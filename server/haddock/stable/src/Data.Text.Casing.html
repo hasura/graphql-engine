@@ -1,0 +1,520 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | This module is inspired by @casing@ package. Instead of @String@ this</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--  package uses @Data.Text.Text@</span><span>
+</span><span id="line-3"></span><span class="hs-comment">--</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- - @PascalCase@ - no spacing between words, first letter in word is</span><span>
+</span><span id="line-5"></span><span class="hs-comment">--    uppercase, all others are lowercase.</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- - @camelCase@ - like @PascalCase@, but the very first letter is lowercase.</span><span>
+</span><span id="line-7"></span><span class="hs-comment">-- - @snake_Case@ - underscores delimit words, case is unrestricted.</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.Text.Casing</span><span>
+</span><span id="line-9"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-comment">-- * Types</span></span><span>
+</span><span id="line-10"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier">GQLNameIdentifier</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-11"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#namePrefix"><span class="hs-identifier">namePrefix</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#nameSuffixes"><span class="hs-identifier">nameSuffixes</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-13"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#NameOrigin"><span class="hs-identifier">NameOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span>    </span><span class="annot"><span class="hs-comment">-- * @Data.Text@ converters</span></span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#toCamelT"><span class="hs-identifier">toCamelT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-17"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#toPascalT"><span class="hs-identifier">toPascalT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-18"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#toSnakeT"><span class="hs-identifier">toSnakeT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span>    </span><span class="annot"><span class="hs-comment">-- * GQLName generators</span></span><span>
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#toCamelG"><span class="hs-identifier">toCamelG</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#toPascalG"><span class="hs-identifier">toPascalG</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#toSnakeG"><span class="hs-identifier">toSnakeG</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Shorthand functions for @Data.Text@</span></span><span>
+</span><span id="line-26"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#snakeToCamel"><span class="hs-identifier">snakeToCamel</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-27"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#snakeToPascal"><span class="hs-identifier">snakeToPascal</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Parser for @Data.Text@</span></span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#fromSnake"><span class="hs-identifier">fromSnake</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Transformers</span></span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#transformNameWith"><span class="hs-identifier">transformNameWith</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#transformGQLSuffixWith"><span class="hs-identifier">transformGQLSuffixWith</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#transformGQLIdentifierWith"><span class="hs-identifier">transformGQLIdentifierWith</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Helpers</span></span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#fromTupleWith"><span class="hs-identifier">fromTupleWith</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-39"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#fromNameWith"><span class="hs-identifier">fromNameWith</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#fromAutogeneratedName"><span class="hs-identifier">fromAutogeneratedName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#fromCustomName"><span class="hs-identifier">fromCustomName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#fromAutogeneratedTuple"><span class="hs-identifier">fromAutogeneratedTuple</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#fromCustomTuple"><span class="hs-identifier">fromCustomTuple</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#fromNonEmptyList"><span class="hs-identifier">fromNonEmptyList</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#identifierToList"><span class="hs-identifier">identifierToList</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#lowerFirstChar"><span class="hs-identifier">lowerFirstChar</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#transformPrefixAndSuffixAndConcat"><span class="hs-identifier">transformPrefixAndSuffixAndConcat</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><a href="Data.Text.Casing.html#upperFirstChar"><span class="hs-identifier">upperFirstChar</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">intersperse</span></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">type</span><span> </span><span id="NameWithOrigin"><span class="annot"><a href="Data.Text.Casing.html#NameWithOrigin"><span class="hs-identifier hs-var">NameWithOrigin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#NameOrigin"><span class="hs-identifier hs-type">NameOrigin</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span class="hs-keyword">type</span><span> </span><span id="NameSuffixWithOrigin"><span class="annot"><a href="Data.Text.Casing.html#NameSuffixWithOrigin"><span class="hs-identifier hs-var">NameSuffixWithOrigin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.NameSuffix</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#NameOrigin"><span class="hs-identifier hs-type">NameOrigin</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- | An opaque type, representing a parsed identifier with prefix and suffixes.</span><span>
+</span><span id="line-63"></span><span class="hs-keyword">data</span><span> </span><span id="GQLNameIdentifier"><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-var">GQLNameIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GQLNameIdentifier"><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-var">GQLNameIdentifier</span></a></span></span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="namePrefix"><span class="annot"><span class="annottext">GQLNameIdentifier -&gt; NameWithOrigin
+</span><a href="Data.Text.Casing.html#namePrefix"><span class="hs-identifier hs-var hs-var">namePrefix</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#NameWithOrigin"><span class="hs-identifier hs-type">NameWithOrigin</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>    </span><span id="nameSuffixes"><span class="annot"><span class="annottext">GQLNameIdentifier -&gt; [NameSuffixWithOrigin]
+</span><a href="Data.Text.Casing.html#nameSuffixes"><span class="hs-identifier hs-var hs-var">nameSuffixes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Data.Text.Casing.html#NameSuffixWithOrigin"><span class="hs-identifier hs-type">NameSuffixWithOrigin</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-66"></span><span>    </span><span class="hs-comment">-- Using Vectors instead of list may improve memory uses</span><span>
+</span><span id="line-67"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689525492"><span id="local-6989586621689525494"><span id="local-6989586621689525496"><span class="annot"><span class="annottext">Int -&gt; GQLNameIdentifier -&gt; ShowS
+[GQLNameIdentifier] -&gt; ShowS
+GQLNameIdentifier -&gt; String
+(Int -&gt; GQLNameIdentifier -&gt; ShowS)
+-&gt; (GQLNameIdentifier -&gt; String)
+-&gt; ([GQLNameIdentifier] -&gt; ShowS)
+-&gt; Show GQLNameIdentifier
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [GQLNameIdentifier] -&gt; ShowS
+$cshowList :: [GQLNameIdentifier] -&gt; ShowS
+show :: GQLNameIdentifier -&gt; String
+$cshow :: GQLNameIdentifier -&gt; String
+showsPrec :: Int -&gt; GQLNameIdentifier -&gt; ShowS
+$cshowsPrec :: Int -&gt; GQLNameIdentifier -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span class="hs-comment">-- | Represents the origin of a name entity.</span><span>
+</span><span id="line-71"></span><span class="hs-comment">--</span><span>
+</span><span id="line-72"></span><span class="hs-comment">--      * `CustomName` represents a custom user provided name</span><span>
+</span><span id="line-73"></span><span class="hs-comment">--      * `AutogeneratedName` represents a name which is generated by Hasura</span><span>
+</span><span id="line-74"></span><span class="hs-comment">--</span><span>
+</span><span id="line-75"></span><span class="hs-comment">--   For a custom table name @foo@, the select by pk field name elements:</span><span>
+</span><span id="line-76"></span><span class="hs-comment">--</span><span>
+</span><span id="line-77"></span><span class="hs-comment">--      * @foo@ is a `CustomName`</span><span>
+</span><span id="line-78"></span><span class="hs-comment">--      * @by@ is an `AutogeneratedName`</span><span>
+</span><span id="line-79"></span><span class="hs-comment">--      * @pk@ is an `AutogeneratedName`</span><span>
+</span><span id="line-80"></span><span class="hs-comment">--</span><span>
+</span><span id="line-81"></span><span class="hs-comment">--   However, for a table name @foo_bar@, the select by pk field name elements</span><span>
+</span><span id="line-82"></span><span class="hs-comment">--   @foo@, @bar@, @by@ and @pk@ are all `AutogeneratedName`</span><span>
+</span><span id="line-83"></span><span class="hs-keyword">data</span><span> </span><span id="NameOrigin"><span class="annot"><a href="Data.Text.Casing.html#NameOrigin"><span class="hs-identifier hs-var">NameOrigin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="CustomName"><span class="annot"><a href="Data.Text.Casing.html#CustomName"><span class="hs-identifier hs-var">CustomName</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="AutogeneratedName"><span class="annot"><a href="Data.Text.Casing.html#AutogeneratedName"><span class="hs-identifier hs-var">AutogeneratedName</span></a></span></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689525483"><span id="local-6989586621689525485"><span id="local-6989586621689525487"><span class="annot"><span class="annottext">Int -&gt; NameOrigin -&gt; ShowS
+[NameOrigin] -&gt; ShowS
+NameOrigin -&gt; String
+(Int -&gt; NameOrigin -&gt; ShowS)
+-&gt; (NameOrigin -&gt; String)
+-&gt; ([NameOrigin] -&gt; ShowS)
+-&gt; Show NameOrigin
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [NameOrigin] -&gt; ShowS
+$cshowList :: [NameOrigin] -&gt; ShowS
+show :: NameOrigin -&gt; String
+$cshow :: NameOrigin -&gt; String
+showsPrec :: Int -&gt; NameOrigin -&gt; ShowS
+$cshowsPrec :: Int -&gt; NameOrigin -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689525478"><span id="local-6989586621689525480"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>  </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span id="local-6989586621689525476"><span class="annot"><span class="annottext">NameWithOrigin
+</span><a href="#local-6989586621689525476"><span class="hs-identifier hs-var">pref1</span></a></span></span><span> </span><span id="local-6989586621689525475"><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525475"><span class="hs-identifier hs-var">suffs1</span></a></span></span><span> </span><span id="local-6989586621689525474"><span class="annot"><span class="annottext">&lt;&gt; :: GQLNameIdentifier -&gt; GQLNameIdentifier -&gt; GQLNameIdentifier
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span id="local-6989586621689525473"><span class="annot"><span class="annottext">NameWithOrigin
+</span><a href="#local-6989586621689525473"><span class="hs-identifier hs-var">pref2</span></a></span></span><span> </span><span id="local-6989586621689525472"><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525472"><span class="hs-identifier hs-var">suffs2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NameWithOrigin -&gt; [NameSuffixWithOrigin] -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-var">GQLNameIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">NameWithOrigin
+</span><a href="#local-6989586621689525476"><span class="hs-identifier hs-var">pref1</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525475"><span class="hs-identifier hs-var">suffs1</span></a></span><span> </span><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+-&gt; [NameSuffixWithOrigin] -&gt; [NameSuffixWithOrigin]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; NameSuffix) -&gt; NameWithOrigin -&gt; NameSuffixWithOrigin
+forall (a :: * -&gt; * -&gt; *) b c d.
+Arrow a =&gt;
+a b c -&gt; a (b, d) (c, d)
+</span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; NameSuffix
+</span><span class="hs-identifier hs-var">G.convertNameToSuffix</span></span><span> </span><span class="annot"><span class="annottext">NameWithOrigin
+</span><a href="#local-6989586621689525473"><span class="hs-identifier hs-var">pref2</span></a></span><span> </span><span class="annot"><span class="annottext">NameSuffixWithOrigin
+-&gt; [NameSuffixWithOrigin] -&gt; [NameSuffixWithOrigin]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525472"><span class="hs-identifier hs-var">suffs2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-88"></span><span>
+</span><span id="line-89"></span><span class="annot"><a href="Data.Text.Casing.html#fromTupleWith"><span class="hs-identifier hs-type">fromTupleWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#NameOrigin"><span class="hs-identifier hs-type">NameOrigin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.NameSuffix</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span>
+</span><span id="line-90"></span><span id="fromTupleWith"><span class="annot"><span class="annottext">fromTupleWith :: NameOrigin -&gt; (Name, [NameSuffix]) -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#fromTupleWith"><span class="hs-identifier hs-var hs-var">fromTupleWith</span></a></span></span><span> </span><span id="local-6989586621689525470"><span class="annot"><span class="annottext">NameOrigin
+</span><a href="#local-6989586621689525470"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689525469"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525469"><span class="hs-identifier hs-var">pref</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689525468"><span class="annot"><span class="annottext">[NameSuffix]
+</span><a href="#local-6989586621689525468"><span class="hs-identifier hs-var">suffs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NameWithOrigin -&gt; [NameSuffixWithOrigin] -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-var">GQLNameIdentifier</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525469"><span class="hs-identifier hs-var">pref</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><a href="#local-6989586621689525470"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(NameSuffix -&gt; NameSuffixWithOrigin)
+-&gt; [NameSuffix] -&gt; [NameSuffixWithOrigin]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-special">,</span></span><span class="annot"><span class="annottext">NameOrigin
+</span><a href="#local-6989586621689525470"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[NameSuffix]
+</span><a href="#local-6989586621689525468"><span class="hs-identifier hs-var">suffs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="annot"><a href="Data.Text.Casing.html#fromNameWith"><span class="hs-identifier hs-type">fromNameWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#NameOrigin"><span class="hs-identifier hs-type">NameOrigin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span>
+</span><span id="line-93"></span><span id="fromNameWith"><span class="annot"><span class="annottext">fromNameWith :: NameOrigin -&gt; Name -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#fromNameWith"><span class="hs-identifier hs-var hs-var">fromNameWith</span></a></span></span><span> </span><span id="local-6989586621689525467"><span class="annot"><span class="annottext">NameOrigin
+</span><a href="#local-6989586621689525467"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span id="local-6989586621689525466"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525466"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NameWithOrigin -&gt; [NameSuffixWithOrigin] -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-var">GQLNameIdentifier</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525466"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><a href="#local-6989586621689525467"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><span id="line-94"></span><span>
+</span><span id="line-95"></span><span class="annot"><a href="Data.Text.Casing.html#fromAutogeneratedName"><span class="hs-identifier hs-type">fromAutogeneratedName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span>
+</span><span id="line-96"></span><span id="fromAutogeneratedName"><span class="annot"><span class="annottext">fromAutogeneratedName :: Name -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#fromAutogeneratedName"><span class="hs-identifier hs-var hs-var">fromAutogeneratedName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NameOrigin -&gt; Name -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#fromNameWith"><span class="hs-identifier hs-var">fromNameWith</span></a></span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><a href="Data.Text.Casing.html#AutogeneratedName"><span class="hs-identifier hs-var">AutogeneratedName</span></a></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span class="annot"><a href="Data.Text.Casing.html#fromCustomName"><span class="hs-identifier hs-type">fromCustomName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span>
+</span><span id="line-99"></span><span id="fromCustomName"><span class="annot"><span class="annottext">fromCustomName :: Name -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#fromCustomName"><span class="hs-identifier hs-var hs-var">fromCustomName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NameOrigin -&gt; Name -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#fromNameWith"><span class="hs-identifier hs-var">fromNameWith</span></a></span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><a href="Data.Text.Casing.html#CustomName"><span class="hs-identifier hs-var">CustomName</span></a></span><span>
+</span><span id="line-100"></span><span>
+</span><span id="line-101"></span><span class="annot"><a href="Data.Text.Casing.html#fromAutogeneratedTuple"><span class="hs-identifier hs-type">fromAutogeneratedTuple</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.NameSuffix</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span>
+</span><span id="line-102"></span><span id="fromAutogeneratedTuple"><span class="annot"><span class="annottext">fromAutogeneratedTuple :: (Name, [NameSuffix]) -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#fromAutogeneratedTuple"><span class="hs-identifier hs-var hs-var">fromAutogeneratedTuple</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NameOrigin -&gt; (Name, [NameSuffix]) -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#fromTupleWith"><span class="hs-identifier hs-var">fromTupleWith</span></a></span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><a href="Data.Text.Casing.html#AutogeneratedName"><span class="hs-identifier hs-var">AutogeneratedName</span></a></span><span>
+</span><span id="line-103"></span><span>
+</span><span id="line-104"></span><span class="annot"><a href="Data.Text.Casing.html#fromCustomTuple"><span class="hs-identifier hs-type">fromCustomTuple</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">G.NameSuffix</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span>
+</span><span id="line-105"></span><span id="fromCustomTuple"><span class="annot"><span class="annottext">fromCustomTuple :: (Name, [NameSuffix]) -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#fromCustomTuple"><span class="hs-identifier hs-var hs-var">fromCustomTuple</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NameOrigin -&gt; (Name, [NameSuffix]) -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#fromTupleWith"><span class="hs-identifier hs-var">fromTupleWith</span></a></span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><a href="Data.Text.Casing.html#CustomName"><span class="hs-identifier hs-var">CustomName</span></a></span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="annot"><a href="Data.Text.Casing.html#fromNonEmptyList"><span class="hs-identifier hs-type">fromNonEmptyList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="Data.Text.Casing.html#NameWithOrigin"><span class="hs-identifier hs-type">NameWithOrigin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span>
+</span><span id="line-108"></span><span id="fromNonEmptyList"><span class="annot"><span class="annottext">fromNonEmptyList :: NonEmpty NameWithOrigin -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#fromNonEmptyList"><span class="hs-identifier hs-var hs-var">fromNonEmptyList</span></a></span></span><span> </span><span id="local-6989586621689525465"><span class="annot"><span class="annottext">NonEmpty NameWithOrigin
+</span><a href="#local-6989586621689525465"><span class="hs-identifier hs-var">neList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NameWithOrigin -&gt; [NameSuffixWithOrigin] -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-var">GQLNameIdentifier</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NonEmpty NameWithOrigin -&gt; NameWithOrigin
+forall a. NonEmpty a -&gt; a
+</span><span class="hs-identifier hs-var">NE.head</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty NameWithOrigin
+</span><a href="#local-6989586621689525465"><span class="hs-identifier hs-var">neList</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(NameWithOrigin -&gt; NameSuffixWithOrigin)
+-&gt; [NameWithOrigin] -&gt; [NameSuffixWithOrigin]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Name -&gt; NameSuffix) -&gt; NameWithOrigin -&gt; NameSuffixWithOrigin
+forall (a :: * -&gt; * -&gt; *) b c d.
+Arrow a =&gt;
+a b c -&gt; a (b, d) (c, d)
+</span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; NameSuffix
+</span><span class="hs-identifier hs-var">G.convertNameToSuffix</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NonEmpty NameWithOrigin -&gt; [NameWithOrigin]
+forall a. NonEmpty a -&gt; [a]
+</span><span class="hs-identifier hs-var">NE.tail</span></span><span> </span><span class="annot"><span class="annottext">NonEmpty NameWithOrigin
+</span><a href="#local-6989586621689525465"><span class="hs-identifier hs-var">neList</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>
+</span><span id="line-110"></span><span class="hs-comment">-- | transforms a graphql name with a transforming function</span><span>
+</span><span id="line-111"></span><span class="hs-comment">--</span><span>
+</span><span id="line-112"></span><span class="hs-comment">-- Note: This will return the graphql name without transformation if the</span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- transformed name is not a valid GraphQL identifier</span><span>
+</span><span id="line-114"></span><span class="annot"><a href="Data.Text.Casing.html#transformNameWith"><span class="hs-identifier hs-type">transformNameWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-115"></span><span id="transformNameWith"><span class="annot"><span class="annottext">transformNameWith :: (Text -&gt; Text) -&gt; Name -&gt; Name
+</span><a href="Data.Text.Casing.html#transformNameWith"><span class="hs-identifier hs-var hs-var">transformNameWith</span></a></span></span><span> </span><span id="local-6989586621689525462"><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525462"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689525461"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525461"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Maybe Name -&gt; Name
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525461"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
+</span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525462"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
+</span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525461"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-116"></span><span>
+</span><span id="line-117"></span><span class="hs-comment">-- | same as `transformNameWith` but will not transform if the name is a custom name</span><span>
+</span><span id="line-118"></span><span class="annot"><a href="Data.Text.Casing.html#transformNameAndOriginWith"><span class="hs-identifier hs-type">transformNameAndOriginWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#NameWithOrigin"><span class="hs-identifier hs-type">NameWithOrigin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#NameWithOrigin"><span class="hs-identifier hs-type">NameWithOrigin</span></a></span><span>
+</span><span id="line-119"></span><span id="transformNameAndOriginWith"><span class="annot"><span class="annottext">transformNameAndOriginWith :: (Text -&gt; Text) -&gt; NameWithOrigin -&gt; NameWithOrigin
+</span><a href="Data.Text.Casing.html#transformNameAndOriginWith"><span class="hs-identifier hs-var hs-var">transformNameAndOriginWith</span></a></span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689525456"><span class="annot"><span class="annottext">n :: NameWithOrigin
+</span><a href="#local-6989586621689525456"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
+</span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><a href="Data.Text.Casing.html#CustomName"><span class="hs-identifier hs-var">CustomName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NameWithOrigin
+</span><a href="#local-6989586621689525456"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-120"></span><span class="annot"><a href="Data.Text.Casing.html#transformNameAndOriginWith"><span class="hs-identifier hs-var">transformNameAndOriginWith</span></a></span><span> </span><span id="local-6989586621689525455"><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525455"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689525454"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525454"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><a href="Data.Text.Casing.html#AutogeneratedName"><span class="hs-identifier hs-var">AutogeneratedName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; Name -&gt; Name
+</span><a href="Data.Text.Casing.html#transformNameWith"><span class="hs-identifier hs-var">transformNameWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525455"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525454"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><a href="Data.Text.Casing.html#AutogeneratedName"><span class="hs-identifier hs-var">AutogeneratedName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-121"></span><span>
+</span><span id="line-122"></span><span class="hs-comment">-- | similar to @transformNameWith@ but transforms @NameSuffix@ instead of</span><span>
+</span><span id="line-123"></span><span class="hs-comment">--  @Name@</span><span>
+</span><span id="line-124"></span><span class="annot"><a href="Data.Text.Casing.html#transformGQLSuffixWith"><span class="hs-identifier hs-type">transformGQLSuffixWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NameSuffix</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NameSuffix</span></span><span>
+</span><span id="line-125"></span><span id="transformGQLSuffixWith"><span class="annot"><span class="annottext">transformGQLSuffixWith :: (Text -&gt; Text) -&gt; NameSuffix -&gt; NameSuffix
+</span><a href="Data.Text.Casing.html#transformGQLSuffixWith"><span class="hs-identifier hs-var hs-var">transformGQLSuffixWith</span></a></span></span><span> </span><span id="local-6989586621689525453"><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525453"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689525452"><span class="annot"><span class="annottext">NameSuffix
+</span><a href="#local-6989586621689525452"><span class="hs-identifier hs-var">suffix</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NameSuffix -&gt; Maybe NameSuffix -&gt; NameSuffix
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">NameSuffix
+</span><a href="#local-6989586621689525452"><span class="hs-identifier hs-var">suffix</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Maybe NameSuffix
+</span><span class="hs-identifier hs-var">G.mkNameSuffix</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525453"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NameSuffix -&gt; Text
+</span><span class="hs-identifier hs-var hs-var">G.unNameSuffix</span></span><span> </span><span class="annot"><span class="annottext">NameSuffix
+</span><a href="#local-6989586621689525452"><span class="hs-identifier hs-var">suffix</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span class="hs-comment">-- | This is essentially same as @second transformGQLSuffixWith@</span><span>
+</span><span id="line-128"></span><span class="annot"><a href="Data.Text.Casing.html#transformGQLSuffixAndOriginWith"><span class="hs-identifier hs-type">transformGQLSuffixAndOriginWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#NameSuffixWithOrigin"><span class="hs-identifier hs-type">NameSuffixWithOrigin</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#NameSuffixWithOrigin"><span class="hs-identifier hs-type">NameSuffixWithOrigin</span></a></span><span>
+</span><span id="line-129"></span><span id="transformGQLSuffixAndOriginWith"><span class="annot"><span class="annottext">transformGQLSuffixAndOriginWith :: (Text -&gt; Text) -&gt; NameSuffixWithOrigin -&gt; NameSuffixWithOrigin
+</span><a href="Data.Text.Casing.html#transformGQLSuffixAndOriginWith"><span class="hs-identifier hs-var hs-var">transformGQLSuffixAndOriginWith</span></a></span></span><span> </span><span id="local-6989586621689525448"><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525448"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689525447"><span class="annot"><span class="annottext">NameSuffix
+</span><a href="#local-6989586621689525447"><span class="hs-identifier hs-var">suffix</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689525446"><span class="annot"><span class="annottext">NameOrigin
+</span><a href="#local-6989586621689525446"><span class="hs-identifier hs-var">orig</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; NameSuffix -&gt; NameSuffix
+</span><a href="Data.Text.Casing.html#transformGQLSuffixWith"><span class="hs-identifier hs-var">transformGQLSuffixWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525448"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">NameSuffix
+</span><a href="#local-6989586621689525447"><span class="hs-identifier hs-var">suffix</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><a href="#local-6989586621689525446"><span class="hs-identifier hs-var">orig</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="hs-comment">-- | transforms a `GQLNameIdentifier`; this will apply the transformations on prefix as well as suffixes</span><span>
+</span><span id="line-132"></span><span class="annot"><a href="Data.Text.Casing.html#transformGQLIdentifierWith"><span class="hs-identifier hs-type">transformGQLIdentifierWith</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span>
+</span><span id="line-133"></span><span id="transformGQLIdentifierWith"><span class="annot"><span class="annottext">transformGQLIdentifierWith :: (Text -&gt; Text) -&gt; GQLNameIdentifier -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#transformGQLIdentifierWith"><span class="hs-identifier hs-var hs-var">transformGQLIdentifierWith</span></a></span></span><span> </span><span id="local-6989586621689525445"><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525445"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span id="local-6989586621689525444"><span class="annot"><span class="annottext">NameWithOrigin
+</span><a href="#local-6989586621689525444"><span class="hs-identifier hs-var">pref</span></a></span></span><span> </span><span id="local-6989586621689525443"><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525443"><span class="hs-identifier hs-var">suffs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NameWithOrigin -&gt; [NameSuffixWithOrigin] -&gt; GQLNameIdentifier
+</span><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-var">GQLNameIdentifier</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; NameWithOrigin -&gt; NameWithOrigin
+</span><a href="Data.Text.Casing.html#transformNameAndOriginWith"><span class="hs-identifier hs-var">transformNameAndOriginWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525445"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">NameWithOrigin
+</span><a href="#local-6989586621689525444"><span class="hs-identifier hs-var">pref</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(NameSuffixWithOrigin -&gt; NameSuffixWithOrigin)
+-&gt; [NameSuffixWithOrigin] -&gt; [NameSuffixWithOrigin]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; NameSuffixWithOrigin -&gt; NameSuffixWithOrigin
+</span><a href="Data.Text.Casing.html#transformGQLSuffixAndOriginWith"><span class="hs-identifier hs-var">transformGQLSuffixAndOriginWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525445"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525443"><span class="hs-identifier hs-var">suffs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- | converts identifiers to @Text@ (i.e. @unName@s and @unNameSuffix@s</span><span>
+</span><span id="line-136"></span><span class="hs-comment">--  identifiers)</span><span>
+</span><span id="line-137"></span><span class="annot"><a href="Data.Text.Casing.html#identifierToList"><span class="hs-identifier hs-type">identifierToList</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span>
+</span><span id="line-138"></span><span id="identifierToList"><span class="annot"><span class="annottext">identifierToList :: GQLNameIdentifier -&gt; [Text]
+</span><a href="Data.Text.Casing.html#identifierToList"><span class="hs-identifier hs-var hs-var">identifierToList</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689525442"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525442"><span class="hs-identifier hs-var">pref</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689525441"><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525441"><span class="hs-identifier hs-var">suffs</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Text
+</span><span class="hs-identifier hs-var hs-var">G.unName</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525442"><span class="hs-identifier hs-var">pref</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; [Text]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(NameSuffixWithOrigin -&gt; Text) -&gt; [NameSuffixWithOrigin] -&gt; [Text]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NameSuffix -&gt; Text
+</span><span class="hs-identifier hs-var hs-var">G.unNameSuffix</span></span><span> </span><span class="annot"><span class="annottext">(NameSuffix -&gt; Text)
+-&gt; (NameSuffixWithOrigin -&gt; NameSuffix)
+-&gt; NameSuffixWithOrigin
+-&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">NameSuffixWithOrigin -&gt; NameSuffix
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525441"><span class="hs-identifier hs-var">suffs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span>
+</span><span id="line-140"></span><span class="hs-comment">-- | To @snake_case@ for @Data.Text@</span><span>
+</span><span id="line-141"></span><span class="hs-comment">--</span><span>
+</span><span id="line-142"></span><span class="hs-comment">-- &gt;&gt;&gt; toSnakeT [&quot;my&quot;,&quot;random&quot;,&quot;text&quot;,&quot;list&quot;]</span><span>
+</span><span id="line-143"></span><span class="hs-comment">-- &quot;my_random_text_list&quot;</span><span>
+</span><span id="line-144"></span><span class="annot"><a href="Data.Text.Casing.html#toSnakeT"><span class="hs-identifier hs-type">toSnakeT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-145"></span><span id="toSnakeT"><span class="annot"><span class="annottext">toSnakeT :: [Text] -&gt; Text
+</span><a href="Data.Text.Casing.html#toSnakeT"><span class="hs-identifier hs-var hs-var">toSnakeT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><span class="hs-identifier hs-var">T.concat</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Text) -&gt; ([Text] -&gt; [Text]) -&gt; [Text] -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; [Text]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">intersperse</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;_&quot;</span></span><span>
+</span><span id="line-146"></span><span>
+</span><span id="line-147"></span><span class="hs-comment">-- | To @PascalCase@ for @Data.Text@</span><span>
+</span><span id="line-148"></span><span class="hs-comment">--</span><span>
+</span><span id="line-149"></span><span class="hs-comment">-- &gt;&gt;&gt; toPascalT [&quot;my&quot;,&quot;random&quot;,&quot;text&quot;,&quot;list&quot;]</span><span>
+</span><span id="line-150"></span><span class="hs-comment">-- &quot;MyRandomTextList&quot;</span><span>
+</span><span id="line-151"></span><span class="annot"><a href="Data.Text.Casing.html#toPascalT"><span class="hs-identifier hs-type">toPascalT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-152"></span><span id="toPascalT"><span class="annot"><span class="annottext">toPascalT :: [Text] -&gt; Text
+</span><a href="Data.Text.Casing.html#toPascalT"><span class="hs-identifier hs-var hs-var">toPascalT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><span class="hs-identifier hs-var">T.concat</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Text) -&gt; ([Text] -&gt; [Text]) -&gt; [Text] -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; [Text] -&gt; [Text]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Data.Text.Casing.html#upperFirstChar"><span class="hs-identifier hs-var">upperFirstChar</span></a></span><span>
+</span><span id="line-153"></span><span>
+</span><span id="line-154"></span><span class="hs-comment">-- | To @camelCase@ for @Data.Text@</span><span>
+</span><span id="line-155"></span><span class="hs-comment">--</span><span>
+</span><span id="line-156"></span><span class="hs-comment">-- &gt;&gt;&gt; toCamelT [&quot;my&quot;,&quot;random&quot;,&quot;text&quot;,&quot;list&quot;]</span><span>
+</span><span id="line-157"></span><span class="hs-comment">-- &quot;myRandomTextList&quot;</span><span>
+</span><span id="line-158"></span><span class="annot"><a href="Data.Text.Casing.html#toCamelT"><span class="hs-identifier hs-type">toCamelT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-159"></span><span id="toCamelT"><span class="annot"><span class="annottext">toCamelT :: [Text] -&gt; Text
+</span><a href="Data.Text.Casing.html#toCamelT"><span class="hs-identifier hs-var hs-var">toCamelT</span></a></span></span><span> </span><span class="hs-special">(</span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-160"></span><span class="annot"><a href="Data.Text.Casing.html#toCamelT"><span class="hs-identifier hs-var">toCamelT</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621689525438"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525438"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621689525437"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621689525437"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Data.Text.Casing.html#lowerFirstChar"><span class="hs-identifier hs-var">lowerFirstChar</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525438"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><span class="hs-identifier hs-var">T.concat</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; [Text] -&gt; [Text]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Data.Text.Casing.html#upperFirstChar"><span class="hs-identifier hs-var">upperFirstChar</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621689525437"><span class="hs-identifier hs-var">xs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-161"></span><span>
+</span><span id="line-162"></span><span class="hs-comment">-- | To @snake_case@ for @GQLNameIdentifier@</span><span>
+</span><span id="line-163"></span><span class="annot"><a href="Data.Text.Casing.html#toSnakeG"><span class="hs-identifier hs-type">toSnakeG</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-164"></span><span id="toSnakeG"><span class="annot"><span class="annottext">toSnakeG :: GQLNameIdentifier -&gt; Name
+</span><a href="Data.Text.Casing.html#toSnakeG"><span class="hs-identifier hs-var hs-var">toSnakeG</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689525436"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525436"><span class="hs-identifier hs-var">pref</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NameOrigin
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689525435"><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525435"><span class="hs-identifier hs-var">suff</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; [NameSuffix] -&gt; Name
+</span><span class="hs-identifier hs-var">G.addSuffixes</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689525436"><span class="hs-identifier hs-var">pref</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(NameSuffixWithOrigin -&gt; NameSuffix)
+-&gt; [NameSuffixWithOrigin] -&gt; [NameSuffix]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; NameSuffix -&gt; NameSuffix
+</span><a href="Data.Text.Casing.html#transformGQLSuffixWith"><span class="hs-identifier hs-var">transformGQLSuffixWith</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;_&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(NameSuffix -&gt; NameSuffix)
+-&gt; (NameSuffixWithOrigin -&gt; NameSuffix)
+-&gt; NameSuffixWithOrigin
+-&gt; NameSuffix
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">NameSuffixWithOrigin -&gt; NameSuffix
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525435"><span class="hs-identifier hs-var">suff</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-165"></span><span>
+</span><span id="line-166"></span><span class="hs-comment">-- | To @PascalCase@ for @GQLNameIdentifier@</span><span>
+</span><span id="line-167"></span><span class="annot"><a href="Data.Text.Casing.html#toPascalG"><span class="hs-identifier hs-type">toPascalG</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-168"></span><span id="toPascalG"><span class="annot"><span class="annottext">toPascalG :: GQLNameIdentifier -&gt; Name
+</span><a href="Data.Text.Casing.html#toPascalG"><span class="hs-identifier hs-var hs-var">toPascalG</span></a></span></span><span> </span><span id="local-6989586621689525433"><span class="annot"><span class="annottext">GQLNameIdentifier
+</span><a href="#local-6989586621689525433"><span class="hs-identifier hs-var">gqlIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier -&gt; (Text -&gt; Text) -&gt; (Text -&gt; Text) -&gt; Name
+</span><a href="Data.Text.Casing.html#transformPrefixAndSuffixAndConcat"><span class="hs-identifier hs-var">transformPrefixAndSuffixAndConcat</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
+</span><a href="#local-6989586621689525433"><span class="hs-identifier hs-var">gqlIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Data.Text.Casing.html#upperFirstChar"><span class="hs-identifier hs-var">upperFirstChar</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Data.Text.Casing.html#upperFirstChar"><span class="hs-identifier hs-var">upperFirstChar</span></a></span><span>
+</span><span id="line-169"></span><span>
+</span><span id="line-170"></span><span class="hs-comment">-- | To @camelCase@ for @GQLNameIdentifier@</span><span>
+</span><span id="line-171"></span><span class="annot"><a href="Data.Text.Casing.html#toCamelG"><span class="hs-identifier hs-type">toCamelG</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-172"></span><span id="toCamelG"><span class="annot"><span class="annottext">toCamelG :: GQLNameIdentifier -&gt; Name
+</span><a href="Data.Text.Casing.html#toCamelG"><span class="hs-identifier hs-var hs-var">toCamelG</span></a></span></span><span> </span><span id="local-6989586621689525432"><span class="annot"><span class="annottext">GQLNameIdentifier
+</span><a href="#local-6989586621689525432"><span class="hs-identifier hs-var">gqlIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier -&gt; (Text -&gt; Text) -&gt; (Text -&gt; Text) -&gt; Name
+</span><a href="Data.Text.Casing.html#transformPrefixAndSuffixAndConcat"><span class="hs-identifier hs-var">transformPrefixAndSuffixAndConcat</span></a></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
+</span><a href="#local-6989586621689525432"><span class="hs-identifier hs-var">gqlIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Data.Text.Casing.html#lowerFirstChar"><span class="hs-identifier hs-var">lowerFirstChar</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="Data.Text.Casing.html#upperFirstChar"><span class="hs-identifier hs-var">upperFirstChar</span></a></span><span>
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span class="hs-comment">-- | Transforms @GQLNameIdentifier@ and returns a @G.Name@</span><span>
+</span><span id="line-175"></span><span class="annot"><a href="Data.Text.Casing.html#transformPrefixAndSuffixAndConcat"><span class="hs-identifier hs-type">transformPrefixAndSuffixAndConcat</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-176"></span><span id="transformPrefixAndSuffixAndConcat"><span class="annot"><span class="annottext">transformPrefixAndSuffixAndConcat :: GQLNameIdentifier -&gt; (Text -&gt; Text) -&gt; (Text -&gt; Text) -&gt; Name
+</span><a href="Data.Text.Casing.html#transformPrefixAndSuffixAndConcat"><span class="hs-identifier hs-var hs-var">transformPrefixAndSuffixAndConcat</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Casing.html#GQLNameIdentifier"><span class="hs-identifier hs-type">GQLNameIdentifier</span></a></span><span> </span><span id="local-6989586621689525431"><span class="annot"><span class="annottext">NameWithOrigin
+</span><a href="#local-6989586621689525431"><span class="hs-identifier hs-var">pref</span></a></span></span><span> </span><span id="local-6989586621689525430"><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525430"><span class="hs-identifier hs-var">suff</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689525429"><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525429"><span class="hs-identifier hs-var">prefixTransformer</span></a></span></span><span> </span><span id="local-6989586621689525428"><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525428"><span class="hs-identifier hs-var">suffixTransformer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-177"></span><span>  </span><span class="annot"><span class="annottext">Name -&gt; [NameSuffix] -&gt; Name
+</span><span class="hs-identifier hs-var">G.addSuffixes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NameWithOrigin -&gt; Name
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; NameWithOrigin -&gt; NameWithOrigin
+</span><a href="Data.Text.Casing.html#transformNameAndOriginWith"><span class="hs-identifier hs-var">transformNameAndOriginWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525429"><span class="hs-identifier hs-var">prefixTransformer</span></a></span><span> </span><span class="annot"><span class="annottext">NameWithOrigin
+</span><a href="#local-6989586621689525431"><span class="hs-identifier hs-var">pref</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(NameSuffixWithOrigin -&gt; NameSuffix)
+-&gt; [NameSuffixWithOrigin] -&gt; [NameSuffix]
+forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NameSuffixWithOrigin -&gt; NameSuffix
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">(NameSuffixWithOrigin -&gt; NameSuffix)
+-&gt; (NameSuffixWithOrigin -&gt; NameSuffixWithOrigin)
+-&gt; NameSuffixWithOrigin
+-&gt; NameSuffix
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; NameSuffixWithOrigin -&gt; NameSuffixWithOrigin
+</span><a href="Data.Text.Casing.html#transformGQLSuffixAndOriginWith"><span class="hs-identifier hs-var">transformGQLSuffixAndOriginWith</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621689525428"><span class="hs-identifier hs-var">suffixTransformer</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[NameSuffixWithOrigin]
+</span><a href="#local-6989586621689525430"><span class="hs-identifier hs-var">suff</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-178"></span><span>
+</span><span id="line-179"></span><span class="hs-comment">-- @fromSnake@ is used in splitting the schema/table names separated by @_@</span><span>
+</span><span id="line-180"></span><span class="hs-comment">-- For global naming conventions:</span><span>
+</span><span id="line-181"></span><span class="hs-comment">-- We do not want to capture the underscore in the begining as a delimiter</span><span>
+</span><span id="line-182"></span><span class="hs-comment">-- and want to store it as it is. A user might have a schema that starts with</span><span>
+</span><span id="line-183"></span><span class="hs-comment">-- an underscore (we want to treat it as a part of the schema name rather</span><span>
+</span><span id="line-184"></span><span class="hs-comment">-- than a delimiter)</span><span>
+</span><span id="line-185"></span><span class="hs-comment">--</span><span>
+</span><span id="line-186"></span><span>
+</span><span id="line-187"></span><span class="hs-comment">-- | Convert from @snake_cased@</span><span>
+</span><span id="line-188"></span><span class="hs-comment">--</span><span>
+</span><span id="line-189"></span><span class="hs-comment">-- &gt;&gt;&gt; fromSnake &quot;_hello_world_foo&quot;</span><span>
+</span><span id="line-190"></span><span class="hs-comment">-- [&quot;_hello&quot;,&quot;world&quot;,&quot;foo&quot;]</span><span>
+</span><span id="line-191"></span><span class="annot"><a href="Data.Text.Casing.html#fromSnake"><span class="hs-identifier hs-type">fromSnake</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span>
+</span><span id="line-192"></span><span id="fromSnake"><span class="annot"><span class="annottext">fromSnake :: Text -&gt; [Text]
+</span><a href="Data.Text.Casing.html#fromSnake"><span class="hs-identifier hs-var hs-var">fromSnake</span></a></span></span><span> </span><span id="local-6989586621689525427"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525427"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; [Text]
+</span><span class="hs-identifier hs-var">T.splitOn</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;_&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525427"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-193"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621689525425"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525425"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span id="local-6989586621689525424"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621689525424"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;_&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525425"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; [Text]
+forall a. a -&gt; [a] -&gt; [a]
+</span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621689525424"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><span id="line-194"></span><span>  </span><span id="local-6989586621689525423"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621689525423"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621689525423"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-195"></span><span>
+</span><span id="line-196"></span><span class="hs-comment">-- | Directly convert to @PascalCase@ through 'fromSnake'</span><span>
+</span><span id="line-197"></span><span class="annot"><a href="Data.Text.Casing.html#snakeToPascal"><span class="hs-identifier hs-type">snakeToPascal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-198"></span><span id="snakeToPascal"><span class="annot"><span class="annottext">snakeToPascal :: Text -&gt; Text
+</span><a href="Data.Text.Casing.html#snakeToPascal"><span class="hs-identifier hs-var hs-var">snakeToPascal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><a href="Data.Text.Casing.html#toPascalT"><span class="hs-identifier hs-var">toPascalT</span></a></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Text) -&gt; (Text -&gt; [Text]) -&gt; Text -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text]
+</span><a href="Data.Text.Casing.html#fromSnake"><span class="hs-identifier hs-var">fromSnake</span></a></span><span>
+</span><span id="line-199"></span><span>
+</span><span id="line-200"></span><span class="hs-comment">-- | Directly convert to @camelCase@ through 'fromSnake'</span><span>
+</span><span id="line-201"></span><span class="annot"><a href="Data.Text.Casing.html#snakeToCamel"><span class="hs-identifier hs-type">snakeToCamel</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-202"></span><span id="snakeToCamel"><span class="annot"><span class="annottext">snakeToCamel :: Text -&gt; Text
+</span><a href="Data.Text.Casing.html#snakeToCamel"><span class="hs-identifier hs-var hs-var">snakeToCamel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><a href="Data.Text.Casing.html#toCamelT"><span class="hs-identifier hs-var">toCamelT</span></a></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; Text) -&gt; (Text -&gt; [Text]) -&gt; Text -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text]
+</span><a href="Data.Text.Casing.html#fromSnake"><span class="hs-identifier hs-var">fromSnake</span></a></span><span>
+</span><span id="line-203"></span><span>
+</span><span id="line-204"></span><span class="hs-comment">-- Internal helpers</span><span>
+</span><span id="line-205"></span><span>
+</span><span id="line-206"></span><span class="hs-comment">-- | An internal helper function to lowercase the first character</span><span>
+</span><span id="line-207"></span><span class="annot"><a href="Data.Text.Casing.html#lowerFirstChar"><span class="hs-identifier hs-type">lowerFirstChar</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-208"></span><span id="lowerFirstChar"><span class="annot"><span class="annottext">lowerFirstChar :: Text -&gt; Text
+</span><a href="Data.Text.Casing.html#lowerFirstChar"><span class="hs-identifier hs-var hs-var">lowerFirstChar</span></a></span></span><span> </span><span id="local-6989586621689525422"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525422"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span class="hs-identifier hs-var">T.toLower</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Text
+</span><span class="hs-identifier hs-var">T.take</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525422"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Text
+</span><span class="hs-identifier hs-var">T.drop</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525422"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-209"></span><span>
+</span><span id="line-210"></span><span class="hs-comment">-- | An internal helper function to uppercase the first character</span><span>
+</span><span id="line-211"></span><span class="annot"><a href="Data.Text.Casing.html#upperFirstChar"><span class="hs-identifier hs-type">upperFirstChar</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-212"></span><span id="upperFirstChar"><span class="annot"><span class="annottext">upperFirstChar :: Text -&gt; Text
+</span><a href="Data.Text.Casing.html#upperFirstChar"><span class="hs-identifier hs-var hs-var">upperFirstChar</span></a></span></span><span> </span><span id="local-6989586621689525418"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525418"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span class="hs-identifier hs-var">T.toUpper</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Text
+</span><span class="hs-identifier hs-var">T.take</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525418"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Text
+</span><span class="hs-identifier hs-var">T.drop</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><span class="hs-number">1</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689525418"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-213"></span></pre></body></html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE Arrows #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- |</span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- = TL;DR</span><span>
+</span><span id="line-5"></span><span class="hs-comment">--</span><span>
+</span><span id="line-6"></span><span class="hs-comment">-- We go from this:</span><span>
+</span><span id="line-7"></span><span class="hs-comment">--</span><span>
+</span><span id="line-8"></span><span class="hs-comment">-- &gt; (|</span><span>
+</span><span id="line-9"></span><span class="hs-comment">-- &gt;   withRecordInconsistency</span><span>
+</span><span id="line-10"></span><span class="hs-comment">-- &gt;     ( (|</span><span>
+</span><span id="line-11"></span><span class="hs-comment">-- &gt;         modifyErrA</span><span>
+</span><span id="line-12"></span><span class="hs-comment">-- &gt;           ( do</span><span>
+</span><span id="line-13"></span><span class="hs-comment">-- &gt;               (info, dependencies) &lt;- liftEitherA -&lt; buildRelInfo relDef</span><span>
+</span><span id="line-14"></span><span class="hs-comment">-- &gt;               recordDependencies -&lt; (metadataObject, schemaObject, dependencies)</span><span>
+</span><span id="line-15"></span><span class="hs-comment">-- &gt;               returnA -&lt; info</span><span>
+</span><span id="line-16"></span><span class="hs-comment">-- &gt;           )</span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- &gt;       |) (addTableContext @b table . addRelationshipContext)</span><span>
+</span><span id="line-18"></span><span class="hs-comment">-- &gt;     )</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- &gt;   |) metadataObject</span><span>
+</span><span id="line-20"></span><span class="hs-comment">--</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- to this:</span><span>
+</span><span id="line-22"></span><span class="hs-comment">--</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- &gt; withRecordInconsistencyM metadataObject $ do</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- &gt;   modifyErr (addTableContext @b table . addRelationshipContext) $ do</span><span>
+</span><span id="line-25"></span><span class="hs-comment">-- &gt;     (info, dependencies) &lt;- liftEither $ buildRelInfo relDef</span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- &gt;     recordDependenciesM metadataObject schemaObject dependencies</span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- &gt;     return info</span><span>
+</span><span id="line-28"></span><span class="hs-comment">--</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- = Background</span><span>
+</span><span id="line-30"></span><span class="hs-comment">--</span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- We use Haskell's @Arrows@ language extension to gain some syntactic sugar when</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- working with `Arrow`s. `Arrow`s are a programming abstraction comparable to</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- `Monad`s.</span><span>
+</span><span id="line-34"></span><span class="hs-comment">--</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- Unfortunately the syntactic sugar provided by this language extension is not</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- very sweet.</span><span>
+</span><span id="line-37"></span><span class="hs-comment">--</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- This module allows us to sometimes avoid using @Arrows@ syntax altogether,</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- without loss of functionality or correctness. It is a demo of a technique that</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- can be used to cut down the amount of @Arrows@-based code in our codebase by</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- about half.</span><span>
+</span><span id="line-42"></span><span class="hs-comment">--</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- = Approach</span><span>
+</span><span id="line-44"></span><span class="hs-comment">--</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- Although /in general/ not every `Monad` is an `Arrow`, specific `Arrow`</span><span>
+</span><span id="line-46"></span><span class="hs-comment">-- instantiations are exactly as powerful as their `Monad` equivalents. Otherwise</span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- they wouldn't be very equivalent, would they?</span><span>
+</span><span id="line-48"></span><span class="hs-comment">--</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- Just like `liftEither` interprets the @`Either` e@ monad into an arbitrary</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- monad implementing @`MonadError` e@, we add interpret certain concrete monads</span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- such as @`Control.Monad.Trans.Writer.CPS.Writer` w@ into arrows satisfying</span><span>
+</span><span id="line-52"></span><span class="hs-comment">-- constraints, in this example the ones satisfying @`ArrowWriter` w@.  This</span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- means that the part of the code that only uses such interpretable arrow</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- effects can be written /monadically/, and then used in /arrow/ constructions</span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- down the line.</span><span>
+</span><span id="line-56"></span><span class="hs-comment">--</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- This approach cannot be used for arrow effects which do not have a monadic</span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- equivalent. In our codebase, the only instance of this is</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- @`Hasura.Incremental.ArrowCache` m@, implemented by the</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- @`Hasura.Incremental.Rule` m@ arrow. So code written with</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- @`Hasura.Incremental.ArrowCache` m@ in the context cannot be rewritten</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- monadically using this technique.</span><span>
+</span><span id="line-63"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Control.Arrow.Interpret</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Control.Arrow.Interpret.html#interpretWriter"><span class="hs-identifier">interpretWriter</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-65"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-66"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Arrow</span></span><span>
+</span><span id="line-69"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Arrow.Extended.html"><span class="hs-identifier">Control.Arrow.Extended</span></a></span><span>
+</span><span id="line-70"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Writer</span></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- | Translate a monadic writer effect stack of a computation into arrow-based</span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- effects.</span><span>
+</span><span id="line-74"></span><span class="hs-comment">--</span><span>
+</span><span id="line-75"></span><span class="hs-comment">-- NB: This is conceptually different from `ArrowKleisli`, which /inserts/ a</span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- single monadic effect into an arrow-based effect stack.</span><span>
+</span><span id="line-77"></span><span class="hs-comment">--</span><span>
+</span><span id="line-78"></span><span class="hs-comment">-- NB: This is conceptually different from `ArrowApply`, which expresses that a</span><span>
+</span><span id="line-79"></span><span class="hs-comment">-- given `Arrow` /is/ a Kleisli arrow.  `ArrowInterpret` has no such condition</span><span>
+</span><span id="line-80"></span><span class="hs-comment">-- on @arr@.</span><span>
+</span><span id="line-81"></span><span id="local-6989586621689517796"><span id="local-6989586621689517797"><span id="local-6989586621689517798"><span class="annot"><a href="Control.Arrow.Interpret.html#interpretWriter"><span class="hs-identifier hs-type">interpretWriter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Control.Arrow.Trans.html#ArrowWriter"><span class="hs-identifier hs-type">ArrowWriter</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689517798"><span class="hs-identifier hs-type">w</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689517797"><span class="hs-identifier hs-type">arr</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Writer</span></span><span> </span><span class="annot"><a href="#local-6989586621689517798"><span class="hs-identifier hs-type">w</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689517796"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689517797"><span class="hs-operator hs-type">`arr`</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689517796"><span class="hs-identifier hs-type">a</span></a></span></span></span></span><span>
+</span><span id="line-82"></span><span id="interpretWriter"><span class="annot"><span class="annottext">interpretWriter :: arr (Writer w a) a
+</span><a href="Control.Arrow.Interpret.html#interpretWriter"><span class="hs-identifier hs-var hs-var">interpretWriter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">proc</span><span> </span><span id="local-6989586621689517795"><span class="annot"><span class="annottext">Writer w a
+</span><a href="#local-6989586621689517795"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689517794"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689517794"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689517793"><span class="annot"><span class="annottext">w
+</span><a href="#local-6989586621689517793"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Writer w a -&gt; (a, w)
+forall w a. Writer w a -&gt; (a, w)
+</span><span class="hs-identifier hs-var">runWriter</span></span><span> </span><span class="annot"><span class="annottext">Writer w a
+</span><a href="#local-6989586621689517795"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><span class="annottext">arr w ()
+forall w (arr :: * -&gt; * -&gt; *). ArrowWriter w arr =&gt; arr w ()
+</span><a href="Control.Arrow.Trans.html#tellA"><span class="hs-identifier hs-var">tellA</span></a></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">w
+</span><a href="#local-6989586621689517793"><span class="hs-identifier hs-var">w</span></a></span><span>
+</span><span id="line-85"></span><span>  </span><span class="annot"><span class="annottext">arr a a
+forall (a :: * -&gt; * -&gt; *) b. Arrow a =&gt; a b b
+</span><span class="hs-identifier hs-var">returnA</span></span><span> </span><span class="hs-glyph">-&lt;</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689517794"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-86"></span></pre></body></html>
