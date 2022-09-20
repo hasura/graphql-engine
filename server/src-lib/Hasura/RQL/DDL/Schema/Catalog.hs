@@ -13,7 +13,7 @@ module Hasura.RQL.DDL.Schema.Catalog
 where
 
 import Data.Bifunctor (bimap)
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
 import Hasura.Prelude
@@ -25,42 +25,42 @@ import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build (CacheInvalidations)
 import Hasura.Server.Types (InstanceId (..))
 
-fetchMetadataFromCatalog :: Q.TxE QErr Metadata
+fetchMetadataFromCatalog :: PG.TxE QErr Metadata
 fetchMetadataFromCatalog = do
   rows <-
-    Q.withQE
+    PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
        SELECT metadata from hdb_catalog.hdb_metadata
     |]
       ()
       True
   case rows of
     [] -> pure emptyMetadata
-    [Identity (Q.AltJ metadata)] -> pure metadata
+    [Identity (PG.AltJ metadata)] -> pure metadata
     _ -> throw500 "multiple rows in hdb_metadata table"
 
-fetchMetadataAndResourceVersionFromCatalog :: Q.TxE QErr (Metadata, MetadataResourceVersion)
+fetchMetadataAndResourceVersionFromCatalog :: PG.TxE QErr (Metadata, MetadataResourceVersion)
 fetchMetadataAndResourceVersionFromCatalog = do
   rows <-
-    Q.withQE
+    PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
        SELECT metadata, resource_version from hdb_catalog.hdb_metadata
     |]
       ()
       True
   case rows of
     [] -> pure (emptyMetadata, initialResourceVersion)
-    [(Q.AltJ metadata, resourceVersion)] -> pure (metadata, MetadataResourceVersion resourceVersion)
+    [(PG.AltJ metadata, resourceVersion)] -> pure (metadata, MetadataResourceVersion resourceVersion)
     _ -> throw500 "multiple rows in hdb_metadata table"
 
-fetchMetadataResourceVersionFromCatalog :: Q.TxE QErr MetadataResourceVersion
+fetchMetadataResourceVersionFromCatalog :: PG.TxE QErr MetadataResourceVersion
 fetchMetadataResourceVersionFromCatalog = do
   rows <-
-    Q.withQE
+    PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
        SELECT resource_version from hdb_catalog.hdb_metadata
     |]
       ()
@@ -70,12 +70,12 @@ fetchMetadataResourceVersionFromCatalog = do
     [Identity resourceVersion] -> pure (MetadataResourceVersion resourceVersion)
     _ -> throw500 "multiple rows in hdb_metadata table"
 
-fetchMetadataNotificationsFromCatalog :: MetadataResourceVersion -> InstanceId -> Q.TxE QErr [(MetadataResourceVersion, CacheInvalidations)]
+fetchMetadataNotificationsFromCatalog :: MetadataResourceVersion -> InstanceId -> PG.TxE QErr [(MetadataResourceVersion, CacheInvalidations)]
 fetchMetadataNotificationsFromCatalog (MetadataResourceVersion resourceVersion) instanceId = do
-  fmap (bimap MetadataResourceVersion Q.getAltJ)
-    <$> Q.withQE
+  fmap (bimap MetadataResourceVersion PG.getAltJ)
+    <$> PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
          SELECT resource_version, notification
          FROM hdb_catalog.hdb_schema_notifications
          WHERE resource_version > $1 AND instance_id != ($2::uuid)
@@ -84,38 +84,38 @@ fetchMetadataNotificationsFromCatalog (MetadataResourceVersion resourceVersion) 
       True
 
 -- Used to increment metadata version when no other changes are required
-bumpMetadataVersionInCatalog :: Q.TxE QErr ()
+bumpMetadataVersionInCatalog :: PG.TxE QErr ()
 bumpMetadataVersionInCatalog = do
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
       UPDATE hdb_catalog.hdb_metadata
       SET resource_version = hdb_catalog.hdb_metadata.resource_version + 1
       |]
     ()
     True
 
-insertMetadataInCatalog :: Metadata -> Q.TxE QErr ()
+insertMetadataInCatalog :: Metadata -> PG.TxE QErr ()
 insertMetadataInCatalog metadata =
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
     INSERT INTO hdb_catalog.hdb_metadata(id, metadata)
     VALUES (1, $1::json)
     |]
-    (Identity $ Q.AltJ metadata)
+    (Identity $ PG.AltJ metadata)
     True
 
 -- | Check that the specified resource version matches the currently stored one, and...
 --
 -- - If so: Update the metadata and bump the version
 -- - If not: Throw a 409 error
-setMetadataInCatalog :: MetadataResourceVersion -> Metadata -> Q.TxE QErr MetadataResourceVersion
+setMetadataInCatalog :: MetadataResourceVersion -> Metadata -> PG.TxE QErr MetadataResourceVersion
 setMetadataInCatalog resourceVersion metadata = do
   rows <-
-    Q.withQE
+    PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     INSERT INTO hdb_catalog.hdb_metadata(id, metadata)
     VALUES (1, $1::json)
     ON CONFLICT (id) DO UPDATE SET
@@ -124,7 +124,7 @@ setMetadataInCatalog resourceVersion metadata = do
       WHERE hdb_catalog.hdb_metadata.resource_version = $2
     RETURNING resource_version
     |]
-      (Q.AltJ metadata, getMetadataResourceVersion resourceVersion)
+      (PG.AltJ metadata, getMetadataResourceVersion resourceVersion)
       True
   case rows of
     [] -> throw409 $ "metadata resource version referenced (" <> tshow (getMetadataResourceVersion resourceVersion) <> ") did not match current version"

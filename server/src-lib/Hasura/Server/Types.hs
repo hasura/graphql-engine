@@ -20,7 +20,7 @@ where
 
 import Data.Aeson
 import Data.HashSet qualified as Set
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
@@ -57,13 +57,13 @@ pgToDbVersion = DbVersion . tshow . unPGVersion
 
 -- | A uuid of the postgres metadata db.
 newtype MetadataDbId = MetadataDbId {getMetadataDbId :: Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Q.FromCol, Q.ToPrepArg)
+  deriving (Show, Eq, ToJSON, FromJSON, PG.FromCol, PG.ToPrepArg)
 
 mdDbIdToDbUid :: MetadataDbId -> DbUid
 mdDbIdToDbUid = DbUid . getMetadataDbId
 
 newtype InstanceId = InstanceId {getInstanceId :: Text}
-  deriving (Show, Eq, ToJSON, FromJSON, Q.FromCol, Q.ToPrepArg)
+  deriving (Show, Eq, ToJSON, FromJSON, PG.FromCol, PG.ToPrepArg)
 
 -- | Generate an 'InstanceId' from a 'UUID'
 generateInstanceId :: IO InstanceId

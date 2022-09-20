@@ -16,7 +16,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML
 import Hasura.Backends.Postgres.SQL.Types
@@ -135,13 +135,13 @@ fetchEnumValuesFromDb tableName primaryKeyColumn maybeCommentColumn = do
   let nullExtr = Extractor SENull Nothing
       commentExtr = maybe nullExtr (mkExtr . rciName) maybeCommentColumn
       query =
-        Q.fromBuilder $
+        PG.fromBuilder $
           toSQL
             mkSelect
               { selFrom = Just $ mkSimpleFromExp tableName,
                 selExtr = [mkExtr (rciName primaryKeyColumn), commentExtr]
               }
-  rawEnumValues <- liftTx $ Q.withQE defaultTxErrorHandler query () True
+  rawEnumValues <- liftTx $ PG.withQE defaultTxErrorHandler query () True
   when (null rawEnumValues) $ dispute [EnumTableNoEnumValues]
   let enumValues = flip map rawEnumValues $
         \(enumValueText, comment) ->

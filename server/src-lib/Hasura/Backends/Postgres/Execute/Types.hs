@@ -19,8 +19,8 @@ where
 import Control.Lens
 import Control.Monad.Trans.Control (MonadBaseControl (..))
 import Data.Aeson.Extended qualified as J
-import Database.PG.Query qualified as Q
-import Database.PG.Query.Connection qualified as Q
+import Database.PG.Query qualified as PG
+import Database.PG.Query.Connection qualified as PG
 import Hasura.Backends.Postgres.SQL.Error
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
@@ -29,36 +29,36 @@ import Hasura.SQL.Types (ExtensionsSchema)
 
 -- See Note [Existentially Quantified Types]
 type RunTx =
-  forall m a. (MonadIO m, MonadBaseControl IO m) => Q.TxET QErr m a -> ExceptT QErr m a
+  forall m a. (MonadIO m, MonadBaseControl IO m) => PG.TxET QErr m a -> ExceptT QErr m a
 
 data PGExecCtx = PGExecCtx
-  { -- | Run a Q.ReadOnly transaction
+  { -- | Run a PG.ReadOnly transaction
     _pecRunReadOnly :: RunTx,
     -- | Run a read only statement without an explicit transaction block
     _pecRunReadNoTx :: RunTx,
-    -- | Run a Q.ReadWrite transaction
+    -- | Run a PG.ReadWrite transaction
     _pecRunReadWrite :: RunTx,
     -- | Destroys connection pools
     _pecDestroyConn :: (IO ())
   }
 
 -- | Creates a Postgres execution context for a single Postgres master pool
-mkPGExecCtx :: Q.TxIsolation -> Q.PGPool -> PGExecCtx
+mkPGExecCtx :: PG.TxIsolation -> PG.PGPool -> PGExecCtx
 mkPGExecCtx isoLevel pool =
   PGExecCtx
-    { _pecRunReadOnly = (Q.runTx pool (isoLevel, Just Q.ReadOnly)),
-      _pecRunReadNoTx = (Q.runTx' pool),
-      _pecRunReadWrite = (Q.runTx pool (isoLevel, Just Q.ReadWrite)),
-      _pecDestroyConn = Q.destroyPGPool pool
+    { _pecRunReadOnly = (PG.runTx pool (isoLevel, Just PG.ReadOnly)),
+      _pecRunReadNoTx = (PG.runTx' pool),
+      _pecRunReadWrite = (PG.runTx pool (isoLevel, Just PG.ReadWrite)),
+      _pecDestroyConn = PG.destroyPGPool pool
     }
 
-defaultTxErrorHandler :: Q.PGTxErr -> QErr
+defaultTxErrorHandler :: PG.PGTxErr -> QErr
 defaultTxErrorHandler = mkTxErrorHandler $ \case
   PGTransactionRollback _ -> True
   _ -> False
 
 -- | Constructs a transaction error handler tailored for the needs of RQL's DML.
-dmlTxErrorHandler :: Q.PGTxErr -> QErr
+dmlTxErrorHandler :: PG.PGTxErr -> QErr
 dmlTxErrorHandler = mkTxErrorHandler $ \case
   PGIntegrityConstraintViolation _ -> True
   PGDataException _ -> True
@@ -71,14 +71,14 @@ dmlTxErrorHandler = mkTxErrorHandler $ \case
 
 -- | Constructs a transaction error handler given a predicate that determines which errors are
 -- expected and should be reported to the user. All other errors are considered internal errors.
-mkTxErrorHandler :: (PGErrorType -> Bool) -> Q.PGTxErr -> QErr
+mkTxErrorHandler :: (PGErrorType -> Bool) -> PG.PGTxErr -> QErr
 mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
   where
     unexpectedError = (internalError "database query error") {qeInternal = Just $ ExtraInternal $ J.toJSON txe}
     expectedError =
       uncurry err400 <$> do
-        errorDetail <- Q.getPGStmtErr txe
-        message <- Q.edMessage errorDetail
+        errorDetail <- PG.getPGStmtErr txe
+        message <- PG.edMessage errorDetail
         errorType <- pgErrorType errorDetail
         guard $ isExpectedError errorType
         pure $ case errorType of
@@ -107,8 +107,8 @@ mkTxErrorHandler isExpectedError txe = fromMaybe unexpectedError expectedError
 
 data PGSourceConfig = PGSourceConfig
   { _pscExecCtx :: PGExecCtx,
-    _pscConnInfo :: Q.ConnInfo,
-    _pscReadReplicaConnInfos :: Maybe (NonEmpty Q.ConnInfo),
+    _pscConnInfo :: PG.ConnInfo,
+    _pscReadReplicaConnInfos :: Maybe (NonEmpty PG.ConnInfo),
     _pscPostDropHook :: IO (),
     _pscExtensionsSchema :: ExtensionsSchema
   }
@@ -128,7 +128,7 @@ instance J.ToJSON PGSourceConfig where
 runPgSourceReadTx ::
   (MonadIO m, MonadBaseControl IO m) =>
   PGSourceConfig ->
-  Q.TxET QErr m a ->
+  PG.TxET QErr m a ->
   m (Either QErr a)
 runPgSourceReadTx psc =
   runExceptT . _pecRunReadNoTx (_pscExecCtx psc)
@@ -136,7 +136,7 @@ runPgSourceReadTx psc =
 runPgSourceWriteTx ::
   (MonadIO m, MonadBaseControl IO m) =>
   PGSourceConfig ->
-  Q.TxET QErr m a ->
+  PG.TxET QErr m a ->
   m (Either QErr a)
 runPgSourceWriteTx psc =
   runExceptT . _pecRunReadWrite (_pscExecCtx psc)

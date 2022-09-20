@@ -43,7 +43,7 @@ import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.Text.NonEmpty (unNonEmptyText)
 import Data.Trie qualified as Trie
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName)
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error
@@ -237,7 +237,7 @@ instance (CacheRWM m) => CacheRWM (TraceT m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 
-instance (CacheRWM m) => CacheRWM (Q.TxET QErr m) where
+instance (CacheRWM m) => CacheRWM (PG.TxET QErr m) where
   buildSchemaCacheWithOptions a b c = lift $ buildSchemaCacheWithOptions a b c
   setMetadataResourceVersionInSchemaCache = lift . setMetadataResourceVersionInSchemaCache
 

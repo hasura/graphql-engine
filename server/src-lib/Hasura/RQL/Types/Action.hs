@@ -63,7 +63,7 @@ import Data.Aeson.TH qualified as J
 import Data.Text.Extended
 import Data.Time.Clock qualified as UTC
 import Data.UUID qualified as UUID
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
@@ -108,22 +108,22 @@ newtype ActionName = ActionName {unActionName :: G.Name}
   deriving (Show, Eq, Ord, J.FromJSON, J.ToJSON, J.FromJSONKey, J.ToJSONKey, ToTxt, Generic, NFData, Cacheable, Hashable)
 
 newtype ActionId = ActionId {unActionId :: UUID.UUID}
-  deriving (Show, Eq, Q.ToPrepArg, Q.FromCol, J.ToJSON, J.FromJSON, Hashable)
+  deriving (Show, Eq, PG.ToPrepArg, PG.FromCol, J.ToJSON, J.FromJSON, Hashable)
 
 actionIdToText :: ActionId -> Text
 actionIdToText = UUID.toText . unActionId
 
 -- Required in the context of event triggers?
 -- TODO: document this / get rid of it
-instance Q.FromCol ActionName where
+instance PG.FromCol ActionName where
   fromCol bs = do
-    text <- Q.fromCol bs
+    text <- PG.fromCol bs
     name <- G.mkName text `onNothing` Left (text <> " is not valid GraphQL name")
     pure $ ActionName name
 
 -- For legacy catalog format.
-instance Q.ToPrepArg ActionName where
-  toPrepVal = Q.toPrepVal . G.unName . unActionName
+instance PG.ToPrepArg ActionName where
+  toPrepVal = PG.toPrepVal . G.unName . unActionName
 
 type ActionDefinitionInput =
   ActionDefinition GraphQLType InputWebhook
@@ -257,9 +257,9 @@ type LockedActionEventId = EventId
 newtype LockedActionIdArray = LockedActionIdArray {unCohortIdArray :: [LockedActionEventId]}
   deriving (Show, Eq)
 
-instance Q.ToPrepArg LockedActionIdArray where
+instance PG.ToPrepArg LockedActionIdArray where
   toPrepVal (LockedActionIdArray l) =
-    Q.toPrepValHelper PTI.unknown encoder $ mapMaybe (UUID.fromText . unEventId) l
+    PG.toPrepValHelper PTI.unknown encoder $ mapMaybe (UUID.fromText . unEventId) l
     where
       encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
 

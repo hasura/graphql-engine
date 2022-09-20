@@ -8,7 +8,7 @@ where
 import Control.Lens (preview, _Just)
 import Data.HashSet qualified as Set
 import Data.URL.Template qualified as Template
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.NamingCase qualified as NC
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -503,7 +503,7 @@ serveParserSpec =
           result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
 
       fmap UUT.rsoTxIso result `Hspec.shouldSatisfy` \case
-        Opt.Success txIso -> txIso == Just Q.ReadCommitted
+        Opt.Success txIso -> txIso == Just PG.ReadCommitted
         Opt.Failure _pf -> False
         Opt.CompletionInvoked _cr -> False
 

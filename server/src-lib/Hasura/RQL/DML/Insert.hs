@@ -9,7 +9,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashSet qualified as HS
 import Data.Sequence qualified as DS
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -222,7 +222,7 @@ convInsertQuery objsParser sessVarBldr prepFn (InsertQuery tableName _ val oC mR
 convInsQ ::
   (QErrM m, UserInfoM m, CacheRM m) =>
   InsertQuery ->
-  m (InsertQueryP1 ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+  m (InsertQueryP1 ('Postgres 'Vanilla), DS.Seq PG.PrepArg)
 convInsQ query = do
   let source = iqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
@@ -252,7 +252,7 @@ runInsert q = do
   userInfo <- askUserInfo
   res <- convInsQ q
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
-  runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite $
+  runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadWrite $
     flip runReaderT emptyQueryTagsComment $ execInsertQuery strfyNum Nothing userInfo res
 
 decodeInsObjs :: (UserInfoM m, QErrM m) => Value -> m [InsObj ('Postgres 'Vanilla)]

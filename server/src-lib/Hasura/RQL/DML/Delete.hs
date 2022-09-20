@@ -11,7 +11,7 @@ where
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Sequence qualified as DS
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -96,7 +96,7 @@ validateDeleteQWith
 validateDeleteQ ::
   (QErrM m, UserInfoM m, CacheRM m) =>
   DeleteQuery ->
-  m (AnnDel ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+  m (AnnDel ('Postgres 'Vanilla), DS.Seq PG.PrepArg)
 validateDeleteQ query = do
   let source = doSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
@@ -122,6 +122,6 @@ runDelete q = do
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   userInfo <- askUserInfo
   validateDeleteQ q
-    >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite
+    >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadWrite
       . flip runReaderT emptyQueryTagsComment
       . execDeleteQuery strfyNum Nothing userInfo

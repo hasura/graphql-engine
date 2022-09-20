@@ -36,7 +36,7 @@ import Data.HashSet qualified as Set
 import Data.List.Extended qualified as LE
 import Data.List.NonEmpty qualified as NE
 import Data.Time.Clock (UTCTime, getCurrentTime)
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.DDL.EventTrigger (dropTriggerQ)
 import Hasura.Backends.Postgres.DDL.Source.Version
@@ -63,16 +63,16 @@ import Language.Haskell.TH.Syntax qualified as TH
 -- Postgres because Citus imposes limitations on the types of joins that it
 -- permits, which then limits the types of relations that we can track.
 class ToMetadataFetchQuery (pgKind :: PostgresKind) where
-  tableMetadata :: Q.Query
+  tableMetadata :: PG.Query
 
 instance ToMetadataFetchQuery 'Vanilla where
-  tableMetadata = $(makeRelativeToProject "src-rsr/pg_table_metadata.sql" >>= Q.sqlFromFile)
+  tableMetadata = $(makeRelativeToProject "src-rsr/pg_table_metadata.sql" >>= PG.sqlFromFile)
 
 instance ToMetadataFetchQuery 'Citus where
-  tableMetadata = $(makeRelativeToProject "src-rsr/citus_table_metadata.sql" >>= Q.sqlFromFile)
+  tableMetadata = $(makeRelativeToProject "src-rsr/citus_table_metadata.sql" >>= PG.sqlFromFile)
 
 instance ToMetadataFetchQuery 'Cockroach where
-  tableMetadata = $(makeRelativeToProject "src-rsr/cockroach_table_metadata.sql" >>= Q.sqlFromFile)
+  tableMetadata = $(makeRelativeToProject "src-rsr/cockroach_table_metadata.sql" >>= PG.sqlFromFile)
 
 resolveSourceConfig ::
   (MonadIO m, MonadResolveSource m) =>
@@ -135,10 +135,10 @@ logPGSourceCatalogMigrationLockedQueries logger sourceConfig = forever $ do
     -- The blocking query in the below transaction is truncated to the first 20 characters because it may contain
     -- sensitive info.
     fetchLockedQueriesTx =
-      (Q.getAltJ . runIdentity . Q.getRow)
-        <$> Q.withQE
+      (PG.getAltJ . runIdentity . PG.getRow)
+        <$> PG.withQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
          SELECT COALESCE(json_agg(DISTINCT jsonb_build_object('query', psa.query, 'lock_granted', pl.granted, 'lock_mode', pl.mode, 'transaction_start_time', psa.xact_start, 'query_start_time', psa.query_start, 'wait_event_type', psa.wait_event_type, 'blocking_query', (SUBSTRING(blocking.query, 1, 20) || '...') )), '[]'::json)
          FROM     pg_stat_activity psa
          JOIN     pg_stat_activity blocking ON blocking.pid = ANY(pg_blocking_pids(psa.pid))
@@ -163,7 +163,7 @@ resolveDatabaseMetadata ::
   SourceTypeCustomization ->
   m (Either QErr (ResolvedSource ('Postgres pgKind)))
 resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExceptT do
-  (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) Q.ReadOnly $ do
+  (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) PG.ReadOnly $ do
     tablesMeta <- fetchTableMetadata $ OMap.keys $ _smTables sourceMetadata
     let allFunctions =
           OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
@@ -187,14 +187,14 @@ prepareCatalog ::
   (MonadIO m, MonadBaseControl IO m) =>
   SourceConfig ('Postgres pgKind) ->
   ExceptT QErr m RecreateEventTriggers
-prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) Q.ReadWrite do
+prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) PG.ReadWrite do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
   sourceVersionTableExist <- doesTableExist "hdb_catalog" "hdb_source_catalog_version"
   if
       -- Fresh database
       | not hdbCatalogExist -> liftTx do
-        Q.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
+        PG.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
         enablePgcryptoExtension $ _pscExtensionsSchema sourceConfig
         initPgSourceCatalog
         return RETDoNothing
@@ -216,14 +216,14 @@ prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) Q.ReadWrite do
       | otherwise -> migrateSourceCatalog
   where
     initPgSourceCatalog = do
-      () <- Q.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/init_pg_source.sql" >>= Q.sqlFromFile)
+      () <- PG.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/init_pg_source.sql" >>= PG.sqlFromFile)
       setSourceCatalogVersion
 
     createVersionTable = do
       () <-
-        Q.multiQE
+        PG.multiQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
            CREATE TABLE hdb_catalog.hdb_source_catalog_version(
              version TEXT NOT NULL,
              upgraded_on TIMESTAMPTZ NOT NULL
@@ -289,12 +289,12 @@ migrateSourceCatalogFrom prevVersion
     neededMigrations =
       dropWhile ((/= prevVersion) . fst) sourceMigrations
 
-sourceMigrations :: [(SourceCatalogVersion pgKind, Q.TxE QErr ())]
+sourceMigrations :: [(SourceCatalogVersion pgKind, PG.TxE QErr ())]
 sourceMigrations =
   $( let migrationFromFile from =
            let to = succ from
                path = "src-rsr/pg_source_migrations/" <> show from <> "_to_" <> show to <> ".sql"
-            in [|Q.multiQE defaultTxErrorHandler $(makeRelativeToProject path >>= Q.sqlFromFile)|]
+            in [|PG.multiQE defaultTxErrorHandler $(makeRelativeToProject path >>= PG.sqlFromFile)|]
 
          migrationsFromFile = map $ \from ->
            [|($(TH.lift from), $(migrationFromFile from))|]
@@ -302,11 +302,11 @@ sourceMigrations =
    )
 
 -- Upgrade the hdb_catalog schema to v43 (Metadata catalog)
-upMigrationsUntil43 :: [(MetadataCatalogVersion, Q.TxE QErr ())]
+upMigrationsUntil43 :: [(MetadataCatalogVersion, PG.TxE QErr ())]
 upMigrationsUntil43 =
   $( let migrationFromFile from to =
            let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
-            in [|Q.multiQE defaultTxErrorHandler $(makeRelativeToProject path >>= Q.sqlFromFile)|]
+            in [|PG.multiQE defaultTxErrorHandler $(makeRelativeToProject path >>= PG.sqlFromFile)|]
 
          migrationsFromFile = map $ \(to :: Int) ->
            let from = pred to
@@ -362,15 +362,15 @@ pgFetchTableMetadata ::
 pgFetchTableMetadata tables = do
   results <-
     liftTx $
-      Q.withQE
+      PG.withQE
         defaultTxErrorHandler
         (tableMetadata @pgKind)
-        [Q.AltJ $ LE.uniques tables]
+        [PG.AltJ $ LE.uniques tables]
         True
   pure $
     Map.fromList $
       flip map results $
-        \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
+        \(schema, table, PG.AltJ info) -> (QualifiedObject schema table, info)
 
 -- | Fetch Cockroach metadata of all user tables
 cockroachFetchTableMetadata ::
@@ -381,7 +381,7 @@ cockroachFetchTableMetadata ::
 cockroachFetchTableMetadata _tables = do
   results <-
     liftTx $
-      Q.rawQE
+      PG.rawQE
         defaultTxErrorHandler
         (tableMetadata @pgKind)
         []
@@ -389,7 +389,7 @@ cockroachFetchTableMetadata _tables = do
   pure $
     Map.fromList $
       flip map results $
-        \(schema, table, Q.AltJ info) -> (QualifiedObject schema table, info)
+        \(schema, table, PG.AltJ info) -> (QualifiedObject schema table, info)
 
 class FetchFunctionMetadata (pgKind :: PostgresKind) where
   fetchFunctionMetadata ::
@@ -411,24 +411,24 @@ pgFetchFunctionMetadata :: (MonadTx m) => [QualifiedFunction] -> m (DBFunctionsM
 pgFetchFunctionMetadata functions = do
   results <-
     liftTx $
-      Q.withQE
+      PG.withQE
         defaultTxErrorHandler
-        $(makeRelativeToProject "src-rsr/pg_function_metadata.sql" >>= Q.sqlFromFile)
-        [Q.AltJ $ LE.uniques functions]
+        $(makeRelativeToProject "src-rsr/pg_function_metadata.sql" >>= PG.sqlFromFile)
+        [PG.AltJ $ LE.uniques functions]
         True
   pure $
     Map.fromList $
       flip map results $
-        \(schema, table, Q.AltJ infos) -> (QualifiedObject schema table, infos)
+        \(schema, table, PG.AltJ infos) -> (QualifiedObject schema table, infos)
 
 -- | Fetch all scalar types from Postgres
 fetchPgScalars :: MonadTx m => m (HashSet PGScalarType)
 fetchPgScalars =
   liftTx $
-    Q.getAltJ . runIdentity . Q.getRow
-      <$> Q.withQE
+    PG.getAltJ . runIdentity . PG.getRow
+      <$> PG.withQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
     SELECT coalesce(json_agg(typname), '[]')
     FROM pg_catalog.pg_type where typtype = 'b'
    |]
@@ -480,9 +480,9 @@ postDropSourceHook sourceConfig tableTriggersMap = do
             for_ (HM.toList tableTriggersMap) $ \(_table, triggers) ->
               for_ triggers $ \triggerName ->
                 liftTx $ dropTriggerQ triggerName
-            Q.multiQE
+            PG.multiQE
               defaultTxErrorHandler
-              $(makeRelativeToProject "src-rsr/drop_pg_source.sql" >>= Q.sqlFromFile)
+              $(makeRelativeToProject "src-rsr/drop_pg_source.sql" >>= PG.sqlFromFile)
           -- Otherwise, we have a non-default postgres source, which has no metadata tables.
           -- We drop the entire "hdb_catalog" schema as discussed above.
           | otherwise ->

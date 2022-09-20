@@ -37,7 +37,7 @@ import Data.SerializableBlob qualified as SB
 import Data.Set (Set)
 import Data.Text.Extended
 import Data.Text.NonEmpty
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Prepare
 import Hasura.Backends.Postgres.Execute.Types
@@ -119,20 +119,20 @@ runActionExecution userInfo aep =
         AAQEOnSourceDB srcConfig (AsyncActionQuerySourceExecution _ jsonAggSelect f) -> do
           let selectAST = f actionLogResponse
           selectResolved <- traverse (prepareWithoutPlan userInfo) selectAST
-          let querySQL = Q.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
-          liftEitherM $ runExceptT $ runTx (_pscExecCtx srcConfig) Q.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
+          let querySQL = PG.fromBuilder $ toSQL $ RS.mkSQLSelect jsonAggSelect selectResolved
+          liftEitherM $ runExceptT $ runTx (_pscExecCtx srcConfig) PG.ReadOnly $ liftTx $ asSingleRowJsonResp querySQL []
     AEPAsyncMutation actionId -> pure $ (,Nothing) $ encJFromJValue $ actionIdToText actionId
 
 -- | This function is generally used on the result of 'selectQuerySQL',
 -- 'selectAggregateQuerySQL' or 'connectionSelectSQL' to run said query and get
 -- back the resulting JSON.
 asSingleRowJsonResp ::
-  Q.Query ->
-  [Q.PrepArg] ->
-  Q.TxE QErr EncJSON
+  PG.Query ->
+  [PG.PrepArg] ->
+  PG.TxE QErr EncJSON
 asSingleRowJsonResp query args =
-  runIdentity . Q.getRow
-    <$> Q.rawQE dmlTxErrorHandler query args True
+  runIdentity . PG.getRow
+    <$> PG.rawQE dmlTxErrorHandler query args True
 
 -- | Synchronously execute webhook handler and resolve response to action "output"
 resolveActionExecution ::
@@ -352,7 +352,7 @@ resolveAsyncActionQuery userInfo annAction =
                     IR.UVParameter Nothing $
                       ColumnValue (ColumnScalar PGJSONB) $
                         PGValJSONB $
-                          Q.JSONB $
+                          PG.JSONB $
                             J.toJSON [actionLogResponse]
                   functionArgs = FunctionArgsExp [TF.AEInput actionLogInput] mempty
                   tableFromExp =
@@ -403,7 +403,7 @@ resolveAsyncActionQuery userInfo annAction =
           sessionVarValue =
             IR.UVParameter Nothing $
               ColumnValue (ColumnScalar PGJSONB) $
-                PGValJSONB $ Q.JSONB $ J.toJSON $ _uiSession userInfo
+                PGValJSONB $ PG.JSONB $ J.toJSON $ _uiSession userInfo
           sessionVarsColumnEq = BoolField $ AVColumn sessionVarsColumnInfo [AEQ True sessionVarValue]
        in -- For non-admin roles, accessing an async action's response should be allowed only for the user
           -- who initiated the action through mutation. The action's response is accessible for a query/subscription
@@ -680,12 +680,12 @@ insertActionTx ::
   SessionVariables ->
   [HTTP.Header] ->
   J.Value ->
-  Q.TxE QErr ActionId
+  PG.TxE QErr ActionId
 insertActionTx actionName sessionVariables httpHeaders inputArgsPayload =
-  runIdentity . Q.getRow
-    <$> Q.withQE
+  runIdentity . PG.getRow
+    <$> PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     INSERT INTO
         "hdb_catalog"."hdb_action_log"
         ("action_name", "session_variables", "request_headers", "input_payload", "status")
@@ -694,21 +694,21 @@ insertActionTx actionName sessionVariables httpHeaders inputArgsPayload =
     RETURNING "id"
    |]
       ( actionName,
-        Q.AltJ sessionVariables,
-        Q.AltJ $ toHeadersMap httpHeaders,
-        Q.AltJ inputArgsPayload,
+        PG.AltJ sessionVariables,
+        PG.AltJ $ toHeadersMap httpHeaders,
+        PG.AltJ inputArgsPayload,
         "created" :: Text
       )
       False
   where
     toHeadersMap = Map.fromList . map ((bsToTxt . CI.original) *** bsToTxt)
 
-fetchUndeliveredActionEventsTx :: Q.TxE QErr [ActionLogItem]
+fetchUndeliveredActionEventsTx :: PG.TxE QErr [ActionLogItem]
 fetchUndeliveredActionEventsTx =
   map mapEvent
-    <$> Q.listQE
+    <$> PG.listQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     update hdb_catalog.hdb_action_log set status = 'processing'
     where
       id in (
@@ -725,68 +725,68 @@ fetchUndeliveredActionEventsTx =
     mapEvent
       ( actionId,
         actionName,
-        Q.AltJ headersMap,
-        Q.AltJ sessionVariables,
-        Q.AltJ inputPayload
+        PG.AltJ headersMap,
+        PG.AltJ sessionVariables,
+        PG.AltJ inputPayload
         ) =
         ActionLogItem actionId actionName (fromHeadersMap headersMap) sessionVariables inputPayload
 
     fromHeadersMap = map ((CI.mk . txtToBs) *** txtToBs) . Map.toList
 
-setActionStatusTx :: ActionId -> AsyncActionStatus -> Q.TxE QErr ()
+setActionStatusTx :: ActionId -> AsyncActionStatus -> PG.TxE QErr ()
 setActionStatusTx actionId = \case
   AASCompleted responsePayload ->
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       update hdb_catalog.hdb_action_log
       set response_payload = $1, status = 'completed'
       where id = $2
     |]
-      (Q.AltJ responsePayload, actionId)
+      (PG.AltJ responsePayload, actionId)
       False
   AASError qerr ->
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       update hdb_catalog.hdb_action_log
       set errors = $1, status = 'error'
       where id = $2
     |]
-      (Q.AltJ qerr, actionId)
+      (PG.AltJ qerr, actionId)
       False
 
-fetchActionResponseTx :: ActionId -> Q.TxE QErr ActionLogResponse
+fetchActionResponseTx :: ActionId -> PG.TxE QErr ActionLogResponse
 fetchActionResponseTx actionId = do
-  (ca, rp, errs, Q.AltJ sessVars) <-
-    Q.getRow
-      <$> Q.withQE
+  (ca, rp, errs, PG.AltJ sessVars) <-
+    PG.getRow
+      <$> PG.withQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
      SELECT created_at, response_payload::json, errors::json, session_variables::json
        FROM hdb_catalog.hdb_action_log
       WHERE id = $1
     |]
         (Identity actionId)
         True
-  pure $ ActionLogResponse actionId ca (Q.getAltJ <$> rp) (Q.getAltJ <$> errs) sessVars
+  pure $ ActionLogResponse actionId ca (PG.getAltJ <$> rp) (PG.getAltJ <$> errs) sessVars
 
-clearActionDataTx :: ActionName -> Q.TxE QErr ()
+clearActionDataTx :: ActionName -> PG.TxE QErr ()
 clearActionDataTx actionName =
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
       DELETE FROM hdb_catalog.hdb_action_log
         WHERE action_name = $1
       |]
     (Identity actionName)
     True
 
-setProcessingActionLogsToPendingTx :: LockedActionIdArray -> Q.TxE QErr ()
+setProcessingActionLogsToPendingTx :: LockedActionIdArray -> PG.TxE QErr ()
 setProcessingActionLogsToPendingTx lockedActions =
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
     UPDATE hdb_catalog.hdb_action_log
     SET status = 'created'
     WHERE status = 'processing' AND id = ANY($1::uuid[])

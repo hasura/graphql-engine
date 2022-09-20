@@ -30,7 +30,7 @@ import Data.Aeson
 import Data.Aeson.TH
 import Data.Text.Extended
 import Data.Text.NonEmpty
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -44,8 +44,8 @@ newtype CollectionName = CollectionName {unCollectionName :: NonEmptyText}
       ToJSON,
       ToJSONKey,
       FromJSON,
-      Q.FromCol,
-      Q.ToPrepArg,
+      PG.FromCol,
+      PG.ToPrepArg,
       ToTxt,
       Generic
     )

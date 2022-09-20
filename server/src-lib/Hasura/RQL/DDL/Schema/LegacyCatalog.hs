@@ -21,7 +21,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended ((<<>))
 import Data.Text.NonEmpty
 import Data.Time.Clock qualified as C
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Base.Error
@@ -154,9 +154,9 @@ saveTableToCatalog ::
 saveTableToCatalog (QualifiedObject sn tn) isEnum config = do
   systemDefined <- ask
   liftTx $
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     INSERT INTO "hdb_catalog"."hdb_table"
       (table_schema, table_name, is_system_defined, is_enum, configuration)
     VALUES ($1, $2, $3, $4, $5)
@@ -164,7 +164,7 @@ saveTableToCatalog (QualifiedObject sn tn) isEnum config = do
       (sn, tn, systemDefined, isEnum, configVal)
       False
   where
-    configVal = Q.AltJ $ toJSON config
+    configVal = PG.AltJ $ toJSON config
 
 insertRelationshipToCatalog ::
   (MonadTx m, MonadReader SystemDefined m, ToJSON a) =>
@@ -174,11 +174,11 @@ insertRelationshipToCatalog ::
   m ()
 insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name using comment) = do
   systemDefined <- ask
-  let args = (schema, table, name, relTypeToTxt relType, Q.AltJ using, comment, systemDefined)
-  liftTx $ Q.unitQE defaultTxErrorHandler query args True
+  let args = (schema, table, name, relTypeToTxt relType, PG.AltJ using, comment, systemDefined)
+  liftTx $ PG.unitQE defaultTxErrorHandler query args True
   where
     query =
-      [Q.sql|
+      [PG.sql|
       INSERT INTO
         hdb_catalog.hdb_relationship
         (table_schema, table_name, rel_name, rel_type, rel_def, comment, is_system_defined)
@@ -190,14 +190,14 @@ addEventTriggerToCatalog ::
   EventTriggerConf ('Postgres pgKind) ->
   m ()
 addEventTriggerToCatalog qt etc = liftTx do
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
            INSERT into hdb_catalog.event_triggers
                        (name, type, schema_name, table_name, configuration)
            VALUES ($1, 'table', $2, $3, $4)
          |]
-    (name, sn, tn, Q.AltJ $ toJSON etc)
+    (name, sn, tn, PG.AltJ $ toJSON etc)
     False
   where
     QualifiedObject sn tn = qt
@@ -209,14 +209,14 @@ addComputedFieldToCatalog ::
   m ()
 addComputedFieldToCatalog q =
   liftTx $
-    Q.withQE
+    PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
      INSERT INTO hdb_catalog.hdb_computed_field
        (table_schema, table_name, computed_field_name, definition, commentText)
      VALUES ($1, $2, $3, $4, $5)
     |]
-      (schemaName, tableName, computedField, Q.AltJ definition, commentText)
+      (schemaName, tableName, computedField, PG.AltJ definition, commentText)
       True
   where
     commentText = commentToMaybeText comment
@@ -226,14 +226,14 @@ addComputedFieldToCatalog q =
 addRemoteRelationshipToCatalog :: MonadTx m => CreateFromSourceRelationship ('Postgres 'Vanilla) -> m ()
 addRemoteRelationshipToCatalog CreateFromSourceRelationship {..} =
   liftTx $
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
        INSERT INTO hdb_catalog.hdb_remote_relationship
        (remote_relationship_name, table_schema, table_name, definition)
        VALUES ($1, $2, $3, $4::jsonb)
   |]
-      (_crrName, schemaName, tableName, Q.AltJ _crrDefinition)
+      (_crrName, schemaName, tableName, PG.AltJ _crrDefinition)
       True
   where
     QualifiedObject schemaName tableName = _crrTable
@@ -246,50 +246,50 @@ addFunctionToCatalog ::
 addFunctionToCatalog (QualifiedObject sn fn) config = do
   systemDefined <- ask
   liftTx $
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
          INSERT INTO "hdb_catalog"."hdb_function"
            (function_schema, function_name, configuration, is_system_defined)
          VALUES ($1, $2, $3, $4)
                  |]
-      (sn, fn, Q.AltJ config, systemDefined)
+      (sn, fn, PG.AltJ config, systemDefined)
       False
 
 addRemoteSchemaToCatalog ::
   RemoteSchemaMetadata ->
-  Q.TxE QErr ()
+  PG.TxE QErr ()
 addRemoteSchemaToCatalog (RemoteSchemaMetadata name def comment _ _) =
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
     INSERT into hdb_catalog.remote_schemas
       (name, definition, comment)
       VALUES ($1, $2, $3)
   |]
-    (name, Q.AltJ $ toJSON def, comment)
+    (name, PG.AltJ $ toJSON def, comment)
     True
 
 addCollectionToCatalog ::
   MonadTx m => CreateCollection -> SystemDefined -> m ()
 addCollectionToCatalog (CreateCollection name defn mComment) systemDefined =
   liftTx $
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     INSERT INTO hdb_catalog.hdb_query_collection
       (collection_name, collection_defn, comment, is_system_defined)
     VALUES ($1, $2, $3, $4)
   |]
-      (name, Q.AltJ defn, mComment, systemDefined)
+      (name, PG.AltJ defn, mComment, systemDefined)
       True
 
 addCollectionToAllowlistCatalog :: MonadTx m => CollectionName -> m ()
 addCollectionToAllowlistCatalog collName =
   liftTx $
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       INSERT INTO hdb_catalog.hdb_allowlist
                    (collection_name)
             VALUES ($1)
@@ -300,20 +300,20 @@ addCollectionToAllowlistCatalog collName =
 setCustomTypesInCatalog :: MonadTx m => CustomTypes -> m ()
 setCustomTypesInCatalog customTypes = liftTx do
   clearCustomTypes
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
     INSERT into hdb_catalog.hdb_custom_types
       (custom_types)
       VALUES ($1)
   |]
-    (Identity $ Q.AltJ customTypes)
+    (Identity $ PG.AltJ customTypes)
     False
   where
     clearCustomTypes = do
-      Q.unitQE
+      PG.unitQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
         DELETE FROM hdb_catalog.hdb_custom_types
       |]
         ()
@@ -322,22 +322,22 @@ setCustomTypesInCatalog customTypes = liftTx do
 addActionToCatalog :: (MonadTx m) => CreateAction -> m ()
 addActionToCatalog (CreateAction actionName actionDefinition comment) = do
   liftTx $
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     INSERT into hdb_catalog.hdb_action
       (action_name, action_defn, comment)
       VALUES ($1, $2, $3)
   |]
-      (actionName, Q.AltJ actionDefinition, comment)
+      (actionName, PG.AltJ actionDefinition, comment)
       True
 
 addActionPermissionToCatalog :: (MonadTx m) => CreateActionPermission -> m ()
 addActionPermissionToCatalog CreateActionPermission {..} = do
   liftTx $
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     INSERT into hdb_catalog.hdb_action_permission
       (action_name, role_name, comment)
       VALUES ($1, $2, $3)
@@ -353,32 +353,32 @@ addPermissionToCatalog ::
   m ()
 addPermissionToCatalog (QualifiedObject sn tn) (PermDef rn qdef mComment) systemDefined =
   liftTx $
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
            INSERT INTO
                hdb_catalog.hdb_permission
                (table_schema, table_name, role_name, perm_type, perm_def, comment, is_system_defined)
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7)
                 |]
-      (sn, tn, rn, permTypeToCode (reflectPermDefPermission qdef), Q.AltJ qdef, mComment, systemDefined)
+      (sn, tn, rn, permTypeToCode (reflectPermDefPermission qdef), PG.AltJ qdef, mComment, systemDefined)
       True
 
 addCronTriggerToCatalog :: (MonadTx m) => CronTriggerMetadata -> m ()
 addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
       INSERT into hdb_catalog.hdb_cron_triggers
         (name, webhook_conf, cron_schedule, payload, retry_conf, header_conf, include_in_metadata, comment)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     |]
     ( ctName,
-      Q.AltJ ctWebhook,
+      PG.AltJ ctWebhook,
       ctSchedule,
-      Q.AltJ <$> ctPayload,
-      Q.AltJ ctRetryConf,
-      Q.AltJ ctHeaders,
+      PG.AltJ <$> ctPayload,
+      PG.AltJ ctRetryConf,
+      PG.AltJ ctHeaders,
       ctIncludeInMetadata,
       ctComment
     )
@@ -396,21 +396,21 @@ parseLegacyRemoteRelationshipDefinition =
 
 fetchMetadataFromHdbTables :: MonadTx m => m MetadataNoSources
 fetchMetadataFromHdbTables = liftTx do
-  tables <- Q.catchE defaultTxErrorHandler fetchTables
+  tables <- PG.catchE defaultTxErrorHandler fetchTables
   let tableMetaMap = OMap.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
           let qualifiedName = QualifiedObject schema name
-              configuration = maybe emptyTableConfig Q.getAltJ maybeConfig
+              configuration = maybe emptyTableConfig PG.getAltJ maybeConfig
            in (qualifiedName, mkTableMeta qualifiedName isEnum configuration)
 
   -- Fetch all the relationships
-  relationships <- Q.catchE defaultTxErrorHandler fetchRelationships
+  relationships <- PG.catchE defaultTxErrorHandler fetchRelationships
 
   objRelDefs <- mkRelDefs ObjRel relationships
   arrRelDefs <- mkRelDefs ArrRel relationships
 
   -- Fetch all the permissions
-  permissions <- Q.catchE defaultTxErrorHandler fetchPermissions
+  permissions <- PG.catchE defaultTxErrorHandler fetchPermissions
 
   -- Parse all the permissions
   insPermDefs <- mkPermDefs PTInsert permissions
@@ -419,14 +419,14 @@ fetchMetadataFromHdbTables = liftTx do
   delPermDefs <- mkPermDefs PTDelete permissions
 
   -- Fetch all event triggers
-  eventTriggers <- Q.catchE defaultTxErrorHandler fetchEventTriggers
+  eventTriggers <- PG.catchE defaultTxErrorHandler fetchEventTriggers
   triggerMetaDefs <- mkTriggerMetaDefs eventTriggers
 
   -- Fetch all computed fields
   computedFields <- fetchComputedFields
 
   -- Fetch all remote relationships
-  remoteRelationshipsRaw <- Q.catchE defaultTxErrorHandler fetchRemoteRelationships
+  remoteRelationshipsRaw <- PG.catchE defaultTxErrorHandler fetchRemoteRelationships
   remoteRelationships <- for remoteRelationshipsRaw $ \(table, relationshipName, definitionValue) -> do
     definition <- parseLegacyRemoteRelationshipDefinition definitionValue
     pure $ (table, RemoteRelationship relationshipName definition)
@@ -442,7 +442,7 @@ fetchMetadataFromHdbTables = liftTx do
         modMetaMap tmComputedFields _cfmName computedFields
         modMetaMap tmRemoteRelationships _rrName remoteRelationships
 
-  functions <- Q.catchE defaultTxErrorHandler fetchFunctions
+  functions <- PG.catchE defaultTxErrorHandler fetchFunctions
   remoteSchemas <- oMapFromL _rsmName <$> fetchRemoteSchemas
   collections <- oMapFromL _ccName <$> fetchCollections
   allowlist <- oMapFromL aeCollection <$> fetchAllowlist
@@ -467,25 +467,25 @@ fetchMetadataFromHdbTables = liftTx do
 
     mkPermDefs pt = mapM permRowToDef . filter (\pr -> pr ^. _4 == pt)
 
-    permRowToDef (sn, tn, rn, _, Q.AltJ pDef, mComment) = do
+    permRowToDef (sn, tn, rn, _, PG.AltJ pDef, mComment) = do
       perm <- decodeValue pDef
       return (QualifiedObject sn tn, PermDef rn perm mComment)
 
     mkRelDefs rt = mapM relRowToDef . filter (\rr -> rr ^. _4 == rt)
 
-    relRowToDef (sn, tn, rn, _, Q.AltJ rDef, mComment) = do
+    relRowToDef (sn, tn, rn, _, PG.AltJ rDef, mComment) = do
       using <- decodeValue rDef
       return (QualifiedObject sn tn, RelDef rn using mComment)
 
     mkTriggerMetaDefs = mapM trigRowToDef
 
-    trigRowToDef (sn, tn, Q.AltJ configuration) = do
+    trigRowToDef (sn, tn, PG.AltJ configuration) = do
       conf :: EventTriggerConf ('Postgres pgKind) <- decodeValue configuration
       return (QualifiedObject sn tn, conf)
 
     fetchTables =
-      Q.listQ
-        [Q.sql|
+      PG.listQ
+        [PG.sql|
                 SELECT table_schema, table_name, is_enum, configuration::json
                 FROM hdb_catalog.hdb_table
                  WHERE is_system_defined = 'false'
@@ -495,8 +495,8 @@ fetchMetadataFromHdbTables = liftTx do
         False
 
     fetchRelationships =
-      Q.listQ
-        [Q.sql|
+      PG.listQ
+        [PG.sql|
                 SELECT table_schema, table_name, rel_name, rel_type, rel_def::json, comment
                   FROM hdb_catalog.hdb_relationship
                  WHERE is_system_defined = 'false'
@@ -506,8 +506,8 @@ fetchMetadataFromHdbTables = liftTx do
         False
 
     fetchPermissions =
-      Q.listQ
-        [Q.sql|
+      PG.listQ
+        [PG.sql|
                 SELECT table_schema, table_name, role_name, perm_type, perm_def::json, comment
                   FROM hdb_catalog.hdb_permission
                  WHERE is_system_defined = 'false'
@@ -517,8 +517,8 @@ fetchMetadataFromHdbTables = liftTx do
         False
 
     fetchEventTriggers =
-      Q.listQ
-        [Q.sql|
+      PG.listQ
+        [PG.sql|
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
               ORDER BY e.schema_name ASC, e.table_name ASC, e.name ASC
@@ -528,8 +528,8 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchFunctions = do
       l <-
-        Q.listQ
-          [Q.sql|
+        PG.listQ
+          [PG.sql|
                 SELECT function_schema, function_name, configuration::json
                 FROM hdb_catalog.hdb_function
                 WHERE is_system_defined = 'false'
@@ -539,7 +539,7 @@ fetchMetadataFromHdbTables = liftTx do
           False
       pure $
         oMapFromL _fmFunction $
-          flip map l $ \(sn, fn, Q.AltJ config) ->
+          flip map l $ \(sn, fn, PG.AltJ config) ->
             -- function permissions were only introduced post 43rd
             -- migration, so it's impossible we get any permissions
             -- here
@@ -547,9 +547,9 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchRemoteSchemas =
       map fromRow
-        <$> Q.listQE
+        <$> PG.listQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
          SELECT name, definition, comment
            FROM hdb_catalog.remote_schemas
          ORDER BY name ASC
@@ -557,14 +557,14 @@ fetchMetadataFromHdbTables = liftTx do
           ()
           True
       where
-        fromRow (name, Q.AltJ def, comment) =
+        fromRow (name, PG.AltJ def, comment) =
           RemoteSchemaMetadata name def comment mempty mempty
 
     fetchCollections =
       map fromRow
-        <$> Q.listQE
+        <$> PG.listQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
                SELECT collection_name, collection_defn::json, comment
                  FROM hdb_catalog.hdb_query_collection
                  WHERE is_system_defined = 'false'
@@ -573,14 +573,14 @@ fetchMetadataFromHdbTables = liftTx do
           ()
           False
       where
-        fromRow (name, Q.AltJ defn, mComment) =
+        fromRow (name, PG.AltJ defn, mComment) =
           CreateCollection name defn mComment
 
     fetchAllowlist =
       map fromRow
-        <$> Q.listQE
+        <$> PG.listQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
           SELECT collection_name
             FROM hdb_catalog.hdb_allowlist
           ORDER BY collection_name ASC
@@ -592,9 +592,9 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchComputedFields = do
       r <-
-        Q.listQE
+        PG.listQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
               SELECT table_schema, table_name, computed_field_name,
                      definition::json, comment
                 FROM hdb_catalog.hdb_computed_field
@@ -602,16 +602,16 @@ fetchMetadataFromHdbTables = liftTx do
           ()
           False
       pure $
-        flip map r $ \(schema, table, name, Q.AltJ definition, comment) ->
+        flip map r $ \(schema, table, name, PG.AltJ definition, comment) ->
           ( QualifiedObject schema table,
             ComputedFieldMetadata name definition (commentFromMaybeText comment)
           )
 
     fetchCronTriggers =
       oMapFromL ctName . map uncurryCronTrigger
-        <$> Q.listQE
+        <$> PG.listQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
        SELECT ct.name, ct.webhook_conf, ct.cron_schedule, ct.payload,
              ct.retry_conf, ct.header_conf, ct.include_in_metadata, ct.comment
         FROM hdb_catalog.hdb_cron_triggers ct
@@ -624,33 +624,33 @@ fetchMetadataFromHdbTables = liftTx do
           (name, webhook, schedule, payload, retryConfig, headerConfig, includeMetadata, comment) =
             CronTriggerMetadata
               { ctName = name,
-                ctWebhook = Q.getAltJ webhook,
+                ctWebhook = PG.getAltJ webhook,
                 ctSchedule = schedule,
-                ctPayload = Q.getAltJ <$> payload,
-                ctRetryConf = Q.getAltJ retryConfig,
-                ctHeaders = Q.getAltJ headerConfig,
+                ctPayload = PG.getAltJ <$> payload,
+                ctRetryConf = PG.getAltJ retryConfig,
+                ctHeaders = PG.getAltJ headerConfig,
                 ctIncludeInMetadata = includeMetadata,
                 ctComment = comment,
                 ctRequestTransform = Nothing,
                 ctResponseTransform = Nothing
               }
 
-    fetchCustomTypes :: Q.TxE QErr CustomTypes
+    fetchCustomTypes :: PG.TxE QErr CustomTypes
     fetchCustomTypes =
-      Q.getAltJ . runIdentity . Q.getRow
-        <$> Q.rawQE
+      PG.getAltJ . runIdentity . PG.getRow
+        <$> PG.rawQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
          select coalesce((select custom_types::json from hdb_catalog.hdb_custom_types), '{}'::json)
          |]
           []
           False
 
     fetchActions =
-      Q.getAltJ . runIdentity . Q.getRow
-        <$> Q.rawQE
+      PG.getAltJ . runIdentity . PG.getRow
+        <$> PG.rawQE
           defaultTxErrorHandler
-          [Q.sql|
+          [PG.sql|
         select
           coalesce(
             json_agg(
@@ -687,8 +687,8 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchRemoteRelationships = do
       r <-
-        Q.listQ
-          [Q.sql|
+        PG.listQ
+          [PG.sql|
                 SELECT table_schema, table_name,
                        remote_relationship_name, definition::json
                 FROM hdb_catalog.hdb_remote_relationship
@@ -696,7 +696,7 @@ fetchMetadataFromHdbTables = liftTx do
           ()
           False
       pure $
-        flip map r $ \(schema, table, name, Q.AltJ definition) ->
+        flip map r $ \(schema, table, name, PG.AltJ definition) ->
           ( QualifiedObject schema table,
             name,
             definition
@@ -705,9 +705,9 @@ fetchMetadataFromHdbTables = liftTx do
 addCronTriggerForeignKeyConstraint :: MonadTx m => m ()
 addCronTriggerForeignKeyConstraint =
   liftTx $
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       ALTER TABLE hdb_catalog.hdb_cron_events ADD CONSTRAINT
      hdb_cron_events_trigger_name_fkey FOREIGN KEY (trigger_name)
      REFERENCES hdb_catalog.hdb_cron_triggers(name)
@@ -745,7 +745,7 @@ addCronTriggerForeignKeyConstraint =
 -- instead.
 recreateSystemMetadata :: (MonadTx m) => m ()
 recreateSystemMetadata = do
-  () <- liftTx $ Q.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/clear_system_metadata.sql" >>= Q.sqlFromFile)
+  () <- liftTx $ PG.multiQE defaultTxErrorHandler $(makeRelativeToProject "src-rsr/clear_system_metadata.sql" >>= PG.sqlFromFile)
   flip runReaderT (SystemDefined True) $ for_ systemMetadata \(tableName, tableRels) -> do
     saveTableToCatalog tableName False emptyTableConfig
     for_ tableRels \case

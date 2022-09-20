@@ -18,7 +18,7 @@ import Data.Kind (Type)
 import Data.Tagged
 import Data.Text.Extended
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.EncJSON
 import Hasura.GraphQL.Execute.Action.Types (ActionExecutionPlan)
@@ -288,8 +288,8 @@ instance (MonadQueryTags m) => MonadQueryTags (TraceT m) where
 instance (MonadQueryTags m) => MonadQueryTags (MetadataStorageT m) where
   createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataStorageT m) QueryTagsComment
 
-instance (MonadQueryTags m) => MonadQueryTags (Q.TxET QErr m) where
-  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (Q.TxET QErr m) QueryTagsComment
+instance (MonadQueryTags m) => MonadQueryTags (PG.TxET QErr m) where
+  createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (PG.TxET QErr m) QueryTagsComment
 
 instance (MonadQueryTags m) => MonadQueryTags (MetadataT m) where
   createQueryTags qtSourceConfig attr = retag (createQueryTags @m qtSourceConfig attr) :: Tagged (MetadataT m) QueryTagsComment

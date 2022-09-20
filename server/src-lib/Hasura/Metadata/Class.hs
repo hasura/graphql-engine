@@ -13,7 +13,7 @@ where
 import Control.Monad.Morph (MFunctor, hoist)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Eventing.ScheduledTrigger.Types
 import Hasura.Prelude
@@ -299,7 +299,7 @@ instance (MonadMetadataStorage m) => MonadMetadataStorage (MetadataT m) where
   clearActionData = lift . clearActionData
   setProcessingActionLogsToPending = lift . setProcessingActionLogsToPending
 
-instance (MonadMetadataStorage m) => MonadMetadataStorage (Q.TxET QErr m) where
+instance (MonadMetadataStorage m) => MonadMetadataStorage (PG.TxET QErr m) where
   fetchMetadataResourceVersion = lift fetchMetadataResourceVersion
   fetchMetadata = lift fetchMetadata
   fetchMetadataNotifications a b = lift $ fetchMetadataNotifications a b
@@ -496,4 +496,4 @@ instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (Traci
 
 instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (MetadataT m)
 
-instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (Q.TxET QErr m)
+instance (MonadMetadataStorageQueryAPI m) => MonadMetadataStorageQueryAPI (PG.TxET QErr m)
