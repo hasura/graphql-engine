@@ -280,7 +280,7 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
   (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
 
   (requestId, headers) <- getRequestId origHeaders
-  tracingCtx <- liftIO $ Tracing.extractHttpContext headers
+  tracingCtx <- liftIO $ Tracing.extractB3HttpContext headers
   handlerLimit <- lift askHTTPHandlerLimit
 
   let runTraceT ::

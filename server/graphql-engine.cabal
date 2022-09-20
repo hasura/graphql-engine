@@ -214,8 +214,8 @@ common lib-depends
 
                      -- Encoder related
                      , uuid
-                     , binary
                      , base16-bytestring
+                     , cereal
                      , cryptohash-md5
 
                      -- Logging related
@@ -874,6 +874,7 @@ library
                      , Hasura.SQL.Value
                      , Hasura.SQL.WKT
                      , Hasura.Tracing
+                     , Hasura.Tracing.TraceId
                      , Hasura.QueryTags
                      , Network.HTTP.Client.Transformable
                      , Network.HTTP.Client.Manager
@@ -1097,6 +1098,7 @@ test-suite graphql-engine-tests
     Hasura.SessionSpec
     Hasura.SQL.WKTSpec
     Hasura.StreamingSubscriptionSuite
+    Hasura.Tracing.TraceIdSpec
     Network.HTTP.Client.TransformableSpec
     Test.Aeson.Expectation
     Test.Aeson.Utils
