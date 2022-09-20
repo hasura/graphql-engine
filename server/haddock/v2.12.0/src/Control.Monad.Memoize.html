@@ -1,0 +1,598 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Control.Monad.Memoize</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier">MonadMemoize</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Control.Monad.Memoize.html#memoize"><span class="hs-identifier">memoize</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Control.Monad.Memoize.html#MemoizeT"><span class="hs-identifier">MemoizeT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Control.Monad.Memoize.html#runMemoizeT"><span class="hs-identifier">runMemoizeT</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-7"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-8"></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Except</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Reader</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadReader</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ReaderT</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">mapReaderT</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.State.Strict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadState</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">StateT</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">evalStateT</span></span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Dependent.Map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">DMap</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Dependent.Map</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">DM</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Functor.Identity</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier">Data.GADT.Compare.Extended</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.IORef</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">K</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TH</span></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">System.IO.Unsafe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">unsafeInterleaveIO</span></span><span class="hs-special">)</span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Type.Reflection</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Typeable</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">typeRep</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(:~:)</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-comment">{- Note [Tying the knot]
+~~~~~~~~~~~~~~~~~~~~~~~~
+GraphQL type definitions can be mutually recursive, and indeed, they quite often
+are! For example, two tables that reference one another will be represented by
+types such as the following:
+
+    type author {
+      id: Int!
+      name: String!
+      articles: [article!]!
+    }
+
+    type article {
+      id: Int!
+      title: String!
+      content: String!
+      author: author!
+    }
+
+This doesn&#8217;t cause any trouble if the schema is represented by a mapping from
+type names to type definitions, but the Parser abstraction is all about avoiding
+that kind of indirection to improve type safety &#8212; parsers refer to their
+sub-parsers directly. This presents two problems during schema generation:
+
+  1. Schema generation needs to terminate in finite time, so we need to ensure
+     we don&#8217;t try to eagerly construct an infinitely-large schema due to the
+     mutually-recursive structure.
+
+  2. To serve introspection queries, we do eventually need to construct a
+     mapping from names to types (a TypeMap), so we need to be able to
+     recursively walk the entire schema in finite time.
+
+Solving point number 1 could be done with either laziness or sharing, but
+neither of those are enough to solve point number 2, which requires /observable/
+sharing. We need to construct a Parser graph that contains enough information to
+detect cycles during traversal.
+
+It may seem appealing to just use type names to detect cycles, which would allow
+us to get away with using laziness rather than true sharing. Unfortunately, that
+leads to two further problems:
+
+  * It&#8217;s possible to end up with two different types with the same name, which
+    is an error and should be reported as such. Using names to break cycles
+    prevents us from doing that, since we have no way to check that two types
+    with the same name are actually the same.
+
+  * Some Parser constructors can fail &#8212; the `column` parser checks that the type
+    name is a valid GraphQL name, for example. This extra validation means lazy
+    schema construction isn&#8217;t viable, since we need to eagerly build the schema
+    to ensure all the validation checks hold.
+
+So we&#8217;re forced to use sharing. But how do we do it? Somehow, we have to /tie
+the knot/ &#8212; we have to build a cyclic data structure &#8212; and some of the cycles
+may be quite large. Doing all this knot-tying by hand would be incredibly
+tricky, and it would require a lot of inversion of control to thread the shared
+parsers around.
+
+To avoid contorting the program, we instead implement a form of memoization. The
+MonadMemoize class provides a mechanism to memoize a parser constructor function,
+which allows us to get sharing mostly for free. The memoization strategy also
+annotates cached parsers with a Unique that can be used to break cycles while
+traversing the graph, so we get observable sharing as well. -}</span><span>
+</span><span id="line-85"></span><span>
+</span><span id="line-86"></span><span class="hs-keyword">class</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689518333"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="MonadMemoize"><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier hs-var">MonadMemoize</span></a></span></span><span> </span><span id="local-6989586621689518333"><span class="annot"><a href="#local-6989586621689518333"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>  </span><span class="hs-comment">-- | Memoizes a parser constructor function for the extent of a single schema</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-comment">-- construction process. This is mostly useful for recursive parsers;</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-comment">-- see Note [Tying the knot] for more details.</span><span>
+</span><span id="line-90"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-91"></span><span>  </span><span class="hs-comment">-- The generality of the type here allows us to use this with multiple concrete</span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-comment">-- parser types:</span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-94"></span><span>  </span><span class="hs-comment">-- @</span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-comment">-- 'memoizeOn' :: ('MonadMemoize' m, MonadParse n) =&gt; 'TH.Name' -&gt; a -&gt; m (Parser n b) -&gt; m (Parser n b)</span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-comment">-- 'memoizeOn' :: ('MonadMemoize' m, MonadParse n) =&gt; 'TH.Name' -&gt; a -&gt; m (FieldParser n b) -&gt; m (FieldParser n b)</span><span>
+</span><span id="line-97"></span><span>  </span><span class="hs-comment">-- @</span><span>
+</span><span id="line-98"></span><span>  </span><span id="memoizeOn"><span class="annot"><a href="Control.Monad.Memoize.html#memoizeOn"><span class="hs-identifier hs-type">memoizeOn</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-99"></span><span>    </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689518336"><span class="annot"><a href="#local-6989586621689518336"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621689518335"><span class="annot"><a href="#local-6989586621689518335"><span class="hs-identifier hs-type">p</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-100"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689518336"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span> </span><span class="annot"><a href="#local-6989586621689518336"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span> </span><span class="annot"><a href="#local-6989586621689518335"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-101"></span><span>    </span><span class="hs-comment">-- | A unique name used to identify the function being memoized. There isn&#8217;t</span><span>
+</span><span id="line-102"></span><span>    </span><span class="hs-comment">-- really any metaprogramming going on here, we just use a Template Haskell</span><span>
+</span><span id="line-103"></span><span>    </span><span class="hs-comment">-- 'TH.Name' as a convenient source for a static, unique identifier.</span><span>
+</span><span id="line-104"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">TH.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-105"></span><span>    </span><span class="hs-comment">-- | The value to use as the memoization key. It&#8217;s the caller&#8217;s</span><span>
+</span><span id="line-106"></span><span>    </span><span class="hs-comment">-- responsibility to ensure multiple calls to the same function don&#8217;t use</span><span>
+</span><span id="line-107"></span><span>    </span><span class="hs-comment">-- the same key.</span><span>
+</span><span id="line-108"></span><span>    </span><span class="annot"><a href="#local-6989586621689518336"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><a href="#local-6989586621689518333"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518335"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-110"></span><span>    </span><span class="annot"><a href="#local-6989586621689518333"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518335"><span class="hs-identifier hs-type">p</span></a></span><span>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span id="local-6989586621689518160"><span id="local-6989586621689518161"><span class="hs-keyword">instance</span><span>
+</span><span id="line-113"></span><span>  </span><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier hs-type">MonadMemoize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518161"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-114"></span><span>  </span><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier hs-type">MonadMemoize</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="#local-6989586621689518160"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518161"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-116"></span><span>  </span><span id="local-6989586621689518156"><span class="annot"><span class="annottext">memoizeOn :: Name -&gt; a -&gt; ReaderT a m p -&gt; ReaderT a m p
+</span><a href="#local-6989586621689518156"><span class="hs-identifier hs-var hs-var hs-var hs-var">memoizeOn</span></a></span></span><span> </span><span id="local-6989586621689518155"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518155"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689518154"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518154"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(m p -&gt; m p) -&gt; ReaderT a m p -&gt; ReaderT a m p
+forall (m :: * -&gt; *) a (n :: * -&gt; *) b r.
+(m a -&gt; n b) -&gt; ReaderT r m a -&gt; ReaderT r n b
+</span><span class="hs-identifier hs-var">mapReaderT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; a -&gt; m p -&gt; m p
+forall (m :: * -&gt; *) a p.
+(MonadMemoize m, Ord a, Typeable a, Typeable p) =&gt;
+Name -&gt; a -&gt; m p -&gt; m p
+</span><a href="Control.Monad.Memoize.html#memoizeOn"><span class="hs-identifier hs-var">memoizeOn</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518155"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518154"><span class="hs-identifier hs-var">key</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-117"></span><span>
+</span><span id="line-118"></span><span class="hs-comment">-- | A wrapper around 'memoizeOn' that memoizes a function by using its argument</span><span>
+</span><span id="line-119"></span><span class="hs-comment">-- as the key.</span><span>
+</span><span id="line-120"></span><span id="local-6989586621689518151"><span id="local-6989586621689518152"><span id="local-6989586621689518153"><span class="annot"><a href="Control.Monad.Memoize.html#memoize"><span class="hs-identifier hs-type">memoize</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier hs-type">MonadMemoize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518153"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689518152"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span> </span><span class="annot"><a href="#local-6989586621689518152"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span> </span><span class="annot"><a href="#local-6989586621689518151"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-122"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">TH.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689518152"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689518153"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518151"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689518152"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689518153"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518151"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-125"></span><span id="memoize"><span class="annot"><span class="annottext">memoize :: Name -&gt; (a -&gt; m p) -&gt; a -&gt; m p
+</span><a href="Control.Monad.Memoize.html#memoize"><span class="hs-identifier hs-var hs-var">memoize</span></a></span></span><span> </span><span id="local-6989586621689518150"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518150"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689518149"><span class="annot"><span class="annottext">a -&gt; m p
+</span><a href="#local-6989586621689518149"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689518148"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518148"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; a -&gt; m p -&gt; m p
+forall (m :: * -&gt; *) a p.
+(MonadMemoize m, Ord a, Typeable a, Typeable p) =&gt;
+Name -&gt; a -&gt; m p -&gt; m p
+</span><a href="Control.Monad.Memoize.html#memoizeOn"><span class="hs-identifier hs-var">memoizeOn</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518150"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518148"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; m p
+</span><a href="#local-6989586621689518149"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518148"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span id="local-6989586621689518146"><span id="local-6989586621689518147"><span class="hs-keyword">newtype</span><span> </span><span id="MemoizeT"><span class="annot"><a href="Control.Monad.Memoize.html#MemoizeT"><span class="hs-identifier hs-var">MemoizeT</span></a></span></span><span> </span><span id="local-6989586621689518241"><span class="annot"><a href="#local-6989586621689518241"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689518240"><span class="annot"><a href="#local-6989586621689518240"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MemoizeT"><span class="annot"><a href="Control.Monad.Memoize.html#MemoizeT"><span class="hs-identifier hs-var">MemoizeT</span></a></span></span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="unMemoizeT"><span class="annot"><span class="annottext">MemoizeT m a -&gt; StateT (DMap MemoizationKey Identity) m a
+</span><a href="Control.Monad.Memoize.html#unMemoizeT"><span class="hs-identifier hs-var hs-var">unMemoizeT</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">StateT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">DMap</span></span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689518241"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518240"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689518140"><span id="local-6989586621689518142"><span class="annot"><span class="annottext">a -&gt; MemoizeT m b -&gt; MemoizeT m a
+(a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b
+(forall a b. (a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b)
+-&gt; (forall a b. a -&gt; MemoizeT m b -&gt; MemoizeT m a)
+-&gt; Functor (MemoizeT m)
+forall a b. a -&gt; MemoizeT m b -&gt; MemoizeT m a
+forall a b. (a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; MemoizeT m b -&gt; MemoizeT m a
+forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; MemoizeT m b -&gt; MemoizeT m a
+$c&lt;$ :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+a -&gt; MemoizeT m b -&gt; MemoizeT m a
+fmap :: (a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b
+$cfmap :: forall (m :: * -&gt; *) a b.
+Functor m =&gt;
+(a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689518128"><span id="local-6989586621689518130"><span id="local-6989586621689518132"><span id="local-6989586621689518134"><span id="local-6989586621689518136"><span class="annot"><span class="annottext">Functor (MemoizeT m)
+a -&gt; MemoizeT m a
+Functor (MemoizeT m)
+-&gt; (forall a. a -&gt; MemoizeT m a)
+-&gt; (forall a b.
+    MemoizeT m (a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b)
+-&gt; (forall a b c.
+    (a -&gt; b -&gt; c) -&gt; MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m c)
+-&gt; (forall a b. MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b)
+-&gt; (forall a b. MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m a)
+-&gt; Applicative (MemoizeT m)
+MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b
+MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m a
+MemoizeT m (a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b
+(a -&gt; b -&gt; c) -&gt; MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m c
+forall a. a -&gt; MemoizeT m a
+forall a b. MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m a
+forall a b. MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b
+forall a b. MemoizeT m (a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b
+forall a b c.
+(a -&gt; b -&gt; c) -&gt; MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m c
+forall (m :: * -&gt; *). Monad m =&gt; Functor (MemoizeT m)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; MemoizeT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+MemoizeT m (a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b
+forall (m :: * -&gt; *) a b c.
+Monad m =&gt;
+(a -&gt; b -&gt; c) -&gt; MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m c
+forall (f :: * -&gt; *).
+Functor f
+-&gt; (forall a. a -&gt; f a)
+-&gt; (forall a b. f (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b c. (a -&gt; b -&gt; c) -&gt; f a -&gt; f b -&gt; f c)
+-&gt; (forall a b. f a -&gt; f b -&gt; f b)
+-&gt; (forall a b. f a -&gt; f b -&gt; f a)
+-&gt; Applicative f
+&lt;* :: MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m a
+$c&lt;* :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m a
+*&gt; :: MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b
+$c*&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b
+liftA2 :: (a -&gt; b -&gt; c) -&gt; MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m c
+$cliftA2 :: forall (m :: * -&gt; *) a b c.
+Monad m =&gt;
+(a -&gt; b -&gt; c) -&gt; MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m c
+&lt;*&gt; :: MemoizeT m (a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b
+$c&lt;*&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+MemoizeT m (a -&gt; b) -&gt; MemoizeT m a -&gt; MemoizeT m b
+pure :: a -&gt; MemoizeT m a
+$cpure :: forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; MemoizeT m a
+$cp1Applicative :: forall (m :: * -&gt; *). Monad m =&gt; Functor (MemoizeT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689518120"><span id="local-6989586621689518122"><span id="local-6989586621689518124"><span class="annot"><span class="annottext">Applicative (MemoizeT m)
+a -&gt; MemoizeT m a
+Applicative (MemoizeT m)
+-&gt; (forall a b.
+    MemoizeT m a -&gt; (a -&gt; MemoizeT m b) -&gt; MemoizeT m b)
+-&gt; (forall a b. MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b)
+-&gt; (forall a. a -&gt; MemoizeT m a)
+-&gt; Monad (MemoizeT m)
+MemoizeT m a -&gt; (a -&gt; MemoizeT m b) -&gt; MemoizeT m b
+MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b
+forall a. a -&gt; MemoizeT m a
+forall a b. MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b
+forall a b. MemoizeT m a -&gt; (a -&gt; MemoizeT m b) -&gt; MemoizeT m b
+forall (m :: * -&gt; *). Monad m =&gt; Applicative (MemoizeT m)
+forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; MemoizeT m a
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+MemoizeT m a -&gt; (a -&gt; MemoizeT m b) -&gt; MemoizeT m b
+forall (m :: * -&gt; *).
+Applicative m
+-&gt; (forall a b. m a -&gt; (a -&gt; m b) -&gt; m b)
+-&gt; (forall a b. m a -&gt; m b -&gt; m b)
+-&gt; (forall a. a -&gt; m a)
+-&gt; Monad m
+return :: a -&gt; MemoizeT m a
+$creturn :: forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; MemoizeT m a
+&gt;&gt; :: MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b
+$c&gt;&gt; :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+MemoizeT m a -&gt; MemoizeT m b -&gt; MemoizeT m b
+&gt;&gt;= :: MemoizeT m a -&gt; (a -&gt; MemoizeT m b) -&gt; MemoizeT m b
+$c&gt;&gt;= :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+MemoizeT m a -&gt; (a -&gt; MemoizeT m b) -&gt; MemoizeT m b
+$cp1Monad :: forall (m :: * -&gt; *). Monad m =&gt; Applicative (MemoizeT m)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689518114"><span id="local-6989586621689518116"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="#local-6989586621689518147"><span class="hs-identifier hs-type">e</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689518106"><span id="local-6989586621689518108"><span id="local-6989586621689518110"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689518146"><span class="hs-identifier hs-type">r</span></a></span></span></span></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-131"></span><span>
+</span><span id="line-132"></span><span class="annot"><a href="Control.Monad.Memoize.html#runMemoizeT"><span class="hs-identifier hs-type">runMemoizeT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689518104"><span class="annot"><a href="#local-6989586621689518104"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689518103"><span class="annot"><a href="#local-6989586621689518103"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689518104"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MemoizeT"><span class="hs-identifier hs-type">MemoizeT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518104"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518103"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689518104"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518103"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-133"></span><span id="runMemoizeT"><span class="annot"><span class="annottext">runMemoizeT :: MemoizeT m a -&gt; m a
+</span><a href="Control.Monad.Memoize.html#runMemoizeT"><span class="hs-identifier hs-var hs-var">runMemoizeT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(StateT (DMap MemoizationKey Identity) m a
+ -&gt; DMap MemoizationKey Identity -&gt; m a)
+-&gt; DMap MemoizationKey Identity
+-&gt; StateT (DMap MemoizationKey Identity) m a
+-&gt; m a
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">StateT (DMap MemoizationKey Identity) m a
+-&gt; DMap MemoizationKey Identity -&gt; m a
+forall (m :: * -&gt; *) s a. Monad m =&gt; StateT s m a -&gt; s -&gt; m a
+</span><span class="hs-identifier hs-var">evalStateT</span></span><span> </span><span class="annot"><span class="annottext">DMap MemoizationKey Identity
+forall a. Monoid a =&gt; a
+</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">(StateT (DMap MemoizationKey Identity) m a -&gt; m a)
+-&gt; (MemoizeT m a -&gt; StateT (DMap MemoizationKey Identity) m a)
+-&gt; MemoizeT m a
+-&gt; m a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MemoizeT m a -&gt; StateT (DMap MemoizationKey Identity) m a
+forall (m :: * -&gt; *) a.
+MemoizeT m a -&gt; StateT (DMap MemoizationKey Identity) m a
+</span><a href="Control.Monad.Memoize.html#unMemoizeT"><span class="hs-identifier hs-var hs-var">unMemoizeT</span></a></span><span>
+</span><span id="line-134"></span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- | see Note [MemoizeT requires MonadIO]</span><span>
+</span><span id="line-136"></span><span id="local-6989586621689518100"><span class="hs-keyword">instance</span><span>
+</span><span id="line-137"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689518100"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-138"></span><span>  </span><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier hs-type">MonadMemoize</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Memoize.html#MemoizeT"><span class="hs-identifier hs-type">MemoizeT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518100"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-140"></span><span>  </span><span id="local-6989586621689518097"><span class="annot"><span class="annottext">memoizeOn :: Name -&gt; a -&gt; MemoizeT m p -&gt; MemoizeT m p
+</span><a href="#local-6989586621689518097"><span class="hs-identifier hs-var hs-var hs-var hs-var">memoizeOn</span></a></span></span><span> </span><span id="local-6989586621689518096"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518096"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621689518095"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518095"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span id="local-6989586621689518094"><span class="annot"><span class="annottext">MemoizeT m p
+</span><a href="#local-6989586621689518094"><span class="hs-identifier hs-var">buildParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StateT (DMap MemoizationKey Identity) m p -&gt; MemoizeT m p
+forall (m :: * -&gt; *) a.
+StateT (DMap MemoizationKey Identity) m a -&gt; MemoizeT m a
+</span><a href="Control.Monad.Memoize.html#MemoizeT"><span class="hs-identifier hs-var">MemoizeT</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-141"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689518093"><span class="annot"><span class="annottext">parserId :: MemoizationKey p
+</span><a href="#local-6989586621689518093"><span class="hs-identifier hs-var hs-var">parserId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; a -&gt; MemoizationKey p
+forall a p.
+(Ord a, Typeable a, Typeable p) =&gt;
+Name -&gt; a -&gt; MemoizationKey p
+</span><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-var">MemoizationKey</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518096"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518095"><span class="hs-identifier hs-var">key</span></a></span><span>
+</span><span id="line-142"></span><span>    </span><span id="local-6989586621689518091"><span class="annot"><span class="annottext">DMap MemoizationKey Identity
+</span><a href="#local-6989586621689518091"><span class="hs-identifier hs-var">parsersById</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">StateT
+  (DMap MemoizationKey Identity) m (DMap MemoizationKey Identity)
+forall s (m :: * -&gt; *). MonadState s m =&gt; m s
+</span><span class="hs-identifier hs-var">get</span></span><span>
+</span><span id="line-143"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MemoizationKey p
+-&gt; DMap MemoizationKey Identity -&gt; Maybe (Identity p)
+forall k1 (k2 :: k1 -&gt; *) (f :: k1 -&gt; *) (v :: k1).
+GCompare k2 =&gt;
+k2 v -&gt; DMap k2 f -&gt; Maybe (f v)
+</span><span class="hs-identifier hs-var">DM.lookup</span></span><span> </span><span class="annot"><span class="annottext">MemoizationKey p
+</span><a href="#local-6989586621689518093"><span class="hs-identifier hs-var">parserId</span></a></span><span> </span><span class="annot"><span class="annottext">DMap MemoizationKey Identity
+</span><a href="#local-6989586621689518091"><span class="hs-identifier hs-var">parsersById</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-144"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Identity</span></span><span> </span><span id="local-6989586621689518087"><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621689518087"><span class="hs-identifier hs-var">parser</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">p -&gt; StateT (DMap MemoizationKey Identity) m p
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621689518087"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-145"></span><span>      </span><span class="annot"><span class="annottext">Maybe (Identity p)
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-146"></span><span>        </span><span class="hs-comment">-- We manually do eager blackholing here using a MutVar rather than</span><span>
+</span><span id="line-147"></span><span>        </span><span class="hs-comment">-- relying on MonadFix and ordinary thunk blackholing. Why? A few</span><span>
+</span><span id="line-148"></span><span>        </span><span class="hs-comment">-- reasons:</span><span>
+</span><span id="line-149"></span><span>        </span><span class="hs-comment">--</span><span>
+</span><span id="line-150"></span><span>        </span><span class="hs-comment">--   1. We have more control. We aren&#8217;t at the whims of whatever</span><span>
+</span><span id="line-151"></span><span>        </span><span class="hs-comment">--      MonadFix instance happens to get used.</span><span>
+</span><span id="line-152"></span><span>        </span><span class="hs-comment">--</span><span>
+</span><span id="line-153"></span><span>        </span><span class="hs-comment">--   2. We can be more precise. GHC&#8217;s lazy blackholing doesn&#8217;t always</span><span>
+</span><span id="line-154"></span><span>        </span><span class="hs-comment">--      kick in when you&#8217;d expect.</span><span>
+</span><span id="line-155"></span><span>        </span><span class="hs-comment">--</span><span>
+</span><span id="line-156"></span><span>        </span><span class="hs-comment">--   3. We can provide more useful error reporting if things go wrong.</span><span>
+</span><span id="line-157"></span><span>        </span><span class="hs-comment">--      Most usefully, we can include a HasCallStack source location.</span><span>
+</span><span id="line-158"></span><span>        </span><span id="local-6989586621689518086"><span class="annot"><span class="annottext">IORef (Maybe p)
+</span><a href="#local-6989586621689518086"><span class="hs-identifier hs-var">cell</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (IORef (Maybe p))
+-&gt; StateT (DMap MemoizationKey Identity) m (IORef (Maybe p))
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (IORef (Maybe p))
+ -&gt; StateT (DMap MemoizationKey Identity) m (IORef (Maybe p)))
+-&gt; IO (IORef (Maybe p))
+-&gt; StateT (DMap MemoizationKey Identity) m (IORef (Maybe p))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Maybe p -&gt; IO (IORef (Maybe p))
+forall a. a -&gt; IO (IORef a)
+</span><span class="hs-identifier hs-var">newIORef</span></span><span> </span><span class="annot"><span class="annottext">Maybe p
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-159"></span><span>
+</span><span id="line-160"></span><span>        </span><span class="hs-comment">-- We use unsafeInterleaveIO here, which sounds scary, but</span><span>
+</span><span id="line-161"></span><span>        </span><span class="hs-comment">-- unsafeInterleaveIO is actually far more safe than unsafePerformIO.</span><span>
+</span><span id="line-162"></span><span>        </span><span class="hs-comment">-- unsafeInterleaveIO just defers the execution of the action until its</span><span>
+</span><span id="line-163"></span><span>        </span><span class="hs-comment">-- result is needed, adding some laziness.</span><span>
+</span><span id="line-164"></span><span>        </span><span class="hs-comment">--</span><span>
+</span><span id="line-165"></span><span>        </span><span class="hs-comment">-- That laziness can be dangerous if the action has side-effects, since</span><span>
+</span><span id="line-166"></span><span>        </span><span class="hs-comment">-- the point at which the effect is performed can be unpredictable. But</span><span>
+</span><span id="line-167"></span><span>        </span><span class="hs-comment">-- this action just reads, never writes, so that isn&#8217;t a concern.</span><span>
+</span><span id="line-168"></span><span>        </span><span id="local-6989586621689518083"><span class="annot"><span class="annottext">Identity p
+</span><a href="#local-6989586621689518083"><span class="hs-identifier hs-var">parserById</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-169"></span><span>          </span><span class="annot"><span class="annottext">IO (Identity p)
+-&gt; StateT (DMap MemoizationKey Identity) m (Identity p)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Identity p)
+ -&gt; StateT (DMap MemoizationKey Identity) m (Identity p))
+-&gt; IO (Identity p)
+-&gt; StateT (DMap MemoizationKey Identity) m (Identity p)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-170"></span><span>            </span><span class="annot"><span class="annottext">IO (Identity p) -&gt; IO (Identity p)
+forall a. IO a -&gt; IO a
+</span><span class="hs-identifier hs-var">unsafeInterleaveIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Identity p) -&gt; IO (Identity p))
+-&gt; IO (Identity p) -&gt; IO (Identity p)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-171"></span><span>              </span><span class="annot"><span class="annottext">IORef (Maybe p) -&gt; IO (Maybe p)
+forall a. IORef a -&gt; IO a
+</span><span class="hs-identifier hs-var">readIORef</span></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe p)
+</span><a href="#local-6989586621689518086"><span class="hs-identifier hs-var">cell</span></a></span><span> </span><span class="annot"><span class="annottext">IO (Maybe p) -&gt; (Maybe p -&gt; IO (Identity p)) -&gt; IO (Identity p)
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-172"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689518081"><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621689518081"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Identity p -&gt; IO (Identity p)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Identity p -&gt; IO (Identity p)) -&gt; Identity p -&gt; IO (Identity p)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">p -&gt; Identity p
+forall a. a -&gt; Identity a
+</span><span class="hs-identifier hs-var">Identity</span></span><span> </span><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621689518081"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-173"></span><span>                </span><span class="annot"><span class="annottext">Maybe p
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-174"></span><span>                  </span><span class="annot"><span class="annottext">[Char] -&gt; IO (Identity p)
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">([Char] -&gt; IO (Identity p)) -&gt; [Char] -&gt; IO (Identity p)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-175"></span><span>                    </span><span class="annot"><span class="annottext">[[Char]] -&gt; [Char]
+</span><span class="hs-identifier hs-var">unlines</span></span><span>
+</span><span id="line-176"></span><span>                      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;memoize: parser was forced before being fully constructed&quot;</span></span><span class="hs-special">,</span><span>
+</span><span id="line-177"></span><span>                        </span><span class="annot"><span class="annottext">[Char]
+</span><span class="hs-string">&quot;  parser constructor: &quot;</span></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; [Char] -&gt; [Char]
+forall a. [a] -&gt; [a] -&gt; [a]
+</span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; [Char]
+forall a. Ppr a =&gt; a -&gt; [Char]
+</span><span class="hs-identifier hs-var">TH.pprint</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518096"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><span id="line-178"></span><span>                      </span><span class="hs-special">]</span><span>
+</span><span id="line-179"></span><span>        </span><span class="annot"><span class="annottext">DMap MemoizationKey Identity
+-&gt; StateT (DMap MemoizationKey Identity) m ()
+forall s (m :: * -&gt; *). MonadState s m =&gt; s -&gt; m ()
+</span><span class="hs-identifier hs-var">put</span></span><span> </span><span class="annot"><span class="annottext">(DMap MemoizationKey Identity
+ -&gt; StateT (DMap MemoizationKey Identity) m ())
+-&gt; DMap MemoizationKey Identity
+-&gt; StateT (DMap MemoizationKey Identity) m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$!</span></span><span> </span><span class="annot"><span class="annottext">MemoizationKey p
+-&gt; Identity p
+-&gt; DMap MemoizationKey Identity
+-&gt; DMap MemoizationKey Identity
+forall k1 (k2 :: k1 -&gt; *) (f :: k1 -&gt; *) (v :: k1).
+GCompare k2 =&gt;
+k2 v -&gt; f v -&gt; DMap k2 f -&gt; DMap k2 f
+</span><span class="hs-identifier hs-var">DM.insert</span></span><span> </span><span class="annot"><span class="annottext">MemoizationKey p
+</span><a href="#local-6989586621689518093"><span class="hs-identifier hs-var">parserId</span></a></span><span> </span><span class="annot"><span class="annottext">Identity p
+</span><a href="#local-6989586621689518083"><span class="hs-identifier hs-var">parserById</span></a></span><span> </span><span class="annot"><span class="annottext">DMap MemoizationKey Identity
+</span><a href="#local-6989586621689518091"><span class="hs-identifier hs-var">parsersById</span></a></span><span>
+</span><span id="line-180"></span><span>
+</span><span id="line-181"></span><span>        </span><span id="local-6989586621689518074"><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621689518074"><span class="hs-identifier hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">MemoizeT m p -&gt; StateT (DMap MemoizationKey Identity) m p
+forall (m :: * -&gt; *) a.
+MemoizeT m a -&gt; StateT (DMap MemoizationKey Identity) m a
+</span><a href="Control.Monad.Memoize.html#unMemoizeT"><span class="hs-identifier hs-var hs-var">unMemoizeT</span></a></span><span> </span><span class="annot"><span class="annottext">MemoizeT m p
+</span><a href="#local-6989586621689518094"><span class="hs-identifier hs-var">buildParser</span></a></span><span>
+</span><span id="line-182"></span><span>        </span><span class="annot"><span class="annottext">IO () -&gt; StateT (DMap MemoizationKey Identity) m ()
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO () -&gt; StateT (DMap MemoizationKey Identity) m ())
+-&gt; IO () -&gt; StateT (DMap MemoizationKey Identity) m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe p) -&gt; Maybe p -&gt; IO ()
+forall a. IORef a -&gt; a -&gt; IO ()
+</span><span class="hs-identifier hs-var">writeIORef</span></span><span> </span><span class="annot"><span class="annottext">IORef (Maybe p)
+</span><a href="#local-6989586621689518086"><span class="hs-identifier hs-var">cell</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">p -&gt; Maybe p
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621689518074"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-183"></span><span>        </span><span class="annot"><span class="annottext">p -&gt; StateT (DMap MemoizationKey Identity) m p
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621689518074"><span class="hs-identifier hs-var">parser</span></a></span></span><span>
+</span><span id="line-184"></span><span>
+</span><span id="line-185"></span><span class="hs-comment">{- Note [MemoizeT requires MonadIO]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The MonadMemoize instance for MemoizeT requires MonadIO, which is unsatisfying.
+The only reason the constraint is needed is to implement knot-tying via IORefs
+(see Note [Tying the knot] above), which really only requires the power of
+ST. Alternatively, it might be possible to use the ST monad instead, but that
+has not been done for historical reasons.
+-}</span><span>
+</span><span id="line-193"></span><span>
+</span><span id="line-194"></span><span class="hs-comment">-- | A key used to distinguish calls to 'memoize'd functions. The 'TH.Name'</span><span>
+</span><span id="line-195"></span><span class="hs-comment">-- distinguishes calls to completely different parsers, and the @a@ value</span><span>
+</span><span id="line-196"></span><span class="hs-comment">-- records the arguments.</span><span>
+</span><span id="line-197"></span><span class="hs-keyword">data</span><span> </span><span id="MemoizationKey"><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-var">MemoizationKey</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689518072"><span class="annot"><a href="#local-6989586621689518072"><span class="hs-identifier hs-type">t</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">K.Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-198"></span><span>  </span><span id="local-6989586621689518071"><span id="local-6989586621689518234"><span id="MemoizationKey"><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-var">MemoizationKey</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621689518071"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span> </span><span class="annot"><a href="#local-6989586621689518071"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span> </span><span class="annot"><a href="#local-6989586621689518234"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TH.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689518071"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518234"><span class="hs-identifier hs-type">p</span></a></span></span></span><span>
+</span><span id="line-199"></span><span>
+</span><span id="line-200"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">GEq</span></span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-201"></span><span>  </span><span id="local-6989586621689518068"><span class="annot"><span class="annottext">geq :: MemoizationKey a -&gt; MemoizationKey b -&gt; Maybe (a :~: b)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">geq</span></span></span><span>
+</span><span id="line-202"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689518066"><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span id="local-6989586621689518065"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518065"><span class="hs-identifier hs-var">name1</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689518064"><span id="local-6989586621689518063"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518063"><span class="hs-identifier hs-var">arg1</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689518064"><span class="hs-identifier hs-type">a1</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518066"><span class="hs-identifier hs-type">t1</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-203"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689518062"><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span id="local-6989586621689518061"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518061"><span class="hs-identifier hs-var">name2</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689518060"><span id="local-6989586621689518059"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518059"><span class="hs-identifier hs-var">arg2</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689518060"><span class="hs-identifier hs-type">a2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518062"><span class="hs-identifier hs-type">t2</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-204"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518065"><span class="hs-identifier hs-var">name1</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518061"><span class="hs-identifier hs-var">name2</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-205"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">a :~: a
+</span><span class="hs-identifier hs-var">Refl</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Typeable a =&gt; TypeRep a
+forall k (a :: k). Typeable a =&gt; TypeRep a
+</span><span class="hs-identifier hs-var">typeRep</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689518064"><span class="hs-identifier hs-type">a1</span></a></span><span> </span><span class="annot"><span class="annottext">TypeRep a -&gt; TypeRep a -&gt; Maybe (a :~: a)
+forall k (f :: k -&gt; *) (a :: k) (b :: k).
+GEq f =&gt;
+f a -&gt; f b -&gt; Maybe (a :~: b)
+</span><span class="hs-operator hs-var">`geq`</span></span><span> </span><span class="annot"><span class="annottext">Typeable a =&gt; TypeRep a
+forall k (a :: k). Typeable a =&gt; TypeRep a
+</span><span class="hs-identifier hs-var">typeRep</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689518060"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-206"></span><span>        </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518063"><span class="hs-identifier hs-var">arg1</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">a
+a
+</span><a href="#local-6989586621689518059"><span class="hs-identifier hs-var">arg2</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-207"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">a :~: b
+</span><span class="hs-identifier hs-var">Refl</span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Typeable a =&gt; TypeRep a
+forall k (a :: k). Typeable a =&gt; TypeRep a
+</span><span class="hs-identifier hs-var">typeRep</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689518066"><span class="hs-identifier hs-type">t1</span></a></span><span> </span><span class="annot"><span class="annottext">TypeRep a -&gt; TypeRep b -&gt; Maybe (a :~: b)
+forall k (f :: k -&gt; *) (a :: k) (b :: k).
+GEq f =&gt;
+f a -&gt; f b -&gt; Maybe (a :~: b)
+</span><span class="hs-operator hs-var">`geq`</span></span><span> </span><span class="annot"><span class="annottext">Typeable b =&gt; TypeRep b
+forall k (a :: k). Typeable a =&gt; TypeRep a
+</span><span class="hs-identifier hs-var">typeRep</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689518062"><span class="hs-identifier hs-type">t2</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-208"></span><span>        </span><span class="annot"><span class="annottext">(a :~: a) -&gt; Maybe (a :~: a)
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">a :~: a
+forall k (a :: k). a :~: a
+</span><span class="hs-identifier hs-var">Refl</span></span><span>
+</span><span id="line-209"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (a :~: b)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-210"></span><span>
+</span><span id="line-211"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">GCompare</span></span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-212"></span><span>  </span><span id="local-6989586621689518054"><span class="annot"><span class="annottext">gcompare :: MemoizationKey a -&gt; MemoizationKey b -&gt; GOrdering a b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">gcompare</span></span></span><span>
+</span><span id="line-213"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689518052"><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span id="local-6989586621689518051"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518051"><span class="hs-identifier hs-var">name1</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689518050"><span id="local-6989586621689518049"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518049"><span class="hs-identifier hs-var">arg1</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689518050"><span class="hs-identifier hs-type">a1</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518052"><span class="hs-identifier hs-type">t1</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-214"></span><span>    </span><span class="hs-special">(</span><span id="local-6989586621689518048"><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span id="local-6989586621689518047"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518047"><span class="hs-identifier hs-var">name2</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689518046"><span id="local-6989586621689518045"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518045"><span class="hs-identifier hs-var">arg2</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689518046"><span class="hs-identifier hs-type">a2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MemoizationKey"><span class="hs-identifier hs-type">MemoizationKey</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689518048"><span class="hs-identifier hs-type">t2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-215"></span><span>      </span><span class="annot"><span class="annottext">Ordering -&gt; GOrdering Any Any
+forall k (a :: k). Ordering -&gt; GOrdering a a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">strengthenOrdering</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Ordering
+forall a. Ord a =&gt; a -&gt; a -&gt; Ordering
+</span><span class="hs-identifier hs-var">compare</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518051"><span class="hs-identifier hs-var">name1</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689518047"><span class="hs-identifier hs-var">name2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-216"></span><span>        </span><span class="annot"><span class="annottext">GOrdering Any Any
+-&gt; ((Any ~ Any) =&gt; GOrdering a b) -&gt; GOrdering a b
+forall k1 k2 (a :: k1) (b :: k1) (c :: k2) (d :: k2).
+GOrdering a b -&gt; ((a ~ b) =&gt; GOrdering c d) -&gt; GOrdering c d
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`extendGOrdering`</span></a></span><span> </span><span class="annot"><span class="annottext">TypeRep a -&gt; TypeRep a -&gt; GOrdering a a
+forall k (f :: k -&gt; *) (a :: k) (b :: k).
+GCompare f =&gt;
+f a -&gt; f b -&gt; GOrdering a b
+</span><span class="hs-identifier hs-var">gcompare</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Typeable a =&gt; TypeRep a
+forall k (a :: k). Typeable a =&gt; TypeRep a
+</span><span class="hs-identifier hs-var">typeRep</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689518050"><span class="hs-identifier hs-type">a1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Typeable a =&gt; TypeRep a
+forall k (a :: k). Typeable a =&gt; TypeRep a
+</span><span class="hs-identifier hs-var">typeRep</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689518046"><span class="hs-identifier hs-type">a2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-217"></span><span>        </span><span class="annot"><span class="annottext">GOrdering a a -&gt; ((a ~ a) =&gt; GOrdering a b) -&gt; GOrdering a b
+forall k1 k2 (a :: k1) (b :: k1) (c :: k2) (d :: k2).
+GOrdering a b -&gt; ((a ~ b) =&gt; GOrdering c d) -&gt; GOrdering c d
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`extendGOrdering`</span></a></span><span> </span><span class="annot"><span class="annottext">Ordering -&gt; GOrdering Any Any
+forall k (a :: k). Ordering -&gt; GOrdering a a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">strengthenOrdering</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; a -&gt; Ordering
+forall a. Ord a =&gt; a -&gt; a -&gt; Ordering
+</span><span class="hs-identifier hs-var">compare</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689518049"><span class="hs-identifier hs-var">arg1</span></a></span><span> </span><span class="annot"><span class="annottext">a
+a
+</span><a href="#local-6989586621689518045"><span class="hs-identifier hs-var">arg2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-218"></span><span>        </span><span class="annot"><span class="annottext">GOrdering Any Any
+-&gt; ((Any ~ Any) =&gt; GOrdering a b) -&gt; GOrdering a b
+forall k1 k2 (a :: k1) (b :: k1) (c :: k2) (d :: k2).
+GOrdering a b -&gt; ((a ~ b) =&gt; GOrdering c d) -&gt; GOrdering c d
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`extendGOrdering`</span></a></span><span> </span><span class="annot"><span class="annottext">TypeRep a -&gt; TypeRep b -&gt; GOrdering a b
+forall k (f :: k -&gt; *) (a :: k) (b :: k).
+GCompare f =&gt;
+f a -&gt; f b -&gt; GOrdering a b
+</span><span class="hs-identifier hs-var">gcompare</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Typeable a =&gt; TypeRep a
+forall k (a :: k). Typeable a =&gt; TypeRep a
+</span><span class="hs-identifier hs-var">typeRep</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689518052"><span class="hs-identifier hs-type">t1</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Typeable b =&gt; TypeRep b
+forall k (a :: k). Typeable a =&gt; TypeRep a
+</span><span class="hs-identifier hs-var">typeRep</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689518048"><span class="hs-identifier hs-type">t2</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-219"></span><span>        </span><span class="annot"><span class="annottext">GOrdering a b -&gt; ((a ~ b) =&gt; GOrdering a b) -&gt; GOrdering a b
+forall k1 k2 (a :: k1) (b :: k1) (c :: k2) (d :: k2).
+GOrdering a b -&gt; ((a ~ b) =&gt; GOrdering c d) -&gt; GOrdering c d
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`extendGOrdering`</span></a></span><span> </span><span class="annot"><span class="annottext">(a ~ b) =&gt; GOrdering a b
+forall k (a :: k). GOrdering a a
+</span><span class="hs-identifier hs-var">GEQ</span></span><span>
+</span><span id="line-220"></span></pre></body></html>

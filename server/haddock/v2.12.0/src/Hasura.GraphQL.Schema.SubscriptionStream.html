@@ -1,0 +1,1133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE ApplicativeDo #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskellQuotes #-}</span><span>
+</span><span id="line-3"></span><span>
+</span><span id="line-4"></span><span class="hs-comment">-- | Generate the GraphQL schema types related to streaming subscriptions.</span><span>
+</span><span id="line-5"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Schema.SubscriptionStream</span><span>
+</span><span id="line-6"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#selectStreamTable"><span class="hs-identifier">selectStreamTable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html"><span class="hs-identifier">Control.Monad.Memoize</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Has</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.List.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator">(&lt;&gt;&gt;)</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier">QErr</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier">Hasura.GraphQL.Parser.Class</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Backend</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.BoolExp.html"><span class="hs-identifier">Hasura.GraphQL.Schema.BoolExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.BoolExp.html#AggregationPredicatesSchema"><span class="hs-identifier">AggregationPredicatesSchema</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Common</span></a></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html"><span class="hs-identifier">Hasura.GraphQL.Schema.NamingCase</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Options</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Options</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier">InputFieldsParser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier">Kind</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-24"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier">Parser</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Parser</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Select.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Select</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Select.html#tablePermissionsInfo"><span class="hs-identifier">tablePermissionsInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Select.html#tableSelectionList"><span class="hs-identifier">tableSelectionList</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Select.html#tableWhereArg"><span class="hs-identifier">tableWhereArg</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Table</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier">getTableGQLName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#tableSelectColumns"><span class="hs-identifier">tableSelectColumns</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier">tableSelectPermissions</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Typename</span></a></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Name.html"><span class="hs-identifier">Hasura.Name</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Name</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html"><span class="hs-identifier">Hasura.RQL.IR.Select</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html"><span class="hs-identifier">Hasura.RQL.IR.Value</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html"><span class="hs-identifier">Hasura.RQL.Types.Source</span></a></span><span>
+</span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html"><span class="hs-identifier">Hasura.RQL.Types.SourceCustomization</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#applyFieldNameCaseCust"><span class="hs-identifier">applyFieldNameCaseCust</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SourceCustomization.html#applyTypeNameCaseCust"><span class="hs-identifier">applyTypeNameCaseCust</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Subscription.html"><span class="hs-identifier">Hasura.RQL.Types.Subscription</span></a></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html"><span class="hs-identifier">Hasura.RQL.Types.Table</span></a></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- | Argument to limit the maximum number of results returned in a single batch.</span><span>
+</span><span id="line-43"></span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#cursorBatchSizeArg"><span class="hs-identifier hs-type">cursorBatchSizeArg</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689649074"><span class="annot"><a href="#local-6989586621689649074"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-45"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649074"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649074"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-48"></span><span id="cursorBatchSizeArg"><span class="annot"><span class="annottext">cursorBatchSizeArg :: NamingCase -&gt; InputFieldsParser n Int
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#cursorBatchSizeArg"><span class="hs-identifier hs-var hs-var">cursorBatchSizeArg</span></a></span></span><span> </span><span id="local-6989586621689649005"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689649005"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><span class="annottext">Int32 -&gt; Int
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">(Int32 -&gt; Int)
+-&gt; InputFieldsParser MetadataObjId n Int32
+-&gt; InputFieldsParser n Int
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Name
+-&gt; Maybe Description
+-&gt; Parser MetadataObjId 'Both n Int32
+-&gt; InputFieldsParser MetadataObjId n Int32
+forall (m :: * -&gt; *) (k :: Kind) origin a.
+(MonadParse m, 'Input &lt;: k) =&gt;
+Name
+-&gt; Maybe Description
+-&gt; Parser origin k m a
+-&gt; InputFieldsParser origin m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.field</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689649002"><span class="hs-identifier hs-var">batchSizeName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689649001"><span class="hs-identifier hs-var">batchSizeDesc</span></a></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n Int32
+forall (m :: * -&gt; *) origin.
+MonadParse m =&gt;
+Parser origin 'Both m Int32
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nonNegativeInt</span></a></span><span>
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621689649002"><span class="annot"><span class="annottext">batchSizeName :: Name
+</span><a href="#local-6989586621689649002"><span class="hs-identifier hs-var hs-var">batchSizeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Name -&gt; Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#applyFieldNameCaseCust"><span class="hs-identifier hs-var">applyFieldNameCaseCust</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689649005"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#_batch_size"><span class="hs-identifier hs-var">Name._batch_size</span></a></span><span>
+</span><span id="line-53"></span><span>    </span><span id="local-6989586621689649001"><span class="annot"><span class="annottext">batchSizeDesc :: Maybe Description
+</span><a href="#local-6989586621689649001"><span class="hs-identifier hs-var hs-var">batchSizeDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
+-&gt; Description -&gt; Maybe Description
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;maximum number of rows returned in a single batch&quot;</span></span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- | Cursor ordering enum fields</span><span>
+</span><span id="line-56"></span><span class="hs-comment">--</span><span>
+</span><span id="line-57"></span><span class="hs-comment">-- &gt; enum cursor_ordering {</span><span>
+</span><span id="line-58"></span><span class="hs-comment">-- &gt;   ASC</span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- &gt;   DESC</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- &gt; }</span><span>
+</span><span id="line-61"></span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#cursorOrderingArgParser"><span class="hs-identifier hs-type">cursorOrderingArgParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-62"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689649219"><span class="annot"><a href="#local-6989586621689649219"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621689649221"><span class="annot"><a href="#local-6989586621689649221"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689649218"><span class="annot"><a href="#local-6989586621689649218"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier hs-type">MonadMemoize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649221"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649219"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier hs-type">MkTypename</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649218"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649218"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689649218"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649221"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-64"></span><span>  </span><span class="annot"><a href="#local-6989586621689649221"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649219"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CursorOrdering"><span class="hs-identifier hs-type">CursorOrdering</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span id="cursorOrderingArgParser"><span class="annot"><span class="annottext">cursorOrderingArgParser :: m (Parser 'Both n CursorOrdering)
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#cursorOrderingArgParser"><span class="hs-identifier hs-var hs-var">cursorOrderingArgParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621689648996"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689648996"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; NamingCase) -&gt; m NamingCase
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; NamingCase
+forall a t. Has a t =&gt; t -&gt; a
+</span><span class="hs-identifier hs-var">getter</span></span><span>
+</span><span id="line-67"></span><span>  </span><span id="local-6989586621689648993"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648993"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m Name
+forall r (m :: * -&gt; *).
+(MonadReader r m, Has MkTypename r) =&gt;
+Name -&gt; m Name
+</span><a href="Hasura.GraphQL.Schema.Typename.html#mkTypename"><span class="hs-identifier hs-var">mkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; m Name) -&gt; Name -&gt; m Name
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Name -&gt; Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#applyTypeNameCaseCust"><span class="hs-identifier hs-var">applyTypeNameCaseCust</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689648996"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#_cursor_ordering"><span class="hs-identifier hs-var">Name._cursor_ordering</span></a></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689648990"><span class="annot"><span class="annottext">description :: Maybe Description
+</span><a href="#local-6989586621689648990"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
+-&gt; Description -&gt; Maybe Description
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-70"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Description) -&gt; Text -&gt; Description
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-71"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;ordering argument of a cursor&quot;</span></span><span>
+</span><span id="line-72"></span><span>  </span><span class="annot"><span class="annottext">Parser 'Both n CursorOrdering -&gt; m (Parser 'Both n CursorOrdering)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Parser 'Both n CursorOrdering
+ -&gt; m (Parser 'Both n CursorOrdering))
+-&gt; Parser 'Both n CursorOrdering
+-&gt; m (Parser 'Both n CursorOrdering)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-73"></span><span>    </span><span class="annot"><span class="annottext">Name
+-&gt; Maybe Description
+-&gt; NonEmpty
+     (Definition MetadataObjId EnumValueInfo, CursorOrdering)
+-&gt; Parser 'Both n CursorOrdering
+forall (m :: * -&gt; *) origin a.
+MonadParse m =&gt;
+Name
+-&gt; Maybe Description
+-&gt; NonEmpty (Definition origin EnumValueInfo, a)
+-&gt; Parser origin 'Both m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.enum</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648993"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689648990"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">(NonEmpty (Definition MetadataObjId EnumValueInfo, CursorOrdering)
+ -&gt; Parser 'Both n CursorOrdering)
+-&gt; NonEmpty
+     (Definition MetadataObjId EnumValueInfo, CursorOrdering)
+-&gt; Parser 'Both n CursorOrdering
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-74"></span><span>      </span><span class="annot"><span class="annottext">[(Definition MetadataObjId EnumValueInfo, CursorOrdering)]
+-&gt; NonEmpty
+     (Definition MetadataObjId EnumValueInfo, CursorOrdering)
+forall a. [a] -&gt; NonEmpty a
+</span><span class="hs-identifier hs-var">NE.fromList</span></span><span> </span><span class="hs-comment">-- It's fine to use fromList here because we know the list is never empty.</span><span>
+</span><span id="line-75"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">(Name, CursorOrdering) -&gt; Definition MetadataObjId EnumValueInfo
+forall origin.
+(Name, CursorOrdering) -&gt; Definition origin EnumValueInfo
+</span><a href="#local-6989586621689648987"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">(Name, CursorOrdering)
+</span><a href="#local-6989586621689648986"><span class="hs-identifier hs-var">enumNameVal</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-76"></span><span>            </span><span class="annot"><span class="annottext">(Name, CursorOrdering) -&gt; CursorOrdering
+forall a b. (a, b) -&gt; b
+</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">(Name, CursorOrdering)
+</span><a href="#local-6989586621689648986"><span class="hs-identifier hs-var">enumNameVal</span></a></span><span>
+</span><span id="line-77"></span><span>          </span><span class="hs-special">)</span><span>
+</span><span id="line-78"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621689648986"><span class="annot"><span class="annottext">(Name, CursorOrdering)
+</span><a href="#local-6989586621689648986"><span class="hs-identifier hs-var">enumNameVal</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#_ASC"><span class="hs-identifier hs-var">Name._ASC</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">CursorOrdering
+</span><a href="Hasura.RQL.Types.Subscription.html#COAscending"><span class="hs-identifier hs-var">COAscending</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#_DESC"><span class="hs-identifier hs-var">Name._DESC</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">CursorOrdering
+</span><a href="Hasura.RQL.Types.Subscription.html#CODescending"><span class="hs-identifier hs-var">CODescending</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-79"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-80"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>    </span><span id="local-6989586621689648987"><span class="annot"><span class="annottext">define :: (Name, CursorOrdering) -&gt; Definition origin EnumValueInfo
+</span><a href="#local-6989586621689648987"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689648981"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648981"><span class="hs-identifier hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689648980"><span class="annot"><span class="annottext">CursorOrdering
+</span><a href="#local-6989586621689648980"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-82"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689648979"><span class="annot"><span class="annottext">orderingTypeDesc :: Text
+</span><a href="#local-6989586621689648979"><span class="hs-identifier hs-var hs-var">orderingTypeDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool -&gt; Text
+forall a. a -&gt; a -&gt; Bool -&gt; a
+</span><span class="hs-identifier hs-var">bool</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;descending&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;ascending&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Text) -&gt; Bool -&gt; Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CursorOrdering
+</span><a href="#local-6989586621689648980"><span class="hs-identifier hs-var">val</span></a></span><span> </span><span class="annot"><span class="annottext">CursorOrdering -&gt; CursorOrdering -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">CursorOrdering
+</span><a href="Hasura.RQL.Types.Subscription.html#COAscending"><span class="hs-identifier hs-var">COAscending</span></a></span><span>
+</span><span id="line-83"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Name
+-&gt; Maybe Description
+-&gt; Maybe origin
+-&gt; [Directive Void]
+-&gt; EnumValueInfo
+-&gt; Definition origin EnumValueInfo
+forall origin a.
+Name
+-&gt; Maybe Description
+-&gt; Maybe origin
+-&gt; [Directive Void]
+-&gt; a
+-&gt; Definition origin a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648981"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
+-&gt; Description -&gt; Maybe Description
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Description) -&gt; Text -&gt; Description
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689648979"><span class="hs-identifier hs-var">orderingTypeDesc</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; ordering of the cursor&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe origin
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">EnumValueInfo
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.EnumValueInfo</span></a></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span class="hs-comment">-- | Argument to specify the ordering of the cursor.</span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- &gt; ordering: cursor_ordering</span><span>
+</span><span id="line-87"></span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#cursorOrderingArg"><span class="hs-identifier hs-type">cursorOrderingArg</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689649146"><span class="annot"><a href="#local-6989586621689649146"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621689649147"><span class="annot"><a href="#local-6989586621689649147"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689649145"><span class="annot"><a href="#local-6989586621689649145"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-89"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier hs-type">MonadMemoize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649147"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649146"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier hs-type">MkTypename</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649145"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649145"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689649145"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649147"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-90"></span><span>  </span><span class="annot"><a href="#local-6989586621689649147"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649146"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CursorOrdering"><span class="hs-identifier hs-type">CursorOrdering</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-91"></span><span id="cursorOrderingArg"><span class="annot"><span class="annottext">cursorOrderingArg :: m (InputFieldsParser n (Maybe CursorOrdering))
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#cursorOrderingArg"><span class="hs-identifier hs-var hs-var">cursorOrderingArg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-92"></span><span>  </span><span id="local-6989586621689648974"><span class="annot"><span class="annottext">Parser 'Both n CursorOrdering
+</span><a href="#local-6989586621689648974"><span class="hs-identifier hs-var">cursorOrderingParser'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Parser 'Both n CursorOrdering)
+forall (n :: * -&gt; *) (m :: * -&gt; *) r.
+(MonadMemoize m, MonadParse n, Has MkTypename r, Has NamingCase r,
+ MonadReader r m) =&gt;
+m (Parser 'Both n CursorOrdering)
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#cursorOrderingArgParser"><span class="hs-identifier hs-var">cursorOrderingArgParser</span></a></span><span>
+</span><span id="line-93"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-94"></span><span>    </span><span class="annot"><span class="annottext">Name
+-&gt; Maybe Description
+-&gt; Parser 'Both n CursorOrdering
+-&gt; InputFieldsParser n (Maybe CursorOrdering)
+forall (m :: * -&gt; *) (k :: Kind) origin a.
+(MonadParse m, 'Input &lt;: k) =&gt;
+Name
+-&gt; Maybe Description
+-&gt; Parser origin k m a
+-&gt; InputFieldsParser origin m (Maybe a)
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#_ordering"><span class="hs-identifier hs-var">Name._ordering</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
+-&gt; Description -&gt; Maybe Description
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;cursor ordering&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser 'Both n CursorOrdering
+</span><a href="#local-6989586621689648974"><span class="hs-identifier hs-var">cursorOrderingParser'</span></a></span><span>
+</span><span id="line-95"></span><span>
+</span><span id="line-96"></span><span class="hs-comment">-- | Input fields parser to parse the value of a table's column</span><span>
+</span><span id="line-97"></span><span class="hs-comment">-- &gt; column_name: column_type</span><span>
+</span><span id="line-98"></span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#streamColumnParserArg"><span class="hs-identifier hs-type">streamColumnParserArg</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-99"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689649169"><span class="annot"><a href="#local-6989586621689649169"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689649167"><span class="annot"><a href="#local-6989586621689649167"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621689649168"><span class="annot"><a href="#local-6989586621689649168"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689649166"><span class="annot"><a href="#local-6989586621689649166"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-100"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649169"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier hs-type">MonadMemoize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649168"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649167"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier hs-type">MkTypename</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649166"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689649166"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649168"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649168"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649166"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-101"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649169"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-102"></span><span>  </span><span class="annot"><a href="#local-6989586621689649168"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649167"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649169"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649169"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-103"></span><span id="streamColumnParserArg"><span class="annot"><span class="annottext">streamColumnParserArg :: ColumnInfo b
+-&gt; m (InputFieldsParser n (Maybe (ColumnInfo b, ColumnValue b)))
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#streamColumnParserArg"><span class="hs-identifier hs-var hs-var">streamColumnParserArg</span></a></span></span><span> </span><span id="local-6989586621689648970"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689648970"><span class="hs-identifier hs-var">colInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-104"></span><span>  </span><span id="local-6989586621689648969"><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (ColumnValue b)
+</span><a href="#local-6989586621689648969"><span class="hs-identifier hs-var">fieldParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; m (Parser MetadataObjId 'Both n (ColumnValue b))
+forall (b :: BackendType) (n :: * -&gt; *) (f :: * -&gt; *) r.
+(BackendSchema b, MonadParse n, MonadError QErr f, MonadReader r f,
+ Has MkTypename r, Has NamingCase r) =&gt;
+ColumnInfo b -&gt; f (Parser MetadataObjId 'Both n (ColumnValue b))
+</span><a href="#local-6989586621689648968"><span class="hs-identifier hs-var">typedParser</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689648970"><span class="hs-identifier hs-var">colInfo</span></a></span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689648967"><span class="annot"><span class="annottext">fieldName :: Name
+</span><a href="#local-6989586621689648967"><span class="hs-identifier hs-var hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Name
+forall (b :: BackendType). ColumnInfo b -&gt; Name
+</span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var hs-var">ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689648970"><span class="hs-identifier hs-var">colInfo</span></a></span><span>
+</span><span id="line-106"></span><span>      </span><span id="local-6989586621689648965"><span class="annot"><span class="annottext">fieldDesc :: Maybe Description
+</span><a href="#local-6989586621689648965"><span class="hs-identifier hs-var hs-var">fieldDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Maybe Description
+forall (b :: BackendType). ColumnInfo b -&gt; Maybe Description
+</span><a href="Hasura.RQL.Types.Column.html#ciDescription"><span class="hs-identifier hs-var hs-var">ciDescription</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689648970"><span class="hs-identifier hs-var">colInfo</span></a></span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><span class="annottext">InputFieldsParser n (Maybe (ColumnInfo b, ColumnValue b))
+-&gt; m (InputFieldsParser n (Maybe (ColumnInfo b, ColumnValue b)))
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-108"></span><span>    </span><span class="annot"><span class="annottext">Name
+-&gt; Maybe Description
+-&gt; Parser MetadataObjId 'Both n (ColumnValue b)
+-&gt; InputFieldsParser MetadataObjId n (Maybe (ColumnValue b))
+forall (m :: * -&gt; *) (k :: Kind) origin a.
+(MonadParse m, 'Input &lt;: k) =&gt;
+Name
+-&gt; Maybe Description
+-&gt; Parser origin k m a
+-&gt; InputFieldsParser origin m (Maybe a)
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.fieldOptional</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648967"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689648965"><span class="hs-identifier hs-var">fieldDesc</span></a></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Both n (ColumnValue b)
+</span><a href="#local-6989586621689648969"><span class="hs-identifier hs-var">fieldParser</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser MetadataObjId n (Maybe (ColumnValue b))
+-&gt; (Maybe (ColumnValue b) -&gt; Maybe (ColumnInfo b, ColumnValue b))
+-&gt; InputFieldsParser n (Maybe (ColumnInfo b, ColumnValue b))
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(ColumnValue b -&gt; (ColumnInfo b, ColumnValue b))
+-&gt; Maybe (ColumnValue b) -&gt; Maybe (ColumnInfo b, ColumnValue b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689648970"><span class="hs-identifier hs-var">colInfo</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-110"></span><span>    </span><span id="local-6989586621689648968"><span class="annot"><span class="annottext">typedParser :: ColumnInfo b -&gt; f (Parser MetadataObjId 'Both n (ColumnValue b))
+</span><a href="#local-6989586621689648968"><span class="hs-identifier hs-var hs-var">typedParser</span></a></span></span><span> </span><span id="local-6989586621689648962"><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689648962"><span class="hs-identifier hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-111"></span><span>      </span><span class="annot"><span class="annottext">(ValueWithOrigin (ColumnValue b) -&gt; ColumnValue b)
+-&gt; Parser MetadataObjId 'Both n (ValueWithOrigin (ColumnValue b))
+-&gt; Parser MetadataObjId 'Both n (ColumnValue b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">ValueWithOrigin (ColumnValue b) -&gt; ColumnValue b
+forall a. ValueWithOrigin a -&gt; a
+</span><a href="Hasura.RQL.IR.Value.html#openValueOrigin"><span class="hs-identifier hs-var">IR.openValueOrigin</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser MetadataObjId 'Both n (ValueWithOrigin (ColumnValue b))
+ -&gt; Parser MetadataObjId 'Both n (ColumnValue b))
+-&gt; f (Parser
+        MetadataObjId 'Both n (ValueWithOrigin (ColumnValue b)))
+-&gt; f (Parser MetadataObjId 'Both n (ColumnValue b))
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType b
+-&gt; Nullability
+-&gt; f (Parser
+        MetadataObjId 'Both n (ValueWithOrigin (ColumnValue b)))
+forall (b :: BackendType) (n :: * -&gt; *) (m :: * -&gt; *) r.
+(BackendSchema b, MonadParse n, MonadError QErr m, MonadReader r m,
+ Has MkTypename r, Has NamingCase r) =&gt;
+ColumnType b
+-&gt; Nullability
+-&gt; m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
+</span><a href="Hasura.GraphQL.Schema.Backend.html#columnParser"><span class="hs-identifier hs-var">columnParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnInfo b -&gt; ColumnType b
+forall (b :: BackendType). ColumnInfo b -&gt; ColumnType b
+</span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var hs-var">ciType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689648962"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Nullability
+</span><span class="hs-identifier hs-var">G.Nullability</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Nullability) -&gt; Bool -&gt; Nullability
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b -&gt; Bool
+forall (b :: BackendType). ColumnInfo b -&gt; Bool
+</span><a href="Hasura.RQL.Types.Column.html#ciIsNullable"><span class="hs-identifier hs-var hs-var">ciIsNullable</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
+</span><a href="#local-6989586621689648962"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- | Input object parser whose keys are the column names and the values are the</span><span>
+</span><span id="line-114"></span><span class="hs-comment">--   initial values of those columns from where the streaming should start.</span><span>
+</span><span id="line-115"></span><span class="hs-comment">-- &gt; input table_stream_cursor_value_input {</span><span>
+</span><span id="line-116"></span><span class="hs-comment">-- &gt;   col1: col1_type</span><span>
+</span><span id="line-117"></span><span class="hs-comment">-- &gt;   col2: col2_type</span><span>
+</span><span id="line-118"></span><span class="hs-comment">--     ...</span><span>
+</span><span id="line-119"></span><span class="hs-comment">-- &gt; }</span><span>
+</span><span id="line-120"></span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#streamColumnValueParser"><span class="hs-identifier hs-type">streamColumnValueParser</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689649155"><span class="annot"><a href="#local-6989586621689649155"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689649153"><span class="annot"><a href="#local-6989586621689649153"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621689649154"><span class="annot"><a href="#local-6989586621689649154"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689649152"><span class="annot"><a href="#local-6989586621689649152"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-122"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649155"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier hs-type">MonadMemoize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649154"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649153"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier hs-type">MkTypename</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649152"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689649152"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649154"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649154"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649152"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-123"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649155"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-124"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649155"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-126"></span><span>  </span><span class="annot"><a href="#local-6989586621689649154"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649153"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649155"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649155"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span id="streamColumnValueParser"><span class="annot"><span class="annottext">streamColumnValueParser :: SourceInfo b
+-&gt; Name
+-&gt; [ColumnInfo b]
+-&gt; m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#streamColumnValueParser"><span class="hs-identifier hs-var hs-var">streamColumnValueParser</span></a></span></span><span> </span><span id="local-6989586621689648955"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648955"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689648954"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648954"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span id="local-6989586621689648953"><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689648953"><span class="hs-identifier hs-var">colInfos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-128"></span><span>  </span><span class="annot"><span class="annottext">Name
+-&gt; (SourceName, Name)
+-&gt; m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
+-&gt; m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
+forall (m :: * -&gt; *) a p.
+(MonadMemoize m, Ord a, Typeable a, Typeable p) =&gt;
+Name -&gt; a -&gt; m p -&gt; m p
+</span><a href="Control.Monad.Memoize.html#memoizeOn"><span class="hs-identifier hs-var">memoizeOn</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">streamColumnValueParser</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
+forall (b :: BackendType). SourceInfo b -&gt; SourceName
+</span><a href="Hasura.RQL.Types.Source.html#_siName"><span class="hs-identifier hs-var hs-var">_siName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648955"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648954"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
+ -&gt; m (Parser 'Input n [(ColumnInfo b, ColumnValue b)]))
+-&gt; m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
+-&gt; m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-129"></span><span>    </span><span id="local-6989586621689648950"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689648950"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; NamingCase) -&gt; m NamingCase
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; NamingCase
+forall a t. Has a t =&gt; t -&gt; a
+</span><span class="hs-identifier hs-var">getter</span></span><span>
+</span><span id="line-130"></span><span>    </span><span id="local-6989586621689648949"><span class="annot"><span class="annottext">InputFieldsParser
+  MetadataObjId n [Maybe (ColumnInfo b, ColumnValue b)]
+</span><a href="#local-6989586621689648949"><span class="hs-identifier hs-var">columnVals</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[InputFieldsParser
+   MetadataObjId n (Maybe (ColumnInfo b, ColumnValue b))]
+-&gt; InputFieldsParser
+     MetadataObjId n [Maybe (ColumnInfo b, ColumnValue b)]
+forall (t :: * -&gt; *) (f :: * -&gt; *) a.
+(Traversable t, Applicative f) =&gt;
+t (f a) -&gt; f (t a)
+</span><span class="hs-identifier hs-var">sequenceA</span></span><span> </span><span class="annot"><span class="annottext">([InputFieldsParser
+    MetadataObjId n (Maybe (ColumnInfo b, ColumnValue b))]
+ -&gt; InputFieldsParser
+      MetadataObjId n [Maybe (ColumnInfo b, ColumnValue b)])
+-&gt; m [InputFieldsParser
+        MetadataObjId n (Maybe (ColumnInfo b, ColumnValue b))]
+-&gt; m (InputFieldsParser
+        MetadataObjId n [Maybe (ColumnInfo b, ColumnValue b)])
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(ColumnInfo b
+ -&gt; m (InputFieldsParser
+         MetadataObjId n (Maybe (ColumnInfo b, ColumnValue b))))
+-&gt; [ColumnInfo b]
+-&gt; m [InputFieldsParser
+        MetadataObjId n (Maybe (ColumnInfo b, ColumnValue b))]
+forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+(Traversable t, Applicative f) =&gt;
+(a -&gt; f b) -&gt; t a -&gt; f (t b)
+</span><span class="hs-identifier hs-var">traverse</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
+-&gt; m (InputFieldsParser
+        MetadataObjId n (Maybe (ColumnInfo b, ColumnValue b)))
+forall (b :: BackendType) (n :: * -&gt; *) (m :: * -&gt; *) r.
+(BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r,
+ MonadReader r m, MonadError QErr m, Has NamingCase r) =&gt;
+ColumnInfo b
+-&gt; m (InputFieldsParser n (Maybe (ColumnInfo b, ColumnValue b)))
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#streamColumnParserArg"><span class="hs-identifier hs-var">streamColumnParserArg</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689648953"><span class="hs-identifier hs-var">colInfos</span></a></span><span>
+</span><span id="line-131"></span><span>    </span><span id="local-6989586621689648946"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648946"><span class="hs-identifier hs-var">objName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m Name
+forall r (m :: * -&gt; *).
+(MonadReader r m, Has MkTypename r) =&gt;
+Name -&gt; m Name
+</span><a href="Hasura.GraphQL.Schema.Typename.html#mkTypename"><span class="hs-identifier hs-var">mkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; m Name) -&gt; Name -&gt; m Name
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648954"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Name -&gt; Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#applyTypeNameCaseCust"><span class="hs-identifier hs-var">applyTypeNameCaseCust</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689648950"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#__stream_cursor_value_input"><span class="hs-identifier hs-var">Name.__stream_cursor_value_input</span></a></span><span>
+</span><span id="line-132"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-133"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689648944"><span class="annot"><span class="annottext">description :: Description
+</span><a href="#local-6989586621689648944"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Description) -&gt; Text -&gt; Description
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Initial value of the column from where the streaming should start&quot;</span></span><span>
+</span><span id="line-134"></span><span>      </span><span class="annot"><span class="annottext">Name
+-&gt; Maybe Description
+-&gt; InputFieldsParser
+     MetadataObjId n [Maybe (ColumnInfo b, ColumnValue b)]
+-&gt; Parser
+     MetadataObjId 'Input n [Maybe (ColumnInfo b, ColumnValue b)]
+forall (m :: * -&gt; *) origin a.
+MonadParse m =&gt;
+Name
+-&gt; Maybe Description
+-&gt; InputFieldsParser origin m a
+-&gt; Parser origin 'Input m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.object</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648946"><span class="hs-identifier hs-var">objName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
+</span><a href="#local-6989586621689648944"><span class="hs-identifier hs-var">description</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
+  MetadataObjId n [Maybe (ColumnInfo b, ColumnValue b)]
+</span><a href="#local-6989586621689648949"><span class="hs-identifier hs-var">columnVals</span></a></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Input n [Maybe (ColumnInfo b, ColumnValue b)]
+-&gt; ([Maybe (ColumnInfo b, ColumnValue b)]
+    -&gt; [(ColumnInfo b, ColumnValue b)])
+-&gt; Parser 'Input n [(ColumnInfo b, ColumnValue b)]
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Maybe (ColumnInfo b, ColumnValue b)]
+-&gt; [(ColumnInfo b, ColumnValue b)]
+forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
+</span><span class="hs-identifier hs-var">catMaybes</span></span><span>
+</span><span id="line-135"></span><span>
+</span><span id="line-136"></span><span class="hs-comment">-- | Argument to accept the initial value from where the streaming should start.</span><span>
+</span><span id="line-137"></span><span class="hs-comment">-- &gt; initial_value: table_stream_cursor_value_input!</span><span>
+</span><span id="line-138"></span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#streamColumnValueParserArg"><span class="hs-identifier hs-type">streamColumnValueParserArg</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689649144"><span class="annot"><a href="#local-6989586621689649144"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689649142"><span class="annot"><a href="#local-6989586621689649142"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621689649143"><span class="annot"><a href="#local-6989586621689649143"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689649141"><span class="annot"><a href="#local-6989586621689649141"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-140"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649144"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-141"></span><span>    </span><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier hs-type">MonadMemoize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649143"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-142"></span><span>    </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649142"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-143"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier hs-type">MkTypename</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649141"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689649141"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649143"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-145"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649143"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-146"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649141"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-147"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-148"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649144"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-149"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-150"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649144"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-151"></span><span>  </span><span class="annot"><a href="#local-6989586621689649143"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649142"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649144"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649144"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-152"></span><span id="streamColumnValueParserArg"><span class="annot"><span class="annottext">streamColumnValueParserArg :: SourceInfo b
+-&gt; Name
+-&gt; [ColumnInfo b]
+-&gt; m (InputFieldsParser n [(ColumnInfo b, ColumnValue b)])
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#streamColumnValueParserArg"><span class="hs-identifier hs-var hs-var">streamColumnValueParserArg</span></a></span></span><span> </span><span id="local-6989586621689648940"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648940"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689648939"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648939"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span id="local-6989586621689648938"><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689648938"><span class="hs-identifier hs-var">colInfos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-153"></span><span>  </span><span id="local-6989586621689648937"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689648937"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; NamingCase) -&gt; m NamingCase
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; NamingCase
+forall a t. Has a t =&gt; t -&gt; a
+</span><span class="hs-identifier hs-var">getter</span></span><span>
+</span><span id="line-154"></span><span>  </span><span id="local-6989586621689648936"><span class="annot"><span class="annottext">Parser 'Input n [(ColumnInfo b, ColumnValue b)]
+</span><a href="#local-6989586621689648936"><span class="hs-identifier hs-var">columnValueParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+-&gt; Name
+-&gt; [ColumnInfo b]
+-&gt; m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
+forall (b :: BackendType) (n :: * -&gt; *) (m :: * -&gt; *) r.
+(BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r,
+ MonadReader r m, MonadError QErr m, Has NamingCase r) =&gt;
+SourceInfo b
+-&gt; Name
+-&gt; [ColumnInfo b]
+-&gt; m (Parser 'Input n [(ColumnInfo b, ColumnValue b)])
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#streamColumnValueParser"><span class="hs-identifier hs-var">streamColumnValueParser</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648940"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648939"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689648938"><span class="hs-identifier hs-var">colInfos</span></a></span><span>
+</span><span id="line-155"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-156"></span><span>    </span><span class="annot"><span class="annottext">Name
+-&gt; Maybe Description
+-&gt; Parser 'Input n [(ColumnInfo b, ColumnValue b)]
+-&gt; InputFieldsParser n [(ColumnInfo b, ColumnValue b)]
+forall (m :: * -&gt; *) (k :: Kind) origin a.
+(MonadParse m, 'Input &lt;: k) =&gt;
+Name
+-&gt; Maybe Description
+-&gt; Parser origin k m a
+-&gt; InputFieldsParser origin m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.field</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">NamingCase -&gt; Name -&gt; Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#applyFieldNameCaseCust"><span class="hs-identifier hs-var">applyFieldNameCaseCust</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689648937"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#_initial_value"><span class="hs-identifier hs-var">Name._initial_value</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
+-&gt; Description -&gt; Maybe Description
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Stream column input with initial value&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser 'Input n [(ColumnInfo b, ColumnValue b)]
+</span><a href="#local-6989586621689648936"><span class="hs-identifier hs-var">columnValueParser</span></a></span><span>
+</span><span id="line-157"></span><span>
+</span><span id="line-158"></span><span class="hs-comment">-- | Argument to accept the cursor data. At the time of writing this, only a single</span><span>
+</span><span id="line-159"></span><span class="hs-comment">--   column cursor is supported and if multiple column cursors are provided,</span><span>
+</span><span id="line-160"></span><span class="hs-comment">--   then a parse error is thrown.</span><span>
+</span><span id="line-161"></span><span class="hs-comment">-- &gt;</span><span>
+</span><span id="line-162"></span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamColumnArg"><span class="hs-identifier hs-type">tableStreamColumnArg</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-163"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689649117"><span class="annot"><a href="#local-6989586621689649117"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621689649118"><span class="annot"><a href="#local-6989586621689649118"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689649116"><span class="annot"><a href="#local-6989586621689649116"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689649119"><span class="annot"><a href="#local-6989586621689649119"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-164"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649119"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Control.Monad.Memoize.html#MonadMemoize"><span class="hs-identifier hs-type">MonadMemoize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649118"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649117"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Typename.html#MkTypename"><span class="hs-identifier hs-type">MkTypename</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649116"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="#local-6989586621689649116"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649118"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649118"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Has</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649116"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-165"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649119"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-166"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-167"></span><span>  </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnInfo"><span class="hs-identifier hs-type">ColumnInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649119"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-168"></span><span>  </span><span class="annot"><a href="#local-6989586621689649118"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649117"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#StreamCursorItem"><span class="hs-identifier hs-type">IR.StreamCursorItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649119"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-169"></span><span id="tableStreamColumnArg"><span class="annot"><span class="annottext">tableStreamColumnArg :: SourceInfo b
+-&gt; Name
+-&gt; [ColumnInfo b]
+-&gt; m (InputFieldsParser n [StreamCursorItem b])
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamColumnArg"><span class="hs-identifier hs-var hs-var">tableStreamColumnArg</span></a></span></span><span> </span><span id="local-6989586621689648933"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648933"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689648932"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648932"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span id="local-6989586621689648931"><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689648931"><span class="hs-identifier hs-var">colInfos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-170"></span><span>  </span><span id="local-6989586621689648930"><span class="annot"><span class="annottext">InputFieldsParser n (Maybe CursorOrdering)
+</span><a href="#local-6989586621689648930"><span class="hs-identifier hs-var">cursorOrderingParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (InputFieldsParser n (Maybe CursorOrdering))
+forall (n :: * -&gt; *) (m :: * -&gt; *) r.
+(MonadMemoize m, MonadParse n, Has MkTypename r, Has NamingCase r,
+ MonadReader r m) =&gt;
+m (InputFieldsParser n (Maybe CursorOrdering))
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#cursorOrderingArg"><span class="hs-identifier hs-var">cursorOrderingArg</span></a></span><span>
+</span><span id="line-171"></span><span>  </span><span id="local-6989586621689648929"><span class="annot"><span class="annottext">InputFieldsParser n [(ColumnInfo b, ColumnValue b)]
+</span><a href="#local-6989586621689648929"><span class="hs-identifier hs-var">streamColumnParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+-&gt; Name
+-&gt; [ColumnInfo b]
+-&gt; m (InputFieldsParser n [(ColumnInfo b, ColumnValue b)])
+forall (b :: BackendType) (n :: * -&gt; *) (m :: * -&gt; *) r.
+(BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r,
+ MonadReader r m, MonadError QErr m, Has NamingCase r) =&gt;
+SourceInfo b
+-&gt; Name
+-&gt; [ColumnInfo b]
+-&gt; m (InputFieldsParser n [(ColumnInfo b, ColumnValue b)])
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#streamColumnValueParserArg"><span class="hs-identifier hs-var">streamColumnValueParserArg</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648933"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648932"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689648931"><span class="hs-identifier hs-var">colInfos</span></a></span><span>
+</span><span id="line-172"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-173"></span><span>    </span><span id="local-6989586621689648928"><span class="annot"><span class="annottext">Maybe CursorOrdering
+</span><a href="#local-6989586621689648928"><span class="hs-identifier hs-var">orderingArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (Maybe CursorOrdering)
+</span><a href="#local-6989586621689648930"><span class="hs-identifier hs-var">cursorOrderingParser</span></a></span><span>
+</span><span id="line-174"></span><span>    </span><span id="local-6989586621689648927"><span class="annot"><span class="annottext">[(ColumnInfo b, ColumnValue b)]
+</span><a href="#local-6989586621689648927"><span class="hs-identifier hs-var">columnArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n [(ColumnInfo b, ColumnValue b)]
+</span><a href="#local-6989586621689648929"><span class="hs-identifier hs-var">streamColumnParser</span></a></span><span>
+</span><span id="line-175"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ColumnInfo b -&gt; ColumnValue b -&gt; StreamCursorItem b)
+-&gt; (ColumnInfo b, ColumnValue b) -&gt; StreamCursorItem b
+forall a b c. (a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
+</span><span class="hs-identifier hs-var">uncurry</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CursorOrdering
+-&gt; ColumnInfo b -&gt; ColumnValue b -&gt; StreamCursorItem b
+forall (b :: BackendType).
+CursorOrdering
+-&gt; ColumnInfo b -&gt; ColumnValue b -&gt; StreamCursorItem b
+</span><a href="Hasura.RQL.IR.Select.html#StreamCursorItem"><span class="hs-identifier hs-var">IR.StreamCursorItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CursorOrdering -&gt; Maybe CursorOrdering -&gt; CursorOrdering
+forall a. a -&gt; Maybe a -&gt; a
+</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">CursorOrdering
+</span><a href="Hasura.RQL.Types.Subscription.html#COAscending"><span class="hs-identifier hs-var">COAscending</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CursorOrdering
+</span><a href="#local-6989586621689648928"><span class="hs-identifier hs-var">orderingArg</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((ColumnInfo b, ColumnValue b) -&gt; StreamCursorItem b)
+-&gt; [(ColumnInfo b, ColumnValue b)] -&gt; [StreamCursorItem b]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[(ColumnInfo b, ColumnValue b)]
+</span><a href="#local-6989586621689648927"><span class="hs-identifier hs-var">columnArg</span></a></span><span>
+</span><span id="line-176"></span><span>
+</span><span id="line-177"></span><span class="hs-comment">-- | Input object that contains the initial value of a column</span><span>
+</span><span id="line-178"></span><span class="hs-comment">--   along with how it needs to be ordered.</span><span>
+</span><span id="line-179"></span><span class="hs-comment">-- &gt; input table_stream_cursor_input {</span><span>
+</span><span id="line-180"></span><span class="hs-comment">-- &gt;   initial_value: table_stream_cursor_value_input!</span><span>
+</span><span id="line-181"></span><span class="hs-comment">-- &gt;   ordering: cursor_ordering</span><span>
+</span><span id="line-182"></span><span class="hs-comment">-- &gt; }</span><span>
+</span><span id="line-183"></span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamCursorExp"><span class="hs-identifier hs-type">tableStreamCursorExp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-184"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689649110"><span class="annot"><a href="#local-6989586621689649110"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689649109"><span class="annot"><a href="#local-6989586621689649109"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621689649111"><span class="annot"><a href="#local-6989586621689649111"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689649112"><span class="annot"><a href="#local-6989586621689649112"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-185"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649112"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649111"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649110"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649109"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-186"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649112"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-187"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649112"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-188"></span><span>  </span><span class="annot"><a href="#local-6989586621689649110"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649109"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#StreamCursorItem"><span class="hs-identifier hs-type">IR.StreamCursorItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649112"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-189"></span><span id="tableStreamCursorExp"><span class="annot"><span class="annottext">tableStreamCursorExp :: SourceInfo b
+-&gt; TableInfo b -&gt; m (Parser 'Input n [StreamCursorItem b])
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamCursorExp"><span class="hs-identifier hs-var hs-var">tableStreamCursorExp</span></a></span></span><span> </span><span id="local-6989586621689648922"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648922"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689648921"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648921"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-190"></span><span>  </span><span class="annot"><span class="annottext">Name
+-&gt; (SourceName, TableName b)
+-&gt; m (Parser 'Input n [StreamCursorItem b])
+-&gt; m (Parser 'Input n [StreamCursorItem b])
+forall (m :: * -&gt; *) a p.
+(MonadMemoize m, Ord a, Typeable a, Typeable p) =&gt;
+Name -&gt; a -&gt; m p -&gt; m p
+</span><a href="Control.Monad.Memoize.html#memoizeOn"><span class="hs-identifier hs-var">memoizeOn</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">tableStreamCursorExp</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
+forall (b :: BackendType). SourceInfo b -&gt; SourceName
+</span><a href="Hasura.RQL.Types.Source.html#_siName"><span class="hs-identifier hs-var hs-var">_siName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648922"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableName b
+forall (b :: BackendType). TableInfo b -&gt; TableName b
+</span><a href="Hasura.RQL.Types.Table.html#tableInfoName"><span class="hs-identifier hs-var">tableInfoName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648921"><span class="hs-identifier hs-var">tableInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (Parser 'Input n [StreamCursorItem b])
+ -&gt; m (Parser 'Input n [StreamCursorItem b]))
+-&gt; m (Parser 'Input n [StreamCursorItem b])
+-&gt; m (Parser 'Input n [StreamCursorItem b])
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-191"></span><span>    </span><span id="local-6989586621689648919"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689648919"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; NamingCase) -&gt; m NamingCase
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; NamingCase
+forall a t. Has a t =&gt; t -&gt; a
+</span><span class="hs-identifier hs-var">getter</span></span><span>
+</span><span id="line-192"></span><span>    </span><span id="local-6989586621689648918"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648918"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; m Name
+forall (b :: BackendType) (m :: * -&gt; *).
+(Backend b, MonadError QErr m) =&gt;
+TableInfo b -&gt; m Name
+</span><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier hs-var">getTableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648921"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-193"></span><span>    </span><span id="local-6989586621689648917"><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689648917"><span class="hs-identifier hs-var">columnInfos</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b -&gt; TableInfo b -&gt; m [ColumnInfo b]
+forall (b :: BackendType) r (m :: * -&gt; *).
+(Backend b, MonadError QErr m, MonadReader r m,
+ Has SchemaContext r) =&gt;
+SourceInfo b -&gt; TableInfo b -&gt; m [ColumnInfo b]
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectColumns"><span class="hs-identifier hs-var">tableSelectColumns</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648922"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648921"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-194"></span><span>    </span><span id="local-6989586621689648916"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648916"><span class="hs-identifier hs-var">objName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Name -&gt; m Name
+forall r (m :: * -&gt; *).
+(MonadReader r m, Has MkTypename r) =&gt;
+Name -&gt; m Name
+</span><a href="Hasura.GraphQL.Schema.Typename.html#mkTypename"><span class="hs-identifier hs-var">mkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; m Name) -&gt; Name -&gt; m Name
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648918"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Name
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Name -&gt; Name
+</span><a href="Hasura.RQL.Types.SourceCustomization.html#applyTypeNameCaseCust"><span class="hs-identifier hs-var">applyTypeNameCaseCust</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689648919"><span class="hs-identifier hs-var">tCase</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#__stream_cursor_input"><span class="hs-identifier hs-var">Name.__stream_cursor_input</span></a></span><span>
+</span><span id="line-195"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689648914"><span class="annot"><span class="annottext">description :: Description
+</span><a href="#local-6989586621689648914"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-196"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Description) -&gt; Text -&gt; Description
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Streaming cursor of the table &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Name -&gt; Text
+forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648918"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span>
+</span><span id="line-197"></span><span>    </span><span id="local-6989586621689648913"><span class="annot"><span class="annottext">InputFieldsParser n [StreamCursorItem b]
+</span><a href="#local-6989586621689648913"><span class="hs-identifier hs-var">columnParsers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+-&gt; Name
+-&gt; [ColumnInfo b]
+-&gt; m (InputFieldsParser n [StreamCursorItem b])
+forall (n :: * -&gt; *) (m :: * -&gt; *) r (b :: BackendType).
+(BackendSchema b, MonadMemoize m, MonadParse n, Has MkTypename r,
+ MonadReader r m, MonadError QErr m, Has NamingCase r) =&gt;
+SourceInfo b
+-&gt; Name
+-&gt; [ColumnInfo b]
+-&gt; m (InputFieldsParser n [StreamCursorItem b])
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamColumnArg"><span class="hs-identifier hs-var">tableStreamColumnArg</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648922"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648918"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo b]
+</span><a href="#local-6989586621689648917"><span class="hs-identifier hs-var">columnInfos</span></a></span><span>
+</span><span id="line-198"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Name
+-&gt; Maybe Description
+-&gt; InputFieldsParser n [StreamCursorItem b]
+-&gt; Parser 'Input n [StreamCursorItem b]
+forall (m :: * -&gt; *) origin a.
+MonadParse m =&gt;
+Name
+-&gt; Maybe Description
+-&gt; InputFieldsParser origin m a
+-&gt; Parser origin 'Input m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.object</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648916"><span class="hs-identifier hs-var">objName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Description
+</span><a href="#local-6989586621689648914"><span class="hs-identifier hs-var">description</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n [StreamCursorItem b]
+</span><a href="#local-6989586621689648913"><span class="hs-identifier hs-var">columnParsers</span></a></span><span>
+</span><span id="line-199"></span><span>
+</span><span id="line-200"></span><span class="hs-comment">-- | Argument to accept the cursor input object.</span><span>
+</span><span id="line-201"></span><span class="hs-comment">-- &gt; cursor: [table_stream_cursor_input]!</span><span>
+</span><span id="line-202"></span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamCursorArg"><span class="hs-identifier hs-type">tableStreamCursorArg</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-203"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689649085"><span class="annot"><a href="#local-6989586621689649085"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689649084"><span class="annot"><a href="#local-6989586621689649084"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689649083"><span class="annot"><a href="#local-6989586621689649083"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689649082"><span class="annot"><a href="#local-6989586621689649082"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-204"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649085"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649084"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649083"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649082"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-205"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649085"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-206"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649085"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-207"></span><span>  </span><span class="annot"><a href="#local-6989586621689649083"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649082"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#StreamCursorItem"><span class="hs-identifier hs-type">IR.StreamCursorItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649085"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-208"></span><span id="tableStreamCursorArg"><span class="annot"><span class="annottext">tableStreamCursorArg :: SourceInfo b
+-&gt; TableInfo b -&gt; m (InputFieldsParser n [StreamCursorItem b])
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamCursorArg"><span class="hs-identifier hs-var hs-var">tableStreamCursorArg</span></a></span></span><span> </span><span id="local-6989586621689648911"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648911"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689648910"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648910"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-209"></span><span>  </span><span id="local-6989586621689648909"><span class="annot"><span class="annottext">Parser 'Input n [StreamCursorItem b]
+</span><a href="#local-6989586621689648909"><span class="hs-identifier hs-var">cursorParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+-&gt; TableInfo b -&gt; m (Parser 'Input n [StreamCursorItem b])
+forall (m :: * -&gt; *) (n :: * -&gt; *) r (b :: BackendType).
+MonadBuildSchema b r m n =&gt;
+SourceInfo b
+-&gt; TableInfo b -&gt; m (Parser 'Input n [StreamCursorItem b])
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamCursorExp"><span class="hs-identifier hs-var">tableStreamCursorExp</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648911"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648910"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-210"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-211"></span><span>    </span><span id="local-6989586621689648908"><span class="annot"><span class="annottext">[Maybe [StreamCursorItem b]]
+</span><a href="#local-6989586621689648908"><span class="hs-identifier hs-var">cursorArgs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-212"></span><span>      </span><span class="annot"><span class="annottext">Name
+-&gt; Maybe Description
+-&gt; Parser MetadataObjId 'Input n [Maybe [StreamCursorItem b]]
+-&gt; InputFieldsParser MetadataObjId n [Maybe [StreamCursorItem b]]
+forall (m :: * -&gt; *) (k :: Kind) origin a.
+(MonadParse m, 'Input &lt;: k) =&gt;
+Name
+-&gt; Maybe Description
+-&gt; Parser origin k m a
+-&gt; InputFieldsParser origin m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.field</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648907"><span class="hs-identifier hs-var">cursorName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689648906"><span class="hs-identifier hs-var">cursorDesc</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser MetadataObjId 'Input n [Maybe [StreamCursorItem b]]
+ -&gt; InputFieldsParser MetadataObjId n [Maybe [StreamCursorItem b]])
+-&gt; Parser MetadataObjId 'Input n [Maybe [StreamCursorItem b]]
+-&gt; InputFieldsParser MetadataObjId n [Maybe [StreamCursorItem b]]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Input n (Maybe [StreamCursorItem b])
+-&gt; Parser MetadataObjId 'Input n [Maybe [StreamCursorItem b]]
+forall origin (k :: Kind) (m :: * -&gt; *) a.
+(MonadParse m, 'Input &lt;: k) =&gt;
+Parser origin k m a -&gt; Parser origin k m [a]
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.list</span></a></span><span> </span><span class="annot"><span class="annottext">(Parser MetadataObjId 'Input n (Maybe [StreamCursorItem b])
+ -&gt; Parser MetadataObjId 'Input n [Maybe [StreamCursorItem b]])
+-&gt; Parser MetadataObjId 'Input n (Maybe [StreamCursorItem b])
+-&gt; Parser MetadataObjId 'Input n [Maybe [StreamCursorItem b]]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Parser 'Input n [StreamCursorItem b]
+-&gt; Parser MetadataObjId 'Input n (Maybe [StreamCursorItem b])
+forall origin (k :: Kind) (m :: * -&gt; *) a.
+(MonadParse m, 'Input &lt;: k) =&gt;
+Parser origin k m a -&gt; Parser origin k m (Maybe a)
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Input n [StreamCursorItem b]
+</span><a href="#local-6989586621689648909"><span class="hs-identifier hs-var">cursorParser</span></a></span><span>
+</span><span id="line-213"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">[[StreamCursorItem b]] -&gt; [StreamCursorItem b]
+forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">concat</span></span><span> </span><span class="annot"><span class="annottext">([[StreamCursorItem b]] -&gt; [StreamCursorItem b])
+-&gt; [[StreamCursorItem b]] -&gt; [StreamCursorItem b]
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Maybe [StreamCursorItem b]] -&gt; [[StreamCursorItem b]]
+forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
+</span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="annot"><span class="annottext">[Maybe [StreamCursorItem b]]
+</span><a href="#local-6989586621689648908"><span class="hs-identifier hs-var">cursorArgs</span></a></span><span>
+</span><span id="line-214"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-215"></span><span>    </span><span id="local-6989586621689648907"><span class="annot"><span class="annottext">cursorName :: Name
+</span><a href="#local-6989586621689648907"><span class="hs-identifier hs-var hs-var">cursorName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="Hasura.Name.html#_cursor"><span class="hs-identifier hs-var">Name._cursor</span></a></span><span>
+</span><span id="line-216"></span><span>    </span><span id="local-6989586621689648906"><span class="annot"><span class="annottext">cursorDesc :: Maybe Description
+</span><a href="#local-6989586621689648906"><span class="hs-identifier hs-var hs-var">cursorDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Description -&gt; Maybe Description
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(Description -&gt; Maybe Description)
+-&gt; Description -&gt; Maybe Description
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><span class="hs-identifier hs-var">G.Description</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;cursor to stream the results returned by the query&quot;</span></span><span>
+</span><span id="line-217"></span><span>
+</span><span id="line-218"></span><span class="hs-comment">-- | Arguments to the streaming subscription field.</span><span>
+</span><span id="line-219"></span><span class="hs-comment">-- &gt; table_stream (cursor: [table_stream_cursor_input]!, batch_size: Int!, where: table_bool_exp)</span><span>
+</span><span id="line-220"></span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamArguments"><span class="hs-identifier hs-type">tableStreamArguments</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-221"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689649046"><span class="annot"><a href="#local-6989586621689649046"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689649045"><span class="annot"><a href="#local-6989586621689649045"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689649044"><span class="annot"><a href="#local-6989586621689649044"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689649043"><span class="annot"><a href="#local-6989586621689649043"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-222"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.BoolExp.html#AggregationPredicatesSchema"><span class="hs-identifier hs-type">AggregationPredicatesSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649046"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-223"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649046"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649045"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649044"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649043"><span class="hs-identifier hs-type">n</span></a></span><span>
+</span><span id="line-224"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-225"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649046"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-226"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649046"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-227"></span><span>  </span><span class="annot"><a href="#local-6989586621689649044"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649043"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SelectStreamArgs"><span class="hs-identifier hs-type">SelectStreamArgs</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689649046"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-228"></span><span id="tableStreamArguments"><span class="annot"><span class="annottext">tableStreamArguments :: SourceInfo b
+-&gt; TableInfo b -&gt; m (InputFieldsParser n (SelectStreamArgs b))
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamArguments"><span class="hs-identifier hs-var hs-var">tableStreamArguments</span></a></span></span><span> </span><span id="local-6989586621689648900"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648900"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689648899"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648899"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-229"></span><span>  </span><span id="local-6989586621689648898"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689648898"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(r -&gt; NamingCase) -&gt; m NamingCase
+forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">r -&gt; NamingCase
+forall a t. Has a t =&gt; t -&gt; a
+</span><span class="hs-identifier hs-var">getter</span></span><span>
+</span><span id="line-230"></span><span>  </span><span id="local-6989586621689648897"><span class="annot"><span class="annottext">InputFieldsParser n (Maybe (AnnBoolExp b (UnpreparedValue b)))
+</span><a href="#local-6989586621689648897"><span class="hs-identifier hs-var">whereParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+-&gt; TableInfo b
+-&gt; m (InputFieldsParser
+        n (Maybe (AnnBoolExp b (UnpreparedValue b))))
+forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+(AggregationPredicatesSchema b, MonadBuildSchema b r m n) =&gt;
+SourceInfo b
+-&gt; TableInfo b
+-&gt; m (InputFieldsParser
+        n (Maybe (AnnBoolExp b (UnpreparedValue b))))
+</span><a href="Hasura.GraphQL.Schema.Select.html#tableWhereArg"><span class="hs-identifier hs-var">tableWhereArg</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648900"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648899"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-231"></span><span>  </span><span id="local-6989586621689648896"><span class="annot"><span class="annottext">InputFieldsParser n [StreamCursorItem b]
+</span><a href="#local-6989586621689648896"><span class="hs-identifier hs-var">cursorParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+-&gt; TableInfo b -&gt; m (InputFieldsParser n [StreamCursorItem b])
+forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+MonadBuildSchema b r m n =&gt;
+SourceInfo b
+-&gt; TableInfo b -&gt; m (InputFieldsParser n [StreamCursorItem b])
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamCursorArg"><span class="hs-identifier hs-var">tableStreamCursorArg</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648900"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648899"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-232"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-233"></span><span>    </span><span id="local-6989586621689648895"><span class="annot"><span class="annottext">Maybe (AnnBoolExp b (UnpreparedValue b))
+</span><a href="#local-6989586621689648895"><span class="hs-identifier hs-var">whereArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (Maybe (AnnBoolExp b (UnpreparedValue b)))
+</span><a href="#local-6989586621689648897"><span class="hs-identifier hs-var">whereParser</span></a></span><span>
+</span><span id="line-234"></span><span>    </span><span id="local-6989586621689648894"><span class="annot"><span class="annottext">StreamCursorItem b
+</span><a href="#local-6989586621689648894"><span class="hs-identifier hs-var">cursorArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-235"></span><span>      </span><span class="annot"><span class="annottext">InputFieldsParser n [StreamCursorItem b]
+</span><a href="#local-6989586621689648896"><span class="hs-identifier hs-var">cursorParser</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n [StreamCursorItem b]
+-&gt; ([StreamCursorItem b] -&gt; n (StreamCursorItem b))
+-&gt; InputFieldsParser MetadataObjId n (StreamCursorItem b)
+forall (m :: * -&gt; *) origin a b.
+Monad m =&gt;
+InputFieldsParser origin m a
+-&gt; (a -&gt; m b) -&gt; InputFieldsParser origin m b
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-236"></span><span>        </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; n (StreamCursorItem b)
+forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
+</span><span class="hs-string">&quot;one streaming column field is expected&quot;</span></span><span>
+</span><span id="line-237"></span><span>        </span><span class="hs-special">[</span><span id="local-6989586621689648891"><span class="annot"><span class="annottext">StreamCursorItem b
+</span><a href="#local-6989586621689648891"><span class="hs-identifier hs-var">c</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">StreamCursorItem b -&gt; n (StreamCursorItem b)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">StreamCursorItem b
+</span><a href="#local-6989586621689648891"><span class="hs-identifier hs-var">c</span></a></span><span>
+</span><span id="line-238"></span><span>        </span><span class="annot"><span class="annottext">[StreamCursorItem b]
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ErrorMessage -&gt; n (StreamCursorItem b)
+forall (m :: * -&gt; *) a. MonadParse m =&gt; ErrorMessage -&gt; m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
+</span><span class="hs-string">&quot;multiple column cursors are not supported yet&quot;</span></span><span>
+</span><span id="line-239"></span><span>    </span><span id="local-6989586621689648890"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689648890"><span class="hs-identifier hs-var">batchSizeArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; InputFieldsParser n Int
+forall (n :: * -&gt; *).
+MonadParse n =&gt;
+NamingCase -&gt; InputFieldsParser n Int
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#cursorBatchSizeArg"><span class="hs-identifier hs-var">cursorBatchSizeArg</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621689648898"><span class="hs-identifier hs-var">tCase</span></a></span><span>
+</span><span id="line-240"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
+</span><span id="line-241"></span><span>      </span><span class="annot"><span class="annottext">Maybe (AnnBoolExp b (UnpreparedValue b))
+-&gt; Int -&gt; StreamCursorItem b -&gt; SelectStreamArgs b
+forall (b :: BackendType) v.
+Maybe (AnnBoolExp b v)
+-&gt; Int -&gt; StreamCursorItem b -&gt; SelectStreamArgsG b v
+</span><a href="Hasura.RQL.IR.Select.html#SelectStreamArgsG"><span class="hs-identifier hs-var">IR.SelectStreamArgsG</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (AnnBoolExp b (UnpreparedValue b))
+</span><a href="#local-6989586621689648895"><span class="hs-identifier hs-var">whereArg</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689648890"><span class="hs-identifier hs-var">batchSizeArg</span></a></span><span> </span><span class="annot"><span class="annottext">StreamCursorItem b
+</span><a href="#local-6989586621689648894"><span class="hs-identifier hs-var">cursorArg</span></a></span><span>
+</span><span id="line-242"></span><span>
+</span><span id="line-243"></span><span class="hs-comment">-- | Field parser for a streaming subscription for a table.</span><span>
+</span><span id="line-244"></span><span class="annot"><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#selectStreamTable"><span class="hs-identifier hs-type">selectStreamTable</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-245"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689648888"><span class="annot"><a href="#local-6989586621689648888"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621689648887"><span class="annot"><a href="#local-6989586621689648887"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621689648886"><span class="annot"><a href="#local-6989586621689648886"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689648885"><span class="annot"><a href="#local-6989586621689648885"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-246"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689648888"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689648887"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689648886"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689648885"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-247"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.BoolExp.html#AggregationPredicatesSchema"><span class="hs-identifier hs-type">AggregationPredicatesSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689648888"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-248"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendTableSelectSchema"><span class="hs-identifier hs-type">BackendTableSelectSchema</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689648888"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-249"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-250"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689648888"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-251"></span><span>  </span><span class="hs-comment">-- | table info</span><span>
+</span><span id="line-252"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689648888"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-253"></span><span>  </span><span class="hs-comment">-- | field display name</span><span>
+</span><span id="line-254"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-255"></span><span>  </span><span class="hs-comment">-- | field description, if any</span><span>
+</span><span id="line-256"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Description</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-257"></span><span>  </span><span class="annot"><a href="#local-6989586621689648886"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">P.FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689648885"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#StreamSelectExp"><span class="hs-identifier hs-type">StreamSelectExp</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689648888"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-258"></span><span id="selectStreamTable"><span class="annot"><span class="annottext">selectStreamTable :: SourceInfo b
+-&gt; TableInfo b
+-&gt; Name
+-&gt; Maybe Description
+-&gt; m (Maybe (FieldParser n (StreamSelectExp b)))
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#selectStreamTable"><span class="hs-identifier hs-var hs-var">selectStreamTable</span></a></span></span><span> </span><span id="local-6989586621689648884"><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648884"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621689648883"><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648883"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span id="local-6989586621689648882"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648882"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span id="local-6989586621689648881"><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689648881"><span class="hs-identifier hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaybeT m (FieldParser n (StreamSelectExp b))
+-&gt; m (Maybe (FieldParser n (StreamSelectExp b)))
+forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
+</span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="annot"><span class="annottext">(MaybeT m (FieldParser n (StreamSelectExp b))
+ -&gt; m (Maybe (FieldParser n (StreamSelectExp b))))
+-&gt; MaybeT m (FieldParser n (StreamSelectExp b))
+-&gt; m (Maybe (FieldParser n (StreamSelectExp b)))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-259"></span><span>  </span><span id="local-6989586621689648879"><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689648879"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SchemaContext -&gt; RoleName) -&gt; MaybeT m RoleName
+forall r (m :: * -&gt; *) a b.
+(MonadReader r m, Has a r) =&gt;
+(a -&gt; b) -&gt; m b
+</span><a href="Hasura.GraphQL.Schema.Common.html#retrieve"><span class="hs-identifier hs-var">retrieve</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaContext -&gt; RoleName
+</span><a href="Hasura.GraphQL.Schema.Common.html#scRole"><span class="hs-identifier hs-var hs-var">scRole</span></a></span><span>
+</span><span id="line-260"></span><span>  </span><span id="local-6989586621689648876"><span class="annot"><span class="annottext">SelPermInfo b
+</span><a href="#local-6989586621689648876"><span class="hs-identifier hs-var">selectPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (SelPermInfo b) -&gt; MaybeT m (SelPermInfo b)
+forall (m :: * -&gt; *) b. Applicative m =&gt; Maybe b -&gt; MaybeT m b
+</span><a href="Hasura.Prelude.html#hoistMaybe"><span class="hs-identifier hs-var">hoistMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe (SelPermInfo b) -&gt; MaybeT m (SelPermInfo b))
+-&gt; Maybe (SelPermInfo b) -&gt; MaybeT m (SelPermInfo b)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RoleName -&gt; TableInfo b -&gt; Maybe (SelPermInfo b)
+forall (b :: BackendType).
+RoleName -&gt; TableInfo b -&gt; Maybe (SelPermInfo b)
+</span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var">tableSelectPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
+</span><a href="#local-6989586621689648879"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648883"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-261"></span><span>  </span><span id="local-6989586621689648874"><span class="annot"><span class="annottext">XStreamingSubscription b
+</span><a href="#local-6989586621689648874"><span class="hs-identifier hs-var">xStreamSubscription</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe (XStreamingSubscription b)
+-&gt; MaybeT m (XStreamingSubscription b)
+forall (m :: * -&gt; *) b. Applicative m =&gt; Maybe b -&gt; MaybeT m b
+</span><a href="Hasura.Prelude.html#hoistMaybe"><span class="hs-identifier hs-var">hoistMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe (XStreamingSubscription b)
+ -&gt; MaybeT m (XStreamingSubscription b))
+-&gt; Maybe (XStreamingSubscription b)
+-&gt; MaybeT m (XStreamingSubscription b)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">BackendSchema b =&gt; Maybe (XStreamingSubscription b)
+forall (b :: BackendType).
+BackendSchema b =&gt;
+Maybe (XStreamingSubscription b)
+</span><a href="Hasura.GraphQL.Schema.Backend.html#streamSubscriptionExtension"><span class="hs-identifier hs-var">streamSubscriptionExtension</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689648888"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-262"></span><span>  </span><span id="local-6989586621689648872"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621689648872"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(SchemaOptions -&gt; StringifyNumbers) -&gt; MaybeT m StringifyNumbers
+forall r (m :: * -&gt; *) a b.
+(MonadReader r m, Has a r) =&gt;
+(a -&gt; b) -&gt; m b
+</span><a href="Hasura.GraphQL.Schema.Common.html#retrieve"><span class="hs-identifier hs-var">retrieve</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaOptions -&gt; StringifyNumbers
+</span><a href="Hasura.GraphQL.Schema.Options.html#soStringifyNumbers"><span class="hs-identifier hs-var hs-var">Options.soStringifyNumbers</span></a></span><span>
+</span><span id="line-263"></span><span>  </span><span id="local-6989586621689648870"><span class="annot"><span class="annottext">InputFieldsParser n (SelectStreamArgs b)
+</span><a href="#local-6989586621689648870"><span class="hs-identifier hs-var">tableStreamArgsParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (InputFieldsParser n (SelectStreamArgs b))
+-&gt; MaybeT m (InputFieldsParser n (SelectStreamArgs b))
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (InputFieldsParser n (SelectStreamArgs b))
+ -&gt; MaybeT m (InputFieldsParser n (SelectStreamArgs b)))
+-&gt; m (InputFieldsParser n (SelectStreamArgs b))
+-&gt; MaybeT m (InputFieldsParser n (SelectStreamArgs b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+-&gt; TableInfo b -&gt; m (InputFieldsParser n (SelectStreamArgs b))
+forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+(AggregationPredicatesSchema b, MonadBuildSchema b r m n) =&gt;
+SourceInfo b
+-&gt; TableInfo b -&gt; m (InputFieldsParser n (SelectStreamArgs b))
+</span><a href="Hasura.GraphQL.Schema.SubscriptionStream.html#tableStreamArguments"><span class="hs-identifier hs-var">tableStreamArguments</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648884"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648883"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-264"></span><span>  </span><span id="local-6989586621689648868"><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
+</span><a href="#local-6989586621689648868"><span class="hs-identifier hs-var">selectionSetParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">m (Maybe (Parser 'Output n (AnnotatedFields b)))
+-&gt; MaybeT m (Parser 'Output n (AnnotatedFields b))
+forall (m :: * -&gt; *) a. m (Maybe a) -&gt; MaybeT m a
+</span><span class="hs-identifier hs-var">MaybeT</span></span><span> </span><span class="annot"><span class="annottext">(m (Maybe (Parser 'Output n (AnnotatedFields b)))
+ -&gt; MaybeT m (Parser 'Output n (AnnotatedFields b)))
+-&gt; m (Maybe (Parser 'Output n (AnnotatedFields b)))
+-&gt; MaybeT m (Parser 'Output n (AnnotatedFields b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+-&gt; TableInfo b -&gt; m (Maybe (Parser 'Output n (AnnotatedFields b)))
+forall r (m :: * -&gt; *) (n :: * -&gt; *) (b :: BackendType).
+(MonadBuildSchemaBase r m n, BackendTableSelectSchema b) =&gt;
+SourceInfo b
+-&gt; TableInfo b -&gt; m (Maybe (Parser 'Output n (AnnotatedFields b)))
+</span><a href="Hasura.GraphQL.Schema.Select.html#tableSelectionList"><span class="hs-identifier hs-var">tableSelectionList</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648884"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648883"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-265"></span><span>  </span><span class="annot"><span class="annottext">m (FieldParser n (StreamSelectExp b))
+-&gt; MaybeT m (FieldParser n (StreamSelectExp b))
+forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+(MonadTrans t, Monad m) =&gt;
+m a -&gt; t m a
+</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (FieldParser n (StreamSelectExp b))
+ -&gt; MaybeT m (FieldParser n (StreamSelectExp b)))
+-&gt; m (FieldParser n (StreamSelectExp b))
+-&gt; MaybeT m (FieldParser n (StreamSelectExp b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-266"></span><span>    </span><span class="annot"><span class="annottext">Name
+-&gt; (SourceName, TableName b, Name)
+-&gt; m (FieldParser n (StreamSelectExp b))
+-&gt; m (FieldParser n (StreamSelectExp b))
+forall (m :: * -&gt; *) a p.
+(MonadMemoize m, Ord a, Typeable a, Typeable p) =&gt;
+Name -&gt; a -&gt; m p -&gt; m p
+</span><a href="Control.Monad.Memoize.html#memoizeOn"><span class="hs-identifier hs-var">memoizeOn</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">selectStreamTable</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceInfo b -&gt; SourceName
+forall (b :: BackendType). SourceInfo b -&gt; SourceName
+</span><a href="Hasura.RQL.Types.Source.html#_siName"><span class="hs-identifier hs-var hs-var">_siName</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo b
+</span><a href="#local-6989586621689648884"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689648866"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648882"><span class="hs-identifier hs-var">fieldName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m (FieldParser n (StreamSelectExp b))
+ -&gt; m (FieldParser n (StreamSelectExp b)))
+-&gt; m (FieldParser n (StreamSelectExp b))
+-&gt; m (FieldParser n (StreamSelectExp b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-267"></span><span>      </span><span class="annot"><span class="annottext">FieldParser n (StreamSelectExp b)
+-&gt; m (FieldParser n (StreamSelectExp b))
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(FieldParser n (StreamSelectExp b)
+ -&gt; m (FieldParser n (StreamSelectExp b)))
+-&gt; FieldParser n (StreamSelectExp b)
+-&gt; m (FieldParser n (StreamSelectExp b))
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-268"></span><span>        </span><span class="annot"><span class="annottext">Name
+-&gt; Maybe Description
+-&gt; InputFieldsParser n (SelectStreamArgs b)
+-&gt; Parser 'Output n (AnnotatedFields b)
+-&gt; FieldParser
+     MetadataObjId n (SelectStreamArgs b, AnnotatedFields b)
+forall (m :: * -&gt; *) origin a b.
+MonadParse m =&gt;
+Name
+-&gt; Maybe Description
+-&gt; InputFieldsParser origin m a
+-&gt; Parser origin 'Output m b
+-&gt; FieldParser origin m (a, b)
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.subselection</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689648882"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Description
+</span><a href="#local-6989586621689648881"><span class="hs-identifier hs-var">description</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser n (SelectStreamArgs b)
+</span><a href="#local-6989586621689648870"><span class="hs-identifier hs-var">tableStreamArgsParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Output n (AnnotatedFields b)
+</span><a href="#local-6989586621689648868"><span class="hs-identifier hs-var">selectionSetParser</span></a></span><span>
+</span><span id="line-269"></span><span>          </span><span class="annot"><span class="annottext">FieldParser MetadataObjId n (SelectStreamArgs b, AnnotatedFields b)
+-&gt; ((SelectStreamArgs b, AnnotatedFields b) -&gt; StreamSelectExp b)
+-&gt; FieldParser n (StreamSelectExp b)
+forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689648864"><span class="annot"><span class="annottext">SelectStreamArgs b
+</span><a href="#local-6989586621689648864"><span class="hs-identifier hs-var">args</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689648863"><span class="annot"><span class="annottext">AnnotatedFields b
+</span><a href="#local-6989586621689648863"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-270"></span><span>            </span><span class="annot"><span class="annottext">AnnSelectStreamG :: forall (b :: BackendType) (f :: * -&gt; *) v.
+XStreamingSubscription b
+-&gt; Fields (f v)
+-&gt; SelectFromG b v
+-&gt; TablePermG b v
+-&gt; SelectStreamArgsG b v
+-&gt; StringifyNumbers
+-&gt; AnnSelectStreamG b f v
+</span><a href="Hasura.RQL.IR.Select.html#AnnSelectStreamG"><span class="hs-identifier hs-type">IR.AnnSelectStreamG</span></a></span><span>
+</span><span id="line-271"></span><span>              </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:_assnXStreamingSubscription:AnnSelectStreamG :: XStreamingSubscription b
+</span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_assnXStreamingSubscription%3AAnnSelectStreamG"><span class="hs-identifier hs-var">IR._assnXStreamingSubscription</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">XStreamingSubscription b
+</span><a href="#local-6989586621689648874"><span class="hs-identifier hs-var">xStreamSubscription</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-272"></span><span>                </span><span class="annot"><span class="annottext">$sel:_assnFields:AnnSelectStreamG :: AnnotatedFields b
+</span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_assnFields%3AAnnSelectStreamG"><span class="hs-identifier hs-var">IR._assnFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnotatedFields b
+</span><a href="#local-6989586621689648863"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-273"></span><span>                </span><span class="annot"><span class="annottext">$sel:_assnFrom:AnnSelectStreamG :: SelectFromG b (UnpreparedValue b)
+</span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_assnFrom%3AAnnSelectStreamG"><span class="hs-identifier hs-var">IR._assnFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName b -&gt; SelectFromG b (UnpreparedValue b)
+forall (b :: BackendType) v. TableName b -&gt; SelectFromG b v
+</span><a href="Hasura.RQL.IR.Select.html#FromTable"><span class="hs-identifier hs-var">IR.FromTable</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
+</span><a href="#local-6989586621689648866"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-274"></span><span>                </span><span class="annot"><span class="annottext">$sel:_assnPerm:AnnSelectStreamG :: TablePermG b (UnpreparedValue b)
+</span><a href="#local-6989586621689648857"><span class="hs-identifier hs-var">IR._assnPerm</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelPermInfo b -&gt; TablePermG b (UnpreparedValue b)
+forall (b :: BackendType).
+Backend b =&gt;
+SelPermInfo b -&gt; TablePerms b
+</span><a href="Hasura.GraphQL.Schema.Select.html#tablePermissionsInfo"><span class="hs-identifier hs-var">tablePermissionsInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo b
+</span><a href="#local-6989586621689648876"><span class="hs-identifier hs-var">selectPermissions</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-275"></span><span>                </span><span class="annot"><span class="annottext">$sel:_assnArgs:AnnSelectStreamG :: SelectStreamArgs b
+</span><a href="#local-6989586621689648856"><span class="hs-identifier hs-var">IR._assnArgs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectStreamArgs b
+</span><a href="#local-6989586621689648864"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-276"></span><span>                </span><span class="annot"><span class="annottext">$sel:_assnStrfyNum:AnnSelectStreamG :: StringifyNumbers
+</span><a href="#local-6989586621689648855"><span class="hs-identifier hs-var">IR._assnStrfyNum</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621689648872"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span><span>
+</span><span id="line-277"></span><span>              </span><span class="hs-special">}</span><span>
+</span><span id="line-278"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-279"></span><span>    </span><span id="local-6989586621689648866"><span class="annot"><span class="annottext">tableName :: TableName b
+</span><a href="#local-6989586621689648866"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableInfo b -&gt; TableName b
+forall (b :: BackendType). TableInfo b -&gt; TableName b
+</span><a href="Hasura.RQL.Types.Table.html#tableInfoName"><span class="hs-identifier hs-var">tableInfoName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo b
+</span><a href="#local-6989586621689648883"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-280"></span></pre></body></html>

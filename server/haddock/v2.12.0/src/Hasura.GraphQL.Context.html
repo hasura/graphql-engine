@@ -1,0 +1,242 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE TemplateHaskell #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.GraphQL.Context</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Context.html#RoleContext"><span class="hs-identifier">RoleContext</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Context.html#GQLContext"><span class="hs-identifier">GQLContext</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.GraphQL.Context.html#ParserFn"><span class="hs-identifier">ParserFn</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-8"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.TH</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Namespace.html"><span class="hs-identifier">Hasura.GraphQL.Namespace</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier">Hasura.GraphQL.Parser</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.html"><span class="hs-identifier">Hasura.RQL.IR</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">IR</span></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- | For storing both a normal GQLContext and one for the backend variant.</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- Currently, this is to enable the backend variant to have certain insert/update/delete</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- permissions which the frontend variant does not.</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">data</span><span> </span><span id="RoleContext"><span class="annot"><a href="Hasura.GraphQL.Context.html#RoleContext"><span class="hs-identifier hs-var">RoleContext</span></a></span></span><span> </span><span id="local-6989586621689619371"><span class="annot"><a href="#local-6989586621689619371"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RoleContext"><span class="annot"><a href="Hasura.GraphQL.Context.html#RoleContext"><span class="hs-identifier hs-var">RoleContext</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The default context for normal sessions</span><span>
+</span><span id="line-24"></span><span>    </span><span id="_rctxDefault"><span class="annot"><span class="annottext">RoleContext a -&gt; a
+</span><a href="Hasura.GraphQL.Context.html#_rctxDefault"><span class="hs-identifier hs-var hs-var">_rctxDefault</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="#local-6989586621689619371"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-25"></span><span>    </span><span class="hs-comment">-- | The context for sessions with backend privilege.</span><span>
+</span><span id="line-26"></span><span>    </span><span id="_rctxBackend"><span class="annot"><span class="annottext">RoleContext a -&gt; Maybe a
+</span><a href="Hasura.GraphQL.Context.html#_rctxBackend"><span class="hs-identifier hs-var hs-var">_rctxBackend</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621689619371"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689619362"><span id="local-6989586621689619364"><span id="local-6989586621689619366"><span class="annot"><span class="annottext">Int -&gt; RoleContext a -&gt; ShowS
+[RoleContext a] -&gt; ShowS
+RoleContext a -&gt; String
+(Int -&gt; RoleContext a -&gt; ShowS)
+-&gt; (RoleContext a -&gt; String)
+-&gt; ([RoleContext a] -&gt; ShowS)
+-&gt; Show (RoleContext a)
+forall a. Show a =&gt; Int -&gt; RoleContext a -&gt; ShowS
+forall a. Show a =&gt; [RoleContext a] -&gt; ShowS
+forall a. Show a =&gt; RoleContext a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [RoleContext a] -&gt; ShowS
+$cshowList :: forall a. Show a =&gt; [RoleContext a] -&gt; ShowS
+show :: RoleContext a -&gt; String
+$cshow :: forall a. Show a =&gt; RoleContext a -&gt; String
+showsPrec :: Int -&gt; RoleContext a -&gt; ShowS
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; RoleContext a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689619357"><span id="local-6989586621689619359"><span class="annot"><span class="annottext">RoleContext a -&gt; RoleContext a -&gt; Bool
+(RoleContext a -&gt; RoleContext a -&gt; Bool)
+-&gt; (RoleContext a -&gt; RoleContext a -&gt; Bool) -&gt; Eq (RoleContext a)
+forall a. Eq a =&gt; RoleContext a -&gt; RoleContext a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: RoleContext a -&gt; RoleContext a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; RoleContext a -&gt; RoleContext a -&gt; Bool
+== :: RoleContext a -&gt; RoleContext a -&gt; Bool
+$c== :: forall a. Eq a =&gt; RoleContext a -&gt; RoleContext a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689619352"><span id="local-6989586621689619354"><span class="annot"><span class="annottext">a -&gt; RoleContext b -&gt; RoleContext a
+(a -&gt; b) -&gt; RoleContext a -&gt; RoleContext b
+(forall a b. (a -&gt; b) -&gt; RoleContext a -&gt; RoleContext b)
+-&gt; (forall a b. a -&gt; RoleContext b -&gt; RoleContext a)
+-&gt; Functor RoleContext
+forall a b. a -&gt; RoleContext b -&gt; RoleContext a
+forall a b. (a -&gt; b) -&gt; RoleContext a -&gt; RoleContext b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; RoleContext b -&gt; RoleContext a
+$c&lt;$ :: forall a b. a -&gt; RoleContext b -&gt; RoleContext a
+fmap :: (a -&gt; b) -&gt; RoleContext a -&gt; RoleContext b
+$cfmap :: forall a b. (a -&gt; b) -&gt; RoleContext a -&gt; RoleContext b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689619317"><span id="local-6989586621689619319"><span id="local-6989586621689619321"><span id="local-6989586621689619323"><span id="local-6989586621689619325"><span id="local-6989586621689619327"><span id="local-6989586621689619329"><span id="local-6989586621689619331"><span id="local-6989586621689619333"><span id="local-6989586621689619335"><span id="local-6989586621689619337"><span id="local-6989586621689619339"><span id="local-6989586621689619341"><span id="local-6989586621689619343"><span id="local-6989586621689619345"><span id="local-6989586621689619347"><span id="local-6989586621689619349"><span class="annot"><span class="annottext">RoleContext a -&gt; Bool
+(a -&gt; m) -&gt; RoleContext a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b
+(forall m. Monoid m =&gt; RoleContext m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RoleContext a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RoleContext a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; RoleContext a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; RoleContext a -&gt; a)
+-&gt; (forall a. RoleContext a -&gt; [a])
+-&gt; (forall a. RoleContext a -&gt; Bool)
+-&gt; (forall a. RoleContext a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; RoleContext a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; RoleContext a -&gt; a)
+-&gt; (forall a. Ord a =&gt; RoleContext a -&gt; a)
+-&gt; (forall a. Num a =&gt; RoleContext a -&gt; a)
+-&gt; (forall a. Num a =&gt; RoleContext a -&gt; a)
+-&gt; Foldable RoleContext
+forall a. Eq a =&gt; a -&gt; RoleContext a -&gt; Bool
+forall a. Num a =&gt; RoleContext a -&gt; a
+forall a. Ord a =&gt; RoleContext a -&gt; a
+forall m. Monoid m =&gt; RoleContext m -&gt; m
+forall a. RoleContext a -&gt; Bool
+forall a. RoleContext a -&gt; Int
+forall a. RoleContext a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; RoleContext a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RoleContext a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: RoleContext a -&gt; a
+$cproduct :: forall a. Num a =&gt; RoleContext a -&gt; a
+sum :: RoleContext a -&gt; a
+$csum :: forall a. Num a =&gt; RoleContext a -&gt; a
+minimum :: RoleContext a -&gt; a
+$cminimum :: forall a. Ord a =&gt; RoleContext a -&gt; a
+maximum :: RoleContext a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; RoleContext a -&gt; a
+elem :: a -&gt; RoleContext a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; RoleContext a -&gt; Bool
+length :: RoleContext a -&gt; Int
+$clength :: forall a. RoleContext a -&gt; Int
+null :: RoleContext a -&gt; Bool
+$cnull :: forall a. RoleContext a -&gt; Bool
+toList :: RoleContext a -&gt; [a]
+$ctoList :: forall a. RoleContext a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; RoleContext a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; RoleContext a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; RoleContext a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; RoleContext a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; RoleContext a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; RoleContext a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RoleContext a -&gt; m
+foldMap :: (a -&gt; m) -&gt; RoleContext a -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; RoleContext a -&gt; m
+fold :: RoleContext m -&gt; m
+$cfold :: forall m. Monoid m =&gt; RoleContext m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689619306"><span id="local-6989586621689619308"><span id="local-6989586621689619310"><span id="local-6989586621689619312"><span class="annot"><span class="annottext">Functor RoleContext
+Foldable RoleContext
+Functor RoleContext
+-&gt; Foldable RoleContext
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; RoleContext a -&gt; f (RoleContext b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    RoleContext (f a) -&gt; f (RoleContext a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; RoleContext a -&gt; m (RoleContext b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    RoleContext (m a) -&gt; m (RoleContext a))
+-&gt; Traversable RoleContext
+(a -&gt; f b) -&gt; RoleContext a -&gt; f (RoleContext b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+RoleContext (m a) -&gt; m (RoleContext a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+RoleContext (f a) -&gt; f (RoleContext a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; RoleContext a -&gt; m (RoleContext b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; RoleContext a -&gt; f (RoleContext b)
+sequence :: RoleContext (m a) -&gt; m (RoleContext a)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+RoleContext (m a) -&gt; m (RoleContext a)
+mapM :: (a -&gt; m b) -&gt; RoleContext a -&gt; m (RoleContext b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; RoleContext a -&gt; m (RoleContext b)
+sequenceA :: RoleContext (f a) -&gt; f (RoleContext a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+RoleContext (f a) -&gt; f (RoleContext a)
+traverse :: (a -&gt; f b) -&gt; RoleContext a -&gt; f (RoleContext b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; RoleContext a -&gt; f (RoleContext b)
+$cp2Traversable :: Foldable RoleContext
+$cp1Traversable :: Functor RoleContext
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="hs-special">$(</span><span id="local-6989586621689619297"><span id="local-6989586621689619299"><span id="local-6989586621689619301"><span id="local-6989586621689619303"><span id="local-6989586621689619371"><span class="hs-identifier">deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">RoleContext</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-keyword">data</span><span> </span><span id="GQLContext"><span class="annot"><a href="Hasura.GraphQL.Context.html#GQLContext"><span class="hs-identifier hs-var">GQLContext</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="GQLContext"><span class="annot"><a href="Hasura.GraphQL.Context.html#GQLContext"><span class="hs-identifier hs-var">GQLContext</span></a></span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="gqlQueryParser"><span class="annot"><span class="annottext">GQLContext
+-&gt; ParserFn (RootFieldMap (QueryRootField UnpreparedValue))
+</span><a href="Hasura.GraphQL.Context.html#gqlQueryParser"><span class="hs-identifier hs-var hs-var">gqlQueryParser</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Context.html#ParserFn"><span class="hs-identifier hs-type">ParserFn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">IR.QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span id="gqlMutationParser"><span class="annot"><span class="annottext">GQLContext
+-&gt; Maybe
+     (ParserFn (RootFieldMap (MutationRootField UnpreparedValue)))
+</span><a href="Hasura.GraphQL.Context.html#gqlMutationParser"><span class="hs-identifier hs-var hs-var">gqlMutationParser</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Context.html#ParserFn"><span class="hs-identifier hs-type">ParserFn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#MutationRootField"><span class="hs-identifier hs-type">IR.MutationRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>    </span><span id="gqlSubscriptionParser"><span class="annot"><span class="annottext">GQLContext
+-&gt; Maybe (ParserFn (RootFieldMap (QueryRootField UnpreparedValue)))
+</span><a href="Hasura.GraphQL.Context.html#gqlSubscriptionParser"><span class="hs-identifier hs-var hs-var">gqlSubscriptionParser</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Context.html#ParserFn"><span class="hs-identifier hs-type">ParserFn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Namespace.html#RootFieldMap"><span class="hs-identifier hs-type">RootFieldMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Root.html#QueryRootField"><span class="hs-identifier hs-type">IR.QueryRootField</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689619283"><span id="local-6989586621689619285"><span id="local-6989586621689619287"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Context.html#GQLContext"><span class="hs-identifier hs-type">GQLContext</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621689619282"><span class="annot"><span class="annottext">toJSON :: GQLContext -&gt; Value
+</span><a href="#local-6989586621689619282"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Context.html#GQLContext"><span class="hs-identifier hs-type">GQLContext</span></a></span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;The GraphQL schema parsers&quot;</span></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">type</span><span> </span><span id="ParserFn"><span class="annot"><a href="Hasura.GraphQL.Context.html#ParserFn"><span class="hs-identifier hs-var">ParserFn</span></a></span></span><span> </span><span id="local-6989586621689619280"><span class="annot"><a href="#local-6989586621689619280"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">G.SelectionSet</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.NoFragments</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-43"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689619280"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-44"></span></pre></body></html>

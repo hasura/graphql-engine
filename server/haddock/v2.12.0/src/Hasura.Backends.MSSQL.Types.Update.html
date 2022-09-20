@@ -1,0 +1,867 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">-- | MSSQL Types Update</span><span>
+</span><span id="line-2"></span><span class="hs-comment">--</span><span>
+</span><span id="line-3"></span><span class="hs-comment">-- This module defines the Update-related IR types specific to MSSQL.</span><span>
+</span><span id="line-4"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Update</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#BackendUpdate"><span class="hs-identifier">BackendUpdate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateOperator"><span class="hs-identifier">UpdateOperator</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#Update"><span class="hs-identifier">Update</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateSet"><span class="hs-identifier">UpdateSet</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateOutput"><span class="hs-identifier">UpdateOutput</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Instances.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Instances</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html"><span class="hs-identifier">Hasura.Backends.MSSQL.Types.Internal</span></a></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-comment">-- | The MSSQL-specific data of an Update expression.</span><span>
+</span><span id="line-18"></span><span class="hs-comment">--</span><span>
+</span><span id="line-19"></span><span class="hs-comment">-- This is parameterised over @v@ which enables different phases of IR</span><span>
+</span><span id="line-20"></span><span class="hs-comment">-- transformation to maintain the overall structure while enriching/transforming</span><span>
+</span><span id="line-21"></span><span class="hs-comment">-- the data at the leaves.</span><span>
+</span><span id="line-22"></span><span id="local-6989586621689585959"><span id="local-6989586621689585960"></span></span><span class="hs-keyword">data</span><span> </span><span id="BackendUpdate"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-var">BackendUpdate</span></a></span></span><span> </span><span id="local-6989586621689585958"><span class="annot"><a href="#local-6989586621689585958"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BackendUpdate"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-var">BackendUpdate</span></a></span></span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The update operations to perform on each column.</span><span>
+</span><span id="line-24"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-25"></span><span>    </span><span class="hs-comment">-- This HashMap will also contain the update operators for the presets.</span><span>
+</span><span id="line-26"></span><span>    </span><span class="hs-comment">-- They are populated as part of the schema building in</span><span>
+</span><span id="line-27"></span><span>    </span><span class="hs-comment">-- 'Hasura.Backends.MSSQL.Instances.Schema.msBuildTableUpdateMutationFields'</span><span>
+</span><span id="line-28"></span><span>    </span><span class="hs-comment">-- in the call to @buildUpdateOperators@.</span><span>
+</span><span id="line-29"></span><span>    </span><span id="updateOperations"><span class="annot"><span class="annottext">BackendUpdate v -&gt; HashMap ColumnName (UpdateOperator v)
+</span><a href="Hasura.Backends.MSSQL.Types.Update.html#updateOperations"><span class="hs-identifier hs-var hs-var">updateOperations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateOperator"><span class="hs-identifier hs-type">UpdateOperator</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689585958"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689585952"><span id="local-6989586621689585954"><span class="annot"><span class="annottext">a -&gt; BackendUpdate b -&gt; BackendUpdate a
+(a -&gt; b) -&gt; BackendUpdate a -&gt; BackendUpdate b
+(forall a b. (a -&gt; b) -&gt; BackendUpdate a -&gt; BackendUpdate b)
+-&gt; (forall a b. a -&gt; BackendUpdate b -&gt; BackendUpdate a)
+-&gt; Functor BackendUpdate
+forall a b. a -&gt; BackendUpdate b -&gt; BackendUpdate a
+forall a b. (a -&gt; b) -&gt; BackendUpdate a -&gt; BackendUpdate b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; BackendUpdate b -&gt; BackendUpdate a
+$c&lt;$ :: forall a b. a -&gt; BackendUpdate b -&gt; BackendUpdate a
+fmap :: (a -&gt; b) -&gt; BackendUpdate a -&gt; BackendUpdate b
+$cfmap :: forall a b. (a -&gt; b) -&gt; BackendUpdate a -&gt; BackendUpdate b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689585917"><span id="local-6989586621689585919"><span id="local-6989586621689585921"><span id="local-6989586621689585923"><span id="local-6989586621689585925"><span id="local-6989586621689585927"><span id="local-6989586621689585929"><span id="local-6989586621689585931"><span id="local-6989586621689585933"><span id="local-6989586621689585935"><span id="local-6989586621689585937"><span id="local-6989586621689585939"><span id="local-6989586621689585941"><span id="local-6989586621689585943"><span id="local-6989586621689585945"><span id="local-6989586621689585947"><span id="local-6989586621689585949"><span class="annot"><span class="annottext">BackendUpdate a -&gt; Bool
+(a -&gt; m) -&gt; BackendUpdate a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
+(forall m. Monoid m =&gt; BackendUpdate m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendUpdate a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendUpdate a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; BackendUpdate a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; BackendUpdate a -&gt; a)
+-&gt; (forall a. BackendUpdate a -&gt; [a])
+-&gt; (forall a. BackendUpdate a -&gt; Bool)
+-&gt; (forall a. BackendUpdate a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; BackendUpdate a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; BackendUpdate a -&gt; a)
+-&gt; (forall a. Ord a =&gt; BackendUpdate a -&gt; a)
+-&gt; (forall a. Num a =&gt; BackendUpdate a -&gt; a)
+-&gt; (forall a. Num a =&gt; BackendUpdate a -&gt; a)
+-&gt; Foldable BackendUpdate
+forall a. Eq a =&gt; a -&gt; BackendUpdate a -&gt; Bool
+forall a. Num a =&gt; BackendUpdate a -&gt; a
+forall a. Ord a =&gt; BackendUpdate a -&gt; a
+forall m. Monoid m =&gt; BackendUpdate m -&gt; m
+forall a. BackendUpdate a -&gt; Bool
+forall a. BackendUpdate a -&gt; Int
+forall a. BackendUpdate a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; BackendUpdate a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendUpdate a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: BackendUpdate a -&gt; a
+$cproduct :: forall a. Num a =&gt; BackendUpdate a -&gt; a
+sum :: BackendUpdate a -&gt; a
+$csum :: forall a. Num a =&gt; BackendUpdate a -&gt; a
+minimum :: BackendUpdate a -&gt; a
+$cminimum :: forall a. Ord a =&gt; BackendUpdate a -&gt; a
+maximum :: BackendUpdate a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; BackendUpdate a -&gt; a
+elem :: a -&gt; BackendUpdate a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; BackendUpdate a -&gt; Bool
+length :: BackendUpdate a -&gt; Int
+$clength :: forall a. BackendUpdate a -&gt; Int
+null :: BackendUpdate a -&gt; Bool
+$cnull :: forall a. BackendUpdate a -&gt; Bool
+toList :: BackendUpdate a -&gt; [a]
+$ctoList :: forall a. BackendUpdate a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; BackendUpdate a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; BackendUpdate a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; BackendUpdate a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; BackendUpdate a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; BackendUpdate a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; BackendUpdate a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendUpdate a -&gt; m
+foldMap :: (a -&gt; m) -&gt; BackendUpdate a -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; BackendUpdate a -&gt; m
+fold :: BackendUpdate m -&gt; m
+$cfold :: forall m. Monoid m =&gt; BackendUpdate m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689585906"><span id="local-6989586621689585908"><span id="local-6989586621689585910"><span id="local-6989586621689585912"><span class="annot"><span class="annottext">Functor BackendUpdate
+Foldable BackendUpdate
+Functor BackendUpdate
+-&gt; Foldable BackendUpdate
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; BackendUpdate a -&gt; f (BackendUpdate b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    BackendUpdate (f a) -&gt; f (BackendUpdate a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; BackendUpdate a -&gt; m (BackendUpdate b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    BackendUpdate (m a) -&gt; m (BackendUpdate a))
+-&gt; Traversable BackendUpdate
+(a -&gt; f b) -&gt; BackendUpdate a -&gt; f (BackendUpdate b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+BackendUpdate (m a) -&gt; m (BackendUpdate a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+BackendUpdate (f a) -&gt; f (BackendUpdate a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; BackendUpdate a -&gt; m (BackendUpdate b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; BackendUpdate a -&gt; f (BackendUpdate b)
+sequence :: BackendUpdate (m a) -&gt; m (BackendUpdate a)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+BackendUpdate (m a) -&gt; m (BackendUpdate a)
+mapM :: (a -&gt; m b) -&gt; BackendUpdate a -&gt; m (BackendUpdate b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; BackendUpdate a -&gt; m (BackendUpdate b)
+sequenceA :: BackendUpdate (f a) -&gt; f (BackendUpdate a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+BackendUpdate (f a) -&gt; f (BackendUpdate a)
+traverse :: (a -&gt; f b) -&gt; BackendUpdate a -&gt; f (BackendUpdate b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; BackendUpdate a -&gt; f (BackendUpdate b)
+$cp2Traversable :: Foldable BackendUpdate
+$cp1Traversable :: Functor BackendUpdate
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. BackendUpdate v -&gt; Rep (BackendUpdate v) x)
+-&gt; (forall x. Rep (BackendUpdate v) x -&gt; BackendUpdate v)
+-&gt; Generic (BackendUpdate v)
+forall x. Rep (BackendUpdate v) x -&gt; BackendUpdate v
+forall x. BackendUpdate v -&gt; Rep (BackendUpdate v) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall v x. Rep (BackendUpdate v) x -&gt; BackendUpdate v
+forall v x. BackendUpdate v -&gt; Rep (BackendUpdate v) x
+$cto :: forall v x. Rep (BackendUpdate v) x -&gt; BackendUpdate v
+$cfrom :: forall v x. BackendUpdate v -&gt; Rep (BackendUpdate v) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cBackendUpdate"><span id="%24tBackendUpdate"><span id="local-6989586621689585873"><span id="local-6989586621689585875"><span id="local-6989586621689585877"><span id="local-6989586621689585879"><span id="local-6989586621689585881"><span id="local-6989586621689585883"><span id="local-6989586621689585885"><span id="local-6989586621689585887"><span id="local-6989586621689585889"><span id="local-6989586621689585891"><span id="local-6989586621689585893"><span id="local-6989586621689585895"><span id="local-6989586621689585897"><span id="local-6989586621689585899"><span class="annot"><span class="annottext">Typeable (BackendUpdate v)
+DataType
+Constr
+Typeable (BackendUpdate v)
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; BackendUpdate v -&gt; c (BackendUpdate v))
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (BackendUpdate v))
+-&gt; (BackendUpdate v -&gt; Constr)
+-&gt; (BackendUpdate v -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (BackendUpdate v)))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c (BackendUpdate v)))
+-&gt; ((forall b. Data b =&gt; b -&gt; b)
+    -&gt; BackendUpdate v -&gt; BackendUpdate v)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; BackendUpdate v -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; BackendUpdate v -&gt; r)
+-&gt; (forall u.
+    (forall d. Data d =&gt; d -&gt; u) -&gt; BackendUpdate v -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; BackendUpdate v -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; BackendUpdate v -&gt; m (BackendUpdate v))
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; BackendUpdate v -&gt; m (BackendUpdate v))
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; BackendUpdate v -&gt; m (BackendUpdate v))
+-&gt; Data (BackendUpdate v)
+BackendUpdate v -&gt; DataType
+BackendUpdate v -&gt; Constr
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (BackendUpdate v))
+(forall b. Data b =&gt; b -&gt; b) -&gt; BackendUpdate v -&gt; BackendUpdate v
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; BackendUpdate v -&gt; c (BackendUpdate v)
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (BackendUpdate v)
+forall v. Data v =&gt; Typeable (BackendUpdate v)
+forall v. Data v =&gt; BackendUpdate v -&gt; DataType
+forall v. Data v =&gt; BackendUpdate v -&gt; Constr
+forall v.
+Data v =&gt;
+(forall b. Data b =&gt; b -&gt; b) -&gt; BackendUpdate v -&gt; BackendUpdate v
+forall v u.
+Data v =&gt;
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; BackendUpdate v -&gt; u
+forall v u.
+Data v =&gt;
+(forall d. Data d =&gt; d -&gt; u) -&gt; BackendUpdate v -&gt; [u]
+forall v r r'.
+Data v =&gt;
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; BackendUpdate v -&gt; r
+forall v r r'.
+Data v =&gt;
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; BackendUpdate v -&gt; r
+forall v (m :: * -&gt; *).
+(Data v, Monad m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; BackendUpdate v -&gt; m (BackendUpdate v)
+forall v (m :: * -&gt; *).
+(Data v, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; BackendUpdate v -&gt; m (BackendUpdate v)
+forall v (c :: * -&gt; *).
+Data v =&gt;
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (BackendUpdate v)
+forall v (c :: * -&gt; *).
+Data v =&gt;
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; BackendUpdate v -&gt; c (BackendUpdate v)
+forall v (t :: * -&gt; *) (c :: * -&gt; *).
+(Data v, Typeable t) =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (BackendUpdate v))
+forall v (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+(Data v, Typeable t) =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (BackendUpdate v))
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; BackendUpdate v -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; BackendUpdate v -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; BackendUpdate v -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; BackendUpdate v -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; BackendUpdate v -&gt; m (BackendUpdate v)
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; BackendUpdate v -&gt; m (BackendUpdate v)
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (BackendUpdate v)
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; BackendUpdate v -&gt; c (BackendUpdate v)
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (BackendUpdate v))
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (BackendUpdate v))
+$cBackendUpdate :: Constr
+$tBackendUpdate :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; BackendUpdate v -&gt; m (BackendUpdate v)
+$cgmapMo :: forall v (m :: * -&gt; *).
+(Data v, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; BackendUpdate v -&gt; m (BackendUpdate v)
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; BackendUpdate v -&gt; m (BackendUpdate v)
+$cgmapMp :: forall v (m :: * -&gt; *).
+(Data v, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; BackendUpdate v -&gt; m (BackendUpdate v)
+gmapM :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; BackendUpdate v -&gt; m (BackendUpdate v)
+$cgmapM :: forall v (m :: * -&gt; *).
+(Data v, Monad m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; BackendUpdate v -&gt; m (BackendUpdate v)
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; BackendUpdate v -&gt; u
+$cgmapQi :: forall v u.
+Data v =&gt;
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; BackendUpdate v -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; BackendUpdate v -&gt; [u]
+$cgmapQ :: forall v u.
+Data v =&gt;
+(forall d. Data d =&gt; d -&gt; u) -&gt; BackendUpdate v -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; BackendUpdate v -&gt; r
+$cgmapQr :: forall v r r'.
+Data v =&gt;
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; BackendUpdate v -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; BackendUpdate v -&gt; r
+$cgmapQl :: forall v r r'.
+Data v =&gt;
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; BackendUpdate v -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b) -&gt; BackendUpdate v -&gt; BackendUpdate v
+$cgmapT :: forall v.
+Data v =&gt;
+(forall b. Data b =&gt; b -&gt; b) -&gt; BackendUpdate v -&gt; BackendUpdate v
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (BackendUpdate v))
+$cdataCast2 :: forall v (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+(Data v, Typeable t) =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (BackendUpdate v))
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (BackendUpdate v))
+$cdataCast1 :: forall v (t :: * -&gt; *) (c :: * -&gt; *).
+(Data v, Typeable t) =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (BackendUpdate v))
+dataTypeOf :: BackendUpdate v -&gt; DataType
+$cdataTypeOf :: forall v. Data v =&gt; BackendUpdate v -&gt; DataType
+toConstr :: BackendUpdate v -&gt; Constr
+$ctoConstr :: forall v. Data v =&gt; BackendUpdate v -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (BackendUpdate v)
+$cgunfold :: forall v (c :: * -&gt; *).
+Data v =&gt;
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (BackendUpdate v)
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; BackendUpdate v -&gt; c (BackendUpdate v)
+$cgfoldl :: forall v (c :: * -&gt; *).
+Data v =&gt;
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; BackendUpdate v -&gt; c (BackendUpdate v)
+$cp1Data :: forall v. Data v =&gt; Typeable (BackendUpdate v)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- | The various @update operators@ supported by MSSQL,</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- i.e. the @_set@, @_inc@ operators that appear in the schema.</span><span>
+</span><span id="line-35"></span><span class="hs-comment">--</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- TODO: Docs for MSSQL!</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- See &lt;https://hasura.io/docs/latest/graphql/core/databases/postgres/mutations/update.html#postgres-update-mutation Update Mutations User docs&gt;</span><span>
+</span><span id="line-38"></span><span id="local-6989586621689585868"><span id="local-6989586621689585869"></span></span><span class="hs-keyword">data</span><span> </span><span id="UpdateOperator"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateOperator"><span class="hs-identifier hs-var">UpdateOperator</span></a></span></span><span> </span><span id="local-6989586621689585867"><span class="annot"><a href="#local-6989586621689585867"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="UpdateSet"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateSet"><span class="hs-identifier hs-var">UpdateSet</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689585867"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateInc"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateInc"><span class="hs-identifier hs-var">UpdateInc</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689585867"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689585861"><span id="local-6989586621689585863"><span class="annot"><span class="annottext">a -&gt; UpdateOperator b -&gt; UpdateOperator a
+(a -&gt; b) -&gt; UpdateOperator a -&gt; UpdateOperator b
+(forall a b. (a -&gt; b) -&gt; UpdateOperator a -&gt; UpdateOperator b)
+-&gt; (forall a b. a -&gt; UpdateOperator b -&gt; UpdateOperator a)
+-&gt; Functor UpdateOperator
+forall a b. a -&gt; UpdateOperator b -&gt; UpdateOperator a
+forall a b. (a -&gt; b) -&gt; UpdateOperator a -&gt; UpdateOperator b
+forall (f :: * -&gt; *).
+(forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
+-&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
+&lt;$ :: a -&gt; UpdateOperator b -&gt; UpdateOperator a
+$c&lt;$ :: forall a b. a -&gt; UpdateOperator b -&gt; UpdateOperator a
+fmap :: (a -&gt; b) -&gt; UpdateOperator a -&gt; UpdateOperator b
+$cfmap :: forall a b. (a -&gt; b) -&gt; UpdateOperator a -&gt; UpdateOperator b
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689585827"><span id="local-6989586621689585829"><span id="local-6989586621689585831"><span id="local-6989586621689585833"><span id="local-6989586621689585835"><span id="local-6989586621689585837"><span id="local-6989586621689585839"><span id="local-6989586621689585841"><span id="local-6989586621689585843"><span id="local-6989586621689585845"><span id="local-6989586621689585847"><span id="local-6989586621689585849"><span id="local-6989586621689585851"><span id="local-6989586621689585853"><span id="local-6989586621689585855"><span id="local-6989586621689585857"><span id="local-6989586621689585859"><span class="annot"><span class="annottext">UpdateOperator a -&gt; Bool
+(a -&gt; m) -&gt; UpdateOperator a -&gt; m
+(a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+(forall m. Monoid m =&gt; UpdateOperator m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a)
+-&gt; (forall a. UpdateOperator a -&gt; [a])
+-&gt; (forall a. UpdateOperator a -&gt; Bool)
+-&gt; (forall a. UpdateOperator a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; UpdateOperator a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; UpdateOperator a -&gt; a)
+-&gt; (forall a. Ord a =&gt; UpdateOperator a -&gt; a)
+-&gt; (forall a. Num a =&gt; UpdateOperator a -&gt; a)
+-&gt; (forall a. Num a =&gt; UpdateOperator a -&gt; a)
+-&gt; Foldable UpdateOperator
+forall a. Eq a =&gt; a -&gt; UpdateOperator a -&gt; Bool
+forall a. Num a =&gt; UpdateOperator a -&gt; a
+forall a. Ord a =&gt; UpdateOperator a -&gt; a
+forall m. Monoid m =&gt; UpdateOperator m -&gt; m
+forall a. UpdateOperator a -&gt; Bool
+forall a. UpdateOperator a -&gt; Int
+forall a. UpdateOperator a -&gt; [a]
+forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
+forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m
+forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+forall (t :: * -&gt; *).
+(forall m. Monoid m =&gt; t m -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; t a -&gt; m)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. (a -&gt; a -&gt; a) -&gt; t a -&gt; a)
+-&gt; (forall a. t a -&gt; [a])
+-&gt; (forall a. t a -&gt; Bool)
+-&gt; (forall a. t a -&gt; Int)
+-&gt; (forall a. Eq a =&gt; a -&gt; t a -&gt; Bool)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Ord a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; (forall a. Num a =&gt; t a -&gt; a)
+-&gt; Foldable t
+product :: UpdateOperator a -&gt; a
+$cproduct :: forall a. Num a =&gt; UpdateOperator a -&gt; a
+sum :: UpdateOperator a -&gt; a
+$csum :: forall a. Num a =&gt; UpdateOperator a -&gt; a
+minimum :: UpdateOperator a -&gt; a
+$cminimum :: forall a. Ord a =&gt; UpdateOperator a -&gt; a
+maximum :: UpdateOperator a -&gt; a
+$cmaximum :: forall a. Ord a =&gt; UpdateOperator a -&gt; a
+elem :: a -&gt; UpdateOperator a -&gt; Bool
+$celem :: forall a. Eq a =&gt; a -&gt; UpdateOperator a -&gt; Bool
+length :: UpdateOperator a -&gt; Int
+$clength :: forall a. UpdateOperator a -&gt; Int
+null :: UpdateOperator a -&gt; Bool
+$cnull :: forall a. UpdateOperator a -&gt; Bool
+toList :: UpdateOperator a -&gt; [a]
+$ctoList :: forall a. UpdateOperator a -&gt; [a]
+foldl1 :: (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
+$cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
+foldr1 :: (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
+$cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOperator a -&gt; a
+foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+$cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+$cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+$cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+$cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOperator a -&gt; b
+foldMap' :: (a -&gt; m) -&gt; UpdateOperator a -&gt; m
+$cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m
+foldMap :: (a -&gt; m) -&gt; UpdateOperator a -&gt; m
+$cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOperator a -&gt; m
+fold :: UpdateOperator m -&gt; m
+$cfold :: forall m. Monoid m =&gt; UpdateOperator m -&gt; m
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689585817"><span id="local-6989586621689585819"><span id="local-6989586621689585821"><span id="local-6989586621689585823"><span class="annot"><span class="annottext">Functor UpdateOperator
+Foldable UpdateOperator
+Functor UpdateOperator
+-&gt; Foldable UpdateOperator
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; UpdateOperator a -&gt; f (UpdateOperator b))
+-&gt; (forall (f :: * -&gt; *) a.
+    Applicative f =&gt;
+    UpdateOperator (f a) -&gt; f (UpdateOperator a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; UpdateOperator a -&gt; m (UpdateOperator b))
+-&gt; (forall (m :: * -&gt; *) a.
+    Monad m =&gt;
+    UpdateOperator (m a) -&gt; m (UpdateOperator a))
+-&gt; Traversable UpdateOperator
+(a -&gt; f b) -&gt; UpdateOperator a -&gt; f (UpdateOperator b)
+forall (t :: * -&gt; *).
+Functor t
+-&gt; Foldable t
+-&gt; (forall (f :: * -&gt; *) a b.
+    Applicative f =&gt;
+    (a -&gt; f b) -&gt; t a -&gt; f (t b))
+-&gt; (forall (f :: * -&gt; *) a. Applicative f =&gt; t (f a) -&gt; f (t a))
+-&gt; (forall (m :: * -&gt; *) a b.
+    Monad m =&gt;
+    (a -&gt; m b) -&gt; t a -&gt; m (t b))
+-&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
+-&gt; Traversable t
+forall (m :: * -&gt; *) a.
+Monad m =&gt;
+UpdateOperator (m a) -&gt; m (UpdateOperator a)
+forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+UpdateOperator (f a) -&gt; f (UpdateOperator a)
+forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; UpdateOperator a -&gt; m (UpdateOperator b)
+forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; UpdateOperator a -&gt; f (UpdateOperator b)
+sequence :: UpdateOperator (m a) -&gt; m (UpdateOperator a)
+$csequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+UpdateOperator (m a) -&gt; m (UpdateOperator a)
+mapM :: (a -&gt; m b) -&gt; UpdateOperator a -&gt; m (UpdateOperator b)
+$cmapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; UpdateOperator a -&gt; m (UpdateOperator b)
+sequenceA :: UpdateOperator (f a) -&gt; f (UpdateOperator a)
+$csequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+UpdateOperator (f a) -&gt; f (UpdateOperator a)
+traverse :: (a -&gt; f b) -&gt; UpdateOperator a -&gt; f (UpdateOperator b)
+$ctraverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; UpdateOperator a -&gt; f (UpdateOperator b)
+$cp2Traversable :: Foldable UpdateOperator
+$cp1Traversable :: Functor UpdateOperator
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. UpdateOperator v -&gt; Rep (UpdateOperator v) x)
+-&gt; (forall x. Rep (UpdateOperator v) x -&gt; UpdateOperator v)
+-&gt; Generic (UpdateOperator v)
+forall x. Rep (UpdateOperator v) x -&gt; UpdateOperator v
+forall x. UpdateOperator v -&gt; Rep (UpdateOperator v) x
+forall a.
+(forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
+forall v x. Rep (UpdateOperator v) x -&gt; UpdateOperator v
+forall v x. UpdateOperator v -&gt; Rep (UpdateOperator v) x
+$cto :: forall v x. Rep (UpdateOperator v) x -&gt; UpdateOperator v
+$cfrom :: forall v x. UpdateOperator v -&gt; Rep (UpdateOperator v) x
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cUpdateInc"><span id="%24cUpdateSet"><span id="%24tUpdateOperator"><span id="local-6989586621689585786"><span id="local-6989586621689585788"><span id="local-6989586621689585790"><span id="local-6989586621689585792"><span id="local-6989586621689585794"><span id="local-6989586621689585796"><span id="local-6989586621689585798"><span id="local-6989586621689585800"><span id="local-6989586621689585802"><span id="local-6989586621689585804"><span id="local-6989586621689585806"><span id="local-6989586621689585808"><span id="local-6989586621689585810"><span id="local-6989586621689585812"><span class="annot"><span class="annottext">Typeable (UpdateOperator v)
+DataType
+Constr
+Typeable (UpdateOperator v)
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g)
+    -&gt; UpdateOperator v
+    -&gt; c (UpdateOperator v))
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (UpdateOperator v))
+-&gt; (UpdateOperator v -&gt; Constr)
+-&gt; (UpdateOperator v -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOperator v)))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e))
+    -&gt; Maybe (c (UpdateOperator v)))
+-&gt; ((forall b. Data b =&gt; b -&gt; b)
+    -&gt; UpdateOperator v -&gt; UpdateOperator v)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOperator v -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r)
+    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOperator v -&gt; r)
+-&gt; (forall u.
+    (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOperator v -&gt; [u])
+-&gt; (forall u.
+    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOperator v -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; UpdateOperator v -&gt; m (UpdateOperator v))
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; UpdateOperator v -&gt; m (UpdateOperator v))
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d)
+    -&gt; UpdateOperator v -&gt; m (UpdateOperator v))
+-&gt; Data (UpdateOperator v)
+UpdateOperator v -&gt; DataType
+UpdateOperator v -&gt; Constr
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOperator v))
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; UpdateOperator v -&gt; UpdateOperator v
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; UpdateOperator v -&gt; c (UpdateOperator v)
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (UpdateOperator v)
+forall v. Data v =&gt; Typeable (UpdateOperator v)
+forall v. Data v =&gt; UpdateOperator v -&gt; DataType
+forall v. Data v =&gt; UpdateOperator v -&gt; Constr
+forall v.
+Data v =&gt;
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; UpdateOperator v -&gt; UpdateOperator v
+forall v u.
+Data v =&gt;
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOperator v -&gt; u
+forall v u.
+Data v =&gt;
+(forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOperator v -&gt; [u]
+forall v r r'.
+Data v =&gt;
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOperator v -&gt; r
+forall v r r'.
+Data v =&gt;
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOperator v -&gt; r
+forall v (m :: * -&gt; *).
+(Data v, Monad m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; UpdateOperator v -&gt; m (UpdateOperator v)
+forall v (m :: * -&gt; *).
+(Data v, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; UpdateOperator v -&gt; m (UpdateOperator v)
+forall v (c :: * -&gt; *).
+Data v =&gt;
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (UpdateOperator v)
+forall v (c :: * -&gt; *).
+Data v =&gt;
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; UpdateOperator v -&gt; c (UpdateOperator v)
+forall v (t :: * -&gt; *) (c :: * -&gt; *).
+(Data v, Typeable t) =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOperator v))
+forall v (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+(Data v, Typeable t) =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (UpdateOperator v))
+forall a.
+Typeable a
+-&gt; (forall (c :: * -&gt; *).
+    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+    -&gt; (forall g. g -&gt; c g) -&gt; a -&gt; c a)
+-&gt; (forall (c :: * -&gt; *).
+    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c a)
+-&gt; (a -&gt; Constr)
+-&gt; (a -&gt; DataType)
+-&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c a))
+-&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+    Typeable t =&gt;
+    (forall d e. (Data d, Data e) =&gt; c (t d e)) -&gt; Maybe (c a))
+-&gt; ((forall b. Data b =&gt; b -&gt; b) -&gt; a -&gt; a)
+-&gt; (forall r r'.
+    (r -&gt; r' -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall r r'.
+    (r' -&gt; r -&gt; r) -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; a -&gt; r)
+-&gt; (forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; [u])
+-&gt; (forall u. Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; a -&gt; u)
+-&gt; (forall (m :: * -&gt; *).
+    Monad m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; (forall (m :: * -&gt; *).
+    MonadPlus m =&gt;
+    (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
+-&gt; Data a
+forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOperator v -&gt; u
+forall u. (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOperator v -&gt; [u]
+forall r r'.
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOperator v -&gt; r
+forall r r'.
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOperator v -&gt; r
+forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; UpdateOperator v -&gt; m (UpdateOperator v)
+forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; UpdateOperator v -&gt; m (UpdateOperator v)
+forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (UpdateOperator v)
+forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; UpdateOperator v -&gt; c (UpdateOperator v)
+forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOperator v))
+forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (UpdateOperator v))
+$cUpdateInc :: Constr
+$cUpdateSet :: Constr
+$tUpdateOperator :: DataType
+gmapMo :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; UpdateOperator v -&gt; m (UpdateOperator v)
+$cgmapMo :: forall v (m :: * -&gt; *).
+(Data v, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; UpdateOperator v -&gt; m (UpdateOperator v)
+gmapMp :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; UpdateOperator v -&gt; m (UpdateOperator v)
+$cgmapMp :: forall v (m :: * -&gt; *).
+(Data v, MonadPlus m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; UpdateOperator v -&gt; m (UpdateOperator v)
+gmapM :: (forall d. Data d =&gt; d -&gt; m d)
+-&gt; UpdateOperator v -&gt; m (UpdateOperator v)
+$cgmapM :: forall v (m :: * -&gt; *).
+(Data v, Monad m) =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
+-&gt; UpdateOperator v -&gt; m (UpdateOperator v)
+gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOperator v -&gt; u
+$cgmapQi :: forall v u.
+Data v =&gt;
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOperator v -&gt; u
+gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOperator v -&gt; [u]
+$cgmapQ :: forall v u.
+Data v =&gt;
+(forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOperator v -&gt; [u]
+gmapQr :: (r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOperator v -&gt; r
+$cgmapQr :: forall v r r'.
+Data v =&gt;
+(r' -&gt; r -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOperator v -&gt; r
+gmapQl :: (r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOperator v -&gt; r
+$cgmapQl :: forall v r r'.
+Data v =&gt;
+(r -&gt; r' -&gt; r)
+-&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOperator v -&gt; r
+gmapT :: (forall b. Data b =&gt; b -&gt; b)
+-&gt; UpdateOperator v -&gt; UpdateOperator v
+$cgmapT :: forall v.
+Data v =&gt;
+(forall b. Data b =&gt; b -&gt; b)
+-&gt; UpdateOperator v -&gt; UpdateOperator v
+dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (UpdateOperator v))
+$cdataCast2 :: forall v (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+(Data v, Typeable t) =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
+-&gt; Maybe (c (UpdateOperator v))
+dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOperator v))
+$cdataCast1 :: forall v (t :: * -&gt; *) (c :: * -&gt; *).
+(Data v, Typeable t) =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOperator v))
+dataTypeOf :: UpdateOperator v -&gt; DataType
+$cdataTypeOf :: forall v. Data v =&gt; UpdateOperator v -&gt; DataType
+toConstr :: UpdateOperator v -&gt; Constr
+$ctoConstr :: forall v. Data v =&gt; UpdateOperator v -&gt; Constr
+gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (UpdateOperator v)
+$cgunfold :: forall v (c :: * -&gt; *).
+Data v =&gt;
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+-&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (UpdateOperator v)
+gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; UpdateOperator v -&gt; c (UpdateOperator v)
+$cgfoldl :: forall v (c :: * -&gt; *).
+Data v =&gt;
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+-&gt; (forall g. g -&gt; c g) -&gt; UpdateOperator v -&gt; c (UpdateOperator v)
+$cp1Data :: forall v. Data v =&gt; Typeable (UpdateOperator v)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">type</span><span> </span><span id="UpdateSet"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateSet"><span class="hs-identifier hs-var">UpdateSet</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ColumnName"><span class="hs-identifier hs-type">ColumnName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateOperator"><span class="hs-identifier hs-type">UpdateOperator</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span class="hs-keyword">type</span><span> </span><span id="UpdateOutput"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateOutput"><span class="hs-identifier hs-var">UpdateOutput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Output"><span class="hs-identifier hs-type">Output</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Inserted"><span class="hs-identifier hs-type">Inserted</span></a></span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-comment">-- | UPDATE [table_alias] SET [table_alias].column = 'value' OUTPUT INSERTED.column INTO #updated</span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- FROM [table_name] AS [table_alias] WHERE &lt;filter-expression&gt;</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">data</span><span> </span><span id="Update"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#Update"><span class="hs-identifier hs-var">Update</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Update"><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#Update"><span class="hs-identifier hs-var">Update</span></a></span></span><span>
+</span><span id="line-50"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="updateTable"><span class="annot"><span class="annottext">Update -&gt; Aliased TableName
+</span><a href="Hasura.Backends.MSSQL.Types.Update.html#updateTable"><span class="hs-identifier hs-var hs-var">updateTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-51"></span><span>    </span><span id="updateSet"><span class="annot"><span class="annottext">Update -&gt; UpdateSet
+</span><a href="Hasura.Backends.MSSQL.Types.Update.html#updateSet"><span class="hs-identifier hs-var hs-var">updateSet</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateSet"><span class="hs-identifier hs-type">UpdateSet</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-52"></span><span>    </span><span id="updateOutput"><span class="annot"><span class="annottext">Update -&gt; UpdateOutput
+</span><a href="Hasura.Backends.MSSQL.Types.Update.html#updateOutput"><span class="hs-identifier hs-var hs-var">updateOutput</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Update.html#UpdateOutput"><span class="hs-identifier hs-type">UpdateOutput</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-53"></span><span>    </span><span id="updateTempTable"><span class="annot"><span class="annottext">Update -&gt; TempTable
+</span><a href="Hasura.Backends.MSSQL.Types.Update.html#updateTempTable"><span class="hs-identifier hs-var hs-var">updateTempTable</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTable"><span class="hs-identifier hs-type">TempTable</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-54"></span><span>    </span><span id="updateWhere"><span class="annot"><span class="annottext">Update -&gt; Where
+</span><a href="Hasura.Backends.MSSQL.Types.Update.html#updateWhere"><span class="hs-identifier hs-var hs-var">updateWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Where"><span class="hs-identifier hs-type">Where</span></a></span><span>
+</span><span id="line-55"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-56"></span></pre></body></html>

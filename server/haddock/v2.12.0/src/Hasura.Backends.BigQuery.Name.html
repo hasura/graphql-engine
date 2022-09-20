@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE QuasiQuotes #-}</span><span>
+</span><span id="line-2"></span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Backends.BigQuery.Name</span><span>
+</span><span id="line-4"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Bytes"><span class="hs-identifier">_Bytes</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Date"><span class="hs-identifier">_Date</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-6"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Datetime"><span class="hs-identifier">_Datetime</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-7"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Geography"><span class="hs-identifier">_Geography</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-8"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Time"><span class="hs-identifier">_Time</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-9"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Timestamp"><span class="hs-identifier">_Timestamp</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-10"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax.QQ</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Bytes"><span class="hs-identifier hs-type">_Bytes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-17"></span><span id="_Bytes"><span class="annot"><span class="annottext">_Bytes :: Name
+</span><a href="Hasura.Backends.BigQuery.Name.html#_Bytes"><span class="hs-identifier hs-var hs-var">_Bytes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Bytes|]</span></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Date"><span class="hs-identifier hs-type">_Date</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-20"></span><span id="_Date"><span class="annot"><span class="annottext">_Date :: Name
+</span><a href="Hasura.Backends.BigQuery.Name.html#_Date"><span class="hs-identifier hs-var hs-var">_Date</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Date|]</span></span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Datetime"><span class="hs-identifier hs-type">_Datetime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-23"></span><span id="_Datetime"><span class="annot"><span class="annottext">_Datetime :: Name
+</span><a href="Hasura.Backends.BigQuery.Name.html#_Datetime"><span class="hs-identifier hs-var hs-var">_Datetime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Datetime|]</span></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Geography"><span class="hs-identifier hs-type">_Geography</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-26"></span><span id="_Geography"><span class="annot"><span class="annottext">_Geography :: Name
+</span><a href="Hasura.Backends.BigQuery.Name.html#_Geography"><span class="hs-identifier hs-var hs-var">_Geography</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Geography|]</span></span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Time"><span class="hs-identifier hs-type">_Time</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-29"></span><span id="_Time"><span class="annot"><span class="annottext">_Time :: Name
+</span><a href="Hasura.Backends.BigQuery.Name.html#_Time"><span class="hs-identifier hs-var hs-var">_Time</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Time|]</span></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Name.html#_Timestamp"><span class="hs-identifier hs-type">_Timestamp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span><span>
+</span><span id="line-32"></span><span id="_Timestamp"><span class="annot"><span class="annottext">_Timestamp :: Name
+</span><a href="Hasura.Backends.BigQuery.Name.html#_Timestamp"><span class="hs-identifier hs-var hs-var">_Timestamp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="">[G.name|Timestamp|]</span></span><span>
+</span><span id="line-33"></span></pre></body></html>

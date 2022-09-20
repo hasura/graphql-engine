@@ -1,0 +1,674 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hasura.Server.Auth.WebHook</span><span>
+</span><span id="line-2"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHookType"><span class="hs-identifier">AuthHookType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-3"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHook"><span class="hs-identifier">AuthHook</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-4"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#userInfoFromAuthHook"><span class="hs-identifier">userInfoFromAuthHook</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-5"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-6"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Exception.Lifted</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">try</span></span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Control</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadBaseControl</span></span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BL</span></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Parser.CacheControl.html"><span class="hs-identifier">Data.Parser.CacheControl</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Parser.CacheControl.html#parseMaxAge"><span class="hs-identifier">parseMaxAge</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Parser.Expires.html"><span class="hs-identifier">Data.Parser.Expires</span></a></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Clock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">addUTCTime</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">getCurrentTime</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html"><span class="hs-identifier">Hasura.GraphQL.Transport.HTTP.Protocol</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GH</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.HTTP.html"><span class="hs-identifier">Hasura.HTTP</span></a></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Logging.html"><span class="hs-identifier">Hasura.Logging</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Prelude.html"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Logging.html"><span class="hs-identifier">Hasura.Server.Logging</span></a></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Utils.html"><span class="hs-identifier">Hasura.Server.Utils</span></a></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Tracing.html"><span class="hs-identifier">Hasura.Tracing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Tracing</span></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html"><span class="hs-identifier">Network.HTTP.Client.Transformable</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HTTP</span></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.Wreq</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Wreq</span></span><span>
+</span><span id="line-30"></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">data</span><span> </span><span id="AuthHookType"><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHookType"><span class="hs-identifier hs-var">AuthHookType</span></a></span></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AHTGet"><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AHTGet"><span class="hs-identifier hs-var">AHTGet</span></a></span></span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AHTPost"><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AHTPost"><span class="hs-identifier hs-var">AHTPost</span></a></span></span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689688694"><span id="local-6989586621689688696"><span class="annot"><span class="annottext">AuthHookType -&gt; AuthHookType -&gt; Bool
+(AuthHookType -&gt; AuthHookType -&gt; Bool)
+-&gt; (AuthHookType -&gt; AuthHookType -&gt; Bool) -&gt; Eq AuthHookType
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: AuthHookType -&gt; AuthHookType -&gt; Bool
+$c/= :: AuthHookType -&gt; AuthHookType -&gt; Bool
+== :: AuthHookType -&gt; AuthHookType -&gt; Bool
+$c== :: AuthHookType -&gt; AuthHookType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689688688"><span id="local-6989586621689688691"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHookType"><span class="hs-identifier hs-type">AuthHookType</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-37"></span><span>  </span><span id="local-6989586621689688686"><span class="annot"><span class="annottext">show :: AuthHookType -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="annot"><span class="annottext">AuthHookType
+</span><a href="Hasura.Server.Auth.WebHook.html#AHTGet"><span class="hs-identifier hs-var">AHTGet</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;GET&quot;</span></span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">AuthHookType
+</span><a href="Hasura.Server.Auth.WebHook.html#AHTPost"><span class="hs-identifier hs-var">AHTPost</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;POST&quot;</span></span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">data</span><span> </span><span id="AuthHook"><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHook"><span class="hs-identifier hs-var">AuthHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AuthHook"><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHook"><span class="hs-identifier hs-var">AuthHook</span></a></span></span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="ahUrl"><span class="annot"><span class="annottext">AuthHook -&gt; Text
+</span><a href="Hasura.Server.Auth.WebHook.html#ahUrl"><span class="hs-identifier hs-var hs-var">ahUrl</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span id="ahType"><span class="annot"><span class="annottext">AuthHook -&gt; AuthHookType
+</span><a href="Hasura.Server.Auth.WebHook.html#ahType"><span class="hs-identifier hs-var hs-var">ahType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHookType"><span class="hs-identifier hs-type">AuthHookType</span></a></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689688676"><span id="local-6989586621689688678"><span id="local-6989586621689688680"><span class="annot"><span class="annottext">Int -&gt; AuthHook -&gt; ShowS
+[AuthHook] -&gt; ShowS
+AuthHook -&gt; String
+(Int -&gt; AuthHook -&gt; ShowS)
+-&gt; (AuthHook -&gt; String) -&gt; ([AuthHook] -&gt; ShowS) -&gt; Show AuthHook
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [AuthHook] -&gt; ShowS
+$cshowList :: [AuthHook] -&gt; ShowS
+show :: AuthHook -&gt; String
+$cshow :: AuthHook -&gt; String
+showsPrec :: Int -&gt; AuthHook -&gt; ShowS
+$cshowsPrec :: Int -&gt; AuthHook -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689688672"><span id="local-6989586621689688674"><span class="annot"><span class="annottext">AuthHook -&gt; AuthHook -&gt; Bool
+(AuthHook -&gt; AuthHook -&gt; Bool)
+-&gt; (AuthHook -&gt; AuthHook -&gt; Bool) -&gt; Eq AuthHook
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: AuthHook -&gt; AuthHook -&gt; Bool
+$c/= :: AuthHook -&gt; AuthHook -&gt; Bool
+== :: AuthHook -&gt; AuthHook -&gt; Bool
+$c== :: AuthHook -&gt; AuthHook -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#hookMethod"><span class="hs-identifier hs-type">hookMethod</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHook"><span class="hs-identifier hs-type">AuthHook</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.StdMethod</span></span><span>
+</span><span id="line-47"></span><span id="hookMethod"><span class="annot"><span class="annottext">hookMethod :: AuthHook -&gt; StdMethod
+</span><a href="Hasura.Server.Auth.WebHook.html#hookMethod"><span class="hs-identifier hs-var hs-var">hookMethod</span></a></span></span><span> </span><span id="local-6989586621689688670"><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689688670"><span class="hs-identifier hs-var">authHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">AuthHook -&gt; AuthHookType
+</span><a href="Hasura.Server.Auth.WebHook.html#ahType"><span class="hs-identifier hs-var hs-var">ahType</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689688670"><span class="hs-identifier hs-var">authHook</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-48"></span><span>  </span><span class="annot"><span class="annottext">AuthHookType
+</span><a href="Hasura.Server.Auth.WebHook.html#AHTGet"><span class="hs-identifier hs-var">AHTGet</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">StdMethod
+</span><span class="hs-identifier hs-var">HTTP.GET</span></span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><span class="annottext">AuthHookType
+</span><a href="Hasura.Server.Auth.WebHook.html#AHTPost"><span class="hs-identifier hs-var">AHTPost</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">StdMethod
+</span><span class="hs-identifier hs-var">HTTP.POST</span></span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-comment">-- | Makes an authentication request to the given AuthHook and returns</span><span>
+</span><span id="line-52"></span><span class="hs-comment">--   UserInfo parsed from the response, plus an expiration time if one</span><span>
+</span><span id="line-53"></span><span class="hs-comment">--   was returned. Optionally passes a batch of raw GraphQL requests</span><span>
+</span><span id="line-54"></span><span class="hs-comment">--   for finer-grained auth. (#2666)</span><span>
+</span><span id="line-55"></span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#userInfoFromAuthHook"><span class="hs-identifier hs-type">userInfoFromAuthHook</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689688667"><span class="annot"><a href="#local-6989586621689688667"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-57"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689688667"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">IO</span></span><span> </span><span class="annot"><a href="#local-6989586621689688667"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689688667"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Tracing.html#MonadTrace"><span class="hs-identifier hs-type">Tracing.MonadTrace</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689688667"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-58"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-59"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Manager</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#AuthHook"><span class="hs-identifier hs-type">AuthHook</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Transport.HTTP.Protocol.html#ReqsText"><span class="hs-identifier hs-type">GH.ReqsText</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="#local-6989586621689688667"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span id="userInfoFromAuthHook"><span class="annot"><span class="annottext">userInfoFromAuthHook :: Logger Hasura
+-&gt; Manager
+-&gt; AuthHook
+-&gt; [Header]
+-&gt; Maybe ReqsText
+-&gt; m (UserInfo, Maybe UTCTime, [Header])
+</span><a href="Hasura.Server.Auth.WebHook.html#userInfoFromAuthHook"><span class="hs-identifier hs-var hs-var">userInfoFromAuthHook</span></a></span></span><span> </span><span id="local-6989586621689688666"><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689688666"><span class="hs-identifier hs-var">logger</span></a></span></span><span> </span><span id="local-6989586621689688665"><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621689688665"><span class="hs-identifier hs-var">manager</span></a></span></span><span> </span><span id="local-6989586621689688664"><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689688664"><span class="hs-identifier hs-var">hook</span></a></span></span><span> </span><span id="local-6989586621689688663"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689688663"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621689688662"><span class="annot"><span class="annottext">Maybe ReqsText
+</span><a href="#local-6989586621689688662"><span class="hs-identifier hs-var">reqs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621689688661"><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689688661"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Either HttpException (Response ByteString)
+-&gt; (HttpException -&gt; m (Response ByteString))
+-&gt; m (Response ByteString)
+forall (m :: * -&gt; *) e a.
+Applicative m =&gt;
+Either e a -&gt; (e -&gt; m a) -&gt; m a
+</span><a href="Hasura.Prelude.html#onLeft"><span class="hs-operator hs-var">`onLeft`</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; m (Response ByteString)
+forall a. HttpException -&gt; m a
+</span><a href="#local-6989586621689688659"><span class="hs-identifier hs-var">logAndThrow</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Either HttpException (Response ByteString)
+ -&gt; m (Response ByteString))
+-&gt; m (Either HttpException (Response ByteString))
+-&gt; m (Response ByteString)
+forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
+</span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">m (Response ByteString)
+-&gt; m (Either HttpException (Response ByteString))
+forall (m :: * -&gt; *) e a.
+(MonadBaseControl IO m, Exception e) =&gt;
+m a -&gt; m (Either e a)
+</span><span class="hs-identifier hs-var">try</span></span><span> </span><span class="annot"><span class="annottext">m (Response ByteString)
+</span><a href="#local-6989586621689688657"><span class="hs-identifier hs-var">performHTTPRequest</span></a></span><span>
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689688656"><span class="annot"><span class="annottext">status :: Status
+</span><a href="#local-6989586621689688656"><span class="hs-identifier hs-var hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689688661"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
+-&gt; Getting Status (Response ByteString) Status -&gt; Status
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting Status (Response ByteString) Status
+forall body. Lens' (Response body) Status
+</span><span class="hs-identifier hs-var">Wreq.responseStatus</span></span><span>
+</span><span id="line-67"></span><span>      </span><span id="local-6989586621689688653"><span class="annot"><span class="annottext">respBody :: ByteString
+</span><a href="#local-6989586621689688653"><span class="hs-identifier hs-var hs-var">respBody</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689688661"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
+-&gt; Getting ByteString (Response ByteString) ByteString
+-&gt; ByteString
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting ByteString (Response ByteString) ByteString
+forall body0 body1.
+Lens (Response body0) (Response body1) body0 body1
+</span><span class="hs-identifier hs-var">Wreq.responseBody</span></span><span>
+</span><span id="line-68"></span><span>      </span><span id="local-6989586621689688651"><span class="annot"><span class="annottext">cookieHeaders :: [Header]
+</span><a href="#local-6989586621689688651"><span class="hs-identifier hs-var hs-var">cookieHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Header -&gt; Bool) -&gt; [Header] -&gt; [Header]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689688650"><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621689688650"><span class="hs-identifier hs-var">headerName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621689688650"><span class="hs-identifier hs-var">headerName</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderName -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;Set-Cookie&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Response ByteString
+</span><a href="#local-6989586621689688661"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Response ByteString
+-&gt; Getting [Header] (Response ByteString) [Header] -&gt; [Header]
+forall s a. s -&gt; Getting a s a -&gt; a
+</span><span class="hs-operator hs-var">^.</span></span><span> </span><span class="annot"><span class="annottext">Getting [Header] (Response ByteString) [Header]
+forall body. Lens' (Response body) [Header]
+</span><span class="hs-identifier hs-var">Wreq.responseHeaders</span></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; Text
+-&gt; StdMethod
+-&gt; Status
+-&gt; ByteString
+-&gt; [Header]
+-&gt; m (UserInfo, Maybe UTCTime, [Header])
+forall (m :: * -&gt; *).
+(MonadIO m, MonadError QErr m) =&gt;
+Logger Hasura
+-&gt; Text
+-&gt; StdMethod
+-&gt; Status
+-&gt; ByteString
+-&gt; [Header]
+-&gt; m (UserInfo, Maybe UTCTime, [Header])
+</span><a href="Hasura.Server.Auth.WebHook.html#mkUserInfoFromResp"><span class="hs-identifier hs-var">mkUserInfoFromResp</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689688666"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthHook -&gt; Text
+</span><a href="Hasura.Server.Auth.WebHook.html#ahUrl"><span class="hs-identifier hs-var hs-var">ahUrl</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689688664"><span class="hs-identifier hs-var">hook</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthHook -&gt; StdMethod
+</span><a href="Hasura.Server.Auth.WebHook.html#hookMethod"><span class="hs-identifier hs-var">hookMethod</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689688664"><span class="hs-identifier hs-var">hook</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621689688656"><span class="hs-identifier hs-var">status</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689688653"><span class="hs-identifier hs-var">respBody</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689688651"><span class="hs-identifier hs-var">cookieHeaders</span></a></span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-72"></span><span>    </span><span class="annot"><a href="#local-6989586621689688657"><span class="hs-identifier hs-type">performHTTPRequest</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689688667"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Wreq.Response</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>    </span><span id="local-6989586621689688657"><span class="annot"><span class="annottext">performHTTPRequest :: m (Response ByteString)
+</span><a href="#local-6989586621689688657"><span class="hs-identifier hs-var hs-var">performHTTPRequest</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-74"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689688647"><span class="annot"><span class="annottext">url :: String
+</span><a href="#local-6989586621689688647"><span class="hs-identifier hs-var hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; String) -&gt; Text -&gt; String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AuthHook -&gt; Text
+</span><a href="Hasura.Server.Auth.WebHook.html#ahUrl"><span class="hs-identifier hs-var hs-var">ahUrl</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689688664"><span class="hs-identifier hs-var">hook</span></a></span><span>
+</span><span id="line-75"></span><span>      </span><span id="local-6989586621689688645"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689688645"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO Request -&gt; m Request
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO Request -&gt; m Request) -&gt; IO Request -&gt; m Request
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; IO Request
+forall (m :: * -&gt; *). MonadThrow m =&gt; Text -&gt; m Request
+</span><a href="Network.HTTP.Client.Transformable.html#mkRequestThrow"><span class="hs-identifier hs-var">HTTP.mkRequestThrow</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; IO Request) -&gt; Text -&gt; IO Request
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689688647"><span class="hs-identifier hs-var">url</span></a></span><span>
+</span><span id="line-76"></span><span>      </span><span class="annot"><span class="annottext">Request
+-&gt; (Request -&gt; m (Response ByteString)) -&gt; m (Response ByteString)
+forall (m :: * -&gt; *) a.
+MonadTrace m =&gt;
+Request -&gt; (Request -&gt; m a) -&gt; m a
+</span><a href="Hasura.Tracing.html#tracedHttpRequest"><span class="hs-identifier hs-var">Tracing.tracedHttpRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689688645"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689688640"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689688640"><span class="hs-identifier hs-var">req'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">IO (Response ByteString) -&gt; m (Response ByteString)
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-77"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">AuthHook -&gt; AuthHookType
+</span><a href="Hasura.Server.Auth.WebHook.html#ahType"><span class="hs-identifier hs-var hs-var">ahType</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689688664"><span class="hs-identifier hs-var">hook</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-78"></span><span>          </span><span class="annot"><span class="annottext">AuthHookType
+</span><a href="Hasura.Server.Auth.WebHook.html#AHTGet"><span class="hs-identifier hs-var">AHTGet</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-79"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689688639"><span class="annot"><span class="annottext">isCommonHeader :: HeaderName -&gt; Bool
+</span><a href="#local-6989586621689688639"><span class="hs-identifier hs-var hs-var">isCommonHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName -&gt; [HeaderName] -&gt; Bool
+forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">[HeaderName]
+forall a. IsString a =&gt; [a]
+</span><a href="Hasura.Server.Utils.html#commonClientHeadersIgnored"><span class="hs-identifier hs-var">commonClientHeadersIgnored</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-80"></span><span>                </span><span id="local-6989586621689688636"><span class="annot"><span class="annottext">filteredHeaders :: [Header]
+</span><a href="#local-6989586621689688636"><span class="hs-identifier hs-var hs-var">filteredHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Header -&gt; Bool) -&gt; [Header] -&gt; [Header]
+forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
+</span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; (Header -&gt; Bool) -&gt; Header -&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; Bool
+</span><a href="#local-6989586621689688639"><span class="hs-identifier hs-var">isCommonHeader</span></a></span><span> </span><span class="annot"><span class="annottext">(HeaderName -&gt; Bool) -&gt; (Header -&gt; HeaderName) -&gt; Header -&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Header -&gt; HeaderName
+forall a b. (a, b) -&gt; a
+</span><span class="hs-identifier hs-var">fst</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689688663"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
+</span><span id="line-81"></span><span>                </span><span id="local-6989586621689688633"><span class="annot"><span class="annottext">req'' :: Request
+</span><a href="#local-6989586621689688633"><span class="hs-identifier hs-var hs-var">req''</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689688640"><span class="hs-identifier hs-var">req'</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; (Request -&gt; Request) -&gt; Request
+forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">ASetter Request Request [Header] [Header]
+-&gt; [Header] -&gt; Request -&gt; Request
+forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">ASetter Request Request [Header] [Header]
+Lens' Request [Header]
+</span><a href="Network.HTTP.Client.Transformable.html#headers"><span class="hs-identifier hs-var">HTTP.headers</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Header] -&gt; [Header]
+</span><a href="Hasura.HTTP.html#addDefaultHeaders"><span class="hs-identifier hs-var">addDefaultHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689688636"><span class="hs-identifier hs-var">filteredHeaders</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span>            </span><span class="annot"><span class="annottext">Request -&gt; Manager -&gt; IO (Response ByteString)
+</span><a href="Network.HTTP.Client.Transformable.html#performRequest"><span class="hs-identifier hs-var">HTTP.performRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689688633"><span class="hs-identifier hs-var">req''</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621689688665"><span class="hs-identifier hs-var">manager</span></a></span><span>
+</span><span id="line-83"></span><span>          </span><span class="annot"><span class="annottext">AuthHookType
+</span><a href="Hasura.Server.Auth.WebHook.html#AHTPost"><span class="hs-identifier hs-var">AHTPost</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-84"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689688627"><span class="annot"><span class="annottext">contentType :: Header
+</span><a href="#local-6989586621689688627"><span class="hs-identifier hs-var hs-var">contentType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
+</span><span class="hs-string">&quot;Content-Type&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;application/json&quot;</span></span><span class="hs-special">)</span><span>
+</span><span id="line-85"></span><span>                </span><span id="local-6989586621689688626"><span class="annot"><span class="annottext">headersPayload :: Value
+</span><a href="#local-6989586621689688626"><span class="hs-identifier hs-var hs-var">headersPayload</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; Value
+forall a. ToJSON a =&gt; a -&gt; Value
+</span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">(HashMap Text Text -&gt; Value) -&gt; HashMap Text Text -&gt; Value
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(Text, Text)] -&gt; HashMap Text Text
+forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="annot"><span class="annottext">([(Text, Text)] -&gt; HashMap Text Text)
+-&gt; [(Text, Text)] -&gt; HashMap Text Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Header] -&gt; [(Text, Text)]
+</span><a href="Hasura.HTTP.html#hdrsToText"><span class="hs-identifier hs-var">hdrsToText</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689688663"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
+</span><span id="line-86"></span><span>                </span><span id="local-6989586621689688622"><span class="annot"><span class="annottext">req'' :: Request
+</span><a href="#local-6989586621689688622"><span class="hs-identifier hs-var hs-var">req''</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-87"></span><span>                  </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689688645"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">Request -&gt; (Request -&gt; Request) -&gt; Request
+forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">ASetter Request Request ByteString ByteString
+-&gt; ByteString -&gt; Request -&gt; Request
+forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">ASetter Request Request ByteString ByteString
+Lens' Request ByteString
+</span><a href="Network.HTTP.Client.Transformable.html#method"><span class="hs-identifier hs-var">HTTP.method</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span class="hs-string">&quot;POST&quot;</span></span><span>
+</span><span id="line-88"></span><span>                    </span><span class="annot"><span class="annottext">Request -&gt; (Request -&gt; Request) -&gt; Request
+forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">ASetter Request Request [Header] [Header]
+-&gt; [Header] -&gt; Request -&gt; Request
+forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">ASetter Request Request [Header] [Header]
+Lens' Request [Header]
+</span><a href="Network.HTTP.Client.Transformable.html#headers"><span class="hs-identifier hs-var">HTTP.headers</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Header] -&gt; [Header]
+</span><a href="Hasura.HTTP.html#addDefaultHeaders"><span class="hs-identifier hs-var">addDefaultHeaders</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Header
+</span><a href="#local-6989586621689688627"><span class="hs-identifier hs-var">contentType</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>                    </span><span class="annot"><span class="annottext">Request -&gt; (Request -&gt; Request) -&gt; Request
+forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span class="hs-operator hs-var">&amp;</span></span><span> </span><span class="annot"><span class="annottext">ASetter Request Request (Maybe ByteString) (Maybe ByteString)
+-&gt; Maybe ByteString -&gt; Request -&gt; Request
+forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
+</span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">ASetter Request Request (Maybe ByteString) (Maybe ByteString)
+Lens' Request (Maybe ByteString)
+</span><a href="Network.HTTP.Client.Transformable.html#body"><span class="hs-identifier hs-var">HTTP.body</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Maybe ByteString
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Maybe ByteString) -&gt; ByteString -&gt; Maybe ByteString
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; ByteString
+forall a. ToJSON a =&gt; a -&gt; ByteString
+</span><span class="hs-identifier hs-var">J.encode</span></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ByteString) -&gt; Value -&gt; ByteString
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;headers&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Value -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689688626"><span class="hs-identifier hs-var">headersPayload</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span class="hs-string">&quot;request&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe ReqsText -&gt; Pair
+forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
+</span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Maybe ReqsText
+</span><a href="#local-6989586621689688662"><span class="hs-identifier hs-var">reqs</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-90"></span><span>            </span><span class="annot"><span class="annottext">Request -&gt; Manager -&gt; IO (Response ByteString)
+</span><a href="Network.HTTP.Client.Transformable.html#performRequest"><span class="hs-identifier hs-var">HTTP.performRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689688622"><span class="hs-identifier hs-var">req''</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
+</span><a href="#local-6989586621689688665"><span class="hs-identifier hs-var">manager</span></a></span><span>
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span>    </span><span id="local-6989586621689688814"><span class="annot"><a href="#local-6989586621689688659"><span class="hs-identifier hs-type">logAndThrow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HTTP.HttpException</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689688667"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689688814"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-93"></span><span>    </span><span id="local-6989586621689688659"><span class="annot"><span class="annottext">logAndThrow :: HttpException -&gt; m a
+</span><a href="#local-6989586621689688659"><span class="hs-identifier hs-var hs-var">logAndThrow</span></a></span></span><span> </span><span id="local-6989586621689688616"><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621689688616"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-94"></span><span>      </span><span class="annot"><span class="annottext">Logger Hasura
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a Hasura, MonadIO m) =&gt;
+   a -&gt; m ()
+forall impl.
+Logger impl
+-&gt; forall a (m :: * -&gt; *).
+   (ToEngineLog a impl, MonadIO m) =&gt;
+   a -&gt; m ()
+</span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var hs-var">unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
+</span><a href="#local-6989586621689688666"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(WebHookLog -&gt; m ()) -&gt; WebHookLog -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-95"></span><span>        </span><span class="annot"><span class="annottext">LogLevel
+-&gt; Maybe Status
+-&gt; Text
+-&gt; StdMethod
+-&gt; Maybe HttpException
+-&gt; Maybe Text
+-&gt; Maybe Text
+-&gt; WebHookLog
+</span><a href="Hasura.Server.Logging.html#WebHookLog"><span class="hs-identifier hs-var">WebHookLog</span></a></span><span>
+</span><span id="line-96"></span><span>          </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span>
+</span><span id="line-97"></span><span>          </span><span class="annot"><span class="annottext">Maybe Status
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-98"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthHook -&gt; Text
+</span><a href="Hasura.Server.Auth.WebHook.html#ahUrl"><span class="hs-identifier hs-var hs-var">ahUrl</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689688664"><span class="hs-identifier hs-var">hook</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AuthHook -&gt; StdMethod
+</span><a href="Hasura.Server.Auth.WebHook.html#hookMethod"><span class="hs-identifier hs-var">hookMethod</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHook
+</span><a href="#local-6989586621689688664"><span class="hs-identifier hs-var">hook</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-100"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HttpException -&gt; Maybe HttpException
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(HttpException -&gt; Maybe HttpException)
+-&gt; HttpException -&gt; Maybe HttpException
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HttpException -&gt; HttpException
+</span><a href="Hasura.HTTP.html#HttpException"><span class="hs-identifier hs-var">HttpException</span></a></span><span> </span><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621689688616"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>          </span><span class="annot"><span class="annottext">Maybe Text
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-102"></span><span>          </span><span class="annot"><span class="annottext">Maybe Text
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-103"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; m a
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;webhook authentication request failed&quot;</span></span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span id="local-6989586621689688792"><span class="annot"><a href="Hasura.Server.Auth.WebHook.html#mkUserInfoFromResp"><span class="hs-identifier hs-type">mkUserInfoFromResp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689688792"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689688792"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-108"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-109"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.StdMethod</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-110"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HTTP.Status</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-111"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-112"></span><span>  </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-113"></span><span>  </span><span class="annot"><a href="#local-6989586621689688792"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">)</span></span><span>
+</span><span id="line-114"></span><span id="mkUserInfoFromResp"><span class="annot"><span class="annottext">mkUserInfoFromResp :: Logger Hasura
+-&gt; Text
+-&gt; StdMethod
+-&gt; Status
+-&gt; ByteString
+-&gt; [Header]
+-&gt; m (UserInfo, Maybe UTCTime, [Header])
+</span><a href="Hasura.Server.Auth.WebHook.html#mkUserInfoFromResp"><span class="hs-identifier hs-var hs-var">mkUserInfoFromResp</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span id="local-6989586621689688609"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
+(ToEngineLog a Hasura, MonadIO m) =&gt;
+a -&gt; m ()
+</span><a href="#local-6989586621689688609"><span class="hs-identifier hs-var">logger</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621689688608"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689688608"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span id="local-6989586621689688607"><span class="annot"><span class="annottext">StdMethod
+</span><a href="#local-6989586621689688607"><span class="hs-identifier hs-var">method</span></a></span></span><span> </span><span id="local-6989586621689688606"><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621689688606"><span class="hs-identifier hs-var">statusCode</span></a></span></span><span> </span><span id="local-6989586621689688605"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689688605"><span class="hs-identifier hs-var">respBody</span></a></span></span><span> </span><span id="local-6989586621689688604"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689688604"><span class="hs-identifier hs-var">respHdrs</span></a></span></span><span>
+</span><span id="line-115"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621689688606"><span class="hs-identifier hs-var">statusCode</span></a></span><span> </span><span class="annot"><span class="annottext">Status -&gt; Status -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Status
+</span><span class="hs-identifier hs-var">HTTP.status200</span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-116"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String (HashMap Text Text)
+forall a. FromJSON a =&gt; ByteString -&gt; Either String a
+</span><span class="hs-identifier hs-var">eitherDecode</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689688605"><span class="hs-identifier hs-var">respBody</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-117"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689688601"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689688601"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-118"></span><span>        </span><span class="annot"><span class="annottext">m ()
+</span><a href="#local-6989586621689688600"><span class="hs-identifier hs-var">logError</span></a></span><span>
+</span><span id="line-119"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; m (UserInfo, Maybe UTCTime, [Header])
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m (UserInfo, Maybe UTCTime, [Header]))
+-&gt; Text -&gt; m (UserInfo, Maybe UTCTime, [Header])
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Invalid response from authorization hook: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689688601"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-120"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689688599"><span class="annot"><span class="annottext">HashMap Text Text
+</span><a href="#local-6989586621689688599"><span class="hs-identifier hs-var">rawHeaders</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">HashMap Text Text
+-&gt; [Header] -&gt; m (UserInfo, Maybe UTCTime, [Header])
+</span><a href="#local-6989586621689688598"><span class="hs-identifier hs-var">getUserInfoFromHdrs</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Text
+</span><a href="#local-6989586621689688599"><span class="hs-identifier hs-var">rawHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689688604"><span class="hs-identifier hs-var">respHdrs</span></a></span><span>
+</span><span id="line-121"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621689688606"><span class="hs-identifier hs-var">statusCode</span></a></span><span> </span><span class="annot"><span class="annottext">Status -&gt; Status -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Status
+</span><span class="hs-identifier hs-var">HTTP.status401</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><span class="annottext">m ()
+</span><a href="#local-6989586621689688600"><span class="hs-identifier hs-var">logError</span></a></span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m (UserInfo, Maybe UTCTime, [Header])
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw401"><span class="hs-identifier hs-var">throw401</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Authentication hook unauthorized this request&quot;</span></span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-125"></span><span>    </span><span class="annot"><span class="annottext">m ()
+</span><a href="#local-6989586621689688600"><span class="hs-identifier hs-var">logError</span></a></span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; m (UserInfo, Maybe UTCTime, [Header])
+forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Invalid response from authorization hook&quot;</span></span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-128"></span><span>    </span><span id="local-6989586621689688598"><span class="annot"><span class="annottext">getUserInfoFromHdrs :: HashMap Text Text
+-&gt; [Header] -&gt; m (UserInfo, Maybe UTCTime, [Header])
+</span><a href="#local-6989586621689688598"><span class="hs-identifier hs-var hs-var">getUserInfoFromHdrs</span></a></span></span><span> </span><span id="local-6989586621689688595"><span class="annot"><span class="annottext">HashMap Text Text
+</span><a href="#local-6989586621689688595"><span class="hs-identifier hs-var">rawHeaders</span></a></span></span><span> </span><span id="local-6989586621689688594"><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689688594"><span class="hs-identifier hs-var">responseHdrs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-129"></span><span>      </span><span id="local-6989586621689688593"><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689688593"><span class="hs-identifier hs-var">userInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-130"></span><span>        </span><span class="annot"><span class="annottext">UserRoleBuild -&gt; UserAdminSecret -&gt; SessionVariables -&gt; m UserInfo
+forall (m :: * -&gt; *).
+MonadError QErr m =&gt;
+UserRoleBuild -&gt; UserAdminSecret -&gt; SessionVariables -&gt; m UserInfo
+</span><a href="Hasura.Session.html#mkUserInfo"><span class="hs-identifier hs-var">mkUserInfo</span></a></span><span> </span><span class="annot"><span class="annottext">UserRoleBuild
+</span><a href="Hasura.Session.html#URBFromSessionVariables"><span class="hs-identifier hs-var">URBFromSessionVariables</span></a></span><span> </span><span class="annot"><span class="annottext">UserAdminSecret
+</span><a href="Hasura.Session.html#UAdminSecretNotSent"><span class="hs-identifier hs-var">UAdminSecretNotSent</span></a></span><span> </span><span class="annot"><span class="annottext">(SessionVariables -&gt; m UserInfo) -&gt; SessionVariables -&gt; m UserInfo
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-131"></span><span>          </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; SessionVariables
+</span><a href="Hasura.Session.html#mkSessionVariablesText"><span class="hs-identifier hs-var">mkSessionVariablesText</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Text
+</span><a href="#local-6989586621689688595"><span class="hs-identifier hs-var">rawHeaders</span></a></span><span>
+</span><span id="line-132"></span><span>      </span><span class="annot"><span class="annottext">LogLevel -&gt; Maybe ByteString -&gt; Maybe Text -&gt; m ()
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+LogLevel -&gt; Maybe ByteString -&gt; Maybe Text -&gt; m ()
+</span><a href="#local-6989586621689688588"><span class="hs-identifier hs-var">logWebHookResp</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelInfo"><span class="hs-identifier hs-var">LevelInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-133"></span><span>      </span><span id="local-6989586621689688586"><span class="annot"><span class="annottext">Maybe UTCTime
+</span><a href="#local-6989586621689688586"><span class="hs-identifier hs-var">expiration</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">MaybeT m UTCTime -&gt; m (Maybe UTCTime)
+forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
+</span><span class="hs-identifier hs-var hs-var">runMaybeT</span></span><span> </span><span class="annot"><span class="annottext">(MaybeT m UTCTime -&gt; m (Maybe UTCTime))
+-&gt; MaybeT m UTCTime -&gt; m (Maybe UTCTime)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; MaybeT m UTCTime
+</span><a href="#local-6989586621689688584"><span class="hs-identifier hs-var">timeFromCacheControl</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Text
+</span><a href="#local-6989586621689688595"><span class="hs-identifier hs-var">rawHeaders</span></a></span><span> </span><span class="annot"><span class="annottext">MaybeT m UTCTime -&gt; MaybeT m UTCTime -&gt; MaybeT m UTCTime
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
+</span><span class="hs-operator hs-var">&lt;|&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; MaybeT m UTCTime
+</span><a href="#local-6989586621689688582"><span class="hs-identifier hs-var">timeFromExpires</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Text
+</span><a href="#local-6989586621689688595"><span class="hs-identifier hs-var">rawHeaders</span></a></span><span>
+</span><span id="line-134"></span><span>      </span><span class="annot"><span class="annottext">(UserInfo, Maybe UTCTime, [Header])
+-&gt; m (UserInfo, Maybe UTCTime, [Header])
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UserInfo
+</span><a href="#local-6989586621689688593"><span class="hs-identifier hs-var">userInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe UTCTime
+</span><a href="#local-6989586621689688586"><span class="hs-identifier hs-var">expiration</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Header]
+</span><a href="#local-6989586621689688594"><span class="hs-identifier hs-var">responseHdrs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-135"></span><span>
+</span><span id="line-136"></span><span>    </span><span id="local-6989586621689688729"><span class="annot"><a href="#local-6989586621689688588"><span class="hs-identifier hs-type">logWebHookResp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689688729"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Logging.html#LogLevel"><span class="hs-identifier hs-type">LogLevel</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689688729"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-137"></span><span>    </span><span id="local-6989586621689688588"><span class="annot"><span class="annottext">logWebHookResp :: LogLevel -&gt; Maybe ByteString -&gt; Maybe Text -&gt; m ()
+</span><a href="#local-6989586621689688588"><span class="hs-identifier hs-var hs-var">logWebHookResp</span></a></span></span><span> </span><span id="local-6989586621689688581"><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621689688581"><span class="hs-identifier hs-var">logLevel</span></a></span></span><span> </span><span id="local-6989586621689688580"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621689688580"><span class="hs-identifier hs-var">mResp</span></a></span></span><span> </span><span id="local-6989586621689688579"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689688579"><span class="hs-identifier hs-var">message</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-138"></span><span>      </span><span class="annot"><span class="annottext">WebHookLog -&gt; m ()
+forall a (m :: * -&gt; *).
+(ToEngineLog a Hasura, MonadIO m) =&gt;
+a -&gt; m ()
+</span><a href="#local-6989586621689688609"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">(WebHookLog -&gt; m ()) -&gt; WebHookLog -&gt; m ()
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span>
+</span><span id="line-139"></span><span>        </span><span class="annot"><span class="annottext">LogLevel
+-&gt; Maybe Status
+-&gt; Text
+-&gt; StdMethod
+-&gt; Maybe HttpException
+-&gt; Maybe Text
+-&gt; Maybe Text
+-&gt; WebHookLog
+</span><a href="Hasura.Server.Logging.html#WebHookLog"><span class="hs-identifier hs-var">WebHookLog</span></a></span><span>
+</span><span id="line-140"></span><span>          </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621689688581"><span class="hs-identifier hs-var">logLevel</span></a></span><span>
+</span><span id="line-141"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Status -&gt; Maybe Status
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621689688606"><span class="hs-identifier hs-var">statusCode</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-142"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689688608"><span class="hs-identifier hs-var">url</span></a></span><span>
+</span><span id="line-143"></span><span>          </span><span class="annot"><span class="annottext">StdMethod
+</span><a href="#local-6989586621689688607"><span class="hs-identifier hs-var">method</span></a></span><span>
+</span><span id="line-144"></span><span>          </span><span class="annot"><span class="annottext">Maybe HttpException
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-145"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Text
+</span><a href="Hasura.Prelude.html#bsToTxt"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text)
+-&gt; (ByteString -&gt; ByteString) -&gt; ByteString -&gt; Text
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><span class="hs-identifier hs-var">BL.toStrict</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text) -&gt; Maybe ByteString -&gt; Maybe Text
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621689688580"><span class="hs-identifier hs-var">mResp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-146"></span><span>          </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689688579"><span class="hs-identifier hs-var">message</span></a></span><span>
+</span><span id="line-147"></span><span>    </span><span id="local-6989586621689688575"><span class="annot"><span class="annottext">logWarn :: Text -&gt; MaybeT m ()
+</span><a href="#local-6989586621689688575"><span class="hs-identifier hs-var hs-var">logWarn</span></a></span></span><span> </span><span id="local-6989586621689688574"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689688574"><span class="hs-identifier hs-var">message</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; Maybe ByteString -&gt; Maybe Text -&gt; MaybeT m ()
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+LogLevel -&gt; Maybe ByteString -&gt; Maybe Text -&gt; m ()
+</span><a href="#local-6989586621689688588"><span class="hs-identifier hs-var">logWebHookResp</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelWarn"><span class="hs-identifier hs-var">LevelWarn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Maybe ByteString
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689688605"><span class="hs-identifier hs-var">respBody</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Maybe Text
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689688574"><span class="hs-identifier hs-var">message</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-148"></span><span>    </span><span id="local-6989586621689688600"><span class="annot"><span class="annottext">logError :: m ()
+</span><a href="#local-6989586621689688600"><span class="hs-identifier hs-var hs-var">logError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogLevel -&gt; Maybe ByteString -&gt; Maybe Text -&gt; m ()
+forall (m :: * -&gt; *).
+MonadIO m =&gt;
+LogLevel -&gt; Maybe ByteString -&gt; Maybe Text -&gt; m ()
+</span><a href="#local-6989586621689688588"><span class="hs-identifier hs-var">logWebHookResp</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><a href="Hasura.Logging.html#LevelError"><span class="hs-identifier hs-var">LevelError</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; Maybe ByteString
+forall a. a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689688605"><span class="hs-identifier hs-var">respBody</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span>    </span><span id="local-6989586621689688584"><span class="annot"><span class="annottext">timeFromCacheControl :: HashMap Text Text -&gt; MaybeT m UTCTime
+</span><a href="#local-6989586621689688584"><span class="hs-identifier hs-var hs-var">timeFromCacheControl</span></a></span></span><span> </span><span id="local-6989586621689688572"><span class="annot"><span class="annottext">HashMap Text Text
+</span><a href="#local-6989586621689688572"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-151"></span><span>      </span><span id="local-6989586621689688571"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689688571"><span class="hs-identifier hs-var">header</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; MaybeT m Text
+forall (t :: * -&gt; *) (f :: * -&gt; *) a.
+(Foldable t, Alternative f) =&gt;
+t a -&gt; f a
+</span><a href="Hasura.Prelude.html#afold"><span class="hs-identifier hs-var">afold</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Text -&gt; MaybeT m Text) -&gt; Maybe Text -&gt; MaybeT m Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; HashMap Text Text -&gt; Maybe Text
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Cache-Control&quot;</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text Text
+</span><a href="#local-6989586621689688572"><span class="hs-identifier hs-var">headers</span></a></span><span>
+</span><span id="line-152"></span><span>      </span><span id="local-6989586621689688568"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689688568"><span class="hs-identifier hs-var">duration</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String Integer
+forall a. Integral a =&gt; Text -&gt; Either String a
+</span><a href="Data.Parser.CacheControl.html#parseMaxAge"><span class="hs-identifier hs-var">parseMaxAge</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689688571"><span class="hs-identifier hs-var">header</span></a></span><span> </span><span class="annot"><span class="annottext">Either String Integer
+-&gt; (String -&gt; MaybeT m Integer) -&gt; MaybeT m Integer
+forall (m :: * -&gt; *) e a.
+Applicative m =&gt;
+Either e a -&gt; (e -&gt; m a) -&gt; m a
+</span><a href="Hasura.Prelude.html#onLeft"><span class="hs-operator hs-var">`onLeft`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689688567"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689688567"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; MaybeT m ()
+</span><a href="#local-6989586621689688575"><span class="hs-identifier hs-var">logWarn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689688567"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MaybeT m () -&gt; MaybeT m Integer -&gt; MaybeT m Integer
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
+</span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">MaybeT m Integer
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a
+</span><span class="hs-identifier hs-var">empty</span></span><span>
+</span><span id="line-153"></span><span>      </span><span class="annot"><span class="annottext">NominalDiffTime -&gt; UTCTime -&gt; UTCTime
+</span><span class="hs-identifier hs-var">addUTCTime</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; NominalDiffTime
+forall a. Num a =&gt; Integer -&gt; a
+</span><span class="hs-identifier hs-var">fromInteger</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689688568"><span class="hs-identifier hs-var">duration</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(UTCTime -&gt; UTCTime) -&gt; MaybeT m UTCTime -&gt; MaybeT m UTCTime
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">IO UTCTime -&gt; MaybeT m UTCTime
+forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">IO UTCTime
+</span><span class="hs-identifier hs-var">getCurrentTime</span></span><span>
+</span><span id="line-154"></span><span>    </span><span id="local-6989586621689688582"><span class="annot"><span class="annottext">timeFromExpires :: HashMap Text Text -&gt; MaybeT m UTCTime
+</span><a href="#local-6989586621689688582"><span class="hs-identifier hs-var hs-var">timeFromExpires</span></a></span></span><span> </span><span id="local-6989586621689688565"><span class="annot"><span class="annottext">HashMap Text Text
+</span><a href="#local-6989586621689688565"><span class="hs-identifier hs-var">headers</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-155"></span><span>      </span><span id="local-6989586621689688564"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689688564"><span class="hs-identifier hs-var">header</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe Text -&gt; MaybeT m Text
+forall (t :: * -&gt; *) (f :: * -&gt; *) a.
+(Foldable t, Alternative f) =&gt;
+t a -&gt; f a
+</span><a href="Hasura.Prelude.html#afold"><span class="hs-identifier hs-var">afold</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Text -&gt; MaybeT m Text) -&gt; Maybe Text -&gt; MaybeT m Text
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; HashMap Text Text -&gt; Maybe Text
+forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><span class="hs-identifier hs-var">Map.lookup</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Expires&quot;</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text Text
+</span><a href="#local-6989586621689688565"><span class="hs-identifier hs-var">headers</span></a></span><span>
+</span><span id="line-156"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Either String UTCTime
+forall (m :: * -&gt; *). MonadError String m =&gt; Text -&gt; m UTCTime
+</span><a href="Data.Parser.Expires.html#parseExpirationTime"><span class="hs-identifier hs-var">parseExpirationTime</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689688564"><span class="hs-identifier hs-var">header</span></a></span><span> </span><span class="annot"><span class="annottext">Either String UTCTime
+-&gt; (String -&gt; MaybeT m UTCTime) -&gt; MaybeT m UTCTime
+forall (m :: * -&gt; *) e a.
+Applicative m =&gt;
+Either e a -&gt; (e -&gt; m a) -&gt; m a
+</span><a href="Hasura.Prelude.html#onLeft"><span class="hs-operator hs-var">`onLeft`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689688562"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689688562"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; MaybeT m ()
+</span><a href="#local-6989586621689688575"><span class="hs-identifier hs-var">logWarn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
+</span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689688562"><span class="hs-identifier hs-var">err</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MaybeT m () -&gt; MaybeT m UTCTime -&gt; MaybeT m UTCTime
+forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
+</span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">MaybeT m UTCTime
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a
+</span><span class="hs-identifier hs-var">empty</span></span><span>
+</span><span id="line-157"></span></pre></body></html>
