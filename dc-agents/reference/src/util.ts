@@ -13,9 +13,52 @@ export const zip = <T, U>(arr1: T[], arr2: U[]): [T, U][] => {
   return newArray;
 };
 
-export const crossProduct = <T, U>(arr1: T[], arr2: U[]): [T, U][] => {
-  return arr1.flatMap(a1 => arr2.map<[T,U]>(a2 => [a1, a2]));
-};
+export function* mapIterable<T, U>(iterable: Iterable<T>, fn: (item: T) => U) {
+  for (const x of iterable) {
+    yield fn(x);
+  }
+}
+
+export function* filterIterable<T>(iterable: Iterable<T>, fn: (item: T) => boolean) {
+  for (const x of iterable) {
+    if (fn(x)) yield x;
+  }
+}
+
+export function* skipIterable<T>(iterable: Iterable<T>, count: number) {
+  let currentCount = 0;
+  for (const x of iterable) {
+    if (currentCount >= count) {
+      yield x;
+    } else {
+      currentCount++;
+    }
+  }
+}
+
+export function* takeIterable<T>(iterable: Iterable<T>, count: number) {
+  let currentCount = 0;
+  for (const x of iterable) {
+    if (currentCount >= count) return;
+
+    yield x;
+    currentCount++;
+  }
+}
+
+export const reduceAndIterable = (iterable: Iterable<boolean>): boolean => {
+  for (const x of iterable) {
+    if (x === false) return false;
+  }
+  return true;
+}
+
+export const reduceOrIterable = (iterable: Iterable<boolean>): boolean => {
+  for (const x of iterable) {
+    if (x === true) return true;
+  }
+  return false;
+}
 
 export const tableNameEquals = (tableName1: TableName) => (tableName2: TableName): boolean => {
   if (tableName1.length !== tableName2.length)

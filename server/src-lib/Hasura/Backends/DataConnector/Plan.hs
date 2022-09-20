@@ -14,12 +14,14 @@ import Data.Aeson.Encoding qualified as JE
 import Data.Aeson.Key qualified as K
 import Data.Aeson.KeyMap (KeyMap)
 import Data.Aeson.KeyMap qualified as KM
+import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Min (..))
+import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
-import Data.Text.Extended ((<>>))
+import Data.Text.Extended ((<<>), (<>>))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend
 import Hasura.Backends.DataConnector.Adapter.Types
@@ -30,6 +32,7 @@ import Hasura.Backends.DataConnector.IR.Expression qualified as IR.E
 import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
 import Hasura.Backends.DataConnector.IR.Query qualified as IR.Q
 import Hasura.Backends.DataConnector.IR.Relationships qualified as IR.R
+import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S
 import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S
 import Hasura.Backends.DataConnector.IR.Table qualified as IR.T
 import Hasura.Base.Error
@@ -38,10 +41,12 @@ import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.OrderBy
 import Hasura.RQL.IR.Select
 import Hasura.RQL.IR.Value
+import Hasura.RQL.Types.Backend (SessionVarType)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
 import Hasura.SQL.Backend
+import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Session
 import Witch qualified
 
@@ -151,7 +156,7 @@ mkPlan session (SourceConfig {}) ir = do
             case _saWhere (_asnArgs selectG) of
               Just expr -> BoolAnd [expr, _tpFilter (_asnPerm selectG)]
               Nothing -> _tpFilter (_asnPerm selectG)
-      whereClause <- translateBoolExpToExpression [] tableName whereClauseWithPermissions
+      whereClause <- translateBoolExpToExpression tableName whereClauseWithPermissions
       orderBy <- traverse (translateOrderBy tableName) (_saOrderBy $ _asnArgs selectG)
       pure
         IR.Q.Query
@@ -204,7 +209,7 @@ mkPlan session (SourceConfig {}) ir = do
         (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
         (translatedOrderByElement, subOrderByRelations) <- translateOrderByElement _rTargetTable orderDirection (relationshipName : targetReversePath) orderByElement
 
-        targetTableWhereExp <- translateBoolExpToExpression [] _rTargetTable filterExp
+        targetTableWhereExp <- translateBoolExpToExpression _rTargetTable filterExp
         let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation targetTableWhereExp subOrderByRelations)]
 
         pure (translatedOrderByElement, orderByRelations)
@@ -224,7 +229,7 @@ mkPlan session (SourceConfig {}) ir = do
                   _obeOrderDirection = orderDirection
                 }
 
-        targetTableWhereExp <- translateBoolExpToExpression [] _rTargetTable filterExp
+        targetTableWhereExp <- translateBoolExpToExpression _rTargetTable filterExp
         let orderByRelations = HashMap.fromList [(relationshipName, IR.O.OrderByRelation targetTableWhereExp mempty)]
         pure (translatedOrderByElement, orderByRelations)
 
@@ -293,7 +298,7 @@ mkPlan session (SourceConfig {}) ir = do
         let targetTable = _aosTableFrom (_aarAnnSelect objRel)
         let relationshipName = IR.R.mkRelationshipName $ _aarRelationshipName objRel
         FieldsAndAggregates {..} <- translateAnnFields noPrefix targetTable (_aosFields (_aarAnnSelect objRel))
-        whereClause <- translateBoolExpToExpression [] targetTable (_aosTableFilter (_aarAnnSelect objRel))
+        whereClause <- translateBoolExpToExpression targetTable (_aosTableFilter (_aarAnnSelect objRel))
 
         recordTableRelationship
           sourceTableName
@@ -424,41 +429,64 @@ mkPlan session (SourceConfig {}) ir = do
     prepareLiterals (UVLiteral literal) = pure $ literal
     prepareLiterals (UVParameter _ e) = pure (IR.S.ValueLiteral (cvValue e))
     prepareLiterals UVSession = throw400 NotSupported "prepareLiterals: UVSession"
-    prepareLiterals (UVSessionVar _ v) =
-      case getSessionVariableValue v session of
-        Nothing -> throw400 NotSupported ("prepareLiterals: session var not found: " <>> v)
-        Just s -> pure (IR.S.ValueLiteral (J.String s))
+    prepareLiterals (UVSessionVar sessionVarType sessionVar) = do
+      textValue <-
+        getSessionVariableValue sessionVar session
+          `onNothing` throw400 NotSupported ("prepareLiterals: session var not found: " <>> sessionVar)
+      parseSessionVariable sessionVar sessionVarType textValue
+
+    parseSessionVariable :: SessionVariable -> SessionVarType 'DataConnector -> Text -> m IR.S.Literal
+    parseSessionVariable varName varType varValue = do
+      case varType of
+        CollectableTypeScalar scalarType ->
+          case scalarType of
+            IR.S.String -> pure . IR.S.ValueLiteral $ J.String varValue
+            IR.S.Number -> parseValue (IR.S.ValueLiteral . J.Number) "number value"
+            IR.S.Bool -> parseValue (IR.S.ValueLiteral . J.Bool) "boolean value"
+            IR.S.Custom customTypeName -> parseValue IR.S.ValueLiteral (customTypeName <> " JSON value")
+        CollectableTypeArray scalarType ->
+          case scalarType of
+            IR.S.String -> parseValue (IR.S.ArrayLiteral . fmap J.String) "JSON array of strings"
+            IR.S.Number -> parseValue (IR.S.ArrayLiteral . fmap J.Number) "JSON array of numbers"
+            IR.S.Bool -> parseValue (IR.S.ArrayLiteral . fmap J.Bool) "JSON array of booleans"
+            IR.S.Custom customTypeName -> parseValue IR.S.ArrayLiteral ("JSON array of " <> customTypeName <> " JSON values")
+      where
+        parseValue :: J.FromJSON a => (a -> IR.S.Literal) -> Text -> m IR.S.Literal
+        parseValue toLiteral description =
+          toLiteral <$> J.eitherDecodeStrict' valValueBS
+            `onLeft` (\err -> throw400 ParseFailed ("Expected " <> description <> " for session variable " <> varName <<> ". " <> T.pack err))
+
+        valValueBS :: BS.ByteString
+        valValueBS = TE.encodeUtf8 varValue
 
     translateBoolExpToExpression ::
-      [IR.R.RelationshipName] ->
       IR.T.Name ->
       AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
       CPS.WriterT IR.R.TableRelationships m (Maybe IR.E.Expression)
-    translateBoolExpToExpression columnRelationshipReversePath sourceTableName boolExp = do
-      removeAlwaysTrueExpression <$> translateBoolExp columnRelationshipReversePath sourceTableName boolExp
+    translateBoolExpToExpression sourceTableName boolExp = do
+      removeAlwaysTrueExpression <$> translateBoolExp sourceTableName boolExp
 
     translateBoolExp ::
-      [IR.R.RelationshipName] ->
       IR.T.Name ->
       AnnBoolExp 'DataConnector (UnpreparedValue 'DataConnector) ->
       CPS.WriterT IR.R.TableRelationships m IR.E.Expression
-    translateBoolExp columnRelationshipReversePath sourceTableName = \case
+    translateBoolExp sourceTableName = \case
       BoolAnd xs ->
-        mkIfZeroOrMany IR.E.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
+        mkIfZeroOrMany IR.E.And . mapMaybe removeAlwaysTrueExpression <$> traverse (translateBoolExp sourceTableName) xs
       BoolOr xs ->
-        mkIfZeroOrMany IR.E.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp columnRelationshipReversePath sourceTableName) xs
+        mkIfZeroOrMany IR.E.Or . mapMaybe removeAlwaysFalseExpression <$> traverse (translateBoolExp sourceTableName) xs
       BoolNot x ->
-        IR.E.Not <$> (translateBoolExp columnRelationshipReversePath sourceTableName) x
+        IR.E.Not <$> (translateBoolExp sourceTableName) x
       BoolField (AVColumn c xs) ->
-        lift $ mkIfZeroOrMany IR.E.And <$> traverse (translateOp columnRelationshipReversePath (ciColumn c)) xs
+        lift $ mkIfZeroOrMany IR.E.And <$> traverse (translateOp (ciColumn c)) xs
       BoolField (AVRelationship relationshipInfo boolExp) -> do
         (relationshipName, IR.R.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
-        translateBoolExp (relationshipName : columnRelationshipReversePath) _rTargetTable boolExp
-      BoolExists _ ->
-        lift $ throw400 NotSupported "The BoolExists expression type is not supported by the Data Connector backend"
+        IR.E.Exists (IR.E.RelatedTable relationshipName) <$> translateBoolExp _rTargetTable boolExp
+      BoolExists GExists {..} ->
+        IR.E.Exists (IR.E.UnrelatedTable _geTable) <$> translateBoolExp _geTable _geWhere
       where
         -- Makes an 'IR.E.Expression' like 'IR.E.And' if there is zero or many input expressions otherwise
-        -- just returns the singleton expression. This helps remove redundant 'IE.E.And' etcs from the expression.
+        -- just returns the singleton expression. This helps remove redundant 'IR.E.And' etcs from the expression.
         mkIfZeroOrMany :: ([IR.E.Expression] -> IR.E.Expression) -> [IR.E.Expression] -> IR.E.Expression
         mkIfZeroOrMany mk = \case
           [singleExp] -> singleExp
@@ -477,11 +505,10 @@ mkPlan session (SourceConfig {}) ir = do
       other -> Just other
 
     translateOp ::
-      [IR.R.RelationshipName] ->
       IR.C.Name ->
       OpExpG 'DataConnector (UnpreparedValue 'DataConnector) ->
       m IR.E.Expression
-    translateOp columnRelationshipReversePath columnName opExp = do
+    translateOp columnName opExp = do
       preparedOpExp <- traverse prepareLiterals $ opExp
       case preparedOpExp of
         AEQ _ (IR.S.ValueLiteral value) ->
@@ -542,13 +569,13 @@ mkPlan session (SourceConfig {}) ir = do
             pure $ IR.E.ApplyBinaryArrayComparisonOperator (IR.E.CustomBinaryArrayComparisonOperator _cboName) currentComparisonColumn array
       where
         currentComparisonColumn :: IR.E.ComparisonColumn
-        currentComparisonColumn = IR.E.ComparisonColumn (reverse columnRelationshipReversePath) columnName
+        currentComparisonColumn = IR.E.ComparisonColumn IR.E.CurrentTable columnName
 
         mkApplyBinaryComparisonOperatorToAnotherColumn :: IR.E.BinaryComparisonOperator -> RootOrCurrentColumn 'DataConnector -> IR.E.Expression
         mkApplyBinaryComparisonOperatorToAnotherColumn operator (RootOrCurrentColumn rootOrCurrent otherColumnName) =
           let columnPath = case rootOrCurrent of
-                IsRoot -> []
-                IsCurrent -> (reverse columnRelationshipReversePath)
+                IsRoot -> IR.E.QueryTable
+                IsCurrent -> IR.E.CurrentTable
            in IR.E.ApplyBinaryComparisonOperator operator currentComparisonColumn (IR.E.AnotherColumn $ IR.E.ComparisonColumn columnPath otherColumnName)
 
         inOperator :: IR.S.Literal -> IR.E.Expression

@@ -3,10 +3,12 @@
 
 module Hasura.Backends.DataConnector.API.V0.Expression
   ( Expression (..),
+    ExistsInTable (..),
     BinaryComparisonOperator (..),
     BinaryArrayComparisonOperator (..),
     UnaryComparisonOperator (..),
     ComparisonColumn (..),
+    ColumnPath (..),
     ComparisonValue (..),
   )
 where
@@ -24,6 +26,7 @@ import Data.Tuple.Extra
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Table qualified as API.V0
 import Prelude
 
 --------------------------------------------------------------------------------
@@ -104,6 +107,7 @@ data Expression
   = And [Expression]
   | Or [Expression]
   | Not Expression
+  | Exists ExistsInTable Expression
   | ApplyBinaryComparisonOperator BinaryComparisonOperator ComparisonColumn ComparisonValue
   | ApplyBinaryArrayComparisonOperator BinaryArrayComparisonOperator ComparisonColumn [Value]
   | ApplyUnaryComparisonOperator UnaryComparisonOperator ComparisonColumn
@@ -119,6 +123,10 @@ instance HasCodec Expression where
     where
       expressionsCodec = requiredField' "expressions"
       expressionCodec = requiredField' "expression"
+      existsCodec =
+        (,)
+          <$> requiredField' "in_table" .= fst
+          <*> requiredField' "where" .= snd
       binaryOperatorCodec =
         (,,)
           <$> requiredField' "operator" .= fst3
@@ -137,6 +145,8 @@ instance HasCodec Expression where
         And expressions -> ("and", mapToEncoder expressions expressionsCodec)
         Or expressions -> ("or", mapToEncoder expressions expressionsCodec)
         Not expression -> ("not", mapToEncoder expression expressionCodec)
+        Exists inTable where' ->
+          ("exists", mapToEncoder (inTable, where') existsCodec)
         ApplyBinaryComparisonOperator o c v ->
           ("binary_op", mapToEncoder (o, c, v) binaryOperatorCodec)
         ApplyBinaryArrayComparisonOperator o c vs ->
@@ -148,6 +158,11 @@ instance HasCodec Expression where
           [ ("and", ("AndExpression", mapToDecoder And expressionsCodec)),
             ("or", ("OrExpression", mapToDecoder Or expressionsCodec)),
             ("not", ("NotExpression", mapToDecoder Not expressionCodec)),
+            ( "exists",
+              ( "ExistsExpression",
+                mapToDecoder (uncurry Exists) existsCodec
+              )
+            ),
             ( "binary_op",
               ( "ApplyBinaryComparisonOperator",
                 mapToDecoder (uncurry3 ApplyBinaryComparisonOperator) binaryOperatorCodec
@@ -165,10 +180,37 @@ instance HasCodec Expression where
             )
           ]
 
+-- | Which table should be subqueried to satisfy the 'Exists' expression
+data ExistsInTable
+  = -- | The table is the one found by navigating the specified relationship
+    -- from the current table
+    RelatedTable API.V0.RelationshipName
+  | -- | The table is completely unrelated to the current table (ie no join
+    -- between the current table and the specified table should be performed
+    -- and the whole of the specified table would be subqueried)
+    UnrelatedTable API.V0.TableName
+  deriving stock (Data, Eq, Generic, Ord, Show)
+  deriving anyclass (Hashable, NFData)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ExistsInTable
+
+instance HasCodec ExistsInTable where
+  codec = named "ExistsInTable" . object "ExistsInTable" $ discriminatedUnionCodec "type" enc dec
+    where
+      relatedTableCodec = requiredField' "relationship"
+      unrelatedTableCodec = requiredField' "table"
+      enc = \case
+        RelatedTable relationship -> ("related", mapToEncoder relationship relatedTableCodec)
+        UnrelatedTable tableName -> ("unrelated", mapToEncoder tableName unrelatedTableCodec)
+      dec =
+        HashMap.fromList
+          [ ("related", ("RelatedTable", mapToDecoder RelatedTable relatedTableCodec)),
+            ("unrelated", ("UnrelatedTable", mapToDecoder UnrelatedTable unrelatedTableCodec))
+          ]
+
 -- | Specifies a particular column to use in a comparison via its path and name
 data ComparisonColumn = ComparisonColumn
-  { -- | The path of relationships from the current query table to the table that contains the column
-    _ccPath :: [API.V0.RelationshipName],
+  { -- | The path to the table that contains the specified column.
+    _ccPath :: ColumnPath,
     -- | The name of the column
     _ccName :: API.V0.ColumnName
   }
@@ -180,8 +222,39 @@ instance HasCodec ComparisonColumn where
   codec =
     object "ComparisonColumn" $
       ComparisonColumn
-        <$> requiredField "path" "The relationship path from the current query table to the table that contains the specified column. Empty array means the current query table." .= _ccPath
+        <$> optionalFieldWithOmittedDefault "path" CurrentTable "The path to the table that contains the specified column. Missing or empty array means the current table. [\"$\"] means the query table. No other values are supported at this time." .= _ccPath
         <*> requiredField "name" "The name of the column" .= _ccName
+
+-- | Describes what table a column is located on. This may either be the "current" table
+-- (which would be query table, or the table specified by the closest ancestor 'Exists'
+-- expression), or the query table (meaning the table being queried by the 'Query' which
+-- the current 'Expression' is from)
+--
+-- This currently encodes to @[]@ or @["$"]@ in JSON. This format has been chosen to ensure
+-- that if we want to extend the pathing to allow navigation of table relationships by
+-- turning this type into a list of path components, we can do that without breaking the
+-- JSON format. The JSON format also aligns with how HGE encodes this concept in @_ceq@ etc
+-- operators in the permissions system.
+data ColumnPath
+  = CurrentTable
+  | QueryTable
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ColumnPath
+  deriving anyclass (Hashable, NFData)
+
+instance HasCodec ColumnPath where
+  codec = bimapCodec decode encode codec
+    where
+      decode :: [Text] -> Either String ColumnPath
+      decode = \case
+        [] -> Right CurrentTable
+        ["$"] -> Right QueryTable
+        _otherwise -> Left "Invalid ColumnPath"
+
+      encode :: ColumnPath -> [Text]
+      encode = \case
+        CurrentTable -> []
+        QueryTable -> ["$"]
 
 -- | A serializable representation of comparison values used in comparisons inside 'Expression's.
 data ComparisonValue

@@ -25,6 +25,9 @@ extra-source-files:
   src-rsr/mssql_table_metadata.sql
   src-rsr/catalog_versions.txt
   src-rsr/catalog_version.txt
+  -- Test data used by Data Connector agent tests
+  src/tests-dc-api/Test/Data/ChinookData.xml.gz
+  src/tests-dc-api/Test/Data/schema-tables.json
 
 
 source-repository head
@@ -1406,6 +1409,7 @@ test-suite tests-dc-api
     , Test.QuerySpec
     , Test.QuerySpec.AggregatesSpec
     , Test.QuerySpec.BasicSpec
+    , Test.QuerySpec.FilteringSpec
     , Test.QuerySpec.OrderBySpec
     , Test.QuerySpec.RelationshipsSpec
     , Test.SchemaSpec

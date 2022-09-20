@@ -19,9 +19,13 @@ import {
     OrderDirection,
     UnaryComparisonOperator,
     ExplainResponse,
+    ExistsExpression,
   } from "@hasura/dc-api-types";
+import { customAlphabet } from "nanoid";
 
 const SqlString = require('sqlstring-sqlite');
+
+const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789-_", 6);
 
 /** Helper type for convenience. Uses the sqlstring-sqlite library, but should ideally use the function in sequalize.
  */
@@ -82,86 +86,121 @@ function json_object(relationships: Array<TableRelationships>, fields: Fields, t
   return tag('json_object', `JSON_OBJECT(${result})`);
 }
 
-function where_clause(relationships: Array<TableRelationships>, expression: Expression, tableName: TableName): string {
-  switch(expression.type) {
-    case "not":
-      const aNot = where_clause(relationships, expression.expression, tableName);
-        return `(NOT ${aNot})`;
-    case "and":
-      const aAnd = expression.expressions.flatMap(x => where_clause(relationships, x, tableName));
-      return aAnd.length > 0
-        ? `(${aAnd.join(" AND ")})`
-        : "(1 = 1)" // true
-    case "or":
-      const aOr = expression.expressions.flatMap(x => where_clause(relationships, x, tableName));
-      return aOr.length > 0
-        ? `(${aOr.join(" OR ")})`
-        : "(1 = 0)" // false
-    case "unary_op":
-      const uop = uop_op(expression.operator);
-      return expression.column.path.length < 1
-        ? `(${escapeIdentifier(expression.column.name)} ${uop})`
-        : exists(relationships, expression.column, tableName, uop);
-    case "binary_op":
-      const bop = bop_op(expression.operator);
-      return expression.column.path.length < 1
-        ? `${escapeIdentifier(expression.column.name)} ${bop} ${bop_val(expression.value, tableName)}`
-        : exists(relationships, expression.column, tableName, `${bop} ${bop_val(expression.value, tableName)}`);
-    case "binary_arr_op":
-      const bopA = bop_array(expression.operator);
-      return expression.column.path.length < 1
-        ? `(${escapeIdentifier(expression.column.name)} ${bopA} (${expression.values.map(v => escapeString(v)).join(", ")}))`
-        : exists(relationships,expression.column,tableName, `${bopA} (${expression.values.map(v => escapeString(v)).join(", ")})`);
+function where_clause(relationships: Array<TableRelationships>, expression: Expression, queryTableName: TableName): string {
+  // The query table doesn't have an alias, so we refer to it by name directly
+  const queryTableAlias = escapeTableName(queryTableName);
+
+  const generateWhere = (expression: Expression, currentTableName: TableName, currentTableAlias: string): string => {
+    switch(expression.type) {
+      case "not":
+        const aNot = generateWhere(expression.expression, currentTableName, currentTableAlias);
+          return `(NOT ${aNot})`;
+
+      case "and":
+        const aAnd = expression.expressions.flatMap(x => generateWhere(x, currentTableName, currentTableAlias));
+        return aAnd.length > 0
+          ? `(${aAnd.join(" AND ")})`
+          : "(1 = 1)" // true
+
+      case "or":
+        const aOr = expression.expressions.flatMap(x => generateWhere(x, currentTableName, currentTableAlias));
+        return aOr.length > 0
+          ? `(${aOr.join(" OR ")})`
+          : "(1 = 0)" // false
+
+      case "exists":
+        const joinInfo = calculateExistsJoinInfo(relationships, expression, currentTableName, currentTableAlias);
+        const subqueryWhere = generateWhere(expression.where, joinInfo.joinTableName, joinInfo.joinTableAlias);
+        const whereComparisons = [...joinInfo.joinComparisonFragments, subqueryWhere].join(" AND ");
+        return tag('exists',`EXISTS (SELECT 1 FROM ${escapeTableName(joinInfo.joinTableName)} AS ${joinInfo.joinTableAlias} WHERE ${whereComparisons})`);
+
+      case "unary_op":
+        const uop = uop_op(expression.operator);
+        const columnFragment = generateComparisonColumnFragment(expression.column, queryTableAlias, currentTableAlias);
+        return `(${columnFragment} ${uop})`;
+
+      case "binary_op":
+        const bopLhs = generateComparisonColumnFragment(expression.column, queryTableAlias, currentTableAlias);
+        const bop = bop_op(expression.operator);
+        const bopRhs = generateComparisonValueFragment(expression.value, queryTableAlias, currentTableAlias);
+        return `${bopLhs} ${bop} ${bopRhs}`;
+
+      case "binary_arr_op":
+        const bopALhs = generateComparisonColumnFragment(expression.column, queryTableAlias, currentTableAlias);
+        const bopA = bop_array(expression.operator);
+        const bopARhsValues = expression.values.map(v => escapeString(v)).join(", ");
+        return `(${bopALhs} ${bopA} (${bopARhsValues}))`;
+
+      default:
+        return unreachable(expression['type']);
+    }
+  };
+
+  return generateWhere(expression, queryTableName, queryTableAlias);
+}
+
+type ExistsJoinInfo = {
+  joinTableName: TableName,
+  joinTableAlias: string,
+  joinComparisonFragments: string[]
+}
+
+function calculateExistsJoinInfo(allTableRelationships: Array<TableRelationships>, exists: ExistsExpression, sourceTableName: TableName, sourceTableAlias: string): ExistsJoinInfo {
+  switch (exists.in_table.type) {
+    case "related":
+      const tableRelationships = find_table_relationship(allTableRelationships, sourceTableName);
+      const relationship = tableRelationships.relationships[exists.in_table.relationship];
+      const joinTableAlias = generateIdentifierAlias(extractRawTableName(relationship.target_table));
+
+      const joinComparisonFragments = omap(
+        relationship.column_mapping,
+        (sourceColumnName, targetColumnName) =>
+          `${sourceTableAlias}.${escapeIdentifier(sourceColumnName)} = ${joinTableAlias}.${escapeIdentifier(targetColumnName)}`
+        );
+
+      return {
+        joinTableName: relationship.target_table,
+        joinTableAlias,
+        joinComparisonFragments,
+      };
+
+    case "unrelated":
+      return {
+        joinTableName: exists.in_table.table,
+        joinTableAlias: generateIdentifierAlias(extractRawTableName(exists.in_table.table)),
+        joinComparisonFragments: []
+      };
+
     default:
-      return unreachable(expression['type']);
+      return unreachable(exists.in_table["type"]);
   }
 }
 
-function exists(ts: Array<TableRelationships>, c: ComparisonColumn, t: TableName, o: string): string {
-  // NOTE: An N suffix doesn't guarantee that conflicts are avoided.
-  const r = join_path(ts, t, c.path, 0);
-  const f = `FROM ${r.f.map(x => `${x.from} AS ${x.as}`).join(', ')}`;
-  return tag('exists',`EXISTS (SELECT 1 ${f} WHERE ${[...r.j, `${last(r.f).as}.${escapeIdentifier(c.name)} ${o}`].join(' AND ')})`);
-}
-
-/** Develops a from clause for an operation with a path - a relationship referenced column
- *
- * Artist [Albums] Title
- * FROM Album Album_PATH_XX ...
- * WHERE Album_PATH_XX.ArtistId = Artist.ArtistId
- * Album_PATH_XX.Title IS NULL
- *
- * @param ts
- * @param table
- * @param path
- * @returns the from clause for the EXISTS query
- */
-function join_path(ts: TableRelationships[], table: TableName, path: Array<string>, level: number): {f: Array<{from: string, as: string}>, j: string[]} {
-  const r = find_table_relationship(ts, table);
-  if(path.length < 1) {
-    return {f: [], j: []};
-  } else if(r === null) {
-    throw new Error(`Couldn't find relationship ${ts}, ${table.join(".")} - This shouldn't happen.`);
+function generateComparisonColumnFragment(comparisonColumn: ComparisonColumn, queryTableAlias: string, currentTableAlias: string): string {
+  const path = comparisonColumn.path ?? [];
+  if (path.length === 0) {
+    return `${currentTableAlias}.${escapeIdentifier(comparisonColumn.name)}`
+  } else if (path.length === 1 && path[0] === "$") {
+    return `${queryTableAlias}.${escapeIdentifier(comparisonColumn.name)}`
   } else {
-    const x = r.relationships[path[0]];
-    const n = join_path(ts, x.target_table, path.slice(1), level+1);
-    const m =
-      omap(
-        x.column_mapping,
-        (sourceColumnName,targetColumnName) =>
-          `${depthQualifyIdentifier(level-1,extractRawTableName(table))}.${escapeIdentifier(sourceColumnName)} = ${depthQualifyIdentifier(level, extractRawTableName(x.target_table))}.${escapeIdentifier(targetColumnName)}`
-      )
-      .join(' AND ');
-    return {f: [{from: escapeTableName(x.target_table), as: depthQualifyIdentifier(level, extractRawTableName(x.target_table))}, ...n.f], j: [m, ...n.j]};
+    throw new Error(`Unsupported path on ComparisonColumn: ${[...path, comparisonColumn.name].join(".")}`);
   }
 }
 
-function depthQualifyIdentifier(depth: number, identifier:string): string {
-  if(depth < 0) {
-    return escapeIdentifier(identifier);
-  } else {
-    return escapeIdentifier(`${identifier}_${depth}`);
+function generateComparisonValueFragment(comparisonValue: ComparisonValue, queryTableAlias: string, currentTableAlias: string): string {
+  switch (comparisonValue.type) {
+    case "column":
+      return generateComparisonColumnFragment(comparisonValue.column, queryTableAlias, currentTableAlias);
+    case "scalar":
+      return escapeString(comparisonValue.value);
+    default:
+      return unreachable(comparisonValue["type"]);
   }
+}
+
+function generateIdentifierAlias(identifier: string): string {
+  const randomSuffix = nanoid();
+  return escapeIdentifier(`${identifier}_${randomSuffix}`);
 }
 
 /**
@@ -170,14 +209,14 @@ function depthQualifyIdentifier(depth: number, identifier:string): string {
  * @param t Table Name
  * @returns Relationships matching table-name
  */
-function find_table_relationship(ts: Array<TableRelationships>, t: TableName): TableRelationships | null {
+function find_table_relationship(ts: Array<TableRelationships>, t: TableName): TableRelationships {
   for(var i = 0; i < ts.length; i++) {
     const r = ts[i];
     if(tableNameEquals(r.source_table)(t)) {
       return r;
     }
   }
-  return null;
+  throw new Error(`Couldn't find relationship ${ts}, ${t.join(".")} - This shouldn't happen.`);
 }
 
 function cast_aggregate_function(f: string): string {
@@ -300,15 +339,6 @@ function relationship(ts: Array<TableRelationships>, r: Relationship, field: Rel
   }
 }
 
-// TODO: There is a bug in this implementation where vals can reference columns with paths.
-function bop_col(c: ComparisonColumn, t: TableName): string {
-  if(c.path.length < 1) {
-    return tag('bop_col', `${escapeTableName(t)}.${escapeIdentifier(c.name)}`);
-  } else {
-    throw new Error(`bop_col shouldn't be handling paths.`);
-  }
-}
-
 function bop_array(o: BinaryArrayComparisonOperator): string {
   switch(o) {
     case 'in': return tag('bop_array','IN');
@@ -334,13 +364,6 @@ function uop_op(o: UnaryComparisonOperator): string {
     case 'is_null':               result = "IS NULL"; break;
   }
   return tag('uop_op',result);
-}
-
-function bop_val(v: ComparisonValue, t: TableName): string {
-  switch(v.type) {
-    case "column": return tag('bop_val', bop_col(v.column, t));
-    case "scalar": return tag('bop_val', escapeString(v.value));
-  }
 }
 
 function orderDirection(orderDirection: OrderDirection): string {
@@ -493,17 +516,17 @@ export async function queryData(config: Config, sqlLogger: SqlLogger, queryReque
 }
 
 /**
- * 
+ *
  * Constructs a query as per the `POST /query` endpoint but prefixes it with `EXPLAIN QUERY PLAN` before execution.
- * 
+ *
  * Formatted result lines are included under the `lines` field. An initial blank line is included to work around a display bug.
- * 
+ *
  * NOTE: The Explain related items are included here since they are a small extension of Queries, and another module may be overkill.
- * 
- * @param config 
- * @param sqlLogger 
- * @param queryRequest 
- * @returns 
+ *
+ * @param config
+ * @param sqlLogger
+ * @param queryRequest
+ * @returns
  */
 export async function explain(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<ExplainResponse> {
   const db = connect(config, sqlLogger);
