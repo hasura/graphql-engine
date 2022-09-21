@@ -10,7 +10,9 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import Tabbed from '../TabbedDataSourceConnection';
 import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getDataSources } from '../../../../../metadata/selector';
+import { HerokuBanner } from './Neon/components/HerokuBanner/Banner';
 import { Neon } from './Neon';
+import _push from '../../push';
 
 interface Props extends InjectedProps {}
 
@@ -32,16 +34,28 @@ const CreateDataSource: React.FC<Props> = ({
   return (
     <Tabbed tabName="create">
       <div className={styles.connect_db_content}>
-        <div className={`${styles.container} mb-md`}>
-          <Heroku
-            session={herokuSession}
-            dispatch={dispatch}
-            allDataSources={allDataSources}
-          />
-        </div>
-        {showNeonIntegration && (
+        {showNeonIntegration ? (
           <div className={`${styles.container} mb-md`}>
-            <Neon />
+            <div className="w-full mb-md">
+              <Neon
+                dbCreationCallback={dataSourceName => {
+                  dispatch(_push(`/data/${dataSourceName}`));
+                }}
+                errorCallback={() => {
+                  dispatch(_push('/data/manage/connect'));
+                }}
+                allDatabases={allDataSources.map(d => d.name)}
+              />
+            </div>
+            <HerokuBanner />
+          </div>
+        ) : (
+          <div className={`${styles.container} mb-md`}>
+            <Heroku
+              session={herokuSession}
+              dispatch={dispatch}
+              allDataSources={allDataSources}
+            />
           </div>
         )}
       </div>

@@ -152,7 +152,15 @@ export const useNeonOAuth = (oauthString?: string) => {
     );
 
     // Usually means that a popup blocked blocked the popup
-    if (!popup) return;
+    if (!popup) {
+      setStatus({
+        status: 'error',
+        error: new Error(
+          'Could not open popup for logging in with Neon. Please disable your popup blocker and try again.'
+        ),
+      });
+      return;
+    }
 
     /*
      * After OAuth success, neon redirects the user to
@@ -180,7 +188,9 @@ export const useNeonOAuth = (oauthString?: string) => {
         if (!search) {
           setStatus({
             status: 'error',
-            error: new Error('Unexpected error. Please try again.'),
+            error: new Error(
+              'Neon login closed unexpectedly. Please try again.'
+            ),
           });
           return;
         }

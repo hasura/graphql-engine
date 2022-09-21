@@ -13,3 +13,18 @@ export const persistNeonCallbackSearch = (value: string) => {
 export const getPersistedNeonCallbackSearch = () => {
   return window.localStorage.getItem(NEON_CALLBACK_SEARCH);
 };
+
+export function getNeonDBName(allDatabases: string[]) {
+  if (!allDatabases.includes('default')) {
+    return 'default';
+  }
+
+  const prefix = 'neon-db';
+  let suffix = 0;
+  let dbName = prefix;
+  while (allDatabases.includes(dbName)) {
+    dbName = `${prefix}-${++suffix}`;
+  }
+
+  return dbName;
+}
