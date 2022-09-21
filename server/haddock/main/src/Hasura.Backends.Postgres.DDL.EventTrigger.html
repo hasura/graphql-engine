@@ -1170,7 +1170,7 @@ forall a. HashSet a -&gt; [a]
 </span><a href="#local-6989586621689639532"><span class="hs-identifier hs-var">invo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-344"></span><span>  </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
--&gt; (EventId, Text, Maybe Int64, AltJ Value, AltJ Value)
+-&gt; (EventId, Text, Maybe Int64, ViaJSON Value, ViaJSON Value)
 -&gt; Bool
 -&gt; TxET QErr IO ()
 forall (m :: * -&gt; *) r e.
@@ -1198,9 +1198,9 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall (a :: TriggerTypes). Invocation a -&gt; Maybe Int
 </span><a href="Hasura.RQL.Types.Eventing.html#iStatus"><span class="hs-identifier hs-var hs-var">iStatus</span></a></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><a href="#local-6989586621689639532"><span class="hs-identifier hs-var">invo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">,</span><span>
-</span><span id="line-353"></span><span>      </span><span class="annot"><span class="annottext">Value -&gt; AltJ Value
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; AltJ Value) -&gt; Value -&gt; AltJ Value
+</span><span id="line-353"></span><span>      </span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ViaJSON Value) -&gt; Value -&gt; ViaJSON Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">WebhookRequest -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -1210,9 +1210,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (a :: TriggerTypes). Invocation a -&gt; WebhookRequest
 </span><a href="Hasura.RQL.Types.Eventing.html#iRequest"><span class="hs-identifier hs-var hs-var">iRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Invocation 'EventType
 </span><a href="#local-6989586621689639532"><span class="hs-identifier hs-var">invo</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-354"></span><span>      </span><span class="annot"><span class="annottext">Value -&gt; AltJ Value
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; AltJ Value) -&gt; Value -&gt; AltJ Value
+</span><span id="line-354"></span><span>      </span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ViaJSON Value) -&gt; Value -&gt; ViaJSON Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Response 'EventType -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -1277,7 +1277,7 @@ forall a. SingleRow a -&gt; a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
--&gt; (SchemaName, TableName, TriggerName, Text, AltJ Value)
+-&gt; (SchemaName, TableName, TriggerName, Text, ViaJSON Value)
 -&gt; Bool
 -&gt; TxET QErr IO (SingleRow (Identity EventId))
 forall (m :: * -&gt; *) a r e.
@@ -1295,9 +1295,9 @@ forall (m :: * -&gt; *) a r e.
 </span><a href="#local-6989586621689639520"><span class="hs-identifier hs-var">triggerName</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Ops -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Ops
-</span><a href="Hasura.RQL.Types.EventTrigger.html#MANUAL"><span class="hs-identifier hs-var">MANUAL</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value -&gt; AltJ Value
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="Hasura.RQL.Types.EventTrigger.html#MANUAL"><span class="hs-identifier hs-var">MANUAL</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621689639519"><span class="hs-identifier hs-var">rowData</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-381"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
@@ -1401,24 +1401,24 @@ forall a. Show a =&gt; a -&gt; Text
 </span><a href="#local-6989586621689639506"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621689639505"><span class="annot"><span class="annottext">[TriggerName]
 </span><a href="#local-6989586621689639505"><span class="hs-identifier hs-var">triggerNames</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#FetchBatchSize"><span class="hs-identifier hs-type">FetchBatchSize</span></a></span><span> </span><span id="local-6989586621689639503"><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621689639503"><span class="hs-identifier hs-var">fetchBatchSize</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-417"></span><span>  </span><span class="annot"><span class="annottext">((EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
+</span><span id="line-417"></span><span>  </span><span class="annot"><span class="annottext">((EventId, SchemaName, TableName, TriggerName, ViaJSON Value, Int,
   UTCTime)
  -&gt; Event ('Postgres pgKind))
--&gt; [(EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
-     UTCTime)]
+-&gt; [(EventId, SchemaName, TableName, TriggerName, ViaJSON Value,
+     Int, UTCTime)]
 -&gt; [Event ('Postgres pgKind)]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(EventId, SchemaName, TableName, TriggerName, ViaJSON Value, Int,
  UTCTime)
 -&gt; Event ('Postgres pgKind)
 </span><a href="#local-6989586621689639502"><span class="hs-identifier hs-var">uncurryEvent</span></a></span><span>
-</span><span id="line-418"></span><span>    </span><span class="annot"><span class="annottext">([(EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
+</span><span id="line-418"></span><span>    </span><span class="annot"><span class="annottext">([(EventId, SchemaName, TableName, TriggerName, ViaJSON Value, Int,
    UTCTime)]
  -&gt; [Event ('Postgres pgKind)])
 -&gt; TxET
      QErr
      IO
-     [(EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
+     [(EventId, SchemaName, TableName, TriggerName, ViaJSON Value, Int,
        UTCTime)]
 -&gt; TxE QErr [Event ('Postgres pgKind)]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1429,7 +1429,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; TxET
      QErr
      IO
-     [(EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
+     [(EventId, SchemaName, TableName, TriggerName, ViaJSON Value, Int,
        UTCTime)]
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRow a, ToPrepArgs r) =&gt;
@@ -1460,14 +1460,14 @@ forall (m :: * -&gt; *) a r e.
 </span><span id="line-438"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-439"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-440"></span><span>    </span><span id="local-6989586621689639502"><span class="annot"><span class="annottext">uncurryEvent :: (EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
+</span><span id="line-440"></span><span>    </span><span id="local-6989586621689639502"><span class="annot"><span class="annottext">uncurryEvent :: (EventId, SchemaName, TableName, TriggerName, ViaJSON Value, Int,
  UTCTime)
 -&gt; Event ('Postgres pgKind)
 </span><a href="#local-6989586621689639502"><span class="hs-identifier hs-var hs-var">uncurryEvent</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689639498"><span class="annot"><span class="annottext">EventId
 </span><a href="#local-6989586621689639498"><span class="hs-identifier hs-var">id'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639497"><span class="annot"><span class="annottext">SchemaName
 </span><a href="#local-6989586621689639497"><span class="hs-identifier hs-var">sourceName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639496"><span class="annot"><span class="annottext">TableName
 </span><a href="#local-6989586621689639496"><span class="hs-identifier hs-var">tableName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639495"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689639495"><span class="hs-identifier hs-var">triggerName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689639494"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689639495"><span class="hs-identifier hs-var">triggerName</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689639494"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621689639494"><span class="hs-identifier hs-var">payload</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639493"><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621689639493"><span class="hs-identifier hs-var">tries</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639492"><span class="annot"><span class="annottext">UTCTime
 </span><a href="#local-6989586621689639492"><span class="hs-identifier hs-var">created</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
@@ -1535,28 +1535,28 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="#local-6989586621689639480"><span class="hs-identifier hs-var">fetchBatchSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-456"></span><span>  </span><span class="annot"><span class="annottext">MaintenanceModeVersion
 </span><a href="Hasura.RQL.Types.Source.html#PreviousMMVersion"><span class="hs-identifier hs-var">PreviousMMVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-457"></span><span>    </span><span class="annot"><span class="annottext">((EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
+</span><span id="line-457"></span><span>    </span><span class="annot"><span class="annottext">((EventId, SchemaName, TableName, TriggerName, ViaJSON Value, Int,
   UTCTime)
  -&gt; Event ('Postgres pgKind))
--&gt; [(EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
-     UTCTime)]
+-&gt; [(EventId, SchemaName, TableName, TriggerName, ViaJSON Value,
+     Int, UTCTime)]
 -&gt; [Event ('Postgres pgKind)]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(EventId, SchemaName, TableName, TriggerName, ViaJSON Value, Int,
  UTCTime)
 -&gt; Event ('Postgres pgKind)
 forall (b :: BackendType) a.
 (TableName b ~ QualifiedObject a) =&gt;
-(EventId, SchemaName, a, TriggerName, AltJ Value, Int, UTCTime)
+(EventId, SchemaName, a, TriggerName, ViaJSON Value, Int, UTCTime)
 -&gt; Event b
 </span><a href="#local-6989586621689639479"><span class="hs-identifier hs-var">uncurryEvent</span></a></span><span>
-</span><span id="line-458"></span><span>      </span><span class="annot"><span class="annottext">([(EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
+</span><span id="line-458"></span><span>      </span><span class="annot"><span class="annottext">([(EventId, SchemaName, TableName, TriggerName, ViaJSON Value, Int,
    UTCTime)]
  -&gt; [Event ('Postgres pgKind)])
 -&gt; TxET
      QErr
      IO
-     [(EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
+     [(EventId, SchemaName, TableName, TriggerName, ViaJSON Value, Int,
        UTCTime)]
 -&gt; TxE QErr [Event ('Postgres pgKind)]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1567,7 +1567,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; TxET
      QErr
      IO
-     [(EventId, SchemaName, TableName, TriggerName, AltJ Value, Int,
+     [(EventId, SchemaName, TableName, TriggerName, ViaJSON Value, Int,
        UTCTime)]
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRow a, ToPrepArgs r) =&gt;
@@ -1595,13 +1595,13 @@ forall a. a -&gt; Identity a
 </span><span id="line-474"></span><span>        </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">True</span></span><span>
 </span><span id="line-475"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-476"></span><span>      </span><span id="local-6989586621689639479"><span class="annot"><span class="annottext">uncurryEvent :: (EventId, SchemaName, a, TriggerName, AltJ Value, Int, UTCTime)
+</span><span id="line-476"></span><span>      </span><span id="local-6989586621689639479"><span class="annot"><span class="annottext">uncurryEvent :: (EventId, SchemaName, a, TriggerName, ViaJSON Value, Int, UTCTime)
 -&gt; Event b
 </span><a href="#local-6989586621689639479"><span class="hs-identifier hs-var hs-var">uncurryEvent</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689639477"><span class="annot"><span class="annottext">EventId
 </span><a href="#local-6989586621689639477"><span class="hs-identifier hs-var">id'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639476"><span class="annot"><span class="annottext">SchemaName
 </span><a href="#local-6989586621689639476"><span class="hs-identifier hs-var">sn</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639475"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621689639475"><span class="hs-identifier hs-var">tn</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639474"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689639474"><span class="hs-identifier hs-var">trn</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689639473"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689639474"><span class="hs-identifier hs-var">trn</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689639473"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621689639473"><span class="hs-identifier hs-var">payload</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639472"><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621689639472"><span class="hs-identifier hs-var">tries</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639471"><span class="annot"><span class="annottext">UTCTime
 </span><a href="#local-6989586621689639471"><span class="hs-identifier hs-var">created</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>

@@ -4895,7 +4895,7 @@ forall a. Maybe a
 </span><span id="line-1108"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.Discard</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-1109"></span><span>    </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
--&gt; (AltJ CacheInvalidations, Int64, InstanceId)
+-&gt; (ViaJSON CacheInvalidations, Int64, InstanceId)
 -&gt; Bool
 -&gt; TxET QErr IO Discard
 forall (m :: * -&gt; *) a r e.
@@ -4912,9 +4912,9 @@ forall (m :: * -&gt; *) a r e.
         resource_version = $2,
         instance_id = $3::uuid
     |]</span></span><span>
-</span><span id="line-1119"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CacheInvalidations -&gt; AltJ CacheInvalidations
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">CacheInvalidations
+</span><span id="line-1119"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CacheInvalidations -&gt; ViaJSON CacheInvalidations
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">CacheInvalidations
 </span><a href="#local-6989586621689742111"><span class="hs-identifier hs-var">invalidations</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int64
 </span><a href="#local-6989586621689742113"><span class="hs-identifier hs-var">resourceVersion</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InstanceId
 </span><a href="#local-6989586621689742112"><span class="hs-identifier hs-var">instanceId</span></a></span><span class="hs-special">)</span><span>
@@ -4927,26 +4927,26 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span id="line-1123"></span><span class="annot"><a href="Hasura.App.html#getCatalogStateTx"><span class="hs-identifier hs-type">getCatalogStateTx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxE</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#CatalogState"><span class="hs-identifier hs-type">CatalogState</span></a></span><span>
 </span><span id="line-1124"></span><span id="getCatalogStateTx"><span class="annot"><span class="annottext">getCatalogStateTx :: TxE QErr CatalogState
 </span><a href="Hasura.App.html#getCatalogStateTx"><span class="hs-identifier hs-var hs-var">getCatalogStateTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-1125"></span><span>  </span><span class="annot"><span class="annottext">(Text, AltJ Value, AltJ Value) -&gt; CatalogState
-</span><a href="#local-6989586621689742106"><span class="hs-identifier hs-var">mkCatalogState</span></a></span><span> </span><span class="annot"><span class="annottext">((Text, AltJ Value, AltJ Value) -&gt; CatalogState)
--&gt; (SingleRow (Text, AltJ Value, AltJ Value)
-    -&gt; (Text, AltJ Value, AltJ Value))
--&gt; SingleRow (Text, AltJ Value, AltJ Value)
+</span><span id="line-1125"></span><span>  </span><span class="annot"><span class="annottext">(Text, ViaJSON Value, ViaJSON Value) -&gt; CatalogState
+</span><a href="#local-6989586621689742106"><span class="hs-identifier hs-var">mkCatalogState</span></a></span><span> </span><span class="annot"><span class="annottext">((Text, ViaJSON Value, ViaJSON Value) -&gt; CatalogState)
+-&gt; (SingleRow (Text, ViaJSON Value, ViaJSON Value)
+    -&gt; (Text, ViaJSON Value, ViaJSON Value))
+-&gt; SingleRow (Text, ViaJSON Value, ViaJSON Value)
 -&gt; CatalogState
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Text, AltJ Value, AltJ Value)
--&gt; (Text, AltJ Value, AltJ Value)
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Text, ViaJSON Value, ViaJSON Value)
+-&gt; (Text, ViaJSON Value, ViaJSON Value)
 forall a. SingleRow a -&gt; a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span>
-</span><span id="line-1126"></span><span>    </span><span class="annot"><span class="annottext">(SingleRow (Text, AltJ Value, AltJ Value) -&gt; CatalogState)
--&gt; TxET QErr IO (SingleRow (Text, AltJ Value, AltJ Value))
+</span><span id="line-1126"></span><span>    </span><span class="annot"><span class="annottext">(SingleRow (Text, ViaJSON Value, ViaJSON Value) -&gt; CatalogState)
+-&gt; TxET QErr IO (SingleRow (Text, ViaJSON Value, ViaJSON Value))
 -&gt; TxE QErr CatalogState
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
 -&gt; ()
 -&gt; Bool
--&gt; TxET QErr IO (SingleRow (Text, AltJ Value, AltJ Value))
+-&gt; TxET QErr IO (SingleRow (Text, ViaJSON Value, ViaJSON Value))
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
@@ -4961,10 +4961,10 @@ forall (m :: * -&gt; *) a r e.
 </span><span id="line-1133"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-1134"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-1135"></span><span>    </span><span id="local-6989586621689742106"><span class="annot"><span class="annottext">mkCatalogState :: (Text, AltJ Value, AltJ Value) -&gt; CatalogState
+</span><span id="line-1135"></span><span>    </span><span id="local-6989586621689742106"><span class="annot"><span class="annottext">mkCatalogState :: (Text, ViaJSON Value, ViaJSON Value) -&gt; CatalogState
 </span><a href="#local-6989586621689742106"><span class="hs-identifier hs-var hs-var">mkCatalogState</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689742104"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689742104"><span class="hs-identifier hs-var">dbId</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689742103"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689742103"><span class="hs-identifier hs-var">cliState</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689742102"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689742104"><span class="hs-identifier hs-var">dbId</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689742103"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689742103"><span class="hs-identifier hs-var">cliState</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689742102"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621689742102"><span class="hs-identifier hs-var">consoleState</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-1136"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; Value -&gt; Value -&gt; CatalogState
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#CatalogState"><span class="hs-identifier hs-var">CatalogState</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -4982,7 +4982,7 @@ forall (m :: * -&gt; *) a r e.
 </span><span id="line-1141"></span><span>    </span><span class="annot"><span class="annottext">CatalogStateType
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#CSTCli"><span class="hs-identifier hs-var">CSTCli</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-1142"></span><span>      </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
--&gt; Query -&gt; Identity (AltJ Value) -&gt; Bool -&gt; TxE QErr ()
+-&gt; Query -&gt; Identity (ViaJSON Value) -&gt; Bool -&gt; TxE QErr ()
 forall (m :: * -&gt; *) r e.
 (MonadIO m, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m ()
@@ -4993,21 +4993,21 @@ forall (m :: * -&gt; *) r e.
         UPDATE hdb_catalog.hdb_version
            SET cli_state = $1
       |]</span></span><span>
-</span><span id="line-1148"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AltJ Value -&gt; Identity (AltJ Value)
+</span><span id="line-1148"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ViaJSON Value -&gt; Identity (ViaJSON Value)
 forall a. a -&gt; Identity a
-</span><span class="hs-identifier hs-var">Identity</span></span><span> </span><span class="annot"><span class="annottext">(AltJ Value -&gt; Identity (AltJ Value))
--&gt; AltJ Value -&gt; Identity (AltJ Value)
+</span><span class="hs-identifier hs-var">Identity</span></span><span> </span><span class="annot"><span class="annottext">(ViaJSON Value -&gt; Identity (ViaJSON Value))
+-&gt; ViaJSON Value -&gt; Identity (ViaJSON Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; AltJ Value
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621689742099"><span class="hs-identifier hs-var">stateValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-1149"></span><span>        </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-1150"></span><span>    </span><span class="annot"><span class="annottext">CatalogStateType
 </span><a href="Hasura.RQL.Types.Metadata.Common.html#CSTConsole"><span class="hs-identifier hs-var">CSTConsole</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-1151"></span><span>      </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
--&gt; Query -&gt; Identity (AltJ Value) -&gt; Bool -&gt; TxE QErr ()
+-&gt; Query -&gt; Identity (ViaJSON Value) -&gt; Bool -&gt; TxE QErr ()
 forall (m :: * -&gt; *) r e.
 (MonadIO m, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m ()
@@ -5018,14 +5018,14 @@ forall (m :: * -&gt; *) r e.
         UPDATE hdb_catalog.hdb_version
            SET console_state = $1
       |]</span></span><span>
-</span><span id="line-1157"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AltJ Value -&gt; Identity (AltJ Value)
+</span><span id="line-1157"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ViaJSON Value -&gt; Identity (ViaJSON Value)
 forall a. a -&gt; Identity a
-</span><span class="hs-identifier hs-var">Identity</span></span><span> </span><span class="annot"><span class="annottext">(AltJ Value -&gt; Identity (AltJ Value))
--&gt; AltJ Value -&gt; Identity (AltJ Value)
+</span><span class="hs-identifier hs-var">Identity</span></span><span> </span><span class="annot"><span class="annottext">(ViaJSON Value -&gt; Identity (ViaJSON Value))
+-&gt; ViaJSON Value -&gt; Identity (ViaJSON Value)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; AltJ Value
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621689742099"><span class="hs-identifier hs-var">stateValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-1158"></span><span>        </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>

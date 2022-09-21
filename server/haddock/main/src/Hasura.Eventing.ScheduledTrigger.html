@@ -1950,25 +1950,28 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 </span><span id="line-561"></span><span>    </span><span class="annot"><a href="#local-6989586621689668539"><span class="hs-identifier hs-type">getCronEventsForDelivery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxE</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronEvent"><span class="hs-identifier hs-type">CronEvent</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-562"></span><span>    </span><span id="local-6989586621689668539"><span class="annot"><span class="annottext">getCronEventsForDelivery :: TxET QErr IO [CronEvent]
 </span><a href="#local-6989586621689668539"><span class="hs-identifier hs-var hs-var">getCronEventsForDelivery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-563"></span><span>      </span><span class="annot"><span class="annottext">(Identity (AltJ CronEvent) -&gt; CronEvent)
--&gt; [Identity (AltJ CronEvent)] -&gt; [CronEvent]
+</span><span id="line-563"></span><span>      </span><span class="annot"><span class="annottext">(Identity (ViaJSON CronEvent) -&gt; CronEvent)
+-&gt; [Identity (ViaJSON CronEvent)] -&gt; [CronEvent]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AltJ CronEvent -&gt; CronEvent
-forall a. AltJ a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getAltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(AltJ CronEvent -&gt; CronEvent)
--&gt; (Identity (AltJ CronEvent) -&gt; AltJ CronEvent)
--&gt; Identity (AltJ CronEvent)
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ViaJSON CronEvent -&gt; CronEvent
+forall a. ViaJSON a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(ViaJSON CronEvent -&gt; CronEvent)
+-&gt; (Identity (ViaJSON CronEvent) -&gt; ViaJSON CronEvent)
+-&gt; Identity (ViaJSON CronEvent)
 -&gt; CronEvent
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (AltJ CronEvent) -&gt; AltJ CronEvent
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (ViaJSON CronEvent) -&gt; ViaJSON CronEvent
 forall a. Identity a -&gt; a
 </span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span class="hs-special">)</span><span>
-</span><span id="line-564"></span><span>        </span><span class="annot"><span class="annottext">([Identity (AltJ CronEvent)] -&gt; [CronEvent])
--&gt; TxET QErr IO [Identity (AltJ CronEvent)]
+</span><span id="line-564"></span><span>        </span><span class="annot"><span class="annottext">([Identity (ViaJSON CronEvent)] -&gt; [CronEvent])
+-&gt; TxET QErr IO [Identity (ViaJSON CronEvent)]
 -&gt; TxET QErr IO [CronEvent]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
--&gt; Query -&gt; () -&gt; Bool -&gt; TxET QErr IO [Identity (AltJ CronEvent)]
+-&gt; Query
+-&gt; ()
+-&gt; Bool
+-&gt; TxET QErr IO [Identity (ViaJSON CronEvent)]
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRow a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m [a]
@@ -2000,29 +2003,32 @@ forall (m :: * -&gt; *) a r e.
 </span><span id="line-587"></span><span>    </span><span class="annot"><a href="#local-6989586621689668538"><span class="hs-identifier hs-type">getOneOffEventsForDelivery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxE</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#OneOffScheduledEvent"><span class="hs-identifier hs-type">OneOffScheduledEvent</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-588"></span><span>    </span><span id="local-6989586621689668538"><span class="annot"><span class="annottext">getOneOffEventsForDelivery :: TxET QErr IO [OneOffScheduledEvent]
 </span><a href="#local-6989586621689668538"><span class="hs-identifier hs-var hs-var">getOneOffEventsForDelivery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-589"></span><span>      </span><span class="annot"><span class="annottext">(Identity (AltJ OneOffScheduledEvent) -&gt; OneOffScheduledEvent)
--&gt; [Identity (AltJ OneOffScheduledEvent)] -&gt; [OneOffScheduledEvent]
+</span><span id="line-589"></span><span>      </span><span class="annot"><span class="annottext">(Identity (ViaJSON OneOffScheduledEvent) -&gt; OneOffScheduledEvent)
+-&gt; [Identity (ViaJSON OneOffScheduledEvent)]
+-&gt; [OneOffScheduledEvent]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AltJ OneOffScheduledEvent -&gt; OneOffScheduledEvent
-forall a. AltJ a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getAltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(AltJ OneOffScheduledEvent -&gt; OneOffScheduledEvent)
--&gt; (Identity (AltJ OneOffScheduledEvent)
-    -&gt; AltJ OneOffScheduledEvent)
--&gt; Identity (AltJ OneOffScheduledEvent)
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ViaJSON OneOffScheduledEvent -&gt; OneOffScheduledEvent
+forall a. ViaJSON a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(ViaJSON OneOffScheduledEvent -&gt; OneOffScheduledEvent)
+-&gt; (Identity (ViaJSON OneOffScheduledEvent)
+    -&gt; ViaJSON OneOffScheduledEvent)
+-&gt; Identity (ViaJSON OneOffScheduledEvent)
 -&gt; OneOffScheduledEvent
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (AltJ OneOffScheduledEvent) -&gt; AltJ OneOffScheduledEvent
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (ViaJSON OneOffScheduledEvent)
+-&gt; ViaJSON OneOffScheduledEvent
 forall a. Identity a -&gt; a
 </span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span class="hs-special">)</span><span>
-</span><span id="line-590"></span><span>        </span><span class="annot"><span class="annottext">([Identity (AltJ OneOffScheduledEvent)] -&gt; [OneOffScheduledEvent])
--&gt; TxET QErr IO [Identity (AltJ OneOffScheduledEvent)]
+</span><span id="line-590"></span><span>        </span><span class="annot"><span class="annottext">([Identity (ViaJSON OneOffScheduledEvent)]
+ -&gt; [OneOffScheduledEvent])
+-&gt; TxET QErr IO [Identity (ViaJSON OneOffScheduledEvent)]
 -&gt; TxET QErr IO [OneOffScheduledEvent]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
 -&gt; ()
 -&gt; Bool
--&gt; TxET QErr IO [Identity (AltJ OneOffScheduledEvent)]
+-&gt; TxET QErr IO [Identity (ViaJSON OneOffScheduledEvent)]
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRow a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m [a]
@@ -2062,7 +2068,7 @@ forall (m :: * -&gt; *) a r e.
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#Cron"><span class="hs-identifier hs-var">Cron</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-617"></span><span>      </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
--&gt; (CronEventId, Maybe Int64, AltJ Value, AltJ Value)
+-&gt; (CronEventId, Maybe Int64, ViaJSON Value, ViaJSON Value)
 -&gt; Bool
 -&gt; TxE QErr ()
 forall (m :: * -&gt; *) r e.
@@ -2088,9 +2094,9 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall (a :: TriggerTypes). Invocation a -&gt; Maybe Int
 </span><a href="Hasura.RQL.Types.Eventing.html#iStatus"><span class="hs-identifier hs-var hs-var">iStatus</span></a></span><span> </span><span class="annot"><span class="annottext">Invocation 'ScheduledType
 </span><a href="#local-6989586621689668535"><span class="hs-identifier hs-var">invo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">,</span><span>
-</span><span id="line-626"></span><span>          </span><span class="annot"><span class="annottext">Value -&gt; AltJ Value
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; AltJ Value) -&gt; Value -&gt; AltJ Value
+</span><span id="line-626"></span><span>          </span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ViaJSON Value) -&gt; Value -&gt; ViaJSON Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">WebhookRequest -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -2100,9 +2106,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (a :: TriggerTypes). Invocation a -&gt; WebhookRequest
 </span><a href="Hasura.RQL.Types.Eventing.html#iRequest"><span class="hs-identifier hs-var hs-var">iRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Invocation 'ScheduledType
 </span><a href="#local-6989586621689668535"><span class="hs-identifier hs-var">invo</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-627"></span><span>          </span><span class="annot"><span class="annottext">Value -&gt; AltJ Value
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; AltJ Value) -&gt; Value -&gt; AltJ Value
+</span><span id="line-627"></span><span>          </span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ViaJSON Value) -&gt; Value -&gt; ViaJSON Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Response 'ScheduledType -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -2144,7 +2150,7 @@ forall (a :: TriggerTypes). Invocation a -&gt; CronEventId
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#OneOff"><span class="hs-identifier hs-var">OneOff</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-640"></span><span>      </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
--&gt; (CronEventId, Maybe Int64, AltJ Value, AltJ Value)
+-&gt; (CronEventId, Maybe Int64, ViaJSON Value, ViaJSON Value)
 -&gt; Bool
 -&gt; TxE QErr ()
 forall (m :: * -&gt; *) r e.
@@ -2170,9 +2176,9 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall (a :: TriggerTypes). Invocation a -&gt; Maybe Int
 </span><a href="Hasura.RQL.Types.Eventing.html#iStatus"><span class="hs-identifier hs-var hs-var">iStatus</span></a></span><span> </span><span class="annot"><span class="annottext">Invocation 'ScheduledType
 </span><a href="#local-6989586621689668535"><span class="hs-identifier hs-var">invo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int64</span></span><span class="hs-special">,</span><span>
-</span><span id="line-649"></span><span>          </span><span class="annot"><span class="annottext">Value -&gt; AltJ Value
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; AltJ Value) -&gt; Value -&gt; AltJ Value
+</span><span id="line-649"></span><span>          </span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ViaJSON Value) -&gt; Value -&gt; ViaJSON Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">WebhookRequest -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -2182,9 +2188,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (a :: TriggerTypes). Invocation a -&gt; WebhookRequest
 </span><a href="Hasura.RQL.Types.Eventing.html#iRequest"><span class="hs-identifier hs-var hs-var">iRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Invocation 'ScheduledType
 </span><a href="#local-6989586621689668535"><span class="hs-identifier hs-var">invo</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-650"></span><span>          </span><span class="annot"><span class="annottext">Value -&gt; AltJ Value
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; AltJ Value) -&gt; Value -&gt; AltJ Value
+</span><span id="line-650"></span><span>          </span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ViaJSON Value) -&gt; Value -&gt; ViaJSON Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Response 'ScheduledType -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
@@ -2605,8 +2611,8 @@ forall a. SingleRow a -&gt; a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
--&gt; (AltJ InputWebhook, UTCTime, AltJ (Maybe Value),
-    AltJ STRetryConf, AltJ [HeaderConf], Maybe Text)
+-&gt; (ViaJSON InputWebhook, UTCTime, ViaJSON (Maybe Value),
+    ViaJSON STRetryConf, ViaJSON [HeaderConf], Maybe Text)
 -&gt; Bool
 -&gt; TxET QErr IO (SingleRow (Identity CronEventId))
 forall (m :: * -&gt; *) a r e.
@@ -2621,23 +2627,23 @@ forall (m :: * -&gt; *) a r e.
     VALUES
     ($1, $2, $3, $4, $5, $6) RETURNING id
     |]</span></span><span>
-</span><span id="line-798"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">InputWebhook -&gt; AltJ InputWebhook
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">InputWebhook
+</span><span id="line-798"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">InputWebhook -&gt; ViaJSON InputWebhook
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">InputWebhook
 </span><a href="#local-6989586621689668488"><span class="hs-identifier hs-var">cseWebhook</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-799"></span><span>        </span><span class="annot"><span class="annottext">UTCTime
 </span><a href="#local-6989586621689668487"><span class="hs-identifier hs-var">cseScheduleAt</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-800"></span><span>        </span><span class="annot"><span class="annottext">Maybe Value -&gt; AltJ (Maybe Value)
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Value
+</span><span id="line-800"></span><span>        </span><span class="annot"><span class="annottext">Maybe Value -&gt; ViaJSON (Maybe Value)
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Value
 </span><a href="#local-6989586621689668486"><span class="hs-identifier hs-var">csePayload</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-801"></span><span>        </span><span class="annot"><span class="annottext">STRetryConf -&gt; AltJ STRetryConf
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">STRetryConf
+</span><span id="line-801"></span><span>        </span><span class="annot"><span class="annottext">STRetryConf -&gt; ViaJSON STRetryConf
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">STRetryConf
 </span><a href="#local-6989586621689668484"><span class="hs-identifier hs-var">cseRetryConf</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-802"></span><span>        </span><span class="annot"><span class="annottext">[HeaderConf] -&gt; AltJ [HeaderConf]
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">[HeaderConf]
+</span><span id="line-802"></span><span>        </span><span class="annot"><span class="annottext">[HeaderConf] -&gt; ViaJSON [HeaderConf]
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">[HeaderConf]
 </span><a href="#local-6989586621689668485"><span class="hs-identifier hs-var">cseHeaders</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-803"></span><span>        </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="#local-6989586621689668483"><span class="hs-identifier hs-var">cseComment</span></a></span><span>
@@ -2925,10 +2931,10 @@ forall a. IsIdentifier a =&gt; a -&gt; FromExp
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-892"></span><span>
-</span><span id="line-893"></span><span id="local-6989586621689668921"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.html#withCount"><span class="hs-identifier hs-type">withCount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689668921"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithOptionalTotalCount"><span class="hs-identifier hs-type">WithOptionalTotalCount</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689668921"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-894"></span><span id="withCount"><span class="annot"><span class="annottext">withCount :: (Int, AltJ a) -&gt; WithOptionalTotalCount a
+</span><span id="line-893"></span><span id="local-6989586621689668921"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.html#withCount"><span class="hs-identifier hs-type">withCount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689668921"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithOptionalTotalCount"><span class="hs-identifier hs-type">WithOptionalTotalCount</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689668921"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-894"></span><span id="withCount"><span class="annot"><span class="annottext">withCount :: (Int, ViaJSON a) -&gt; WithOptionalTotalCount a
 </span><a href="Hasura.Eventing.ScheduledTrigger.html#withCount"><span class="hs-identifier hs-var hs-var">withCount</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689668421"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689668421"><span class="hs-identifier hs-var">count</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689668420"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689668421"><span class="hs-identifier hs-var">count</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689668420"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621689668420"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int -&gt; a -&gt; WithOptionalTotalCount a
 forall a. Maybe Int -&gt; a -&gt; WithOptionalTotalCount a
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithOptionalTotalCount"><span class="hs-identifier hs-var">WithOptionalTotalCount</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Maybe Int
@@ -2937,9 +2943,9 @@ forall a. a -&gt; Maybe a
 </span><a href="#local-6989586621689668421"><span class="hs-identifier hs-var">count</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621689668420"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-895"></span><span>
-</span><span id="line-896"></span><span id="local-6989586621689668920"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.html#withoutCount"><span class="hs-identifier hs-type">withoutCount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689668920"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithOptionalTotalCount"><span class="hs-identifier hs-type">WithOptionalTotalCount</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689668920"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-897"></span><span id="withoutCount"><span class="annot"><span class="annottext">withoutCount :: AltJ a -&gt; WithOptionalTotalCount a
-</span><a href="Hasura.Eventing.ScheduledTrigger.html#withoutCount"><span class="hs-identifier hs-var hs-var">withoutCount</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689668417"><span class="annot"><span class="annottext">a
+</span><span id="line-896"></span><span id="local-6989586621689668920"><span class="annot"><a href="Hasura.Eventing.ScheduledTrigger.html#withoutCount"><span class="hs-identifier hs-type">withoutCount</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689668920"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithOptionalTotalCount"><span class="hs-identifier hs-type">WithOptionalTotalCount</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689668920"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-897"></span><span id="withoutCount"><span class="annot"><span class="annottext">withoutCount :: ViaJSON a -&gt; WithOptionalTotalCount a
+</span><a href="Hasura.Eventing.ScheduledTrigger.html#withoutCount"><span class="hs-identifier hs-var hs-var">withoutCount</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689668417"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621689668417"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int -&gt; a -&gt; WithOptionalTotalCount a
 forall a. Maybe Int -&gt; a -&gt; WithOptionalTotalCount a
 </span><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithOptionalTotalCount"><span class="hs-identifier hs-var">WithOptionalTotalCount</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
@@ -2955,21 +2961,21 @@ forall a. Maybe a
 </span><span id="line-901"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RowsCountOption
 </span><a href="#local-6989586621689668415"><span class="hs-identifier hs-var">getRowsCount</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-902"></span><span>    </span><span class="annot"><span class="annottext">RowsCountOption
-</span><a href="Hasura.RQL.Types.ScheduledTrigger.html#IncludeRowsCount"><span class="hs-identifier hs-var">IncludeRowsCount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Int, AltJ a) -&gt; WithOptionalTotalCount a
-forall a. (Int, AltJ a) -&gt; WithOptionalTotalCount a
-</span><a href="Hasura.Eventing.ScheduledTrigger.html#withCount"><span class="hs-identifier hs-var">withCount</span></a></span><span> </span><span class="annot"><span class="annottext">((Int, AltJ a) -&gt; WithOptionalTotalCount a)
--&gt; (SingleRow (Int, AltJ a) -&gt; (Int, AltJ a))
--&gt; SingleRow (Int, AltJ a)
+</span><a href="Hasura.RQL.Types.ScheduledTrigger.html#IncludeRowsCount"><span class="hs-identifier hs-var">IncludeRowsCount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Int, ViaJSON a) -&gt; WithOptionalTotalCount a
+forall a. (Int, ViaJSON a) -&gt; WithOptionalTotalCount a
+</span><a href="Hasura.Eventing.ScheduledTrigger.html#withCount"><span class="hs-identifier hs-var">withCount</span></a></span><span> </span><span class="annot"><span class="annottext">((Int, ViaJSON a) -&gt; WithOptionalTotalCount a)
+-&gt; (SingleRow (Int, ViaJSON a) -&gt; (Int, ViaJSON a))
+-&gt; SingleRow (Int, ViaJSON a)
 -&gt; WithOptionalTotalCount a
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Int, AltJ a) -&gt; (Int, AltJ a)
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Int, ViaJSON a) -&gt; (Int, ViaJSON a)
 forall a. SingleRow a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SingleRow (Int, AltJ a) -&gt; WithOptionalTotalCount a)
--&gt; TxET QErr IO (SingleRow (Int, AltJ a))
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SingleRow (Int, ViaJSON a) -&gt; WithOptionalTotalCount a)
+-&gt; TxET QErr IO (SingleRow (Int, ViaJSON a))
 -&gt; TxE QErr (WithOptionalTotalCount a)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
--&gt; Query -&gt; () -&gt; Bool -&gt; TxET QErr IO (SingleRow (Int, AltJ a))
+-&gt; Query -&gt; () -&gt; Bool -&gt; TxET QErr IO (SingleRow (Int, ViaJSON a))
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
@@ -2978,31 +2984,31 @@ forall (m :: * -&gt; *) a r e.
 </span><a href="#local-6989586621689668416"><span class="hs-identifier hs-var">sql</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-903"></span><span>    </span><span class="annot"><span class="annottext">RowsCountOption
-</span><a href="Hasura.RQL.Types.ScheduledTrigger.html#DontIncludeRowsCount"><span class="hs-identifier hs-var">DontIncludeRowsCount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AltJ a -&gt; WithOptionalTotalCount a
-forall a. AltJ a -&gt; WithOptionalTotalCount a
-</span><a href="Hasura.Eventing.ScheduledTrigger.html#withoutCount"><span class="hs-identifier hs-var">withoutCount</span></a></span><span> </span><span class="annot"><span class="annottext">(AltJ a -&gt; WithOptionalTotalCount a)
--&gt; (SingleRow (Identity (AltJ a)) -&gt; AltJ a)
--&gt; SingleRow (Identity (AltJ a))
+</span><a href="Hasura.RQL.Types.ScheduledTrigger.html#DontIncludeRowsCount"><span class="hs-identifier hs-var">DontIncludeRowsCount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ViaJSON a -&gt; WithOptionalTotalCount a
+forall a. ViaJSON a -&gt; WithOptionalTotalCount a
+</span><a href="Hasura.Eventing.ScheduledTrigger.html#withoutCount"><span class="hs-identifier hs-var">withoutCount</span></a></span><span> </span><span class="annot"><span class="annottext">(ViaJSON a -&gt; WithOptionalTotalCount a)
+-&gt; (SingleRow (Identity (ViaJSON a)) -&gt; ViaJSON a)
+-&gt; SingleRow (Identity (ViaJSON a))
 -&gt; WithOptionalTotalCount a
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (AltJ a) -&gt; AltJ a
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (ViaJSON a) -&gt; ViaJSON a
 forall a. Identity a -&gt; a
-</span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity (AltJ a) -&gt; AltJ a)
--&gt; (SingleRow (Identity (AltJ a)) -&gt; Identity (AltJ a))
--&gt; SingleRow (Identity (AltJ a))
--&gt; AltJ a
+</span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity (ViaJSON a) -&gt; ViaJSON a)
+-&gt; (SingleRow (Identity (ViaJSON a)) -&gt; Identity (ViaJSON a))
+-&gt; SingleRow (Identity (ViaJSON a))
+-&gt; ViaJSON a
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Identity (AltJ a)) -&gt; Identity (AltJ a)
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Identity (ViaJSON a)) -&gt; Identity (ViaJSON a)
 forall a. SingleRow a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SingleRow (Identity (AltJ a)) -&gt; WithOptionalTotalCount a)
--&gt; TxET QErr IO (SingleRow (Identity (AltJ a)))
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SingleRow (Identity (ViaJSON a)) -&gt; WithOptionalTotalCount a)
+-&gt; TxET QErr IO (SingleRow (Identity (ViaJSON a)))
 -&gt; TxE QErr (WithOptionalTotalCount a)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
 -&gt; ()
 -&gt; Bool
--&gt; TxET QErr IO (SingleRow (Identity (AltJ a)))
+-&gt; TxET QErr IO (SingleRow (Identity (ViaJSON a)))
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a

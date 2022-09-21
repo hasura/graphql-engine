@@ -343,11 +343,11 @@ forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables
 </span><a href="#local-6989586621689719663"><span class="hs-identifier hs-var">usrVars</span></a></span><span>
 </span><span id="line-130"></span><span>      </span><span id="local-6989586621689719657"><span class="annot"><span class="annottext">prepArg :: PrepArg
-</span><a href="#local-6989586621689719657"><span class="hs-identifier hs-var hs-var">prepArg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AltJ SessionVariables -&gt; PrepArg
+</span><a href="#local-6989586621689719657"><span class="hs-identifier hs-var hs-var">prepArg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ViaJSON SessionVariables -&gt; PrepArg
 forall a. ToPrepArg a =&gt; a -&gt; PrepArg
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.toPrepVal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SessionVariables -&gt; AltJ SessionVariables
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.toPrepVal</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SessionVariables -&gt; ViaJSON SessionVariables
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
 </span><a href="#local-6989586621689719663"><span class="hs-identifier hs-var">usrVars</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-131"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Int -&gt; (PrepArg, PGScalarValue) -&gt; PrepArgMap -&gt; PrepArgMap
 forall a. Int -&gt; a -&gt; IntMap a -&gt; IntMap a

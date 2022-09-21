@@ -830,89 +830,90 @@ forall (m :: * -&gt; *) a. MonadError QErr m =&gt; m (a, Bool) -&gt; m a
 -&gt; TxET QErr IO (MutateResp ('Postgres pgKind) TxtEncodedVal, Bool)
 -&gt; TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)
  -&gt; MutateResp ('Postgres pgKind) TxtEncodedVal)
--&gt; (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
+-&gt; (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
 -&gt; (MutateResp ('Postgres pgKind) TxtEncodedVal, Bool)
 forall (a :: * -&gt; * -&gt; *) b c d.
 Arrow a =&gt;
 a b c -&gt; a (b, d) (c, d)
-</span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="annot"><span class="annottext">AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)
+</span><span class="hs-identifier hs-var">first</span></span><span> </span><span class="annot"><span class="annottext">ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)
 -&gt; MutateResp ('Postgres pgKind) TxtEncodedVal
-forall a. AltJ a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getAltJ</span></a></span><span> </span><span class="annot"><span class="annottext">((AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
+forall a. ViaJSON a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">((ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
  -&gt; (MutateResp ('Postgres pgKind) TxtEncodedVal, Bool))
 -&gt; (SingleRow
-      (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
-    -&gt; (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool))
+      (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
+    -&gt; (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool))
 -&gt; SingleRow
-     (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
+     (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
 -&gt; (MutateResp ('Postgres pgKind) TxtEncodedVal, Bool)
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow
-  (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
--&gt; (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
+  (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
+-&gt; (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
 forall a. SingleRow a -&gt; a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SingleRow
-   (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
+   (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool)
  -&gt; (MutateResp ('Postgres pgKind) TxtEncodedVal, Bool))
 -&gt; TxET
      QErr
      IO
      (SingleRow
-        (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool))
+        (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool))
 -&gt; TxET QErr IO (MutateResp ('Postgres pgKind) TxtEncodedVal, Bool)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">TxET
   QErr
   IO
   (SingleRow
-     (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool))
+     (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal), Bool))
 forall a. FromRes a =&gt; TxE QErr a
 </span><a href="#local-6989586621689696606"><span class="hs-identifier hs-var">mutationTx</span></a></span><span>
-</span><span id="line-265"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)
+</span><span id="line-265"></span><span>    </span><span class="hs-keyword">else</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)
 -&gt; MutateResp ('Postgres pgKind) TxtEncodedVal
-forall a. AltJ a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getAltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)
+forall a. ViaJSON a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)
  -&gt; MutateResp ('Postgres pgKind) TxtEncodedVal)
 -&gt; (SingleRow
-      (Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)))
-    -&gt; AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal))
+      (Identity (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)))
+    -&gt; ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal))
 -&gt; SingleRow
-     (Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)))
+     (Identity (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)))
 -&gt; MutateResp ('Postgres pgKind) TxtEncodedVal
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal))
--&gt; AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal))
+-&gt; ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)
 forall a. Identity a -&gt; a
-</span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal))
- -&gt; AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal))
+</span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal))
+ -&gt; ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal))
 -&gt; (SingleRow
-      (Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)))
-    -&gt; Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)))
+      (Identity (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)))
+    -&gt; Identity
+         (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)))
 -&gt; SingleRow
-     (Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)))
--&gt; AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)
+     (Identity (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)))
+-&gt; ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow
-  (Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)))
--&gt; Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal))
+  (Identity (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)))
+-&gt; Identity (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal))
 forall a. SingleRow a -&gt; a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(SingleRow
-   (Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal)))
+   (Identity (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal)))
  -&gt; MutateResp ('Postgres pgKind) TxtEncodedVal)
 -&gt; TxET
      QErr
      IO
      (SingleRow
-        (Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal))))
+        (Identity (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal))))
 -&gt; TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">TxET
   QErr
   IO
   (SingleRow
-     (Identity (AltJ (MutateResp ('Postgres pgKind) TxtEncodedVal))))
+     (Identity (ViaJSON (MutateResp ('Postgres pgKind) TxtEncodedVal))))
 forall a. FromRes a =&gt; TxE QErr a
 </span><a href="#local-6989586621689696606"><span class="hs-identifier hs-var">mutationTx</span></a></span><span>
 </span><span id="line-266"></span><span>  </span><span class="hs-keyword">where</span><span>

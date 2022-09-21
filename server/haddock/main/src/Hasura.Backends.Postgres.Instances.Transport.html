@@ -485,32 +485,36 @@ forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 -&gt; m (Either QErr [(CohortId, ByteString, CursorVariableValues)])
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-129"></span><span>      </span><span id="local-6989586621689721633"><span class="annot"><span class="annottext">[(CohortId, ByteString, AltJ CursorVariableValues)]
+</span><span id="line-129"></span><span>      </span><span id="local-6989586621689721633"><span class="annot"><span class="annottext">[(CohortId, ByteString, ViaJSON CursorVariableValues)]
 </span><a href="#local-6989586621689721633"><span class="hs-identifier hs-var">res</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">PGExecCtx
--&gt; TxET QErr IO [(CohortId, ByteString, AltJ CursorVariableValues)]
+-&gt; TxET
+     QErr IO [(CohortId, ByteString, ViaJSON CursorVariableValues)]
 -&gt; ExceptT
-     QErr m [(CohortId, ByteString, AltJ CursorVariableValues)]
+     QErr m [(CohortId, ByteString, ViaJSON CursorVariableValues)]
 forall (m :: * -&gt; *) a.
 (MonadIO m, MonadError QErr m) =&gt;
 PGExecCtx -&gt; TxET QErr IO a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#runQueryTx"><span class="hs-identifier hs-var">runQueryTx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGSourceConfig -&gt; PGExecCtx
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#_pscExecCtx"><span class="hs-identifier hs-var hs-var">_pscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">PGSourceConfig
 SourceConfig ('Postgres pgKind)
-</span><a href="#local-6989586621689721636"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(TxET QErr IO [(CohortId, ByteString, AltJ CursorVariableValues)]
+</span><a href="#local-6989586621689721636"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(TxET
+   QErr IO [(CohortId, ByteString, ViaJSON CursorVariableValues)]
  -&gt; ExceptT
-      QErr m [(CohortId, ByteString, AltJ CursorVariableValues)])
--&gt; TxET QErr IO [(CohortId, ByteString, AltJ CursorVariableValues)]
+      QErr m [(CohortId, ByteString, ViaJSON CursorVariableValues)])
+-&gt; TxET
+     QErr IO [(CohortId, ByteString, ViaJSON CursorVariableValues)]
 -&gt; ExceptT
-     QErr m [(CohortId, ByteString, AltJ CursorVariableValues)]
+     QErr m [(CohortId, ByteString, ViaJSON CursorVariableValues)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MultiplexedQuery
 -&gt; [(CohortId, CohortVariables)]
--&gt; TxET QErr IO [(CohortId, ByteString, AltJ CursorVariableValues)]
+-&gt; TxET
+     QErr IO [(CohortId, ByteString, ViaJSON CursorVariableValues)]
 forall (m :: * -&gt; *).
 MonadTx m =&gt;
 MultiplexedQuery
 -&gt; [(CohortId, CohortVariables)]
--&gt; m [(CohortId, ByteString, AltJ CursorVariableValues)]
+-&gt; m [(CohortId, ByteString, ViaJSON CursorVariableValues)]
 </span><a href="Hasura.Backends.Postgres.Execute.Subscription.html#executeStreamingMultiplexedQuery"><span class="hs-identifier hs-var">PGL.executeStreamingMultiplexedQuery</span></a></span><span> </span><span class="annot"><span class="annottext">MultiplexedQuery
 MultiplexedQuery ('Postgres pgKind)
 </span><a href="#local-6989586621689721635"><span class="hs-identifier hs-var">query</span></a></span><span> </span><span class="annot"><span class="annottext">[(CohortId, CohortVariables)]
@@ -523,20 +527,20 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; [(CohortId, ByteString, CursorVariableValues)]
 -&gt; ExceptT QErr m [(CohortId, ByteString, CursorVariableValues)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(CohortId, ByteString, AltJ CursorVariableValues)]
-</span><a href="#local-6989586621689721633"><span class="hs-identifier hs-var">res</span></a></span><span> </span><span class="annot"><span class="annottext">[(CohortId, ByteString, AltJ CursorVariableValues)]
--&gt; ((CohortId, ByteString, AltJ CursorVariableValues)
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(CohortId, ByteString, ViaJSON CursorVariableValues)]
+</span><a href="#local-6989586621689721633"><span class="hs-identifier hs-var">res</span></a></span><span> </span><span class="annot"><span class="annottext">[(CohortId, ByteString, ViaJSON CursorVariableValues)]
+-&gt; ((CohortId, ByteString, ViaJSON CursorVariableValues)
     -&gt; (CohortId, ByteString, CursorVariableValues))
 -&gt; [(CohortId, ByteString, CursorVariableValues)]
 forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 </span><span class="hs-operator hs-var">&lt;&amp;&gt;</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689721630"><span class="annot"><span class="annottext">CohortId
 </span><a href="#local-6989586621689721630"><span class="hs-identifier hs-var">cohortId</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689721629"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689721629"><span class="hs-identifier hs-var">cohortRes</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689721628"><span class="annot"><span class="annottext">AltJ CursorVariableValues
+</span><a href="#local-6989586621689721629"><span class="hs-identifier hs-var">cohortRes</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689721628"><span class="annot"><span class="annottext">ViaJSON CursorVariableValues
 </span><a href="#local-6989586621689721628"><span class="hs-identifier hs-var">cursorVariableVals</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CohortId
 </span><a href="#local-6989586621689721630"><span class="hs-identifier hs-var">cohortId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689721629"><span class="hs-identifier hs-var">cohortRes</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">AltJ CursorVariableValues -&gt; CursorVariableValues
-forall a. AltJ a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getAltJ</span></a></span><span> </span><span class="annot"><span class="annottext">AltJ CursorVariableValues
+</span><a href="#local-6989586621689721629"><span class="hs-identifier hs-var">cohortRes</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ViaJSON CursorVariableValues -&gt; CursorVariableValues
+forall a. ViaJSON a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">ViaJSON CursorVariableValues
 </span><a href="#local-6989586621689721628"><span class="hs-identifier hs-var">cursorVariableVals</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-131"></span><span>
 </span><span id="line-132"></span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Transport.html#runPGQueryExplain"><span class="hs-identifier hs-type">runPGQueryExplain</span></a></span><span> </span><span class="hs-glyph">::</span><span>

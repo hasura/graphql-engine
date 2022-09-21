@@ -1540,44 +1540,46 @@ forall a. Maybe a
 </span><a href="Hasura.Backends.Postgres.DDL.RunSQL.html#fetchTablesFunctionsFromOids"><span class="hs-identifier hs-var hs-var">fetchTablesFunctionsFromOids</span></a></span></span><span> </span><span id="local-6989586621689717107"><span class="annot"><span class="annottext">[OID]
 </span><a href="#local-6989586621689717107"><span class="hs-identifier hs-var">tableOids</span></a></span></span><span> </span><span id="local-6989586621689717106"><span class="annot"><span class="annottext">[OID]
 </span><a href="#local-6989586621689717106"><span class="hs-identifier hs-var">functionOids</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-405"></span><span>  </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">AltJ [QualifiedTable] -&gt; [QualifiedTable]
-forall a. AltJ a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getAltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(AltJ [QualifiedTable] -&gt; [QualifiedTable])
--&gt; (AltJ [QualifiedFunction] -&gt; [QualifiedFunction])
--&gt; (AltJ [QualifiedTable], AltJ [QualifiedFunction])
+</span><span id="line-405"></span><span>  </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">ViaJSON [QualifiedTable] -&gt; [QualifiedTable]
+forall a. ViaJSON a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(ViaJSON [QualifiedTable] -&gt; [QualifiedTable])
+-&gt; (ViaJSON [QualifiedFunction] -&gt; [QualifiedFunction])
+-&gt; (ViaJSON [QualifiedTable], ViaJSON [QualifiedFunction])
 -&gt; ([QualifiedTable], [QualifiedFunction])
 forall (a :: * -&gt; * -&gt; *) b c b' c'.
 Arrow a =&gt;
 a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
-</span><span class="hs-operator hs-var">***</span></span><span> </span><span class="annot"><span class="annottext">AltJ [QualifiedFunction] -&gt; [QualifiedFunction]
-forall a. AltJ a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getAltJ</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((AltJ [QualifiedTable], AltJ [QualifiedFunction])
+</span><span class="hs-operator hs-var">***</span></span><span> </span><span class="annot"><span class="annottext">ViaJSON [QualifiedFunction] -&gt; [QualifiedFunction]
+forall a. ViaJSON a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getViaJSON</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((ViaJSON [QualifiedTable], ViaJSON [QualifiedFunction])
  -&gt; ([QualifiedTable], [QualifiedFunction]))
--&gt; (SingleRow (AltJ [QualifiedTable], AltJ [QualifiedFunction])
-    -&gt; (AltJ [QualifiedTable], AltJ [QualifiedFunction]))
--&gt; SingleRow (AltJ [QualifiedTable], AltJ [QualifiedFunction])
+-&gt; (SingleRow
+      (ViaJSON [QualifiedTable], ViaJSON [QualifiedFunction])
+    -&gt; (ViaJSON [QualifiedTable], ViaJSON [QualifiedFunction]))
+-&gt; SingleRow
+     (ViaJSON [QualifiedTable], ViaJSON [QualifiedFunction])
 -&gt; ([QualifiedTable], [QualifiedFunction])
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (AltJ [QualifiedTable], AltJ [QualifiedFunction])
--&gt; (AltJ [QualifiedTable], AltJ [QualifiedFunction])
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (ViaJSON [QualifiedTable], ViaJSON [QualifiedFunction])
+-&gt; (ViaJSON [QualifiedTable], ViaJSON [QualifiedFunction])
 forall a. SingleRow a -&gt; a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-406"></span><span>    </span><span class="annot"><span class="annottext">(SingleRow (AltJ [QualifiedTable], AltJ [QualifiedFunction])
+</span><span id="line-406"></span><span>    </span><span class="annot"><span class="annottext">(SingleRow (ViaJSON [QualifiedTable], ViaJSON [QualifiedFunction])
  -&gt; ([QualifiedTable], [QualifiedFunction]))
 -&gt; TxET
      QErr
      m
-     (SingleRow (AltJ [QualifiedTable], AltJ [QualifiedFunction]))
+     (SingleRow (ViaJSON [QualifiedTable], ViaJSON [QualifiedFunction]))
 -&gt; TxET QErr m ([QualifiedTable], [QualifiedFunction])
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
--&gt; (AltJ [Value], AltJ [Value])
+-&gt; (ViaJSON [Value], ViaJSON [Value])
 -&gt; Bool
 -&gt; TxET
      QErr
      m
-     (SingleRow (AltJ [QualifiedTable], AltJ [QualifiedFunction]))
+     (SingleRow (ViaJSON [QualifiedTable], ViaJSON [QualifiedFunction]))
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
@@ -1624,18 +1626,18 @@ forall (m :: * -&gt; *) a r e.
         '[]'
       ) AS &quot;functions&quot;
   |]</span></span><span>
-</span><span id="line-448"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Value] -&gt; AltJ [Value]
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">([Value] -&gt; AltJ [Value]) -&gt; [Value] -&gt; AltJ [Value]
+</span><span id="line-448"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Value] -&gt; ViaJSON [Value]
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">([Value] -&gt; ViaJSON [Value]) -&gt; [Value] -&gt; ViaJSON [Value]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(OID -&gt; Value) -&gt; [OID] -&gt; [Value]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">OID -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><a href="#local-6989586621689717098"><span class="hs-identifier hs-var">mkOidObject</span></a></span><span> </span><span class="annot"><span class="annottext">[OID]
-</span><a href="#local-6989586621689717107"><span class="hs-identifier hs-var">tableOids</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; AltJ [Value]
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">([Value] -&gt; AltJ [Value]) -&gt; [Value] -&gt; AltJ [Value]
+</span><a href="#local-6989586621689717107"><span class="hs-identifier hs-var">tableOids</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; ViaJSON [Value]
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">([Value] -&gt; ViaJSON [Value]) -&gt; [Value] -&gt; ViaJSON [Value]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(OID -&gt; Value) -&gt; [OID] -&gt; [Value]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]

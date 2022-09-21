@@ -3406,8 +3406,8 @@ forall a. SingleRow a -&gt; a
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
--&gt; (ActionName, AltJ SessionVariables, AltJ (HashMap Text Text),
-    AltJ Value, Text)
+-&gt; (ActionName, ViaJSON SessionVariables,
+    ViaJSON (HashMap Text Text), ViaJSON Value, Text)
 -&gt; Bool
 -&gt; TxET QErr IO (SingleRow (Identity ActionId))
 forall (m :: * -&gt; *) a r e.
@@ -3426,21 +3426,21 @@ forall (m :: * -&gt; *) a r e.
    |]</span></span><span>
 </span><span id="line-696"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">ActionName
 </span><a href="#local-6989586621689719897"><span class="hs-identifier hs-var">actionName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-697"></span><span>        </span><span class="annot"><span class="annottext">SessionVariables -&gt; AltJ SessionVariables
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
+</span><span id="line-697"></span><span>        </span><span class="annot"><span class="annottext">SessionVariables -&gt; ViaJSON SessionVariables
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
 </span><a href="#local-6989586621689719896"><span class="hs-identifier hs-var">sessionVariables</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-698"></span><span>        </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; AltJ (HashMap Text Text)
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap Text Text -&gt; AltJ (HashMap Text Text))
--&gt; HashMap Text Text -&gt; AltJ (HashMap Text Text)
+</span><span id="line-698"></span><span>        </span><span class="annot"><span class="annottext">HashMap Text Text -&gt; ViaJSON (HashMap Text Text)
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(HashMap Text Text -&gt; ViaJSON (HashMap Text Text))
+-&gt; HashMap Text Text -&gt; ViaJSON (HashMap Text Text)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ResponseHeaders -&gt; HashMap Text Text
 </span><a href="#local-6989586621689719890"><span class="hs-identifier hs-var">toHeadersMap</span></a></span><span> </span><span class="annot"><span class="annottext">ResponseHeaders
 </span><a href="#local-6989586621689719895"><span class="hs-identifier hs-var">httpHeaders</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-699"></span><span>        </span><span class="annot"><span class="annottext">Value -&gt; AltJ Value
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span id="line-699"></span><span>        </span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621689719894"><span class="hs-identifier hs-var">inputArgsPayload</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-700"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;created&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
@@ -3476,25 +3476,25 @@ a b c -&gt; a b' c' -&gt; a (b, b') (c, c')
 </span><span id="line-706"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Action.html#fetchUndeliveredActionEventsTx"><span class="hs-identifier hs-type">fetchUndeliveredActionEventsTx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxE</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionLogItem"><span class="hs-identifier hs-type">ActionLogItem</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-707"></span><span id="fetchUndeliveredActionEventsTx"><span class="annot"><span class="annottext">fetchUndeliveredActionEventsTx :: TxE QErr [ActionLogItem]
 </span><a href="Hasura.GraphQL.Execute.Action.html#fetchUndeliveredActionEventsTx"><span class="hs-identifier hs-var hs-var">fetchUndeliveredActionEventsTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-708"></span><span>  </span><span class="annot"><span class="annottext">((ActionId, ActionName, AltJ (HashMap Text Text),
-  AltJ SessionVariables, AltJ Value)
+</span><span id="line-708"></span><span>  </span><span class="annot"><span class="annottext">((ActionId, ActionName, ViaJSON (HashMap Text Text),
+  ViaJSON SessionVariables, ViaJSON Value)
  -&gt; ActionLogItem)
--&gt; [(ActionId, ActionName, AltJ (HashMap Text Text),
-     AltJ SessionVariables, AltJ Value)]
+-&gt; [(ActionId, ActionName, ViaJSON (HashMap Text Text),
+     ViaJSON SessionVariables, ViaJSON Value)]
 -&gt; [ActionLogItem]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(ActionId, ActionName, AltJ (HashMap Text Text),
- AltJ SessionVariables, AltJ Value)
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(ActionId, ActionName, ViaJSON (HashMap Text Text),
+ ViaJSON SessionVariables, ViaJSON Value)
 -&gt; ActionLogItem
 </span><a href="#local-6989586621689719887"><span class="hs-identifier hs-var">mapEvent</span></a></span><span>
-</span><span id="line-709"></span><span>    </span><span class="annot"><span class="annottext">([(ActionId, ActionName, AltJ (HashMap Text Text),
-   AltJ SessionVariables, AltJ Value)]
+</span><span id="line-709"></span><span>    </span><span class="annot"><span class="annottext">([(ActionId, ActionName, ViaJSON (HashMap Text Text),
+   ViaJSON SessionVariables, ViaJSON Value)]
  -&gt; [ActionLogItem])
 -&gt; TxET
      QErr
      IO
-     [(ActionId, ActionName, AltJ (HashMap Text Text),
-       AltJ SessionVariables, AltJ Value)]
+     [(ActionId, ActionName, ViaJSON (HashMap Text Text),
+       ViaJSON SessionVariables, ViaJSON Value)]
 -&gt; TxE QErr [ActionLogItem]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
@@ -3504,8 +3504,8 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; TxET
      QErr
      IO
-     [(ActionId, ActionName, AltJ (HashMap Text Text),
-       AltJ SessionVariables, AltJ Value)]
+     [(ActionId, ActionName, ViaJSON (HashMap Text Text),
+       ViaJSON SessionVariables, ViaJSON Value)]
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRow a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m [a]
@@ -3527,19 +3527,19 @@ forall (m :: * -&gt; *) a r e.
 </span><span id="line-723"></span><span>      </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span>
 </span><span id="line-724"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-725"></span><span>    </span><span id="local-6989586621689719887"><span class="annot"><span class="annottext">mapEvent :: (ActionId, ActionName, AltJ (HashMap Text Text),
- AltJ SessionVariables, AltJ Value)
+</span><span id="line-725"></span><span>    </span><span id="local-6989586621689719887"><span class="annot"><span class="annottext">mapEvent :: (ActionId, ActionName, ViaJSON (HashMap Text Text),
+ ViaJSON SessionVariables, ViaJSON Value)
 -&gt; ActionLogItem
 </span><a href="#local-6989586621689719887"><span class="hs-identifier hs-var hs-var">mapEvent</span></a></span></span><span>
 </span><span id="line-726"></span><span>      </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689719885"><span class="annot"><span class="annottext">ActionId
 </span><a href="#local-6989586621689719885"><span class="hs-identifier hs-var">actionId</span></a></span></span><span class="hs-special">,</span><span>
 </span><span id="line-727"></span><span>        </span><span id="local-6989586621689719884"><span class="annot"><span class="annottext">ActionName
 </span><a href="#local-6989586621689719884"><span class="hs-identifier hs-var">actionName</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-728"></span><span>        </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689719883"><span class="annot"><span class="annottext">HashMap Text Text
+</span><span id="line-728"></span><span>        </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689719883"><span class="annot"><span class="annottext">HashMap Text Text
 </span><a href="#local-6989586621689719883"><span class="hs-identifier hs-var">headersMap</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-729"></span><span>        </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689719882"><span class="annot"><span class="annottext">SessionVariables
+</span><span id="line-729"></span><span>        </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689719882"><span class="annot"><span class="annottext">SessionVariables
 </span><a href="#local-6989586621689719882"><span class="hs-identifier hs-var">sessionVariables</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-730"></span><span>        </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689719881"><span class="annot"><span class="annottext">Value
+</span><span id="line-730"></span><span>        </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689719881"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621689719881"><span class="hs-identifier hs-var">inputPayload</span></a></span></span><span>
 </span><span id="line-731"></span><span>        </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-732"></span><span>        </span><span class="annot"><span class="annottext">ActionId
@@ -3588,7 +3588,7 @@ forall k v. HashMap k v -&gt; [(k, v)]
 </span><span id="line-738"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#AASCompleted"><span class="hs-identifier hs-type">AASCompleted</span></a></span><span> </span><span id="local-6989586621689719876"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621689719876"><span class="hs-identifier hs-var">responsePayload</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-739"></span><span>    </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
--&gt; Query -&gt; (AltJ Value, ActionId) -&gt; Bool -&gt; TxE QErr ()
+-&gt; Query -&gt; (ViaJSON Value, ActionId) -&gt; Bool -&gt; TxE QErr ()
 forall (m :: * -&gt; *) r e.
 (MonadIO m, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m ()
@@ -3600,9 +3600,9 @@ forall (m :: * -&gt; *) r e.
       set response_payload = $1, status = 'completed'
       where id = $2
     |]</span></span><span>
-</span><span id="line-746"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; AltJ Value
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><span id="line-746"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621689719876"><span class="hs-identifier hs-var">responsePayload</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ActionId
 </span><a href="#local-6989586621689719877"><span class="hs-identifier hs-var">actionId</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-747"></span><span>      </span><span class="annot"><span class="annottext">Bool
@@ -3610,7 +3610,7 @@ forall a. a -&gt; AltJ a
 </span><span id="line-748"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#AASError"><span class="hs-identifier hs-type">AASError</span></a></span><span> </span><span id="local-6989586621689719874"><span class="annot"><span class="annottext">QErr
 </span><a href="#local-6989586621689719874"><span class="hs-identifier hs-var">qerr</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-749"></span><span>    </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
--&gt; Query -&gt; (AltJ QErr, ActionId) -&gt; Bool -&gt; TxE QErr ()
+-&gt; Query -&gt; (ViaJSON QErr, ActionId) -&gt; Bool -&gt; TxE QErr ()
 forall (m :: * -&gt; *) r e.
 (MonadIO m, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m ()
@@ -3622,9 +3622,9 @@ forall (m :: * -&gt; *) r e.
       set errors = $1, status = 'error'
       where id = $2
     |]</span></span><span>
-</span><span id="line-756"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QErr -&gt; AltJ QErr
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
+</span><span id="line-756"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QErr -&gt; ViaJSON QErr
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">QErr
 </span><a href="#local-6989586621689719874"><span class="hs-identifier hs-var">qerr</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ActionId
 </span><a href="#local-6989586621689719877"><span class="hs-identifier hs-var">actionId</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-757"></span><span>      </span><span class="annot"><span class="annottext">Bool
@@ -3635,33 +3635,33 @@ forall a. a -&gt; AltJ a
 </span><a href="Hasura.GraphQL.Execute.Action.html#fetchActionResponseTx"><span class="hs-identifier hs-var hs-var">fetchActionResponseTx</span></a></span></span><span> </span><span id="local-6989586621689719873"><span class="annot"><span class="annottext">ActionId
 </span><a href="#local-6989586621689719873"><span class="hs-identifier hs-var">actionId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-761"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621689719872"><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621689719872"><span class="hs-identifier hs-var">ca</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689719871"><span class="annot"><span class="annottext">Maybe (AltJ Value)
-</span><a href="#local-6989586621689719871"><span class="hs-identifier hs-var">rp</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689719870"><span class="annot"><span class="annottext">Maybe (AltJ Value)
-</span><a href="#local-6989586621689719870"><span class="hs-identifier hs-var">errs</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689719869"><span class="annot"><span class="annottext">SessionVariables
+</span><a href="#local-6989586621689719872"><span class="hs-identifier hs-var">ca</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689719871"><span class="annot"><span class="annottext">Maybe (ViaJSON Value)
+</span><a href="#local-6989586621689719871"><span class="hs-identifier hs-var">rp</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689719870"><span class="annot"><span class="annottext">Maybe (ViaJSON Value)
+</span><a href="#local-6989586621689719870"><span class="hs-identifier hs-var">errs</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689719869"><span class="annot"><span class="annottext">SessionVariables
 </span><a href="#local-6989586621689719869"><span class="hs-identifier hs-var">sessVars</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-762"></span><span>    </span><span class="annot"><span class="annottext">SingleRow
-  (UTCTime, Maybe (AltJ Value), Maybe (AltJ Value),
-   AltJ SessionVariables)
--&gt; (UTCTime, Maybe (AltJ Value), Maybe (AltJ Value),
-    AltJ SessionVariables)
+  (UTCTime, Maybe (ViaJSON Value), Maybe (ViaJSON Value),
+   ViaJSON SessionVariables)
+-&gt; (UTCTime, Maybe (ViaJSON Value), Maybe (ViaJSON Value),
+    ViaJSON SessionVariables)
 forall a. SingleRow a -&gt; a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span>
 </span><span id="line-763"></span><span>      </span><span class="annot"><span class="annottext">(SingleRow
-   (UTCTime, Maybe (AltJ Value), Maybe (AltJ Value),
-    AltJ SessionVariables)
- -&gt; (UTCTime, Maybe (AltJ Value), Maybe (AltJ Value),
-     AltJ SessionVariables))
+   (UTCTime, Maybe (ViaJSON Value), Maybe (ViaJSON Value),
+    ViaJSON SessionVariables)
+ -&gt; (UTCTime, Maybe (ViaJSON Value), Maybe (ViaJSON Value),
+     ViaJSON SessionVariables))
 -&gt; TxET
      QErr
      IO
      (SingleRow
-        (UTCTime, Maybe (AltJ Value), Maybe (AltJ Value),
-         AltJ SessionVariables))
+        (UTCTime, Maybe (ViaJSON Value), Maybe (ViaJSON Value),
+         ViaJSON SessionVariables))
 -&gt; TxET
      QErr
      IO
-     (UTCTime, Maybe (AltJ Value), Maybe (AltJ Value),
-      AltJ SessionVariables)
+     (UTCTime, Maybe (ViaJSON Value), Maybe (ViaJSON Value),
+      ViaJSON SessionVariables)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
@@ -3671,8 +3671,8 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
      QErr
      IO
      (SingleRow
-        (UTCTime, Maybe (AltJ Value), Maybe (AltJ Value),
-         AltJ SessionVariables))
+        (UTCTime, Maybe (ViaJSON Value), Maybe (ViaJSON Value),
+         ViaJSON SessionVariables))
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
@@ -3703,16 +3703,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; ActionLogResponse
 </span><a href="Hasura.RQL.Types.Action.html#ActionLogResponse"><span class="hs-identifier hs-var">ActionLogResponse</span></a></span><span> </span><span class="annot"><span class="annottext">ActionId
 </span><a href="#local-6989586621689719873"><span class="hs-identifier hs-var">actionId</span></a></span><span> </span><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621689719872"><span class="hs-identifier hs-var">ca</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AltJ Value -&gt; Value
-forall a. AltJ a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getAltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(AltJ Value -&gt; Value) -&gt; Maybe (AltJ Value) -&gt; Maybe Value
+</span><a href="#local-6989586621689719872"><span class="hs-identifier hs-var">ca</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ViaJSON Value -&gt; Value
+forall a. ViaJSON a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(ViaJSON Value -&gt; Value) -&gt; Maybe (ViaJSON Value) -&gt; Maybe Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe (AltJ Value)
-</span><a href="#local-6989586621689719871"><span class="hs-identifier hs-var">rp</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AltJ Value -&gt; Value
-forall a. AltJ a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getAltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(AltJ Value -&gt; Value) -&gt; Maybe (AltJ Value) -&gt; Maybe Value
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe (ViaJSON Value)
+</span><a href="#local-6989586621689719871"><span class="hs-identifier hs-var">rp</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ViaJSON Value -&gt; Value
+forall a. ViaJSON a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(ViaJSON Value -&gt; Value) -&gt; Maybe (ViaJSON Value) -&gt; Maybe Value
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe (AltJ Value)
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe (ViaJSON Value)
 </span><a href="#local-6989586621689719870"><span class="hs-identifier hs-var">errs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SessionVariables
 </span><a href="#local-6989586621689719869"><span class="hs-identifier hs-var">sessVars</span></a></span><span>
 </span><span id="line-773"></span><span>

@@ -22485,8 +22485,8 @@ scheduledTimeOrderBy :: OrderByExp
 -- | Build a select expression which outputs total count and list of json
 --   rows with pagination limit and offset applied
 mkPaginationSelectExp :: Select -> ScheduledEventPagination -> RowsCountOption -> Select
-withCount :: (Int, AltJ a) -> WithOptionalTotalCount a
-withoutCount :: AltJ a -> WithOptionalTotalCount a
+withCount :: (Int, ViaJSON a) -> WithOptionalTotalCount a
+withoutCount :: ViaJSON a -> WithOptionalTotalCount a
 executeWithOptionalTotalCount :: FromJSON a => Query -> RowsCountOption -> TxE QErr (WithOptionalTotalCount a)
 getOneOffScheduledEventsTx :: ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> TxE QErr (WithOptionalTotalCount [OneOffScheduledEvent])
 getCronEventsTx :: TriggerName -> ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> TxE QErr (WithOptionalTotalCount [CronEvent])
@@ -25662,7 +25662,7 @@ mkStreamingMultiplexedQuery :: (Backend ('Postgres pgKind), PostgresAnnotatedFie
 --   way.
 resolveMultiplexedValue :: (MonadState (QueryParametersInfo ('Postgres pgKind)) m, MonadError QErr m) => SessionVariables -> UnpreparedValue ('Postgres pgKind) -> m SQLExp
 executeMultiplexedQuery :: MonadTx m => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, ByteString)]
-executeStreamingMultiplexedQuery :: MonadTx m => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, ByteString, AltJ CursorVariableValues)]
+executeStreamingMultiplexedQuery :: MonadTx m => MultiplexedQuery -> [(CohortId, CohortVariables)] -> m [(CohortId, ByteString, ViaJSON CursorVariableValues)]
 
 -- | Internal; used by both <a>executeMultiplexedQuery</a>,
 --   <a>executeStreamingMultiplexedQuery</a> and

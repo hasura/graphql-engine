@@ -304,32 +304,34 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-136"></span><span>    </span><span class="hs-comment">-- sensitive info.</span><span>
 </span><span id="line-137"></span><span>    </span><span id="local-6989586621689646739"><span class="annot"><span class="annottext">fetchLockedQueriesTx :: TxET QErr IO (Maybe [PGSourceLockQuery])
 </span><a href="#local-6989586621689646739"><span class="hs-identifier hs-var hs-var">fetchLockedQueriesTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-138"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">AltJ (Maybe [PGSourceLockQuery]) -&gt; Maybe [PGSourceLockQuery]
-forall a. AltJ a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getAltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(AltJ (Maybe [PGSourceLockQuery]) -&gt; Maybe [PGSourceLockQuery])
--&gt; (SingleRow (Identity (AltJ (Maybe [PGSourceLockQuery])))
-    -&gt; AltJ (Maybe [PGSourceLockQuery]))
--&gt; SingleRow (Identity (AltJ (Maybe [PGSourceLockQuery])))
+</span><span id="line-138"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ViaJSON (Maybe [PGSourceLockQuery]) -&gt; Maybe [PGSourceLockQuery]
+forall a. ViaJSON a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(ViaJSON (Maybe [PGSourceLockQuery]) -&gt; Maybe [PGSourceLockQuery])
+-&gt; (SingleRow (Identity (ViaJSON (Maybe [PGSourceLockQuery])))
+    -&gt; ViaJSON (Maybe [PGSourceLockQuery]))
+-&gt; SingleRow (Identity (ViaJSON (Maybe [PGSourceLockQuery])))
 -&gt; Maybe [PGSourceLockQuery]
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (AltJ (Maybe [PGSourceLockQuery]))
--&gt; AltJ (Maybe [PGSourceLockQuery])
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (ViaJSON (Maybe [PGSourceLockQuery]))
+-&gt; ViaJSON (Maybe [PGSourceLockQuery])
 forall a. Identity a -&gt; a
-</span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity (AltJ (Maybe [PGSourceLockQuery]))
- -&gt; AltJ (Maybe [PGSourceLockQuery]))
--&gt; (SingleRow (Identity (AltJ (Maybe [PGSourceLockQuery])))
-    -&gt; Identity (AltJ (Maybe [PGSourceLockQuery])))
--&gt; SingleRow (Identity (AltJ (Maybe [PGSourceLockQuery])))
--&gt; AltJ (Maybe [PGSourceLockQuery])
+</span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity (ViaJSON (Maybe [PGSourceLockQuery]))
+ -&gt; ViaJSON (Maybe [PGSourceLockQuery]))
+-&gt; (SingleRow (Identity (ViaJSON (Maybe [PGSourceLockQuery])))
+    -&gt; Identity (ViaJSON (Maybe [PGSourceLockQuery])))
+-&gt; SingleRow (Identity (ViaJSON (Maybe [PGSourceLockQuery])))
+-&gt; ViaJSON (Maybe [PGSourceLockQuery])
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Identity (AltJ (Maybe [PGSourceLockQuery])))
--&gt; Identity (AltJ (Maybe [PGSourceLockQuery]))
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Identity (ViaJSON (Maybe [PGSourceLockQuery])))
+-&gt; Identity (ViaJSON (Maybe [PGSourceLockQuery]))
 forall a. SingleRow a -&gt; a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-139"></span><span>        </span><span class="annot"><span class="annottext">(SingleRow (Identity (AltJ (Maybe [PGSourceLockQuery])))
+</span><span id="line-139"></span><span>        </span><span class="annot"><span class="annottext">(SingleRow (Identity (ViaJSON (Maybe [PGSourceLockQuery])))
  -&gt; Maybe [PGSourceLockQuery])
 -&gt; TxET
-     QErr IO (SingleRow (Identity (AltJ (Maybe [PGSourceLockQuery]))))
+     QErr
+     IO
+     (SingleRow (Identity (ViaJSON (Maybe [PGSourceLockQuery]))))
 -&gt; TxET QErr IO (Maybe [PGSourceLockQuery])
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
@@ -337,7 +339,9 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; ()
 -&gt; Bool
 -&gt; TxET
-     QErr IO (SingleRow (Identity (AltJ (Maybe [PGSourceLockQuery]))))
+     QErr
+     IO
+     (SingleRow (Identity (ViaJSON (Maybe [PGSourceLockQuery]))))
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
@@ -1057,37 +1061,37 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 </span><a href="Hasura.Backends.Postgres.DDL.Source.html#pgFetchTableMetadata"><span class="hs-identifier hs-var hs-var">pgFetchTableMetadata</span></a></span></span><span> </span><span id="local-6989586621689646631"><span class="annot"><span class="annottext">[QualifiedTable]
 </span><a href="#local-6989586621689646631"><span class="hs-identifier hs-var">tables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-363"></span><span>  </span><span id="local-6989586621689646630"><span class="annot"><span class="annottext">[(SchemaName, TableName,
-  AltJ (DBTableMetadata ('Postgres pgKind)))]
+  ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 </span><a href="#local-6989586621689646630"><span class="hs-identifier hs-var">results</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-364"></span><span>    </span><span class="annot"><span class="annottext">TxE
   QErr
   [(SchemaName, TableName,
-    AltJ (DBTableMetadata ('Postgres pgKind)))]
+    ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 -&gt; m [(SchemaName, TableName,
-       AltJ (DBTableMetadata ('Postgres pgKind)))]
+       ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE
    QErr
    [(SchemaName, TableName,
-     AltJ (DBTableMetadata ('Postgres pgKind)))]
+     ViaJSON (DBTableMetadata ('Postgres pgKind)))]
  -&gt; m [(SchemaName, TableName,
-        AltJ (DBTableMetadata ('Postgres pgKind)))])
+        ViaJSON (DBTableMetadata ('Postgres pgKind)))])
 -&gt; TxE
      QErr
      [(SchemaName, TableName,
-       AltJ (DBTableMetadata ('Postgres pgKind)))]
+       ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 -&gt; m [(SchemaName, TableName,
-       AltJ (DBTableMetadata ('Postgres pgKind)))]
+       ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-365"></span><span>      </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
--&gt; [AltJ [QualifiedTable]]
+-&gt; [ViaJSON [QualifiedTable]]
 -&gt; Bool
 -&gt; TxE
      QErr
      [(SchemaName, TableName,
-       AltJ (DBTableMetadata ('Postgres pgKind)))]
+       ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
@@ -1099,10 +1103,10 @@ forall (pgKind :: PostgresKind).
 ToMetadataFetchQuery pgKind =&gt;
 Query
 </span><a href="Hasura.Backends.Postgres.DDL.Source.html#tableMetadata"><span class="hs-identifier hs-var">tableMetadata</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689646868"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-368"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">[QualifiedTable] -&gt; AltJ [QualifiedTable]
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">([QualifiedTable] -&gt; AltJ [QualifiedTable])
--&gt; [QualifiedTable] -&gt; AltJ [QualifiedTable]
+</span><span id="line-368"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">[QualifiedTable] -&gt; ViaJSON [QualifiedTable]
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">([QualifiedTable] -&gt; ViaJSON [QualifiedTable])
+-&gt; [QualifiedTable] -&gt; ViaJSON [QualifiedTable]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[QualifiedTable] -&gt; [QualifiedTable]
 forall a. Ord a =&gt; [a] -&gt; [a]
@@ -1129,39 +1133,40 @@ forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-372"></span><span>      </span><span class="annot"><span class="annottext">(((SchemaName, TableName,
-   AltJ (DBTableMetadata ('Postgres pgKind)))
+   ViaJSON (DBTableMetadata ('Postgres pgKind)))
   -&gt; (QualifiedTable, DBTableMetadata ('Postgres pgKind)))
  -&gt; [(SchemaName, TableName,
-      AltJ (DBTableMetadata ('Postgres pgKind)))]
+      ViaJSON (DBTableMetadata ('Postgres pgKind)))]
  -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))])
 -&gt; [(SchemaName, TableName,
-     AltJ (DBTableMetadata ('Postgres pgKind)))]
+     ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 -&gt; ((SchemaName, TableName,
-     AltJ (DBTableMetadata ('Postgres pgKind)))
+     ViaJSON (DBTableMetadata ('Postgres pgKind)))
     -&gt; (QualifiedTable, DBTableMetadata ('Postgres pgKind)))
 -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))]
 forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
-</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">((SchemaName, TableName, AltJ (DBTableMetadata ('Postgres pgKind)))
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">((SchemaName, TableName,
+  ViaJSON (DBTableMetadata ('Postgres pgKind)))
  -&gt; (QualifiedTable, DBTableMetadata ('Postgres pgKind)))
 -&gt; [(SchemaName, TableName,
-     AltJ (DBTableMetadata ('Postgres pgKind)))]
+     ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">[(SchemaName, TableName,
-  AltJ (DBTableMetadata ('Postgres pgKind)))]
+  ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 </span><a href="#local-6989586621689646630"><span class="hs-identifier hs-var">results</span></a></span><span> </span><span class="annot"><span class="annottext">(((SchemaName, TableName,
-   AltJ (DBTableMetadata ('Postgres pgKind)))
+   ViaJSON (DBTableMetadata ('Postgres pgKind)))
   -&gt; (QualifiedTable, DBTableMetadata ('Postgres pgKind)))
  -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))])
 -&gt; ((SchemaName, TableName,
-     AltJ (DBTableMetadata ('Postgres pgKind)))
+     ViaJSON (DBTableMetadata ('Postgres pgKind)))
     -&gt; (QualifiedTable, DBTableMetadata ('Postgres pgKind)))
 -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-373"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689646626"><span class="annot"><span class="annottext">SchemaName
 </span><a href="#local-6989586621689646626"><span class="hs-identifier hs-var">schema</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646625"><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621689646625"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689646624"><span class="annot"><span class="annottext">DBTableMetadata ('Postgres pgKind)
+</span><a href="#local-6989586621689646625"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689646624"><span class="annot"><span class="annottext">DBTableMetadata ('Postgres pgKind)
 </span><a href="#local-6989586621689646624"><span class="hs-identifier hs-var">info</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; QualifiedTable
 forall a. SchemaName -&gt; a -&gt; QualifiedObject a
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedObject"><span class="hs-identifier hs-var">QualifiedObject</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaName
@@ -1179,27 +1184,27 @@ forall a. SchemaName -&gt; a -&gt; QualifiedObject a
 </span><a href="Hasura.Backends.Postgres.DDL.Source.html#cockroachFetchTableMetadata"><span class="hs-identifier hs-var hs-var">cockroachFetchTableMetadata</span></a></span></span><span> </span><span id="local-6989586621689646620"><span class="annot"><span class="annottext">[QualifiedTable]
 </span><a href="#local-6989586621689646620"><span class="hs-identifier hs-var">_tables</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-382"></span><span>  </span><span id="local-6989586621689646619"><span class="annot"><span class="annottext">[(SchemaName, TableName,
-  AltJ (DBTableMetadata ('Postgres pgKind)))]
+  ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 </span><a href="#local-6989586621689646619"><span class="hs-identifier hs-var">results</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-383"></span><span>    </span><span class="annot"><span class="annottext">TxE
   QErr
   [(SchemaName, TableName,
-    AltJ (DBTableMetadata ('Postgres pgKind)))]
+    ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 -&gt; m [(SchemaName, TableName,
-       AltJ (DBTableMetadata ('Postgres pgKind)))]
+       ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 </span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE
    QErr
    [(SchemaName, TableName,
-     AltJ (DBTableMetadata ('Postgres pgKind)))]
+     ViaJSON (DBTableMetadata ('Postgres pgKind)))]
  -&gt; m [(SchemaName, TableName,
-        AltJ (DBTableMetadata ('Postgres pgKind)))])
+        ViaJSON (DBTableMetadata ('Postgres pgKind)))])
 -&gt; TxE
      QErr
      [(SchemaName, TableName,
-       AltJ (DBTableMetadata ('Postgres pgKind)))]
+       ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 -&gt; m [(SchemaName, TableName,
-       AltJ (DBTableMetadata ('Postgres pgKind)))]
+       ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-384"></span><span>      </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
@@ -1209,7 +1214,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; TxE
      QErr
      [(SchemaName, TableName,
-       AltJ (DBTableMetadata ('Postgres pgKind)))]
+       ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 forall (m :: * -&gt; *) a e.
 (MonadIO m, FromRes a) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; [PrepArg] -&gt; Bool -&gt; TxET e m a
@@ -1243,39 +1248,40 @@ forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-391"></span><span>      </span><span class="annot"><span class="annottext">(((SchemaName, TableName,
-   AltJ (DBTableMetadata ('Postgres pgKind)))
+   ViaJSON (DBTableMetadata ('Postgres pgKind)))
   -&gt; (QualifiedTable, DBTableMetadata ('Postgres pgKind)))
  -&gt; [(SchemaName, TableName,
-      AltJ (DBTableMetadata ('Postgres pgKind)))]
+      ViaJSON (DBTableMetadata ('Postgres pgKind)))]
  -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))])
 -&gt; [(SchemaName, TableName,
-     AltJ (DBTableMetadata ('Postgres pgKind)))]
+     ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 -&gt; ((SchemaName, TableName,
-     AltJ (DBTableMetadata ('Postgres pgKind)))
+     ViaJSON (DBTableMetadata ('Postgres pgKind)))
     -&gt; (QualifiedTable, DBTableMetadata ('Postgres pgKind)))
 -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))]
 forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
-</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">((SchemaName, TableName, AltJ (DBTableMetadata ('Postgres pgKind)))
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">((SchemaName, TableName,
+  ViaJSON (DBTableMetadata ('Postgres pgKind)))
  -&gt; (QualifiedTable, DBTableMetadata ('Postgres pgKind)))
 -&gt; [(SchemaName, TableName,
-     AltJ (DBTableMetadata ('Postgres pgKind)))]
+     ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">[(SchemaName, TableName,
-  AltJ (DBTableMetadata ('Postgres pgKind)))]
+  ViaJSON (DBTableMetadata ('Postgres pgKind)))]
 </span><a href="#local-6989586621689646619"><span class="hs-identifier hs-var">results</span></a></span><span> </span><span class="annot"><span class="annottext">(((SchemaName, TableName,
-   AltJ (DBTableMetadata ('Postgres pgKind)))
+   ViaJSON (DBTableMetadata ('Postgres pgKind)))
   -&gt; (QualifiedTable, DBTableMetadata ('Postgres pgKind)))
  -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))])
 -&gt; ((SchemaName, TableName,
-     AltJ (DBTableMetadata ('Postgres pgKind)))
+     ViaJSON (DBTableMetadata ('Postgres pgKind)))
     -&gt; (QualifiedTable, DBTableMetadata ('Postgres pgKind)))
 -&gt; [(QualifiedTable, DBTableMetadata ('Postgres pgKind))]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-392"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689646617"><span class="annot"><span class="annottext">SchemaName
 </span><a href="#local-6989586621689646617"><span class="hs-identifier hs-var">schema</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646616"><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621689646616"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689646615"><span class="annot"><span class="annottext">DBTableMetadata ('Postgres pgKind)
+</span><a href="#local-6989586621689646616"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689646615"><span class="annot"><span class="annottext">DBTableMetadata ('Postgres pgKind)
 </span><a href="#local-6989586621689646615"><span class="hs-identifier hs-var">info</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaName -&gt; TableName -&gt; QualifiedTable
 forall a. SchemaName -&gt; a -&gt; QualifiedObject a
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedObject"><span class="hs-identifier hs-var">QualifiedObject</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaName
@@ -1321,22 +1327,24 @@ forall a. Monoid a =&gt; a
 </span><span id="line-411"></span><span id="pgFetchFunctionMetadata"><span class="annot"><span class="annottext">pgFetchFunctionMetadata :: [QualifiedFunction] -&gt; m (DBFunctionsMetadata ('Postgres pgKind))
 </span><a href="Hasura.Backends.Postgres.DDL.Source.html#pgFetchFunctionMetadata"><span class="hs-identifier hs-var hs-var">pgFetchFunctionMetadata</span></a></span></span><span> </span><span id="local-6989586621689646606"><span class="annot"><span class="annottext">[QualifiedFunction]
 </span><a href="#local-6989586621689646606"><span class="hs-identifier hs-var">functions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-412"></span><span>  </span><span id="local-6989586621689646605"><span class="annot"><span class="annottext">[(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
+</span><span id="line-412"></span><span>  </span><span id="local-6989586621689646605"><span class="annot"><span class="annottext">[(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])]
 </span><a href="#local-6989586621689646605"><span class="hs-identifier hs-var">results</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-413"></span><span>    </span><span class="annot"><span class="annottext">TxE QErr [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
--&gt; m [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
+</span><span id="line-413"></span><span>    </span><span class="annot"><span class="annottext">TxE QErr [(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])]
+-&gt; m [(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])]
 forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
-</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
- -&gt; m [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])])
--&gt; TxE QErr [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
--&gt; m [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
+</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr [(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])]
+ -&gt; m [(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])])
+-&gt; TxE
+     QErr [(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])]
+-&gt; m [(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-414"></span><span>      </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
 -&gt; Query
--&gt; [AltJ [QualifiedFunction]]
+-&gt; [ViaJSON [QualifiedFunction]]
 -&gt; Bool
--&gt; TxE QErr [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
+-&gt; TxE
+     QErr [(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])]
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
@@ -1344,10 +1352,10 @@ forall (m :: * -&gt; *) a r e.
 </span><span id="line-415"></span><span>        </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
 </span><span id="line-416"></span><span>        </span><span class="hs-special">$(</span><span class="hs-identifier">makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/pg_function_metadata.sql&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">PG.sqlFromFile</span><span class="hs-special">)</span><span>
-</span><span id="line-417"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">[QualifiedFunction] -&gt; AltJ [QualifiedFunction]
-forall a. a -&gt; AltJ a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.AltJ</span></a></span><span> </span><span class="annot"><span class="annottext">([QualifiedFunction] -&gt; AltJ [QualifiedFunction])
--&gt; [QualifiedFunction] -&gt; AltJ [QualifiedFunction]
+</span><span id="line-417"></span><span>        </span><span class="hs-special">[</span><span class="annot"><span class="annottext">[QualifiedFunction] -&gt; ViaJSON [QualifiedFunction]
+forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">([QualifiedFunction] -&gt; ViaJSON [QualifiedFunction])
+-&gt; [QualifiedFunction] -&gt; ViaJSON [QualifiedFunction]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[QualifiedFunction] -&gt; [QualifiedFunction]
 forall a. Ord a =&gt; [a] -&gt; [a]
@@ -1373,32 +1381,32 @@ forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 -&gt; HashMap QualifiedFunction [PGRawFunctionInfo]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-421"></span><span>      </span><span class="annot"><span class="annottext">(((SchemaName, FunctionName, AltJ [PGRawFunctionInfo])
+</span><span id="line-421"></span><span>      </span><span class="annot"><span class="annottext">(((SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])
   -&gt; (QualifiedFunction, [PGRawFunctionInfo]))
- -&gt; [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
+ -&gt; [(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])]
  -&gt; [(QualifiedFunction, [PGRawFunctionInfo])])
--&gt; [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
--&gt; ((SchemaName, FunctionName, AltJ [PGRawFunctionInfo])
+-&gt; [(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])]
+-&gt; ((SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])
     -&gt; (QualifiedFunction, [PGRawFunctionInfo]))
 -&gt; [(QualifiedFunction, [PGRawFunctionInfo])]
 forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
-</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">((SchemaName, FunctionName, AltJ [PGRawFunctionInfo])
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">((SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])
  -&gt; (QualifiedFunction, [PGRawFunctionInfo]))
--&gt; [(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
+-&gt; [(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])]
 -&gt; [(QualifiedFunction, [PGRawFunctionInfo])]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">[(SchemaName, FunctionName, AltJ [PGRawFunctionInfo])]
-</span><a href="#local-6989586621689646605"><span class="hs-identifier hs-var">results</span></a></span><span> </span><span class="annot"><span class="annottext">(((SchemaName, FunctionName, AltJ [PGRawFunctionInfo])
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">[(SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])]
+</span><a href="#local-6989586621689646605"><span class="hs-identifier hs-var">results</span></a></span><span> </span><span class="annot"><span class="annottext">(((SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])
   -&gt; (QualifiedFunction, [PGRawFunctionInfo]))
  -&gt; [(QualifiedFunction, [PGRawFunctionInfo])])
--&gt; ((SchemaName, FunctionName, AltJ [PGRawFunctionInfo])
+-&gt; ((SchemaName, FunctionName, ViaJSON [PGRawFunctionInfo])
     -&gt; (QualifiedFunction, [PGRawFunctionInfo]))
 -&gt; [(QualifiedFunction, [PGRawFunctionInfo])]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-422"></span><span>        </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621689646604"><span class="annot"><span class="annottext">SchemaName
 </span><a href="#local-6989586621689646604"><span class="hs-identifier hs-var">schema</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646603"><span class="annot"><span class="annottext">FunctionName
-</span><a href="#local-6989586621689646603"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.AltJ</span></a></span><span> </span><span id="local-6989586621689646602"><span class="annot"><span class="annottext">[PGRawFunctionInfo]
+</span><a href="#local-6989586621689646603"><span class="hs-identifier hs-var">table</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689646602"><span class="annot"><span class="annottext">[PGRawFunctionInfo]
 </span><a href="#local-6989586621689646602"><span class="hs-identifier hs-var">infos</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaName -&gt; FunctionName -&gt; QualifiedFunction
 forall a. SchemaName -&gt; a -&gt; QualifiedObject a
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedObject"><span class="hs-identifier hs-var">QualifiedObject</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaName
@@ -1416,32 +1424,32 @@ forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
 -&gt; TxE QErr (HashSet PGScalarType) -&gt; m (HashSet PGScalarType)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-428"></span><span>    </span><span class="annot"><span class="annottext">AltJ (HashSet PGScalarType) -&gt; HashSet PGScalarType
-forall a. AltJ a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getAltJ</span></a></span><span> </span><span class="annot"><span class="annottext">(AltJ (HashSet PGScalarType) -&gt; HashSet PGScalarType)
--&gt; (SingleRow (Identity (AltJ (HashSet PGScalarType)))
-    -&gt; AltJ (HashSet PGScalarType))
--&gt; SingleRow (Identity (AltJ (HashSet PGScalarType)))
+</span><span id="line-428"></span><span>    </span><span class="annot"><span class="annottext">ViaJSON (HashSet PGScalarType) -&gt; HashSet PGScalarType
+forall a. ViaJSON a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(ViaJSON (HashSet PGScalarType) -&gt; HashSet PGScalarType)
+-&gt; (SingleRow (Identity (ViaJSON (HashSet PGScalarType)))
+    -&gt; ViaJSON (HashSet PGScalarType))
+-&gt; SingleRow (Identity (ViaJSON (HashSet PGScalarType)))
 -&gt; HashSet PGScalarType
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (AltJ (HashSet PGScalarType))
--&gt; AltJ (HashSet PGScalarType)
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Identity (ViaJSON (HashSet PGScalarType))
+-&gt; ViaJSON (HashSet PGScalarType)
 forall a. Identity a -&gt; a
-</span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity (AltJ (HashSet PGScalarType))
- -&gt; AltJ (HashSet PGScalarType))
--&gt; (SingleRow (Identity (AltJ (HashSet PGScalarType)))
-    -&gt; Identity (AltJ (HashSet PGScalarType)))
--&gt; SingleRow (Identity (AltJ (HashSet PGScalarType)))
--&gt; AltJ (HashSet PGScalarType)
+</span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity (ViaJSON (HashSet PGScalarType))
+ -&gt; ViaJSON (HashSet PGScalarType))
+-&gt; (SingleRow (Identity (ViaJSON (HashSet PGScalarType)))
+    -&gt; Identity (ViaJSON (HashSet PGScalarType)))
+-&gt; SingleRow (Identity (ViaJSON (HashSet PGScalarType)))
+-&gt; ViaJSON (HashSet PGScalarType)
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Identity (AltJ (HashSet PGScalarType)))
--&gt; Identity (AltJ (HashSet PGScalarType))
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Identity (ViaJSON (HashSet PGScalarType)))
+-&gt; Identity (ViaJSON (HashSet PGScalarType))
 forall a. SingleRow a -&gt; a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span>
-</span><span id="line-429"></span><span>      </span><span class="annot"><span class="annottext">(SingleRow (Identity (AltJ (HashSet PGScalarType)))
+</span><span id="line-429"></span><span>      </span><span class="annot"><span class="annottext">(SingleRow (Identity (ViaJSON (HashSet PGScalarType)))
  -&gt; HashSet PGScalarType)
 -&gt; TxET
-     QErr IO (SingleRow (Identity (AltJ (HashSet PGScalarType))))
+     QErr IO (SingleRow (Identity (ViaJSON (HashSet PGScalarType))))
 -&gt; TxE QErr (HashSet PGScalarType)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
@@ -1449,7 +1457,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 -&gt; ()
 -&gt; Bool
 -&gt; TxET
-     QErr IO (SingleRow (Identity (AltJ (HashSet PGScalarType))))
+     QErr IO (SingleRow (Identity (ViaJSON (HashSet PGScalarType))))
 forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
