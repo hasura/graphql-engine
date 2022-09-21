@@ -694,9 +694,9 @@ insertActionTx actionName sessionVariables httpHeaders inputArgsPayload =
     RETURNING "id"
    |]
       ( actionName,
-        PG.AltJ sessionVariables,
-        PG.AltJ $ toHeadersMap httpHeaders,
-        PG.AltJ inputArgsPayload,
+        PG.ViaJSON sessionVariables,
+        PG.ViaJSON $ toHeadersMap httpHeaders,
+        PG.ViaJSON inputArgsPayload,
         "created" :: Text
       )
       False
@@ -725,9 +725,9 @@ fetchUndeliveredActionEventsTx =
     mapEvent
       ( actionId,
         actionName,
-        PG.AltJ headersMap,
-        PG.AltJ sessionVariables,
-        PG.AltJ inputPayload
+        PG.ViaJSON headersMap,
+        PG.ViaJSON sessionVariables,
+        PG.ViaJSON inputPayload
         ) =
         ActionLogItem actionId actionName (fromHeadersMap headersMap) sessionVariables inputPayload
 
@@ -743,7 +743,7 @@ setActionStatusTx actionId = \case
       set response_payload = $1, status = 'completed'
       where id = $2
     |]
-      (PG.AltJ responsePayload, actionId)
+      (PG.ViaJSON responsePayload, actionId)
       False
   AASError qerr ->
     PG.unitQE
@@ -753,12 +753,12 @@ setActionStatusTx actionId = \case
       set errors = $1, status = 'error'
       where id = $2
     |]
-      (PG.AltJ qerr, actionId)
+      (PG.ViaJSON qerr, actionId)
       False
 
 fetchActionResponseTx :: ActionId -> PG.TxE QErr ActionLogResponse
 fetchActionResponseTx actionId = do
-  (ca, rp, errs, PG.AltJ sessVars) <-
+  (ca, rp, errs, PG.ViaJSON sessVars) <-
     PG.getRow
       <$> PG.withQE
         defaultTxErrorHandler
@@ -769,7 +769,7 @@ fetchActionResponseTx actionId = do
     |]
         (Identity actionId)
         True
-  pure $ ActionLogResponse actionId ca (PG.getAltJ <$> rp) (PG.getAltJ <$> errs) sessVars
+  pure $ ActionLogResponse actionId ca (PG.getViaJSON <$> rp) (PG.getViaJSON <$> errs) sessVars
 
 clearActionDataTx :: ActionName -> PG.TxE QErr ()
 clearActionDataTx actionName =

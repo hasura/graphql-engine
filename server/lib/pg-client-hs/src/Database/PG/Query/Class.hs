@@ -18,7 +18,7 @@ module Database.PG.Query.Class
     ToPrepArgs (..),
     SingleRow (..),
     Discard (..),
-    AltJ (..),
+    ViaJSON (..),
     JSON (..),
     JSONB (..),
   )
@@ -78,15 +78,16 @@ newtype SingleRow a = SingleRow
   }
   deriving stock (Eq, Show)
 
-type AltJ :: Type -> Type
-newtype AltJ a = AltJ {getAltJ :: a}
+-- | Helper newtype to allow parsing JSON directly into a chosen type
+type ViaJSON :: Type -> Type
+newtype ViaJSON a = ViaJSON {getViaJSON :: a}
 
-instance (FromJSON a) => FromCol (AltJ a) where
+instance (FromJSON a) => FromCol (ViaJSON a) where
   fromCol =
     decodeJson >=> parse
     where
-      parse :: Value -> Either Text (AltJ a)
-      parse = fmap AltJ . first fromString . parseEither parseJSON
+      parse :: Value -> Either Text (ViaJSON a)
+      parse = fmap ViaJSON . first fromString . parseEither parseJSON
 
       decodeJson :: Maybe ByteString -> Either Text Value
       decodeJson = fromColHelper PD.json_ast . fmap dropFirst
@@ -478,8 +479,8 @@ instance ToPrepArg PrepArg where
 toPrepValHelper :: PQ.Oid -> (a -> PE.Encoding) -> a -> PrepArg
 toPrepValHelper o e a = (o, Just (PE.encodingBytes $ e a, PQ.Binary))
 
-instance (ToJSON a) => ToPrepArg (AltJ a) where
-  toPrepVal (AltJ a) = toPrepValHelper PTI.json PE.bytea_lazy $ encode a
+instance (ToJSON a) => ToPrepArg (ViaJSON a) where
+  toPrepVal (ViaJSON a) = toPrepValHelper PTI.json PE.bytea_lazy $ encode a
 
 instance ToPrepArg Word64 where
   toPrepVal = toPrepValHelper PTI.int8 PE.int8_word64

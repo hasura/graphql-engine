@@ -127,7 +127,7 @@ runPGStreamingSubscription sourceConfig query variables =
   withElapsedTime $
     runExceptT $ do
       res <- runQueryTx (_pscExecCtx sourceConfig) $ PGL.executeStreamingMultiplexedQuery query variables
-      pure $ res <&> (\(cohortId, cohortRes, cursorVariableVals) -> (cohortId, cohortRes, PG.getAltJ cursorVariableVals))
+      pure $ res <&> (\(cohortId, cohortRes, cursorVariableVals) -> (cohortId, cohortRes, PG.getViaJSON cursorVariableVals))
 
 runPGQueryExplain ::
   forall pgKind m.

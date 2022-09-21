@@ -1116,7 +1116,7 @@ notifySchemaCacheSyncTx (MetadataResourceVersion resourceVersion) instanceId inv
         resource_version = $2,
         instance_id = $3::uuid
     |]
-      (PG.AltJ invalidations, resourceVersion, instanceId)
+      (PG.ViaJSON invalidations, resourceVersion, instanceId)
       True
   pure ()
 
@@ -1132,7 +1132,7 @@ getCatalogStateTx =
       ()
       False
   where
-    mkCatalogState (dbId, PG.AltJ cliState, PG.AltJ consoleState) =
+    mkCatalogState (dbId, PG.ViaJSON cliState, PG.ViaJSON consoleState) =
       CatalogState dbId cliState consoleState
 
 setCatalogStateTx :: CatalogStateType -> A.Value -> PG.TxE QErr ()
@@ -1145,7 +1145,7 @@ setCatalogStateTx stateTy stateValue =
         UPDATE hdb_catalog.hdb_version
            SET cli_state = $1
       |]
-        (Identity $ PG.AltJ stateValue)
+        (Identity $ PG.ViaJSON stateValue)
         False
     CSTConsole ->
       PG.unitQE
@@ -1154,7 +1154,7 @@ setCatalogStateTx stateTy stateValue =
         UPDATE hdb_catalog.hdb_version
            SET console_state = $1
       |]
-        (Identity $ PG.AltJ stateValue)
+        (Identity $ PG.ViaJSON stateValue)
         False
 
 -- | Each of the function in the type class is executed in a totally separate transaction.

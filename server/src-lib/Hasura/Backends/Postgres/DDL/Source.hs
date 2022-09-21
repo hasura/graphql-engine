@@ -135,7 +135,7 @@ logPGSourceCatalogMigrationLockedQueries logger sourceConfig = forever $ do
     -- The blocking query in the below transaction is truncated to the first 20 characters because it may contain
     -- sensitive info.
     fetchLockedQueriesTx =
-      (PG.getAltJ . runIdentity . PG.getRow)
+      (PG.getViaJSON . runIdentity . PG.getRow)
         <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
@@ -365,12 +365,12 @@ pgFetchTableMetadata tables = do
       PG.withQE
         defaultTxErrorHandler
         (tableMetadata @pgKind)
-        [PG.AltJ $ LE.uniques tables]
+        [PG.ViaJSON $ LE.uniques tables]
         True
   pure $
     Map.fromList $
       flip map results $
-        \(schema, table, PG.AltJ info) -> (QualifiedObject schema table, info)
+        \(schema, table, PG.ViaJSON info) -> (QualifiedObject schema table, info)
 
 -- | Fetch Cockroach metadata of all user tables
 cockroachFetchTableMetadata ::
@@ -389,7 +389,7 @@ cockroachFetchTableMetadata _tables = do
   pure $
     Map.fromList $
       flip map results $
-        \(schema, table, PG.AltJ info) -> (QualifiedObject schema table, info)
+        \(schema, table, PG.ViaJSON info) -> (QualifiedObject schema table, info)
 
 class FetchFunctionMetadata (pgKind :: PostgresKind) where
   fetchFunctionMetadata ::
@@ -414,18 +414,18 @@ pgFetchFunctionMetadata functions = do
       PG.withQE
         defaultTxErrorHandler
         $(makeRelativeToProject "src-rsr/pg_function_metadata.sql" >>= PG.sqlFromFile)
-        [PG.AltJ $ LE.uniques functions]
+        [PG.ViaJSON $ LE.uniques functions]
         True
   pure $
     Map.fromList $
       flip map results $
-        \(schema, table, PG.AltJ infos) -> (QualifiedObject schema table, infos)
+        \(schema, table, PG.ViaJSON infos) -> (QualifiedObject schema table, infos)
 
 -- | Fetch all scalar types from Postgres
 fetchPgScalars :: MonadTx m => m (HashSet PGScalarType)
 fetchPgScalars =
   liftTx $
-    PG.getAltJ . runIdentity . PG.getRow
+    PG.getViaJSON . runIdentity . PG.getRow
       <$> PG.withQE
         defaultTxErrorHandler
         [PG.sql|
