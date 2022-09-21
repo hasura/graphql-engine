@@ -8,7 +8,7 @@ import Data.Aeson
 import Data.Set.NonEmpty qualified as NE
 import Data.Time.Clock qualified as Time
 import Hasura.Backends.MSSQL.DDL.EventTrigger qualified as MSSQL
-import Hasura.Backends.Postgres.DDL.EventTrigger qualified as PG
+import Hasura.Backends.Postgres.DDL.EventTrigger qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
@@ -294,27 +294,27 @@ class Backend b => BackendEventTrigger (b :: BackendType) where
 -- depending / importing backend-specific files.
 
 instance BackendEventTrigger ('Postgres 'Vanilla) where
-  insertManualEvent = PG.insertManualEvent
-  fetchUndeliveredEvents = PG.fetchUndeliveredEvents
-  setRetry = PG.setRetry
-  getMaintenanceModeVersion = PG.getMaintenanceModeVersion
-  recordSuccess = PG.recordSuccess
-  recordError = PG.recordError
-  recordError' = PG.recordError'
-  dropTriggerAndArchiveEvents = PG.dropTriggerAndArchiveEvents
-  dropDanglingSQLTrigger = PG.dropDanglingSQLTrigger
-  redeliverEvent = PG.redeliverEvent
-  unlockEventsInSource = PG.unlockEventsInSource
-  createTableEventTrigger = PG.createTableEventTrigger
-  createMissingSQLTriggers = PG.createMissingSQLTriggers
-  checkIfTriggerExists = PG.checkIfTriggerExists
-  addCleanupSchedules = PG.addCleanupSchedules
-  deleteAllScheduledCleanups = PG.deleteAllScheduledCleanups
-  getCleanupEventsForDeletion = PG.getCleanupEventsForDeletion
-  updateCleanupEventStatusToDead = PG.updateCleanupEventStatusToDead
-  updateCleanupEventStatusToPaused = PG.updateCleanupEventStatusToPaused
-  updateCleanupEventStatusToCompleted = PG.updateCleanupEventStatusToCompleted
-  deleteEventTriggerLogs = PG.deleteEventTriggerLogs
+  insertManualEvent = Postgres.insertManualEvent
+  fetchUndeliveredEvents = Postgres.fetchUndeliveredEvents
+  setRetry = Postgres.setRetry
+  getMaintenanceModeVersion = Postgres.getMaintenanceModeVersion
+  recordSuccess = Postgres.recordSuccess
+  recordError = Postgres.recordError
+  recordError' = Postgres.recordError'
+  dropTriggerAndArchiveEvents = Postgres.dropTriggerAndArchiveEvents
+  dropDanglingSQLTrigger = Postgres.dropDanglingSQLTrigger
+  redeliverEvent = Postgres.redeliverEvent
+  unlockEventsInSource = Postgres.unlockEventsInSource
+  createTableEventTrigger = Postgres.createTableEventTrigger
+  createMissingSQLTriggers = Postgres.createMissingSQLTriggers
+  checkIfTriggerExists = Postgres.checkIfTriggerExists
+  addCleanupSchedules = Postgres.addCleanupSchedules
+  deleteAllScheduledCleanups = Postgres.deleteAllScheduledCleanups
+  getCleanupEventsForDeletion = Postgres.getCleanupEventsForDeletion
+  updateCleanupEventStatusToDead = Postgres.updateCleanupEventStatusToDead
+  updateCleanupEventStatusToPaused = Postgres.updateCleanupEventStatusToPaused
+  updateCleanupEventStatusToCompleted = Postgres.updateCleanupEventStatusToCompleted
+  deleteEventTriggerLogs = Postgres.deleteEventTriggerLogs
 
 instance BackendEventTrigger ('Postgres 'Citus) where
   insertManualEvent _ _ _ _ _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
@@ -340,27 +340,27 @@ instance BackendEventTrigger ('Postgres 'Citus) where
   deleteEventTriggerLogs _ _ = throw400 NotSupported $ "Event triggers are not supported for Citus sources"
 
 instance BackendEventTrigger ('Postgres 'Cockroach) where
-  insertManualEvent = PG.insertManualEvent
-  fetchUndeliveredEvents = PG.fetchUndeliveredEvents
-  setRetry = PG.setRetry
-  getMaintenanceModeVersion = PG.getMaintenanceModeVersion
-  recordSuccess = PG.recordSuccess
-  recordError = PG.recordError
-  recordError' = PG.recordError'
-  dropTriggerAndArchiveEvents = PG.dropTriggerAndArchiveEvents
-  dropDanglingSQLTrigger = PG.dropDanglingSQLTrigger
-  redeliverEvent = PG.redeliverEvent
-  unlockEventsInSource = PG.unlockEventsInSource
-  createTableEventTrigger = PG.createTableEventTrigger
-  createMissingSQLTriggers = PG.createMissingSQLTriggers
-  checkIfTriggerExists = PG.checkIfTriggerExists
-  addCleanupSchedules = PG.addCleanupSchedules
-  deleteAllScheduledCleanups = PG.deleteAllScheduledCleanups
-  getCleanupEventsForDeletion = PG.getCleanupEventsForDeletion
-  updateCleanupEventStatusToDead = PG.updateCleanupEventStatusToDead
-  updateCleanupEventStatusToPaused = PG.updateCleanupEventStatusToPaused
-  updateCleanupEventStatusToCompleted = PG.updateCleanupEventStatusToCompleted
-  deleteEventTriggerLogs = PG.deleteEventTriggerLogs
+  insertManualEvent = Postgres.insertManualEvent
+  fetchUndeliveredEvents = Postgres.fetchUndeliveredEvents
+  setRetry = Postgres.setRetry
+  getMaintenanceModeVersion = Postgres.getMaintenanceModeVersion
+  recordSuccess = Postgres.recordSuccess
+  recordError = Postgres.recordError
+  recordError' = Postgres.recordError'
+  dropTriggerAndArchiveEvents = Postgres.dropTriggerAndArchiveEvents
+  dropDanglingSQLTrigger = Postgres.dropDanglingSQLTrigger
+  redeliverEvent = Postgres.redeliverEvent
+  unlockEventsInSource = Postgres.unlockEventsInSource
+  createTableEventTrigger = Postgres.createTableEventTrigger
+  createMissingSQLTriggers = Postgres.createMissingSQLTriggers
+  checkIfTriggerExists = Postgres.checkIfTriggerExists
+  addCleanupSchedules = Postgres.addCleanupSchedules
+  deleteAllScheduledCleanups = Postgres.deleteAllScheduledCleanups
+  getCleanupEventsForDeletion = Postgres.getCleanupEventsForDeletion
+  updateCleanupEventStatusToDead = Postgres.updateCleanupEventStatusToDead
+  updateCleanupEventStatusToPaused = Postgres.updateCleanupEventStatusToPaused
+  updateCleanupEventStatusToCompleted = Postgres.updateCleanupEventStatusToCompleted
+  deleteEventTriggerLogs = Postgres.deleteEventTriggerLogs
 
 instance BackendEventTrigger 'MSSQL where
   insertManualEvent = MSSQL.insertManualEvent

@@ -30,7 +30,7 @@ import Data.Aeson.TH
 import Data.Attoparsec.Text qualified as AT
 import Data.HashMap.Strict qualified as M
 import Hasura.Backends.Postgres.Instances.Types ()
-import Hasura.Backends.Postgres.SQL.DML qualified as PG
+import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -68,8 +68,8 @@ instance FromJSON OrderByExp where
           <*> pure Nothing
       orderTypeParser =
         choice
-          [ "+" *> pure (Just PG.OTAsc),
-            "-" *> pure (Just PG.OTDesc),
+          [ "+" *> pure (Just Postgres.OTAsc),
+            "-" *> pure (Just Postgres.OTDesc),
             pure Nothing
           ]
       orderColumnParser = AT.takeText >>= orderByColFromTxt

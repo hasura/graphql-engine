@@ -55,7 +55,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.GraphQL.Namespace (NamespacedField)
 import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
@@ -355,10 +355,10 @@ numericAggOperators =
 comparisonAggOperators :: [G.Name]
 comparisonAggOperators = [$$(G.litName "max"), $$(G.litName "min")]
 
-mkDescriptionWith :: Maybe PG.PGDescription -> Text -> G.Description
+mkDescriptionWith :: Maybe Postgres.PGDescription -> Text -> G.Description
 mkDescriptionWith descM defaultTxt = G.Description $ case descM of
   Nothing -> defaultTxt
-  Just (PG.PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
+  Just (Postgres.PGDescription descTxt) -> T.unlines [descTxt, "\n", defaultTxt]
 
 -- TODO why do we do these validations at this point? What does it mean to track
 --      a function but not add it to the schema...?

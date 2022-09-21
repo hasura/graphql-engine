@@ -35,11 +35,11 @@ import Hasura.Backends.Postgres.Execute.Prepare
 import Hasura.Backends.Postgres.Execute.Subscription qualified as PGL
 import Hasura.Backends.Postgres.Execute.Types (PGSourceConfig (..), dmlTxErrorHandler)
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
-import Hasura.Backends.Postgres.SQL.Value qualified as PG
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
+import Hasura.Backends.Postgres.SQL.Value qualified as Postgres
 import Hasura.Backends.Postgres.Translate.Select (PostgresAnnotatedFieldJSON)
 import Hasura.Backends.Postgres.Translate.Select qualified as DS
-import Hasura.Backends.Postgres.Types.Function qualified as PG
+import Hasura.Backends.Postgres.Types.Function qualified as Postgres
 import Hasura.Backends.Postgres.Types.Update qualified as BackendUpdate
 import Hasura.Base.Error (QErr)
 import Hasura.EncJSON (EncJSON, encJFromJValue)
@@ -473,28 +473,28 @@ pgDBRemoteRelationshipPlan userInfo sourceName sourceConfig lhs lhsSchema argume
   -- a root field name that makes sense to attach to it.
   flip runReaderT emptyQueryTagsComment $ pgDBQueryPlan userInfo Env.emptyEnvironment sourceName sourceConfig rootSelection
   where
-    coerceToColumn = PG.unsafePGCol . getFieldNameTxt
+    coerceToColumn = Postgres.unsafePGCol . getFieldNameTxt
     joinColumnMapping = mapKeys coerceToColumn lhsSchema
 
     rowsArgument :: UnpreparedValue ('Postgres pgKind)
     rowsArgument =
       UVParameter Nothing $
-        ColumnValue (ColumnScalar PG.PGJSONB) $
-          PG.PGValJSONB $ PG.JSONB $ J.toJSON lhs
+        ColumnValue (ColumnScalar Postgres.PGJSONB) $
+          Postgres.PGValJSONB $ PG.JSONB $ J.toJSON lhs
     jsonToRecordSet :: IR.SelectFromG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
 
     recordSetDefinitionList =
-      (coerceToColumn argumentId, PG.PGBigInt) : Map.toList (fmap snd joinColumnMapping)
+      (coerceToColumn argumentId, Postgres.PGBigInt) : Map.toList (fmap snd joinColumnMapping)
     jsonToRecordSet =
       IR.FromFunction
-        (PG.QualifiedObject "pg_catalog" $ PG.FunctionName "jsonb_to_recordset")
-        (FunctionArgsExp [PG.AEInput rowsArgument] mempty)
+        (Postgres.QualifiedObject "pg_catalog" $ Postgres.FunctionName "jsonb_to_recordset")
+        (FunctionArgsExp [Postgres.AEInput rowsArgument] mempty)
         (Just recordSetDefinitionList)
 
     rootSelection =
       convertRemoteSourceRelationship
         (fst <$> joinColumnMapping)
         jsonToRecordSet
-        (PG.unsafePGCol $ getFieldNameTxt argumentId)
-        (ColumnScalar PG.PGBigInt)
+        (Postgres.unsafePGCol $ getFieldNameTxt argumentId)
+        (ColumnScalar Postgres.PGBigInt)
         relationship

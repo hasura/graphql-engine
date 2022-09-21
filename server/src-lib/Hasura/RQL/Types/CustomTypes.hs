@@ -54,7 +54,7 @@ import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.Postgres.Instances.Types ()
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -248,8 +248,8 @@ data TypeRelationshipDefinition = TypeRelationshipDefinition
     -- are performed, then we can replace this PG-specific code with the new and
     -- fancy generalized remote relationship code.
     _trdSource :: SourceName,
-    _trdRemoteTable :: PG.QualifiedTable,
-    _trdFieldMapping :: HashMap ObjectFieldName PG.PGCol
+    _trdRemoteTable :: Postgres.QualifiedTable,
+    _trdFieldMapping :: HashMap ObjectFieldName Postgres.PGCol
   }
   deriving (Show, Eq, Generic)
 

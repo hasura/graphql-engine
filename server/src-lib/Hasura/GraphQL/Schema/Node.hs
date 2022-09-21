@@ -24,7 +24,7 @@ import Data.Aeson.Types qualified as J
 import Data.HashMap.Strict qualified as Map
 import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.Types.Backend
@@ -117,7 +117,7 @@ data NodeId
 -- This id does NOT uniquely identify the table properly, as it only knows the
 -- table's name, but doesn't store a source name.
 data V1NodeId = V1NodeId
-  { _ni1Table :: PG.QualifiedTable,
+  { _ni1Table :: Postgres.QualifiedTable,
     _ni1Columns :: NESeq.NESeq J.Value
   }
 
@@ -141,7 +141,7 @@ instance J.FromJSON NodeId where
 parseNodeIdV1 :: [J.Value] -> J.Parser V1NodeId
 parseNodeIdV1 (schemaValue : nameValue : firstColumn : remainingColumns) =
   V1NodeId
-    <$> (PG.QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
+    <$> (Postgres.QualifiedObject <$> J.parseJSON schemaValue <*> J.parseJSON nameValue)
     <*> pure (firstColumn NESeq.:<|| Seq.fromList remainingColumns)
 parseNodeIdV1 _ = fail "GUID version 1: expecting schema name, table name and at least one column value"
 
