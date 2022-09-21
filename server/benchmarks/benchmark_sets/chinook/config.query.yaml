@@ -41,9 +41,10 @@ queries:
     options:
       k6:
         # NOTE: setting this to true will ignore graphql-layer errors, which
-        # still return a 200 HTTP status code.
-        # This doesn't seem to really affect measurements AFAICT so leave off
-        # discardResponseBodies: true
+        # still return a 200 HTTP status code.  Unfortunately we need to set to
+        # `true` so that we aren't measuring e.g. decompression on the k6 side
+        # (see: https://github.com/grafana/k6/issues/2685)
+        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
@@ -62,6 +63,8 @@ queries:
     <<: *k6_custom
     options:
       k6:
+        # See note on Chinook.simple_query_low_load
+        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
@@ -83,6 +86,8 @@ queries:
     <<: *k6_custom
     options:
       k6:
+        # See note on Chinook.simple_query_low_load
+        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
@@ -117,6 +122,8 @@ queries:
     <<: *k6_custom
     options:
       k6:
+        # See note on Chinook.simple_query_low_load
+        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
@@ -134,6 +141,8 @@ queries:
     <<: *k6_custom
     options:
       k6:
+        # See note on Chinook.simple_query_low_load
+        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
@@ -149,6 +158,8 @@ queries:
     <<: *k6_custom
     options:
       k6:
+        # See note on Chinook.simple_query_low_load
+        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
@@ -169,6 +180,8 @@ queries:
     <<: *k6_custom
     options:
       k6:
+        # See note on Chinook.simple_query_low_load
+        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
