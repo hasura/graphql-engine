@@ -42,6 +42,24 @@ function TOCItemList({toc, className, linkClassName, isChild}) {
   );
 }
 
+// find descendent with searchId as id using DFS and return its children
+function findTOC(tocTree, searchId) {
+  for(let i = 0; i < tocTree.length; i++ ) {
+    let tocTreeNode = tocTree[i];
+
+    if (tocTreeNode.id === searchId) {
+      return tocTreeNode.children;
+    }
+
+    let searchResult = findTOC(tocTreeNode.children, searchId);
+    if (searchResult) {
+      return searchResult;
+    }
+  }
+
+  return null;
+}
+
 export default function TOCItems({
   toc,
   className = 'table-of-contents table-of-contents__left-border',
@@ -56,7 +74,7 @@ export default function TOCItems({
     minHeadingLevelOption ?? themeConfig.tableOfContents.minHeadingLevel;
   const maxHeadingLevel =
     maxHeadingLevelOption ?? themeConfig.tableOfContents.maxHeadingLevel;
-  // In the event of re-swizzling, make sure to change the tocTree declaration aboe to `let`
+  // In the event of re-swizzling, make sure to change the tocTree declaration above to `let`
   let tocTree = useFilteredAndTreeifiedTOC({
     toc,
     minHeadingLevel,
@@ -65,10 +83,18 @@ export default function TOCItems({
 
   // Customization START
   // In the event of re-swizzling, need to copy below snippet and add back in the newly swizzled TOCItems component
-  // This block should alwways come after the `tocTree` variable which holds results from `useFilteredAndTreeifiedTOC`
-  // make sure to change the tocTree declaration aboe to `let`
+  // This block should always come after the `tocTree` variable which holds results from `useFilteredAndTreeifiedTOC`
+  // make sure to change the tocTree declaration above to `let`
   if (typeof props.filterTOC === "function") {
     tocTree = props.filterTOC(tocTree);
+  }
+
+  if (typeof props.filterTOC === "string") {
+    tocTree = findTOC(tocTree, props.filterTOC)
+  }
+
+  if(!tocTree) {
+    throw new Error('TOCInline error: filter gives no result');
   }
   // Customization END
 
