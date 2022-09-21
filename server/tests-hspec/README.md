@@ -28,7 +28,7 @@ For motivation, rationale, and more, see the [test suite rfc](../../rfcs/hspec-t
   - [Troubleshooting](#troubleshooting)
     - [`Database 'hasura' already exists. Choose a different database name.`](#database-hasura-already-exists-choose-a-different-database-name)
     - [General `DataConnector` failures](#general-dataconnector-failures)
-    - [`SQLServer` failures on Apple M1 chips](#sqlserver-failures-on-apple-m1-chips)
+    - [`SQLServer` failures on Apple M1 chips](#microsoft-sql-server-failures-on-apple-aarch64-chips)
 
 ## Required setup for BigQuery tests
 
@@ -168,7 +168,7 @@ modules in the `Test` namespace, for more guidance. As well as this, the module
 [Test.HelloWorldSpec](Test/HelloWorldSpec.hs) contains a skeleton for writing
 new tests.
 
-### Specifying fixtures 
+### Specifying fixtures
 
 We often want to run the same tests several times with slightly different
 configuration. Most commonly, we want to assert that a given behaviour works
@@ -195,9 +195,9 @@ is written in terms of `Fixture ()`. This uses `()` for the local test which
 does not carry any "useful" state information, and is therefore omitted from
 the body of the tests themselves.
 
-In the rare cases where some local state is necessary, test authors should use 
+In the rare cases where some local state is necessary, test authors should use
 `Harness.Test.Fixture.runWithLocalTestEnvironment`. This function
-takes a type parameter for its local testEnvironment, which will be provided to 
+takes a type parameter for its local testEnvironment, which will be provided to
 the body of tests themselves.
 
 #### Make local testEnvironment action
@@ -255,7 +255,7 @@ These actions can be created by running POST requests against graphql-engine
 using `Harness.GraphqlEngine.post_`, or by running SQL requests against the
 backend using `Backend.<backend>.run_`.
 
-##### Teardown 
+##### Teardown
 
 These actions are responsible for freeing acquired resources, and reverting all
 local modifications: dropping newly created tables, deleting custom functions,
@@ -317,10 +317,10 @@ spec =
     [ Fixture.fixture (Fixture.Backend Fixture.SQLServer)
         { Fixture.mkLocalTestEnvironment = Fixture.noLocalTestEnvironment,
           setupTeardown = \testEnv ->
-            [ Fixture.SetupAction 
+            [ Fixture.SetupAction
                { Fixture.setupAction = SqlServer.setup schema testEnv,
 -                Fixture.teardownAction = \_ -> SqlServer.teardown schema testEnv
-+                Fixture.teardownAction = \_ -> pure () 
++                Fixture.teardownAction = \_ -> pure ()
                }
             ]
         }]
@@ -424,42 +424,48 @@ This typically indicates persistent DB state between test runs. Try `docker comp
 
 The DataConnector agent might be out of date. If you are getting a lot of test failures, first try rebuilding the containers with `docker compose build` to make sure you are using the latest version of the agent.
 
-### `SQLServer` failures on Apple M1 chips
+### Microsoft SQL Server failures on Apple aarch64 chips
 
-We have a few problems with SQLServer on M1:
+This applies to all Apple hardware that uses aarch64 chips, e.g. the MacBook M1 or M2.
 
-1. Compiler bug in GHC 8.10.7 on M1.
+We have a few problems with Microsoft SQL Server on Apple aarch64:
 
-   Due to compiler bugs in GHC 8.10.7 we need to use patched Haskell ODBC bindings as a workaround for M1 systems.
-   Make the following change in the `cabal.project`:
+1.  Due to compiler bugs in GHC 8.10.7, we need to use patched Haskell ODBC bindings as a workaround for aarch64 systems.
 
-   ```diff
-     source-repository-package
-       type: git
-   -   location: https://github.com/fpco/odbc.git
-   -   tag: 3d80ffdd4a2879f0debecabb56d834d2d898212b
-   +   location: https://github.com/soupi/odbc.git
-   +   tag: a6acf6b4eca31022babbf8045f31a0f7f26c5923
-   ```
+    Add the following to `cabal.project.local`:
 
-2. Microsoft did not release SQL Server for M1. We need to use Azure SQL Edge instead.
+    ```
+    source-repository-package
+      type: git
+      location: https://github.com/soupi/odbc.git
+      tag: a6acf6b4eca31022babbf8045f31a0f7f26c5923
+    ```
 
-   Switch the docker image in `docker-compose/sqlserver/Dockerfile` to `azure-sql-edge`:
+2.  Microsoft has not yet released SQL Server for aarch64. We need to use Azure SQL Edge instead.
 
-   ```diff
-   - FROM mcr.microsoft.com/mssql/server:2019-latest@sha256:a098c9ff6fbb8e1c9608ad7511fa42dba8d22e0d50b48302761717840ccc26af
-   + FROM mcr.microsoft.com/azure-sql-edge
-   ```
+    You don't need to do anything if you're using the `make` commands; they will provide the correct image automatically.
 
-   Note: you might need to rebuild the Docker images with `docker compose build`
+    If you run `docker compose` directly, make sure to set the environment variable yourself:
 
-3. Azure SQL Edge does not ship with the `sqlcmd` utility with which we use to setup the SQL Server schema.
+    ```sh
+    export MSSQL_IMAGE='mcr.microsoft.com/azure-sql-edge'
+    ```
 
-   1. Install it locally instead, with brew: `brew install microsoft/mssql-release/mssql-tools`.
-   2. To start the test suite's backends, we need to setup the SQL Server schema using our local `sqlcmd`.
-      To start the backends, run this command instead:
+    You can add this to your _.envrc.local_ file if you like.
 
-      ```diff
-      - docker compose up
-      + docker compose up & (cd docker-compose/sqlserver/ && ./run-init.sh 65003) && fg
-      ```
+3.  Azure SQL Edge for aarch64 does not ship with the `sqlcmd` utility with which we use to setup the SQL Server schema.
+
+    If you need it, you can instead use the `mssql-tools` Docker image, for example:
+
+    ```
+    docker run --rm -it --platform=linux/amd64 --net=host mcr.microsoft.com/mssql-tools \
+      /opt/mssql-tools/bin/sqlcmd -S localhost,65003 -U SA -P <password>
+    ```
+
+    To make this easier, you might want to define an alias:
+
+    ```
+    alias sqlcmd='docker run --rm -it --platform=linux/amd64 --net=host mcr.microsoft.com/mssql-tools /opt/mssql-tools/bin/sqlcmd'
+    ```
+
+    You can also install them directly with `brew install microsoft/mssql-release/mssql-tools`.

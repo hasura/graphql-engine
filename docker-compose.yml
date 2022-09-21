@@ -59,7 +59,7 @@ services:
       - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   sqlserver:
-    build: ./docker-compose/sqlserver/
+    image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest@sha256:a098c9ff6fbb8e1c9608ad7511fa42dba8d22e0d50b48302761717840ccc26af}
     ports:
       - "65003:1433"
     environment:
@@ -68,6 +68,18 @@ services:
       MSSQL_SA_PASSWORD: "DockerComposePassword!"
     volumes:
       - mssql-data:/var/opt/mssql
+
+  # Separated from the `sqlserver` container so we can use the `mssql-tools` image to run `sqlcmd`.
+  # `sqlcmd` is not available in the `azure-sql-edge` image on arm64, which we use for testing on macOS.
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql-tools
+    command:
+      - /init.sh
+    environment:
+      SERVER_HOST: sqlserver
+    volumes:
+      - ./docker-compose/sqlserver-init/init.sh:/init.sh
+      - ./docker-compose/sqlserver-init/init.sql:/init.sql
 
   citus:
     image: citusdata/citus:10.1@sha256:7e497e5ca18d7f2ae2a66c1d5d676b548e9221b7e6294adfb03006adad85502c
