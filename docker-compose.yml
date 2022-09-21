@@ -82,7 +82,7 @@ services:
       - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   cockroach:
-    image: us-docker.pkg.dev/cockroach-cloud-images/cockroachdb/cockroach:v22.1.6-112-g5e2f4ff465
+    image: us-docker.pkg.dev/cockroach-cloud-images/cockroachdb/cockroach:v22.1.7-28-g19985f9b60
     command:
       - start-single-node
       - --insecure

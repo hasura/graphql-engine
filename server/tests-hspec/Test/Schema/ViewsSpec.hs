@@ -45,7 +45,7 @@ spec =
                 Just $
                   Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True,
-                      Fixture.skipTests = Just "Cockroach disabled pending prepared args fix https://github.com/cockroachdb/cockroach/issues/86375"
+                      Fixture.skipTests = Just "Cockroach disabled views query fix https://github.com/hasura/graphql-engine-mono/issues/5987"
                     }
             }
         ]
