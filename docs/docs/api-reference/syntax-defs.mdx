@@ -1564,3 +1564,25 @@ Table columns can be referred by prefixing `$` e.g `$id`.
 | Key    | required | Schema  | Description                                    |
 |--------|----------|---------|------------------------------------------------|
 | enable | true     | String  | Apollo federation version (can be `"v1"` only) |
+
+## AutoEventTriggerCleanupConfig {#autoeventtriggercleanupconfig}
+
+| Key                   | required | Schema          | Description                                                           |
+|-----------------------|----------|-----------------|-----------------------------------------------------------------------|
+| schedule              | true     | Cron Expression | Cron expression at which the cleanup should be invoked.               |
+| batch_size            | false    | Integer         | Number of event trigger logs to delete. Default 10000                 |
+| clear_older_than      | false    | Integer         | Event logs retention period (in hours). 168 hours of retention period means that the logs older than 7 days will be removed. Default 168 hours (or 7 days). |
+| timeout               | false    | Integer         | Maximum time (in seconds) the cleanup process can take up during execution. If the cleanup process takes up more time, the process will be aborted. Default: 60 |
+| clean_invocation_logs | false    | Bool            | Should corresponding invocation logs be cleaned. Default `false`      |
+| paused                | false    | Bool            | Is the auto-cleanup process paused. Default `false`                   |
+
+## TriggerLogCleanupSources {#triggerlogcleanupsources}
+| Key                   | required | Schema                               | Description                                                                            |
+|-----------------------|----------|--------------------------------------|----------------------------------------------------------------------------------------|
+| sources               | true     | `'*'` \| [[SourceName]](#sourcename) | Sources for which to update the cleaner status (or all sources when `'*'` is provided) |
+
+## EventTriggerQualifier {#eventtriggerqualifier}
+| Key                   | required | Schema                           | Description                                          |
+|-----------------------|----------|----------------------------------|------------------------------------------------------|
+| event_triggers        | true     |  [[TriggerName]](#triggername)   | List of trigger names                                |
+| source_name           | true     | [SourceName](#sourcename)        | Source to which the event triggers belong            |

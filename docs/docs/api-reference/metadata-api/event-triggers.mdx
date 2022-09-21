@@ -65,6 +65,14 @@ X-Hasura-Role: admin
               "value_from_env": "EVENT_WEBHOOK_HEADER"
           }
         ],
+        "cleanup_config": {
+            "schedule": "0 0 * * *",
+            "batch_size": 10000,
+            "clear_older_than": 168,
+            "timeout": 60,
+            "clean_invocation_logs": false,
+            "paused": false
+        },
         "replace": false
     }
 }
@@ -88,6 +96,7 @@ X-Hasura-Role: admin
 | enable_manual             | false    | Boolean                                                                                                                                                             | If set to true, the event trigger can be invoked manually               |
 | request_transform         | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                                          | Attaches a Request Transformation to the Event Trigger.                 |
 | response_transform        | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                                        | Attaches a Request Transformation to the Event Trigger.                 |
+| cleanup_config            | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                                          | Cleanup config for the auto cleanup process (EE/Cloud only).            |
 
 (\*) Either `webhook` or `webhook_from_env` are required.
 
@@ -216,6 +225,14 @@ X-Hasura-Role: admin
               "value_from_env": "EVENT_WEBHOOK_HEADER"
           }
         ],
+        "cleanup_config": {
+            "schedule": "0 0 * * *",
+            "batch_size": 10000,
+            "clear_older_than": 168,
+            "timeout": 60,
+            "clean_invocation_logs": false,
+            "paused": false
+        },
         "replace": false
     }
 }
@@ -239,6 +256,7 @@ X-Hasura-Role: admin
 | enable_manual             | false    | Boolean                                                                                                                                                             | If set to true, the event trigger can be invoked manually               |
 | request_transform         | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                                          | Attaches a Request Transformation to the Event Trigger.                 |
 | response_transform        | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                                        | Attaches a Request Transformation to the Event Trigger.                 |
+| cleanup_config            | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                                          | Cleanup config for the auto cleanup process (EE/Cloud only).            |
 
 (\*) Either `webhook` or `webhook_from_env` are required.
 
@@ -313,10 +331,112 @@ X-Hasura-Role: admin
 }
 ```
 
-### Args syntax {#metadata-pg-invoke-event-trigger-syntax}
+### Args syntax {#metadata-mssql-invoke-event-trigger-syntax}
 
 | Key     | Required | Schema                                                                 | Description                                                     |
 |---------|----------|------------------------------------------------------------------------|-----------------------------------------------------------------|
 | name    | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the event trigger                                       |
 | payload | true     | JSON                                                                   | Some JSON payload to send to trigger                            |
 | source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`) |
+
+## cleanup_event_trigger_logs {#metadata-cleanup-event-trigger-logs}
+
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition/Cloud</div>
+
+`cleanup_event_trigger_logs` is used to manually delete the event logs for a given event trigger.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+{
+  "type" : "cleanup_event_trigger_logs",
+  "args": {
+    "event_trigger_name": "sample_trigger",
+    "source": "default",
+    "batch_size": 10000,
+    "clear_older_than": 168,
+    "timeout": 60,
+    "clean_invocation_logs": false
+  }
+}
+```
+
+### Args syntax {#metadata-cleanup-event-trigger-logs-syntax}
+
+| Key                   | Required      | Schema                                                    | Description                                                                   |
+|-----------------------|---------------|-----------------------------------------------------------|-------------------------------------------------------------------------------|
+| event_trigger_name    | true          | String                                                    | Name of the event trigger whose logs needs to be cleaned up                   |
+| source                | false         | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Source to which the event trigger belong. Default `default`                   |
+| batch_size            | false         | Int                                                       | Maximum number of event trigger logs to delete. Default 10000                 |
+| clear_older_than      | false         | Int                                                       | Event logs retention period (in hours). Default 168 hours (or 7 days)         |
+| timeout               | false         | Int                                                       | Timeout for the cleanup query (in seconds). Default: 60                       |
+| clean_invocation_logs | false         | Boolean                                                   | Should corresponding invocation logs be cleaned. Default `false`              |
+
+## resume_event_trigger_cleanups {#metadata-resume-event-trigger-cleanups}
+
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition/Cloud</div>
+
+`resume_event_trigger_cleanups` is used to resume the paused log cleaner for event triggers.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "resume_event_trigger_cleanups",
+  "args": {
+    "event_triggers": [
+      {
+        "source_name": "default",
+        "event_triggers": ["sample_trigger"]
+      }
+    ]
+  }
+}
+```
+
+### Args syntax {#metadata-resume-event-trigger-cleanups-syntax}
+
+| Key               | Required | Schema                                                                                                                                                                  | Description                                                 |
+|-------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------|
+| event_triggers    | true     | [TriggerLogCleanupSources](/api-reference/syntax-defs.mdx#triggerlogcleanupsources) \| [[EventTriggerQualifier]](/api-reference/syntax-defs.mdx#eventtriggerqualifier)  | Event triggers for which to start the cleanup process       |
+
+## pause_event_trigger_cleanups {#metadata-pause-event-trigger-cleanups}
+
+<div className='badge badge--primary heading-badge'>Available on: Enterprise Edition/Cloud</div>
+ 
+-
+`pause_event_trigger_cleanups` is used to pause the log cleaner for event
+triggers which already have a cleaner installed.
+
+```http
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type": "pause_event_trigger_cleanups",
+  "args": {
+    "event_triggers": [
+      {
+        "source_name": "default",
+        "event_triggers": ["sample_trigger"]
+      }
+    ]
+  }
+}
+```
+
+### Args syntax {#metadata-pause-event-trigger-cleanups-syntax}
+
+| Key               | Required | Schema                                                                                                                                                                  | Description                                           |
+|-------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
+| event_triggers    | true     | [TriggerLogCleanupSources](/api-reference/syntax-defs.mdx#triggerlogcleanupsources) \| [[EventTriggerQualifier]](/api-reference/syntax-defs.mdx#eventtriggerqualifier)  | Event triggers for which to pause the cleanup process |
+
+:::info Note
+
+The start and pause APIs for event trigger cleanup work only for event triggers that have a cleanup configuration defined.
+
+:::
