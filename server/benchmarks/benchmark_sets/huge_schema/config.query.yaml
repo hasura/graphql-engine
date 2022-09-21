@@ -28,6 +28,8 @@ queries:
     <<: *k6_custom
     options:
       k6:
+        # See note on Chinook.simple_query_low_load
+        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
@@ -49,6 +51,8 @@ queries:
     <<: *k6_custom
     options:
       k6:
+        # See note on Chinook.simple_query_low_load
+        discardResponseBodies: true
         scenarios:
           main:
             <<: *settings
@@ -174,6 +178,8 @@ queries:
     <<: *k6_custom
     options:
       k6:
+        # See note on Chinook.simple_query_low_load
+        discardResponseBodies: true
         scenarios:
           main:
             # Since this is currently quite slow and we're not as interested in
