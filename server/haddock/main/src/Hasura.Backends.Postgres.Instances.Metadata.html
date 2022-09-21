@@ -8,7 +8,7 @@
 </span><span id="line-8"></span><span>
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
-</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.html"><span class="hs-identifier">Hasura.Backends.Postgres.DDL</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.html"><span class="hs-identifier">Hasura.Backends.Postgres.DDL</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedTable"><span class="hs-identifier">QualifiedTable</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.CitusExtraTableMetadata.html"><span class="hs-identifier">Hasura.Backends.Postgres.Types.CitusExtraTableMetadata</span></a></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
@@ -475,9 +475,9 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span id="line-118"></span><span id="local-6989586621689680401"><span class="hs-keyword">instance</span><span>
 </span><span id="line-119"></span><span>  </span><span id="local-6989586621689680387"><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689680401"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-120"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Instances.Metadata.html#PostgresMetadata"><span class="hs-identifier hs-type">PostgresMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689680401"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-121"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#FetchTableMetadata"><span class="hs-identifier hs-type">PG.FetchTableMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689680401"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-122"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#FetchFunctionMetadata"><span class="hs-identifier hs-type">PG.FetchFunctionMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689680401"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-123"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-type">PG.ToMetadataFetchQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689680401"><span class="hs-identifier hs-type">pgKind</span></a></span><span>
+</span><span id="line-121"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#FetchTableMetadata"><span class="hs-identifier hs-type">Postgres.FetchTableMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689680401"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-122"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#FetchFunctionMetadata"><span class="hs-identifier hs-type">Postgres.FetchFunctionMetadata</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689680401"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-123"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Source.html#ToMetadataFetchQuery"><span class="hs-identifier hs-type">Postgres.ToMetadataFetchQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689680401"><span class="hs-identifier hs-type">pgKind</span></a></span><span>
 </span><span id="line-124"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-125"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689680401"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-126"></span><span>  </span><span class="hs-keyword">where</span><span>
@@ -489,7 +489,7 @@ forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadBaseControl IO m) =&gt;
 SourceConfig ('Postgres pgKind)
 -&gt; ExceptT QErr m RecreateEventTriggers
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#prepareCatalog"><span class="hs-identifier hs-var">PG.prepareCatalog</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#prepareCatalog"><span class="hs-identifier hs-var">Postgres.prepareCatalog</span></a></span><span>
 </span><span id="line-128"></span><span>  </span><span id="local-6989586621689680372"><span class="annot"><span class="annottext">buildComputedFieldInfo :: HashSet (TableName ('Postgres pgKind))
 -&gt; TableName ('Postgres pgKind)
 -&gt; HashSet (Column ('Postgres pgKind))
@@ -516,7 +516,7 @@ HashSet QualifiedTable
 -&gt; PGRawFunctionInfo
 -&gt; Comment
 -&gt; m (ComputedFieldInfo ('Postgres pgKind))
-</span><a href="Hasura.Backends.Postgres.DDL.ComputedField.html#buildComputedFieldInfo"><span class="hs-identifier hs-var">PG.buildComputedFieldInfo</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.ComputedField.html#buildComputedFieldInfo"><span class="hs-identifier hs-var">Postgres.buildComputedFieldInfo</span></a></span><span>
 </span><span id="line-129"></span><span>  </span><span id="local-6989586621689680369"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: SourceConfig ('Postgres pgKind)
 -&gt; TableName ('Postgres pgKind)
 -&gt; Maybe
@@ -537,7 +537,7 @@ PGSourceConfig
      (PrimaryKey ('Postgres pgKind) (RawColumnInfo ('Postgres pgKind)))
 -&gt; [RawColumnInfo ('Postgres pgKind)]
 -&gt; m (Either QErr EnumValues)
-</span><a href="Hasura.Backends.Postgres.DDL.Table.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-var">PG.fetchAndValidateEnumValues</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.Table.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-var">Postgres.fetchAndValidateEnumValues</span></a></span><span>
 </span><span id="line-130"></span><span>  </span><span id="local-6989586621689680366"><span class="annot"><span class="annottext">resolveSourceConfig :: Logger Hasura
 -&gt; SourceName
 -&gt; SourceConnConfiguration ('Postgres pgKind)
@@ -564,7 +564,7 @@ Logger Hasura
 -&gt; Environment
 -&gt; manager
 -&gt; m (Either QErr (SourceConfig ('Postgres pgKind)))
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-var">PG.resolveSourceConfig</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-var">Postgres.resolveSourceConfig</span></a></span><span>
 </span><span id="line-131"></span><span>  </span><span id="local-6989586621689680363"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: SourceMetadata ('Postgres pgKind)
 -&gt; SourceConfig ('Postgres pgKind)
 -&gt; SourceTypeCustomization
@@ -581,7 +581,7 @@ SourceMetadata ('Postgres pgKind)
 -&gt; SourceConfig ('Postgres pgKind)
 -&gt; SourceTypeCustomization
 -&gt; m (Either QErr (ResolvedSource ('Postgres pgKind)))
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#resolveDatabaseMetadata"><span class="hs-identifier hs-var">PG.resolveDatabaseMetadata</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#resolveDatabaseMetadata"><span class="hs-identifier hs-var">Postgres.resolveDatabaseMetadata</span></a></span><span>
 </span><span id="line-132"></span><span>  </span><span id="local-6989586621689680360"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser ('Postgres pgKind) m v
 -&gt; TableName ('Postgres pgKind)
 -&gt; FieldInfoMap (FieldInfo ('Postgres pgKind))
@@ -603,7 +603,7 @@ ValueParser ('Postgres pgKind) m v
 -&gt; ColumnReference ('Postgres pgKind)
 -&gt; Value
 -&gt; m [OpExpG ('Postgres pgKind) v]
-</span><a href="Hasura.Backends.Postgres.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-var">PG.parseBoolExpOperations</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-var">Postgres.parseBoolExpOperations</span></a></span><span>
 </span><span id="line-133"></span><span>  </span><span id="local-6989586621689680357"><span class="annot"><span class="annottext">buildFunctionInfo :: SourceName
 -&gt; FunctionName ('Postgres pgKind)
 -&gt; SystemDefined
@@ -633,7 +633,7 @@ SourceName
 -&gt; Maybe Text
 -&gt; NamingCase
 -&gt; m (FunctionInfo ('Postgres pgKind), SchemaDependency)
-</span><a href="Hasura.Backends.Postgres.DDL.Function.html#buildFunctionInfo"><span class="hs-identifier hs-var">PG.buildFunctionInfo</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.Function.html#buildFunctionInfo"><span class="hs-identifier hs-var">Postgres.buildFunctionInfo</span></a></span><span>
 </span><span id="line-134"></span><span>  </span><span id="local-6989586621689680354"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName ('Postgres pgKind)
 -&gt; Column ('Postgres pgKind)
 -&gt; Column ('Postgres pgKind)
@@ -653,7 +653,7 @@ QualifiedTable
 -&gt; QualifiedTable
 -&gt; EventTriggerConf ('Postgres pgKind)
 -&gt; EventTriggerConf ('Postgres pgKind)
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateColumnInEventTrigger"><span class="hs-identifier hs-var">PG.updateColumnInEventTrigger</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateColumnInEventTrigger"><span class="hs-identifier hs-var">Postgres.updateColumnInEventTrigger</span></a></span><span>
 </span><span id="line-135"></span><span>  </span><span id="local-6989586621689680351"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType ('Postgres pgKind))
 -&gt; Value -&gt; m (PartialSQLExp ('Postgres pgKind))
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#parseCollectableType"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseCollectableType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
@@ -662,7 +662,7 @@ forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (Backend ('Postgres pgKind), MonadError QErr m) =&gt;
 CollectableType (ColumnType ('Postgres pgKind))
 -&gt; Value -&gt; m (PartialSQLExp ('Postgres pgKind))
-</span><a href="Hasura.Backends.Postgres.DDL.html#parseCollectableType"><span class="hs-identifier hs-var">PG.parseCollectableType</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.html#parseCollectableType"><span class="hs-identifier hs-var">Postgres.parseCollectableType</span></a></span><span>
 </span><span id="line-136"></span><span>  </span><span id="local-6989586621689680348"><span class="annot"><span class="annottext">postDropSourceHook :: SourceConfig ('Postgres pgKind)
 -&gt; TableEventTriggers ('Postgres pgKind) -&gt; m ()
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres pgKind)
@@ -671,7 +671,7 @@ forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m, MonadBaseControl IO m) =&gt;
 SourceConfig ('Postgres pgKind)
 -&gt; TableEventTriggers ('Postgres pgKind) -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-var">PG.postDropSourceHook</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-var">Postgres.postDropSourceHook</span></a></span><span>
 </span><span id="line-137"></span><span>  </span><span id="local-6989586621689680345"><span class="annot"><span class="annottext">validateRelationship :: TableCache ('Postgres pgKind)
 -&gt; TableName ('Postgres pgKind)
 -&gt; Either
@@ -716,5 +716,5 @@ BoolExpResolver ('Postgres pgKind) m v
 -&gt; ComputedFieldInfo ('Postgres pgKind)
 -&gt; Value
 -&gt; m (AnnComputedFieldBoolExp ('Postgres pgKind) v)
-</span><a href="Hasura.Backends.Postgres.DDL.BoolExp.html#buildComputedFieldBooleanExp"><span class="hs-identifier hs-var">PG.buildComputedFieldBooleanExp</span></a></span></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.BoolExp.html#buildComputedFieldBooleanExp"><span class="hs-identifier hs-var">Postgres.buildComputedFieldBooleanExp</span></a></span></span><span>
 </span><span id="line-139"></span></pre></body></html>

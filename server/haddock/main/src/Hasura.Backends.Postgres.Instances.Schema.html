@@ -22,9 +22,9 @@
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Parser.JSONPath.html"><span class="hs-identifier">Data.Parser.JSONPath</span></a></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Casing.html"><span class="hs-identifier">Data.Text.Casing</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">C</span></span><span>
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Data.Text.Extended.html"><span class="hs-identifier">Data.Text.Extended</span></a></span><span>
-</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.DML</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#CountType"><span class="hs-identifier">CountType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#incOp"><span class="hs-identifier">incOp</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#FunctionName"><span class="hs-identifier">FunctionName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableName"><span class="hs-identifier">TableName</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Value</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.DML</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#CountType"><span class="hs-identifier">CountType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#incOp"><span class="hs-identifier">incOp</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span> </span><span class="hs-keyword">hiding</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#FunctionName"><span class="hs-identifier">FunctionName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#TableName"><span class="hs-identifier">TableName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Value</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span>
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Schema.OnConflict.html"><span class="hs-identifier">Hasura.Backends.Postgres.Schema.OnConflict</span></a></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Schema.Select.html"><span class="hs-identifier">Hasura.Backends.Postgres.Schema.Select</span></a></span><span>
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.BoolExp.html"><span class="hs-identifier">Hasura.Backends.Postgres.Types.BoolExp</span></a></span><span>
@@ -1360,7 +1360,7 @@ Maybe (Parser 'Both n (Column ('Postgres pgKind)))
 </span><span id="line-245"></span><span>  </span><span id="local-6989586621689700077"><span class="annot"><span class="annottext">aggregateOrderByCountType :: ScalarType ('Postgres pgKind)
 </span><a href="Hasura.GraphQL.Schema.Backend.html#aggregateOrderByCountType"><span class="hs-identifier hs-var hs-var hs-var hs-var">aggregateOrderByCountType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ScalarType ('Postgres pgKind)
 PGScalarType
-</span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGInteger"><span class="hs-identifier hs-var">PG.PGInteger</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGInteger"><span class="hs-identifier hs-var">Postgres.PGInteger</span></a></span><span>
 </span><span id="line-246"></span><span>  </span><span id="local-6989586621689700075"><span class="annot"><span class="annottext">computedField :: SourceInfo ('Postgres pgKind)
 -&gt; ComputedFieldInfo ('Postgres pgKind)
 -&gt; TableName ('Postgres pgKind)
@@ -3981,7 +3981,7 @@ forall (b :: BackendType).
 (ScalarType b -&gt; Bool) -&gt; ColumnType b -&gt; Bool
 </span><a href="Hasura.RQL.Types.Column.html#isScalarColumnWhere"><span class="hs-identifier hs-var">isScalarColumnWhere</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType ('Postgres pgKind) -&gt; Bool
 PGScalarType -&gt; Bool
-</span><a href="Hasura.Backends.Postgres.SQL.Types.html#isJSONType"><span class="hs-identifier hs-var">PG.isJSONType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
+</span><a href="Hasura.Backends.Postgres.SQL.Types.html#isJSONType"><span class="hs-identifier hs-var">Postgres.isJSONType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
 </span><a href="#local-6989586621689699865"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-500"></span><span>    </span><span class="annot"><span class="annottext">Name
 -&gt; Maybe Description
@@ -4073,11 +4073,11 @@ forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(ColumnOp -&gt; Maybe ColumnOp) -&gt; ColumnOp -&gt; Maybe ColumnOp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">SQLOp -&gt; SQLExp -&gt; ColumnOp
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#ColumnOp"><span class="hs-identifier hs-var">PG.ColumnOp</span></a></span><span> </span><span class="annot"><span class="annottext">SQLOp
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#jsonbPathOp"><span class="hs-identifier hs-var">PG.jsonbPathOp</span></a></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; ColumnOp) -&gt; SQLExp -&gt; ColumnOp
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#ColumnOp"><span class="hs-identifier hs-var">Postgres.ColumnOp</span></a></span><span> </span><span class="annot"><span class="annottext">SQLOp
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#jsonbPathOp"><span class="hs-identifier hs-var">Postgres.jsonbPathOp</span></a></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; ColumnOp) -&gt; SQLExp -&gt; ColumnOp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[SQLExp] -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEArray"><span class="hs-identifier hs-var">PG.SEArray</span></a></span><span> </span><span class="annot"><span class="annottext">([SQLExp] -&gt; SQLExp) -&gt; [SQLExp] -&gt; SQLExp
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEArray"><span class="hs-identifier hs-var">Postgres.SEArray</span></a></span><span> </span><span class="annot"><span class="annottext">([SQLExp] -&gt; SQLExp) -&gt; [SQLExp] -&gt; SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(JSONPathElement -&gt; SQLExp) -&gt; JSONPath -&gt; [SQLExp]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
@@ -4087,14 +4087,14 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span id="line-509"></span><span>    </span><span id="local-6989586621689699847"><span class="annot"><span class="annottext">elToColExp :: JSONPathElement -&gt; SQLExp
 </span><a href="#local-6989586621689699847"><span class="hs-identifier hs-var hs-var">elToColExp</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Key</span></span><span> </span><span id="local-6989586621689699845"><span class="annot"><span class="annottext">Key
 </span><a href="#local-6989586621689699845"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#SELit"><span class="hs-identifier hs-var">PG.SELit</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; SQLExp) -&gt; Text -&gt; SQLExp
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#SELit"><span class="hs-identifier hs-var">Postgres.SELit</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; SQLExp) -&gt; Text -&gt; SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text
 </span><span class="hs-identifier hs-var">K.toText</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><a href="#local-6989586621689699845"><span class="hs-identifier hs-var">k</span></a></span><span>
 </span><span id="line-510"></span><span>    </span><span class="annot"><a href="#local-6989586621689699847"><span class="hs-identifier hs-var">elToColExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Index</span></span><span> </span><span id="local-6989586621689699841"><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621689699841"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#SELit"><span class="hs-identifier hs-var">PG.SELit</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; SQLExp) -&gt; Text -&gt; SQLExp
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#SELit"><span class="hs-identifier hs-var">Postgres.SELit</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; SQLExp) -&gt; Text -&gt; SQLExp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
@@ -4180,8 +4180,8 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><a href="Hasura.Name.html#_asc"><span class="hs-identifier hs-var">Name._asc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in ascending order, nulls last&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-529"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTAsc"><span class="hs-identifier hs-var">PG.OTAsc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsLast"><span class="hs-identifier hs-var">PG.NullsLast</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTAsc"><span class="hs-identifier hs-var">Postgres.OTAsc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsLast"><span class="hs-identifier hs-var">Postgres.NullsLast</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-530"></span><span>        </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-531"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Description -&gt; Definition EnumValueInfo
 forall origin.
@@ -4192,8 +4192,8 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><a href="Hasura.Name.html#_asc_nulls_first"><span class="hs-identifier hs-var">Name._asc_nulls_first</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in ascending order, nulls first&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-532"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTAsc"><span class="hs-identifier hs-var">PG.OTAsc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsFirst"><span class="hs-identifier hs-var">PG.NullsFirst</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTAsc"><span class="hs-identifier hs-var">Postgres.OTAsc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsFirst"><span class="hs-identifier hs-var">Postgres.NullsFirst</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-533"></span><span>        </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-534"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Description -&gt; Definition EnumValueInfo
 forall origin.
@@ -4204,8 +4204,8 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><a href="Hasura.Name.html#_asc_nulls_last"><span class="hs-identifier hs-var">Name._asc_nulls_last</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in ascending order, nulls last&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-535"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTAsc"><span class="hs-identifier hs-var">PG.OTAsc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsLast"><span class="hs-identifier hs-var">PG.NullsLast</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTAsc"><span class="hs-identifier hs-var">Postgres.OTAsc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsLast"><span class="hs-identifier hs-var">Postgres.NullsLast</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-536"></span><span>        </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-537"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Description -&gt; Definition EnumValueInfo
 forall origin.
@@ -4216,8 +4216,8 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><a href="Hasura.Name.html#_desc"><span class="hs-identifier hs-var">Name._desc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in descending order, nulls first&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-538"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTDesc"><span class="hs-identifier hs-var">PG.OTDesc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsFirst"><span class="hs-identifier hs-var">PG.NullsFirst</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTDesc"><span class="hs-identifier hs-var">Postgres.OTDesc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsFirst"><span class="hs-identifier hs-var">Postgres.NullsFirst</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-539"></span><span>        </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-540"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Description -&gt; Definition EnumValueInfo
 forall origin.
@@ -4228,8 +4228,8 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><a href="Hasura.Name.html#_desc_nulls_first"><span class="hs-identifier hs-var">Name._desc_nulls_first</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in descending order, nulls first&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-541"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTDesc"><span class="hs-identifier hs-var">PG.OTDesc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsFirst"><span class="hs-identifier hs-var">PG.NullsFirst</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTDesc"><span class="hs-identifier hs-var">Postgres.OTDesc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsFirst"><span class="hs-identifier hs-var">Postgres.NullsFirst</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-542"></span><span>        </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-543"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Description -&gt; Definition EnumValueInfo
 forall origin.
@@ -4240,8 +4240,8 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><a href="Hasura.Name.html#_desc_nulls_last"><span class="hs-identifier hs-var">Name._desc_nulls_last</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in descending order, nulls last&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-544"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">OrderType
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTDesc"><span class="hs-identifier hs-var">PG.OTDesc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsLast"><span class="hs-identifier hs-var">PG.NullsLast</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#OTDesc"><span class="hs-identifier hs-var">Postgres.OTDesc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">NullsOrder
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#NullsLast"><span class="hs-identifier hs-var">Postgres.NullsLast</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-545"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-546"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-547"></span><span>  </span><span class="hs-keyword">where</span><span>
@@ -7202,10 +7202,10 @@ forall (b :: BackendType). ScalarType b -&gt; ColumnType b
 -&gt; ScalarType ('Postgres pgKind) -&gt; ColumnType ('Postgres pgKind)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGScalarType -&gt; PGScalarType
-</span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGArray"><span class="hs-identifier hs-var">PG.PGArray</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
+</span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGArray"><span class="hs-identifier hs-var">Postgres.PGArray</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
 </span><a href="#local-6989586621689699707"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-856"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[PGScalarValue] -&gt; PGScalarValue
-</span><a href="Hasura.Backends.Postgres.SQL.Value.html#PGValArray"><span class="hs-identifier hs-var">PG.PGValArray</span></a></span><span> </span><span class="annot"><span class="annottext">([PGScalarValue] -&gt; PGScalarValue)
+</span><a href="Hasura.Backends.Postgres.SQL.Value.html#PGValArray"><span class="hs-identifier hs-var">Postgres.PGValArray</span></a></span><span> </span><span class="annot"><span class="annottext">([PGScalarValue] -&gt; PGScalarValue)
 -&gt; [PGScalarValue] -&gt; PGScalarValue
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnValue ('Postgres pgKind) -&gt; PGScalarValue
@@ -8380,17 +8380,17 @@ forall a. Maybe a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe [Column ('Postgres pgKind)]
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CountType ('Postgres pgKind)
 CountType
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#CTStar"><span class="hs-identifier hs-var">PG.CTStar</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#CTStar"><span class="hs-identifier hs-var">Postgres.CTStar</span></a></span><span>
 </span><span id="line-943"></span><span>    </span><span class="annot"><a href="#local-6989586621689699663"><span class="hs-identifier hs-var">mkCountType</span></a></span><span> </span><span class="annot"><span class="annottext">CountDistinct
 </span><a href="Hasura.RQL.IR.Select.html#SelectCountDistinct"><span class="hs-identifier hs-var">IR.SelectCountDistinct</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689699660"><span class="annot"><span class="annottext">[Column ('Postgres pgKind)]
 </span><a href="#local-6989586621689699660"><span class="hs-identifier hs-var">cols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[PGCol] -&gt; CountType
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#CTDistinct"><span class="hs-identifier hs-var">PG.CTDistinct</span></a></span><span> </span><span class="annot"><span class="annottext">[Column ('Postgres pgKind)]
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#CTDistinct"><span class="hs-identifier hs-var">Postgres.CTDistinct</span></a></span><span> </span><span class="annot"><span class="annottext">[Column ('Postgres pgKind)]
 [PGCol]
 </span><a href="#local-6989586621689699660"><span class="hs-identifier hs-var">cols</span></a></span><span>
 </span><span id="line-944"></span><span>    </span><span class="annot"><a href="#local-6989586621689699663"><span class="hs-identifier hs-var">mkCountType</span></a></span><span> </span><span class="annot"><span class="annottext">CountDistinct
 </span><a href="Hasura.RQL.IR.Select.html#SelectCountNonDistinct"><span class="hs-identifier hs-var">IR.SelectCountNonDistinct</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689699657"><span class="annot"><span class="annottext">[Column ('Postgres pgKind)]
 </span><a href="#local-6989586621689699657"><span class="hs-identifier hs-var">cols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[PGCol] -&gt; CountType
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#CTSimple"><span class="hs-identifier hs-var">PG.CTSimple</span></a></span><span> </span><span class="annot"><span class="annottext">[Column ('Postgres pgKind)]
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#CTSimple"><span class="hs-identifier hs-var">Postgres.CTSimple</span></a></span><span> </span><span class="annot"><span class="annottext">[Column ('Postgres pgKind)]
 [PGCol]
 </span><a href="#local-6989586621689699657"><span class="hs-identifier hs-var">cols</span></a></span><span>
 </span><span id="line-945"></span><span>

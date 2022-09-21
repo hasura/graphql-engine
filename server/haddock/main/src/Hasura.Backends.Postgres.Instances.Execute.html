@@ -35,11 +35,11 @@
 </span><span id="line-35"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Subscription.html"><span class="hs-identifier">Hasura.Backends.Postgres.Execute.Subscription</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PGL</span></span><span>
 </span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.Execute.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Types.html#PGSourceConfig"><span class="hs-identifier">PGSourceConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Execute.Types.html#dmlTxErrorHandler"><span class="hs-identifier">dmlTxErrorHandler</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.DML</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
-</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
-</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Value</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span>
+</span><span id="line-39"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Value.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Value</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span>
 </span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier">PostgresAnnotatedFieldJSON</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-41"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Select</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">DS</span></span><span>
-</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html"><span class="hs-identifier">Hasura.Backends.Postgres.Types.Function</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html"><span class="hs-identifier">Hasura.Backends.Postgres.Types.Function</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span>
 </span><span id="line-43"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html"><span class="hs-identifier">Hasura.Backends.Postgres.Types.Update</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">BackendUpdate</span></span><span>
 </span><span id="line-44"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier">QErr</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier">EncJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier">encJFromJValue</span></a></span><span class="hs-special">)</span><span>
@@ -2210,7 +2210,7 @@ UserInfo
 </span><span id="line-475"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-476"></span><span>    </span><span id="local-6989586621689726441"><span class="annot"><span class="annottext">coerceToColumn :: FieldName -&gt; PGCol
 </span><a href="#local-6989586621689726441"><span class="hs-identifier hs-var hs-var">coerceToColumn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; PGCol
-</span><a href="Hasura.Backends.Postgres.SQL.Types.html#unsafePGCol"><span class="hs-identifier hs-var">PG.unsafePGCol</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; PGCol) -&gt; (FieldName -&gt; Text) -&gt; FieldName -&gt; PGCol
+</span><a href="Hasura.Backends.Postgres.SQL.Types.html#unsafePGCol"><span class="hs-identifier hs-var">Postgres.unsafePGCol</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; PGCol) -&gt; (FieldName -&gt; Text) -&gt; FieldName -&gt; PGCol
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var hs-var">getFieldNameTxt</span></a></span><span>
@@ -2252,12 +2252,12 @@ ColumnType b -&gt; ScalarValue b -&gt; ColumnValue b
 forall (b :: BackendType). ScalarType b -&gt; ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-var">ColumnScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType ('Postgres pgKind)
 PGScalarType
-</span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGJSONB"><span class="hs-identifier hs-var">PG.PGJSONB</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ScalarValue ('Postgres pgKind) -&gt; ColumnValue ('Postgres pgKind))
+</span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGJSONB"><span class="hs-identifier hs-var">Postgres.PGJSONB</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(ScalarValue ('Postgres pgKind) -&gt; ColumnValue ('Postgres pgKind))
 -&gt; ScalarValue ('Postgres pgKind) -&gt; ColumnValue ('Postgres pgKind)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-483"></span><span>          </span><span class="annot"><span class="annottext">JSONB -&gt; PGScalarValue
-</span><a href="Hasura.Backends.Postgres.SQL.Value.html#PGValJSONB"><span class="hs-identifier hs-var">PG.PGValJSONB</span></a></span><span> </span><span class="annot"><span class="annottext">(JSONB -&gt; PGScalarValue) -&gt; JSONB -&gt; PGScalarValue
+</span><a href="Hasura.Backends.Postgres.SQL.Value.html#PGValJSONB"><span class="hs-identifier hs-var">Postgres.PGValJSONB</span></a></span><span> </span><span class="annot"><span class="annottext">(JSONB -&gt; PGScalarValue) -&gt; JSONB -&gt; PGScalarValue
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; JSONB
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.JSONB</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; JSONB) -&gt; Value -&gt; JSONB
@@ -2273,7 +2273,7 @@ forall a. ToJSON a =&gt; a -&gt; Value
 </span><span id="line-487"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldName -&gt; PGCol
 </span><a href="#local-6989586621689726441"><span class="hs-identifier hs-var">coerceToColumn</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621689726445"><span class="hs-identifier hs-var">argumentId</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">PGScalarType
-</span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGBigInt"><span class="hs-identifier hs-var">PG.PGBigInt</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(PGCol, PGScalarType)
+</span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGBigInt"><span class="hs-identifier hs-var">Postgres.PGBigInt</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(PGCol, PGScalarType)
 -&gt; [(PGCol, PGScalarType)] -&gt; [(PGCol, PGScalarType)]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">HashMap PGCol PGScalarType -&gt; [(PGCol, PGScalarType)]
@@ -2303,12 +2303,12 @@ FunctionName b
 </span><a href="Hasura.RQL.IR.Select.html#FromFunction"><span class="hs-identifier hs-var">IR.FromFunction</span></a></span><span>
 </span><span id="line-490"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SchemaName -&gt; FunctionName -&gt; QualifiedObject FunctionName
 forall a. SchemaName -&gt; a -&gt; QualifiedObject a
-</span><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedObject"><span class="hs-identifier hs-var">PG.QualifiedObject</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaName
+</span><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedObject"><span class="hs-identifier hs-var">Postgres.QualifiedObject</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaName
 </span><span class="hs-string">&quot;pg_catalog&quot;</span></span><span> </span><span class="annot"><span class="annottext">(FunctionName -&gt; QualifiedObject FunctionName)
 -&gt; FunctionName -&gt; QualifiedObject FunctionName
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; FunctionName
-</span><a href="Hasura.Backends.Postgres.SQL.Types.html#FunctionName"><span class="hs-identifier hs-var">PG.FunctionName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Hasura.Backends.Postgres.SQL.Types.html#FunctionName"><span class="hs-identifier hs-var">Postgres.FunctionName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;jsonb_to_recordset&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-491"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[ArgumentExp (UnpreparedValue ('Postgres pgKind))]
 -&gt; HashMap Text (ArgumentExp (UnpreparedValue ('Postgres pgKind)))
@@ -2318,7 +2318,7 @@ forall a. [a] -&gt; HashMap Text a -&gt; FunctionArgsExpG a
 </span><a href="Hasura.RQL.Types.Function.html#FunctionArgsExp"><span class="hs-identifier hs-var">FunctionArgsExp</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">UnpreparedValue ('Postgres pgKind)
 -&gt; ArgumentExp (UnpreparedValue ('Postgres pgKind))
 forall a. a -&gt; ArgumentExp a
-</span><a href="Hasura.Backends.Postgres.Types.Function.html#AEInput"><span class="hs-identifier hs-var">PG.AEInput</span></a></span><span> </span><span class="annot"><span class="annottext">UnpreparedValue ('Postgres pgKind)
+</span><a href="Hasura.Backends.Postgres.Types.Function.html#AEInput"><span class="hs-identifier hs-var">Postgres.AEInput</span></a></span><span> </span><span class="annot"><span class="annottext">UnpreparedValue ('Postgres pgKind)
 </span><a href="#local-6989586621689726436"><span class="hs-identifier hs-var">rowsArgument</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">HashMap Text (ArgumentExp (UnpreparedValue ('Postgres pgKind)))
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span class="hs-special">)</span><span>
@@ -2359,7 +2359,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span id="line-497"></span><span>        </span><span class="annot"><span class="annottext">SelectFromG ('Postgres pgKind) (UnpreparedValue ('Postgres pgKind))
 </span><a href="#local-6989586621689726428"><span class="hs-identifier hs-var">jsonToRecordSet</span></a></span><span>
 </span><span id="line-498"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; PGCol
-</span><a href="Hasura.Backends.Postgres.SQL.Types.html#unsafePGCol"><span class="hs-identifier hs-var">PG.unsafePGCol</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; PGCol) -&gt; Text -&gt; PGCol
+</span><a href="Hasura.Backends.Postgres.SQL.Types.html#unsafePGCol"><span class="hs-identifier hs-var">Postgres.unsafePGCol</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; PGCol) -&gt; Text -&gt; PGCol
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#getFieldNameTxt"><span class="hs-identifier hs-var hs-var">getFieldNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
@@ -2368,7 +2368,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType). ScalarType b -&gt; ColumnType b
 </span><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-var">ColumnScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType ('Postgres pgKind)
 PGScalarType
-</span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGBigInt"><span class="hs-identifier hs-var">PG.PGBigInt</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGBigInt"><span class="hs-identifier hs-var">Postgres.PGBigInt</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-500"></span><span>        </span><span class="annot"><span class="annottext">(FieldName,
  SourceRelationshipSelection
    ('Postgres pgKind) Void UnpreparedValue)

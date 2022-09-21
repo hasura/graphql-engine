@@ -8,7 +8,7 @@
 </span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Set.NonEmpty</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">NE</span></span><span>
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Clock</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Time</span></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.EventTrigger.html"><span class="hs-identifier">Hasura.Backends.MSSQL.DDL.EventTrigger</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">MSSQL</span></span><span>
-</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html"><span class="hs-identifier">Hasura.Backends.Postgres.DDL.EventTrigger</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html"><span class="hs-identifier">Hasura.Backends.Postgres.DDL.EventTrigger</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Postgres</span></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
@@ -317,7 +317,7 @@ SourceConfig ('Postgres pgKind)
 -&gt; UserInfo
 -&gt; TraceContext
 -&gt; m EventId
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#insertManualEvent"><span class="hs-identifier hs-var">PG.insertManualEvent</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#insertManualEvent"><span class="hs-identifier hs-var">Postgres.insertManualEvent</span></a></span><span>
 </span><span id="line-298"></span><span>  </span><span id="local-6989586621689648033"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig ('Postgres 'Vanilla)
 -&gt; SourceName
 -&gt; [TriggerName]
@@ -338,7 +338,7 @@ SourceConfig ('Postgres pgKind)
 -&gt; MaintenanceMode ()
 -&gt; FetchBatchSize
 -&gt; m [Event ('Postgres pgKind)]
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#fetchUndeliveredEvents"><span class="hs-identifier hs-var">PG.fetchUndeliveredEvents</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#fetchUndeliveredEvents"><span class="hs-identifier hs-var">Postgres.fetchUndeliveredEvents</span></a></span><span>
 </span><span id="line-299"></span><span>  </span><span id="local-6989586621689648031"><span class="annot"><span class="annottext">setRetry :: SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; UTCTime
@@ -356,13 +356,13 @@ SourceConfig ('Postgres pgKind)
 -&gt; UTCTime
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#setRetry"><span class="hs-identifier hs-var">PG.setRetry</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#setRetry"><span class="hs-identifier hs-var">Postgres.setRetry</span></a></span><span>
 </span><span id="line-300"></span><span>  </span><span id="local-6989586621689648029"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig ('Postgres 'Vanilla) -&gt; m MaintenanceModeVersion
 </span><a href="#local-6989586621689648029"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; m MaintenanceModeVersion
 forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 SourceConfig ('Postgres pgKind) -&gt; m MaintenanceModeVersion
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#getMaintenanceModeVersion"><span class="hs-identifier hs-var">PG.getMaintenanceModeVersion</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#getMaintenanceModeVersion"><span class="hs-identifier hs-var">Postgres.getMaintenanceModeVersion</span></a></span><span>
 </span><span id="line-301"></span><span>  </span><span id="local-6989586621689648027"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; Invocation 'EventType
@@ -380,7 +380,7 @@ SourceConfig ('Postgres pgKind)
 -&gt; Invocation 'EventType
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordSuccess"><span class="hs-identifier hs-var">PG.recordSuccess</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordSuccess"><span class="hs-identifier hs-var">Postgres.recordSuccess</span></a></span><span>
 </span><span id="line-302"></span><span>  </span><span id="local-6989586621689648025"><span class="annot"><span class="annottext">recordError :: SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; Invocation 'EventType
@@ -401,7 +401,7 @@ SourceConfig ('Postgres pgKind)
 -&gt; ProcessEventError
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordError"><span class="hs-identifier hs-var">PG.recordError</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordError"><span class="hs-identifier hs-var">Postgres.recordError</span></a></span><span>
 </span><span id="line-303"></span><span>  </span><span id="local-6989586621689648023"><span class="annot"><span class="annottext">recordError' :: SourceConfig ('Postgres 'Vanilla)
 -&gt; Event ('Postgres 'Vanilla)
 -&gt; Maybe (Invocation 'EventType)
@@ -422,7 +422,7 @@ SourceConfig ('Postgres pgKind)
 -&gt; ProcessEventError
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordError%27"><span class="hs-identifier hs-var">PG.recordError'</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordError%27"><span class="hs-identifier hs-var">Postgres.recordError'</span></a></span><span>
 </span><span id="line-304"></span><span>  </span><span id="local-6989586621689648021"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig ('Postgres 'Vanilla)
 -&gt; TriggerName -&gt; TableName ('Postgres 'Vanilla) -&gt; m ()
 </span><a href="#local-6989586621689648021"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
@@ -431,7 +431,7 @@ forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 SourceConfig ('Postgres pgKind)
 -&gt; TriggerName -&gt; QualifiedTable -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#dropTriggerAndArchiveEvents"><span class="hs-identifier hs-var">PG.dropTriggerAndArchiveEvents</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#dropTriggerAndArchiveEvents"><span class="hs-identifier hs-var">Postgres.dropTriggerAndArchiveEvents</span></a></span><span>
 </span><span id="line-305"></span><span>  </span><span id="local-6989586621689648019"><span class="annot"><span class="annottext">dropDanglingSQLTrigger :: SourceConfig ('Postgres 'Vanilla)
 -&gt; TriggerName
 -&gt; TableName ('Postgres 'Vanilla)
@@ -446,13 +446,13 @@ forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 SourceConfig ('Postgres pgKind)
 -&gt; TriggerName -&gt; QualifiedTable -&gt; HashSet Ops -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#dropDanglingSQLTrigger"><span class="hs-identifier hs-var">PG.dropDanglingSQLTrigger</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#dropDanglingSQLTrigger"><span class="hs-identifier hs-var">Postgres.dropDanglingSQLTrigger</span></a></span><span>
 </span><span id="line-306"></span><span>  </span><span id="local-6989586621689648017"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig ('Postgres 'Vanilla) -&gt; EventId -&gt; m ()
 </span><a href="#local-6989586621689648017"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; EventId -&gt; m ()
 forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 SourceConfig ('Postgres pgKind) -&gt; EventId -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#redeliverEvent"><span class="hs-identifier hs-var">PG.redeliverEvent</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#redeliverEvent"><span class="hs-identifier hs-var">Postgres.redeliverEvent</span></a></span><span>
 </span><span id="line-307"></span><span>  </span><span id="local-6989586621689648015"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig ('Postgres 'Vanilla)
 -&gt; NESet EventId -&gt; m (Either QErr Int)
 </span><a href="#local-6989586621689648015"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
@@ -461,7 +461,7 @@ forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 MonadIO m =&gt;
 SourceConfig ('Postgres pgKind)
 -&gt; NESet EventId -&gt; m (Either QErr Int)
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#unlockEventsInSource"><span class="hs-identifier hs-var">PG.unlockEventsInSource</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#unlockEventsInSource"><span class="hs-identifier hs-var">Postgres.unlockEventsInSource</span></a></span><span>
 </span><span id="line-308"></span><span>  </span><span id="local-6989586621689648013"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
 -&gt; SourceConfig ('Postgres 'Vanilla)
 -&gt; TableName ('Postgres 'Vanilla)
@@ -491,7 +491,7 @@ ServerConfigCtx
 -&gt; Maybe
      (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind)))
 -&gt; m (Either QErr ())
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#createTableEventTrigger"><span class="hs-identifier hs-var">PG.createTableEventTrigger</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#createTableEventTrigger"><span class="hs-identifier hs-var">Postgres.createTableEventTrigger</span></a></span><span>
 </span><span id="line-309"></span><span>  </span><span id="local-6989586621689648011"><span class="annot"><span class="annottext">createMissingSQLTriggers :: SourceConfig ('Postgres 'Vanilla)
 -&gt; TableName ('Postgres 'Vanilla)
 -&gt; ([ColumnInfo ('Postgres 'Vanilla)],
@@ -521,7 +521,7 @@ PGSourceConfig
 -&gt; TriggerName
 -&gt; TriggerOpsDef ('Postgres pgKind)
 -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#createMissingSQLTriggers"><span class="hs-identifier hs-var">PG.createMissingSQLTriggers</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#createMissingSQLTriggers"><span class="hs-identifier hs-var">Postgres.createMissingSQLTriggers</span></a></span><span>
 </span><span id="line-310"></span><span>  </span><span id="local-6989586621689648009"><span class="annot"><span class="annottext">checkIfTriggerExists :: SourceConfig ('Postgres 'Vanilla)
 -&gt; TriggerName -&gt; HashSet Ops -&gt; m Bool
 </span><a href="#local-6989586621689648009"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkIfTriggerExists</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
@@ -529,7 +529,7 @@ PGSourceConfig
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; TriggerName -&gt; HashSet Ops -&gt; m Bool
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#checkIfTriggerExists"><span class="hs-identifier hs-var">PG.checkIfTriggerExists</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#checkIfTriggerExists"><span class="hs-identifier hs-var">Postgres.checkIfTriggerExists</span></a></span><span>
 </span><span id="line-311"></span><span>  </span><span id="local-6989586621689648007"><span class="annot"><span class="annottext">addCleanupSchedules :: SourceConfig ('Postgres 'Vanilla)
 -&gt; [(TriggerName, AutoTriggerLogCleanupConfig)] -&gt; m ()
 </span><a href="#local-6989586621689648007"><span class="hs-identifier hs-var hs-var hs-var hs-var">addCleanupSchedules</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
@@ -538,31 +538,31 @@ forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig
 -&gt; [(TriggerName, AutoTriggerLogCleanupConfig)] -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#addCleanupSchedules"><span class="hs-identifier hs-var">PG.addCleanupSchedules</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#addCleanupSchedules"><span class="hs-identifier hs-var">Postgres.addCleanupSchedules</span></a></span><span>
 </span><span id="line-312"></span><span>  </span><span id="local-6989586621689648005"><span class="annot"><span class="annottext">deleteAllScheduledCleanups :: SourceConfig ('Postgres 'Vanilla) -&gt; TriggerName -&gt; m ()
 </span><a href="#local-6989586621689648005"><span class="hs-identifier hs-var hs-var hs-var hs-var">deleteAllScheduledCleanups</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; TriggerName -&gt; m ()
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; TriggerName -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#deleteAllScheduledCleanups"><span class="hs-identifier hs-var">PG.deleteAllScheduledCleanups</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#deleteAllScheduledCleanups"><span class="hs-identifier hs-var">Postgres.deleteAllScheduledCleanups</span></a></span><span>
 </span><span id="line-313"></span><span>  </span><span id="local-6989586621689648003"><span class="annot"><span class="annottext">getCleanupEventsForDeletion :: SourceConfig ('Postgres 'Vanilla) -&gt; m [(Text, TriggerName)]
 </span><a href="#local-6989586621689648003"><span class="hs-identifier hs-var hs-var hs-var hs-var">getCleanupEventsForDeletion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; m [(Text, TriggerName)]
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; m [(Text, TriggerName)]
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#getCleanupEventsForDeletion"><span class="hs-identifier hs-var">PG.getCleanupEventsForDeletion</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#getCleanupEventsForDeletion"><span class="hs-identifier hs-var">Postgres.getCleanupEventsForDeletion</span></a></span><span>
 </span><span id="line-314"></span><span>  </span><span id="local-6989586621689648001"><span class="annot"><span class="annottext">updateCleanupEventStatusToDead :: SourceConfig ('Postgres 'Vanilla) -&gt; [Text] -&gt; m ()
 </span><a href="#local-6989586621689648001"><span class="hs-identifier hs-var hs-var hs-var hs-var">updateCleanupEventStatusToDead</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; [Text] -&gt; m ()
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; [Text] -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToDead"><span class="hs-identifier hs-var">PG.updateCleanupEventStatusToDead</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToDead"><span class="hs-identifier hs-var">Postgres.updateCleanupEventStatusToDead</span></a></span><span>
 </span><span id="line-315"></span><span>  </span><span id="local-6989586621689647999"><span class="annot"><span class="annottext">updateCleanupEventStatusToPaused :: SourceConfig ('Postgres 'Vanilla) -&gt; Text -&gt; m ()
 </span><a href="#local-6989586621689647999"><span class="hs-identifier hs-var hs-var hs-var hs-var">updateCleanupEventStatusToPaused</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla) -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; Text -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToPaused"><span class="hs-identifier hs-var">PG.updateCleanupEventStatusToPaused</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToPaused"><span class="hs-identifier hs-var">Postgres.updateCleanupEventStatusToPaused</span></a></span><span>
 </span><span id="line-316"></span><span>  </span><span id="local-6989586621689647997"><span class="annot"><span class="annottext">updateCleanupEventStatusToCompleted :: SourceConfig ('Postgres 'Vanilla)
 -&gt; Text -&gt; DeletedEventLogStats -&gt; m ()
 </span><a href="#local-6989586621689647997"><span class="hs-identifier hs-var hs-var hs-var hs-var">updateCleanupEventStatusToCompleted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
@@ -570,7 +570,7 @@ PGSourceConfig -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; Text -&gt; DeletedEventLogStats -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToCompleted"><span class="hs-identifier hs-var">PG.updateCleanupEventStatusToCompleted</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToCompleted"><span class="hs-identifier hs-var">Postgres.updateCleanupEventStatusToCompleted</span></a></span><span>
 </span><span id="line-317"></span><span>  </span><span id="local-6989586621689647995"><span class="annot"><span class="annottext">deleteEventTriggerLogs :: SourceConfig ('Postgres 'Vanilla)
 -&gt; TriggerLogCleanupConfig -&gt; m DeletedEventLogStats
 </span><a href="#local-6989586621689647995"><span class="hs-identifier hs-var hs-var hs-var hs-var">deleteEventTriggerLogs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Vanilla)
@@ -578,7 +578,7 @@ PGSourceConfig -&gt; Text -&gt; DeletedEventLogStats -&gt; m ()
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; TriggerLogCleanupConfig -&gt; m DeletedEventLogStats
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#deleteEventTriggerLogs"><span class="hs-identifier hs-var">PG.deleteEventTriggerLogs</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#deleteEventTriggerLogs"><span class="hs-identifier hs-var">Postgres.deleteEventTriggerLogs</span></a></span><span>
 </span><span id="line-318"></span><span>
 </span><span id="line-319"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-type">BackendEventTrigger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Citus"><span class="hs-identifier hs-type">Citus</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-320"></span><span>  </span><span id="local-6989586621689647971"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig ('Postgres 'Citus)
@@ -905,7 +905,7 @@ SourceConfig ('Postgres pgKind)
 -&gt; UserInfo
 -&gt; TraceContext
 -&gt; m EventId
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#insertManualEvent"><span class="hs-identifier hs-var">PG.insertManualEvent</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#insertManualEvent"><span class="hs-identifier hs-var">Postgres.insertManualEvent</span></a></span><span>
 </span><span id="line-344"></span><span>  </span><span id="local-6989586621689647924"><span class="annot"><span class="annottext">fetchUndeliveredEvents :: SourceConfig ('Postgres 'Cockroach)
 -&gt; SourceName
 -&gt; [TriggerName]
@@ -926,7 +926,7 @@ SourceConfig ('Postgres pgKind)
 -&gt; MaintenanceMode ()
 -&gt; FetchBatchSize
 -&gt; m [Event ('Postgres pgKind)]
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#fetchUndeliveredEvents"><span class="hs-identifier hs-var">PG.fetchUndeliveredEvents</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#fetchUndeliveredEvents"><span class="hs-identifier hs-var">Postgres.fetchUndeliveredEvents</span></a></span><span>
 </span><span id="line-345"></span><span>  </span><span id="local-6989586621689647923"><span class="annot"><span class="annottext">setRetry :: SourceConfig ('Postgres 'Cockroach)
 -&gt; Event ('Postgres 'Cockroach)
 -&gt; UTCTime
@@ -944,13 +944,13 @@ SourceConfig ('Postgres pgKind)
 -&gt; UTCTime
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#setRetry"><span class="hs-identifier hs-var">PG.setRetry</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#setRetry"><span class="hs-identifier hs-var">Postgres.setRetry</span></a></span><span>
 </span><span id="line-346"></span><span>  </span><span id="local-6989586621689647922"><span class="annot"><span class="annottext">getMaintenanceModeVersion :: SourceConfig ('Postgres 'Cockroach) -&gt; m MaintenanceModeVersion
 </span><a href="#local-6989586621689647922"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMaintenanceModeVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach) -&gt; m MaintenanceModeVersion
 forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 SourceConfig ('Postgres pgKind) -&gt; m MaintenanceModeVersion
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#getMaintenanceModeVersion"><span class="hs-identifier hs-var">PG.getMaintenanceModeVersion</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#getMaintenanceModeVersion"><span class="hs-identifier hs-var">Postgres.getMaintenanceModeVersion</span></a></span><span>
 </span><span id="line-347"></span><span>  </span><span id="local-6989586621689647921"><span class="annot"><span class="annottext">recordSuccess :: SourceConfig ('Postgres 'Cockroach)
 -&gt; Event ('Postgres 'Cockroach)
 -&gt; Invocation 'EventType
@@ -968,7 +968,7 @@ SourceConfig ('Postgres pgKind)
 -&gt; Invocation 'EventType
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordSuccess"><span class="hs-identifier hs-var">PG.recordSuccess</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordSuccess"><span class="hs-identifier hs-var">Postgres.recordSuccess</span></a></span><span>
 </span><span id="line-348"></span><span>  </span><span id="local-6989586621689647920"><span class="annot"><span class="annottext">recordError :: SourceConfig ('Postgres 'Cockroach)
 -&gt; Event ('Postgres 'Cockroach)
 -&gt; Invocation 'EventType
@@ -989,7 +989,7 @@ SourceConfig ('Postgres pgKind)
 -&gt; ProcessEventError
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordError"><span class="hs-identifier hs-var">PG.recordError</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordError"><span class="hs-identifier hs-var">Postgres.recordError</span></a></span><span>
 </span><span id="line-349"></span><span>  </span><span id="local-6989586621689647919"><span class="annot"><span class="annottext">recordError' :: SourceConfig ('Postgres 'Cockroach)
 -&gt; Event ('Postgres 'Cockroach)
 -&gt; Maybe (Invocation 'EventType)
@@ -1010,7 +1010,7 @@ SourceConfig ('Postgres pgKind)
 -&gt; ProcessEventError
 -&gt; MaintenanceMode MaintenanceModeVersion
 -&gt; m (Either QErr ())
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordError%27"><span class="hs-identifier hs-var">PG.recordError'</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#recordError%27"><span class="hs-identifier hs-var">Postgres.recordError'</span></a></span><span>
 </span><span id="line-350"></span><span>  </span><span id="local-6989586621689647918"><span class="annot"><span class="annottext">dropTriggerAndArchiveEvents :: SourceConfig ('Postgres 'Cockroach)
 -&gt; TriggerName -&gt; TableName ('Postgres 'Cockroach) -&gt; m ()
 </span><a href="#local-6989586621689647918"><span class="hs-identifier hs-var hs-var hs-var hs-var">dropTriggerAndArchiveEvents</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach)
@@ -1019,7 +1019,7 @@ forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 SourceConfig ('Postgres pgKind)
 -&gt; TriggerName -&gt; QualifiedTable -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#dropTriggerAndArchiveEvents"><span class="hs-identifier hs-var">PG.dropTriggerAndArchiveEvents</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#dropTriggerAndArchiveEvents"><span class="hs-identifier hs-var">Postgres.dropTriggerAndArchiveEvents</span></a></span><span>
 </span><span id="line-351"></span><span>  </span><span id="local-6989586621689647917"><span class="annot"><span class="annottext">dropDanglingSQLTrigger :: SourceConfig ('Postgres 'Cockroach)
 -&gt; TriggerName
 -&gt; TableName ('Postgres 'Cockroach)
@@ -1034,13 +1034,13 @@ forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 SourceConfig ('Postgres pgKind)
 -&gt; TriggerName -&gt; QualifiedTable -&gt; HashSet Ops -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#dropDanglingSQLTrigger"><span class="hs-identifier hs-var">PG.dropDanglingSQLTrigger</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#dropDanglingSQLTrigger"><span class="hs-identifier hs-var">Postgres.dropDanglingSQLTrigger</span></a></span><span>
 </span><span id="line-352"></span><span>  </span><span id="local-6989586621689647916"><span class="annot"><span class="annottext">redeliverEvent :: SourceConfig ('Postgres 'Cockroach) -&gt; EventId -&gt; m ()
 </span><a href="#local-6989586621689647916"><span class="hs-identifier hs-var hs-var hs-var hs-var">redeliverEvent</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach) -&gt; EventId -&gt; m ()
 forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 (MonadIO m, MonadError QErr m) =&gt;
 SourceConfig ('Postgres pgKind) -&gt; EventId -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#redeliverEvent"><span class="hs-identifier hs-var">PG.redeliverEvent</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#redeliverEvent"><span class="hs-identifier hs-var">Postgres.redeliverEvent</span></a></span><span>
 </span><span id="line-353"></span><span>  </span><span id="local-6989586621689647915"><span class="annot"><span class="annottext">unlockEventsInSource :: SourceConfig ('Postgres 'Cockroach)
 -&gt; NESet EventId -&gt; m (Either QErr Int)
 </span><a href="#local-6989586621689647915"><span class="hs-identifier hs-var hs-var hs-var hs-var">unlockEventsInSource</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach)
@@ -1049,7 +1049,7 @@ forall (m :: * -&gt; *) (pgKind :: PostgresKind).
 MonadIO m =&gt;
 SourceConfig ('Postgres pgKind)
 -&gt; NESet EventId -&gt; m (Either QErr Int)
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#unlockEventsInSource"><span class="hs-identifier hs-var">PG.unlockEventsInSource</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#unlockEventsInSource"><span class="hs-identifier hs-var">Postgres.unlockEventsInSource</span></a></span><span>
 </span><span id="line-354"></span><span>  </span><span id="local-6989586621689647914"><span class="annot"><span class="annottext">createTableEventTrigger :: ServerConfigCtx
 -&gt; SourceConfig ('Postgres 'Cockroach)
 -&gt; TableName ('Postgres 'Cockroach)
@@ -1081,7 +1081,7 @@ ServerConfigCtx
 -&gt; Maybe
      (PrimaryKey ('Postgres pgKind) (ColumnInfo ('Postgres pgKind)))
 -&gt; m (Either QErr ())
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#createTableEventTrigger"><span class="hs-identifier hs-var">PG.createTableEventTrigger</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#createTableEventTrigger"><span class="hs-identifier hs-var">Postgres.createTableEventTrigger</span></a></span><span>
 </span><span id="line-355"></span><span>  </span><span id="local-6989586621689647913"><span class="annot"><span class="annottext">createMissingSQLTriggers :: SourceConfig ('Postgres 'Cockroach)
 -&gt; TableName ('Postgres 'Cockroach)
 -&gt; ([ColumnInfo ('Postgres 'Cockroach)],
@@ -1111,7 +1111,7 @@ PGSourceConfig
 -&gt; TriggerName
 -&gt; TriggerOpsDef ('Postgres pgKind)
 -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#createMissingSQLTriggers"><span class="hs-identifier hs-var">PG.createMissingSQLTriggers</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#createMissingSQLTriggers"><span class="hs-identifier hs-var">Postgres.createMissingSQLTriggers</span></a></span><span>
 </span><span id="line-356"></span><span>  </span><span id="local-6989586621689647912"><span class="annot"><span class="annottext">checkIfTriggerExists :: SourceConfig ('Postgres 'Cockroach)
 -&gt; TriggerName -&gt; HashSet Ops -&gt; m Bool
 </span><a href="#local-6989586621689647912"><span class="hs-identifier hs-var hs-var hs-var hs-var">checkIfTriggerExists</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach)
@@ -1119,7 +1119,7 @@ PGSourceConfig
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; TriggerName -&gt; HashSet Ops -&gt; m Bool
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#checkIfTriggerExists"><span class="hs-identifier hs-var">PG.checkIfTriggerExists</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#checkIfTriggerExists"><span class="hs-identifier hs-var">Postgres.checkIfTriggerExists</span></a></span><span>
 </span><span id="line-357"></span><span>  </span><span id="local-6989586621689647911"><span class="annot"><span class="annottext">addCleanupSchedules :: SourceConfig ('Postgres 'Cockroach)
 -&gt; [(TriggerName, AutoTriggerLogCleanupConfig)] -&gt; m ()
 </span><a href="#local-6989586621689647911"><span class="hs-identifier hs-var hs-var hs-var hs-var">addCleanupSchedules</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach)
@@ -1128,31 +1128,31 @@ forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig
 -&gt; [(TriggerName, AutoTriggerLogCleanupConfig)] -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#addCleanupSchedules"><span class="hs-identifier hs-var">PG.addCleanupSchedules</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#addCleanupSchedules"><span class="hs-identifier hs-var">Postgres.addCleanupSchedules</span></a></span><span>
 </span><span id="line-358"></span><span>  </span><span id="local-6989586621689647910"><span class="annot"><span class="annottext">deleteAllScheduledCleanups :: SourceConfig ('Postgres 'Cockroach) -&gt; TriggerName -&gt; m ()
 </span><a href="#local-6989586621689647910"><span class="hs-identifier hs-var hs-var hs-var hs-var">deleteAllScheduledCleanups</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach) -&gt; TriggerName -&gt; m ()
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; TriggerName -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#deleteAllScheduledCleanups"><span class="hs-identifier hs-var">PG.deleteAllScheduledCleanups</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#deleteAllScheduledCleanups"><span class="hs-identifier hs-var">Postgres.deleteAllScheduledCleanups</span></a></span><span>
 </span><span id="line-359"></span><span>  </span><span id="local-6989586621689647909"><span class="annot"><span class="annottext">getCleanupEventsForDeletion :: SourceConfig ('Postgres 'Cockroach) -&gt; m [(Text, TriggerName)]
 </span><a href="#local-6989586621689647909"><span class="hs-identifier hs-var hs-var hs-var hs-var">getCleanupEventsForDeletion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach) -&gt; m [(Text, TriggerName)]
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; m [(Text, TriggerName)]
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#getCleanupEventsForDeletion"><span class="hs-identifier hs-var">PG.getCleanupEventsForDeletion</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#getCleanupEventsForDeletion"><span class="hs-identifier hs-var">Postgres.getCleanupEventsForDeletion</span></a></span><span>
 </span><span id="line-360"></span><span>  </span><span id="local-6989586621689647908"><span class="annot"><span class="annottext">updateCleanupEventStatusToDead :: SourceConfig ('Postgres 'Cockroach) -&gt; [Text] -&gt; m ()
 </span><a href="#local-6989586621689647908"><span class="hs-identifier hs-var hs-var hs-var hs-var">updateCleanupEventStatusToDead</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach) -&gt; [Text] -&gt; m ()
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; [Text] -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToDead"><span class="hs-identifier hs-var">PG.updateCleanupEventStatusToDead</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToDead"><span class="hs-identifier hs-var">Postgres.updateCleanupEventStatusToDead</span></a></span><span>
 </span><span id="line-361"></span><span>  </span><span id="local-6989586621689647907"><span class="annot"><span class="annottext">updateCleanupEventStatusToPaused :: SourceConfig ('Postgres 'Cockroach) -&gt; Text -&gt; m ()
 </span><a href="#local-6989586621689647907"><span class="hs-identifier hs-var hs-var hs-var hs-var">updateCleanupEventStatusToPaused</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach) -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; Text -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToPaused"><span class="hs-identifier hs-var">PG.updateCleanupEventStatusToPaused</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToPaused"><span class="hs-identifier hs-var">Postgres.updateCleanupEventStatusToPaused</span></a></span><span>
 </span><span id="line-362"></span><span>  </span><span id="local-6989586621689647906"><span class="annot"><span class="annottext">updateCleanupEventStatusToCompleted :: SourceConfig ('Postgres 'Cockroach)
 -&gt; Text -&gt; DeletedEventLogStats -&gt; m ()
 </span><a href="#local-6989586621689647906"><span class="hs-identifier hs-var hs-var hs-var hs-var">updateCleanupEventStatusToCompleted</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach)
@@ -1160,7 +1160,7 @@ PGSourceConfig -&gt; Text -&gt; m ()
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; Text -&gt; DeletedEventLogStats -&gt; m ()
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToCompleted"><span class="hs-identifier hs-var">PG.updateCleanupEventStatusToCompleted</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#updateCleanupEventStatusToCompleted"><span class="hs-identifier hs-var">Postgres.updateCleanupEventStatusToCompleted</span></a></span><span>
 </span><span id="line-363"></span><span>  </span><span id="local-6989586621689647905"><span class="annot"><span class="annottext">deleteEventTriggerLogs :: SourceConfig ('Postgres 'Cockroach)
 -&gt; TriggerLogCleanupConfig -&gt; m DeletedEventLogStats
 </span><a href="#local-6989586621689647905"><span class="hs-identifier hs-var hs-var hs-var hs-var">deleteEventTriggerLogs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceConfig ('Postgres 'Cockroach)
@@ -1168,7 +1168,7 @@ PGSourceConfig -&gt; Text -&gt; DeletedEventLogStats -&gt; m ()
 forall (m :: * -&gt; *).
 (MonadIO m, MonadError QErr m) =&gt;
 PGSourceConfig -&gt; TriggerLogCleanupConfig -&gt; m DeletedEventLogStats
-</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#deleteEventTriggerLogs"><span class="hs-identifier hs-var">PG.deleteEventTriggerLogs</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.EventTrigger.html#deleteEventTriggerLogs"><span class="hs-identifier hs-var">Postgres.deleteEventTriggerLogs</span></a></span><span>
 </span><span id="line-364"></span><span>
 </span><span id="line-365"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Eventing.Backend.html#BackendEventTrigger"><span class="hs-identifier hs-type">BackendEventTrigger</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-366"></span><span>  </span><span id="local-6989586621689647882"><span class="annot"><span class="annottext">insertManualEvent :: SourceConfig 'MSSQL
