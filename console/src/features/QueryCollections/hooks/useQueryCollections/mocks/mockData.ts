@@ -11,13 +11,13 @@ export const createMetadata = (): MetadataResponse => ({
     inherited_roles: [],
     allowlist: [
       {
-        collection: 'allowed_queries',
+        collection: 'allowed-queries',
         scope: {
           global: true,
         },
       },
       {
-        collection: 'allowed_queries',
+        collection: 'allowed-queries',
         scope: {
           global: false,
           roles: ['user'],
@@ -25,7 +25,7 @@ export const createMetadata = (): MetadataResponse => ({
       },
     ],
     query_collections: [
-      { name: 'allowed_queries', definition: { queries: [] } },
+      { name: 'allowed-queries', definition: { queries: [] } },
       { name: 'other_queries', definition: { queries: [] } },
     ],
   },

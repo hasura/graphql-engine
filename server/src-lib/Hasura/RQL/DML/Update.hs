@@ -9,7 +9,7 @@ import Data.HashMap.Strict qualified as M
 import Data.HashMap.Strict qualified as Map
 import Data.Sequence qualified as DS
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation
 import Hasura.Backends.Postgres.SQL.DML qualified as S
@@ -202,7 +202,7 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
 validateUpdateQuery ::
   (QErrM m, UserInfoM m, CacheRM m) =>
   UpdateQuery ->
-  m (AnnotatedUpdate ('Postgres 'Vanilla), DS.Seq Q.PrepArg)
+  m (AnnotatedUpdate ('Postgres 'Vanilla), DS.Seq PG.PrepArg)
 validateUpdateQuery query = do
   let source = uqSource query
   tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
@@ -228,6 +228,6 @@ runUpdate q = do
   userInfo <- askUserInfo
   strfyNum <- stringifyNum . _sccSQLGenCtx <$> askServerConfigCtx
   validateUpdateQuery q
-    >>= runTxWithCtx (_pscExecCtx sourceConfig) Q.ReadWrite
+    >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadWrite
       . flip runReaderT emptyQueryTagsComment
       . execUpdateQuery strfyNum Nothing userInfo

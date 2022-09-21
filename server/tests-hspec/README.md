@@ -439,7 +439,7 @@ We have a few problems with SQLServer on M1:
    -   location: https://github.com/fpco/odbc.git
    -   tag: 3d80ffdd4a2879f0debecabb56d834d2d898212b
    +   location: https://github.com/soupi/odbc.git
-   +   tag: 46ada57c0d8f750280d6c554536c0fbcff02be59
+   +   tag: a6acf6b4eca31022babbf8045f31a0f7f26c5923
    ```
 
 2. Microsoft did not release SQL Server for M1. We need to use Azure SQL Edge instead.

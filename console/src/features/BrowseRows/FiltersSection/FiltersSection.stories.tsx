@@ -2,8 +2,7 @@ import React from 'react';
 import { ComponentStory, ComponentMeta } from '@storybook/react';
 import { SelectItem } from '@/components/Common/SelectInputSplitField/SelectInputSplitField';
 import { action } from '@storybook/addon-actions';
-import { userEvent } from '@storybook/testing-library';
-import { within } from '@testing-library/react';
+import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { FiltersSection } from './FiltersSection';
 import { OperatorItem } from './FilterRow';
@@ -72,11 +71,12 @@ export const Primary: ComponentStory<typeof FiltersSection> = () => (
     columns={columnOptions}
     operators={operatorOptions}
     orders={sortOptions}
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     onExport={action('onExport') as any}
     onSubmit={action('onSubmit')}
   />
 );
-
 Primary.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 

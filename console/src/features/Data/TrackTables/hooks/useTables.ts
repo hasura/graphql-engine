@@ -1,17 +1,19 @@
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import { useHttpClient } from '@/features/Network';
 import { Table, MetadataTable } from '@/features/MetadataAPI';
-import { DataSource, Feature, exportMetadata } from '@/features/DataSource';
+import { DataSource, exportMetadata, Feature } from '@/features/DataSource';
 import type { IntrospectedTable } from '@/features/DataSource';
-
 import type { TrackableTable } from '../types';
 
 export type UseTablesProps = {
   dataSourceName: string;
 };
 
-const getTableName = (table: Table, databaseHierarcy: string[]): string => {
-  if (databaseHierarcy.length === 0) {
+export const getTableName = (
+  table: Table,
+  databaseHierarchy: string[]
+): string => {
+  if (databaseHierarchy.length === 0) {
     if (!Array.isArray(table)) return '';
 
     const result = table.reduce<string[]>((acc, item) => {
@@ -32,7 +34,7 @@ const getTableName = (table: Table, databaseHierarcy: string[]): string => {
       return acc;
     }, {});
 
-    const tableName = databaseHierarcy
+    const tableName = databaseHierarchy
       .map(key => {
         return flatJsonTableDefinition[key];
       })
@@ -46,12 +48,12 @@ const getTableName = (table: Table, databaseHierarcy: string[]): string => {
 const getTrackableTables = (
   trackedTables: MetadataTable[],
   introspectedTables: IntrospectedTable[],
-  databaseHierarcy: string[]
+  databaseHierarchy: string[]
 ) =>
   introspectedTables.map(introspectedTable => {
     const trackedTable = trackedTables.find(
       _trackedTable =>
-        getTableName(_trackedTable.table, databaseHierarcy) ===
+        getTableName(_trackedTable.table, databaseHierarchy) ===
         introspectedTable.name
     );
 
@@ -82,13 +84,20 @@ const getTrackableTables = (
 
 export const useTables = ({ dataSourceName }: UseTablesProps) => {
   const httpClient = useHttpClient();
+  const queryClient = useQueryClient();
   return useQuery<TrackableTable[], Error>({
-    queryKey: [dataSourceName, 'tables'],
+    queryKey: ['introspected-tables', dataSourceName],
     queryFn: async () => {
-      const { metadata } = await exportMetadata({ httpClient });
+      const { metadata } = await exportMetadata({
+        httpClient,
+      });
+
+      if (!metadata) throw Error('metadata not found');
+
       const currentMetadataSource = metadata.sources?.find(
         source => source.name === dataSourceName
       );
+
       if (!currentMetadataSource)
         throw Error(`useTables.metadataSource not found`);
 
@@ -102,17 +111,20 @@ export const useTables = ({ dataSourceName }: UseTablesProps) => {
         );
 
       const trackedTables = currentMetadataSource.tables;
-      const databaseHierarcy = await DataSource(
+      const databaseHierarchy = await DataSource(
         httpClient
       ).getDatabaseHierarchy({ dataSourceName });
 
       const trackableTables = getTrackableTables(
         trackedTables,
         introspectedTables,
-        databaseHierarcy
+        databaseHierarchy
       );
       return trackableTables;
     },
     refetchOnWindowFocus: false,
+    onSettled: () => {
+      queryClient.invalidateQueries(['export_metadata']);
+    },
   });
 };

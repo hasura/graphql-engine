@@ -33,7 +33,7 @@ import Data.HashSet qualified as HS
 import Data.Sequence qualified as DS
 import Data.Text qualified as T
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Instances.Metadata ()
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
@@ -58,13 +58,13 @@ import Hasura.SQL.Types
 import Hasura.Server.Types
 import Hasura.Session
 
-newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a}
+newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq PG.PrepArg) m a}
   deriving
     ( Functor,
       Applicative,
       Monad,
       MonadTrans,
-      MonadState (DS.Seq Q.PrepArg),
+      MonadState (DS.Seq PG.PrepArg),
       MonadError e,
       SourceM,
       TableCoreInfoRM b,
@@ -74,7 +74,7 @@ newtype DMLP1T m a = DMLP1T {unDMLP1T :: StateT (DS.Seq Q.PrepArg) m a}
       HasServerConfigCtx
     )
 
-runDMLP1T :: DMLP1T m a -> m (a, DS.Seq Q.PrepArg)
+runDMLP1T :: DMLP1T m a -> m (a, DS.Seq PG.PrepArg)
 runDMLP1T = flip runStateT DS.empty . unDMLP1T
 
 askPermInfo ::

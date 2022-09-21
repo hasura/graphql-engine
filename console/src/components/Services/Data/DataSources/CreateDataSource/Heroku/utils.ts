@@ -234,18 +234,6 @@ export const exchangeHerokuCode = (code: string) => {
     });
 };
 
-export const generateRandomString = (stringLength = 16) => {
-  const allChars =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let str = '';
-
-  for (let i = 0; i < stringLength; i++) {
-    const randomNum = Math.floor(Math.random() * allChars.length);
-    str += allChars.charAt(randomNum);
-  }
-  return str;
-};
-
 const HEROKU_CALLBACK_SEARCH = 'HEROKU_CALLBACK_SEARCH';
 export const clearPersistedHerokuCallbackSearch = () => {
   window.localStorage.removeItem(HEROKU_CALLBACK_SEARCH);

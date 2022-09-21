@@ -35,8 +35,8 @@ import Control.Monad.Validate
 import Data.Aeson
 import Data.Aeson.Extended
 import Data.Time.Clock.Compat ()
-import Database.PG.Query qualified as Q
-import Database.PG.Query.Connection qualified as Q
+import Database.PG.Query qualified as PG
+import Database.PG.Query.Connection qualified as PG
 import Hasura.Backends.Postgres.Execute.Types as ET
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
@@ -50,7 +50,7 @@ import Test.QuickCheck.Instances.Semigroup ()
 import Test.QuickCheck.Instances.Time ()
 
 class (MonadError QErr m) => MonadTx m where
-  liftTx :: Q.TxE QErr a -> m a
+  liftTx :: PG.TxE QErr a -> m a
 
 instance (MonadTx m) => MonadTx (StateT s m) where
   liftTx = lift . liftTx
@@ -67,7 +67,7 @@ instance (MonadTx m) => MonadTx (ValidateT e m) where
 instance (MonadTx m) => MonadTx (Tracing.TraceT m) where
   liftTx = lift . liftTx
 
-instance (MonadIO m) => MonadTx (Q.TxET QErr m) where
+instance (MonadIO m) => MonadTx (PG.TxET QErr m) where
   liftTx = hoist liftIO
 
 -- | Executes the given query in a transaction of the specified
@@ -77,12 +77,12 @@ runTx ::
     MonadBaseControl IO m
   ) =>
   PGExecCtx ->
-  Q.TxAccess ->
-  Q.TxET QErr m a ->
+  PG.TxAccess ->
+  PG.TxET QErr m a ->
   ExceptT QErr m a
 runTx pgExecCtx = \case
-  Q.ReadOnly -> _pecRunReadOnly pgExecCtx
-  Q.ReadWrite -> _pecRunReadWrite pgExecCtx
+  PG.ReadOnly -> _pecRunReadOnly pgExecCtx
+  PG.ReadWrite -> _pecRunReadWrite pgExecCtx
 
 runTxWithCtx ::
   ( MonadIO m,
@@ -92,8 +92,8 @@ runTxWithCtx ::
     UserInfoM m
   ) =>
   PGExecCtx ->
-  Q.TxAccess ->
-  Q.TxET QErr m a ->
+  PG.TxAccess ->
+  PG.TxET QErr m a ->
   m a
 runTxWithCtx pgExecCtx txAccess tx = do
   traceCtx <- Tracing.currentContext
@@ -111,30 +111,30 @@ runQueryTx ::
     MonadError QErr m
   ) =>
   PGExecCtx ->
-  Q.TxET QErr IO a ->
+  PG.TxET QErr IO a ->
   m a
 runQueryTx pgExecCtx tx =
   liftEither =<< liftIO (runExceptT $ _pecRunReadNoTx pgExecCtx tx)
 
-setHeadersTx :: (MonadIO m) => SessionVariables -> Q.TxET QErr m ()
+setHeadersTx :: (MonadIO m) => SessionVariables -> PG.TxET QErr m ()
 setHeadersTx session = do
-  Q.unitQE defaultTxErrorHandler setSess () False
+  PG.unitQE defaultTxErrorHandler setSess () False
   where
     setSess =
-      Q.fromText $
+      PG.fromText $
         "SET LOCAL \"hasura.user\" = " <> toSQLTxt (sessionInfoJsonExp session)
 
 sessionInfoJsonExp :: SessionVariables -> S.SQLExp
 sessionInfoJsonExp = S.SELit . encodeToStrictText
 
-withUserInfo :: (MonadIO m) => UserInfo -> Q.TxET QErr m a -> Q.TxET QErr m a
+withUserInfo :: (MonadIO m) => UserInfo -> PG.TxET QErr m a -> PG.TxET QErr m a
 withUserInfo uInfo tx = setHeadersTx (_uiSession uInfo) >> tx
 
-setTraceContextInTx :: (MonadIO m) => Tracing.TraceContext -> Q.TxET QErr m ()
-setTraceContextInTx traceCtx = Q.unitQE defaultTxErrorHandler sql () False
+setTraceContextInTx :: (MonadIO m) => Tracing.TraceContext -> PG.TxET QErr m ()
+setTraceContextInTx traceCtx = PG.unitQE defaultTxErrorHandler sql () False
   where
     sql =
-      Q.fromText $
+      PG.fromText $
         "SET LOCAL \"hasura.tracecontext\" = "
           <> toSQLTxt (S.SELit . encodeToStrictText . Tracing.injectEventContext $ traceCtx)
 
@@ -143,24 +143,24 @@ setTraceContextInTx traceCtx = Q.unitQE defaultTxErrorHandler sql () False
 withTraceContext ::
   (MonadIO m) =>
   Tracing.TraceContext ->
-  Q.TxET QErr m a ->
-  Q.TxET QErr m a
+  PG.TxET QErr m a ->
+  PG.TxET QErr m a
 withTraceContext ctx tx = setTraceContextInTx ctx >> tx
 
-deriving instance Tracing.MonadTrace m => Tracing.MonadTrace (Q.TxET e m)
+deriving instance Tracing.MonadTrace m => Tracing.MonadTrace (PG.TxET e m)
 
 checkDbConnection :: MonadTx m => m ()
 checkDbConnection = do
-  Q.Discard () <- liftTx $ Q.withQE defaultTxErrorHandler [Q.sql| SELECT 1; |] () False
+  PG.Discard () <- liftTx $ PG.withQE defaultTxErrorHandler [PG.sql| SELECT 1; |] () False
   pure ()
 
 doesSchemaExist :: MonadTx m => SchemaName -> m Bool
 doesSchemaExist schemaName =
   liftTx $
-    (runIdentity . Q.getRow)
-      <$> Q.withQE
+    (runIdentity . PG.getRow)
+      <$> PG.withQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
     SELECT EXISTS
     ( SELECT 1 FROM information_schema.schemata
       WHERE schema_name = $1
@@ -171,10 +171,10 @@ doesSchemaExist schemaName =
 doesTableExist :: MonadTx m => SchemaName -> TableName -> m Bool
 doesTableExist schemaName tableName =
   liftTx $
-    (runIdentity . Q.getRow)
-      <$> Q.withQE
+    (runIdentity . PG.getRow)
+      <$> PG.withQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
     SELECT EXISTS
     ( SELECT 1 FROM pg_tables
       WHERE schemaname = $1 AND tablename = $2
@@ -185,10 +185,10 @@ doesTableExist schemaName tableName =
 isExtensionAvailable :: MonadTx m => Text -> m Bool
 isExtensionAvailable extensionName =
   liftTx $
-    (runIdentity . Q.getRow)
-      <$> Q.withQE
+    (runIdentity . PG.getRow)
+      <$> PG.withQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
     SELECT EXISTS
     ( SELECT 1 FROM pg_catalog.pg_available_extensions
       WHERE name = $1
@@ -209,16 +209,16 @@ enablePgcryptoExtension (ExtensionsSchema extensionsSchema) = do
     createPgcryptoExtension :: m ()
     createPgcryptoExtension =
       liftTx $
-        Q.unitQE
+        PG.unitQE
           needsPGCryptoError
-          (Q.fromText $ "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA " <> extensionsSchema)
+          (PG.fromText $ "CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA " <> extensionsSchema)
           ()
           False
       where
-        needsPGCryptoError e@(Q.PGTxErr _ _ _ err) =
+        needsPGCryptoError e@(PG.PGTxErr _ _ _ err) =
           case err of
-            Q.PGIUnexpected _ -> requiredError
-            Q.PGIStatement pgErr -> case Q.edStatusCode pgErr of
+            PG.PGIUnexpected _ -> requiredError
+            PG.PGIStatement pgErr -> case PG.edStatusCode pgErr of
               Just "42501" -> err500 PostgresError permissionsMessage
               _ -> requiredError
           where
@@ -235,8 +235,8 @@ enablePgcryptoExtension (ExtensionsSchema extensionsSchema) = do
 dropHdbCatalogSchema :: (MonadTx m) => m ()
 dropHdbCatalogSchema =
   liftTx $
-    Q.catchE defaultTxErrorHandler $
+    PG.catchE defaultTxErrorHandler $
       -- This is where
       -- 1. Metadata storage:- Metadata and its stateful information stored
       -- 2. Postgres source:- Table event trigger related stuff & insert permission check function stored
-      Q.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False
+      PG.unitQ "DROP SCHEMA IF EXISTS hdb_catalog CASCADE" () False

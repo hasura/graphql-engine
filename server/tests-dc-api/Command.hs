@@ -36,7 +36,9 @@ data TestOptions = TestOptions
     _toAgentCapabilities :: AgentCapabilities,
     _toParallelDegree :: Maybe Int,
     _toMatch :: Maybe String,
-    _toSkip :: Maybe String
+    _toSkip :: [String],
+    _toDryRun :: Bool,
+    _toExportMatchStrings :: Bool
   }
 
 data AgentCapabilities
@@ -126,14 +128,21 @@ testOptionsParser =
               <> help "Only run tests that match given PATTERN"
           )
       )
-    <*> optional
-      ( option
-          auto
+    <*> many
+      ( strOption
           ( long "skip"
               <> short 's'
               <> metavar "PATTERN"
               <> help "Skip tests that match given PATTERN"
           )
+      )
+    <*> switch
+      ( long "dry-run"
+          <> help "Skip execution of test bodies"
+      )
+    <*> switch
+      ( long "export-match-strings"
+          <> help "Exports the hspec match strings without running the tests"
       )
 
 testCommandParser :: Parser Command

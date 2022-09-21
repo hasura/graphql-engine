@@ -24,7 +24,7 @@ import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as HS
 import Data.List (nub)
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.DDL.EventTrigger
 import Hasura.Backends.Postgres.DDL.Source
@@ -70,7 +70,7 @@ data RunSQL = RunSQL
     rSource :: SourceName,
     rCascade :: Bool,
     rCheckMetadataConsistency :: Maybe Bool,
-    rTxAccessMode :: Q.TxAccess
+    rTxAccessMode :: PG.TxAccess
   }
   deriving (Show, Eq)
 
@@ -81,7 +81,7 @@ instance FromJSON RunSQL where
     rCascade <- o .:? "cascade" .!= False
     rCheckMetadataConsistency <- o .:? "check_metadata_consistency"
     isReadOnly <- o .:? "read_only" .!= False
-    let rTxAccessMode = if isReadOnly then Q.ReadOnly else Q.ReadWrite
+    let rTxAccessMode = if isReadOnly then PG.ReadOnly else PG.ReadWrite
     pure RunSQL {..}
 
 instance ToJSON RunSQL where
@@ -93,8 +93,8 @@ instance ToJSON RunSQL where
         "check_metadata_consistency" .= rCheckMetadataConsistency,
         "read_only"
           .= case rTxAccessMode of
-            Q.ReadOnly -> True
-            Q.ReadWrite -> False
+            PG.ReadOnly -> True
+            PG.ReadWrite -> False
       ]
 
 -- | Check for known schema-mutating keywords in the raw SQL text.
@@ -103,8 +103,8 @@ instance ToJSON RunSQL where
 isSchemaCacheBuildRequiredRunSQL :: RunSQL -> Bool
 isSchemaCacheBuildRequiredRunSQL RunSQL {..} =
   case rTxAccessMode of
-    Q.ReadOnly -> False
-    Q.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
+    PG.ReadOnly -> False
+    PG.ReadWrite -> fromMaybe (containsDDLKeyword rSql) rCheckMetadataConsistency
   where
     containsDDLKeyword =
       TDFA.match
@@ -211,7 +211,7 @@ runRunSQL q@RunSQL {..} = do
   where
     execRawSQL :: (MonadTx n) => Text -> n EncJSON
     execRawSQL =
-      fmap (encJFromJValue @RunSQLRes) . liftTx . Q.multiQE rawSqlErrHandler . Q.fromText
+      fmap (encJFromJValue @RunSQLRes) . liftTx . PG.multiQE rawSqlErrHandler . PG.fromText
       where
         rawSqlErrHandler txe =
           (err400 PostgresError "query execution failed") {qeInternal = Just $ ExtraInternal $ toJSON txe}
@@ -235,8 +235,8 @@ withMetadataCheck ::
   ) =>
   SourceName ->
   Bool ->
-  Q.TxAccess ->
-  Q.TxET QErr m a ->
+  PG.TxAccess ->
+  PG.TxET QErr m a ->
   m a
 withMetadataCheck source cascade txAccess runSQLQuery = do
   SourceInfo _ tableCache functionCache sourceConfig _ _ <- askSourceInfo @('Postgres pgKind) source
@@ -285,11 +285,11 @@ runTxWithMetadataCheck ::
   ) =>
   SourceName ->
   SourceConfig ('Postgres pgKind) ->
-  Q.TxAccess ->
+  PG.TxAccess ->
   TableCache ('Postgres pgKind) ->
   FunctionCache ('Postgres pgKind) ->
   Bool ->
-  Q.TxET QErr m a ->
+  PG.TxET QErr m a ->
   m (a, MetadataModifier)
 runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cascadeDependencies tx =
   liftEitherM $
@@ -400,12 +400,12 @@ fetchTablesFunctionsFromOids ::
   (MonadIO m) =>
   [OID] ->
   [OID] ->
-  Q.TxET QErr m ([TableName ('Postgres pgKind)], [FunctionName ('Postgres pgKind)])
+  PG.TxET QErr m ([TableName ('Postgres pgKind)], [FunctionName ('Postgres pgKind)])
 fetchTablesFunctionsFromOids tableOids functionOids =
-  ((Q.getAltJ *** Q.getAltJ) . Q.getRow)
-    <$> Q.withQE
+  ((PG.getAltJ *** PG.getAltJ) . PG.getRow)
+    <$> PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     SELECT
       COALESCE(
         ( SELECT
@@ -445,7 +445,7 @@ fetchTablesFunctionsFromOids tableOids functionOids =
         '[]'
       ) AS "functions"
   |]
-      (Q.AltJ $ map mkOidObject tableOids, Q.AltJ $ map mkOidObject functionOids)
+      (PG.AltJ $ map mkOidObject tableOids, PG.AltJ $ map mkOidObject functionOids)
       True
   where
     mkOidObject oid = object ["oid" .= oid]

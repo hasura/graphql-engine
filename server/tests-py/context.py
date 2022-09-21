@@ -280,6 +280,9 @@ class GraphQLWSClient():
         if json_msg['type'] == 'ping':
             new_msg = json_msg
             new_msg['type'] = 'pong'
+            # Decline to reflect the payload of the ping, because the
+            # graphql-ws specification does not require it
+            new_msg.pop('payload')
             self.send(json.dumps(new_msg))
             return
 
@@ -747,36 +750,23 @@ class EvtsWebhookServer(ThreadedHTTPServer):
     def is_queue_empty(self):
         return self.resp_queue.empty
 
-    def teardown(self):
-        self.evt_trggr_httpd.shutdown()
-        self.evt_trggr_httpd.server_close()
-        graphql_server.stop_server(self.graphql_server)
-        self.gql_srvr_thread.join()
-        self.evt_trggr_web_server.join()
-
 class HGECtxGQLServer:
-    def __init__(self, hge_urls, port=5000):
+    def __init__(self, port: int):
         # start the graphql server
         self.port = port
-        self._hge_urls = hge_urls
-        self.is_running = False
-        self.start_server()
+        self.is_running: bool = False
 
     def start_server(self):
         if not self.is_running:
-            self.graphql_server = graphql_server.create_server('127.0.0.1', self.port)
-            self.hge_urls = graphql_server.set_hge_urls(self._hge_urls)
-            self.gql_srvr_thread = threading.Thread(target=self.graphql_server.serve_forever)
-            self.gql_srvr_thread.start()
+            self.server = graphql_server.create_server('localhost', self.port)
+            self.thread = threading.Thread(target=self.server.serve_forever)
+            self.thread.start()
         self.is_running = True
-
-    def teardown(self):
-        self.stop_server()
 
     def stop_server(self):
         if self.is_running:
-            graphql_server.stop_server(self.graphql_server)
-            self.gql_srvr_thread.join()
+            graphql_server.stop_server(self.server)
+            self.thread.join()
         self.is_running = False
 
 class HGECtx:
@@ -785,7 +775,7 @@ class HGECtx:
 
         self.http = requests.Session()
         self.hge_key = config.getoption('--hge-key')
-        self.timeout = 60
+        self.timeout = 120  # BigQuery can take a while
         self.hge_url = hge_url
         self.pg_url = pg_url
         self.hge_webhook = config.getoption('--hge-webhook')

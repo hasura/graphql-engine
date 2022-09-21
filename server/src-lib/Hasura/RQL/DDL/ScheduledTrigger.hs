@@ -201,19 +201,17 @@ runGetEventInvocations ::
   ) =>
   GetEventInvocations ->
   m EncJSON
-runGetEventInvocations GetEventInvocations {..} = do
+runGetEventInvocations getEventInvocations@GetEventInvocations {..} = do
   case _geiInvocationsBy of
     GIBEventId _ _ -> pure ()
     GIBEvent event -> case event of
       SEOneOff -> pure ()
       SECron name -> checkExists name
-  WithTotalCount count invocations <- fetchInvocations _geiInvocationsBy _geiPagination
+  WithOptionalTotalCount countMaybe invocations <- fetchInvocations getEventInvocations
   pure $
     encJFromJValue $
-      J.object
-        [ "invocations" J..= invocations,
-          "count" J..= count
-        ]
+      J.object $
+        ("invocations" J..= invocations) : (maybe mempty (\count -> ["count" J..= count]) countMaybe)
 
 -- | Metadata API handler to retrieve all the cron triggers from the metadata
 runGetCronTriggers :: MetadataM m => m EncJSON

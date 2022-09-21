@@ -24,29 +24,40 @@ module Hasura.Backends.Postgres.DDL.EventTrigger
     unlockEventsInSource,
     updateColumnInEventTrigger,
     checkIfTriggerExists,
+    addCleanupSchedules,
+    deleteAllScheduledCleanups,
+    getCleanupEventsForDeletion,
+    updateCleanupEventStatusToDead,
+    updateCleanupEventStatusToPaused,
+    updateCleanupEventStatusToCompleted,
+    deleteEventTriggerLogs,
   )
 where
 
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.FileEmbed (makeRelativeToProject)
+import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as HashSet
 import Data.Int (Int64)
 import Data.Set.NonEmpty qualified as NE
 import Data.Text.Lazy qualified as TL
 import Data.Time.Clock qualified as Time
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML
+import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types hiding (TableName)
 import Hasura.Backends.Postgres.Translate.Column
 import Hasura.Base.Error
+import Hasura.Eventing.Common
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (Backend, SourceConfig, TableName)
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
+import Hasura.RQL.Types.ScheduledTrigger (formatTime')
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table (PrimaryKey)
 import Hasura.SQL.Backend
@@ -57,6 +68,7 @@ import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Text.Builder qualified as TB
 import Text.Shakespeare.Text qualified as ST
 
 fetchUndeliveredEvents ::
@@ -134,7 +146,7 @@ recordSuccess ::
 recordSuccess sourceConfig event invocation maintenanceModeVersion =
   liftIO $
     runPgSourceWriteTx sourceConfig $ do
-      insertInvocation invocation
+      insertInvocation (tmName (eTrigger event)) invocation
       setSuccessTx event maintenanceModeVersion
 
 recordError ::
@@ -159,7 +171,7 @@ recordError' ::
 recordError' sourceConfig event invocation processEventError maintenanceModeVersion =
   liftIO $
     runPgSourceWriteTx sourceConfig $ do
-      onJust invocation insertInvocation
+      onJust invocation $ insertInvocation (tmName (eTrigger event))
       case processEventError of
         PESetRetry retryTime -> setRetryTx event retryTime maintenanceModeVersion
         PESetError -> setErrorTx event maintenanceModeVersion
@@ -211,10 +223,10 @@ createMissingSQLTriggers sourceConfig table (allCols, _) triggerName opsDefiniti
     doesSQLTriggerExist serverConfigCtx op opSpec = do
       let opTriggerName = pgTriggerName op triggerName
       doesOpTriggerFunctionExist <-
-        runIdentity . Q.getRow
-          <$> Q.withQE
+        runIdentity . PG.getRow
+          <$> PG.withQE
             defaultTxErrorHandler
-            [Q.sql|
+            [PG.sql|
                  SELECT EXISTS
                    ( SELECT 1
                      FROM pg_proc
@@ -327,23 +339,24 @@ checkIfTriggerExists sourceConfig triggerName ops = do
 --   The API for our in-database work queue:
 -------------------------------------------
 
-insertInvocation :: Invocation 'EventType -> Q.TxE QErr ()
-insertInvocation invo = do
-  Q.unitQE
+insertInvocation :: TriggerName -> Invocation 'EventType -> PG.TxE QErr ()
+insertInvocation tName invo = do
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
-          INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
-          VALUES ($1, $2, $3, $4)
+    [PG.sql|
+          INSERT INTO hdb_catalog.event_invocation_logs (event_id, trigger_name, status, request, response)
+          VALUES ($1, $2, $3, $4, $5)
           |]
     ( iEventId invo,
+      (triggerNameToTxt tName),
       fromIntegral <$> iStatus invo :: Maybe Int64,
-      Q.AltJ $ toJSON $ iRequest invo,
-      Q.AltJ $ toJSON $ iResponse invo
+      PG.AltJ $ toJSON $ iRequest invo,
+      PG.AltJ $ toJSON $ iResponse invo
     )
     True
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
           UPDATE hdb_catalog.event_log
 
           SET tries = tries + 1
@@ -356,22 +369,22 @@ insertPGManualEvent ::
   QualifiedTable ->
   TriggerName ->
   Value ->
-  Q.TxE QErr EventId
+  PG.TxE QErr EventId
 insertPGManualEvent (QualifiedObject schemaName tableName) triggerName rowData = do
-  runIdentity . Q.getRow
-    <$> Q.withQE
+  runIdentity . PG.getRow
+    <$> PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     SELECT hdb_catalog.insert_event_log($1, $2, $3, $4, $5)
   |]
-      (schemaName, tableName, triggerName, (tshow MANUAL), Q.AltJ rowData)
+      (schemaName, tableName, triggerName, (tshow MANUAL), PG.AltJ rowData)
       False
 
-archiveEvents :: TriggerName -> Q.TxE QErr ()
+archiveEvents :: TriggerName -> PG.TxE QErr ()
 archiveEvents trn =
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
            UPDATE hdb_catalog.event_log
            SET archived = 't'
            WHERE trigger_name = $1
@@ -379,7 +392,7 @@ archiveEvents trn =
     (Identity trn)
     False
 
-getMaintenanceModeVersionTx :: Q.TxE QErr MaintenanceModeVersion
+getMaintenanceModeVersionTx :: PG.TxE QErr MaintenanceModeVersion
 getMaintenanceModeVersionTx = liftTx $ do
   catalogVersion <- getCatalogVersion -- From the user's DB
   -- the previous version and the current version will change depending
@@ -399,12 +412,12 @@ getMaintenanceModeVersionTx = liftTx $ do
 -- limit. Process events approximately in created_at order, but we make no
 -- ordering guarentees; events can and will race. Nevertheless we want to
 -- ensure newer change events don't starve older ones.
-fetchEvents :: SourceName -> [TriggerName] -> FetchBatchSize -> Q.TxE QErr [Event ('Postgres pgKind)]
+fetchEvents :: SourceName -> [TriggerName] -> FetchBatchSize -> PG.TxE QErr [Event ('Postgres pgKind)]
 fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
   map uncurryEvent
-    <$> Q.listQE
+    <$> PG.listQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       UPDATE hdb_catalog.event_log
       SET locked = NOW()
       WHERE id IN ( SELECT l.id
@@ -424,7 +437,7 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
       (limit, triggerNamesTxt)
       True
   where
-    uncurryEvent (id', sourceName, tableName, triggerName, Q.AltJ payload, tries, created) =
+    uncurryEvent (id', sourceName, tableName, triggerName, PG.AltJ payload, tries, created) =
       Event
         { eId = id',
           eSource = source,
@@ -438,13 +451,13 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
 
     triggerNamesTxt = PGTextArray $ triggerNameToTxt <$> triggerNames
 
-fetchEventsMaintenanceMode :: SourceName -> [TriggerName] -> FetchBatchSize -> MaintenanceModeVersion -> Q.TxE QErr [Event ('Postgres pgKind)]
+fetchEventsMaintenanceMode :: SourceName -> [TriggerName] -> FetchBatchSize -> MaintenanceModeVersion -> PG.TxE QErr [Event ('Postgres pgKind)]
 fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
   PreviousMMVersion ->
     map uncurryEvent
-      <$> Q.listQE
+      <$> PG.listQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
         UPDATE hdb_catalog.event_log
         SET locked = 't'
         WHERE id IN ( SELECT l.id
@@ -460,7 +473,7 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
         (Identity limit)
         True
     where
-      uncurryEvent (id', sn, tn, trn, Q.AltJ payload, tries, created) =
+      uncurryEvent (id', sn, tn, trn, PG.AltJ payload, tries, created) =
         Event
           { eId = id',
             eSource = SNDefault, -- in v1, there'll only be the default source
@@ -473,12 +486,12 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
       limit = fromIntegral (_unFetchBatchSize fetchBatchSize) :: Word64
   CurrentMMVersion -> fetchEvents sourceName triggerNames fetchBatchSize
 
-setSuccessTx :: Event ('Postgres pgKind) -> MaintenanceMode MaintenanceModeVersion -> Q.TxE QErr ()
+setSuccessTx :: Event ('Postgres pgKind) -> MaintenanceMode MaintenanceModeVersion -> PG.TxE QErr ()
 setSuccessTx e = \case
   (MaintenanceModeEnabled PreviousMMVersion) ->
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     UPDATE hdb_catalog.event_log
     SET delivered = 't', next_retry_at = NULL, locked = 'f'
     WHERE id = $1
@@ -489,9 +502,9 @@ setSuccessTx e = \case
   MaintenanceModeDisabled -> latestVersionSetSuccess
   where
     latestVersionSetSuccess =
-      Q.unitQE
+      PG.unitQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
       UPDATE hdb_catalog.event_log
       SET delivered = 't', next_retry_at = NULL, locked = NULL
       WHERE id = $1
@@ -499,12 +512,12 @@ setSuccessTx e = \case
         (Identity $ eId e)
         True
 
-setErrorTx :: Event ('Postgres pgKind) -> MaintenanceMode MaintenanceModeVersion -> Q.TxE QErr ()
+setErrorTx :: Event ('Postgres pgKind) -> MaintenanceMode MaintenanceModeVersion -> PG.TxE QErr ()
 setErrorTx e = \case
   (MaintenanceModeEnabled PreviousMMVersion) ->
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     UPDATE hdb_catalog.event_log
     SET error = 't', next_retry_at = NULL, locked = 'f'
     WHERE id = $1
@@ -515,9 +528,9 @@ setErrorTx e = \case
   MaintenanceModeDisabled -> latestVersionSetError
   where
     latestVersionSetError =
-      Q.unitQE
+      PG.unitQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
       UPDATE hdb_catalog.event_log
       SET error = 't', next_retry_at = NULL, locked = NULL
       WHERE id = $1
@@ -525,12 +538,12 @@ setErrorTx e = \case
         (Identity $ eId e)
         True
 
-setRetryTx :: Event ('Postgres pgKind) -> Time.UTCTime -> MaintenanceMode MaintenanceModeVersion -> Q.TxE QErr ()
+setRetryTx :: Event ('Postgres pgKind) -> Time.UTCTime -> MaintenanceMode MaintenanceModeVersion -> PG.TxE QErr ()
 setRetryTx e time = \case
   (MaintenanceModeEnabled PreviousMMVersion) ->
-    Q.unitQE
+    PG.unitQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     UPDATE hdb_catalog.event_log
     SET next_retry_at = $1, locked = 'f'
     WHERE id = $2
@@ -541,9 +554,9 @@ setRetryTx e time = \case
   MaintenanceModeDisabled -> latestVersionSetRetry
   where
     latestVersionSetRetry =
-      Q.unitQE
+      PG.unitQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
               UPDATE hdb_catalog.event_log
               SET next_retry_at = $1, locked = NULL
               WHERE id = $2
@@ -551,15 +564,15 @@ setRetryTx e time = \case
         (time, eId e)
         True
 
-dropTriggerQ :: TriggerName -> Q.TxE QErr ()
+dropTriggerQ :: TriggerName -> PG.TxE QErr ()
 dropTriggerQ trn =
   mapM_ (dropTriggerOp trn) [INSERT, UPDATE, DELETE]
 
-dropTriggerOp :: TriggerName -> Ops -> Q.TxE QErr ()
+dropTriggerOp :: TriggerName -> Ops -> PG.TxE QErr ()
 dropTriggerOp triggerName triggerOp =
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    (Q.fromText $ getDropFuncSql triggerOp)
+    (PG.fromText $ getDropFuncSql triggerOp)
     ()
     False
   where
@@ -571,12 +584,12 @@ dropTriggerOp triggerName triggerOp =
         <> "()"
         <> " CASCADE"
 
-checkEvent :: EventId -> Q.TxE QErr ()
+checkEvent :: EventId -> PG.TxE QErr ()
 checkEvent eid = do
   events <-
-    Q.listQE
+    PG.listQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
               SELECT l.locked IS NOT NULL AND l.locked >= (NOW() - interval '30 minute')
               FROM hdb_catalog.event_log l
               WHERE l.id = $1
@@ -593,11 +606,11 @@ checkEvent eid = do
       when locked $
         throw400 Busy "event is already being processed"
 
-markForDelivery :: EventId -> Q.TxE QErr ()
+markForDelivery :: EventId -> PG.TxE QErr ()
 markForDelivery eid =
-  Q.unitQE
+  PG.unitQE
     defaultTxErrorHandler
-    [Q.sql|
+    [PG.sql|
           UPDATE hdb_catalog.event_log
           SET
           delivered = 'f',
@@ -608,19 +621,19 @@ markForDelivery eid =
     (Identity eid)
     True
 
-redeliverEventTx :: EventId -> Q.TxE QErr ()
+redeliverEventTx :: EventId -> PG.TxE QErr ()
 redeliverEventTx eventId = do
   checkEvent eventId
   markForDelivery eventId
 
 -- | unlockEvents takes an array of 'EventId' and unlocks them. This function is called
 --   when a graceful shutdown is initiated.
-unlockEventsTx :: [EventId] -> Q.TxE QErr Int
+unlockEventsTx :: [EventId] -> PG.TxE QErr Int
 unlockEventsTx eventIds =
-  runIdentity . Q.getRow
-    <$> Q.withQE
+  runIdentity . PG.getRow
+    <$> PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
      WITH "cte" AS
      (UPDATE hdb_catalog.event_log
      SET locked = NULL
@@ -641,7 +654,7 @@ unlockEventsTx eventIds =
 --   An example of it is `"notify_hasura_users_all_INSERT"` where `users_all`
 --   is the name of the event trigger.
 newtype QualifiedTriggerName = QualifiedTriggerName {unQualifiedTriggerName :: Text}
-  deriving (Show, Eq, Q.ToPrepArg)
+  deriving (Show, Eq, PG.ToPrepArg)
 
 pgTriggerName :: Ops -> TriggerName -> QualifiedTriggerName
 pgTriggerName op trn = qualifyTriggerName op $ triggerNameToTxt trn
@@ -670,8 +683,8 @@ mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (Subscr
   let dbQualifiedTriggerName = pgIdenTrigger op triggerName
   () <-
     liftTx $
-      Q.multiQE defaultTxErrorHandler $
-        Q.fromText . TL.toStrict $
+      PG.multiQE defaultTxErrorHandler $
+        PG.fromText . TL.toStrict $
           let -- If there are no specific delivery columns selected by user then all the columns will be delivered
               -- in payload hence 'SubCStar'.
               deliveryColumns = fromMaybe SubCStar deliveryColumns'
@@ -733,16 +746,16 @@ mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (Subscr
 checkIfTriggerExistsForTableQ ::
   QualifiedTriggerName ->
   QualifiedTable ->
-  Q.TxE QErr Bool
+  PG.TxE QErr Bool
 checkIfTriggerExistsForTableQ (QualifiedTriggerName triggerName) (QualifiedObject schemaName tableName) =
-  fmap (runIdentity . Q.getRow) $
-    Q.withQE
+  fmap (runIdentity . PG.getRow) $
+    PG.withQE
       defaultTxErrorHandler
       -- 'regclass' converts non-quoted strings to lowercase but since identifiers
       -- such as table name needs are case-sensitive, we add quotes to table name
       -- using 'quote_ident'.
       -- Ref: https://www.postgresql.org/message-id/3896142.1620136761%40sss.pgh.pa.us
-      [Q.sql|
+      [PG.sql|
       SELECT EXISTS (
         SELECT 1
         FROM pg_trigger
@@ -756,13 +769,13 @@ checkIfTriggerExistsForTableQ (QualifiedTriggerName triggerName) (QualifiedObjec
 checkIfFunctionExistsQ ::
   TriggerName ->
   Ops ->
-  Q.TxE QErr Bool
+  PG.TxE QErr Bool
 checkIfFunctionExistsQ triggerName op = do
   let qualifiedTriggerName = pgTriggerName op triggerName
-  fmap (runIdentity . Q.getRow) $
-    Q.withQE
+  fmap (runIdentity . PG.getRow) $
+    PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       SELECT EXISTS (
         SELECT 1
         FROM pg_catalog.pg_proc
@@ -791,8 +804,8 @@ mkTrigger triggerName table allCols op subOpSpec = do
   doesTriggerExist <- liftTx $ checkIfTriggerExistsForTableQ (pgTriggerName op triggerName) table
   unless doesTriggerExist $
     let sqlQuery =
-          Q.fromText $ createTriggerSQL dbTriggerName (toSQLTxt table) (tshow op)
-     in liftTx $ Q.unitQE defaultTxErrorHandler sqlQuery () False
+          PG.fromText $ createTriggerSQL dbTriggerName (toSQLTxt table) (tshow op)
+     in liftTx $ PG.unitQE defaultTxErrorHandler sqlQuery () False
   where
     createTriggerSQL (QualifiedTriggerName triggerNameTxt) tableName opText =
       [ST.st|
@@ -811,3 +824,306 @@ mkAllTriggersQ triggerName table allCols fullspec = do
   onJust (tdInsert fullspec) (mkTrigger triggerName table allCols INSERT)
   onJust (tdUpdate fullspec) (mkTrigger triggerName table allCols UPDATE)
   onJust (tdDelete fullspec) (mkTrigger triggerName table allCols DELETE)
+
+-- | Add cleanup logs for given trigger names and cleanup configs. This will perform the following steps:
+--
+--   1. Get last scheduled cleanup event and count.
+--   2. If count is less than 5, then add add more cleanup logs, else do nothing
+addCleanupSchedules ::
+  (MonadIO m, MonadError QErr m) =>
+  PGSourceConfig ->
+  [(TriggerName, AutoTriggerLogCleanupConfig)] ->
+  m ()
+addCleanupSchedules sourceConfig triggersWithcleanupConfig =
+  unless (null triggersWithcleanupConfig) $ do
+    let triggerNames = map fst triggersWithcleanupConfig
+    countAndLastSchedules <- liftEitherM $ liftIO $ runPgSourceReadTx sourceConfig $ selectLastCleanupScheduledTimestamp triggerNames
+    currTime <- liftIO $ Time.getCurrentTime
+    let triggerMap = Map.fromList $ map (\(triggerName, count, lastTime) -> (triggerName, (count, lastTime))) countAndLastSchedules
+        scheduledTriggersAndTimestamps =
+          mapMaybe
+            ( \(triggerName, cleanupConfig) ->
+                let lastScheduledTime = case Map.lookup triggerName triggerMap of
+                      Nothing -> Just currTime
+                      Just (count, lastTime) -> if count < 5 then (Just lastTime) else Nothing
+                 in fmap
+                      ( \lastScheduledTimestamp ->
+                          (triggerName, generateScheduleTimes lastScheduledTimestamp cleanupSchedulesToBeGenerated (_atlccSchedule cleanupConfig))
+                      )
+                      lastScheduledTime
+            )
+            triggersWithcleanupConfig
+    unless (null scheduledTriggersAndTimestamps) $
+      liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
+
+-- | Insert the cleanup logs for the fiven trigger name and schedules
+insertEventTriggerCleanupLogsTx :: [(TriggerName, [Time.UTCTime])] -> PG.TxET QErr IO ()
+insertEventTriggerCleanupLogsTx triggersWithschedules = do
+  let insertCleanupEventsSql =
+        TB.run $
+          toSQL
+            S.SQLInsert
+              { siTable = cleanupLogTable,
+                siCols = map unsafePGCol ["trigger_name", "scheduled_at", "status"],
+                siValues = S.ValuesExp $ concatMap genArr triggersWithschedules,
+                siConflict = Just $ S.DoNothing Nothing,
+                siRet = Nothing
+              }
+  PG.unitQE defaultTxErrorHandler (PG.fromText insertCleanupEventsSql) () False
+  where
+    cleanupLogTable = QualifiedObject "hdb_catalog" "hdb_event_log_cleanups"
+    genArr (t, schedules) = map (toTupleExp . (\s -> [(triggerNameToTxt t), (formatTime' s), "scheduled"])) schedules
+    toTupleExp = S.TupleExp . map S.SELit
+
+-- | Get the last scheduled timestamp for a given event trigger name
+selectLastCleanupScheduledTimestamp :: [TriggerName] -> PG.TxET QErr IO [(TriggerName, Int, Time.UTCTime)]
+selectLastCleanupScheduledTimestamp triggerNames =
+  PG.listQE
+    defaultTxErrorHandler
+    [PG.sql|
+      SELECT trigger_name, count(1), max(scheduled_at)
+      FROM hdb_catalog.hdb_event_log_cleanups
+      WHERE status='scheduled' AND trigger_name = ANY($1::text[])
+      GROUP BY trigger_name
+    |]
+    (Identity $ PGTextArray $ map triggerNameToTxt triggerNames)
+    True
+
+deleteAllScheduledCleanupsTx :: TriggerName -> PG.TxE QErr ()
+deleteAllScheduledCleanupsTx triggerName = do
+  PG.unitQE
+    defaultTxErrorHandler
+    [PG.sql|
+      DELETE from hdb_catalog.hdb_event_log_cleanups
+      WHERE (status = 'scheduled') AND (trigger_name = $1)
+    |]
+    (Identity (triggerNameToTxt triggerName))
+    True
+
+-- | @deleteAllScheduledCleanups@ deletes all scheduled cleanup logs for a given event trigger
+deleteAllScheduledCleanups ::
+  (MonadIO m, MonadError QErr m) =>
+  PGSourceConfig ->
+  TriggerName ->
+  m ()
+deleteAllScheduledCleanups sourceConfig triggerName =
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deleteAllScheduledCleanupsTx triggerName
+
+getCleanupEventsForDeletionTx :: PG.TxE QErr ([(Text, TriggerName)])
+getCleanupEventsForDeletionTx =
+  PG.listQE
+    defaultTxErrorHandler
+    [PG.sql|
+          WITH latest_events as (
+            SELECT * from hdb_catalog.hdb_event_log_cleanups WHERE status = 'scheduled' AND scheduled_at < (now() at time zone 'utc')
+          ),
+            grouped_events as (
+              SELECT trigger_name, max(scheduled_at) as scheduled_at
+                from latest_events
+              group by trigger_name
+            ),
+            mark_events_as_dead as (
+              UPDATE hdb_catalog.hdb_event_log_cleanups l
+              SET status = 'dead'
+              FROM grouped_events AS g
+              WHERE l.trigger_name = g.trigger_name AND l.scheduled_at < g.scheduled_at AND l.status = 'scheduled'
+            )
+          SELECT l.id, l.trigger_name
+            FROM latest_events l
+                JOIN grouped_events g ON l.trigger_name = g.trigger_name
+                WHERE l.scheduled_at = g.scheduled_at;
+      |]
+    ()
+    False
+
+-- | @getCleanupEventsForDeletion@ returns the cleanup logs that are to be deleted.
+-- This will perform the following steps:
+--
+-- 1. Get the scheduled cleanup events that were scheduled before current time.
+-- 2. If there are multiple entries for the same trigger name with different scheduled time,
+--    then fetch the latest entry and mark others as dead.
+getCleanupEventsForDeletion ::
+  (MonadIO m, MonadError QErr m) =>
+  PGSourceConfig ->
+  m [(Text, TriggerName)]
+getCleanupEventsForDeletion sourceConfig =
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ getCleanupEventsForDeletionTx
+
+markCleanupEventsAsDeadTx :: [Text] -> PG.TxE QErr ()
+markCleanupEventsAsDeadTx toDeadEvents = do
+  unless (null toDeadEvents) $
+    PG.unitQE
+      defaultTxErrorHandler
+      [PG.sql|
+        UPDATE hdb_catalog.hdb_event_log_cleanups l
+        SET status = 'dead'
+        WHERE id = ANY($1::text[])
+      |]
+      (Identity $ PGTextArray toDeadEvents)
+      True
+
+-- unitQueryE HGE.defaultMSSQLTxErrorHandler $
+--   rawUnescapedText . LT.toStrict $
+--     $(makeRelativeToProject "src-rsr/mssql/event_logs_cleanup_sqls/mssql_update_events_to_dead.sql.shakespeare" >>= ST.stextFile)
+
+updateCleanupEventStatusToDead ::
+  (MonadIO m, MonadError QErr m) =>
+  PGSourceConfig ->
+  [Text] ->
+  m ()
+updateCleanupEventStatusToDead sourceConfig toDeadEvents =
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ markCleanupEventsAsDeadTx toDeadEvents
+
+updateCleanupEventStatusToPausedTx :: Text -> PG.TxE QErr ()
+updateCleanupEventStatusToPausedTx cleanupLogId =
+  PG.unitQE
+    defaultTxErrorHandler
+    [PG.sql|
+          UPDATE hdb_catalog.hdb_event_log_cleanups
+          SET status = 'paused'
+          WHERE id = $1
+          |]
+    (Identity cleanupLogId)
+    True
+
+-- | @updateCleanupEventStatusToPaused@ updates the cleanup log status to `paused` if the event trigger configuration is paused.
+updateCleanupEventStatusToPaused ::
+  (MonadIO m, MonadError QErr m) =>
+  PGSourceConfig ->
+  Text ->
+  m ()
+updateCleanupEventStatusToPaused sourceConfig cleanupLogId =
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ updateCleanupEventStatusToPausedTx cleanupLogId
+
+updateCleanupEventStatusToCompletedTx :: Text -> DeletedEventLogStats -> PG.TxE QErr ()
+updateCleanupEventStatusToCompletedTx cleanupLogId (DeletedEventLogStats numEventLogs numInvocationLogs) =
+  PG.unitQE
+    defaultTxErrorHandler
+    [PG.sql|
+          UPDATE hdb_catalog.hdb_event_log_cleanups
+          SET status = 'completed', deleted_event_logs = $2 , deleted_event_invocation_logs = $3
+          WHERE id = $1
+          |]
+    (cleanupLogId, delLogs, delInvLogs)
+    True
+  where
+    delLogs = (fromIntegral $ numEventLogs) :: Int64
+    delInvLogs = (fromIntegral $ numInvocationLogs) :: Int64
+
+-- | @updateCleanupEventStatusToCompleted@ updates the cleanup log status after the event logs are deleted.
+-- This will perform the following steps:
+--
+-- 1. Updates the cleanup config status to `completed`.
+-- 2. Updates the number of event logs and event invocation logs that were deleted for a trigger name
+updateCleanupEventStatusToCompleted ::
+  (MonadIO m, MonadError QErr m) =>
+  PGSourceConfig ->
+  Text ->
+  DeletedEventLogStats ->
+  m ()
+updateCleanupEventStatusToCompleted sourceConfig cleanupLogId delStats =
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ updateCleanupEventStatusToCompletedTx cleanupLogId delStats
+
+deleteEventTriggerLogsTx :: TriggerLogCleanupConfig -> PG.TxE QErr DeletedEventLogStats
+deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
+  -- Setting the timeout
+  PG.unitQE defaultTxErrorHandler (PG.fromText $ "SET statement_timeout = " <> (tshow qTimeout)) () True
+  -- Select all the dead events based on criteria set in the cleanup config.
+  deadEventIDs <-
+    map runIdentity
+      <$> PG.listQE
+        defaultTxErrorHandler
+        ( PG.fromText
+            [ST.st|
+          SELECT id FROM hdb_catalog.event_log
+          WHERE ((delivered = true OR error = true) AND trigger_name = $1)
+          AND created_at < now() - interval '#{qRetentionPeriod}'
+          AND locked IS NULL
+          LIMIT $2
+        |]
+        )
+        (qTriggerName, qBatchSize)
+        True
+  --  Lock the events in the database so that other HGE instances don't pick them up for deletion.
+  PG.unitQE
+    defaultTxErrorHandler
+    [PG.sql|
+      UPDATE hdb_catalog.event_log
+      SET locked = now()
+      WHERE id = ANY($1::text[]);
+    |]
+    (Identity $ PGTextArray $ map unEventId deadEventIDs)
+    True
+  --  Based on the config either delete the corresponding invocation logs or set trigger_name
+  --  to appropriate value. Please note that the event_id won't exist anymore in the event_log
+  --  table, but we are still retaining it for debugging purpose.
+  deletedInvocationLogs <-
+    if tlccCleanInvocationLogs
+      then
+        runIdentity . PG.getRow
+          <$> PG.withQE
+            defaultTxErrorHandler
+            [PG.sql|
+              WITH deletedInvocations AS (
+                DELETE FROM hdb_catalog.event_invocation_logs
+                WHERE event_id = ANY($1::text[])
+                RETURNING 1
+              )
+              SELECT count(*) FROM deletedInvocations;
+            |]
+            (Identity $ PGTextArray $ map unEventId deadEventIDs)
+            True
+      else do
+        PG.unitQE
+          defaultTxErrorHandler
+          [PG.sql|
+            UPDATE hdb_catalog.event_invocation_logs
+            SET trigger_name = $2
+            WHERE event_id = ANY($1::text[])
+          |]
+          (PGTextArray $ map unEventId deadEventIDs, qTriggerName)
+          True
+        pure 0
+  --  Finally delete the event logs.
+  deletedEventLogs <-
+    runIdentity . PG.getRow
+      <$> PG.withQE
+        defaultTxErrorHandler
+        [PG.sql|
+          WITH deletedEvents AS (
+            DELETE FROM hdb_catalog.event_log
+            WHERE id = ANY($1::text[])
+            RETURNING 1
+          )
+          SELECT count(*) FROM deletedEvents;
+        |]
+        (Identity $ PGTextArray $ map unEventId deadEventIDs)
+        True
+  -- Resetting the timeout to default value (0)
+  PG.unitQE
+    defaultTxErrorHandler
+    [PG.sql|
+      SET statement_timeout = 0;
+    |]
+    ()
+    False
+  pure DeletedEventLogStats {..}
+  where
+    qTimeout = (fromIntegral $ tlccTimeout * 1000) :: Int64
+    qTriggerName = triggerNameToTxt tlccEventTriggerName
+    qRetentionPeriod = tshow tlccClearOlderThan <> " hours"
+    qBatchSize = (fromIntegral tlccBatchSize) :: Int64
+
+-- | @deleteEventTriggerLogs@ deletes the event logs (and event invocation logs) based on the cleanup configuration given
+-- This will perform the following steps:
+--
+-- 1. Select all the dead events based on criteria set in the cleanup config.
+-- 2. Lock the events in the database so that other HGE instances don't pick them up for deletion.
+-- 3. Based on the config, perform the delete action.
+deleteEventTriggerLogs ::
+  (MonadIO m, MonadError QErr m) =>
+  PGSourceConfig ->
+  TriggerLogCleanupConfig ->
+  m DeletedEventLogStats
+deleteEventTriggerLogs sourceConfig cleanupConfig =
+  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig

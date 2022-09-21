@@ -31,6 +31,9 @@ class ToYamlString a where
 instance ToYamlString String where
   showYml s = s
 
+instance ToYamlString Text where
+  showYml s = T.unpack s
+
 instance ToYamlString Int where
   showYml = show
 

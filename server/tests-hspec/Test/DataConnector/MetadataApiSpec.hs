@@ -8,8 +8,10 @@ where
 
 --------------------------------------------------------------------------------
 
+import Control.Lens qualified as Lens
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
+import Data.Aeson.Lens
 import Data.Vector qualified as Vector
 import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -79,17 +81,17 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               |]
             )
             [yaml|
-              - Artist
-              - Album
-              - Customer
-              - Employee
-              - Genre
-              - Invoice
-              - InvoiceLine
-              - MediaType
-              - Playlist
-              - PlaylistTrack
-              - Track
+              - - Artist
+              - - Album
+              - - Customer
+              - - Employee
+              - - Genre
+              - - Invoice
+              - - InvoiceLine
+              - - MediaType
+              - - Playlist
+              - - PlaylistTrack
+              - - Track
             |]
 
   describe "get_table_info" $ do
@@ -138,15 +140,26 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
         (Just backendCapabilities, Just backendString) -> do
           shouldReturnYaml
             opts
-            ( GraphqlEngine.postMetadata
-                testEnvironment
-                [yaml|
+            ( ( GraphqlEngine.postMetadata
+                  testEnvironment
+                  [yaml|
                 type: get_source_kind_capabilities
                 args:
                   name: *backendString
               |]
+              ) -- Note: These fields are backend specific so we ignore their values and just verify their shapes:
+                <&> Lens.set (key "config_schema_response" . key "otherSchemas") J.Null
+                  . Lens.set (key "config_schema_response" . key "configSchema") J.Null
+                  . Lens.set (key "options" . key "uri") J.Null
             )
-            backendCapabilities
+            [yaml|
+            capabilities: *backendCapabilities
+            config_schema_response:
+              configSchema: null
+              otherSchemas: null
+            options:
+              uri: null
+            |]
 
 schemaCrudTests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 schemaCrudTests opts = describe "A series of actions to setup and teardown a source with tracked tables and relationships" $ do

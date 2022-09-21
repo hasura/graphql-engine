@@ -7,8 +7,8 @@ module Hasura.GraphQL.Schema
   )
 where
 
-import Control.Concurrent.Extended (forConcurrentlyEIO)
-import Control.Lens
+import Control.Concurrent.Extended (concurrentlyEIO, forConcurrentlyEIO)
+import Control.Lens hiding (contexts)
 import Control.Monad.Memoize
 import Data.Aeson.Ordered qualified as JO
 import Data.Has
@@ -23,7 +23,6 @@ import Hasura.Base.ErrorMessage
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.ApolloFederation
 import Hasura.GraphQL.Context
-import Hasura.GraphQL.Execute.Types
 import Hasura.GraphQL.Namespace
 import Hasura.GraphQL.Parser.Schema.Convert (convertToSchemaIntrospection)
 import Hasura.GraphQL.Schema.Backend
@@ -98,18 +97,23 @@ buildGQLContext ::
     MonadIO m
   ) =>
   ServerConfigCtx ->
-  GraphQLQueryType ->
   SourceCache ->
   HashMap RemoteSchemaName (RemoteSchemaCtx, MetadataObject) ->
   ActionCache ->
   AnnotatedCustomTypes ->
   m
-    ( G.SchemaIntrospection,
-      HashMap RoleName (RoleContext GQLContext),
-      GQLContext,
-      HashSet InconsistentMetadata
+    ( -- Hasura schema
+      ( G.SchemaIntrospection,
+        HashMap RoleName (RoleContext GQLContext),
+        GQLContext,
+        HashSet InconsistentMetadata
+      ),
+      -- Relay schema
+      ( HashMap RoleName (RoleContext GQLContext),
+        GQLContext
+      )
     )
-buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActions customTypes = do
+buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customTypes = do
   let remoteSchemasRoles = concatMap (Map.keys . _rscPermissions . fst . snd) $ Map.toList allRemoteSchemas
       nonTableRoles =
         Set.insert adminRoleName $
@@ -118,19 +122,17 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
       allActionInfos = Map.elems allActions
       allTableRoles = Set.fromList $ getTableRoles =<< Map.elems sources
       allRoles = nonTableRoles <> allTableRoles
-      defaultNC = bool Nothing _sccDefaultNamingConvention $ EFNamingConventions `elem` _sccExperimentalFeatures
 
-  roleContexts <-
+  contexts <-
     -- Buld role contexts in parallel. We'd prefer deterministic parallelism
     -- but that isn't really acheivable (see mono #3829). NOTE: the admin role
     -- will still be a bottleneck here, even on huge_schema which has many
     -- roles.
     fmap Map.fromList $
-      forConcurrentlyEIO 10 (Set.toList allRoles) $ \role ->
+      forConcurrentlyEIO 10 (Set.toList allRoles) $ \role -> do
         (role,)
-          <$> case queryType of
-            QueryHasura ->
-              buildRoleContext
+          <$> concurrentlyEIO
+            ( buildRoleContext
                 (_sccSQLGenCtx, _sccFunctionPermsCtx)
                 sources
                 allRemoteSchemas
@@ -139,28 +141,34 @@ buildGQLContext ServerConfigCtx {..} queryType sources allRemoteSchemas allActio
                 role
                 _sccRemoteSchemaPermsCtx
                 _sccExperimentalFeatures
-                defaultNC
-            QueryRelay ->
-              (,mempty,G.SchemaIntrospection mempty)
-                <$> buildRelayRoleContext
-                  (_sccSQLGenCtx, _sccFunctionPermsCtx)
-                  sources
-                  allActionInfos
-                  customTypes
-                  role
-                  _sccExperimentalFeatures
-                  defaultNC
+            )
+            ( buildRelayRoleContext
+                (_sccSQLGenCtx, _sccFunctionPermsCtx)
+                sources
+                allActionInfos
+                customTypes
+                role
+            )
+  let hasuraContexts = fst <$> contexts
+      relayContexts = snd <$> contexts
 
   adminIntrospection <-
-    case Map.lookup adminRoleName roleContexts of
+    case Map.lookup adminRoleName hasuraContexts of
       Just (_context, _errors, introspection) -> pure introspection
       Nothing -> throw500 "buildGQLContext failed to build for the admin role"
   (unauthenticated, unauthenticatedRemotesErrors) <- unauthenticatedContext allRemoteSchemas _sccRemoteSchemaPermsCtx
   pure
-    ( adminIntrospection,
-      view _1 <$> roleContexts,
-      unauthenticated,
-      Set.unions $ unauthenticatedRemotesErrors : map (view _2) (Map.elems roleContexts)
+    ( ( adminIntrospection,
+        view _1 <$> hasuraContexts,
+        unauthenticated,
+        Set.unions $ unauthenticatedRemotesErrors : (view _2 <$> Map.elems hasuraContexts)
+      ),
+      ( relayContexts,
+        -- Currently, remote schemas are exposed through Relay, but ONLY through
+        -- the unauthenticated role.  This is probably an oversight.  See
+        -- hasura/graphql-engine-mono#3883.
+        unauthenticated
+      )
     )
 
 -- | Build the @QueryHasura@ context for a given role.
@@ -175,13 +183,12 @@ buildRoleContext ::
   RoleName ->
   Options.RemoteSchemaPermissions ->
   Set.HashSet ExperimentalFeature ->
-  Maybe NamingCase ->
   m
     ( RoleContext GQLContext,
       HashSet InconsistentMetadata,
       G.SchemaIntrospection
     )
-buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures globalDefaultNC = do
+buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures = do
   let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
         functionPermsCtx
         ) = options
@@ -304,11 +311,11 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))],
           [(G.Name, Parser 'Output P.Parse (ApolloFederationParserFunction P.Parse))]
         )
-    buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization') =
-      withSourceCustomization sourceCustomization (namingConventionSupport @b) globalDefaultNC do
-        mkRootFieldName <- getRootFieldsCustomizer sourceCustomization (namingConventionSupport @b) globalDefaultNC
+    buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization) =
+      withSourceCustomization sourceCustomization do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
+            mkRootFieldName = _rscRootFields sourceCustomization
         makeTypename <- asks getter
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields, apolloFedTableParsers) <-
           buildQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions
@@ -329,11 +336,6 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
             sourceCustomization
             (makeTypename <> MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
-      where
-        sourceCustomization =
-          if EFNamingConventions `elem` expFeatures
-            then sourceCustomization'
-            else sourceCustomization' {_scNamingConvention = Nothing}
 
 buildRelayRoleContext ::
   forall m.
@@ -343,10 +345,8 @@ buildRelayRoleContext ::
   [ActionInfo] ->
   AnnotatedCustomTypes ->
   RoleName ->
-  Set.HashSet ExperimentalFeature ->
-  Maybe NamingCase ->
   m (RoleContext GQLContext)
-buildRelayRoleContext options sources actions customTypes role expFeatures globalDefaultNC = do
+buildRelayRoleContext options sources actions customTypes role = do
   let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
         functionPermsCtx
         ) = options
@@ -447,12 +447,11 @@ buildRelayRoleContext options sources actions customTypes role expFeatures globa
           [FieldParser P.Parse (NamespacedField (MutationRootField UnpreparedValue))],
           [FieldParser P.Parse (NamespacedField (QueryRootField UnpreparedValue))]
         )
-    buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization') = do
-      mkRootFieldName <- getRootFieldsCustomizer sourceCustomization (namingConventionSupport @b) globalDefaultNC
-      withSourceCustomization sourceCustomization (namingConventionSupport @b) globalDefaultNC do
+    buildSource sourceInfo@(SourceInfo _ tables functions _ _ sourceCustomization) = do
+      withSourceCustomization sourceCustomization do
         let validFunctions = takeValidFunctions functions
             validTables = takeValidTables tables
-
+            mkRootFieldName = _rscRootFields sourceCustomization
         (uncustomizedQueryRootFields, uncustomizedSubscriptionRootFields) <-
           buildRelayQueryAndSubscriptionFields mkRootFieldName sourceInfo validTables validFunctions
         makeTypename <- asks getter
@@ -473,11 +472,6 @@ buildRelayRoleContext options sources actions customTypes role expFeatures globa
             sourceCustomization
             (makeTypename <> MkTypename (<> Name.__subscription))
             (pure uncustomizedSubscriptionRootFields)
-      where
-        sourceCustomization =
-          if EFNamingConventions `elem` expFeatures
-            then sourceCustomization'
-            else sourceCustomization' {_scNamingConvention = Nothing}
 
 -- | Builds the schema context for unauthenticated users.
 --
@@ -890,12 +884,12 @@ safeSelectionSet name description fields =
 customizeFields ::
   forall f n db remote action.
   (Functor f, MonadParse n) =>
-  SourceCustomization ->
+  ResolvedSourceCustomization ->
   MkTypename ->
   f [FieldParser n (RootField db remote action JO.Value)] ->
   f [FieldParser n (NamespacedField (RootField db remote action JO.Value))]
-customizeFields SourceCustomization {..} =
-  fmap . customizeNamespace (_rootfcNamespace =<< _scRootFields) (const typenameToRawRF)
+customizeFields ResolvedSourceCustomization {..} =
+  fmap . customizeNamespace _rscRootNamespace (const typenameToRawRF)
 
 -- | All the 'BackendSchema' methods produce something of the form @m
 -- [FieldParser n a]@, where @a@ is something specific to what is being parsed

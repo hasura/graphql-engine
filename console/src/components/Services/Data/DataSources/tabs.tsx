@@ -8,7 +8,9 @@ const tabs: Tabs = {
     display_text: 'Connect Existing Database',
   },
 };
-if (Globals.hasuraCloudTenantId && Globals.herokuOAuthClientId) {
+
+// this condition is true only for Hasura Cloud projects
+if (Globals.consoleType === 'cloud' && Globals.hasuraCloudTenantId) {
   tabs.create = {
     display: (
       <div className={styles.display_flex}>

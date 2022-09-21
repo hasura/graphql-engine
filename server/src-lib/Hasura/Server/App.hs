@@ -63,6 +63,7 @@ import Hasura.HTTP
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude hiding (get, put)
+import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint as EP
@@ -279,7 +280,7 @@ mkSpockAction serverCtx@ServerCtx {..} qErrEncoder qErrModifier apiHandler = do
   (ioWaitTime, reqBody) <- withElapsedTime $ liftIO $ Wai.strictRequestBody req
 
   (requestId, headers) <- getRequestId origHeaders
-  tracingCtx <- liftIO $ Tracing.extractHttpContext headers
+  tracingCtx <- liftIO $ Tracing.extractB3HttpContext headers
   handlerLimit <- lift askHTTPHandlerLimit
 
   let runTraceT ::
@@ -389,7 +390,8 @@ v1QueryHandler ::
     MonadReader HandlerCtx m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   RQLQuery ->
   m (HttpResponse EncJSON)
@@ -442,7 +444,8 @@ v1MetadataHandler ::
     Tracing.MonadTrace m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    MonadMetadataApiAuthorization m
+    MonadMetadataApiAuthorization m,
+    MonadEventLogCleanup m
   ) =>
   RQLMetadata ->
   m (HttpResponse EncJSON)
@@ -742,7 +745,8 @@ mkWaiApp ::
     HasResourceLimits m,
     MonadMetadataStorage (MetadataStorageT m),
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   -- | Set of environment variables for reference in UIs
@@ -902,7 +906,8 @@ httpApp ::
     MonadMetadataStorage (MetadataStorageT m),
     HasResourceLimits m,
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   CorsConfig ->

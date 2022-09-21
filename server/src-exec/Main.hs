@@ -13,7 +13,7 @@ import Data.Kind (Type)
 import Data.Text.Conversions (convertText)
 import Data.Time.Clock (getCurrentTime)
 import Data.Time.Clock.POSIX (getPOSIXTime)
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import GHC.TypeLits (Symbol)
 import Hasura.App
 import Hasura.Backends.Postgres.Connection.MonadTx
@@ -106,7 +106,7 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
                       dbUrlConf
                       (Just setPostgresPoolSettings {_ppsRetries = maybeRetries <|> Just 1})
                       False
-                      Q.ReadCommitted
+                      PG.ReadCommitted
                       Nothing
                in PostgresConnConfiguration pgSourceConnInfo Nothing defaultPostgresExtensionsSchema
       res <- runTxWithMinimalPool _gcMetadataDbConnInfo $ downgradeCatalog defaultSourceConfig opts initTime
@@ -115,12 +115,12 @@ runApp env (HGEOptions rci metadataDbUrl hgeCmd) = do
   where
     runTxWithMinimalPool connInfo tx = lowerManagedT $ do
       minimalPool <- mkMinimalPool connInfo
-      liftIO $ runExceptT $ Q.runTx minimalPool (Q.ReadCommitted, Nothing) tx
+      liftIO $ runExceptT $ PG.runTx minimalPool (PG.ReadCommitted, Nothing) tx
 
     mkMinimalPool connInfo = do
       pgLogger <- _lsPgLogger <$> mkLoggers defaultEnabledEngineLogTypes LevelInfo
-      let connParams = Q.defaultConnParams {Q.cpConns = 1}
-      liftIO $ Q.initPGPool connInfo connParams pgLogger
+      let connParams = PG.defaultConnParams {PG.cpConns = 1}
+      liftIO $ PG.initPGPool connInfo connParams pgLogger
 
 -- | A specification of all EKG metrics tracked in `runApp`.
 data

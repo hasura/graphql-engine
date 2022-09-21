@@ -19,6 +19,11 @@ const scalarTypes: ScalarTypesCapabilities = {
 
 const capabilities: Capabilities = {
   relationships: {},
+  comparisons: {
+    cross_table: {
+      supports_relations: true
+    }
+  },
   graphqlSchema: schemaDoc,
   scalarTypes: scalarTypes
 }

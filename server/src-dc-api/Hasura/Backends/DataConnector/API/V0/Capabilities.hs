@@ -13,6 +13,8 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     ScalarTypesCapabilities (..),
     GraphQLTypeDefinitions,
     RelationshipCapabilities (..),
+    ComparisonCapabilities (..),
+    CrossTableComparisonCapabilities (..),
     MetricsCapabilities (..),
     ExplainCapabilities (..),
     CapabilitiesResponse (..),
@@ -59,6 +61,7 @@ data Capabilities = Capabilities
     cScalarTypes :: Maybe ScalarTypesCapabilities,
     cGraphQLTypeDefinitions :: Maybe GraphQLTypeDefinitions,
     cRelationships :: Maybe RelationshipCapabilities,
+    cComparisons :: Maybe ComparisonCapabilities,
     cMetrics :: Maybe MetricsCapabilities,
     cExplain :: Maybe ExplainCapabilities
   }
@@ -67,7 +70,7 @@ data Capabilities = Capabilities
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
 emptyCapabilities :: Capabilities
-emptyCapabilities = Capabilities Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+emptyCapabilities = Capabilities Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
@@ -79,6 +82,7 @@ instance HasCodec Capabilities where
         <*> optionalField "scalarTypes" "The agent's scalar types and their capabilities" .= cScalarTypes
         <*> optionalField "graphqlSchema" "A GraphQL Schema Document describing the agent's scalar types and input object types for comparison operators" .= cGraphQLTypeDefinitions
         <*> optionalField "relationships" "The agent's relationship capabilities" .= cRelationships
+        <*> optionalField "comparisons" "The agent's comparison capabilities" .= cComparisons
         <*> optionalField "metrics" "The agent's metrics capabilities" .= cMetrics
         <*> optionalField "explain" "The agent's explain capabilities" .= cExplain
 
@@ -218,6 +222,30 @@ instance HasCodec GraphQLTypeDefinitions where
           . fmap GQL.Syntax.TypeSystemDefinitionType
           . toList
           . gtdTypeDefinitions
+
+data ComparisonCapabilities = ComparisonCapabilities
+  {_ccCrossTableComparisonCapabilities :: Maybe CrossTableComparisonCapabilities}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ComparisonCapabilities
+
+instance HasCodec ComparisonCapabilities where
+  codec =
+    object "ComparisonCapabilities" $
+      ComparisonCapabilities
+        <$> optionalFieldOrNull "cross_table" "The agent supports comparisons that involve tables other than the one being queried" .= _ccCrossTableComparisonCapabilities
+
+data CrossTableComparisonCapabilities = CrossTableComparisonCapabilities
+  {_ctccSupportsRelations :: Bool}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec CrossTableComparisonCapabilities
+
+instance HasCodec CrossTableComparisonCapabilities where
+  codec =
+    object "CrossTableComparisonCapabilities" $
+      CrossTableComparisonCapabilities
+        <$> requiredField "supports_relations" "Does the agent support comparisons that involve related tables (ie. joins)?" .= _ctccSupportsRelations
 
 data MetricsCapabilities = MetricsCapabilities {}
   deriving stock (Eq, Ord, Show, Generic, Data)

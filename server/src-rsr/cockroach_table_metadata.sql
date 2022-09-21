@@ -69,46 +69,12 @@ LEFT JOIN LATERAL
       'position', "column".attnum,
       'type', json_build_object('name', coalesce(base_type.typname, "type".typname), 'type', "type".typtype),
       'is_nullable', NOT "column".attnotnull,
-      'description', pg_catalog.col_description("table".oid, "column".attnum),
+      'description', '', -- pg_catalog.col_description("table".oid, "column".attnum), -- removing this for now as it takes ~20 seconds per lookup
       'mutability', jsonb_build_object(
-        'is_insertable', NOT (identitypolyfill.attidentity = 'a' OR generatedpolyfill.attgenerated = 's'),
-        'is_updatable', NOT (identitypolyfill.attidentity = 'a' OR generatedpolyfill.attgenerated = 's'))
+        'is_insertable', NOT ("column".attidentity = 'a' OR "column".attgenerated = 's'),
+        'is_updatable', NOT ("column".attidentity = 'a' OR "column".attgenerated = 's'))
     )) AS info
     FROM pg_catalog.pg_attribute "column"
-
-    -- The columns 'pg_attribute.attidentity' and 'pg_attribute.attgenerated' are
-    -- not available in older versions of Postgres, because those versions do not
-    -- implement the concepts the catalog columns represent.
-    -- To support older versions we apply an aliasing hack that ensures
-    -- _something_ called e.g. attidentity is in scope.
-    -- Originally sourced from: https://stackoverflow.com/questions/18951071/postgres-return-a-default-value-when-a-column-doesnt-exist.
-    INNER JOIN
-    (
-      SELECT attrelid, attnum, attname, CASE WHEN attidentity_exists
-                                        THEN attidentity::text
-                                        ELSE ''::text
-                                        END as attidentity
-      FROM pg_catalog.pg_attribute
-      CROSS JOIN (SELECT current_setting('server_version_num')::int >= 100000)
-            AS attidentity(attidentity_exists)
-    ) AS identitypolyfill
-      ON  identitypolyfill.attrelid = "column".attrelid
-      AND identitypolyfill.attnum = "column".attnum
-      AND identitypolyfill.attname = "column".attname
-
-    INNER JOIN
-    (
-      SELECT attrelid, attnum, attname, CASE WHEN attgenerated_exists
-                                                 THEN attgenerated::text
-                                                 ELSE ''::text
-                                                 END as attgenerated
-      FROM pg_catalog.pg_attribute
-      CROSS JOIN (SELECT current_setting('server_version_num')::int >= 120000)
-            AS attgenerated(attgenerated_exists)
-    ) AS generatedpolyfill
-      ON  generatedpolyfill.attrelid = "column".attrelid
-      AND generatedpolyfill.attnum = "column".attnum
-      AND generatedpolyfill.attname = "column".attname
 
     LEFT JOIN pg_catalog.pg_type "type"
       ON "type".oid = "column".atttypid

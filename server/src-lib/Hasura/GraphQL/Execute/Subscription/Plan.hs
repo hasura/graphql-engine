@@ -40,7 +40,7 @@
 -- We could iterate over @postIds@ in Haskell, executing the same prepared query 10 times:
 --
 -- > for postIds $ \postId ->
--- >   Q.listQE defaultTxErrorHandler preparedQuery (Identity postId) True
+-- >   PG.listQE defaultTxErrorHandler preparedQuery (Identity postId) True
 --
 -- Sadly, that on its own isn’t good enough. The overhead of running each query is large enough that
 -- Postgres becomes overwhelmed if we have to serve lots of concurrent subscribers. Therefore, what we
@@ -122,7 +122,7 @@ import Data.HashSet qualified as Set
 import Data.UUID (UUID)
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Prelude
@@ -172,7 +172,7 @@ mkUnsafeValidateVariables = ValidatedVariables
 -- Cohort
 
 newtype CohortId = CohortId {unCohortId :: UUID}
-  deriving (Show, Eq, Hashable, J.ToJSON, J.FromJSON, Q.FromCol)
+  deriving (Show, Eq, Hashable, J.ToJSON, J.FromJSON, PG.FromCol)
 
 newCohortId :: (MonadIO m) => m CohortId
 newCohortId = CohortId <$> liftIO UUID.nextRandom
@@ -252,17 +252,17 @@ instance J.ToJSON CohortVariables where
 newtype CohortIdArray = CohortIdArray {unCohortIdArray :: [CohortId]}
   deriving (Show, Eq)
 
-instance Q.ToPrepArg CohortIdArray where
-  toPrepVal (CohortIdArray l) = Q.toPrepValHelper PTI.unknown encoder $ map unCohortId l
+instance PG.ToPrepArg CohortIdArray where
+  toPrepVal (CohortIdArray l) = PG.toPrepValHelper PTI.unknown encoder $ map unCohortId l
     where
       encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
 
 newtype CohortVariablesArray = CohortVariablesArray {unCohortVariablesArray :: [CohortVariables]}
   deriving (Show, Eq)
 
-instance Q.ToPrepArg CohortVariablesArray where
+instance PG.ToPrepArg CohortVariablesArray where
   toPrepVal (CohortVariablesArray l) =
-    Q.toPrepValHelper PTI.unknown encoder (map J.toJSON l)
+    PG.toPrepValHelper PTI.unknown encoder (map J.toJSON l)
     where
       encoder = PE.array 114 . PE.dimensionArray foldl' (PE.encodingArray . PE.json_ast)
 

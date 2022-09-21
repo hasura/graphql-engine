@@ -460,7 +460,8 @@ const RawSQL = ({
           />
         </div>
         <div className={`${styles.padd_left_remove} col-xs-10`}>
-          {unsupportedRawSQLDrivers.includes(selectedDriver) && getSQLSection()}
+          {!unsupportedRawSQLDrivers.includes(selectedDriver) &&
+            getSQLSection()}
         </div>
 
         <div

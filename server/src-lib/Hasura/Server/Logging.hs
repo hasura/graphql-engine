@@ -381,6 +381,8 @@ data OperationLog = OperationLog
   { olRequestId :: !RequestId,
     olUserVars :: !(Maybe SessionVariables),
     olResponseSize :: !(Maybe Int64),
+    -- | Response size before compression
+    olUncompressedResponseSize :: !Int64,
     -- | Request IO wait time, i.e. time spent reading the full request from the socket.
     olRequestReadTime :: !(Maybe Seconds),
     -- | Service time, not including request IO wait time.
@@ -455,6 +457,8 @@ mkHttpAccessLogContext ::
   RequestId ->
   Wai.Request ->
   (BL.ByteString, Maybe Value) ->
+  -- | Size of response body, before compression
+  Int64 ->
   BL.ByteString ->
   Maybe (DiffTime, DiffTime) ->
   Maybe CompressionType ->
@@ -462,7 +466,7 @@ mkHttpAccessLogContext ::
   RequestMode ->
   Maybe (GH.GQLBatchedReqs GQLBatchQueryOperationLog) ->
   HttpLogContext
-mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) res mTiming compressTypeM headers batching queryLogMetadata =
+mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) uncompressedResponseSize res mTiming compressTypeM headers batching queryLogMetadata =
   let http =
         HttpInfoLog
           { hlStatus = status,
@@ -478,6 +482,7 @@ mkHttpAccessLogContext userInfoM loggingSettings reqId req (_, parsedReq) res mT
           { olRequestId = reqId,
             olUserVars = _uiSession <$> userInfoM,
             olResponseSize = respSize,
+            olUncompressedResponseSize = uncompressedResponseSize,
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
             olRequestMode = batching,
@@ -535,11 +540,13 @@ mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq (reqBody, parsedReq
             hlCompression = compressTypeM,
             hlHeaders = headers
           }
+      responseSize = BL.length $ encode err
       op =
         OperationLog
           { olRequestId = reqId,
             olUserVars = _uiSession <$> userInfoM,
-            olResponseSize = Just $ BL.length $ encode err,
+            olResponseSize = Just responseSize,
+            olUncompressedResponseSize = responseSize,
             olRequestReadTime = Seconds . fst <$> mTiming,
             olQueryExecutionTime = Seconds . snd <$> mTiming,
             olQuery = if (isQueryIncludedInLogs (hlPath http) loggingSettings) then parsedReq else Nothing,

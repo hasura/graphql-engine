@@ -49,7 +49,8 @@ schema =
             [Schema.VInt 5, Schema.VStr "\\"],
             [Schema.VInt 6, Schema.VStr "\""],
             [Schema.VInt 7, Schema.VStr "&"],
-            [Schema.VInt 8, Schema.VStr "c"]
+            [Schema.VInt 8, Schema.VStr "c"],
+            [Schema.VInt 9, Schema.VStr "שלום"]
           ]
       }
   ]
@@ -111,7 +112,7 @@ tests opts = do
             testEnvironment
             [graphql|
                 query {
-                  hasura_table(where: {str: {_nin: ["a,", "", ",", "\""]}}, order_by: { id: asc }) {
+                  hasura_table(where: {str: {_nin: ["a,", "", ",", "\"", "שלום"]}}, order_by: { id: asc }) {
                     id
                     str
                   }

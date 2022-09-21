@@ -29,7 +29,7 @@ import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
 import Data.Semigroup.Generic
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Error
@@ -80,10 +80,10 @@ validateVariables ::
   m (ValidatedVariables f)
 validateVariables pgExecCtx variableValues = do
   let valSel = mkValidationSel $ toList variableValues
-  Q.Discard () <-
+  PG.Discard () <-
     runQueryTx_ $
       liftTx $
-        Q.rawQE dataExnErrHandler (Q.fromBuilder $ toSQL valSel) [] False
+        PG.rawQE dataExnErrHandler (PG.fromBuilder $ toSQL valSel) [] False
   pure . ValidatedVariables $ fmap (txtEncodedVal . cvValue) variableValues
   where
     mkExtr = flip S.Extractor Nothing . toTxtValue
@@ -100,11 +100,11 @@ validateVariables pgExecCtx variableValues = do
 ----------------------------------------------------------------------------------------------------
 -- Multiplexed queries
 
-newtype MultiplexedQuery = MultiplexedQuery {unMultiplexedQuery :: Q.Query}
+newtype MultiplexedQuery = MultiplexedQuery {unMultiplexedQuery :: PG.Query}
   deriving (Eq, Hashable)
 
 instance ToTxt MultiplexedQuery where
-  toTxt = Q.getQueryText . unMultiplexedQuery
+  toTxt = PG.getQueryText . unMultiplexedQuery
 
 toSQLFromItem ::
   ( Backend ('Postgres pgKind),
@@ -127,7 +127,7 @@ mkMultiplexedQuery ::
   OMap.InsOrdHashMap G.Name (QueryDB ('Postgres pgKind) Void S.SQLExp) ->
   MultiplexedQuery
 mkMultiplexedQuery rootFields =
-  MultiplexedQuery . Q.fromBuilder . toSQL $
+  MultiplexedQuery . PG.fromBuilder . toSQL $
     S.mkSelect
       { S.selExtr =
           -- SELECT _subs.result_id, _fld_resp.root AS result
@@ -177,7 +177,7 @@ mkStreamingMultiplexedQuery ::
   (G.Name, (QueryDB ('Postgres pgKind) Void S.SQLExp)) ->
   MultiplexedQuery
 mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
-  MultiplexedQuery . Q.fromBuilder . toSQL $
+  MultiplexedQuery . PG.fromBuilder . toSQL $
     S.mkSelect
       { S.selExtr =
           -- SELECT _subs.result_id, _fld_resp.root, _fld_resp.cursor AS result
@@ -285,18 +285,18 @@ executeStreamingMultiplexedQuery ::
   (MonadTx m) =>
   MultiplexedQuery ->
   [(CohortId, CohortVariables)] ->
-  m [(CohortId, B.ByteString, Q.AltJ CursorVariableValues)]
+  m [(CohortId, B.ByteString, PG.AltJ CursorVariableValues)]
 executeStreamingMultiplexedQuery (MultiplexedQuery query) cohorts = do
   executeQuery query cohorts
 
 -- | Internal; used by both 'executeMultiplexedQuery', 'executeStreamingMultiplexedQuery'
 -- and 'pgDBSubscriptionExplain'.
 executeQuery ::
-  (MonadTx m, Q.FromRow a) =>
-  Q.Query ->
+  (MonadTx m, PG.FromRow a) =>
+  PG.Query ->
   [(CohortId, CohortVariables)] ->
   m [a]
 executeQuery query cohorts =
   let (cohortIds, cohortVars) = unzip cohorts
       preparedArgs = (CohortIdArray cohortIds, CohortVariablesArray cohortVars)
-   in liftTx $ Q.listQE defaultTxErrorHandler query preparedArgs True
+   in liftTx $ PG.listQE defaultTxErrorHandler query preparedArgs True

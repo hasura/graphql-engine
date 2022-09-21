@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
-from http import HTTPStatus
-import graphene
 import copy
-from webserver import RequestHandler, WebServer, MkHandlers, Response
 from enum import Enum
+import graphene
+from http import HTTPStatus
 import time
 import ssl
 import sys
+from urllib.parse import urlparse
+
 from graphql import GraphQLError
+from webserver import RequestHandler, WebServer, MkHandlers, Response
 
 HGE_URLS=[]
 

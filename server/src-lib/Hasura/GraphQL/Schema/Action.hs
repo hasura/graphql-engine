@@ -328,7 +328,6 @@ actionOutputFields outputType annotatedObject objectTypes = do
                           _rsfiType = _atrType,
                           _rsfiSource = _atrSource,
                           _rsfiSourceConfig = _atrSourceConfig,
-                          _rsfiSourceCustomization = _atrSourceCustomization,
                           _rsfiTable = tableInfoName _atrTableInfo,
                           _rsfiMapping = joinMapping
                         }

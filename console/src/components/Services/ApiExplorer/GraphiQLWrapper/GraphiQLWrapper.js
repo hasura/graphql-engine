@@ -13,7 +13,7 @@ import {
 } from '../OneGraphExplorer/utils';
 
 import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
-import { generateRandomString } from '../../../Services/Data/DataSources/CreateDataSource/Heroku/utils';
+import { generateRandomString } from '../../../Services/Data/DataSources/CreateDataSource/utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
 import { parse as sdlParse, print } from 'graphql';
 import deriveAction from '../../../../shared/utils/deriveAction';
@@ -33,7 +33,7 @@ import {
 } from '../../Actions/Add/reducer';
 import { getGraphQLEndpoint } from '../utils';
 import snippets from './snippets';
-import globals from '../../../../Globals';
+import { canAccessCacheButton } from '@/utils/permissions';
 
 import 'graphiql/graphiql.css';
 import 'graphiql-code-exporter/CodeExporter.css';
@@ -240,7 +240,7 @@ class GraphiQLWrapper extends Component {
             label: 'Cache',
             title: 'Cache the response of this query',
             onClick: _toggleCacheDirective,
-            hide: globals.consoleType !== 'cloud',
+            hide: !canAccessCacheButton(),
           },
           {
             label: 'Code Exporter',

@@ -1,0 +1,137 @@
+---
+description: Using Hasura with a Crunchy Postgres database
+title: 'Cloud: Using Hasura Cloud with a Crunchy Postgres database'
+keywords:
+  - hasura
+  - docs
+  - existing database
+  - guide
+  - crunchy
+sidebar_label: Crunchy Postgres
+sidebar_position: 6
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Using Hasura Cloud with a Crunchy Postgres database
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+
+## Introduction
+
+This guide explains how to connect a new or existing Crunchy Postgres database to a Hasura Cloud project.
+
+## Step 1: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 2: Create a Hasura Cloud project {#create-hasura-project}
+
+On the Hasura Cloud dashboard, create a new project:
+
+<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' />
+
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
+
+On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
+
+You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
+
+<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
+
+## Step 3: Create a Postgres DB on Crunchy ([skip if you have an existing DB](#get-db-url))
+
+Log into [Crunchy](https://crunchybridge.com/dashboard).
+
+From your dashboard, click `Create Cluster`:
+
+<Thumbnail src='/img/cloud-dbs/crunchy/crunchy-dashboard.png' alt='Crunchy dashboard' width='700px' />
+
+Fill in the necessary information and click `Create Cluster`:
+
+<Thumbnail
+  src='/img/cloud-dbs/crunchy/crunchy-create-cluster.png'
+  alt='Create a new cluster with Crunchy'
+  width='700px'
+/>
+
+:::info Note
+
+After creating the cluster, you'll be redirected to its dashboard. Keep an eye on the `Status` row of the Cluster
+Overview card. While you can access your connection string immediately, the cluster must first be provisioned in order
+for Hasura to be able to connect.
+
+:::
+
+Congratulations! You've now created a Postgres instance on Crunchy which you can use with Hasura GraphQL Engine. Follow
+the steps below to connect it to Hasura.
+
+## Step 4: Get the database connection URL {#get-db-url}
+
+The structure of the database connection URL looks as follows:
+
+```bash
+postgres://<user-name>:<password>@<host-server>:<port>/<database-name>
+```
+
+Click on the Hasura card to see your connection string:
+
+<Thumbnail
+  src='/img/cloud-dbs/crunchy/crunchy-cluster-dashboard.png'
+  alt='Create a new cluster with Crunchy'
+  width='700px'
+/>
+
+At the bottom of the instructions, we'll select `Superuser` (which will be `postgres`) for our role:
+
+<Thumbnail
+  src='/img/cloud-dbs/crunchy/crunchy-connection-string-user.png'
+  alt='Create a new cluster with Crunchy'
+  width='700px'
+/>
+
+Copy the connection string:
+
+<Thumbnail
+  src='/img/cloud-dbs/crunchy/crunchy-connection-string-full.png'
+  alt='Create a new cluster with Crunchy'
+  width='700px'
+/>
+
+## Step 5: Finish connecting the database
+
+Back on the Hasura Console, enter the database URL that we retrieved in the previous step:
+
+<Thumbnail
+  src='/img/cloud-dbs/render/render-connect-db.png'
+  alt='Connect the database on Hasura Console'
+  width='700px'
+/>
+
+Then click `Connect Database`.
+
+:::info Note
+
+For security reasons, it is recommended to set database URLs as
+[env vars](/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the databases in place
+of the raw database URLs.
+
+:::
+
+Voilà. You are ready to start developing.
+
+<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura Console' />
+
+## Next steps
+
+You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+
+You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+[collaborators](/projects/collaborators.mdx#manage-project-collaborators),
+[env vars](/projects/env-vars.mdx#manage-project-env-vars) or
+[custom domains](/projects/domains.mdx#manage-project-domains)).
+
+<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />

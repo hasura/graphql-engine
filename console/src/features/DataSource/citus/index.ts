@@ -60,4 +60,7 @@ export const citus: Database = {
     getFKRelationships,
     getTablesListAsTree,
   },
+  query: {
+    getTableRows: async () => Feature.NotImplemented,
+  },
 };

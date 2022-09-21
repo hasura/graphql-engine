@@ -31,6 +31,8 @@ module Hasura.GraphQL.Schema.Parser
     pattern P.FieldParser,
     InputFieldsParser,
     pattern P.InputFieldsParser,
+    InputObjectInfo,
+    pattern P.InputObjectInfo,
     Parser,
     pattern P.Parser,
     Schema,
@@ -40,6 +42,7 @@ module Hasura.GraphQL.Schema.Parser
     Definition,
     pattern P.Definition,
     Type,
+    TypeInfo,
     Directive,
     pattern P.Directive,
     DirectiveInfo,
@@ -80,12 +83,14 @@ import Hasura.GraphQL.Parser hiding
     HasTypeDefinitions,
     InputFieldInfo,
     InputFieldsParser,
+    InputObjectInfo,
     ParseErrorCode (..),
     Parser,
     Schema,
     SomeDefinitionTypeInfo,
     Type,
     TypeDefinitionsWrapper,
+    TypeInfo,
   )
 import Hasura.GraphQL.Parser qualified as P
 import Hasura.Prelude
@@ -102,7 +107,11 @@ type ConflictingDefinitions = P.ConflictingDefinitions MetadataObjId
 
 type Type = P.Type MetadataObjId
 
+type TypeInfo = P.TypeInfo MetadataObjId
+
 type InputFieldsParser = P.InputFieldsParser MetadataObjId
+
+type InputObjectInfo = P.InputObjectInfo MetadataObjId
 
 type Definition = P.Definition MetadataObjId
 

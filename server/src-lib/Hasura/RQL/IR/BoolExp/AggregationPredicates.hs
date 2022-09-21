@@ -39,11 +39,11 @@ import Hasura.SQL.Backend (BackendType)
 --         ))
 --      { ... }
 --
--- Note that we make no attemt at modelling window functions or so-called
+-- Note that we make no attempt at modelling window functions or so-called
 -- 'analytical' functions such as 'percentile_cont'.
 data AggregationPredicatesImplementation (b :: BackendType) field = AggregationPredicatesImplementation
   { aggRelation :: RelInfo b,
-    aggPredicates :: [AggregationPredicate b field]
+    aggPredicate :: AggregationPredicate b field
   }
   deriving stock (Foldable, Traversable, Functor, Generic)
 
@@ -94,7 +94,7 @@ instance
   toJSONKeyValue AggregationPredicatesImplementation {..} =
     ( fromText "aggregation_predicates",
       toJSON
-        [ ("predicates" :: Text, toJSON $ map toJSONKeyValue aggPredicates),
+        [ ("predicate" :: Text, toJSON $ toJSONKeyValue aggPredicate),
           ("relation", toJSON aggRelation)
         ]
     )

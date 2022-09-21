@@ -18,6 +18,11 @@ interface Env {
   serverVersion: string;
   telemetryTopic: string;
   urlPrefix: string;
+
+  /**
+   * Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
+   */
+  consoleSentryDsn: string;
 }
 
 interface Window {

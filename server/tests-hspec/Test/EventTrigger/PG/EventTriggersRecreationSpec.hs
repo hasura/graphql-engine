@@ -89,6 +89,8 @@ postgresSetup (testEnvironment, _) = do
 
            DROP TABLE IF EXISTS hdb_catalog.event_invocation_logs_event_id;
 
+           DROP TABLE IF EXISTS hdb_catalog.hdb_event_log_cleanups;
+
            CREATE TABLE hasura.ddl_history (
              id serial primary key,
              event text,
@@ -234,6 +236,8 @@ result:
   - hdb_catalog.event_log_trigger_name_idx
 - - CREATE FUNCTION
   - hdb_catalog.gen_hasura_uuid()
+- - CREATE TABLE
+  - hdb_catalog.hdb_event_log_cleanups
 - - CREATE TABLE
   - hdb_catalog.hdb_source_catalog_version
 - - CREATE INDEX

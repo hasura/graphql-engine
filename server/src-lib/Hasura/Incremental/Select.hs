@@ -57,6 +57,13 @@ instance (GCompare k) => Select (DM.DMap k f) where
   type Selector (DM.DMap k f) = DMapS k f
   select (DMapS k) = DM.lookup k
 
+-- | This may not be a "canonical" instance of `Select` for `Maybe a`.
+-- We may want to revisit this in future.
+-- See https://github.com/hasura/graphql-engine-mono/pull/5820#pullrequestreview-1106114823
+instance Monoid a => Select (Maybe a) where
+  type Selector (Maybe a) = ConstS () a
+  select (ConstS ()) = fromMaybe mempty
+
 -- | The constant selector, which is useful for representing selectors into data structures where
 -- all fields have the same type. Matching on a value of type @'ConstS' k a b@ causes @a@ and @b@ to
 -- unify, effectively “pinning” @b@ to @a@.

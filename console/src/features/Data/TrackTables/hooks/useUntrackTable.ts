@@ -3,40 +3,36 @@ import { useQueryClient } from 'react-query';
 
 import {
   allowedMetadataTypes,
-  useMetadata,
   useMetadataMigration,
 } from '@/features/MetadataAPI';
+
 import { useFireNotification } from '@/new-components/Notifications';
 import produce from 'immer';
 
 import type { TrackableTable } from '../types';
+import { useMetadataSource } from './useMetadataSource';
 
-export const useUntrackTable = () => {
+export const useUntrackTable = (dataSourceName: string) => {
   const mutation = useMetadataMigration();
-
-  const { data: metadata } = useMetadata();
-  const { fireNotification } = useFireNotification();
   const queryClient = useQueryClient();
 
+  const { fireNotification } = useFireNotification();
+  const { data } = useMetadataSource(dataSourceName);
+
   const untrackTable = useCallback(
-    (dataSourceName: string, table: TrackableTable) => {
-      if (!metadata) throw Error('useTrackTable: cannot export metadata');
-
-      const driver = metadata.metadata.sources.find(
-        source => source.name === dataSourceName
-      )?.kind;
-
-      if (!driver) throw Error('useTrackTable: cannot find source in metadata');
+    async (table: TrackableTable) => {
+      if (!data?.driver)
+        throw Error('useTrackTable: cannot find source in metadata');
 
       mutation.mutate(
         {
           query: {
-            type: `${driver}_untrack_table` as allowedMetadataTypes,
+            type: `${data.driver}_untrack_table` as allowedMetadataTypes,
             args: {
               source: dataSourceName,
-              table: table.table,
+              table: table.name,
             },
-            resource_version: metadata.resource_version,
+            resource_version: data.metadata.resource_version,
           },
         },
         {
@@ -68,10 +64,17 @@ export const useUntrackTable = () => {
               type: 'error',
             });
           },
+          onSettled() {
+            queryClient.invalidateQueries('treeview');
+            queryClient.invalidateQueries([
+              'introspected-tables',
+              dataSourceName,
+            ]);
+          },
         }
       );
     },
-    [metadata, mutation, fireNotification, queryClient]
+    [mutation, fireNotification, queryClient, data, dataSourceName]
   );
 
   return { untrackTable };

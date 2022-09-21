@@ -62,7 +62,7 @@ import Data.List (uncons)
 import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Database.PostgreSQL.LibPQ qualified as PQ
 import Hasura.Base.Error
@@ -117,8 +117,8 @@ newtype TableName = TableName {getTableTxt :: Text}
       FromJSON,
       ToJSON,
       Hashable,
-      Q.ToPrepArg,
-      Q.FromCol,
+      PG.ToPrepArg,
+      PG.FromCol,
       Data,
       Generic,
       NFData,
@@ -142,8 +142,8 @@ data TableType
   | TTLocalTemporary
   deriving (Eq)
 
-instance Q.FromCol TableType where
-  fromCol bs = flip Q.fromColHelper bs $
+instance PG.FromCol TableType where
+  fromCol bs = flip PG.fromColHelper bs $
     PD.enum $ \case
       "BASE TABLE" -> Just TTBaseTable
       "VIEW" -> Just TTView
@@ -156,7 +156,7 @@ isView TTView = True
 isView _ = False
 
 newtype ConstraintName = ConstraintName {getConstraintTxt :: Text}
-  deriving (Show, Eq, ToTxt, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, NFData, Cacheable)
+  deriving (Show, Eq, ToTxt, FromJSON, ToJSON, PG.ToPrepArg, PG.FromCol, Hashable, NFData, Cacheable)
 
 instance IsIdentifier ConstraintName where
   toIdentifier (ConstraintName t) = Identifier t
@@ -168,7 +168,7 @@ instance ToErrorValue ConstraintName where
   toErrorValue = ErrorValue.squote . getConstraintTxt
 
 newtype FunctionName = FunctionName {getFunctionTxt :: Text}
-  deriving (Show, Eq, Ord, FromJSON, ToJSON, Q.ToPrepArg, Q.FromCol, Hashable, Data, Generic, NFData, Cacheable)
+  deriving (Show, Eq, Ord, FromJSON, ToJSON, PG.ToPrepArg, PG.FromCol, Hashable, Data, Generic, NFData, Cacheable)
 
 instance IsIdentifier FunctionName where
   toIdentifier (FunctionName t) = Identifier t
@@ -190,8 +190,8 @@ newtype SchemaName = SchemaName {getSchemaTxt :: Text}
       FromJSON,
       ToJSON,
       Hashable,
-      Q.ToPrepArg,
-      Q.FromCol,
+      PG.ToPrepArg,
+      PG.FromCol,
       Data,
       Generic,
       NFData,
@@ -298,7 +298,7 @@ type QualifiedTable = QualifiedObject TableName
 type QualifiedFunction = QualifiedObject FunctionName
 
 newtype PGDescription = PGDescription {getPGDescription :: Text}
-  deriving (Show, Eq, FromJSON, ToJSON, Q.FromCol, NFData, Cacheable, Hashable)
+  deriving (Show, Eq, FromJSON, ToJSON, PG.FromCol, NFData, Cacheable, Hashable)
 
 newtype PGCol = PGCol {getPGColTxt :: Text}
   deriving
@@ -308,8 +308,8 @@ newtype PGCol = PGCol {getPGColTxt :: Text}
       FromJSON,
       ToJSON,
       Hashable,
-      Q.ToPrepArg,
-      Q.FromCol,
+      PG.ToPrepArg,
+      PG.FromCol,
       ToJSONKey,
       FromJSONKey,
       Data,

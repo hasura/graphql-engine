@@ -1,7 +1,7 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
 import { DataNode } from 'antd/lib/tree';
-import { SupportedDrivers, Table } from '@/features/MetadataAPI';
+import { Source, SupportedDrivers, Table } from '@/features/MetadataAPI';
 import { postgres } from './postgres';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
@@ -19,6 +19,10 @@ import type {
   GetFKRelationshipProps,
   DriverInfoResponse,
   GetTablesListAsTreeProps,
+  TableRow,
+  GetTableRowsProps,
+  WhereClause,
+  OrderBy,
 } from './types';
 
 import { createZodSchema } from './common/createZodSchema';
@@ -43,11 +47,19 @@ export const nativeDrivers = [
 
 export const supportedDrivers = [...nativeDrivers, 'gdc'];
 
+export const getDriver = (dataSource: Source) => {
+  if (nativeDrivers.includes(dataSource.kind)) {
+    return dataSource.kind;
+  }
+
+  return 'gdc';
+};
+
 export type Database = {
   introspection?: {
     getDriverInfo: () => Promise<DriverInfoResponse | Feature.NotImplemented>;
     getDatabaseConfiguration: (
-      fetch: AxiosInstance,
+      httpClient: AxiosInstance,
       driver?: string
     ) => Promise<
       | { configSchema: Property; otherSchemas: Record<string, Property> }
@@ -68,7 +80,9 @@ export type Database = {
     ) => Promise<DataNode | Feature.NotImplemented>;
   };
   query?: {
-    getTableData: () => void;
+    getTableRows: (
+      props: GetTableRowsProps
+    ) => Promise<TableRow[] | Feature.NotImplemented>;
   };
   modify?: null;
 };
@@ -181,16 +195,16 @@ export const DataSource = (httpClient: AxiosInstance) => ({
       );
     }
 
+    const kind = getDriver(dataSource);
     /* 
       NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain 
       only pg databases at the moment. Changing the old types will require us to modify multiple legacy files
     */
-    const getTrackableTables =
-      drivers[dataSource.kind].introspection?.getTrackableTables;
+    const getTrackableTables = drivers[kind].introspection?.getTrackableTables;
     if (getTrackableTables)
       return getTrackableTables({
         dataSourceName: dataSource.name,
-        configuration: (dataSource as any).configuration,
+        configuration: dataSource.configuration,
         httpClient,
       });
     return Feature.NotImplemented;
@@ -226,7 +240,9 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   getTableColumns: async ({
     dataSourceName,
     table,
+    configuration,
   }: {
+    configuration?: any;
     dataSourceName: string;
     table: Table;
   }) => {
@@ -238,11 +254,11 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 
     const result = await introspection.getTableColumns({
       dataSourceName,
+      configuration,
       table,
       httpClient,
     });
     if (result === Feature.NotImplemented) return [];
-
     return result;
   },
   getTableFkRelationships: async ({
@@ -289,6 +305,40 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     if (treeData === Feature.NotImplemented) return null;
 
     return treeData;
+  },
+  getTableRows: async ({
+    dataSourceName,
+    table,
+    columns,
+    options,
+  }: {
+    dataSourceName: string;
+    table: Table;
+    columns: string[];
+    options?: {
+      where?: WhereClause;
+      offset?: number;
+      limit?: number;
+      order_by?: OrderBy[];
+    };
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database) throw Error('Database not found!');
+
+    const query = database.query;
+
+    if (!query) return Feature.NotImplemented;
+
+    const tableRows = await query.getTableRows({
+      dataSourceName,
+      table,
+      columns,
+      httpClient,
+      options,
+    });
+
+    return tableRows;
   },
 });
 

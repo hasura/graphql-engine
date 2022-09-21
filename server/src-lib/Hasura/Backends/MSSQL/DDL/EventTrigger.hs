@@ -18,6 +18,13 @@ module Hasura.Backends.MSSQL.DDL.EventTrigger
     qualifyTableName,
     createMissingSQLTriggers,
     checkIfTriggerExists,
+    addCleanupSchedules,
+    deleteAllScheduledCleanups,
+    getCleanupEventsForDeletion,
+    updateCleanupEventStatusToDead,
+    updateCleanupEventStatusToPaused,
+    updateCleanupEventStatusToCompleted,
+    deleteEventTriggerLogs,
   )
 where
 
@@ -26,15 +33,17 @@ import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.ByteString.Lazy qualified as BL
 import Data.FileEmbed (makeRelativeToProject)
+import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as HashSet
 import Data.Set.NonEmpty qualified as NE
 import Data.Text qualified as T
-import Data.Text.Extended (commaSeparated, toTxt)
+import Data.Text.Extended (ToTxt, commaSeparated, toTxt)
 import Data.Text.Lazy qualified as LT
 import Data.Text.NonEmpty (mkNonEmptyTextUnsafe)
 import Data.Time
-import Database.MSSQL.Transaction (TxE, multiRowQueryE, singleRowQueryE, unitQueryE)
-import Database.ODBC.SQLServer (Datetime2 (..), rawUnescapedText, toSql)
+import Data.Time.Format.ISO8601 (iso8601Show)
+import Database.MSSQL.Transaction (TxE, TxET, multiRowQueryE, singleRowQueryE, unitQueryE)
+import Database.ODBC.SQLServer (Datetime2 (..), Datetimeoffset (..), rawUnescapedText, toSql)
 import Database.ODBC.TH qualified as ODBC
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.MSSQL.DDL.Source.Version
@@ -43,6 +52,7 @@ import Hasura.Backends.MSSQL.ToQuery (fromTableName, toQueryFlat)
 import Hasura.Backends.MSSQL.Types (SchemaName (..), TableName (..))
 import Hasura.Backends.MSSQL.Types.Internal (columnNameText, geoTypes)
 import Hasura.Base.Error
+import Hasura.Eventing.Common
 import Hasura.Prelude
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -55,6 +65,15 @@ import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
 import Text.Shakespeare.Text qualified as ST
+
+-- | creates a SQL Values list from haskell list  (('123-abc'), ('456-vgh'), ('234-asd'))
+generateSQLValuesFromList :: (ToTxt a) => [a] -> Text
+generateSQLValuesFromList = generateSQLValuesFromListWith (\t -> "'" <> toTxt t <> "'")
+
+generateSQLValuesFromListWith :: (a -> Text) -> [a] -> Text
+generateSQLValuesFromListWith f events = commaSeparated values
+  where
+    values = map (\e -> "(" <> f e <> ")") events
 
 fetchUndeliveredEvents ::
   (MonadIO m, MonadError QErr m) =>
@@ -120,7 +139,7 @@ recordSuccess ::
 recordSuccess sourceConfig event invocation maintenanceModeVersion =
   liftIO $
     runMSSQLSourceWriteTx sourceConfig $ do
-      insertInvocation invocation
+      insertInvocation (tmName (eTrigger event)) invocation
       setSuccessTx event maintenanceModeVersion
 
 recordError ::
@@ -145,7 +164,7 @@ recordError' ::
 recordError' sourceConfig event invocation processEventError maintenanceModeVersion =
   liftIO $
     runMSSQLSourceWriteTx sourceConfig $ do
-      onJust invocation insertInvocation
+      onJust invocation $ insertInvocation (tmName (eTrigger event))
       case processEventError of
         PESetRetry retryTime -> do
           setRetryTx event retryTime maintenanceModeVersion
@@ -275,13 +294,13 @@ checkIfTriggerExists sourceConfig triggerName ops = do
 --   The API for our in-database work queue:
 -------------------------------------------
 
-insertInvocation :: Invocation 'EventType -> TxE QErr ()
-insertInvocation invo = do
+insertInvocation :: TriggerName -> Invocation 'EventType -> TxE QErr ()
+insertInvocation tName invo = do
   unitQueryE
     HGE.defaultMSSQLTxErrorHandler
     [ODBC.sql|
-      INSERT INTO hdb_catalog.event_invocation_logs (event_id, status, request, response)
-          VALUES ($invoEventId, $invoStatus, $invoRequest, $invoResponse)
+      INSERT INTO hdb_catalog.event_invocation_logs (event_id, trigger_name, status, request, response)
+          VALUES ($invoEventId, $invoTriggerName, $invoStatus, $invoRequest, $invoResponse)
     |]
 
   unitQueryE
@@ -297,6 +316,7 @@ insertInvocation invo = do
     invoStatus = fromIntegral <$> iStatus invo :: Maybe Int
     invoRequest = J.encode $ J.toJSON $ iRequest invo
     invoResponse = J.encode $ J.toJSON $ iResponse invo
+    invoTriggerName = triggerNameToTxt tName
 
 insertMSSQLManualEventTx ::
   TableName ->
@@ -846,3 +866,296 @@ mkUpdateTriggerQuery
         listenColumnExp = unSQLFragment $ mkListenColumnsExp "INSERTED" "DELETED" listenColumns
         isPrimaryKeyInListenColumnsExp = unSQLFragment $ isPrimaryKeyInListenColumns listenColumns primaryKey
      in $(makeRelativeToProject "src-rsr/mssql/mssql_update_trigger.sql.shakespeare" >>= ST.stextFile)
+
+-- | Add cleanup logs for given trigger names and cleanup configs. This will perform the following steps:
+--
+--   1. Get last scheduled cleanup event and count.
+--   2. If count is less than 5, then add add more cleanup logs, else do nothing
+addCleanupSchedules ::
+  (MonadIO m, MonadError QErr m) =>
+  MSSQLSourceConfig ->
+  [(TriggerName, AutoTriggerLogCleanupConfig)] ->
+  m ()
+addCleanupSchedules sourceConfig triggersWithcleanupConfig =
+  unless (null triggersWithcleanupConfig) $ do
+    currTimeUTC <- liftIO getCurrentTime
+    timeZone <- liftIO $ getTimeZone currTimeUTC
+    let currTime = utcToZonedTime timeZone currTimeUTC
+        triggerNames = map fst triggersWithcleanupConfig
+    allScheduledCleanupsInDB <- liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ selectLastCleanupScheduledTimestamp triggerNames
+    let triggerMap = Map.fromList $ allScheduledCleanupsInDB
+        scheduledTriggersAndTimestamps =
+          mapMaybe
+            ( \(tName, cConfig) ->
+                let lastScheduledTime = case Map.lookup tName triggerMap of
+                      Nothing -> Just currTime
+                      Just (count, lastTime) -> if count < 5 then (Just lastTime) else Nothing
+                 in fmap
+                      ( \lastScheduledTimestamp ->
+                          (tName, map (Datetimeoffset . utcToZonedTime timeZone) $ generateScheduleTimes (zonedTimeToUTC lastScheduledTimestamp) cleanupSchedulesToBeGenerated (_atlccSchedule cConfig))
+                      )
+                      lastScheduledTime
+            )
+            triggersWithcleanupConfig
+    unless (null scheduledTriggersAndTimestamps) $
+      liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
+
+-- | Insert the cleanup logs for the given trigger name and schedules
+insertEventTriggerCleanupLogsTx :: [(TriggerName, [Datetimeoffset])] -> TxET QErr IO ()
+insertEventTriggerCleanupLogsTx triggerNameWithSchedules =
+  unitQueryE
+    HGE.defaultMSSQLTxErrorHandler
+    ( rawUnescapedText
+        [ST.st|
+      INSERT INTO hdb_catalog.hdb_event_log_cleanups(trigger_name, scheduled_at, status)
+      VALUES #{sqlValues};
+      |]
+    )
+  where
+    sqlValues =
+      commaSeparated $
+        map
+          ( \(triggerName, schedules) ->
+              generateSQLValuesFromListWith
+                ( \schedule ->
+                    "'" <> triggerNameToTxt triggerName <> "', '" <> (T.pack . iso8601Show . unDatetimeoffset) schedule <> "', 'scheduled'"
+                )
+                schedules
+          )
+          triggerNameWithSchedules
+
+-- | Get the last scheduled timestamp for a given event trigger name
+selectLastCleanupScheduledTimestamp :: [TriggerName] -> TxET QErr IO [(TriggerName, (Int, ZonedTime))]
+selectLastCleanupScheduledTimestamp triggerNames =
+  map
+    ( \(triggerName, count, lastScheduledTime) ->
+        (TriggerName (mkNonEmptyTextUnsafe triggerName), (count, lastScheduledTime))
+    )
+    <$> multiRowQueryE
+      HGE.defaultMSSQLTxErrorHandler
+      ( rawUnescapedText
+          [ST.st|
+          SELECT trigger_name, count(1), max(scheduled_at) 
+          FROM hdb_catalog.hdb_event_log_cleanups 
+          WHERE status='scheduled' AND trigger_name = 
+            ANY(SELECT n from  (VALUES #{triggerNamesValues}) AS X(n))
+          GROUP BY trigger_name;
+        |]
+      )
+  where
+    triggerNamesValues = generateSQLValuesFromList $ map triggerNameToTxt triggerNames
+
+deleteAllScheduledCleanupsTx :: TriggerName -> TxE QErr ()
+deleteAllScheduledCleanupsTx triggerName = do
+  let triggerNameText = triggerNameToTxt triggerName
+  unitQueryE
+    HGE.defaultMSSQLTxErrorHandler
+    [ODBC.sql|
+      DELETE from hdb_catalog.hdb_event_log_cleanups
+      WHERE status = 'scheduled' AND trigger_name = $triggerNameText
+    |]
+
+-- | @deleteAllScheduledCleanups@ deletes all scheduled cleanup logs for a given event trigger
+deleteAllScheduledCleanups ::
+  (MonadIO m, MonadError QErr m) =>
+  MSSQLSourceConfig ->
+  TriggerName ->
+  m ()
+deleteAllScheduledCleanups sourceConfig triggerName =
+  liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ deleteAllScheduledCleanupsTx triggerName
+
+getCleanupEventsForDeletionTx :: TxE QErr ([(Text, TriggerName)])
+getCleanupEventsForDeletionTx = do
+  latestEvents :: [(Text, TriggerName)] <-
+    map (second (TriggerName . mkNonEmptyTextUnsafe))
+      <$> multiRowQueryE
+        HGE.defaultMSSQLTxErrorHandler
+        [ODBC.sql|
+          select CAST(id AS nvarchar(36)), trigger_name
+          from(
+              SELECT id, trigger_name, ROW_NUMBER()
+              OVER(PARTITION BY trigger_name ORDER BY scheduled_at DESC) AS rn
+              FROM hdb_catalog.hdb_event_log_cleanups
+              WHERE status = 'scheduled' AND scheduled_at < CURRENT_TIMESTAMP
+          ) AS a
+          WHERE rn = 1
+        |]
+  let cleanupIDs = map fst latestEvents
+      cleanupIDsSQLValue = generateSQLValuesFromList cleanupIDs
+  unless (null cleanupIDs) $ do
+    toDeadEvents <-
+      multiRowQueryE
+        HGE.defaultMSSQLTxErrorHandler
+        ( rawUnescapedText
+            [ST.st|
+            SELECT CAST(id AS nvarchar(36)) FROM hdb_catalog.hdb_event_log_cleanups
+            WHERE status = 'scheduled' AND scheduled_at < CURRENT_TIMESTAMP AND id NOT IN 
+              (SELECT n from  (VALUES #{cleanupIDsSQLValue}) AS X(n));
+          |]
+        )
+    markCleanupEventsAsDeadTx toDeadEvents
+
+  pure latestEvents
+
+-- | @getCleanupEventsForDeletion@ returns the cleanup logs that are to be deleted.
+-- This will perform the following steps:
+--
+-- 1. Get the scheduled cleanup events that were scheduled before current time.
+-- 2. If there are multiple entries for the same trigger name with different scheduled time,
+--    then fetch the latest entry and mark others as dead.
+getCleanupEventsForDeletion ::
+  (MonadIO m, MonadError QErr m) =>
+  MSSQLSourceConfig ->
+  m [(Text, TriggerName)]
+getCleanupEventsForDeletion sourceConfig =
+  liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ getCleanupEventsForDeletionTx
+
+markCleanupEventsAsDeadTx :: [Text] -> TxE QErr ()
+markCleanupEventsAsDeadTx toDeadEvents = do
+  let deadEventsValues = generateSQLValuesFromList toDeadEvents
+  unless (null toDeadEvents) $
+    unitQueryE HGE.defaultMSSQLTxErrorHandler $
+      rawUnescapedText $
+        [ST.st|
+        UPDATE hdb_catalog.hdb_event_log_cleanups
+        SET status = 'dead'
+        WHERE id = ANY ( SELECT id from  (VALUES #{deadEventsValues}) AS X(id));
+        |]
+
+updateCleanupEventStatusToDead ::
+  (MonadIO m, MonadError QErr m) =>
+  MSSQLSourceConfig ->
+  [Text] ->
+  m ()
+updateCleanupEventStatusToDead sourceConfig toDeadEvents =
+  liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ markCleanupEventsAsDeadTx toDeadEvents
+
+updateCleanupEventStatusToPausedTx :: Text -> TxE QErr ()
+updateCleanupEventStatusToPausedTx cleanupLogId =
+  unitQueryE
+    HGE.defaultMSSQLTxErrorHandler
+    [ODBC.sql|
+          UPDATE hdb_catalog.hdb_event_log_cleanups
+          SET status = 'paused'
+          WHERE id = $cleanupLogId
+          |]
+
+-- | @updateCleanupEventStatusToPaused@ updates the cleanup log status to `paused` if the event trigger configuration is paused.
+updateCleanupEventStatusToPaused ::
+  (MonadIO m, MonadError QErr m) =>
+  MSSQLSourceConfig ->
+  Text ->
+  m ()
+updateCleanupEventStatusToPaused sourceConfig cleanupLogId =
+  liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ updateCleanupEventStatusToPausedTx cleanupLogId
+
+updateCleanupEventStatusToCompletedTx :: Text -> DeletedEventLogStats -> TxE QErr ()
+updateCleanupEventStatusToCompletedTx cleanupLogId (DeletedEventLogStats numEventLogs numInvocationLogs) =
+  unitQueryE
+    HGE.defaultMSSQLTxErrorHandler
+    [ODBC.sql|
+          UPDATE hdb_catalog.hdb_event_log_cleanups
+          SET status = 'completed', deleted_event_logs = $numEventLogs, deleted_event_invocation_logs = $numInvocationLogs
+          WHERE id = $cleanupLogId
+          |]
+
+-- | @updateCleanupEventStatusToCompleted@ updates the cleanup log status after the event logs are deleted.
+-- This will perform the following steps:
+--
+-- 1. Updates the cleanup config status to `completed`.
+-- 2. Updates the number of event logs and event invocation logs that were deleted for a trigger name
+updateCleanupEventStatusToCompleted ::
+  (MonadIO m, MonadError QErr m) =>
+  MSSQLSourceConfig ->
+  Text ->
+  DeletedEventLogStats ->
+  m ()
+updateCleanupEventStatusToCompleted sourceConfig cleanupLogId delStats =
+  liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ updateCleanupEventStatusToCompletedTx cleanupLogId delStats
+
+deleteEventTriggerLogsTx :: TriggerLogCleanupConfig -> TxE QErr DeletedEventLogStats
+deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
+  -- Setting the timeout
+  unitQueryE
+    HGE.defaultMSSQLTxErrorHandler
+    [ODBC.sql|
+          SET LOCK_TIMEOUT $qTimeout;
+        |]
+  --  Select all the dead events based on criteria set in the cleanup config.
+  deadEventIDs :: [EventId] <-
+    map EventId
+      <$> multiRowQueryE
+        HGE.defaultMSSQLTxErrorHandler
+        [ODBC.sql|
+          SELECT TOP ($qBatchSize) CAST(id AS nvarchar(36)) FROM hdb_catalog.event_log WITH (UPDLOCK, READPAST)
+          WHERE ((delivered = 1 OR error = 1) AND trigger_name = $qTriggerName  )
+          AND created_at < DATEADD(HOUR, - $qRetentionPeriod, CURRENT_TIMESTAMP)
+          AND locked IS NULL
+        |]
+  if null deadEventIDs
+    then pure $ DeletedEventLogStats 0 0
+    else do
+      let eventIdsValues = generateSQLValuesFromList deadEventIDs
+      --  Lock the events in the database so that other HGE instances don't pick them up for deletion.
+      unitQueryE HGE.defaultMSSQLTxErrorHandler $
+        rawUnescapedText $
+          [ST.st|
+          UPDATE hdb_catalog.event_log
+          SET locked = CURRENT_TIMESTAMP
+          WHERE id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id)) 
+              AND locked IS NULL
+          |]
+      --  Based on the config either delete the corresponding invocation logs or set trigger_name
+      --  to appropriate value. Please note that the event_id won't exist anymore in the event_log
+      --  table, but we are still retaining it for debugging purpose.
+      deletedInvocationLogs :: [Int] <- -- This will be an array of 1 and is only used to count the number of deleted rows.
+        multiRowQueryE HGE.defaultMSSQLTxErrorHandler $
+          rawUnescapedText $
+            if tlccCleanInvocationLogs
+              then
+                [ST.st|
+                DELETE FROM hdb_catalog.event_invocation_logs
+                OUTPUT 1
+                WHERE event_id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id));
+                |]
+              else
+                [ST.st|
+                UPDATE hdb_catalog.event_invocation_logs
+                SET trigger_name = '#{qTriggerName}'
+                WHERE event_id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id));
+                |]
+      --  Finally delete the event logs.
+      deletedEventLogs :: [Int] <- -- This will be an array of 1 and is only used to count the number of deleted rows.
+        multiRowQueryE HGE.defaultMSSQLTxErrorHandler $
+          rawUnescapedText $
+            [ST.st|
+            DELETE FROM hdb_catalog.event_log
+            OUTPUT 1
+            WHERE id = ANY ( SELECT id from  (VALUES #{eventIdsValues}) AS X(id));
+            |]
+      -- Removing the timeout (-1 is the default timeout)
+      unitQueryE
+        HGE.defaultMSSQLTxErrorHandler
+        [ODBC.sql|
+              SET LOCK_TIMEOUT -1;
+            |]
+      pure $ DeletedEventLogStats (length deletedEventLogs) (length deletedInvocationLogs)
+  where
+    qTimeout = tlccTimeout * 1000
+    qTriggerName = triggerNameToTxt tlccEventTriggerName
+    qRetentionPeriod = tlccClearOlderThan
+    qBatchSize = tlccBatchSize
+
+-- | @deleteEventTriggerLogs@ deletes the event logs (and event invocation logs) based on the cleanup configuration given
+-- This will perform the following steps:
+--
+-- 1. Select all the dead events based on criteria set in the cleanup config.
+-- 2. Lock the events in the database so that other HGE instances don't pick them up for deletion.
+-- 3. Based on the config, perform the delete action.
+deleteEventTriggerLogs ::
+  (MonadIO m, MonadError QErr m) =>
+  MSSQLSourceConfig ->
+  TriggerLogCleanupConfig ->
+  m DeletedEventLogStats
+deleteEventTriggerLogs sourceConfig cleanupConfig =
+  liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig

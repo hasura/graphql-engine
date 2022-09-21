@@ -29,7 +29,8 @@ module Hasura.Backends.Postgres.Connection.Settings
   )
 where
 
-import Autodocodec (HasCodec (codec), named)
+import Autodocodec hiding (object, (.=))
+import Autodocodec qualified as AC
 import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson.Casing (aesonDrop)
@@ -38,12 +39,13 @@ import Data.Bifoldable
 import Data.Bifunctor
 import Data.Bitraversable
 import Data.Char (toLower)
+import Data.List.NonEmpty qualified as NonEmpty
 import Data.Semigroup (Max (..))
 import Data.Text (unpack)
 import Data.Text qualified as T
 import Data.Time
 import Data.Time.Clock.Compat ()
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Instances ()
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
@@ -68,6 +70,30 @@ instance Cacheable PostgresPoolSettings
 instance Hashable PostgresPoolSettings
 
 instance NFData PostgresPoolSettings
+
+instance HasCodec PostgresPoolSettings where
+  codec =
+    CommentCodec "https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgpoolsettings" $
+      AC.object "PostgresPoolSettings" $
+        PostgresPoolSettings
+          <$> optionalFieldOrNull "max_connections" maxConnectionsDoc .== _ppsMaxConnections
+          <*> optionalFieldOrNull "idle_timeout" idleTimeoutDoc .== _ppsIdleTimeout
+          <*> optionalFieldOrNull "retries" retriesDoc .== _ppsRetries
+          <*> optionalFieldOrNull "pool_timeout" poolTimeoutDoc .== _ppsPoolTimeout
+          <*> parseConnLifeTime `rmapCodec` optionalFieldOrNull "connection_lifetime" connectionLifetimeDoc .== _ppsConnectionLifetime
+    where
+      maxConnectionsDoc = "Maximum number of connections to be kept in the pool (default: 50)"
+      idleTimeoutDoc = "The idle timeout (in seconds) per connection (default: 180)"
+      retriesDoc = "Number of retries to perform (default: 1)"
+      poolTimeoutDoc = "Maximum time to wait while acquiring a Postgres connection from the pool, in seconds (default: forever)"
+      connectionLifetimeDoc =
+        T.unwords
+          [ "Time from connection creation after which the connection should be",
+            "destroyed and a new one created. A value of 0 indicates we should",
+            "never destroy an active connection. If 0 is passed, memory from large",
+            "query results may not be reclaimed. (default: 600 sec)"
+          ]
+      (.==) = (AC..=)
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''PostgresPoolSettings)
 
@@ -147,6 +173,13 @@ instance Show SSLMode where
 
 deriving via (Max SSLMode) instance Semigroup SSLMode
 
+instance HasCodec SSLMode where
+  codec =
+    named "SSLMode" $
+      stringConstCodec $
+        NonEmpty.fromList $
+          (\m -> (m, tshow m)) <$> [minBound ..]
+
 instance FromJSON SSLMode where
   parseJSON = withText "SSLMode" $ \case
     "disable" -> pure Disable
@@ -167,6 +200,13 @@ instance Hashable CertVar
 
 instance NFData CertVar
 
+instance HasCodec CertVar where
+  codec =
+    AC.object "CertVar" $ CertVar <$> requiredField' "from_env" .== unCertVar
+    where
+      unCertVar (CertVar t) = t
+      (.==) = (AC..=)
+
 instance ToJSON CertVar where
   toJSON (CertVar var) = (object ["from_env" .= var])
 
@@ -175,6 +215,9 @@ instance FromJSON CertVar where
 
 newtype CertData = CertData {unCert :: Text}
   deriving (Show, Eq, Generic)
+
+instance HasCodec CertData where
+  codec = dimapCodec CertData unCert textCodec
 
 instance ToJSON CertData where
   toJSON = String . unCert
@@ -187,6 +230,24 @@ data PGClientCerts p a = PGClientCerts
     pgcSslPassword :: Maybe p
   }
   deriving (Show, Eq, Generic, Functor, Foldable, Traversable)
+
+instance (HasCodec p, HasCodec a) => HasCodec (PGClientCerts p a) where
+  codec =
+    CommentCodec "https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgcertsettings" $
+      AC.object "PGClientCerts" $
+        PGClientCerts
+          <$> optionalFieldOrNull "sslcert" sslcertDoc .== pgcSslCert
+          <*> optionalFieldOrNull "sslkey" sslkeyDoc .== pgcSslKey
+          <*> optionalFieldOrNull "sslrootcert" sslrootcertDoc .== pgcSslRootCert
+          <*> requiredField "sslmode" sslmodeDoc .== pgcSslMode
+          <*> optionalFieldOrNull "sslpassword" sslpasswordDoc .== pgcSslPassword
+    where
+      sslcertDoc = "Environment variable which stores the client certificate."
+      sslkeyDoc = "Environment variable which stores the client private key."
+      sslrootcertDoc = "Environment variable which stores trusted certificate authorities."
+      sslmodeDoc = "The SSL connection mode. See the libpq ssl support docs <https://www.postgresql.org/docs/9.1/libpq-ssl.html> for more details."
+      sslpasswordDoc = "Password in the case where the sslkey is encrypted."
+      (.==) = (AC..=)
 
 $(deriveFromJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
 $(deriveToJSON (aesonDrop 3 (fmap toLower)) {omitNothingFields = True} ''PGClientCerts)
@@ -220,28 +281,38 @@ instance (NFData p, NFData a) => NFData (PGClientCerts p a)
 instance ToJSON SSLMode where
   toJSON = String . tshow
 
-deriving instance Generic Q.TxIsolation
+deriving instance Generic PG.TxIsolation
 
-instance Cacheable Q.TxIsolation
+instance Cacheable PG.TxIsolation
 
-instance NFData Q.TxIsolation
+instance NFData PG.TxIsolation
 
-instance Hashable Q.TxIsolation
+instance Hashable PG.TxIsolation
 
-instance FromJSON Q.TxIsolation where
+instance HasCodec PG.TxIsolation where
+  codec =
+    named "TxIsolation" $
+      stringConstCodec $
+        NonEmpty.fromList $
+          [ (PG.ReadCommitted, "read-committed"),
+            (PG.RepeatableRead, "repeatable-read"),
+            (PG.Serializable, "serializable")
+          ]
+
+instance FromJSON PG.TxIsolation where
   parseJSON = withText "Q.TxIsolation" $ \t ->
     onLeft (readIsoLevel $ T.unpack t) fail
 
-instance ToJSON Q.TxIsolation where
-  toJSON Q.ReadCommitted = "read-committed"
-  toJSON Q.RepeatableRead = "repeatable-read"
-  toJSON Q.Serializable = "serializable"
+instance ToJSON PG.TxIsolation where
+  toJSON PG.ReadCommitted = "read-committed"
+  toJSON PG.RepeatableRead = "repeatable-read"
+  toJSON PG.Serializable = "serializable"
 
 data PostgresSourceConnInfo = PostgresSourceConnInfo
   { _psciDatabaseUrl :: UrlConf,
     _psciPoolSettings :: Maybe PostgresPoolSettings,
     _psciUsePreparedStatements :: Bool,
-    _psciIsolationLevel :: Q.TxIsolation,
+    _psciIsolationLevel :: PG.TxIsolation,
     _psciSslConfiguration :: Maybe (PGClientCerts CertVar CertVar)
   }
   deriving (Show, Eq, Generic)
@@ -252,6 +323,33 @@ instance Hashable PostgresSourceConnInfo
 
 instance NFData PostgresSourceConnInfo
 
+instance HasCodec PostgresSourceConnInfo where
+  codec =
+    CommentCodec "https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo" $
+      AC.object "PostgresSourceConnInfo" $
+        PostgresSourceConnInfo
+          <$> requiredFieldWith "database_url" placeholderCodecViaJSON databaseUrlDoc .== _psciDatabaseUrl
+          <*> optionalFieldOrNull "pool_settings" poolSettingsDoc .== _psciPoolSettings
+          <*> optionalFieldWithOmittedDefault "use_prepared_statements" False usePreparedStatementsDoc .== _psciUsePreparedStatements
+          <*> optionalFieldWithOmittedDefault "isolation_level" PG.ReadCommitted isolationLevelDoc .== _psciIsolationLevel
+          <*> optionalFieldOrNull "ssl_configuration" sslConfigurationDoc .== _psciSslConfiguration
+    where
+      databaseUrlDoc = "The database connection URL as a string, as an environment variable, or as connection parameters."
+      poolSettingsDoc = "Connection pool settings"
+      usePreparedStatementsDoc =
+        T.unwords
+          [ "If set to true the server prepares statement before executing on the",
+            "source database (default: false). For more details, refer to the",
+            "Postgres docs"
+          ]
+      isolationLevelDoc =
+        T.unwords
+          [ "The transaction isolation level in which the queries made to the",
+            "source will be run with (default: read-committed)."
+          ]
+      sslConfigurationDoc = "The client SSL certificate settings for the database (Only available in Cloud)."
+      (.==) = (AC..=)
+
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''PostgresSourceConnInfo)
 $(makeLenses ''PostgresSourceConnInfo)
 
@@ -261,7 +359,7 @@ instance FromJSON PostgresSourceConnInfo where
       <$> o .: "database_url"
       <*> o .:? "pool_settings"
       <*> o .:? "use_prepared_statements" .!= False -- By default, preparing statements is OFF for postgres source
-      <*> o .:? "isolation_level" .!= Q.ReadCommitted
+      <*> o .:? "isolation_level" .!= PG.ReadCommitted
       <*> o .:? "ssl_configuration"
 
 defaultPostgresExtensionsSchema :: ExtensionsSchema
@@ -295,6 +393,17 @@ instance ToJSON PostgresConnConfiguration where
         <> bool mempty (["extensions_schema" .= _pccExtensionsSchema]) (_pccExtensionsSchema /= defaultPostgresExtensionsSchema)
 
 instance HasCodec PostgresConnConfiguration where
-  codec = named "PostgresConnConfiguration" $ placeholderCodecViaJSON
+  codec =
+    CommentCodec "https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgconfiguration" $
+      AC.object "PostgresConnConfiguration" $
+        PostgresConnConfiguration
+          <$> requiredField "connection_info" connectionInfoDoc .== _pccConnectionInfo
+          <*> optionalFieldOrNull "read_replicas" readReplicasDoc .== _pccReadReplicas
+          <*> optionalFieldWithOmittedDefault "extensions_schema" defaultPostgresExtensionsSchema extensionsSchemaDoc .== _pccExtensionsSchema
+    where
+      connectionInfoDoc = "Connection parameters for the source"
+      readReplicasDoc = "Optional list of read replica configuration (supported only in cloud/enterprise versions)"
+      extensionsSchemaDoc = "Name of the schema where the graphql-engine will install database extensions (default: public)"
+      (.==) = (AC..=)
 
 $(makeLenses ''PostgresConnConfiguration)

@@ -36,7 +36,7 @@ where
 
 import Control.Lens hiding ((.=))
 import Data.Aeson.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Logging qualified as L
 import Hasura.Prelude
@@ -63,9 +63,8 @@ data SourceInfo b = SourceInfo
     _siFunctions :: FunctionCache b,
     _siConfiguration :: ~(SourceConfig b),
     _siQueryTagsConfig :: Maybe QueryTagsConfig,
-    _siCustomization :: SourceCustomization
+    _siCustomization :: ResolvedSourceCustomization
   }
-  deriving (Generic)
 
 $(makeLenses ''SourceInfo)
 
@@ -79,7 +78,14 @@ instance
   ) =>
   ToJSON (SourceInfo b)
   where
-  toJSON = genericToJSON hasuraJSON
+  toJSON (SourceInfo {..}) =
+    object
+      [ "name" .= _siName,
+        "tables" .= _siTables,
+        "functions" .= _siFunctions,
+        "configuration" .= _siConfiguration,
+        "query_tags_config" .= _siQueryTagsConfig
+      ]
 
 type BackendSourceInfo = AB.AnyBackend SourceInfo
 
@@ -166,7 +172,7 @@ instance (MonadResolveSource m) => MonadResolveSource (Tracing.TraceT m) where
   getPGSourceResolver = lift getPGSourceResolver
   getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
-instance (MonadResolveSource m) => MonadResolveSource (Q.TxET QErr m) where
+instance (MonadResolveSource m) => MonadResolveSource (PG.TxET QErr m) where
   getPGSourceResolver = lift getPGSourceResolver
   getMSSQLSourceResolver = lift getMSSQLSourceResolver
 

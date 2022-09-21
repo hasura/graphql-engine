@@ -24,6 +24,8 @@ class TestConfigAPI():
         jwt_conf = hge_ctx.hge_jwt_conf
         if jwt_conf is not None:
             jwt_conf_dict = json.loads(hge_ctx.hge_jwt_conf)
+        else:
+            jwt_conf_dict = None
 
         headers = { 'x-hasura-role': 'admin' }
         if admin_secret is not None:
@@ -38,7 +40,7 @@ class TestConfigAPI():
         assert body['is_auth_hook_set'] == (auth_hook is not None)
         assert body['is_jwt_set'] == (jwt_conf is not None)
 
-        if jwt_conf is not None:
+        if jwt_conf_dict:
             claims_format = "json"
             if 'claims_namespace_path' in jwt_conf_dict:
                 assert body['jwt']['claims_namespace_path'] == jwt_conf_dict['claims_namespace_path']

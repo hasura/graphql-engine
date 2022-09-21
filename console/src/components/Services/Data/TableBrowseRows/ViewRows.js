@@ -69,7 +69,7 @@ import {
   persistPageSizeChange,
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
-import { inputStyles } from '../constants';
+import { PaginationWithOnlyNav } from '../../../../new-components/PaginationWithOnlyNav/PaginationWithOnlyNav';
 
 const ViewRows = props => {
   const {
@@ -992,56 +992,17 @@ const ViewRows = props => {
       }
     };
 
-    const PaginationWithOnlyNav = () => {
-      const newPage = curFilter.offset / curFilter.limit;
-      return (
-        <div className="flex ml-sm mr-sm justify-around">
-          <div>
-            <Button
-              onClick={() => handlePageChange(newPage - 1)}
-              disabled={curFilter.offset === 0}
-              data-test="custom-pagination-prev"
-            >
-              Prev
-            </Button>
-          </div>
-          <div className="w-1/3">
-            <select
-              className={inputStyles}
-              value={curFilter.limit}
-              onChange={e => {
-                e.persist();
-                handlePageSizeChange(parseInt(e.target.value, 10) || 10);
-              }}
-              data-test="pagination-select"
-            >
-              <option disabled value="">
-                --
-              </option>
-              <option value={5}>5 rows</option>
-              <option value={10}>10 rows</option>
-              <option value={20}>20 rows</option>
-              <option value={25}>25 rows</option>
-              <option value={50}>50 rows</option>
-              <option value={100}>100 rows</option>
-            </select>
-          </div>
-          <div>
-            <Button
-              onClick={() => handlePageChange(newPage + 1)}
-              disabled={curRows.length === 0}
-              data-test="custom-pagination-next"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      );
-    };
-
     const paginationProps = {};
     if (useCustomPagination) {
-      paginationProps.PaginationComponent = PaginationWithOnlyNav;
+      paginationProps.PaginationComponent = () => (
+        <PaginationWithOnlyNav
+          offset={curFilter.offset}
+          limit={curFilter.limit}
+          changePage={handlePageChange}
+          changePageSize={handlePageSizeChange}
+          rows={curRows}
+        />
+      );
     }
 
     return (

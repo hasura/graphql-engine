@@ -8,18 +8,14 @@ module Hasura.Backends.DataConnector.Adapter.Schema () where
 import Control.Lens ((^.))
 import Data.Aeson qualified as J
 import Data.Has
+import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended ((<<>))
 import Data.Text.NonEmpty qualified as NET
 import Hasura.Backends.DataConnector.API.V0.Capabilities (lookupComparisonInputObjectDefinition)
 import Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..))
-import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
-import Hasura.Backends.DataConnector.IR.Aggregate qualified as IR.A
-import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
-import Hasura.Backends.DataConnector.IR.OrderBy qualified as IR.O
-import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
-import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
+import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class
 import Hasura.GraphQL.Schema.Backend (BackendSchema (..), BackendTableSelectSchema (..), ComparisonExp, MonadBuildSchema)
@@ -66,12 +62,14 @@ instance BackendSchema 'DataConnector where
 
   -- individual components
   columnParser = columnParser'
+  enumParser = enumParser'
+  possiblyNullable = possiblyNullable'
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators = orderByOperators'
   comparisonExps = comparisonExps'
 
   countTypeInput = countTypeInput'
-  aggregateOrderByCountType = IR.S.T.Number
+  aggregateOrderByCountType = DC.NumberTy
   computedField =
     error "computedField: not implemented for the Data Connector backend."
 
@@ -100,40 +98,54 @@ columnParser' ::
   RQL.ColumnType 'DataConnector ->
   GQL.Nullability ->
   GS.C.SchemaT r m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
-columnParser' columnType (GQL.Nullability isNullable) = do
+columnParser' columnType nullability = do
   parser <- case columnType of
-    RQL.ColumnScalar IR.S.T.String -> pure (J.String <$> P.string)
-    RQL.ColumnScalar IR.S.T.Number -> pure (J.Number <$> P.scientific)
-    RQL.ColumnScalar IR.S.T.Bool -> pure (J.Bool <$> P.boolean)
-    RQL.ColumnScalar (IR.S.T.Custom name) -> do
+    RQL.ColumnScalar scalarType@DC.StringTy -> pure . possiblyNullable' scalarType nullability $ J.String <$> P.string
+    RQL.ColumnScalar scalarType@DC.NumberTy -> pure . possiblyNullable' scalarType nullability $ J.Number <$> P.scientific
+    RQL.ColumnScalar scalarType@DC.BoolTy -> pure . possiblyNullable' scalarType nullability $ J.Bool <$> P.boolean
+    RQL.ColumnScalar scalarType@(DC.CustomTy name) -> do
       gqlName <-
         GQL.mkName name
           `onNothing` throw400 ValidationFailed ("The column type name " <> name <<> " is not a valid GraphQL name")
-      pure $ P.jsonScalar gqlName (Just "A custom scalar type")
-    RQL.ColumnEnumReference {} ->
-      throw400 NotSupported "Enum column type is unsupported by the Data Connector backend"
-  pure . GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) . possiblyNullable $ parser
-  where
-    possiblyNullable ::
-      MonadParse m =>
-      P.Parser 'P.Both m J.Value ->
-      P.Parser 'P.Both m J.Value
-    possiblyNullable
-      | isNullable = fmap (fromMaybe J.Null) . P.nullable
-      | otherwise = id
+      pure . possiblyNullable' scalarType nullability $ P.jsonScalar gqlName (Just "A custom scalar type")
+    RQL.ColumnEnumReference (RQL.EnumReference tableName enumValues customTableName) ->
+      case nonEmpty (Map.toList enumValues) of
+        Just enumValuesList -> enumParser' tableName enumValuesList customTableName nullability
+        Nothing -> throw400 ValidationFailed "empty enum values"
+  pure . GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) $ parser
+
+enumParser' ::
+  MonadError QErr m =>
+  RQL.TableName 'DataConnector ->
+  NonEmpty (RQL.EnumValue, RQL.EnumValueInfo) ->
+  Maybe GQL.Name ->
+  GQL.Nullability ->
+  GS.C.SchemaT r m (P.Parser 'P.Both n (RQL.ScalarValue 'DataConnector))
+enumParser' _tableName _enumValues _customTableName _nullability =
+  throw400 NotSupported "This column type is unsupported by the Data Connector backend"
+
+possiblyNullable' ::
+  MonadParse m =>
+  RQL.ScalarType 'DataConnector ->
+  GQL.Nullability ->
+  P.Parser 'P.Both m J.Value ->
+  P.Parser 'P.Both m J.Value
+possiblyNullable' _scalarType (GQL.Nullability isNullable)
+  | isNullable = fmap (fromMaybe J.Null) . P.nullable
+  | otherwise = id
 
 orderByOperators' :: RQL.SourceInfo 'DataConnector -> NamingCase -> (GQL.Name, NonEmpty (P.Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataConnector, RQL.NullsOrderType 'DataConnector)))
 orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
-  let dcName = Adapter._scDataConnectorName _siConfiguration
-      orderBy = fromMaybe Name._order_by $ GQL.mkName $ NET.unNonEmptyText (Adapter.unDataConnectorName dcName) <> "_order_by"
+  let dcName = DC._scDataConnectorName _siConfiguration
+      orderBy = fromMaybe Name._order_by $ GQL.mkName $ NET.unNonEmptyText (DC.unDataConnectorName dcName) <> "_order_by"
    in (orderBy,) $
         -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
         NE.fromList
           [ ( define $$(GQL.litName "asc") "in ascending order",
-              (IR.O.Ascending, ())
+              (DC.Ascending, ())
             ),
             ( define $$(GQL.litName "desc") "in descending order",
-              (IR.O.Descending, ())
+              (DC.Descending, ())
             )
           ]
   where
@@ -175,11 +187,11 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
               customOperators
             ]
   where
-    dataConnectorName = sourceInfo ^. RQL.siConfiguration . Adapter.scDataConnectorName
+    dataConnectorName = sourceInfo ^. RQL.siConfiguration . DC.scDataConnectorName
 
     mkListLiteral :: [RQL.ColumnValue 'DataConnector] -> IR.UnpreparedValue 'DataConnector
     mkListLiteral columnValues =
-      IR.UVLiteral . IR.S.V.ArrayLiteral $ RQL.cvValue <$> columnValues
+      IR.UVLiteral . DC.ArrayLiteral $ RQL.cvValue <$> columnValues
 
     mkCustomOperators ::
       NamingCase ->
@@ -187,7 +199,7 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
       GQL.Name ->
       GS.C.SchemaT r m [P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector)))]
     mkCustomOperators tCase collapseIfNull typeName = do
-      let capabilities = sourceInfo ^. RQL.siConfiguration . Adapter.scCapabilities
+      let capabilities = sourceInfo ^. RQL.siConfiguration . DC.scCapabilities
       case lookupComparisonInputObjectDefinition capabilities typeName of
         Nothing -> pure []
         Just GQL.InputObjectTypeDefinition {..} -> do
@@ -208,7 +220,7 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
     mkArgParser argType =
       fmap IR.mkParameter
         <$> columnParser'
-          (RQL.ColumnScalar $ IR.S.T.fromGQLType $ GQL.getBaseType argType)
+          (RQL.ColumnScalar $ DC.fromGQLType $ GQL.getBaseType argType)
           (GQL.Nullability $ GQL.isNotNull argType)
 
 tableArgs' ::
@@ -237,13 +249,13 @@ tableArgs' sourceName tableInfo = do
 
 countTypeInput' ::
   MonadParse n =>
-  Maybe (P.Parser 'P.Both n IR.C.Name) ->
-  P.InputFieldsParser n (IR.CountDistinct -> IR.A.CountAggregate)
+  Maybe (P.Parser 'P.Both n DC.ColumnName) ->
+  P.InputFieldsParser n (IR.CountDistinct -> DC.CountAggregate)
 countTypeInput' = \case
   Just columnEnum -> mkCountAggregate <$> P.fieldOptional Name._column Nothing columnEnum
   Nothing -> pure $ mkCountAggregate Nothing
   where
-    mkCountAggregate :: Maybe IR.C.Name -> IR.CountDistinct -> IR.A.CountAggregate
-    mkCountAggregate Nothing _ = IR.A.StarCount
-    mkCountAggregate (Just column) IR.SelectCountDistinct = IR.A.ColumnDistinctCount column
-    mkCountAggregate (Just column) IR.SelectCountNonDistinct = IR.A.ColumnCount column
+    mkCountAggregate :: Maybe DC.ColumnName -> IR.CountDistinct -> DC.CountAggregate
+    mkCountAggregate Nothing _ = DC.StarCount
+    mkCountAggregate (Just column) IR.SelectCountDistinct = DC.ColumnDistinctCount column
+    mkCountAggregate (Just column) IR.SelectCountNonDistinct = DC.ColumnCount column

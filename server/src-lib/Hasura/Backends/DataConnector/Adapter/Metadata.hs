@@ -20,14 +20,8 @@ import Data.Text qualified as Text
 import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig)
-import Hasura.Backends.DataConnector.Adapter.Types (ConnSourceConfig (ConnSourceConfig))
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
-import Hasura.Backends.DataConnector.IR.Column qualified as IR.C
-import Hasura.Backends.DataConnector.IR.Name qualified as IR.N
-import Hasura.Backends.DataConnector.IR.Scalar.Type qualified as IR.S.T
-import Hasura.Backends.DataConnector.IR.Scalar.Value qualified as IR.S.V
-import Hasura.Backends.DataConnector.IR.Table qualified as IR.T
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
 import Hasura.Base.Error (Code (..), QErr, decodeValue, throw400, throw500, withPathK)
 import Hasura.Incremental qualified as Inc
@@ -60,6 +54,7 @@ import Witch qualified
 
 instance BackendMetadata 'DataConnector where
   prepareCatalog _ = pure RETDoNothing
+  type BackendInvalidationKeys 'DataConnector = HashMap DC.DataConnectorName Inc.InvalidationKey
   resolveBackendInfo = resolveBackendInfo'
   resolveSourceConfig = resolveSourceConfig'
   resolveDatabaseMetadata = resolveDatabaseMetadata'
@@ -82,13 +77,13 @@ resolveBackendInfo' ::
     HasHttpManagerM m
   ) =>
   Logger Hasura ->
-  InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
-resolveBackendInfo' logger = proc (optionsMap) -> do
+  (Inc.Dependency (HashMap DC.DataConnectorName Inc.InvalidationKey), InsOrdHashMap DC.DataConnectorName DC.DataConnectorOptions) `arr` HashMap DC.DataConnectorName DC.DataConnectorInfo
+resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
   maybeDataConnectorCapabilities <-
     (|
       Inc.keyed
         ( \dataConnectorName dataConnectorOptions -> do
-            getDataConnectorCapabilitiesIfNeeded -< (dataConnectorName, dataConnectorOptions)
+            getDataConnectorCapabilitiesIfNeeded -< (invalidationKeys, dataConnectorName, dataConnectorOptions)
         )
       |) (OMap.toHashMap optionsMap)
   returnA -< HashMap.catMaybes maybeDataConnectorCapabilities
@@ -101,10 +96,11 @@ resolveBackendInfo' logger = proc (optionsMap) -> do
         MonadIO m,
         HasHttpManagerM m
       ) =>
-      (DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
-    getDataConnectorCapabilitiesIfNeeded = Inc.cache proc (dataConnectorName, dataConnectorOptions) -> do
+      (Inc.Dependency (HashMap DC.DataConnectorName Inc.InvalidationKey), DC.DataConnectorName, DC.DataConnectorOptions) `arr` Maybe DC.DataConnectorInfo
+    getDataConnectorCapabilitiesIfNeeded = Inc.cache proc (invalidationKeys, dataConnectorName, dataConnectorOptions) -> do
       let metadataObj = MetadataObject (MODataConnectorAgent dataConnectorName) $ J.toJSON dataConnectorName
       httpMgr <- bindA -< askHttpManager
+      Inc.dependOn -< Inc.selectKeyD dataConnectorName invalidationKeys
       (|
         withRecordInconsistency
           ( liftEitherA <<< bindA -< getDataConnectorCapabilities dataConnectorOptions httpMgr
@@ -136,7 +132,7 @@ resolveSourceConfig' ::
 resolveSourceConfig'
   logger
   sourceName
-  csc@ConnSourceConfig {template, timeout, value = originalConfig}
+  csc@DC.ConnSourceConfig {template, timeout, value = originalConfig}
   (DataConnectorKind dataConnectorName)
   backendInfo
   env
@@ -208,7 +204,7 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
                           -- TODO: Add Column Mutability to the 'TableInfo'
                           rciMutability = RQL.T.C.ColumnMutability False False
                         },
-                  _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint (IR.T.ConstraintName "") (OID 0)) <$> NESeq.nonEmptySeq primaryKeyColumns,
+                  _ptmiPrimaryKey = RQL.T.T.PrimaryKey (RQL.T.T.Constraint (DC.ConstraintName "") (OID 0)) <$> NESeq.nonEmptySeq primaryKeyColumns,
                   _ptmiUniqueConstraints = mempty,
                   _ptmiForeignKeys = buildForeignKeySet foreignKeys,
                   _ptmiViewInfo = Just $ RQL.T.T.ViewInfo False False False,
@@ -236,7 +232,7 @@ buildForeignKeySet (catMaybes -> foreignKeys) =
       foreignKeys <&> \(API.ForeignKeys constraints) ->
         constraints & HashMap.foldMapWithKey @[RQL.T.T.ForeignKeyMetadata 'DataConnector]
           \constraintName API.Constraint {..} -> maybeToList do
-            let columnMapAssocList = HashMap.foldrWithKey' (\k v acc -> (Witch.from k, Witch.from v) : acc) [] cColumnMapping
+            let columnMapAssocList = HashMap.foldrWithKey' (\k v acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] cColumnMapping
             columnMapping <- NEHashMap.fromList columnMapAssocList
             let foreignKey =
                   RQL.T.T.ForeignKey
@@ -251,7 +247,7 @@ parseBoolExpOperations' ::
   forall m v.
   (MonadError QErr m, SchemaCache.TableCoreInfoRM 'DataConnector m) =>
   RQL.T.C.ValueParser 'DataConnector m v ->
-  IR.T.Name ->
+  DC.TableName ->
   RQL.T.T.FieldInfoMap (RQL.T.T.FieldInfo 'DataConnector) ->
   RQL.T.C.ColumnReference 'DataConnector ->
   J.Value ->
@@ -351,7 +347,7 @@ parseBoolExpOperations' rhsParser rootTable fieldInfoMap columnRef value =
               colInfo <- validateRhsColumn fieldInfoMap' colName
               pure $ RootOrCurrentColumn rootInfo colInfo
 
-        validateRhsColumn :: RQL.T.T.FieldInfoMap (RQL.T.T.FieldInfo 'DataConnector) -> IR.C.Name -> m IR.C.Name
+        validateRhsColumn :: RQL.T.T.FieldInfoMap (RQL.T.T.FieldInfo 'DataConnector) -> DC.ColumnName -> m DC.ColumnName
         validateRhsColumn fieldInfoMap' rhsCol = do
           rhsType <- RQL.T.T.askColumnType fieldInfoMap' rhsCol "column operators can only compare table columns"
           when (columnType /= rhsType) $
@@ -373,7 +369,7 @@ parseCollectableType' collectableType = \case
     | HSU.isReqUserId t -> pure $ mkTypedSessionVar collectableType HSU.userIdHeader
   val -> case collectableType of
     CollectableTypeScalar scalarType ->
-      PSESQLExp . IR.S.V.ValueLiteral <$> RQL.T.C.parseScalarValueColumnType scalarType val
+      PSESQLExp . DC.ValueLiteral <$> RQL.T.C.parseScalarValueColumnType scalarType val
     CollectableTypeArray _ ->
       throw400 NotSupported "Array types are not supported by the Data Connector backend"
 
@@ -384,8 +380,8 @@ mkTypedSessionVar ::
 mkTypedSessionVar columnType =
   PSESessVar (columnTypeToScalarType <$> columnType)
 
-columnTypeToScalarType :: RQL.T.C.ColumnType 'DataConnector -> IR.S.T.Type
+columnTypeToScalarType :: RQL.T.C.ColumnType 'DataConnector -> DC.ScalarType
 columnTypeToScalarType = \case
   RQL.T.C.ColumnScalar scalarType -> scalarType
   -- NOTE: This should be unreachable:
-  RQL.T.C.ColumnEnumReference _ -> IR.S.T.String
+  RQL.T.C.ColumnEnumReference _ -> DC.StringTy

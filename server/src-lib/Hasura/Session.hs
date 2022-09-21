@@ -28,6 +28,7 @@ module Hasura.Session
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson
 import Data.Aeson.Types (Parser, toJSONKeyText)
 import Data.CaseInsensitive qualified as CI
@@ -36,7 +37,7 @@ import Data.HashSet qualified as Set
 import Data.Text qualified as T
 import Data.Text.Extended
 import Data.Text.NonEmpty
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -55,12 +56,15 @@ newtype RoleName = RoleName {getRoleTxt :: NonEmptyText}
       ToJSONKey,
       FromJSON,
       ToJSON,
-      Q.FromCol,
-      Q.ToPrepArg,
+      PG.FromCol,
+      PG.ToPrepArg,
       Generic,
       NFData,
       Cacheable
     )
+
+instance HasCodec RoleName where
+  codec = dimapCodec RoleName getRoleTxt nonEmptyTextCodec
 
 roleNameToTxt :: RoleName -> Text
 roleNameToTxt = unNonEmptyText . getRoleTxt

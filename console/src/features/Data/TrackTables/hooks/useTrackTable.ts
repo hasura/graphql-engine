@@ -1,30 +1,35 @@
 import { useCallback } from 'react';
 import { useQueryClient } from 'react-query';
-
+import { exportMetadata } from '@/features/DataSource';
+import { useHttpClient } from '@/features/Network';
 import {
   allowedMetadataTypes,
-  useMetadata,
   useMetadataMigration,
 } from '@/features/MetadataAPI';
 import { useFireNotification } from '@/new-components/Notifications';
 import produce from 'immer';
-
 import type { TrackableTable } from '../types';
 
-export const useTrackTable = () => {
+export const useTrackTable = (dataSourceName: string) => {
   const mutation = useMetadataMigration();
 
   const { fireNotification } = useFireNotification();
-  const { data: metadata } = useMetadata();
+  const httpClient = useHttpClient();
   const queryClient = useQueryClient();
+  // const { data } = useMetadataSource(dataSourceName);
 
   const trackTable = useCallback(
-    (dataSourceName: string, table: TrackableTable) => {
-      if (!metadata) throw Error('useTrackTable: cannot export metadata');
-
-      const driver = metadata.metadata.sources.find(
+    async (table: TrackableTable) => {
+      const { metadata, resource_version } = await exportMetadata({
+        httpClient,
+      });
+      const currentMetadataSource = metadata.sources?.find(
         source => source.name === dataSourceName
-      )?.kind;
+      );
+      if (!currentMetadataSource)
+        throw Error(`useTrackTable.currentMetadataSource not found`);
+
+      const driver = currentMetadataSource.kind;
 
       if (!driver) throw Error('useTrackTable: cannot find source in metadata');
 
@@ -34,9 +39,9 @@ export const useTrackTable = () => {
             type: `${driver}_track_table` as allowedMetadataTypes,
             args: {
               source: dataSourceName,
-              table: table.table,
+              table: table.name,
             },
-            resource_version: metadata.resource_version,
+            resource_version,
           },
         },
         {
@@ -68,10 +73,18 @@ export const useTrackTable = () => {
               type: 'error',
             });
           },
+          onSettled() {
+            queryClient.invalidateQueries('treeview');
+            queryClient.refetchQueries(
+              ['introspected-tables', dataSourceName],
+              { exact: true }
+            );
+            queryClient.refetchQueries(['export_metadata'], { exact: true });
+          },
         }
       );
     },
-    [metadata, mutation, queryClient, fireNotification]
+    [httpClient, mutation, dataSourceName, queryClient, fireNotification]
   );
 
   return { trackTable };

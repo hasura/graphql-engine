@@ -285,4 +285,14 @@ export namespace MetadataSelector {
         ? queryCollectionDefinition?.scope?.roles
         : [];
     };
+
+  export const isCollectionInAllowlist =
+    (collectionName: string) =>
+    (m: MetadataResponse): boolean => {
+      return (
+        m.metadata?.allowlist?.find(
+          entry => entry?.collection === collectionName
+        ) !== undefined
+      );
+    };
 }

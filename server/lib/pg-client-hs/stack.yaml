@@ -1,0 +1,6 @@
+resolver: lts-17.15
+packages:
+- .
+extra-deps:
+- git: https://github.com/hasura/pool.git
+  commit: bc4c3f739a8fb8ec4444336a34662895831c9acf

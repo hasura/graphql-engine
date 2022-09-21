@@ -69,7 +69,6 @@ import Hasura.Prelude
 import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Remote
@@ -400,8 +399,8 @@ optionalFieldParser ::
 optionalFieldParser = fmap . fmap . fmap
 
 -- | Builds the type name for referenced enum tables.
-mkEnumTypeName :: forall b m r. (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m, Has NamingCase r) => EnumReference b -> m G.Name
-mkEnumTypeName (EnumReference enumTableName _ enumTableCustomName) = do
+mkEnumTypeName :: forall b m r. (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m, Has NamingCase r) => TableName b -> Maybe G.Name -> m G.Name
+mkEnumTypeName enumTableName enumTableCustomName = do
   tCase <- asks getter
   enumTableGQLName <- getTableIdentifier @b enumTableName `onLeft` throwError
   addEnumSuffix enumTableGQLName enumTableCustomName tCase

@@ -1,0 +1,14 @@
+---
+title: 'Best Practices: Observability'
+description: Security best practices for a production environment
+keywords:
+  - hasura
+  - docs
+  - best practices
+  - production
+sidebar_label: Observability
+---
+
+# Observability Best Practices
+
+## Introduction

@@ -14,7 +14,7 @@ import Data.Aeson qualified as J
 import Data.ByteString qualified as B
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Execute.Subscription qualified as PGL
 import Hasura.Backends.Postgres.Execute.Types
@@ -67,7 +67,7 @@ runPGQuery ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig ('Postgres pgKind) ->
-  Tracing.TraceT (Q.TxET QErr IO) EncJSON ->
+  Tracing.TraceT (PG.TxET QErr IO) EncJSON ->
   Maybe EQ.PreparedSql ->
   -- | Also return the time spent in the PG query; for telemetry.
   m (DiffTime, EncJSON)
@@ -90,7 +90,7 @@ runPGMutation ::
   UserInfo ->
   L.Logger L.Hasura ->
   SourceConfig ('Postgres pgKind) ->
-  Tracing.TraceT (Q.TxET QErr IO) EncJSON ->
+  Tracing.TraceT (PG.TxET QErr IO) EncJSON ->
   Maybe EQ.PreparedSql ->
   m (DiffTime, EncJSON)
 runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql = do
@@ -101,7 +101,7 @@ runPGMutation reqId query fieldName userInfo logger sourceConfig tx _genSql = do
     trace ("Postgres Mutation for root field " <>> fieldName) $
       Tracing.interpTraceT
         ( liftEitherM . liftIO . runExceptT
-            . runTx (_pscExecCtx sourceConfig) Q.ReadWrite
+            . runTx (_pscExecCtx sourceConfig) PG.ReadWrite
             . withTraceContext ctx
             . withUserInfo userInfo
         )
@@ -127,7 +127,7 @@ runPGStreamingSubscription sourceConfig query variables =
   withElapsedTime $
     runExceptT $ do
       res <- runQueryTx (_pscExecCtx sourceConfig) $ PGL.executeStreamingMultiplexedQuery query variables
-      pure $ res <&> (\(cohortId, cohortRes, cursorVariableVals) -> (cohortId, cohortRes, Q.getAltJ cursorVariableVals))
+      pure $ res <&> (\(cohortId, cohortRes, cursorVariableVals) -> (cohortId, cohortRes, PG.getAltJ cursorVariableVals))
 
 runPGQueryExplain ::
   forall pgKind m.
@@ -154,7 +154,7 @@ mkQueryLog gqlQuery fieldName preparedSql requestId =
   where
     generatedQuery =
       preparedSql <&> \(EQ.PreparedSql query args) ->
-        GeneratedQuery (Q.getQueryText query) (J.toJSON $ pgScalarValueToJson . snd <$> args)
+        GeneratedQuery (PG.getQueryText query) (J.toJSON $ pgScalarValueToJson . snd <$> args)
 
 -- ad-hoc transaction optimisation
 -- see Note [Backwards-compatible transaction optimisation]
@@ -178,7 +178,7 @@ runPGMutationTransaction reqId query userInfo logger sourceConfig mutations = do
   withElapsedTime $ do
     Tracing.interpTraceT
       ( liftEitherM . liftIO . runExceptT
-          . runTx (_pscExecCtx sourceConfig) Q.ReadWrite
+          . runTx (_pscExecCtx sourceConfig) PG.ReadWrite
           . withTraceContext ctx
           . withUserInfo userInfo
       )

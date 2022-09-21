@@ -10,6 +10,7 @@ psycopg2-binary
 PyJWT == 2.3.*  # v2.4 disallows the key format we use
 pytest == 6.2.5
 pytest-durations
+pytest-fixture-order
 pytest-xdist
 PyYAML
 redis

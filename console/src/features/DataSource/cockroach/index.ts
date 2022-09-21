@@ -58,4 +58,7 @@ export const cockroach: Database = {
     getFKRelationships,
     getTablesListAsTree,
   },
+  query: {
+    getTableRows: async () => Feature.NotImplemented,
+  },
 };

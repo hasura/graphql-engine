@@ -8,6 +8,7 @@ import {
   availableFeatureFlagIds,
   useIsFeatureFlagEnabled,
 } from '@/features/FeatureFlags';
+import { nativeDrivers } from '@/features/DataSource';
 import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -17,6 +18,7 @@ import {
   removeDataSource,
   reloadDataSource,
 } from '../../../../metadata/actions';
+import { GDCDatabaseListItem } from './components/GDCDatabaseListItem';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getDataSources } from '../../../../metadata/selector';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
@@ -320,20 +322,38 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                 </th>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {dataSources.length ? (
-                  dataSources.map(data => (
-                    <DatabaseListItem
-                      key={data.name}
-                      dataSource={data}
-                      inconsistentObjects={inconsistentObjects}
-                      pushRoute={pushRoute}
-                      onEdit={onEdit}
-                      onReload={onReload}
-                      onRemove={onRemove}
-                      dispatch={dispatch}
-                      dataHeaders={dataHeaders}
-                    />
-                  ))
+                {sourcesFromMetadata.length ? (
+                  sourcesFromMetadata.map(source => {
+                    if (nativeDrivers.includes(source.kind)) {
+                      const data = dataSources.find(
+                        s => s.name === source.name
+                      );
+                      if (!data) return null;
+
+                      return (
+                        <DatabaseListItem
+                          key={data.name}
+                          dataSource={data}
+                          inconsistentObjects={inconsistentObjects}
+                          pushRoute={pushRoute}
+                          onEdit={onEdit}
+                          onReload={onReload}
+                          onRemove={onRemove}
+                          dispatch={dispatch}
+                          dataHeaders={dataHeaders}
+                        />
+                      );
+                    }
+                    if (isDCAgentsManageUIEnabled)
+                      return (
+                        <GDCDatabaseListItem
+                          dataSource={{ name: source.name, kind: source.kind }}
+                          inconsistentObjects={inconsistentObjects}
+                          dispatch={dispatch}
+                        />
+                      );
+                    return null;
+                  })
                 ) : (
                   <td colSpan={3} className="text-center px-sm py-xs">
                     You don&apos;t have any data sources connected, please

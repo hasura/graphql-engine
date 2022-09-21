@@ -61,6 +61,7 @@ import Control.Monad.Trans.Managed (ManagedT (..), allocate_)
 import Control.Retry qualified as Retry
 import Data.Aeson qualified as A
 import Data.ByteString.Char8 qualified as BC
+import Data.ByteString.Lazy qualified as BL
 import Data.ByteString.Lazy.Char8 qualified as BLC
 import Data.Environment qualified as Env
 import Data.FileEmbed (makeRelativeToProject)
@@ -70,7 +71,7 @@ import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock qualified as Clock
 import Data.Yaml qualified as Y
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import GHC.AssertNF.CPP
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.Postgres.Connection
@@ -99,6 +100,7 @@ import Hasura.Logging
 import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.QueryTags
+import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..))
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Catalog
@@ -210,16 +212,16 @@ printJSON = liftIO . BLC.putStrLn . A.encode
 printYaml :: (A.ToJSON a, MonadIO m) => a -> m ()
 printYaml = liftIO . BC.putStrLn . Y.encode
 
-mkPGLogger :: Logger Hasura -> Q.PGLogger
-mkPGLogger (Logger logger) (Q.PLERetryMsg msg) =
+mkPGLogger :: Logger Hasura -> PG.PGLogger
+mkPGLogger (Logger logger) (PG.PLERetryMsg msg) =
   logger $ PGLog LevelWarn msg
 
 -- | Context required for all graphql-engine CLI commands
 data GlobalCtx = GlobalCtx
-  { _gcMetadataDbConnInfo :: !Q.ConnInfo,
+  { _gcMetadataDbConnInfo :: !PG.ConnInfo,
     -- | --database-url option, @'UrlConf' is required to construct default source configuration
     -- and optional retries
-    _gcDefaultPostgresConnInfo :: !(Maybe (UrlConf, Q.ConnInfo), Maybe Int)
+    _gcDefaultPostgresConnInfo :: !(Maybe (UrlConf, PG.ConnInfo), Maybe Int)
   }
 
 readTlsAllowlist :: SchemaCacheRef -> IO [TlsAllow]
@@ -240,7 +242,7 @@ initGlobalCtx env metadataDbUrl defaultPgConnInfo = do
 
       mkConnInfoFromMDb mdbUrl =
         let retries = fromMaybe 1 maybeRetries
-         in (Q.ConnInfo retries . Q.CDDatabaseURI . txtToBs . T.pack) mdbUrl
+         in (PG.ConnInfo retries . PG.CDDatabaseURI . txtToBs . T.pack) mdbUrl
 
       mkGlobalCtx mdbConnInfo sourceConnInfo =
         pure $ GlobalCtx mdbConnInfo (sourceConnInfo, maybeRetries)
@@ -269,7 +271,7 @@ data ServeCtx = ServeCtx
     _scInstanceId :: !InstanceId,
     _scLoggers :: !Loggers,
     _scEnabledLogTypes :: !(HashSet (EngineLogType Hasura)),
-    _scMetadataDbPool :: !Q.PGPool,
+    _scMetadataDbPool :: !PG.PGPool,
     _scShutdownLatch :: !ShutdownLatch,
     _scSchemaCache :: !RebuildableSchemaCache,
     _scSchemaCacheRef :: !SchemaCacheRef,
@@ -281,11 +283,11 @@ data ServeCtx = ServeCtx
 data Loggers = Loggers
   { _lsLoggerCtx :: !(LoggerCtx Hasura),
     _lsLogger :: !(Logger Hasura),
-    _lsPgLogger :: !Q.PGLogger
+    _lsPgLogger :: !PG.PGLogger
   }
 
 -- | An application with Postgres database as a metadata storage
-newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageAppT :: (Q.PGPool, Q.PGLogger) -> m a}
+newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageAppT :: (PG.PGPool, PG.PGLogger) -> m a}
   deriving
     ( Functor,
       Applicative,
@@ -297,23 +299,23 @@ newtype PGMetadataStorageAppT m a = PGMetadataStorageAppT {runPGMetadataStorageA
       MonadMask,
       HasHttpManagerM,
       HasServerConfigCtx,
-      MonadReader (Q.PGPool, Q.PGLogger),
+      MonadReader (PG.PGPool, PG.PGLogger),
       MonadBase b,
       MonadBaseControl b
     )
-    via (ReaderT (Q.PGPool, Q.PGLogger) m)
+    via (ReaderT (PG.PGPool, PG.PGLogger) m)
   deriving
     ( MonadTrans
     )
-    via (ReaderT (Q.PGPool, Q.PGLogger))
+    via (ReaderT (PG.PGPool, PG.PGLogger))
 
 resolvePostgresConnInfo ::
-  (MonadIO m) => Env.Environment -> UrlConf -> Maybe Int -> m Q.ConnInfo
+  (MonadIO m) => Env.Environment -> UrlConf -> Maybe Int -> m PG.ConnInfo
 resolvePostgresConnInfo env dbUrlConf maybeRetries = do
   dbUrlText <-
     runExcept (resolveUrlConf env dbUrlConf) `onLeft` \err ->
       liftIO (throwErrJExit InvalidDatabaseConnectionParamsError err)
-  pure $ Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs dbUrlText
+  pure $ PG.ConnInfo retries $ PG.CDDatabaseURI $ txtToBs dbUrlText
   where
     retries = fromMaybe 1 maybeRetries
 
@@ -344,19 +346,19 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
   -- log postgres connection info
   unLogger logger $ connInfoToLog _gcMetadataDbConnInfo
 
-  metadataDbPool <- liftIO $ Q.initPGPool _gcMetadataDbConnInfo soConnParams pgLogger
+  metadataDbPool <- liftIO $ PG.initPGPool _gcMetadataDbConnInfo soConnParams pgLogger
 
   let maybeDefaultSourceConfig =
         fst _gcDefaultPostgresConnInfo <&> \(dbUrlConf, _) ->
           let connSettings =
                 PostgresPoolSettings
-                  { _ppsMaxConnections = Just $ Q.cpConns soConnParams,
-                    _ppsIdleTimeout = Just $ Q.cpIdleTime soConnParams,
+                  { _ppsMaxConnections = Just $ PG.cpConns soConnParams,
+                    _ppsIdleTimeout = Just $ PG.cpIdleTime soConnParams,
                     _ppsRetries = snd _gcDefaultPostgresConnInfo <|> Just 1,
-                    _ppsPoolTimeout = Q.cpTimeout soConnParams,
-                    _ppsConnectionLifetime = Q.cpMbLifetime soConnParams
+                    _ppsPoolTimeout = PG.cpTimeout soConnParams,
+                    _ppsConnectionLifetime = PG.cpMbLifetime soConnParams
                   }
-              sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (Q.cpAllowPrepare soConnParams) soTxIso Nothing
+              sourceConnInfo = PostgresSourceConnInfo dbUrlConf (Just connSettings) (PG.cpAllowPrepare soConnParams) soTxIso Nothing
            in PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
       optimizePermissionFilters
         | EFOptimizePermissionFilters `elem` soExperimentalFeatures = Options.OptimizePermissionFilters
@@ -430,7 +432,7 @@ migrateCatalogSchema ::
   (MonadIO m, MonadBaseControl IO m) =>
   Env.Environment ->
   Logger Hasura ->
-  Q.PGPool ->
+  PG.PGPool ->
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
   HTTP.Manager ->
   ServerConfigCtx ->
@@ -454,7 +456,7 @@ migrateCatalogSchema
       -- DB has been set correctly
       currentTime <- liftIO Clock.getCurrentTime
       (migrationResult, metadata) <-
-        Q.runTx pool (Q.Serializable, Just Q.ReadWrite) $
+        PG.runTx pool (PG.Serializable, Just PG.ReadWrite) $
           migrateCatalog
             defaultSourceConfig
             extensionsSchema
@@ -557,7 +559,8 @@ runHGEServer ::
     HasResourceLimits m,
     MonadMetadataStorage (MetadataStorageT m),
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   Env.Environment ->
@@ -644,7 +647,8 @@ mkHGEServer ::
     HasResourceLimits m,
     MonadMetadataStorage (MetadataStorageT m),
     MonadResolveSource m,
-    EB.MonadQueryTags m
+    EB.MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   (ServerCtx -> Spock.SpockT m ()) ->
   Env.Environment ->
@@ -795,7 +799,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           runMetadataStorageT getMetadataDbUid
             >>= (`onLeft` throwErrJExit DatabaseMigrationError)
         pgVersion <-
-          liftIO (runExceptT $ Q.runTx _scMetadataDbPool (Q.ReadCommitted, Nothing) $ getPgVersion)
+          liftIO (runExceptT $ PG.runTx _scMetadataDbPool (PG.ReadCommitted, Nothing) $ getPgVersion)
             >>= (`onLeft` throwErrJExit DatabaseMigrationError)
 
         telemetryThread <-
@@ -1025,10 +1029,10 @@ instance (MonadIO m) => HttpLog (PGMetadataStorageAppT m) where
       mkHttpLog $
         mkHttpErrorLogContext userInfoM loggingSettings reqId waiReq req qErr Nothing Nothing headers
 
-  logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody _response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
+  logHttpSuccess logger loggingSettings userInfoM reqId waiReq reqBody response compressedResponse qTime cType headers (CommonHttpLogMetadata rb batchQueryOpLogs, ()) =
     unLogger logger $
       mkHttpLog $
-        mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody compressedResponse qTime cType headers rb batchQueryOpLogs
+        mkHttpAccessLogContext userInfoM loggingSettings reqId waiReq reqBody (BL.length response) compressedResponse qTime cType headers rb batchQueryOpLogs
 
 instance (Monad m) => MonadExecuteQuery (PGMetadataStorageAppT m) where
   cacheLookup _ _ _ _ = pure ([], Nothing)
@@ -1087,20 +1091,24 @@ instance (Monad m) => MonadResolveSource (PGMetadataStorageAppT m) where
 instance (Monad m) => EB.MonadQueryTags (PGMetadataStorageAppT m) where
   createQueryTags _attributes _qtSourceConfig = return $ emptyQueryTagsComment
 
+instance (Monad m) => MonadEventLogCleanup (PGMetadataStorageAppT m) where
+  runLogCleaner _ = pure $ throw400 NotSupported "Event log cleanup feature is enterprise edition only"
+  generateCleanupSchedules _ _ _ = pure $ Right ()
+
 runInSeparateTx ::
   (MonadIO m) =>
-  Q.TxE QErr a ->
+  PG.TxE QErr a ->
   MetadataStorageT (PGMetadataStorageAppT m) a
 runInSeparateTx tx = do
   pool <- lift $ asks fst
-  liftEitherM $ liftIO $ runExceptT $ Q.runTx pool (Q.RepeatableRead, Nothing) tx
+  liftEitherM $ liftIO $ runExceptT $ PG.runTx pool (PG.RepeatableRead, Nothing) tx
 
-notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> Q.TxE QErr ()
+notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> PG.TxE QErr ()
 notifySchemaCacheSyncTx (MetadataResourceVersion resourceVersion) instanceId invalidations = do
-  Q.Discard () <-
-    Q.withQE
+  PG.Discard () <-
+    PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
       INSERT INTO hdb_catalog.hdb_schema_notifications(id, notification, resource_version, instance_id)
       VALUES (1, $1::json, $2, $3::uuid)
       ON CONFLICT (id) DO UPDATE SET
@@ -1108,45 +1116,45 @@ notifySchemaCacheSyncTx (MetadataResourceVersion resourceVersion) instanceId inv
         resource_version = $2,
         instance_id = $3::uuid
     |]
-      (Q.AltJ invalidations, resourceVersion, instanceId)
+      (PG.AltJ invalidations, resourceVersion, instanceId)
       True
   pure ()
 
-getCatalogStateTx :: Q.TxE QErr CatalogState
+getCatalogStateTx :: PG.TxE QErr CatalogState
 getCatalogStateTx =
-  mkCatalogState . Q.getRow
-    <$> Q.withQE
+  mkCatalogState . PG.getRow
+    <$> PG.withQE
       defaultTxErrorHandler
-      [Q.sql|
+      [PG.sql|
     SELECT hasura_uuid::text, cli_state::json, console_state::json
       FROM hdb_catalog.hdb_version
   |]
       ()
       False
   where
-    mkCatalogState (dbId, Q.AltJ cliState, Q.AltJ consoleState) =
+    mkCatalogState (dbId, PG.AltJ cliState, PG.AltJ consoleState) =
       CatalogState dbId cliState consoleState
 
-setCatalogStateTx :: CatalogStateType -> A.Value -> Q.TxE QErr ()
+setCatalogStateTx :: CatalogStateType -> A.Value -> PG.TxE QErr ()
 setCatalogStateTx stateTy stateValue =
   case stateTy of
     CSTCli ->
-      Q.unitQE
+      PG.unitQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
         UPDATE hdb_catalog.hdb_version
            SET cli_state = $1
       |]
-        (Identity $ Q.AltJ stateValue)
+        (Identity $ PG.AltJ stateValue)
         False
     CSTConsole ->
-      Q.unitQE
+      PG.unitQE
         defaultTxErrorHandler
-        [Q.sql|
+        [PG.sql|
         UPDATE hdb_catalog.hdb_version
            SET console_state = $1
       |]
-        (Identity $ Q.AltJ stateValue)
+        (Identity $ PG.AltJ stateValue)
         False
 
 -- | Each of the function in the type class is executed in a totally separate transaction.
@@ -1173,9 +1181,9 @@ instance {-# OVERLAPPING #-} MonadIO m => MonadMetadataStorage (MetadataStorageT
   unlockScheduledEvents a b = runInSeparateTx $ unlockScheduledEventsTx a b
   unlockAllLockedScheduledEvents = runInSeparateTx unlockAllLockedScheduledEventsTx
   clearFutureCronEvents = runInSeparateTx . dropFutureCronEventsTx
-  getOneOffScheduledEvents a b = runInSeparateTx $ getOneOffScheduledEventsTx a b
-  getCronEvents a b c = runInSeparateTx $ getCronEventsTx a b c
-  getInvocations a b = runInSeparateTx $ getInvocationsTx a b
+  getOneOffScheduledEvents a b c = runInSeparateTx $ getOneOffScheduledEventsTx a b c
+  getCronEvents a b c d = runInSeparateTx $ getCronEventsTx a b c d
+  getInvocations a = runInSeparateTx $ getInvocationsTx a
   deleteScheduledEvent a b = runInSeparateTx $ deleteScheduledEventTx a b
 
   insertAction a b c d = runInSeparateTx $ insertActionTx a b c d
@@ -1199,7 +1207,8 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
         "enableTelemetry" A..= boolToText enableTelemetry,
         "cdnAssets" A..= boolToText (isNothing consoleAssetsDir),
         "assetsVersion" A..= consoleAssetsVersion,
-        "serverVersion" A..= currentVersion
+        "serverVersion" A..= currentVersion,
+        "consoleSentryDsn" A..= ("" :: Text)
       ]
   where
     consolePath = case path of
@@ -1214,23 +1223,23 @@ telemetryNotice =
     <> "usage stats which allows us to keep improving Hasura at warp speed. "
     <> "To read more or opt-out, visit https://hasura.io/docs/latest/graphql/core/guides/telemetry.html"
 
-mkPgSourceResolver :: Q.PGLogger -> SourceResolver ('Postgres 'Vanilla)
+mkPgSourceResolver :: PG.PGLogger -> SourceResolver ('Postgres 'Vanilla)
 mkPgSourceResolver pgLogger _ config = runExceptT do
   env <- lift Env.getEnvironment
   let PostgresSourceConnInfo urlConf poolSettings allowPrepare isoLevel _ = _pccConnectionInfo config
   -- If the user does not provide values for the pool settings, then use the default values
   let (maxConns, idleTimeout, retries) = getDefaultPGPoolSettingIfNotExists poolSettings defaultPostgresPoolSettings
   urlText <- resolveUrlConf env urlConf
-  let connInfo = Q.ConnInfo retries $ Q.CDDatabaseURI $ txtToBs urlText
+  let connInfo = PG.ConnInfo retries $ PG.CDDatabaseURI $ txtToBs urlText
       connParams =
-        Q.defaultConnParams
-          { Q.cpIdleTime = idleTimeout,
-            Q.cpConns = maxConns,
-            Q.cpAllowPrepare = allowPrepare,
-            Q.cpMbLifetime = _ppsConnectionLifetime =<< poolSettings,
-            Q.cpTimeout = _ppsPoolTimeout =<< poolSettings
+        PG.defaultConnParams
+          { PG.cpIdleTime = idleTimeout,
+            PG.cpConns = maxConns,
+            PG.cpAllowPrepare = allowPrepare,
+            PG.cpMbLifetime = _ppsConnectionLifetime =<< poolSettings,
+            PG.cpTimeout = _ppsPoolTimeout =<< poolSettings
           }
-  pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
+  pgPool <- liftIO $ PG.initPGPool connInfo connParams pgLogger
   let pgExecCtx = mkPGExecCtx isoLevel pgPool
   pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty $ _pccExtensionsSchema config
 

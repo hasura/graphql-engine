@@ -63,7 +63,7 @@ author =
 
 updatePermission :: Permissions.Permission
 updatePermission =
-  Permissions.UpdatePermission
+  Permissions.updatePermission
     { Permissions.permissionTable = authorTableName,
       Permissions.permissionSource = "postgres",
       Permissions.permissionRole = "user",

@@ -57,7 +57,7 @@ import Data.Time
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
 import Data.Vector qualified as V
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Hasura.Base.Instances ()
 import Hasura.Prelude
 import Language.Haskell.TH.Syntax (Q, TExp)
@@ -214,6 +214,7 @@ mkClientHeadersForward reqHeaders =
       case hdrName of
         "Host" -> Just ("X-Forwarded-Host", hdrValue)
         "User-Agent" -> Just ("X-Forwarded-User-Agent", hdrValue)
+        "Origin" -> Just ("X-Forwarded-Origin", hdrValue)
         _ -> Nothing
 
 mkSetCookieHeaders :: Wreq.Response a -> HTTP.ResponseHeaders
@@ -285,12 +286,12 @@ sha1 = convert @_ @B.ByteString . Crypto.hashlazy @Crypto.SHA1
 cryptoHash :: J.ToJSON a => a -> B.ByteString
 cryptoHash = Base16.encode . sha1 . J.encode
 
-readIsoLevel :: String -> Either String Q.TxIsolation
+readIsoLevel :: String -> Either String PG.TxIsolation
 readIsoLevel isoS =
   case isoS of
-    "read-committed" -> return Q.ReadCommitted
-    "repeatable-read" -> return Q.RepeatableRead
-    "serializable" -> return Q.Serializable
+    "read-committed" -> return PG.ReadCommitted
+    "repeatable-read" -> return PG.RepeatableRead
+    "serializable" -> return PG.Serializable
     _ -> Left "Only expecting read-committed / repeatable-read / serializable"
 
 parseConnLifeTime :: Maybe NominalDiffTime -> Maybe NominalDiffTime

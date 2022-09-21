@@ -385,6 +385,7 @@ const Add: React.FC<Props> = props => {
                     type="submit"
                     mode="primary"
                     data-test="trigger-create"
+                    data-trackid="events-tab-button-create-event-trigger"
                   >
                     {createBtnText}
                   </Button>

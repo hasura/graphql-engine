@@ -56,6 +56,7 @@ import Hasura.GraphQL.Schema.Parser
     MonadParse,
     Parser,
     memoize,
+    type (<:),
   )
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Select
@@ -227,6 +228,8 @@ instance
 
   -- indivdual components
   columnParser = columnParser
+  enumParser = enumParser @pgKind
+  possiblyNullable = possiblyNullable
   scalarSelectionArgumentsParser = pgScalarSelectionArgumentsParser
 
   -- NOTE: We don't use @orderByOperators@ directly as this will cause memory
@@ -416,18 +419,18 @@ buildFunctionRelayQueryFields mkRootFieldName sourceName functionName functionIn
 -- Individual components
 
 columnParser ::
+  forall pgKind r m n.
   MonadBuildSchema ('Postgres pgKind) r m n =>
   ColumnType ('Postgres pgKind) ->
   G.Nullability ->
   SchemaT r m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue ('Postgres pgKind))))
-columnParser columnType (G.Nullability isNullable) = do
-  tCase <- asks getter
+columnParser columnType nullability =
   -- TODO(PDV): It might be worth memoizing this function even though it isn’t
   -- recursive simply for performance reasons, since it’s likely to be hammered
   -- during schema generation. Need to profile to see whether or not it’s a win.
   peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType ->
-      possiblyNullable scalarType <$> do
+      possiblyNullable scalarType nullability <$> do
         -- We convert the value to JSON and use the FromJSON instance. This avoids
         -- having two separate ways of parsing a value in the codebase, which
         -- could lead to inconsistencies.
@@ -455,20 +458,38 @@ columnParser columnType (G.Nullability isNullable) = do
             }
     ColumnEnumReference (EnumReference tableName enumValues tableCustomName) ->
       case nonEmpty (Map.toList enumValues) of
-        Just enumValuesList -> do
-          tableGQLName <- liftEither (getIdentifierQualifiedObject tableName)
-          name <- addEnumSuffix tableGQLName tableCustomName tCase
-          pure $ possiblyNullable PGText $ P.enum name Nothing (mkEnumValue tCase <$> enumValuesList)
+        Just enumValuesList -> enumParser @pgKind tableName enumValuesList tableCustomName nullability
         Nothing -> throw400 ValidationFailed "empty enum values"
+
+enumParser ::
+  forall pgKind r m n.
+  (MonadBuildSchema ('Postgres pgKind) r m n) =>
+  TableName ('Postgres pgKind) ->
+  NonEmpty (EnumValue, EnumValueInfo) ->
+  Maybe G.Name ->
+  G.Nullability ->
+  SchemaT r m (Parser 'Both n (ScalarValue ('Postgres pgKind)))
+enumParser tableName enumValues tableCustomName nullability = do
+  tCase <- asks getter
+  tableGQLName <- liftEither (getIdentifierQualifiedObject tableName)
+  name <- addEnumSuffix tableGQLName tableCustomName tCase
+  pure $ possiblyNullable PGText nullability $ P.enum name Nothing (mkEnumValue tCase <$> enumValues)
   where
-    possiblyNullable scalarType
-      | isNullable = fmap (fromMaybe $ PGNull scalarType) . P.nullable
-      | otherwise = id
-    mkEnumValue :: NamingCase -> (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, PGScalarValue)
+    mkEnumValue :: NamingCase -> (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue ('Postgres pgKind))
     mkEnumValue tCase (EnumValue value, EnumValueInfo description) =
       ( P.Definition (applyEnumValueCase tCase value) (G.Description <$> description) Nothing [] P.EnumValueInfo,
         PGValText $ G.unName value
       )
+
+possiblyNullable ::
+  (MonadParse m, 'Input <: k) =>
+  ScalarType ('Postgres pgKind) ->
+  G.Nullability ->
+  Parser k m (ScalarValue ('Postgres pgKind)) ->
+  Parser k m (ScalarValue ('Postgres pgKind))
+possiblyNullable scalarType (G.Nullability isNullable)
+  | isNullable = fmap (fromMaybe $ PGNull scalarType) . P.nullable
+  | otherwise = id
 
 pgScalarSelectionArgumentsParser ::
   MonadParse n =>

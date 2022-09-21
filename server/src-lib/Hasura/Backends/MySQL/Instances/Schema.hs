@@ -50,6 +50,8 @@ instance BackendSchema 'MySQL where
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Nothing
   columnParser = columnParser'
+  enumParser = enumParser'
+  possiblyNullable = possiblyNullable'
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = orderByOperators'
   comparisonExps = const comparisonExps'
@@ -94,26 +96,26 @@ columnParser' ::
   ColumnType 'MySQL ->
   GQL.Nullability ->
   SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
-columnParser' columnType (GQL.Nullability isNullable) =
+columnParser' columnType nullability =
   peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
     ColumnScalar scalarType -> case scalarType of
-      MySQL.Decimal -> pure $ possiblyNullable scalarType $ MySQL.DecimalValue <$> P.float
-      MySQL.Tiny -> pure $ possiblyNullable scalarType $ MySQL.TinyValue <$> P.int
-      MySQL.Short -> pure $ possiblyNullable scalarType $ MySQL.SmallValue <$> P.int
-      MySQL.Long -> pure $ possiblyNullable scalarType $ MySQL.IntValue <$> P.int
-      MySQL.Float -> pure $ possiblyNullable scalarType $ MySQL.FloatValue <$> P.float
-      MySQL.Double -> pure $ possiblyNullable scalarType $ MySQL.DoubleValue <$> P.float
-      MySQL.Null -> pure $ possiblyNullable scalarType $ MySQL.NullValue <$ P.string
-      MySQL.LongLong -> pure $ possiblyNullable scalarType $ MySQL.BigValue <$> P.int
-      MySQL.Int24 -> pure $ possiblyNullable scalarType $ MySQL.MediumValue <$> P.int
-      MySQL.Date -> pure $ possiblyNullable scalarType $ MySQL.DateValue <$> P.string
-      MySQL.Year -> pure $ possiblyNullable scalarType $ MySQL.YearValue <$> P.string
-      MySQL.Bit -> pure $ possiblyNullable scalarType $ MySQL.BitValue <$> P.boolean
-      MySQL.String -> pure $ possiblyNullable scalarType $ MySQL.VarcharValue <$> P.string
-      MySQL.VarChar -> pure $ possiblyNullable scalarType $ MySQL.VarcharValue <$> P.string
-      MySQL.DateTime -> pure $ possiblyNullable scalarType $ MySQL.DatetimeValue <$> P.string
-      MySQL.Blob -> pure $ possiblyNullable scalarType $ MySQL.BlobValue <$> bsParser
-      MySQL.Timestamp -> pure $ possiblyNullable scalarType $ MySQL.TimestampValue <$> P.string
+      MySQL.Decimal -> pure $ possiblyNullable' scalarType nullability $ MySQL.DecimalValue <$> P.float
+      MySQL.Tiny -> pure $ possiblyNullable' scalarType nullability $ MySQL.TinyValue <$> P.int
+      MySQL.Short -> pure $ possiblyNullable' scalarType nullability $ MySQL.SmallValue <$> P.int
+      MySQL.Long -> pure $ possiblyNullable' scalarType nullability $ MySQL.IntValue <$> P.int
+      MySQL.Float -> pure $ possiblyNullable' scalarType nullability $ MySQL.FloatValue <$> P.float
+      MySQL.Double -> pure $ possiblyNullable' scalarType nullability $ MySQL.DoubleValue <$> P.float
+      MySQL.Null -> pure $ possiblyNullable' scalarType nullability $ MySQL.NullValue <$ P.string
+      MySQL.LongLong -> pure $ possiblyNullable' scalarType nullability $ MySQL.BigValue <$> P.int
+      MySQL.Int24 -> pure $ possiblyNullable' scalarType nullability $ MySQL.MediumValue <$> P.int
+      MySQL.Date -> pure $ possiblyNullable' scalarType nullability $ MySQL.DateValue <$> P.string
+      MySQL.Year -> pure $ possiblyNullable' scalarType nullability $ MySQL.YearValue <$> P.string
+      MySQL.Bit -> pure $ possiblyNullable' scalarType nullability $ MySQL.BitValue <$> P.boolean
+      MySQL.String -> pure $ possiblyNullable' scalarType nullability $ MySQL.VarcharValue <$> P.string
+      MySQL.VarChar -> pure $ possiblyNullable' scalarType nullability $ MySQL.VarcharValue <$> P.string
+      MySQL.DateTime -> pure $ possiblyNullable' scalarType nullability $ MySQL.DatetimeValue <$> P.string
+      MySQL.Blob -> pure $ possiblyNullable' scalarType nullability $ MySQL.BlobValue <$> bsParser
+      MySQL.Timestamp -> pure $ possiblyNullable' scalarType nullability $ MySQL.TimestampValue <$> P.string
       _ -> do
         name <- MySQL.mkMySQLScalarTypeName scalarType
         let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
@@ -124,22 +126,37 @@ columnParser' columnType (GQL.Nullability isNullable) =
                 P.valueToJSON (P.toGraphQLType schemaType)
                   >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MySQL.parseScalarValue scalarType)
             }
-    ColumnEnumReference enumRef@(EnumReference _ enumValues _) ->
+    ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
       case nonEmpty (HM.toList enumValues) of
-        Just enumValuesList -> do
-          enumName <- mkEnumTypeName enumRef
-          pure $ possiblyNullable MySQL.VarChar $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
+        Just enumValuesList -> enumParser' tableName enumValuesList customTableName nullability
         Nothing -> throw400 ValidationFailed "empty enum values"
+
+enumParser' ::
+  MonadBuildSchema 'MySQL r m n =>
+  TableName 'MySQL ->
+  NonEmpty (EnumValue, EnumValueInfo) ->
+  Maybe GQL.Name ->
+  GQL.Nullability ->
+  SchemaT r m (Parser 'Both n (ScalarValue 'MySQL))
+enumParser' tableName enumValues customTableName nullability = do
+  enumName <- mkEnumTypeName @'MySQL tableName customTableName
+  pure $ possiblyNullable' MySQL.VarChar nullability $ P.enum enumName Nothing (mkEnumValue <$> enumValues)
   where
-    possiblyNullable :: (MonadParse m) => MySQL.Type -> Parser 'Both m MySQL.ScalarValue -> Parser 'Both m MySQL.ScalarValue
-    possiblyNullable _scalarType
-      | isNullable = fmap (fromMaybe MySQL.NullValue) . P.nullable
-      | otherwise = id
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, RQL.ScalarValue 'MySQL)
     mkEnumValue (RQL.EnumValue value, EnumValueInfo description) =
       ( P.Definition value (GQL.Description <$> description) Nothing [] P.EnumValueInfo,
         MySQL.VarcharValue $ GQL.unName value
       )
+
+possiblyNullable' ::
+  (MonadParse m) =>
+  ScalarType 'MySQL ->
+  GQL.Nullability ->
+  Parser 'Both m (ScalarValue 'MySQL) ->
+  Parser 'Both m (ScalarValue 'MySQL)
+possiblyNullable' _scalarType (GQL.Nullability isNullable)
+  | isNullable = fmap (fromMaybe MySQL.NullValue) . P.nullable
+  | otherwise = id
 
 orderByOperators' :: NamingCase -> (GQL.Name, NonEmpty (P.Definition P.EnumValueInfo, (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
 orderByOperators' _tCase =

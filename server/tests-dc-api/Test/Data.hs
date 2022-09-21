@@ -44,6 +44,11 @@ module Test.Data
     invoiceLinesRelationshipName,
     mediaTypeRelationshipName,
     albumRelationshipName,
+    genreRelationshipName,
+    -- = Genres table
+    genresTableName,
+    genresRows,
+    genresTableRelationships,
     -- = Utilities
     emptyQuery,
     sortBy,
@@ -59,8 +64,8 @@ module Test.Data
     _ColumnFieldString,
     _ColumnFieldBoolean,
     columnField,
-    comparisonColumn,
-    localComparisonColumn,
+    queryComparisonColumn,
+    currentComparisonColumn,
     orderByColumn,
   )
 where
@@ -265,12 +270,14 @@ tracksTableRelationships =
   let invoiceLinesJoinFieldMapping = HashMap.fromList [(API.ColumnName "TrackId", API.ColumnName "TrackId")]
       mediaTypeJoinFieldMapping = HashMap.fromList [(API.ColumnName "MediaTypeId", API.ColumnName "MediaTypeId")]
       albumJoinFieldMapping = HashMap.fromList [(API.ColumnName "AlbumId", API.ColumnName "AlbumId")]
+      genreJoinFieldMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
    in API.TableRelationships
         tracksTableName
         ( HashMap.fromList
             [ (invoiceLinesRelationshipName, API.Relationship invoiceLinesTableName API.ArrayRelationship invoiceLinesJoinFieldMapping),
               (mediaTypeRelationshipName, API.Relationship mediaTypesTableName API.ObjectRelationship mediaTypeJoinFieldMapping),
-              (albumRelationshipName, API.Relationship albumsTableName API.ObjectRelationship albumJoinFieldMapping)
+              (albumRelationshipName, API.Relationship albumsTableName API.ObjectRelationship albumJoinFieldMapping),
+              (genreRelationshipName, API.Relationship genresTableName API.ObjectRelationship genreJoinFieldMapping)
             ]
         )
 
@@ -282,6 +289,25 @@ mediaTypeRelationshipName = API.RelationshipName "MediaType"
 
 albumRelationshipName :: API.RelationshipName
 albumRelationshipName = API.RelationshipName "Album"
+
+genreRelationshipName :: API.RelationshipName
+genreRelationshipName = API.RelationshipName "Genre"
+
+genresTableName :: API.TableName
+genresTableName = mkTableName "Genre"
+
+genresRows :: [KeyMap API.FieldValue]
+genresRows = sortBy "GenreId" $ readTableFromXmlIntoRows genresTableName
+
+genresTableRelationships :: API.TableRelationships
+genresTableRelationships =
+  let joinFieldMapping = HashMap.fromList [(API.ColumnName "GenreId", API.ColumnName "GenreId")]
+   in API.TableRelationships
+        genresTableName
+        ( HashMap.fromList
+            [ (tracksRelationshipName, API.Relationship tracksTableName API.ArrayRelationship joinFieldMapping)
+            ]
+        )
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
@@ -339,11 +365,11 @@ _ColumnFieldBoolean = API._ColumnFieldValue . _Bool
 columnField :: Text -> API.Field
 columnField = API.ColumnField . API.ColumnName
 
-comparisonColumn :: [API.RelationshipName] -> Text -> API.ComparisonColumn
-comparisonColumn path columnName = API.ComparisonColumn path $ API.ColumnName columnName
+queryComparisonColumn :: Text -> API.ComparisonColumn
+queryComparisonColumn columnName = API.ComparisonColumn API.QueryTable $ API.ColumnName columnName
 
-localComparisonColumn :: Text -> API.ComparisonColumn
-localComparisonColumn columnName = comparisonColumn [] columnName
+currentComparisonColumn :: Text -> API.ComparisonColumn
+currentComparisonColumn columnName = API.ComparisonColumn API.CurrentTable $ API.ColumnName columnName
 
 orderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =

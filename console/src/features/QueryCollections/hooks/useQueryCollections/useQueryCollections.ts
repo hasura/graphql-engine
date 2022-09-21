@@ -1,9 +1,16 @@
 import { MetadataSelector, useMetadata } from '@/features/MetadataAPI';
 
 export const useQueryCollections = () => {
-  const { data, isLoading, isError, isRefetching, isSuccess } = useMetadata(
-    MetadataSelector.getQueryCollections
-  );
+  const { data, ...rest } = useMetadata(MetadataSelector.getQueryCollections);
 
-  return { data, isLoading: isLoading || isRefetching, isError, isSuccess };
+  return {
+    data:
+      data && data?.find(({ name }) => name === 'allowed-queries')
+        ? data
+        : [
+            { name: 'allowed-queries', definition: { queries: [] } },
+            ...(data || []),
+          ],
+    ...rest,
+  };
 };

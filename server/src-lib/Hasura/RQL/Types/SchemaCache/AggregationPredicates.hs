@@ -35,7 +35,7 @@ defaultGetAggregationPredicateDeps (AggregationPredicatesImplementation relInfo 
                 SOITableObj @b currTable (TORel relationshipName)
           )
           DROnType
-   in (schemaDependency :) <$> local (\e -> e {currTable = relationshipTable}) (concat <$> traverse getFunctionDeps functions)
+   in (schemaDependency :) <$> local (\e -> e {currTable = relationshipTable}) (getFunctionDeps functions)
   where
     getFunctionDeps :: AggregationPredicate b (PartialSQLExp b) -> BoolExpM b [SchemaDependency]
     getFunctionDeps AggregationPredicate {..} =

@@ -181,7 +181,8 @@ runQuery ::
     MonadBaseControl IO m,
     MonadMetadataStorage m,
     MonadResolveSource m,
-    MonadQueryTags m
+    MonadQueryTags m,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   L.Logger L.Hasura ->
@@ -393,7 +394,8 @@ runQueryM ::
     MonadMetadataStorageQueryAPI m,
     MonadQueryTags m,
     MonadReader r m,
-    Has (L.Logger L.Hasura) r
+    Has (L.Logger L.Hasura) r,
+    MonadEventLogCleanup m
   ) =>
   Env.Environment ->
   RQLQuery ->

@@ -11,7 +11,7 @@ import Data.Environment qualified as Env
 import Data.Time.Clock (getCurrentTime)
 import Data.URL.Template
 import Database.MSSQL.TransactionSuite qualified as TransactionSuite
-import Database.PG.Query qualified as Q
+import Database.PG.Query qualified as PG
 import Discover qualified
 import Hasura.App
   ( PGMetadataStorageAppT (..),
@@ -21,6 +21,7 @@ import Hasura.App
 import Hasura.Backends.Postgres.Connection.MonadTx
 import Hasura.Backends.Postgres.Connection.Settings
 import Hasura.Backends.Postgres.Execute.Types
+import Hasura.EventTriggerCleanupSuite qualified as EventTriggerCleanupSuite
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging
 import Hasura.Metadata.Class
@@ -59,9 +60,10 @@ main = do
   parseArgs >>= \case
     AllSuites -> do
       streamingSubscriptionSuite <- StreamingSubscriptionSuite.buildStreamingSubscriptionSuite
+      eventTriggerLogCleanupSuite <- EventTriggerCleanupSuite.buildEventTriggerCleanupSuite
       postgresSpecs <- buildPostgresSpecs
       mssqlSpecs <- buildMSSQLSpecs
-      runHspec [] (Discover.spec *> postgresSpecs *> mssqlSpecs *> streamingSubscriptionSuite)
+      runHspec [] (Discover.spec *> postgresSpecs *> mssqlSpecs *> streamingSubscriptionSuite *> eventTriggerLogCleanupSuite)
     SingleSuite hspecArgs suite -> do
       runHspec hspecArgs =<< case suite of
         UnitSuite -> pure Discover.spec
@@ -101,14 +103,14 @@ buildPostgresSpecs = do
       onNothing maybeV $
         throwError $ "Expected: " <> envVar
 
-  let pgConnInfo = Q.ConnInfo 1 $ Q.CDDatabaseURI $ txtToBs pgUrlText
+  let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
       urlConf = UrlValue $ InputWebhook $ mkPlainURLTemplate pgUrlText
       sourceConnInfo =
-        PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True Q.ReadCommitted Nothing
+        PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True PG.ReadCommitted Nothing
       sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
 
-  pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams {Q.cpConns = 1} print
-  let pgContext = mkPGExecCtx Q.Serializable pgPool
+  pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams {PG.cpConns = 1} print
+  let pgContext = mkPGExecCtx PG.Serializable pgPool
 
       logger :: Logger Hasura = Logger $ \l -> do
         let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
@@ -145,7 +147,7 @@ buildPostgresSpecs = do
         (metadata, schemaCache) <- run do
           metadata <-
             snd
-              <$> (liftEitherM . runExceptT . runTx pgContext Q.ReadWrite)
+              <$> (liftEitherM . runExceptT . runTx pgContext PG.ReadWrite)
                 (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
           schemaCache <- lift $ lift $ buildRebuildableSchemaCache logger envMap metadata
           pure (metadata, schemaCache)
@@ -156,12 +158,14 @@ buildPostgresSpecs = do
   -- We use "suite" to denote a set of tests that can't (yet) be detected and
   -- run by @hspec-discover@.
   streamingSubscriptionSuite <- StreamingSubscriptionSuite.buildStreamingSubscriptionSuite
+  eventTriggerLogCleanupSuite <- EventTriggerCleanupSuite.buildEventTriggerCleanupSuite
 
   pure $ do
     describe "Migrate suite" $
       beforeAll setupCacheRef $
         describe "Hasura.Server.Migrate" $ MigrateSuite.suite sourceConfig pgContext pgConnInfo
     describe "Streaming subscription suite" $ streamingSubscriptionSuite
+    describe "Event trigger log cleanup suite" $ eventTriggerLogCleanupSuite
 
 parseArgs :: IO TestSuites
 parseArgs =
