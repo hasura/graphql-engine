@@ -54,6 +54,7 @@ import {
   ETOperationColumn,
   EventTriggerOperation,
   RetryConf,
+  EventTriggerAutoCleanup,
 } from '../../types';
 
 interface Props extends InjectedProps {}
@@ -317,6 +318,10 @@ const Add: React.FC<Props> = props => {
     setState.operations(o);
   };
 
+  const handleAutoCleanupChange = (config: EventTriggerAutoCleanup) => {
+    setState.cleanupConfig(config);
+  };
+
   const handleOperationsColumnsChange = (oc: ETOperationColumn[]) => {
     setState.operationColumns(oc);
   };
@@ -361,6 +366,7 @@ const Add: React.FC<Props> = props => {
                   handleRetryConfChange={handleRetryConfChange}
                   handleHeadersChange={handleHeadersChange}
                   handleToggleAllColumn={setState.toggleAllColumnChecked}
+                  handleAutoCleanupChange={handleAutoCleanupChange}
                 />
                 <ConfigureTransformation
                   transformationType="event"
