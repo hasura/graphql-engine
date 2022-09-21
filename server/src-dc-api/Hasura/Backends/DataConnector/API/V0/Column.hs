@@ -35,10 +35,10 @@ instance HasCodec ColumnName where
 --------------------------------------------------------------------------------
 
 data ColumnInfo = ColumnInfo
-  { dciName :: ColumnName,
-    dciType :: API.V0.Scalar.ScalarType,
-    dciNullable :: Bool,
-    dciDescription :: Maybe Text
+  { _ciName :: ColumnName,
+    _ciType :: API.V0.Scalar.ScalarType,
+    _ciNullable :: Bool,
+    _ciDescription :: Maybe Text
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
@@ -48,7 +48,7 @@ instance HasCodec ColumnInfo where
   codec =
     object "ColumnInfo" $
       ColumnInfo
-        <$> requiredField "name" "Column name" .= dciName
-        <*> requiredField "type" "Column type" .= dciType
-        <*> requiredField "nullable" "Is column nullable" .= dciNullable
-        <*> optionalFieldOrNull "description" "Column description" .= dciDescription
+        <$> requiredField "name" "Column name" .= _ciName
+        <*> requiredField "type" "Column type" .= _ciType
+        <*> requiredField "nullable" "Is column nullable" .= _ciNullable
+        <*> optionalFieldOrNull "description" "Column description" .= _ciDescription

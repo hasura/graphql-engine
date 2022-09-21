@@ -366,7 +366,7 @@ runGetSourceTables GetSourceTables {..} = do
             . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
             $ (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gstSourceName) apiConfig
 
-        let fullyQualifiedTableNames = fmap API.dtiName $ API.srTables schemaResponse
+        let fullyQualifiedTableNames = fmap API._tiName $ API._srTables schemaResponse
         pure $ EncJSON.encJFromJValue fullyQualifiedTableNames
       backend -> Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
 
@@ -424,6 +424,6 @@ runGetTableInfo GetTableInfo {..} = do
             . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
             $ (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gtiSourceName) apiConfig
 
-        let table = find ((== _gtiTableName) . API.dtiName) $ API.srTables schemaResponse
+        let table = find ((== _gtiTableName) . API._tiName) $ API._srTables schemaResponse
         pure $ EncJSON.encJFromJValue table
       backend -> Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")

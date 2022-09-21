@@ -21,7 +21,7 @@ import Prelude
 -- | The Schema Response provides the schemas for tracked tables and
 -- 'Capabilities' supported by the service.
 newtype SchemaResponse = SchemaResponse
-  { srTables :: [API.V0.TableInfo]
+  { _srTables :: [API.V0.TableInfo]
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
@@ -30,4 +30,4 @@ newtype SchemaResponse = SchemaResponse
 instance HasCodec SchemaResponse where
   codec =
     object "SchemaResponse" $
-      SchemaResponse <$> requiredField "tables" "Available tables" .= srTables
+      SchemaResponse <$> requiredField "tables" "Available tables" .= _srTables

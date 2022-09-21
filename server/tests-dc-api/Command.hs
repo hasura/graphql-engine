@@ -203,7 +203,7 @@ readCapabilities :: HashSet Text -> (API.Capabilities, CapabilitiesState)
 readCapabilities providedCapabilities =
   flip runState (CapabilitiesState providedCapabilities mempty) $ do
     supportsRelationships <- readCapability "relationships"
-    pure $ API.emptyCapabilities {API.cRelationships = if supportsRelationships then Just API.RelationshipCapabilities {} else Nothing}
+    pure $ API.emptyCapabilities {API._cRelationships = if supportsRelationships then Just API.RelationshipCapabilities {} else Nothing}
 
 readCapability :: Text -> State CapabilitiesState Bool
 readCapability capability = do

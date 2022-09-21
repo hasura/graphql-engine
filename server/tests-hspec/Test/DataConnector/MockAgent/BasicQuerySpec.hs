@@ -9,8 +9,8 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as Aeson
-import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString (ByteString)
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector (TestCase (..))
 import Harness.Backend.DataConnector qualified as DataConnector
@@ -112,8 +112,8 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
-                              ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+                          [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
+                              (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                             ]
                           ]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
@@ -144,9 +144,9 @@ tests opts = do
                             API.Query
                               { _qFields =
                                   Just $
-                                    KM.fromList
-                                      [ ("id", API.ColumnField (API.ColumnName "AlbumId")),
-                                        ("title", API.ColumnField (API.ColumnName "Title"))
+                                    HashMap.fromList
+                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId")),
+                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title"))
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
@@ -164,14 +164,14 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
-                              ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+                          [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
+                              (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                             ],
-                            [ ("id", API.mkColumnFieldValue $ Aeson.Number 2),
-                              ("title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
+                            [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 2),
+                              (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "Balls to the Wall")
                             ],
-                            [ ("id", API.mkColumnFieldValue $ Aeson.Number 3),
-                              ("title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
+                            [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 3),
+                              (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
                             ]
                           ]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
@@ -206,9 +206,9 @@ tests opts = do
                             API.Query
                               { _qFields =
                                   Just $
-                                    KM.fromList
-                                      [ ("id", API.ColumnField (API.ColumnName "AlbumId")),
-                                        ("title", API.ColumnField (API.ColumnName "Title"))
+                                    HashMap.fromList
+                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId")),
+                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title"))
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 3,
@@ -226,11 +226,11 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("CustomerId", API.mkColumnFieldValue $ Aeson.Number 1)
+                          [ [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 1)
                             ],
-                            [ ("CustomerId", API.mkColumnFieldValue $ Aeson.Number 2)
+                            [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 2)
                             ],
-                            [ ("CustomerId", API.mkColumnFieldValue $ Aeson.Number 3)
+                            [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 3)
                             ]
                           ]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
@@ -265,8 +265,8 @@ tests opts = do
                             API.Query
                               { _qFields =
                                   Just $
-                                    KM.fromList
-                                      [ ("CustomerId", API.ColumnField (API.ColumnName "CustomerId"))
+                                    HashMap.fromList
+                                      [ (API.FieldName "CustomerId", API.ColumnField (API.ColumnName "CustomerId"))
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Nothing,
@@ -284,5 +284,5 @@ tests opts = do
                     )
               }
 
-rowsResponse :: [[(Aeson.Key, API.FieldValue)]] -> API.QueryResponse
-rowsResponse rows = API.QueryResponse (Just $ KM.fromList <$> rows) Nothing
+rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
+rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing

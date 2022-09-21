@@ -5,7 +5,7 @@
 import type { OpenApiSchema } from './OpenApiSchema';
 
 export type ConfigSchemaResponse = {
-  configSchema: OpenApiSchema;
-  otherSchemas: Record<string, OpenApiSchema>;
+  config_schema: OpenApiSchema;
+  other_schemas: Record<string, OpenApiSchema>;
 };
 

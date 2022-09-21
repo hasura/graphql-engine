@@ -10,7 +10,7 @@ input DateTimeComparisons {
 }`
 
 const dateTimeCapabilities: ScalarTypeCapabilities = {
-  comparisonType: 'DateTimeComparisons'
+  comparison_type: 'DateTimeComparisons'
 }
 
 const scalarTypes: ScalarTypesCapabilities = {
@@ -24,11 +24,11 @@ const capabilities: Capabilities = {
       supports_relations: true
     }
   },
-  graphqlSchema: schemaDoc,
-  scalarTypes: scalarTypes
+  graphql_schema: schemaDoc,
+  scalar_types: scalarTypes
 }
 
 export const capabilitiesResponse: CapabilitiesResponse = {
   capabilities: capabilities,
-  configSchemas: configSchema
+  config_schemas: configSchema
 }

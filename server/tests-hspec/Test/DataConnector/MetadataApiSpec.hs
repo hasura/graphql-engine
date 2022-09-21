@@ -148,15 +148,15 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
                   name: *backendString
               |]
               ) -- Note: These fields are backend specific so we ignore their values and just verify their shapes:
-                <&> Lens.set (key "config_schema_response" . key "otherSchemas") J.Null
-                  . Lens.set (key "config_schema_response" . key "configSchema") J.Null
+                <&> Lens.set (key "config_schema_response" . key "other_schemas") J.Null
+                  . Lens.set (key "config_schema_response" . key "config_schema") J.Null
                   . Lens.set (key "options" . key "uri") J.Null
             )
             [yaml|
             capabilities: *backendCapabilities
             config_schema_response:
-              configSchema: null
-              otherSchemas: null
+              config_schema: null
+              other_schemas: null
             options:
               uri: null
             |]
@@ -229,7 +229,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
             type: reference_add_source
             args:
               name: chinook
-              configuration: 
+              configuration:
                 value: {}
           |]
         )
@@ -248,7 +248,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
             type: reference_track_table
             args:
               source: chinook
-              table: Album 
+              table: Album
           |]
         )
         [yaml|
@@ -264,7 +264,7 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
         type: reference_track_table
         args:
           source: chinook
-          table: Artist 
+          table: Artist
       |]
 
       shouldReturnYaml

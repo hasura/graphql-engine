@@ -6,7 +6,6 @@ module Test.DataConnector.MockAgent.AggregateQuerySpec
 where
 
 import Data.Aeson qualified as Aeson
-import Data.Aeson.KeyMap qualified as KM
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector (TestCase (..))
@@ -87,13 +86,13 @@ tests opts = describe "Aggregate Query Tests" $ do
             DataConnector.TestCaseRequired
               { _givenRequired =
                   let response =
-                        [ [ ("ArtistIds_Id", API.mkColumnFieldValue $ Aeson.Number 1),
-                            ("ArtistNames_Name", API.mkColumnFieldValue $ Aeson.String "AC/DC"),
-                            ( "nodes_Albums",
+                        [ [ (API.FieldName "ArtistIds_Id", API.mkColumnFieldValue $ Aeson.Number 1),
+                            (API.FieldName "ArtistNames_Name", API.mkColumnFieldValue $ Aeson.String "AC/DC"),
+                            ( API.FieldName "nodes_Albums",
                               API.mkRelationshipFieldValue $
                                 rowsResponse
-                                  [ [("nodes_Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")],
-                                    [("nodes_Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")]
+                                  [ [(API.FieldName "nodes_Title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")],
+                                    [(API.FieldName "nodes_Title", API.mkColumnFieldValue $ Aeson.String "Let There Be Rock")]
                                   ]
                             )
                           ]
@@ -158,18 +157,18 @@ tests opts = describe "Aggregate Query Tests" $ do
                           API.Query
                             { _qFields =
                                 Just $
-                                  KM.fromList
-                                    [ ("ArtistIds_Id", API.ColumnField (API.ColumnName "ArtistId")),
-                                      ("ArtistNames_Name", API.ColumnField (API.ColumnName "Name")),
-                                      ( "nodes_Albums",
+                                  HashMap.fromList
+                                    [ (API.FieldName "ArtistIds_Id", API.ColumnField (API.ColumnName "ArtistId")),
+                                      (API.FieldName "ArtistNames_Name", API.ColumnField (API.ColumnName "Name")),
+                                      ( API.FieldName "nodes_Albums",
                                         API.RelField
                                           ( API.RelationshipField
                                               (API.RelationshipName "Albums")
                                               API.Query
                                                 { _qFields =
                                                     Just $
-                                                      KM.fromList
-                                                        [ ("nodes_Title", API.ColumnField (API.ColumnName "Title"))
+                                                      HashMap.fromList
+                                                        [ (API.FieldName "nodes_Title", API.ColumnField (API.ColumnName "Title"))
                                                         ],
                                                   _qAggregates = Nothing,
                                                   _qLimit = Nothing,
@@ -196,23 +195,23 @@ tests opts = describe "Aggregate Query Tests" $ do
             DataConnector.TestCaseRequired
               { _givenRequired =
                   let aggregates =
-                        [ ("counts_count", Aeson.Number 2),
-                          ("counts_uniqueBillingCountries", Aeson.Number 2),
-                          ("ids_minimum_Id", Aeson.Number 1),
-                          ("ids_max_InvoiceId", Aeson.Number 2)
+                        [ (API.FieldName "counts_count", Aeson.Number 2),
+                          (API.FieldName "counts_uniqueBillingCountries", Aeson.Number 2),
+                          (API.FieldName "ids_minimum_Id", Aeson.Number 1),
+                          (API.FieldName "ids_max_InvoiceId", Aeson.Number 2)
                         ]
                       rows =
-                        [ [ ( "nodes_Lines",
+                        [ [ ( API.FieldName "nodes_Lines",
                               API.mkRelationshipFieldValue $
                                 aggregatesResponse
-                                  [ ("aggregate_count", Aeson.Number 2)
+                                  [ (API.FieldName "aggregate_count", Aeson.Number 2)
                                   ]
                             )
                           ],
-                          [ ( "nodes_Lines",
+                          [ ( API.FieldName "nodes_Lines",
                               API.mkRelationshipFieldValue $
                                 aggregatesResponse
-                                  [ ("aggregate_count", Aeson.Number 4)
+                                  [ (API.FieldName "aggregate_count", Aeson.Number 4)
                                   ]
                             )
                           ]
@@ -289,8 +288,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                           API.Query
                             { _qFields =
                                 Just $
-                                  KM.fromList
-                                    [ ( "nodes_Lines",
+                                  HashMap.fromList
+                                    [ ( API.FieldName "nodes_Lines",
                                         API.RelField
                                           ( API.RelationshipField
                                               (API.RelationshipName "InvoiceLines")
@@ -298,8 +297,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                                                 { _qFields = Nothing,
                                                   _qAggregates =
                                                     Just $
-                                                      KM.fromList
-                                                        [("aggregate_count", API.StarCount)],
+                                                      HashMap.fromList
+                                                        [(API.FieldName "aggregate_count", API.StarCount)],
                                                   _qLimit = Nothing,
                                                   _qOffset = Nothing,
                                                   _qWhere = Nothing,
@@ -310,11 +309,11 @@ tests opts = describe "Aggregate Query Tests" $ do
                                     ],
                               _qAggregates =
                                 Just $
-                                  KM.fromList
-                                    [ ("counts_count", API.StarCount),
-                                      ("counts_uniqueBillingCountries", API.ColumnCount (API.ColumnCountAggregate (API.ColumnName "BillingCountry") True)),
-                                      ("ids_minimum_Id", API.SingleColumn (API.SingleColumnAggregate API.Min (API.ColumnName "InvoiceId"))),
-                                      ("ids_max_InvoiceId", API.SingleColumn (API.SingleColumnAggregate API.Max (API.ColumnName "InvoiceId")))
+                                  HashMap.fromList
+                                    [ (API.FieldName "counts_count", API.StarCount),
+                                      (API.FieldName "counts_uniqueBillingCountries", API.ColumnCount (API.ColumnCountAggregate (API.ColumnName "BillingCountry") True)),
+                                      (API.FieldName "ids_minimum_Id", API.SingleColumn (API.SingleColumnAggregate API.Min (API.ColumnName "InvoiceId"))),
+                                      (API.FieldName "ids_max_InvoiceId", API.SingleColumn (API.SingleColumnAggregate API.Max (API.ColumnName "InvoiceId")))
                                     ],
                               _qLimit = Just 2,
                               _qOffset = Nothing,
@@ -325,11 +324,11 @@ tests opts = describe "Aggregate Query Tests" $ do
                   )
             }
 
-rowsResponse :: [[(Aeson.Key, API.FieldValue)]] -> API.QueryResponse
-rowsResponse rows = API.QueryResponse (Just $ KM.fromList <$> rows) Nothing
+rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
+rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing
 
-aggregatesResponse :: [(Aeson.Key, Aeson.Value)] -> API.QueryResponse
-aggregatesResponse aggregates = API.QueryResponse Nothing (Just $ KM.fromList aggregates)
+aggregatesResponse :: [(API.FieldName, Aeson.Value)] -> API.QueryResponse
+aggregatesResponse aggregates = API.QueryResponse Nothing (Just $ HashMap.fromList aggregates)
 
-aggregatesAndRowsResponse :: [(Aeson.Key, Aeson.Value)] -> [[(Aeson.Key, API.FieldValue)]] -> API.QueryResponse
-aggregatesAndRowsResponse aggregates rows = API.QueryResponse (Just $ KM.fromList <$> rows) (Just $ KM.fromList aggregates)
+aggregatesAndRowsResponse :: [(API.FieldName, Aeson.Value)] -> [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
+aggregatesAndRowsResponse aggregates rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) (Just $ HashMap.fromList aggregates)

@@ -17,14 +17,14 @@ export const getConfig = (request: FastifyRequest): Config => {
 }
 
 export const configSchema: ConfigSchemaResponse = {
-  configSchema: {
+  config_schema: {
     type: "object",
     nullable: false,
     properties: {
       tables: {
         description: "List of tables to make available in the schema and for querying",
         type: "array",
-        items: { $ref: "#/otherSchemas/TableName" },
+        items: { $ref: "#/other_schemas/TableName" },
         nullable: true
       },
       schema: {
@@ -34,7 +34,7 @@ export const configSchema: ConfigSchemaResponse = {
       }
     }
   },
-  otherSchemas: {
+  other_schemas: {
     TableName: {
       nullable: false,
       type: "string"

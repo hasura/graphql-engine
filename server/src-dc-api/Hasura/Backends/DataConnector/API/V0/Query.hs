@@ -6,6 +6,7 @@ module Hasura.Backends.DataConnector.API.V0.Query
     qrTable,
     qrTableRelationships,
     qrQuery,
+    FieldName (..),
     Query (..),
     qFields,
     qAggregates,
@@ -35,9 +36,11 @@ import Control.Lens (Lens', Prism', lens, prism')
 import Control.Lens.TH (makeLenses, makePrisms)
 import Data.Aeson (FromJSON, ToJSON, Value)
 import Data.Aeson qualified as J
-import Data.Aeson.KeyMap qualified as KM
+import Data.Aeson.Types (FromJSONKey, ToJSONKey)
 import Data.Data (Data)
+import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
+import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
 import Data.Text (Text)
 import Data.Text qualified as T
@@ -69,12 +72,16 @@ instance HasCodec QueryRequest where
         <*> requiredField "table_relationships" "The relationships between tables involved in the entire query request" .= _qrTableRelationships
         <*> requiredField "query" "The details of the query against the table" .= _qrQuery
 
+newtype FieldName = FieldName {unFieldName :: Text}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving newtype (Hashable, FromJSONKey, ToJSONKey)
+
 -- | The details of a query against a table
 data Query = Query
   { -- | Map of field name to Field definition.
-    _qFields :: Maybe (KM.KeyMap Field),
+    _qFields :: Maybe (HashMap FieldName Field),
     -- | Map of aggregate field name to Aggregate definition
-    _qAggregates :: Maybe (KM.KeyMap API.V0.Aggregate),
+    _qAggregates :: Maybe (HashMap FieldName API.V0.Aggregate),
     -- | Optionally limit to N results.
     _qLimit :: Maybe Int,
     -- | Optionally offset from the Nth result.
@@ -147,8 +154,8 @@ instance HasCodec Field where
 -- | The resolved query response provided by the 'POST /query'
 -- endpoint encoded as a list of JSON objects.
 data QueryResponse = QueryResponse
-  { _qrRows :: Maybe [KM.KeyMap FieldValue],
-    _qrAggregates :: Maybe (KM.KeyMap Value)
+  { _qrRows :: Maybe [HashMap FieldName FieldValue],
+    _qrAggregates :: Maybe (HashMap FieldName Value)
   }
   deriving stock (Eq, Ord, Show)
   deriving (ToJSON, FromJSON, ToSchema) via Autodocodec QueryResponse

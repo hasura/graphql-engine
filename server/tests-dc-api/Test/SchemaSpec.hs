@@ -15,23 +15,23 @@ import Prelude
 --------------------------------------------------------------------------------
 
 removeDescriptionFromColumn :: API.ColumnInfo -> API.ColumnInfo
-removeDescriptionFromColumn c = c {API.dciDescription = Nothing}
+removeDescriptionFromColumn c = c {API._ciDescription = Nothing}
 
 removeDescription :: API.TableInfo -> API.TableInfo
-removeDescription t@API.TableInfo {API.dtiColumns} = t {API.dtiDescription = Nothing, API.dtiColumns = newColumns}
+removeDescription t@API.TableInfo {API._tiColumns} = t {API._tiDescription = Nothing, API._tiColumns = newColumns}
   where
-    newColumns = map removeDescriptionFromColumn dtiColumns
+    newColumns = map removeDescriptionFromColumn _tiColumns
 
 removeForeignKeys :: API.TableInfo -> API.TableInfo
-removeForeignKeys t = t {API.dtiForeignKeys = Nothing}
+removeForeignKeys t = t {API._tiForeignKeys = Nothing}
 
 extractForeignKeys :: API.TableInfo -> [API.Constraint]
-extractForeignKeys = foldMap (HashMap.elems . API.unConstraints) . API.dtiForeignKeys
+extractForeignKeys = foldMap (HashMap.elems . API.unConstraints) . API._tiForeignKeys
 
 spec :: Client IO (NamedRoutes API.Routes) -> API.SourceName -> API.Config -> Spec
 spec api sourceName config = describe "schema API" $ do
   it "returns Chinook schema" $ do
-    tables <- (map removeDescription . sortOn API.dtiName . API.srTables) <$> (api // API._schema) sourceName config
+    tables <- (map removeDescription . sortOn API._tiName . API._srTables) <$> (api // API._schema) sourceName config
 
     -- NOTE: Constraint names arent guaranteed to be the same across
     -- Chinook backends so we compare Constraints without their names

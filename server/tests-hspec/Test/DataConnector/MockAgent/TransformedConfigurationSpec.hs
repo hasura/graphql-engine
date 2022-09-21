@@ -9,7 +9,7 @@ where
 --------------------------------------------------------------------------------
 
 import Data.Aeson qualified as Aeson
-import Data.Aeson.KeyMap qualified as KM
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.DataConnector (TestCase (..))
 import Harness.Backend.DataConnector qualified as DataConnector
@@ -108,8 +108,8 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("id", API.mkColumnFieldValue $ Aeson.Number 1),
-                              ("title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
+                          [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
+                              (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                             ]
                           ]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
@@ -140,9 +140,9 @@ tests opts = do
                             API.Query
                               { _qFields =
                                   Just $
-                                    KM.fromList
-                                      [ ("id", API.ColumnField (API.ColumnName "AlbumId")),
-                                        ("title", API.ColumnField (API.ColumnName "Title"))
+                                    HashMap.fromList
+                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId")),
+                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title"))
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
@@ -167,5 +167,5 @@ tests opts = do
                         _ -> error "Should parse."
               }
 
-rowsResponse :: [[(Aeson.Key, API.FieldValue)]] -> API.QueryResponse
-rowsResponse rows = API.QueryResponse (Just $ KM.fromList <$> rows) Nothing
+rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
+rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing

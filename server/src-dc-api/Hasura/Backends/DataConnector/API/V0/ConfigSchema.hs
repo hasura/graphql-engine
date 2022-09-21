@@ -55,10 +55,10 @@ data ConfigSchemaResponse = ConfigSchemaResponse
 
 instance FromJSON ConfigSchemaResponse where
   parseJSON = withObject "ConfigSchemaResponse" $ \obj -> do
-    configSchemaValue <- obj .: "configSchema"
-    (otherSchemaValues :: Object) <- obj .: "otherSchemas"
-    _csrConfigSchema <- parseJSON (rewriteConfigSchemaRefsToOpenApiRefs configSchemaValue) <?> Key "configSchema"
-    _csrOtherSchemas <- (<?> Key "otherSchemas") . parseJSON . Object $ rewriteConfigSchemaRefsToOpenApiRefs <$> otherSchemaValues
+    configSchemaValue <- obj .: "config_schema"
+    (otherSchemaValues :: Object) <- obj .: "other_schemas"
+    _csrConfigSchema <- parseJSON (rewriteConfigSchemaRefsToOpenApiRefs configSchemaValue) <?> Key "config_schema"
+    _csrOtherSchemas <- (<?> Key "other_schemas") . parseJSON . Object $ rewriteConfigSchemaRefsToOpenApiRefs <$> otherSchemaValues
     pure ConfigSchemaResponse {..}
 
 instance ToJSON ConfigSchemaResponse where
@@ -66,8 +66,8 @@ instance ToJSON ConfigSchemaResponse where
     let configSchemaValue = rewriteOpenApiRefsToConfigSchemaRefs $ toJSON _csrConfigSchema
         otherSchemasValue = rewriteOpenApiRefsToConfigSchemaRefs . toJSON <$> _csrOtherSchemas
      in object
-          [ "configSchema" .= configSchemaValue,
-            "otherSchemas" .= otherSchemasValue
+          [ "config_schema" .= configSchemaValue,
+            "other_schemas" .= otherSchemasValue
           ]
 
 instance Autodocodec.HasCodec ConfigSchemaResponse where
@@ -86,11 +86,11 @@ instance ToSchema ConfigSchemaResponse where
           mempty
             { _schemaType = Just OpenApiObject,
               _schemaNullable = Just False,
-              _schemaRequired = ["configSchema", "otherSchemas"],
+              _schemaRequired = ["config_schema", "other_schemas"],
               _schemaProperties =
                 InsOrdHashMap.fromList
-                  [ ("configSchema", openApiSchemaRef),
-                    ("otherSchemas", Inline otherSchemasSchema)
+                  [ ("config_schema", openApiSchemaRef),
+                    ("other_schemas", Inline otherSchemasSchema)
                   ]
             }
     pure $ NamedSchema (Just "ConfigSchemaResponse") schema
@@ -270,7 +270,7 @@ rewriteConfigSchemaRefsToOpenApiRefs = rewriteSchemaRefs configSchemaToOpenApiSc
 
 configSchemaToOpenApiSchemaRef :: Text -> Text
 configSchemaToOpenApiSchemaRef = \case
-  (Text.stripPrefix "#/otherSchemas/" -> Just suffix) -> "#/components/schemas/" <> suffix
+  (Text.stripPrefix "#/other_schemas/" -> Just suffix) -> "#/components/schemas/" <> suffix
   other -> other
 
 -- | Rewrites the refs that openapi3 serializes to their proper pathing given their actual location
@@ -284,7 +284,7 @@ rewriteOpenApiRefsToConfigSchemaRefs = rewriteSchemaRefs openApiSchemaToConfigSc
 
 openApiSchemaToConfigSchemaRef :: Text -> Text
 openApiSchemaToConfigSchemaRef = \case
-  (Text.stripPrefix "#/components/schemas/" -> Just suffix) -> "#/otherSchemas/" <> suffix
+  (Text.stripPrefix "#/components/schemas/" -> Just suffix) -> "#/other_schemas/" <> suffix
   other -> other
 
 rewriteSchemaRefs :: (Text -> Text) -> Value -> Value

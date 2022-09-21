@@ -1,7 +1,6 @@
 module Test.ExplainSpec (spec) where
 
 import Control.Lens ((&), (?~))
-import Data.Aeson.KeyMap qualified as KeyMap
 import Hasura.Backends.DataConnector.API (Capabilities (..), Config, ExplainResponse (..), QueryRequest (..), Routes (..), SourceName, qFields)
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
@@ -24,6 +23,6 @@ spec api sourceName config _ = do
 
 artistsQueryRequest :: QueryRequest
 artistsQueryRequest =
-  let fields = KeyMap.fromList [("ArtistId", Data.columnField "ArtistId"), ("Name", Data.columnField "Name")]
+  let fields = Data.mkFieldsMap [("ArtistId", Data.columnField "ArtistId"), ("Name", Data.columnField "Name")]
       query = Data.emptyQuery & qFields ?~ fields
    in QueryRequest Data.artistsTableName [] query

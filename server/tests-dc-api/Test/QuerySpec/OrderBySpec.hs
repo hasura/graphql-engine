@@ -4,8 +4,7 @@ import Control.Arrow ((>>>))
 import Control.Lens (ix, (&), (.~), (?~), (^.), (^?), _1, _2, _3, _Just)
 import Control.Monad (when)
 import Data.Aeson (Value (..))
-import Data.Aeson.KeyMap (KeyMap)
-import Data.Aeson.KeyMap qualified as KeyMap
+import Data.HashMap.Strict (HashMap)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty (..))
@@ -27,7 +26,7 @@ spec api sourceName config Capabilities {..} = describe "Order By in Queries" $ 
     let query = albumsQueryRequest & qrQuery . qOrderBy ?~ orderBy
     receivedAlbums <- (api // _query) sourceName config query
 
-    let expectedAlbums = sortOn (^? ix "Title") Data.albumsRows
+    let expectedAlbums = sortOn (^? Data.field "Title") Data.albumsRows
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
@@ -36,7 +35,7 @@ spec api sourceName config Capabilities {..} = describe "Order By in Queries" $ 
     let query = albumsQueryRequest & qrQuery . qOrderBy ?~ orderBy
     receivedAlbums <- (api // _query) sourceName config query
 
-    let expectedAlbums = sortOn (Down . (^? ix "Title")) Data.albumsRows
+    let expectedAlbums = sortOn (Down . (^? Data.field "Title")) Data.albumsRows
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
@@ -46,12 +45,12 @@ spec api sourceName config Capabilities {..} = describe "Order By in Queries" $ 
     receivedAlbums <- (api // _query) sourceName config query
 
     let expectedAlbums =
-          sortOn (\album -> (album ^? ix "ArtistId", Down (album ^? ix "Title"))) Data.albumsRows
+          sortOn (\album -> (album ^? Data.field "ArtistId", Down (album ^? Data.field "Title"))) Data.albumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
-  when (isJust cRelationships) $ orderByWithRelationshipsSpec api sourceName config
+  when (isJust _cRelationships) $ orderByWithRelationshipsSpec api sourceName config
 
 orderByWithRelationshipsSpec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
 orderByWithRelationshipsSpec api sourceName config = describe "involving relationships" $ do
@@ -64,13 +63,13 @@ orderByWithRelationshipsSpec api sourceName config = describe "involving relatio
             & qrTableRelationships .~ [Data.onlyKeepRelationships [Data.artistRelationshipName] Data.albumsTableRelationships]
     receivedAlbums <- (api // _query) sourceName config query
 
-    let getRelatedArtist (album :: KeyMap FieldValue) =
-          (album ^? ix "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> Data.artistsRowsById ^? ix artistId
+    let getRelatedArtist (album :: HashMap FieldName FieldValue) =
+          (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> Data.artistsRowsById ^? ix artistId
 
     let expectedAlbums =
           Data.albumsRows
             & fmap (\album -> (album, getRelatedArtist album))
-            & sortOn ((^? _2 . _Just . ix "Name"))
+            & sortOn ((^? _2 . _Just . Data.field "Name"))
             & fmap fst
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
@@ -86,16 +85,16 @@ orderByWithRelationshipsSpec api sourceName config = describe "involving relatio
             & qrTableRelationships .~ [Data.onlyKeepRelationships [Data.artistRelationshipName] Data.albumsTableRelationships]
     receivedAlbums <- (api // _query) sourceName config query
 
-    let getRelatedArtist (album :: KeyMap FieldValue) = do
-          artist <- (album ^? ix "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> Data.artistsRowsById ^? ix artistId
-          if artist ^? ix "Name" . Data._ColumnFieldString > Just "N"
+    let getRelatedArtist (album :: HashMap FieldName FieldValue) = do
+          artist <- (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> Data.artistsRowsById ^? ix artistId
+          if artist ^? Data.field "Name" . Data._ColumnFieldString > Just "N"
             then pure artist
             else Nothing
 
     let expectedAlbums =
           Data.albumsRows
             & fmap (\album -> (album, getRelatedArtist album))
-            & sortOn ((^? _2 . _Just . ix "Name") >>> toNullsLastOrdering)
+            & sortOn ((^? _2 . _Just . Data.field "Name") >>> toNullsLastOrdering)
             & fmap fst
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
@@ -132,16 +131,16 @@ orderByWithRelationshipsSpec api sourceName config = describe "involving relatio
                  ]
     receivedTracks <- (api // _query) sourceName config query
 
-    let getRelatedArtist (track :: KeyMap FieldValue) = do
-          albumId <- track ^? ix "AlbumId" . Data._ColumnFieldNumber
+    let getRelatedArtist (track :: HashMap FieldName FieldValue) = do
+          albumId <- track ^? Data.field "AlbumId" . Data._ColumnFieldNumber
           album <- Data.albumsRowsById ^? ix albumId
-          artistId <- album ^? ix "ArtistId" . Data._ColumnFieldNumber
+          artistId <- album ^? Data.field "ArtistId" . Data._ColumnFieldNumber
           Data.artistsRowsById ^? ix artistId
 
     let expectedTracks =
           Data.tracksRows
-            & fmap (\track -> (Data.filterColumnsByQueryFields (_qrQuery tracksQueryRequest) track, getRelatedArtist track, track ^? ix "Name"))
-            & sortOn (\row -> (Down (row ^? _2 . _Just . ix "Name"), row ^. _3))
+            & fmap (\track -> (Data.filterColumnsByQueryFields (_qrQuery tracksQueryRequest) track, getRelatedArtist track, track ^? Data.field "Name"))
+            & sortOn (\row -> (Down (row ^? _2 . _Just . Data.field "Name"), row ^. _3))
             & fmap (^. _1)
 
     Data.responseRows receivedTracks `rowsShouldBe` expectedTracks
@@ -156,9 +155,9 @@ orderByWithRelationshipsSpec api sourceName config = describe "involving relatio
             & qrTableRelationships .~ [Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships]
     receivedArtists <- (api // _query) sourceName config query
 
-    let getAlbumsCount (artist :: KeyMap FieldValue) = do
-          artistId <- artist ^? ix "ArtistId" . Data._ColumnFieldNumber
-          let albums = filter (\album -> album ^? ix "ArtistId" . Data._ColumnFieldNumber == Just artistId) Data.albumsRows
+    let getAlbumsCount (artist :: HashMap FieldName FieldValue) = do
+          artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
+          let albums = filter (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId) Data.albumsRows
           pure $ length albums
 
     let expectedArtists =
@@ -180,9 +179,9 @@ orderByWithRelationshipsSpec api sourceName config = describe "involving relatio
             & qrTableRelationships .~ [Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships]
     receivedArtists <- (api // _query) sourceName config query
 
-    let getAlbumsCount (artist :: KeyMap FieldValue) = do
-          artistId <- artist ^? ix "ArtistId" . Data._ColumnFieldNumber
-          let albums = filter (\album -> album ^? ix "ArtistId" . Data._ColumnFieldNumber == Just artistId && album ^? ix "Title" . Data._ColumnFieldString > Just "N") Data.albumsRows
+    let getAlbumsCount (artist :: HashMap FieldName FieldValue) = do
+          artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
+          let albums = filter (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId && album ^? Data.field "Title" . Data._ColumnFieldString > Just "N") Data.albumsRows
           pure $ length albums
 
     let expectedArtists =
@@ -225,14 +224,14 @@ orderByWithRelationshipsSpec api sourceName config = describe "involving relatio
                  ]
     receivedAlbums <- (api // _query) sourceName config query
 
-    let getTotalArtistAlbumsCount (album :: KeyMap FieldValue) = do
-          artistId <- album ^? ix "ArtistId" . Data._ColumnFieldNumber
-          let albums = filter (\album' -> album' ^? ix "ArtistId" . Data._ColumnFieldNumber == Just artistId) Data.albumsRows
+    let getTotalArtistAlbumsCount (album :: HashMap FieldName FieldValue) = do
+          artistId <- album ^? Data.field "ArtistId" . Data._ColumnFieldNumber
+          let albums = filter (\album' -> album' ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just artistId) Data.albumsRows
           pure $ length albums
 
     let expectedArtists =
           Data.albumsRows
-            & fmap (\album -> (album, getTotalArtistAlbumsCount album, album ^? ix "Title"))
+            & fmap (\album -> (album, getTotalArtistAlbumsCount album, album ^? Data.field "Title"))
             & sortOn (\row -> (Down (row ^. _2), (row ^. _3)))
             & fmap (^. _1)
 
@@ -241,19 +240,19 @@ orderByWithRelationshipsSpec api sourceName config = describe "involving relatio
 
 albumsQueryRequest :: QueryRequest
 albumsQueryRequest =
-  let fields = KeyMap.fromList [("AlbumId", Data.columnField "AlbumId"), ("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
+  let fields = Data.mkFieldsMap [("AlbumId", Data.columnField "AlbumId"), ("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
       query = Data.emptyQuery & qFields ?~ fields
    in QueryRequest Data.albumsTableName [] query
 
 artistsQueryRequest :: QueryRequest
 artistsQueryRequest =
-  let fields = KeyMap.fromList [("ArtistId", Data.columnField "ArtistId"), ("Name", Data.columnField "Name")]
+  let fields = Data.mkFieldsMap [("ArtistId", Data.columnField "ArtistId"), ("Name", Data.columnField "Name")]
       query = Data.emptyQuery & qFields ?~ fields
    in QueryRequest Data.artistsTableName [] query
 
 tracksQueryRequest :: QueryRequest
 tracksQueryRequest =
-  let fields = KeyMap.fromList [("TrackId", Data.columnField "TrackId"), ("Name", Data.columnField "Name")]
+  let fields = Data.mkFieldsMap [("TrackId", Data.columnField "TrackId"), ("Name", Data.columnField "Name")]
       query = Data.emptyQuery & qFields ?~ fields
    in QueryRequest Data.tracksTableName [] query
 

@@ -35,8 +35,8 @@ spec = do
             (TableName ["my_table_name"])
             [ColumnInfo (ColumnName "id") StringTy False Nothing]
             (Just [ColumnName "id"])
-            (Just "my description")
             Nothing
+            (Just "my description")
         )
         [aesonQQ|
           { "name": ["my_table_name"],
@@ -51,8 +51,8 @@ spec = do
             (TableName ["my_table_name"])
             [ColumnInfo (ColumnName "id") StringTy False Nothing]
             (Just [ColumnName "id"])
-            (Just "my description")
             (Just $ ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton "ArtistId" "ArtistId")))
+            (Just "my description")
         )
         [aesonQQ|
           { "name": ["my_table_name"],
@@ -92,5 +92,5 @@ genTableInfo =
     <$> genTableName
     <*> Gen.list defaultRange genColumnInfo
     <*> Gen.maybe (Gen.list defaultRange genColumnName)
-    <*> Gen.maybe (genArbitraryAlphaNumText defaultRange)
     <*> Gen.maybe genForeignKeys
+    <*> Gen.maybe (genArbitraryAlphaNumText defaultRange)
