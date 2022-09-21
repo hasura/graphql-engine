@@ -9,119 +9,245 @@ keywords:
 sidebar_position: 8
 ---
 
-import Thumbnail from '@site/src/components/Thumbnail';
-import HeadingIcon from '@site/src/components/HeadingIcon';
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import Thumbnail from "@site/src/components/Thumbnail";
+import HeadingIcon from "@site/src/components/HeadingIcon";
 
 # Allow List of operations
 
 ## Introduction
 
-The **Allow-list** is a list of safe operations (_GraphQL queries, mutations or subscriptions_) that is stored by the
-GraphQL engine in its metadata. When enabled, it can be used to restrict the GraphQL engine so that it executes **only**
-those operations that are present in the list _(available after version v1.0.0-beta.1)_.
-
-## Adding or removing an operation in allow-list
-
-You can add or remove an operation in the allow-list in two ways:
-
-- **Using the console:** Head to the `Settings` (⚙) --> `Allow list` section in the console. You can add a new operation
-  to the allow-list or upload a list of new operations from a file that will be added to the allow-list. You can also
-  see a list of existing operations in the allow-list and delete them individually.
-
-- You can add an individual operation, like the one below, manually to the allow-list with a unique name. Note that this
-  unique name is just an identifier for the query in the collection, it is not related to the operation name of the
-  query.
-
-```graphql
-query ($id: Int!) {
-  user_by_pk(id: $id) {
-    __typename
-    id
-    name
-    company
-  }
-}
-```
-
-- You can upload files, like this [sample file](https://gist.github.com/dsandip/8b1b4aa87708289d4c9f8fd9621eb025), to
-  add multiple operations to the allow-list (each operation needs to have a name).
-
-- **Using metadata APIs:** Queries can be stored in collections and a collection can be added to or removed from the
-  allow-list. See [Collections & Allow-list APIs](/api-reference/metadata-api/query-collections.mdx) for API reference.
-
-:::info Note
-
-- The allow list queries are validated against the schema. So, adding an invalid query will result in inconsistent
-  metadata error.
-
-- `__typename` introspection fields will be ignored when adding operations and comparing them to the allow-list.
-
-- Any introspection queries that your client apps require will have to be explicitly added to the allow-list to allow
-  running them.
-
-- The order of fields in a query will be **strictly** compared. E.g. assuming the query in the first example above is
-  part of the allow-list, the following query will be **rejected**:
-
-```graphql
-query ($id: Int!) {
-  user_by_pk(id: $id) {
-    __typename
-    name
-    id
-    company
-  }
-}
-```
-
-- The allow-list is stored in the metadata. To version control the state of the list, you are required to export the
-  metadata. See [Managing Hasura metadata](/migrations-metadata-seeds/manage-metadata.mdx) for more details.
-
-- You can modify the allow-list without actually enabling it on your instance.
-
-:::
-
-## Role based Allow List
-
-A role based allow-list is useful when you would like a query collection to be accessible to only certain roles.
-
-:::info Note
-
-Role based allow-lists are supported in cloud/enterprise products, from version `v2.3.0`. In OSS, role based allow-lists
-entries are ignored.
-
-On older versions (which do not support role based allow-lists), any role based allow-list metadata entry will get
-treated as global. Hence, caution is advised when using role based allow-list metadata with older versions.
-
-:::
+The **Allow List** is a list of safe operations (_GraphQL queries, mutations or subscriptions_) that is stored by the
+GraphQL Engine in its Metadata. When enabled, it can be used to restrict the GraphQL Engine so that it executes **only**
+those operations that are present in the list.
 
 ## Enable Allow List
 
-The allow-list validation can be enabled by setting the `HASURA_GRAPHQL_ENABLE_ALLOWLIST` environment variable to `true`
-or running the GraphQL engine with the `--enable-allowlist` flag (_default value is_ `false`). See
+Allow-list validation can be enabled by setting the `HASURA_GRAPHQL_ENABLE_ALLOWLIST` environment variable to `true` or
+running the GraphQL Engine with the `--enable-allowlist` flag (_default value is_ `false`). See
 [reference docs](/deployment/graphql-engine-flags/reference.mdx#command-flags).
 
 :::info Note
 
-The allow-list validation will not be enforced for the `admin` role.
+Allow-list validation will not be enforced for the `admin` role.
 
 :::
 
+## Open Allow List manager
+
+Head to the `API` tab and find the `Allow List` section in the console.
+
+<Thumbnail
+  src="/img/api-explorer/allowlist-manager.png"
+  alt="AllowList manager"
+/>
+
+## Adding or removing an operation in Allow List
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+Head to the `API` tab and find the `Allow List` section in the console.
+
+- **Write operation**: You can add an individual operation, like the one below, manually to the Allow List. These
+  operations require unique names. This unique name is used an identifier for the query in the collection, it is not
+  related to the operation name of the query.
+
+```graphql
+query ($id: Int!) {
+  user_by_pk(id: $id) {
+    __typename
+    id
+    name
+    company
+  }
+}
+```
+
+After writing your query or selecting a query from quick add dropdown menu, click `Add Operation`.
+
+<Thumbnail src="/img/api-explorer/write-operation.png" alt="Add operation" />
+
+- **Upload File**: Alternatively, you can upload files, like this
+  [sample file](https://gist.github.com/dsandip/8b1b4aa87708289d4c9f8fd9621eb025), to add multiple operations to the
+  Allow List. Each operation in the file will need a unique name. Once you've selected your file, click `Add Operation`.
+
+<Thumbnail
+  src="/img/api-explorer/upload-operation.png"
+  alt="Upload operation"
+/>
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+Head to the `/metadata/databases/query_collections.yaml` file and add the database configuration as below:
+
+```yaml {6-7}
+- name: allowed-queries
+  definition:
+    queries:
+      - name: bv
+        query: |-
+          query MyQuery {
+            test {
+              age
+              id
+            }
+          }
+      - name: operation_name
+        query: |-
+          query MyQuery {
+            test {
+              age
+              id
+            }
+          }
+```
+
+Apply the Metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+Queries can be stored in collections and a collection can be added to or removed from the Allow List. See
+[Collections & Allow List APIs](/api-reference/metadata-api/query-collections.mdx) for API reference.
+
+</TabItem>
+</Tabs>
+
+:::info Note
+
+- Allow List queries are validated against the schema. Adding an invalid query will result in an inconsistent Metadata
+  error.
+
+- `__typename` introspection fields will be ignored when adding operations and comparing them to the Allow List.
+
+- Any introspection queries that your client apps require must be explicitly added to the Allow List to allow running
+  them.
+
+- The order of fields in a query will be **strictly** compared. E.g. assuming the query in the first example above is
+  part of the Allow List, the following query will be **rejected**:
+
+```graphql
+query ($id: Int!) {
+  user_by_pk(id: $id) {
+    __typename
+    name
+    id
+    company
+  }
+}
+```
+
+- The Allow List is stored in Hasura's Metadata. To version control the state of the list, you are required to export
+  the Metadata. See [Managing Hasura Metadata](/migrations-metadata-seeds/manage-metadata.mdx) for more details.
+
+- You can modify the Allow List without actually enabling it on your instance.
+
+:::
+
+## Role-based Allow List
+
+<div className="badge badge--primary heading-badge">Available on: Cloud</div>
+
+A role-based Allow List is useful when you would like a query collection(s) to be accessible to only certain roles.
+
+:::info Note
+
+Role-based Allow Lists are supported in Cloud/Enterprise products from version `v2.3.0`. In OSS, role-based entries are
+ignored.
+
+On older versions (which do not support role-based Allow Lists), any role-based Allow List Metadata entry will be
+treated as global. Hence, caution is advised when using role-based Allow List Metadata with older versions.
+
+:::
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+Head to the `API` tab and find the `Allow List` section on the Console. On the left side bar, you can see a list of
+query collections. After selecting a query collection, you can enable the roles which should have access to any query
+collection via the `Permissions` tab.
+
+<Thumbnail
+  src="/img/api-explorer/role-based-allow-list.png"
+  alt="Role based allow list"
+/>
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+Head to the `/metadata/databases/allow_list.yaml` file and add the database configuration as below:
+
+```yaml {17-19}
+query_collections:
+  - name: allowed-queries
+    definition:
+      queries: []
+  - name: editor_allowed_queries
+    definition:
+      queries: []
+  - name: user_allowed_queries
+    definition:
+      queries: []
+allowlist:
+  - collection: allowed-queries
+    scope:
+      global: true
+  - collection: editor_allowed_queries
+    scope:
+      global: false
+      roles:
+        - editor
+  - collection: user_allowed_queries
+    scope:
+      global: false
+      roles:
+        - user
+```
+
+Apply the Metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+You can update the roles in the Allow List by using the
+[update_scope_of_collection_in_allowlist](/api-reference/metadata-api/query-collections.mdx#metadata-update-scope-of-collection-in-allowlist)
+Metadata API.
+
+</TabItem>
+</Tabs>
+
 ## Quick-create allowed operations
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+<div className="badge badge--primary heading-badge">Available on: Cloud</div>
 
-This feature lets you add to the allow list with one click from the record of past operations. (With Core, allow lists
-must be managed manually.
+### Hasura Cloud
 
-<Thumbnail src='/img/security/allowlist-add-new-op.png' alt='Hasura Cloud Console create new allowed operation' />
+This feature lets you add to the Allow List with one click from the record of past operations. (With Hasura GraphQL
+Engine CE, Allow Lists must be managed manually).
+
+<Thumbnail
+  src="/img/security/allowlist-add-new-op.png"
+  alt="Hasura Cloud Console create new allowed operation"
+/>
 
 ## Recommended usage
 
-The following are the recommended best practices for enabling/disabling allow-list based validation:
+The following are the recommended best practices for enabling/disabling Allow-List-based validation:
 
-- **In development instances**: During development or in dev instances, disable allow-list (_default setting_) to allow
-  complete access to the GraphQL schema. Add/remove operations in the allow-list and then export the metadata for
+- **In development instances**: During development or in dev instances, disable the Allow List (_default setting_) to
+  enable complete access to the GraphQL schema. Add/remove operations in the Allow List and then export the Metadata for
   version-control (_so you can apply it to other instances_).
-- **In CI/CD instances**: Enable the allow-list for testing.
-- **In production instances**: Enabling the allow-list is highly recommended when running the GraphQL engine in
+- **In CI/CD instances**: Enable the Allow List for testing.
+- **In production instances**: Enabling the Allow List is highly recommended when running the GraphQL Engine in
   production.
