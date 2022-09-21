@@ -369,7 +369,7 @@ X-Hasura-Role: admin
 | event_trigger_name    | true          | String                                                    | Name of the event trigger whose logs needs to be cleaned up                   |
 | source                | false         | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Source to which the event trigger belong. Default `default`                   |
 | batch_size            | false         | Int                                                       | Maximum number of event trigger logs to delete. Default 10000                 |
-| clear_older_than      | false         | Int                                                       | Event logs retention period (in hours). Default 168 hours (or 7 days)         |
+| clear_older_than      | true          | Int                                                       | Event logs retention period (in hours).                                       |
 | timeout               | false         | Int                                                       | Timeout for the cleanup query (in seconds). Default: 60                       |
 | clean_invocation_logs | false         | Boolean                                                   | Should corresponding invocation logs be cleaned. Default `false`              |
 
