@@ -1,3 +1,4 @@
+import defaultState from '@/components/Services/Events/EventTriggers/state';
 import {
   ColumnConfig,
   CustomRootFields,
@@ -523,6 +524,10 @@ export const generateCreateEventTriggerQuery = (
       enable_manual: state.operations.enable_manual,
       retry_conf: state.retryConf,
       headers: transformHeaders(state.headers),
+      cleanup_config: {
+        ...defaultState.cleanupConfig,
+        ...state.cleanupConfig,
+      },
       replace,
       request_transform: requestTransform,
     },

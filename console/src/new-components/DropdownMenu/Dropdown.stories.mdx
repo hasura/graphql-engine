@@ -57,28 +57,6 @@ import { DropdownMenu } from '@/new-components/DropdownMenu';
   </Story>
 </Canvas>
 
-<Canvas>
-  <Story name="Dropdown Button">
-    <div>
-      <DropdownMenu
-        items={[
-          ['Action', <span className="text-red-600">Destructive Action</span>],
-          ['Another action'],
-        ]}
-      >
-        <Button
-          iconPosition="end"
-          icon={
-            <FaChevronUp className="transition-transform group-radix-state-open:rotate-180" />
-          }
-        >
-          Dropdown Button
-        </Button>
-      </DropdownMenu>
-    </div>
-  </Story>
-</Canvas>
-
 #### 🚦 Usage
 
 - The dropdownMenu button is used for opening a contextual menu with list of actions

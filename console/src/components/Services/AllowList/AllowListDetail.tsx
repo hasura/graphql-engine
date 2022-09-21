@@ -1,8 +1,8 @@
+/* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { browserHistory } from 'react-router';
 
 import { Tabs } from '@/new-components/Tabs';
-import { useConsoleConfig } from '@/hooks/useEnvVars';
 import {
   useQueryCollections,
   QueryCollectionsOperations,
@@ -11,6 +11,7 @@ import {
 import { AllowListSidebar, AllowListPermissions } from '@/features/AllowLists';
 
 import PageContainer from '@/components/Common/Layout/PageContainer/PageContainer';
+import { isProConsole } from '@/utils/proConsole';
 
 interface AllowListDetailProps {
   params: {
@@ -34,8 +35,6 @@ export const AllowListDetail: React.FC<AllowListDetailProps> = props => {
     isLoading,
     isRefetching,
   } = useQueryCollections();
-
-  const { type } = useConsoleConfig();
 
   const queryCollection = queryCollections?.find(
     ({ name: collectionName }) => collectionName === name
@@ -86,7 +85,7 @@ export const AllowListDetail: React.FC<AllowListDetailProps> = props => {
               />
             </div>
           )}
-          {type !== 'oss' ? (
+          {isProConsole(window.__env) ? (
             <Tabs
               value={section}
               onValueChange={value => {

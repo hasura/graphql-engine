@@ -291,6 +291,7 @@ export const getEventTriggers = createSelector(getMetadata, metadata => {
               retry_conf: trigger.retry_conf,
               webhook: trigger.webhook || '',
               webhook_from_env: trigger.webhook_from_env,
+              cleanup_config: trigger.cleanup_config,
             },
             request_transform: trigger.request_transform,
           })) || [];
@@ -340,6 +341,7 @@ export const getEventTriggerByName = createSelector(
               retry_conf: trigger.retry_conf,
               webhook: trigger.webhook || '',
               webhook_from_env: trigger.webhook_from_env,
+              cleanup_config: trigger.cleanup_config,
             },
             request_transform: trigger.request_transform,
           };
