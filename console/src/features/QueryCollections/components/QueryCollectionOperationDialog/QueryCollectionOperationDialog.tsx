@@ -8,6 +8,7 @@ import { QueryCollection } from '@/metadata/types';
 import { Tabs } from '@/new-components/Tabs';
 import ToolTip from '@/components/Common/Tooltip/Tooltip';
 import { GraphQLFileUpload } from './GraphQLFileUpload';
+import { QuickAdd } from './QuickAdd';
 
 const schema = z.discriminatedUnion('option', [
   z.object({
@@ -84,6 +85,14 @@ export const QueryCollectionOperationDialog = (
                             name="name"
                             className="max-w-full"
                             label="Operation Name"
+                          />
+                          <QuickAdd
+                            onAdd={operation => {
+                              if (operation.name !== 'unnamed') {
+                                options.setValue('name', operation.name);
+                              }
+                              options.setValue('query', operation.query);
+                            }}
                           />
                           <CodeEditorField
                             id="query"
