@@ -14,7 +14,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     GraphQLTypeDefinitions,
     RelationshipCapabilities (..),
     ComparisonCapabilities (..),
-    CrossTableComparisonCapabilities (..),
+    SubqueryComparisonCapabilities (..),
     MetricsCapabilities (..),
     ExplainCapabilities (..),
     CapabilitiesResponse (..),
@@ -224,7 +224,7 @@ instance HasCodec GraphQLTypeDefinitions where
           . _gtdTypeDefinitions
 
 data ComparisonCapabilities = ComparisonCapabilities
-  {_ccCrossTableComparisonCapabilities :: Maybe CrossTableComparisonCapabilities}
+  {_ccSubqueryComparisonCapabilities :: Maybe SubqueryComparisonCapabilities}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ComparisonCapabilities
@@ -233,18 +233,18 @@ instance HasCodec ComparisonCapabilities where
   codec =
     object "ComparisonCapabilities" $
       ComparisonCapabilities
-        <$> optionalFieldOrNull "cross_table" "The agent supports comparisons that involve tables other than the one being queried" .= _ccCrossTableComparisonCapabilities
+        <$> optionalFieldOrNull "subquery" "The agent supports comparisons that involve tables other than the one being queried" .= _ccSubqueryComparisonCapabilities
 
-data CrossTableComparisonCapabilities = CrossTableComparisonCapabilities
+data SubqueryComparisonCapabilities = SubqueryComparisonCapabilities
   {_ctccSupportsRelations :: Bool}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
-  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec CrossTableComparisonCapabilities
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec SubqueryComparisonCapabilities
 
-instance HasCodec CrossTableComparisonCapabilities where
+instance HasCodec SubqueryComparisonCapabilities where
   codec =
-    object "CrossTableComparisonCapabilities" $
-      CrossTableComparisonCapabilities
+    object "SubqueryComparisonCapabilities" $
+      SubqueryComparisonCapabilities
         <$> requiredField "supports_relations" "Does the agent support comparisons that involve related tables (ie. joins)?" .= _ctccSupportsRelations
 
 data MetricsCapabilities = MetricsCapabilities {}

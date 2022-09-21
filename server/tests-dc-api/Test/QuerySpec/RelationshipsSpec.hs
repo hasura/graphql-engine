@@ -16,8 +16,8 @@ import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Hspec (Spec, describe, it)
 import Prelude
 
-spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Maybe CrossTableComparisonCapabilities -> Spec
-spec api sourceName config crossTableComparisonCapabilities = describe "Relationship Queries" $ do
+spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Maybe SubqueryComparisonCapabilities -> Spec
+spec api sourceName config subqueryComparisonCapabilities = describe "Relationship Queries" $ do
   it "perform an object relationship query by joining artist to albums" $ do
     let query = albumsWithArtistQuery id
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
@@ -64,7 +64,7 @@ spec api sourceName config crossTableComparisonCapabilities = describe "Relation
     Data.responseRows receivedArtists `rowsShouldBe` expectedAlbums
     _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
-  when ((_ctccSupportsRelations <$> crossTableComparisonCapabilities) == Just True) $
+  when ((_ctccSupportsRelations <$> subqueryComparisonCapabilities) == Just True) $
     describe "Cross related table comparisons" $ do
       it "perform an object relationship query by joining employee to customers and filter comparing columns across the object relationship" $ do
         -- Join Employee to Customers via SupportRep, and only get those customers that have a rep

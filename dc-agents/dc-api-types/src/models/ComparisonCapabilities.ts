@@ -2,9 +2,9 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { CrossTableComparisonCapabilities } from './CrossTableComparisonCapabilities';
+import type { SubqueryComparisonCapabilities } from './SubqueryComparisonCapabilities';
 
 export type ComparisonCapabilities = {
-  cross_table?: CrossTableComparisonCapabilities;
+  subquery?: SubqueryComparisonCapabilities;
 };
 

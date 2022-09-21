@@ -2,7 +2,7 @@ module Test.QuerySpec (spec) where
 
 import Control.Monad (when)
 import Data.Maybe (isJust)
-import Hasura.Backends.DataConnector.API (Capabilities (..), ComparisonCapabilities (_ccCrossTableComparisonCapabilities), Config, Routes (..), SourceName)
+import Hasura.Backends.DataConnector.API (Capabilities (..), ComparisonCapabilities (..), Config, Routes (..), SourceName)
 import Servant.API (NamedRoutes)
 import Servant.Client (Client)
 import Test.Hspec
@@ -20,5 +20,5 @@ spec api sourceName config capabilities@Capabilities {..} = do
     Test.QuerySpec.FilteringSpec.spec api sourceName config _cComparisons
     Test.QuerySpec.OrderBySpec.spec api sourceName config capabilities
     when (isJust _cRelationships) $
-      Test.QuerySpec.RelationshipsSpec.spec api sourceName config (_cComparisons >>= _ccCrossTableComparisonCapabilities)
+      Test.QuerySpec.RelationshipsSpec.spec api sourceName config (_cComparisons >>= _ccSubqueryComparisonCapabilities)
     Test.QuerySpec.AggregatesSpec.spec api sourceName config _cRelationships
