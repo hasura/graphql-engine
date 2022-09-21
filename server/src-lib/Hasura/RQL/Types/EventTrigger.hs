@@ -245,7 +245,7 @@ instance FromJSON AutoTriggerLogCleanupConfig where
     withObject "AutoTriggerLogCleanupConfig" $ \o -> do
       _atlccSchedule <- o .: "schedule"
       _atlccBatchSize <- o .:? "batch_size" .!= 10000
-      _atlccClearOlderThan <- o .:? "clear_older_than" .!= 168 -- 7 Days = 168 hours
+      _atlccClearOlderThan <- o .: "clear_older_than"
       _atlccTimeout <- o .:? "timeout" .!= 60
       _atlccCleanInvocationLogs <- o .:? "clean_invocation_logs" .!= False
       _atlccPaused <- o .:? "paused" .!= ETCSUnpaused
@@ -281,7 +281,7 @@ instance FromJSON TriggerLogCleanupConfig where
       tlccEventTriggerName <- o .: "event_trigger_name"
       tlccSourceName <- o .:? "source" .!= SNDefault
       tlccBatchSize <- o .:? "batch_size" .!= 10000
-      tlccClearOlderThan <- o .:? "clear_older_than" .!= 168 -- 7 Days = 168 hours
+      tlccClearOlderThan <- o .: "clear_older_than"
       tlccTimeout <- o .:? "timeout" .!= 60
       tlccCleanInvocationLogs <- o .:? "clean_invocation_logs" .!= False
       pure TriggerLogCleanupConfig {..}
