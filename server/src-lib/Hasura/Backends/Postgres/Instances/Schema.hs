@@ -22,9 +22,9 @@ import Data.List.NonEmpty qualified as NE
 import Data.Parser.JSONPath
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
-import Hasura.Backends.Postgres.SQL.DML as PG hiding (CountType, incOp)
-import Hasura.Backends.Postgres.SQL.Types as PG hiding (FunctionName, TableName)
-import Hasura.Backends.Postgres.SQL.Value as PG
+import Hasura.Backends.Postgres.SQL.DML as Postgres hiding (CountType, incOp)
+import Hasura.Backends.Postgres.SQL.Types as Postgres hiding (FunctionName, TableName)
+import Hasura.Backends.Postgres.SQL.Value as Postgres
 import Hasura.Backends.Postgres.Schema.OnConflict
 import Hasura.Backends.Postgres.Schema.Select
 import Hasura.Backends.Postgres.Types.BoolExp
@@ -242,7 +242,7 @@ instance
     GraphqlCase -> orderByOperatorsGraphqlCase
   comparisonExps = const comparisonExps
   countTypeInput = countTypeInput
-  aggregateOrderByCountType = PG.PGInteger
+  aggregateOrderByCountType = Postgres.PGInteger
   computedField = computedFieldPG
 
 backendInsertParser ::
@@ -496,7 +496,7 @@ pgScalarSelectionArgumentsParser ::
   ColumnType ('Postgres pgKind) ->
   InputFieldsParser n (Maybe (ScalarSelectionArguments ('Postgres pgKind)))
 pgScalarSelectionArgumentsParser columnType
-  | isScalarColumnWhere PG.isJSONType columnType =
+  | isScalarColumnWhere Postgres.isJSONType columnType =
     P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
   | otherwise = pure Nothing
   where
@@ -505,9 +505,9 @@ pgScalarSelectionArgumentsParser columnType
     toColExp textValue = case parseJSONPath textValue of
       Left err -> P.parseError $ "parse json path error: " <> toErrorMessage err
       Right [] -> pure Nothing
-      Right jPaths -> pure $ Just $ PG.ColumnOp PG.jsonbPathOp $ PG.SEArray $ map elToColExp jPaths
-    elToColExp (Key k) = PG.SELit $ K.toText k
-    elToColExp (Index i) = PG.SELit $ tshow i
+      Right jPaths -> pure $ Just $ Postgres.ColumnOp Postgres.jsonbPathOp $ Postgres.SEArray $ map elToColExp jPaths
+    elToColExp (Key k) = Postgres.SELit $ K.toText k
+    elToColExp (Index i) = Postgres.SELit $ tshow i
 
 orderByOperatorsHasuraCase ::
   (G.Name, NonEmpty (Definition P.EnumValueInfo, (BasicOrderType ('Postgres pgKind), NullsOrderType ('Postgres pgKind))))
@@ -526,22 +526,22 @@ orderByOperators tCase =
   (Name._order_by,) $
     NE.fromList
       [ ( define (applyEnumValueCase tCase Name._asc) "in ascending order, nulls last",
-          (PG.OTAsc, PG.NullsLast)
+          (Postgres.OTAsc, Postgres.NullsLast)
         ),
         ( define (applyEnumValueCase tCase Name._asc_nulls_first) "in ascending order, nulls first",
-          (PG.OTAsc, PG.NullsFirst)
+          (Postgres.OTAsc, Postgres.NullsFirst)
         ),
         ( define (applyEnumValueCase tCase Name._asc_nulls_last) "in ascending order, nulls last",
-          (PG.OTAsc, PG.NullsLast)
+          (Postgres.OTAsc, Postgres.NullsLast)
         ),
         ( define (applyEnumValueCase tCase Name._desc) "in descending order, nulls first",
-          (PG.OTDesc, PG.NullsFirst)
+          (Postgres.OTDesc, Postgres.NullsFirst)
         ),
         ( define (applyEnumValueCase tCase Name._desc_nulls_first) "in descending order, nulls first",
-          (PG.OTDesc, PG.NullsFirst)
+          (Postgres.OTDesc, Postgres.NullsFirst)
         ),
         ( define (applyEnumValueCase tCase Name._desc_nulls_last) "in descending order, nulls last",
-          (PG.OTDesc, PG.NullsLast)
+          (Postgres.OTDesc, Postgres.NullsLast)
         )
       ]
   where
@@ -852,8 +852,8 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
       let scalarType = unsafePGColumnToBackend columnType
       IR.UVParameter Nothing $
         ColumnValue
-          (ColumnScalar $ PG.PGArray scalarType)
-          (PG.PGValArray $ cvValue <$> columnValues)
+          (ColumnScalar $ Postgres.PGArray scalarType)
+          (Postgres.PGValArray $ cvValue <$> columnValues)
 
     castExp :: ColumnType ('Postgres pgKind) -> NamingCase -> SchemaT r m (Maybe (Parser 'Input n (CastExp ('Postgres pgKind) (IR.UnpreparedValue ('Postgres pgKind)))))
     castExp sourceType tCase = do
@@ -939,9 +939,9 @@ countTypeInput = \case
   Nothing -> pure $ flip mkCountType Nothing
   where
     mkCountType :: IR.CountDistinct -> Maybe [Column ('Postgres pgKind)] -> CountType ('Postgres pgKind)
-    mkCountType _ Nothing = PG.CTStar
-    mkCountType IR.SelectCountDistinct (Just cols) = PG.CTDistinct cols
-    mkCountType IR.SelectCountNonDistinct (Just cols) = PG.CTSimple cols
+    mkCountType _ Nothing = Postgres.CTStar
+    mkCountType IR.SelectCountDistinct (Just cols) = Postgres.CTDistinct cols
+    mkCountType IR.SelectCountNonDistinct (Just cols) = Postgres.CTSimple cols
 
 -- | Update operator that prepends a value to a column containing jsonb arrays.
 --

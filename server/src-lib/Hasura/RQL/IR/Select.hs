@@ -152,7 +152,7 @@ import Data.Int (Int64)
 import Data.Kind (Type)
 import Data.List.NonEmpty qualified as NE
 import Data.Sequence qualified as Seq
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options (StringifyNumbers)
 import Hasura.Prelude
@@ -369,7 +369,7 @@ newtype FIIdentifier = FIIdentifier
   deriving newtype (Eq, Show)
   deriving anyclass (Hashable)
 
-instance PG.IsIdentifier FIIdentifier where
+instance Postgres.IsIdentifier FIIdentifier where
   toIdentifier = coerce
   {-# INLINE toIdentifier #-}
 

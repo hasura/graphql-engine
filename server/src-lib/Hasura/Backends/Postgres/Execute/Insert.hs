@@ -18,7 +18,7 @@ import Data.Text.Extended
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
 import Hasura.Backends.Postgres.Execute.Mutation qualified as PGE
-import Hasura.Backends.Postgres.SQL.DML qualified as PG
+import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value
 import Hasura.Backends.Postgres.Translate.BoolExp qualified as PGT
@@ -53,7 +53,7 @@ convertToSQLTransaction ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  IR.AnnotatedInsert ('Postgres pgKind) Void PG.SQLExp ->
+  IR.AnnotatedInsert ('Postgres pgKind) Void Postgres.SQLExp ->
   UserInfo ->
   Seq.Seq PG.PrepArg ->
   Options.StringifyNumbers ->
@@ -78,8 +78,8 @@ insertMultipleObjects ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  IR.MultiObjectInsert ('Postgres pgKind) PG.SQLExp ->
-  Map.HashMap PGCol PG.SQLExp ->
+  IR.MultiObjectInsert ('Postgres pgKind) Postgres.SQLExp ->
+  Map.HashMap PGCol Postgres.SQLExp ->
   UserInfo ->
   IR.MutationOutput ('Postgres pgKind) ->
   Seq.Seq PG.PrepArg ->
@@ -98,7 +98,7 @@ insertMultipleObjects multiObjIns additionalColumns userInfo mutationOutput plan
       indexedForM_ (IR.getInsertColumns <$> insObjs) \column ->
         validateInsert (map fst column) [] (Map.keys additionalColumns)
       let insObjRows = Map.fromList . IR.getInsertColumns <$> insObjs
-          (columnNames, insertRows) = Map.homogenise PG.columnDefaultValue $ map ((presetRow <> additionalColumns) <>) insObjRows
+          (columnNames, insertRows) = Map.homogenise Postgres.columnDefaultValue $ map ((presetRow <> additionalColumns) <>) insObjRows
           insertQuery =
             IR.InsertQueryP1
               table
@@ -139,8 +139,8 @@ insertObject ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  IR.SingleObjectInsert ('Postgres pgKind) PG.SQLExp ->
-  HashMap PGCol PG.SQLExp ->
+  IR.SingleObjectInsert ('Postgres pgKind) Postgres.SQLExp ->
+  HashMap PGCol Postgres.SQLExp ->
   UserInfo ->
   Seq.Seq PG.PrepArg ->
   Options.StringifyNumbers ->
@@ -174,11 +174,11 @@ insertObject singleObjIns additionalColumns userInfo planVars stringifyNum tCase
     objectRels = IR.getInsertObjectRelationships annObj
     arrayRels = IR.getInsertArrayRelationships annObj
 
-    afterInsert, beforeInsert :: [IR.ObjectRelationInsert ('Postgres pgKind) PG.SQLExp]
+    afterInsert, beforeInsert :: [IR.ObjectRelationInsert ('Postgres pgKind) Postgres.SQLExp]
     (afterInsert, beforeInsert) =
       L.partition ((== AfterParent) . riInsertOrder . IR._riRelationInfo) objectRels
 
-    allAfterInsertRels :: [IR.ArrayRelationInsert ('Postgres pgKind) PG.SQLExp]
+    allAfterInsertRels :: [IR.ArrayRelationInsert ('Postgres pgKind) Postgres.SQLExp]
     allAfterInsertRels = arrayRels <> map objToArr afterInsert
 
     afterInsertDepCols :: [ColumnInfo ('Postgres pgKind)]
@@ -229,8 +229,8 @@ insertObjRel ::
   UserInfo ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
-  IR.ObjectRelationInsert ('Postgres pgKind) PG.SQLExp ->
-  m (Int, [(PGCol, PG.SQLExp)])
+  IR.ObjectRelationInsert ('Postgres pgKind) Postgres.SQLExp ->
+  m (Int, [(PGCol, Postgres.SQLExp)])
 insertObjRel planVars userInfo stringifyNum tCase objRelIns =
   withPathK (relNameToTxt relName) $ do
     (affRows, colValM) <- withPathK "data" $ insertObject singleObjIns mempty userInfo planVars stringifyNum tCase
@@ -261,12 +261,12 @@ insertArrRel ::
     PostgresAnnotatedFieldJSON pgKind,
     MonadReader QueryTagsComment m
   ) =>
-  [(PGCol, PG.SQLExp)] ->
+  [(PGCol, Postgres.SQLExp)] ->
   UserInfo ->
   Seq.Seq PG.PrepArg ->
   Options.StringifyNumbers ->
   Maybe NamingCase ->
-  IR.ArrayRelationInsert ('Postgres pgKind) PG.SQLExp ->
+  IR.ArrayRelationInsert ('Postgres pgKind) Postgres.SQLExp ->
   m Int
 insertArrRel resCols userInfo planVars stringifyNum tCase arrRelIns =
   withPathK (relNameToTxt $ riName relInfo) $ do
@@ -325,33 +325,33 @@ validateInsert insCols objRels addCols = do
 mkInsertQ ::
   Backend ('Postgres pgKind) =>
   QualifiedTable ->
-  Maybe (IR.OnConflictClause ('Postgres pgKind) PG.SQLExp) ->
-  Map.HashMap PGCol PG.SQLExp ->
+  Maybe (IR.OnConflictClause ('Postgres pgKind) Postgres.SQLExp) ->
+  Map.HashMap PGCol Postgres.SQLExp ->
   (AnnBoolExpSQL ('Postgres pgKind), Maybe (AnnBoolExpSQL ('Postgres pgKind))) ->
-  PG.TopLevelCTE
+  Postgres.TopLevelCTE
 mkInsertQ table onConflictM insertRow (insCheck, updCheck) =
   let sqlConflict = PGT.toSQLConflict table <$> onConflictM
       sqlExps = Map.elems insertRow
-      valueExp = PG.ValuesExp [PG.TupleExp sqlExps]
+      valueExp = Postgres.ValuesExp [Postgres.TupleExp sqlExps]
       tableCols = Map.keys insertRow
       sqlInsert =
-        PG.SQLInsert table tableCols valueExp sqlConflict
+        Postgres.SQLInsert table tableCols valueExp sqlConflict
           . Just
-          $ PG.RetExp
-            [ PG.selectStar,
+          $ Postgres.RetExp
+            [ Postgres.selectStar,
               PGT.insertOrUpdateCheckExpr
                 table
                 onConflictM
-                (PGT.toSQLBoolExp (PG.QualTable table) insCheck)
-                (fmap (PGT.toSQLBoolExp (PG.QualTable table)) updCheck)
+                (PGT.toSQLBoolExp (Postgres.QualTable table) insCheck)
+                (fmap (PGT.toSQLBoolExp (Postgres.QualTable table)) updCheck)
             ]
-   in PG.CTEInsert sqlInsert
+   in Postgres.CTEInsert sqlInsert
 
 fetchFromColVals ::
   MonadError QErr m =>
   ColumnValues ('Postgres pgKind) TxtEncodedVal ->
   [ColumnInfo ('Postgres pgKind)] ->
-  m [(PGCol, PG.SQLExp)]
+  m [(PGCol, Postgres.SQLExp)]
 fetchFromColVals colVal reqCols =
   forM reqCols $ \ci -> do
     let valM = Map.lookup (ciColumn ci) colVal
@@ -361,8 +361,8 @@ fetchFromColVals colVal reqCols =
           "column "
             <> ciColumn ci <<> " not found in given colVal"
     let pgColVal = case val of
-          TENull -> PG.SENull
-          TELit t -> PG.SELit t
+          TENull -> Postgres.SENull
+          TELit t -> Postgres.SELit t
     return (ciColumn ci, pgColVal)
 
 decodeEncJSON :: (J.FromJSON a, QErrM m) => EncJSON -> m a

@@ -30,19 +30,19 @@ where
 
 import Data.HashMap.Strict qualified as HM
 import Data.Int (Int64)
-import Hasura.Backends.Postgres.SQL.DML qualified as PG
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
+import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Prelude
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Common
 
 data SourcePrefixes = SourcePrefixes
   { -- | Current source prefix
-    _pfThis :: PG.Identifier,
+    _pfThis :: Postgres.Identifier,
     -- | Base table source row identifier to generate
     -- the table's column identifiers for computed field
     -- function input parameters
-    _pfBase :: PG.Identifier
+    _pfBase :: Postgres.Identifier
   }
   deriving (Show, Eq, Generic)
 
@@ -58,8 +58,8 @@ data SelectSlicing = SelectSlicing
 instance Hashable SelectSlicing
 
 data DistinctAndOrderByExpr = ASorting
-  { _sortAtNode :: (PG.OrderByExp, Maybe PG.DistinctExpr),
-    _sortAtBase :: Maybe (PG.OrderByExp, Maybe PG.DistinctExpr)
+  { _sortAtNode :: (Postgres.OrderByExp, Maybe Postgres.DistinctExpr),
+    _sortAtBase :: Maybe (Postgres.OrderByExp, Maybe Postgres.DistinctExpr)
   }
   deriving (Show, Eq, Generic)
 
@@ -67,7 +67,7 @@ instance Hashable DistinctAndOrderByExpr
 
 -- | Sorting with -- Note [Optimizing queries using limit/offset])
 data SelectSorting
-  = NoSorting (Maybe PG.DistinctExpr)
+  = NoSorting (Maybe Postgres.DistinctExpr)
   | Sorting DistinctAndOrderByExpr
   deriving (Show, Eq, Generic)
 
@@ -82,9 +82,9 @@ data SortingAndSlicing = SortingAndSlicing
 instance Hashable SortingAndSlicing
 
 data SelectSource = SelectSource
-  { _ssPrefix :: PG.Identifier,
-    _ssFrom :: PG.FromItem,
-    _ssWhere :: PG.BoolExp,
+  { _ssPrefix :: Postgres.Identifier,
+    _ssFrom :: Postgres.FromItem,
+    _ssWhere :: Postgres.BoolExp,
     _ssSortingAndSlicing :: SortingAndSlicing
   }
   deriving (Generic)
@@ -102,15 +102,15 @@ noSortingAndSlicing =
 noSlicing :: SelectSlicing
 noSlicing = SelectSlicing Nothing Nothing
 
-orderByForJsonAgg :: SelectSource -> Maybe PG.OrderByExp
+orderByForJsonAgg :: SelectSource -> Maybe Postgres.OrderByExp
 orderByForJsonAgg SelectSource {..} =
   case _sasSorting _ssSortingAndSlicing of
     NoSorting {} -> Nothing
     Sorting ASorting {..} -> Just $ fst _sortAtNode
 
 data ApplySortingAndSlicing = ApplySortingAndSlicing
-  { _applyAtBase :: (Maybe PG.OrderByExp, SelectSlicing, Maybe PG.DistinctExpr),
-    _applyAtNode :: (Maybe PG.OrderByExp, SelectSlicing, Maybe PG.DistinctExpr)
+  { _applyAtBase :: (Maybe Postgres.OrderByExp, SelectSlicing, Maybe Postgres.DistinctExpr),
+    _applyAtNode :: (Maybe Postgres.OrderByExp, SelectSlicing, Maybe Postgres.DistinctExpr)
   }
 
 applySortingAndSlicing :: SortingAndSlicing -> ApplySortingAndSlicing
@@ -130,7 +130,7 @@ applySortingAndSlicing SortingAndSlicing {..} =
               ApplySortingAndSlicing (Nothing, noSlicing, Nothing) (Just nodeOrderBy, _sasSlicing, nodeDistinctOn)
 
 data SelectNode = SelectNode
-  { _snExtractors :: HM.HashMap PG.ColumnAlias PG.SQLExp,
+  { _snExtractors :: HM.HashMap Postgres.ColumnAlias Postgres.SQLExp,
     _snJoinTree :: JoinTree
   }
   deriving stock (Eq)
@@ -140,9 +140,9 @@ instance Semigroup SelectNode where
     SelectNode (lExtrs <> rExtrs) (lJoinTree <> rJoinTree)
 
 data ObjectSelectSource = ObjectSelectSource
-  { _ossPrefix :: PG.Identifier,
-    _ossFrom :: PG.FromItem,
-    _ossWhere :: PG.BoolExp
+  { _ossPrefix :: Postgres.Identifier,
+    _ossFrom :: Postgres.FromItem,
+    _ossWhere :: Postgres.BoolExp
   }
   deriving (Show, Eq, Generic)
 
@@ -165,7 +165,7 @@ objectSelectSourceToSelectSource ObjectSelectSource {..} =
 
 data ObjectRelationSource = ObjectRelationSource
   { _orsRelationshipName :: RelName,
-    _orsRelationMapping :: HM.HashMap PG.PGCol PG.PGCol,
+    _orsRelationMapping :: HM.HashMap Postgres.PGCol Postgres.PGCol,
     _orsSelectSource :: ObjectSelectSource
   }
   deriving (Generic)
@@ -175,8 +175,8 @@ instance Hashable ObjectRelationSource
 deriving instance Eq ObjectRelationSource
 
 data ArrayRelationSource = ArrayRelationSource
-  { _arsAlias :: PG.TableAlias,
-    _arsRelationMapping :: HM.HashMap PG.PGCol PG.PGCol,
+  { _arsAlias :: Postgres.TableAlias,
+    _arsRelationMapping :: HM.HashMap Postgres.PGCol Postgres.PGCol,
     _arsSelectSource :: SelectSource
   }
   deriving (Generic)
@@ -186,7 +186,7 @@ instance Hashable ArrayRelationSource
 deriving instance Eq ArrayRelationSource
 
 data MultiRowSelectNode = MultiRowSelectNode
-  { _mrsnTopExtractors :: [PG.Extractor],
+  { _mrsnTopExtractors :: [Postgres.Extractor],
     _mrsnSelectNode :: SelectNode
   }
   deriving stock (Eq)
@@ -208,9 +208,9 @@ deriving instance Show ComputedFieldTableSetSource
 deriving instance Eq ComputedFieldTableSetSource
 
 data ArrayConnectionSource = ArrayConnectionSource
-  { _acsAlias :: PG.TableAlias,
-    _acsRelationMapping :: HM.HashMap PG.PGCol PG.PGCol,
-    _acsSplitFilter :: Maybe PG.BoolExp,
+  { _acsAlias :: Postgres.TableAlias,
+    _acsRelationMapping :: HM.HashMap Postgres.PGCol Postgres.PGCol,
+    _acsSplitFilter :: Maybe Postgres.BoolExp,
     _acsSlice :: Maybe ConnectionSlice,
     _acsSource :: SelectSource
   }

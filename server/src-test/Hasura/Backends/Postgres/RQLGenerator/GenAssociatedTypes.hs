@@ -17,8 +17,8 @@ import Data.Int (Int)
 import Data.Text (Text)
 import Data.Text qualified as T
 import Hasura.Backends.Postgres.Instances.Types ()
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
 import Hasura.Backends.Postgres.SQL.Types qualified as PGTypes
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Backends.Postgres.Types.BoolExp qualified as B
 import Hasura.Backends.Postgres.Types.Function qualified as PGTypes
 import Hasura.Generator.Common (defaultRange, genArbitraryUnicodeText)
@@ -34,7 +34,7 @@ import Hedgehog.Range qualified as Range
 -- Exported
 
 genColumn :: MonadGen m => m (Column ('Postgres 'Vanilla))
-genColumn = PG.unsafePGCol <$> genArbitraryUnicodeText defaultRange
+genColumn = Postgres.unsafePGCol <$> genArbitraryUnicodeText defaultRange
 
 -- | Generator for a qualified Postgres 'TableName'
 genTableName :: MonadGen m => m (TableName ('Postgres 'Vanilla))
@@ -43,40 +43,40 @@ genTableName = genQualifiedTable
 genScalarType :: MonadGen m => m (ScalarType ('Postgres 'Vanilla))
 genScalarType =
   Gen.choice
-    [ pure PG.PGSmallInt,
-      pure PG.PGInteger,
-      pure PG.PGBigInt,
-      pure PG.PGSerial,
-      pure PG.PGBigSerial,
-      pure PG.PGFloat,
-      pure PG.PGDouble,
-      pure PG.PGNumeric,
-      pure PG.PGMoney,
-      pure PG.PGBoolean,
-      pure PG.PGChar,
-      pure PG.PGVarchar,
-      pure PG.PGText,
-      pure PG.PGCitext,
-      pure PG.PGDate,
-      pure PG.PGTimeStamp,
-      pure PG.PGTimeStampTZ,
-      pure PG.PGTimeTZ,
-      pure PG.PGJSON,
-      pure PG.PGJSONB,
-      pure PG.PGGeometry,
-      pure PG.PGGeography,
-      pure PG.PGRaster,
-      pure PG.PGUUID,
-      pure PG.PGLtree,
-      pure PG.PGLquery,
-      pure PG.PGLtxtquery,
-      PG.PGUnknown <$> genArbitraryUnicodeText defaultRange,
-      PG.PGCompositeScalar <$> genArbitraryUnicodeText defaultRange
+    [ pure Postgres.PGSmallInt,
+      pure Postgres.PGInteger,
+      pure Postgres.PGBigInt,
+      pure Postgres.PGSerial,
+      pure Postgres.PGBigSerial,
+      pure Postgres.PGFloat,
+      pure Postgres.PGDouble,
+      pure Postgres.PGNumeric,
+      pure Postgres.PGMoney,
+      pure Postgres.PGBoolean,
+      pure Postgres.PGChar,
+      pure Postgres.PGVarchar,
+      pure Postgres.PGText,
+      pure Postgres.PGCitext,
+      pure Postgres.PGDate,
+      pure Postgres.PGTimeStamp,
+      pure Postgres.PGTimeStampTZ,
+      pure Postgres.PGTimeTZ,
+      pure Postgres.PGJSON,
+      pure Postgres.PGJSONB,
+      pure Postgres.PGGeometry,
+      pure Postgres.PGGeography,
+      pure Postgres.PGRaster,
+      pure Postgres.PGUUID,
+      pure Postgres.PGLtree,
+      pure Postgres.PGLquery,
+      pure Postgres.PGLtxtquery,
+      Postgres.PGUnknown <$> genArbitraryUnicodeText defaultRange,
+      Postgres.PGCompositeScalar <$> genArbitraryUnicodeText defaultRange
     ]
 
 genFunctionName :: MonadGen m => m (FunctionName ('Postgres 'Vanilla))
 genFunctionName =
-  PG.QualifiedObject <$> genSchemaName defaultRange <*> genPgFunctionName defaultRange
+  Postgres.QualifiedObject <$> genSchemaName defaultRange <*> genPgFunctionName defaultRange
 
 genXComputedField :: MonadGen m => m (XComputedField ('Postgres 'Vanilla))
 genXComputedField = pure ()
@@ -177,12 +177,12 @@ genIdentifier = do
   -- Construct the arbitrarily generated identifier
   pure $ T.cons begin rest
 
-genSchemaName :: MonadGen m => Range Int -> m PG.SchemaName
+genSchemaName :: MonadGen m => Range Int -> m Postgres.SchemaName
 genSchemaName textRange =
-  Gen.choice [pure PG.publicSchema, PG.SchemaName <$> genArbitraryUnicodeText textRange]
+  Gen.choice [pure Postgres.publicSchema, Postgres.SchemaName <$> genArbitraryUnicodeText textRange]
 
-genPgFunctionName :: MonadGen m => Range Int -> m PG.FunctionName
-genPgFunctionName textRange = PG.FunctionName <$> genArbitraryUnicodeText textRange
+genPgFunctionName :: MonadGen m => Range Int -> m Postgres.FunctionName
+genPgFunctionName textRange = Postgres.FunctionName <$> genArbitraryUnicodeText textRange
 
 genDWithinGeomOp :: MonadGen m => m a -> m (DWithinGeomOp a)
 genDWithinGeomOp genA = DWithinGeomOp <$> genA <*> genA

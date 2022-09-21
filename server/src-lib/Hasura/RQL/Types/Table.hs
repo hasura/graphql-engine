@@ -104,7 +104,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Semigroup (Any (..), Max (..))
 import Data.Text qualified as T
 import Data.Text.Extended
-import Hasura.Backends.Postgres.SQL.Types qualified as PG (PGDescription)
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres (PGDescription)
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
 import Hasura.Name qualified as Name
@@ -864,7 +864,7 @@ instance Backend b => FromJSON (ForeignKey b) where
 -- information is accumulated. See also 'TableCoreInfo'.
 data TableCoreInfoG (b :: BackendType) field primaryKeyColumn = TableCoreInfo
   { _tciName :: TableName b,
-    _tciDescription :: Maybe PG.PGDescription, -- TODO make into type family?
+    _tciDescription :: Maybe Postgres.PGDescription, -- TODO make into type family?
     _tciFieldInfoMap :: FieldInfoMap field,
     _tciPrimaryKey :: Maybe (PrimaryKey b primaryKeyColumn),
     -- | Does /not/ include the primary key; use 'tciUniqueOrPrimaryKeyConstraints' if you need both.
@@ -992,7 +992,7 @@ data DBTableMetadata (b :: BackendType) = DBTableMetadata
     _ptmiUniqueConstraints :: HashSet (UniqueConstraint b),
     _ptmiForeignKeys :: HashSet (ForeignKeyMetadata b),
     _ptmiViewInfo :: Maybe ViewInfo,
-    _ptmiDescription :: Maybe PG.PGDescription,
+    _ptmiDescription :: Maybe Postgres.PGDescription,
     _ptmiExtraTableMetadata :: ExtraTableMetadata b
   }
   deriving (Generic)

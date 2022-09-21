@@ -18,9 +18,9 @@ import Data.Sequence qualified as Seq
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Data.Traversable (mapAccumL)
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
-import Hasura.Backends.Postgres.Types.ComputedField qualified as PG
-import Hasura.Backends.Postgres.Types.Function qualified as PG
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
+import Hasura.Backends.Postgres.Types.ComputedField qualified as Postgres
+import Hasura.Backends.Postgres.Types.Function qualified as Postgres
 import Hasura.Base.Error
 import Hasura.GraphQL.Schema.Backend
 import Hasura.GraphQL.Schema.BoolExp
@@ -212,7 +212,7 @@ computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMay
   fieldName <- lift $ textToName $ computedFieldNameToText _cfiName
   functionArgsParser <- lift $ computedFieldFunctionArgs _cfiFunction
   case _cfiReturnType of
-    PG.CFRScalar scalarReturnType -> do
+    Postgres.CFRScalar scalarReturnType -> do
       caseBoolExpMaybe <-
         hoistMaybe (Map.lookup _cfiName (spiComputedFields selectPermissions))
       let caseBoolExpUnpreparedValue =
@@ -236,7 +236,7 @@ computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMay
                 )
       dummyParser <- lift $ columnParser @('Postgres pgKind) (ColumnScalar scalarReturnType) (G.Nullability True)
       pure $ P.selection fieldName fieldDescription fieldArgsParser dummyParser
-    PG.CFRSetofTable tableName -> do
+    Postgres.CFRSetofTable tableName -> do
       otherTableInfo <- lift $ askTableInfo sourceInfo tableName
       remotePerms <- hoistMaybe $ tableSelectPermissions roleName otherTableInfo
       selectionSetParser <- MaybeT (fmap (P.multiple . P.nonNullableParser) <$> tableSelectionSet sourceInfo otherTableInfo)
@@ -267,13 +267,13 @@ computedFieldPG sourceInfo ComputedFieldInfo {..} parentTable tableInfo = runMay
         <&> fmap addTableAndSessionArgument
       where
         addTableAndSessionArgument args@(FunctionArgsExp positional named) =
-          let withTable = case PG._cffaTableArgument _cffComputedFieldImplicitArgs of
-                PG.FTAFirst -> FunctionArgsExp (PG.AETableRow : positional) named
-                PG.FTANamed argName index -> IR.insertFunctionArg argName index PG.AETableRow args
-              sessionArgVal = PG.AESession IR.UVSession
-           in case PG._cffaSessionArgument _cffComputedFieldImplicitArgs of
+          let withTable = case Postgres._cffaTableArgument _cffComputedFieldImplicitArgs of
+                Postgres.FTAFirst -> FunctionArgsExp (Postgres.AETableRow : positional) named
+                Postgres.FTANamed argName index -> IR.insertFunctionArg argName index Postgres.AETableRow args
+              sessionArgVal = Postgres.AESession IR.UVSession
+           in case Postgres._cffaSessionArgument _cffComputedFieldImplicitArgs of
                 Nothing -> withTable
-                Just (PG.FunctionSessionArgument argName index) ->
+                Just (Postgres.FunctionSessionArgument argName index) ->
                   IR.insertFunctionArg argName index sessionArgVal withTable
 
 -- | The custom SQL functions' input "args" field parser
@@ -381,33 +381,33 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
 
         pure $ P.field fieldName (Just fieldDesc) objectParser
   where
-    sessionPlaceholder :: PG.ArgumentExp (IR.UnpreparedValue b)
-    sessionPlaceholder = PG.AEInput IR.UVSession
+    sessionPlaceholder :: Postgres.ArgumentExp (IR.UnpreparedValue b)
+    sessionPlaceholder = Postgres.AEInput IR.UVSession
 
     splitArguments ::
       Int ->
       FunctionInputArgument ('Postgres pgKind) ->
       ( Int,
         ( [Text], -- graphql names, in order
-          [(Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))], -- session argument
-          [SchemaT r m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))], -- optional argument
-          [SchemaT r m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))] -- mandatory argument
+          [(Text, Postgres.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))], -- session argument
+          [SchemaT r m (InputFieldsParser n (Maybe (Text, Postgres.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))], -- optional argument
+          [SchemaT r m (InputFieldsParser n (Maybe (Text, Postgres.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))] -- mandatory argument
         )
       )
     splitArguments positionalIndex (IASessionVariables name) =
       let argName = getFuncArgNameTxt name
        in (positionalIndex, ([argName], [(argName, sessionPlaceholder)], [], []))
     splitArguments positionalIndex (IAUserProvided arg) =
-      let (argName, newIndex) = case PG.faName arg of
+      let (argName, newIndex) = case Postgres.faName arg of
             Nothing -> ("arg_" <> tshow positionalIndex, positionalIndex + 1)
             Just name -> (getFuncArgNameTxt name, positionalIndex)
-       in if PG.unHasDefault $ PG.faHasDefault arg
+       in if Postgres.unHasDefault $ Postgres.faHasDefault arg
             then (newIndex, ([argName], [], [parseArgument arg argName], []))
             else (newIndex, ([argName], [], [], [parseArgument arg argName]))
 
-    parseArgument :: FunctionArgument ('Postgres pgKind) -> Text -> SchemaT r m (InputFieldsParser n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))
+    parseArgument :: FunctionArgument ('Postgres pgKind) -> Text -> SchemaT r m (InputFieldsParser n (Maybe (Text, Postgres.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind)))))
     parseArgument arg name = do
-      typedParser <- columnParser (ColumnScalar $ PG.mkFunctionArgScalarType $ PG.faType arg) (G.Nullability True)
+      typedParser <- columnParser (ColumnScalar $ Postgres.mkFunctionArgScalarType $ Postgres.faType arg) (G.Nullability True)
       fieldName <- textToName name
 
       -- Since all postgres function arguments are nullable, we define the
@@ -422,20 +422,20 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
       -- explicit value of `null` is used, as long as we don't set a default
       -- value, not even `null`.
       let argParser = P.fieldOptional fieldName Nothing typedParser
-      pure $ argParser `mapField` ((name,) . PG.AEInput . IR.mkParameter)
+      pure $ argParser `mapField` ((name,) . Postgres.AEInput . IR.mkParameter)
 
     namedArgument ::
-      HashMap Text (PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind))) ->
+      HashMap Text (Postgres.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind))) ->
       (Text, FunctionInputArgument ('Postgres pgKind)) ->
-      n (Maybe (Text, PG.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind))))
+      n (Maybe (Text, Postgres.ArgumentExp (IR.UnpreparedValue ('Postgres pgKind))))
     namedArgument dictionary (name, inputArgument) = case inputArgument of
       IASessionVariables _ -> pure $ Just (name, sessionPlaceholder)
       IAUserProvided arg -> case Map.lookup name dictionary of
-        Just parsedValue -> case PG.faName arg of
+        Just parsedValue -> case Postgres.faName arg of
           Just _ -> pure $ Just (name, parsedValue)
           Nothing -> P.parseErrorWith P.NotSupported "Only last set of positional arguments can be omitted"
         Nothing ->
-          whenMaybe (not $ PG.unHasDefault $ PG.faHasDefault arg) $
+          whenMaybe (not $ Postgres.unHasDefault $ Postgres.faHasDefault arg) $
             P.parseErrorWith P.NotSupported "Non default arguments cannot be omitted"
 
 buildFunctionQueryFieldsPG ::

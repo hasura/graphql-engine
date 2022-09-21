@@ -129,7 +129,7 @@ import Data.Int (Int64)
 import Data.Text.Extended
 import Database.MSSQL.Transaction qualified as MSSQL
 import Database.PG.Query qualified as PG
-import Hasura.Backends.Postgres.Connection qualified as PG
+import Hasura.Backends.Postgres.Connection qualified as Postgres
 import Hasura.Base.Error
 import Hasura.GraphQL.Context (GQLContext, RoleContext)
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -574,7 +574,7 @@ instance (SourceM m) => SourceM (TraceT m) where
 
 newtype SourceT m a = SourceT {runSourceT :: SourceName -> m a}
   deriving
-    (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, PG.MonadTx, TableCoreInfoRM b, CacheRM)
+    (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx, TableCoreInfoRM b, CacheRM)
     via (ReaderT SourceName m)
   deriving (MonadTrans) via (ReaderT SourceName)
 
@@ -600,7 +600,7 @@ instance (TableCoreInfoRM b m) => TableCoreInfoRM b (TraceT m) where
 
 newtype TableCoreCacheRT b m a = TableCoreCacheRT {runTableCoreCacheRT :: (SourceName, Dependency (TableCoreCache b)) -> m a}
   deriving
-    (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, PG.MonadTx)
+    (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx)
     via (ReaderT (SourceName, Dependency (TableCoreCache b)) m)
   deriving (MonadTrans) via (ReaderT (SourceName, Dependency (TableCoreCache b)))
 
@@ -634,7 +634,7 @@ instance (TableInfoRM b m) => TableInfoRM b (TraceT m) where
 
 newtype TableCacheRT b m a = TableCacheRT {runTableCacheRT :: (SourceName, TableCache b) -> m a}
   deriving
-    (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, PG.MonadTx)
+    (Functor, Applicative, Monad, MonadIO, MonadError e, MonadState s, MonadWriter w, Postgres.MonadTx)
     via (ReaderT (SourceName, TableCache b) m)
   deriving (MonadTrans) via (ReaderT (SourceName, TableCache b))
 

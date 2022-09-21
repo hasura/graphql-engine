@@ -38,7 +38,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text qualified as T
 import Data.Text.Casing (GQLNameIdentifier)
 import Data.Text.Extended
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.GraphQL.Parser.Class
@@ -410,7 +410,7 @@ defaultTableSelectionSet sourceInfo tableInfo = runMaybeT do
           if isApolloFedV1enabled (_tciApolloFederationConfig tableCoreInfo) && (not . null) pkFields
             then [(G.Directive Name._key . Map.singleton Name._fields . G.VString) pkFieldDirective]
             else mempty
-        description = G.Description . PG.getPGDescription <$> _tciDescription tableCoreInfo
+        description = G.Description . Postgres.getPGDescription <$> _tciDescription tableCoreInfo
     fieldParsers <-
       concat
         <$> for

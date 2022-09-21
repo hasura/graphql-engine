@@ -14,16 +14,16 @@ import Data.Aeson (FromJSON)
 import Data.Aeson qualified as J
 import Data.Kind (Type)
 import Data.Typeable
-import Hasura.Backends.Postgres.Connection qualified as PG
-import Hasura.Backends.Postgres.SQL.DML qualified as PG
-import Hasura.Backends.Postgres.SQL.Types qualified as PG
-import Hasura.Backends.Postgres.SQL.Value qualified as PG
-import Hasura.Backends.Postgres.Types.BoolExp qualified as PG
+import Hasura.Backends.Postgres.Connection qualified as Postgres
+import Hasura.Backends.Postgres.SQL.DML qualified as Postgres
+import Hasura.Backends.Postgres.SQL.Types qualified as Postgres
+import Hasura.Backends.Postgres.SQL.Value qualified as Postgres
+import Hasura.Backends.Postgres.Types.BoolExp qualified as Postgres
 import Hasura.Backends.Postgres.Types.CitusExtraTableMetadata qualified as Citus
-import Hasura.Backends.Postgres.Types.ComputedField qualified as PG
-import Hasura.Backends.Postgres.Types.Function qualified as PG
-import Hasura.Backends.Postgres.Types.Insert qualified as PG (BackendInsert)
-import Hasura.Backends.Postgres.Types.Update qualified as PG
+import Hasura.Backends.Postgres.Types.ComputedField qualified as Postgres
+import Hasura.Backends.Postgres.Types.Function qualified as Postgres
+import Hasura.Backends.Postgres.Types.Insert qualified as Postgres (BackendInsert)
+import Hasura.Backends.Postgres.Types.Update qualified as Postgres
 import Hasura.Base.Error
 import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
@@ -76,34 +76,34 @@ instance
   where
   type BackendConfig ('Postgres pgKind) = ()
   type BackendInfo ('Postgres pgKind) = ()
-  type SourceConfig ('Postgres pgKind) = PG.PGSourceConfig
-  type SourceConnConfiguration ('Postgres pgKind) = PG.PostgresConnConfiguration
-  type TableName ('Postgres pgKind) = PG.QualifiedTable
-  type FunctionName ('Postgres pgKind) = PG.QualifiedFunction
-  type FunctionArgument ('Postgres pgKind) = PG.FunctionArg
-  type RawFunctionInfo ('Postgres pgKind) = PG.PGRawFunctionInfo
-  type ConstraintName ('Postgres pgKind) = PG.ConstraintName
-  type BasicOrderType ('Postgres pgKind) = PG.OrderType
-  type NullsOrderType ('Postgres pgKind) = PG.NullsOrder
-  type CountType ('Postgres pgKind) = PG.CountType
-  type Column ('Postgres pgKind) = PG.PGCol
-  type ScalarValue ('Postgres pgKind) = PG.PGScalarValue
-  type ScalarType ('Postgres pgKind) = PG.PGScalarType
-  type BooleanOperators ('Postgres pgKind) = PG.BooleanOperators
-  type SQLExpression ('Postgres pgKind) = PG.SQLExp
-  type ComputedFieldDefinition ('Postgres pgKind) = PG.ComputedFieldDefinition
-  type ScalarSelectionArguments ('Postgres pgKind) = PG.ColumnOp
+  type SourceConfig ('Postgres pgKind) = Postgres.PGSourceConfig
+  type SourceConnConfiguration ('Postgres pgKind) = Postgres.PostgresConnConfiguration
+  type TableName ('Postgres pgKind) = Postgres.QualifiedTable
+  type FunctionName ('Postgres pgKind) = Postgres.QualifiedFunction
+  type FunctionArgument ('Postgres pgKind) = Postgres.FunctionArg
+  type RawFunctionInfo ('Postgres pgKind) = Postgres.PGRawFunctionInfo
+  type ConstraintName ('Postgres pgKind) = Postgres.ConstraintName
+  type BasicOrderType ('Postgres pgKind) = Postgres.OrderType
+  type NullsOrderType ('Postgres pgKind) = Postgres.NullsOrder
+  type CountType ('Postgres pgKind) = Postgres.CountType
+  type Column ('Postgres pgKind) = Postgres.PGCol
+  type ScalarValue ('Postgres pgKind) = Postgres.PGScalarValue
+  type ScalarType ('Postgres pgKind) = Postgres.PGScalarType
+  type BooleanOperators ('Postgres pgKind) = Postgres.BooleanOperators
+  type SQLExpression ('Postgres pgKind) = Postgres.SQLExp
+  type ComputedFieldDefinition ('Postgres pgKind) = Postgres.ComputedFieldDefinition
+  type ScalarSelectionArguments ('Postgres pgKind) = Postgres.ColumnOp
 
-  type FunctionArgumentExp ('Postgres pgKind) = PG.ArgumentExp
-  type ComputedFieldImplicitArguments ('Postgres pgKind) = PG.ComputedFieldImplicitArguments
-  type ComputedFieldReturn ('Postgres pgKind) = PG.ComputedFieldReturn
+  type FunctionArgumentExp ('Postgres pgKind) = Postgres.ArgumentExp
+  type ComputedFieldImplicitArguments ('Postgres pgKind) = Postgres.ComputedFieldImplicitArguments
+  type ComputedFieldReturn ('Postgres pgKind) = Postgres.ComputedFieldReturn
 
-  type BackendUpdate ('Postgres pgKind) = PG.BackendUpdate pgKind
+  type BackendUpdate ('Postgres pgKind) = Postgres.BackendUpdate pgKind
 
   type AggregationPredicates ('Postgres pgKind) = Agg.AggregationPredicatesImplementation ('Postgres pgKind)
 
   type ExtraTableMetadata ('Postgres pgKind) = PgExtraTableMetadata pgKind
-  type BackendInsert ('Postgres pgKind) = PG.BackendInsert pgKind
+  type BackendInsert ('Postgres pgKind) = Postgres.BackendInsert pgKind
 
   type XComputedField ('Postgres pgKind) = XEnable
   type XRelay ('Postgres pgKind) = XEnable
@@ -119,22 +119,22 @@ instance
           _hciTestCodec = placeholderCodecViaJSON
         }
 
-  isComparableType = PG.isComparableType
-  isNumType = PG.isNumType
-  textToScalarValue = PG.textToScalarValue
-  parseScalarValue ty val = runAesonParser (PG.parsePGValue ty) val
-  scalarValueToJSON = PG.pgScalarValueToJson
-  functionToTable = fmap (PG.TableName . PG.getFunctionTxt)
-  tableToFunction = fmap (PG.FunctionName . PG.getTableTxt)
-  computedFieldFunction = PG._cfdFunction
+  isComparableType = Postgres.isComparableType
+  isNumType = Postgres.isNumType
+  textToScalarValue = Postgres.textToScalarValue
+  parseScalarValue ty val = runAesonParser (Postgres.parsePGValue ty) val
+  scalarValueToJSON = Postgres.pgScalarValueToJson
+  functionToTable = fmap (Postgres.TableName . Postgres.getFunctionTxt)
+  tableToFunction = fmap (Postgres.FunctionName . Postgres.getTableTxt)
+  computedFieldFunction = Postgres._cfdFunction
   computedFieldReturnType = \case
-    PG.CFRScalar scalarType -> ReturnsScalar scalarType
-    PG.CFRSetofTable table -> ReturnsTable table
-  fromComputedFieldImplicitArguments = PG.fromComputedFieldImplicitArguments
+    Postgres.CFRScalar scalarType -> ReturnsScalar scalarType
+    Postgres.CFRSetofTable table -> ReturnsTable table
+  fromComputedFieldImplicitArguments = Postgres.fromComputedFieldImplicitArguments
 
-  tableGraphQLName = PG.qualifiedObjectToName
-  functionGraphQLName = PG.qualifiedObjectToName
+  tableGraphQLName = Postgres.qualifiedObjectToName
+  functionGraphQLName = Postgres.qualifiedObjectToName
 
-  snakeCaseTableName = PG.snakeCaseQualifiedObject
-  getTableIdentifier = PG.getIdentifierQualifiedObject
-  namingConventionSupport = PG.namingConventionSupport
+  snakeCaseTableName = Postgres.snakeCaseQualifiedObject
+  getTableIdentifier = Postgres.getIdentifierQualifiedObject
+  namingConventionSupport = Postgres.namingConventionSupport
