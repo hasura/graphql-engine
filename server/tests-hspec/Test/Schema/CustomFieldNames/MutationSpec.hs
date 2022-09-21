@@ -49,8 +49,7 @@ spec = do
               Fixture.customOptions =
                 Just $
                   Fixture.defaultOptions
-                    { Fixture.stringifyNumbers = True,
-                      Fixture.skipTests = Just "Cockroach disabled pending prepared args fix https://github.com/cockroachdb/cockroach/issues/86375"
+                    { Fixture.stringifyNumbers = True
                     }
             },
           (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
