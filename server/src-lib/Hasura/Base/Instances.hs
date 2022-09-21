@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 -- | This module defines all missing instances of third party libraries.
@@ -6,13 +7,16 @@ module Hasura.Base.Instances () where
 
 import Control.Monad.Fix
 import Data.Aeson qualified as J
+import Data.Fixed (Fixed (..))
 import Data.Functor.Product (Product (Pair))
 import "some" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
 import Data.OpenApi.Declare as D
 import Data.Text qualified as T
+import Data.Time (NominalDiffTime)
 import Data.URL.Template qualified as UT
 import Database.PG.Query qualified as PG
 import Hasura.Prelude
+import Language.Haskell.TH.Lift qualified as TH (deriveLift)
 import Language.Haskell.TH.Syntax qualified as TH
 import System.Cron.Parser qualified as C
 import System.Cron.Types qualified as C
@@ -70,11 +74,21 @@ deriving instance TH.Lift TDFA.Pattern
 
 deriving instance TH.Lift TDFA.PatternSet
 
+deriving instance TH.Lift (Fixed a)
+
 deriving instance TH.Lift TDFA.PatternSetCharacterClass
 
 deriving instance TH.Lift TDFA.PatternSetCollatingElement
 
 deriving instance TH.Lift TDFA.PatternSetEquivalenceClass
+
+$(TH.deriveLift ''DiffTime)
+
+$(TH.deriveLift ''NominalDiffTime)
+
+deriving instance TH.Lift Milliseconds
+
+deriving instance TH.Lift Seconds
 
 --------------------------------------------------------------------------------
 -- GADT

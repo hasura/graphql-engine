@@ -186,6 +186,7 @@ common lib-depends
                      , pretty-simple
                      , process
                      , profunctors
+                     , refined
                      , retry
                      , safe-exceptions
                      , scientific
@@ -683,7 +684,6 @@ library
                      , Hasura.RQL.Types.Metadata.Object
                      , Hasura.RQL.Types.Metadata.Serialization
                      , Hasura.RQL.Types.Network
-                     , Hasura.RQL.Types.Numeric
                      , Hasura.RQL.Types.Permission
                      , Hasura.RQL.Types.QueryCollection
                      , Hasura.RQL.Types.QueryTags
@@ -900,6 +900,7 @@ executable graphql-engine
                    , hasura-prelude
                    , kan-extensions
                    , pg-client
+                   , refined
                    , text
                    , text-conversions
                    , time
@@ -1010,7 +1011,6 @@ test-suite graphql-engine-tests
     Control.Monad.MemoizeSpec
     Control.Monad.TimeLimit
     Data.HashMap.Strict.ExtendedSpec
-    Data.NumericSpec
     Data.Parser.CacheControlSpec
     Data.Parser.JSONPathSpec
     Data.Parser.RemoteRelationshipSpec

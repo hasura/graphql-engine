@@ -36,7 +36,6 @@ import Hasura.GraphQL.Schema.NamingCase qualified as NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Config qualified as Config
@@ -45,6 +44,7 @@ import Hasura.Server.Types qualified as Server.Types
 import Hasura.Server.Utils qualified as Utils
 import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
+import Refined (NonNegative, Positive, Refined, refineFail, unrefine)
 
 --------------------------------------------------------------------------------
 
@@ -269,8 +269,8 @@ instance FromEnv Milliseconds where
 
 instance FromEnv Config.OptionalInterval where
   fromEnv x = do
-    i <- fromEnv @(Numeric.NonNegative Milliseconds) x
-    if Numeric.getNonNegative i == 0
+    i <- fromEnv @(Refined NonNegative Milliseconds) x
+    if unrefine i == 0
       then pure $ Config.Skip
       else pure $ Config.Interval i
 
@@ -280,12 +280,12 @@ instance FromEnv Seconds where
 instance FromEnv Config.WSConnectionInitTimeout where
   fromEnv s = do
     seconds <- fromIntegral @_ @Seconds <$> fromEnv @Int s
-    nonNegative <- maybeToEither "WebSocket Connection Timeout must not be negative" $ Numeric.mkNonNegative seconds
+    nonNegative <- maybeToEither "WebSocket Connection Timeout must not be negative" $ refineFail seconds
     pure $ Config.WSConnectionInitTimeout nonNegative
 
 instance FromEnv Config.KeepAliveDelay where
   fromEnv =
-    fmap Config.KeepAliveDelay . fromEnv @(Numeric.NonNegative Seconds)
+    fmap Config.KeepAliveDelay . fromEnv @(Refined NonNegative Seconds)
 
 instance FromEnv Auth.JWTConfig where
   fromEnv = readJson
@@ -307,21 +307,17 @@ instance FromEnv Logging.LogLevel where
 instance FromEnv Template.URLTemplate where
   fromEnv = Template.parseURLTemplate . Text.pack
 
-instance (Num a, Ord a, FromEnv a) => FromEnv (Numeric.NonNegative a) where
+instance (Num a, Ord a, FromEnv a) => FromEnv (Refined NonNegative a) where
   fromEnv s =
-    fmap (maybeToEither "Only expecting a non negative numeric") Numeric.mkNonNegative =<< fromEnv s
+    fmap (maybeToEither "Only expecting a non negative numeric") refineFail =<< fromEnv s
 
-instance FromEnv Numeric.NonNegativeInt where
+instance FromEnv (Refined NonNegative DiffTime) where
   fromEnv s =
-    maybeToEither "Only expecting a non negative integer" (Numeric.mkNonNegativeInt =<< readMaybe s)
+    fmap (maybeToEither "Only expecting a non negative difftime") refineFail =<< (fromEnv @DiffTime s)
 
-instance FromEnv Numeric.NonNegativeDiffTime where
+instance FromEnv (Refined Positive Int) where
   fromEnv s =
-    fmap (maybeToEither "Only expecting a non negative difftime") Numeric.mkNonNegativeDiffTime =<< (fromEnv @DiffTime s)
-
-instance FromEnv Numeric.PositiveInt where
-  fromEnv s =
-    maybeToEither "Only expecting a positive integer" (Numeric.mkPositiveInt =<< readMaybe s)
+    maybeToEither "Only expecting a positive integer" (refineFail =<< readMaybe s)
 
 instance FromEnv Config.Port where
   fromEnv s =

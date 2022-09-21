@@ -27,8 +27,6 @@ import Hasura.Metadata.Class
 import Hasura.Prelude
 import Hasura.RQL.DDL.Schema (runCacheRWT)
 import Hasura.RQL.DDL.Schema.Catalog
-import Hasura.RQL.Types.Numeric (NonNegative)
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.Run
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
@@ -44,6 +42,7 @@ import Hasura.Server.SchemaCacheRef
 import Hasura.Server.Types
 import Hasura.Session
 import Network.HTTP.Client qualified as HTTP
+import Refined (NonNegative, Refined, unrefine)
 
 data ThreadType
   = TTListener
@@ -151,14 +150,14 @@ startSchemaSyncListenerThread ::
   Logger Hasura ->
   PG.PGPool ->
   InstanceId ->
-  NonNegative Milliseconds ->
+  Refined NonNegative Milliseconds ->
   STM.TMVar MetadataResourceVersion ->
   ManagedT m (Immortal.Thread)
 startSchemaSyncListenerThread logger pool instanceId interval metaVersionRef = do
   -- Start listener thread
   listenerThread <-
     C.forkManagedT "SchemeUpdate.listener" logger $
-      listener logger pool metaVersionRef (Numeric.getNonNegative interval)
+      listener logger pool metaVersionRef (unrefine interval)
   logThreadStarted logger instanceId TTListener listenerThread
   pure listenerThread
 

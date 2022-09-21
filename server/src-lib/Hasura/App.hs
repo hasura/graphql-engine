@@ -110,7 +110,6 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
@@ -148,6 +147,7 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 import Network.Wai (Application)
 import Network.Wai.Handler.Warp qualified as Warp
 import Options.Applicative
+import Refined (unrefine)
 import System.Environment (getEnvironment)
 import System.Log.FastLogger qualified as FL
 import System.Metrics qualified as EKG
@@ -915,11 +915,11 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
             waitForProcessingAction l actionType processingEventsCountAction' shutdownAction (maxTimeout - (Seconds 5))
 
     startEventTriggerPollerThread logger lockedEventsCtx cacheRef = do
-      let maxEventThreads = Numeric.getPositiveInt soEventsHttpPoolSize
-          fetchInterval = milliseconds $ Numeric.getNonNegative soEventsFetchInterval
+      let maxEventThreads = unrefine soEventsHttpPoolSize
+          fetchInterval = milliseconds $ unrefine soEventsFetchInterval
           allSources = HM.elems $ scSources $ lastBuiltSchemaCache _scSchemaCache
 
-      unless (Numeric.getNonNegativeInt soEventsFetchBatchSize == 0 || fetchInterval == 0) $ do
+      unless (unrefine soEventsFetchBatchSize == 0 || fetchInterval == 0) $ do
         -- Don't start the events poller thread when fetchBatchSize or fetchInterval is 0
         -- prepare event triggers data
         eventEngineCtx <- liftIO $ atomically $ initEventEngineCtx maxEventThreads fetchInterval soEventsFetchBatchSize
@@ -929,7 +929,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
                 "event_triggers"
                 (length <$> readTVarIO (leEvents lockedEventsCtx))
                 (EventTriggerShutdownAction (shutdownEventTriggerEvents allSources logger lockedEventsCtx))
-                (Numeric.getNonNegative soGracefulShutdownTimeout)
+                (unrefine soGracefulShutdownTimeout)
         unLogger logger $ mkGenericStrLog LevelInfo "event_triggers" "starting workers"
         void $
           C.forkManagedTWithGracefulShutdown
@@ -950,7 +950,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
       -- start a background thread to handle async actions
       case soAsyncActionsFetchInterval of
         Skip -> pure () -- Don't start the poller thread
-        Interval (Numeric.getNonNegative -> sleepTime) -> do
+        Interval (unrefine -> sleepTime) -> do
           let label = "asyncActionsProcessor"
               asyncActionGracefulShutdownAction =
                 ( liftWithStateless \lowerIO ->
@@ -959,7 +959,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
                         "async_actions"
                         (length <$> readTVarIO (leActionEvents lockedEventsCtx))
                         (MetadataDBShutdownAction (hoist lowerIO (shutdownAsyncActions lockedEventsCtx)))
-                        (Numeric.getNonNegative soGracefulShutdownTimeout)
+                        (unrefine soGracefulShutdownTimeout)
                     )
                 )
 
@@ -995,7 +995,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
                     "scheduled_events"
                     (getProcessingScheduledEventsCount lockedEventsCtx)
                     (MetadataDBShutdownAction (hoist lowerIO unlockAllLockedScheduledEvents))
-                    (Numeric.getNonNegative soGracefulShutdownTimeout)
+                    (unrefine soGracefulShutdownTimeout)
                 )
             )
 

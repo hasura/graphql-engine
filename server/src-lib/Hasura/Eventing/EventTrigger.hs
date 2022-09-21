@@ -74,8 +74,6 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing.Backend
-import Hasura.RQL.Types.Numeric (NonNegativeInt)
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.AnyBackend qualified as AB
@@ -85,6 +83,7 @@ import Hasura.Server.Prometheus (EventTriggerMetrics (..))
 import Hasura.Server.Types
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
+import Refined (NonNegative, Positive, Refined, refineTH, unrefine)
 import System.Metrics.Distribution qualified as EKG.Distribution
 import System.Metrics.Gauge qualified as EKG.Gauge
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
@@ -128,7 +127,7 @@ following way now:
 data EventEngineCtx = EventEngineCtx
   { _eeCtxEventThreadsCapacity :: TVar Int,
     _eeCtxFetchInterval :: DiffTime,
-    _eeCtxFetchSize :: NonNegativeInt
+    _eeCtxFetchSize :: Refined NonNegative Int
   }
 
 data DeliveryInfo = DeliveryInfo
@@ -168,13 +167,13 @@ deriving instance Backend b => Eq (EventPayload b)
 instance Backend b => J.ToJSON (EventPayload b) where
   toJSON = J.genericToJSON hasuraJSON {omitNothingFields = True}
 
-defaultMaxEventThreads :: Numeric.PositiveInt
-defaultMaxEventThreads = Numeric.unsafePositiveInt 100
+defaultMaxEventThreads :: Refined Positive Int
+defaultMaxEventThreads = $$(refineTH 100)
 
 defaultFetchInterval :: DiffTime
 defaultFetchInterval = seconds 1
 
-initEventEngineCtx :: Int -> DiffTime -> NonNegativeInt -> STM EventEngineCtx
+initEventEngineCtx :: Int -> DiffTime -> Refined NonNegative Int -> STM EventEngineCtx
 initEventEngineCtx maxT _eeCtxFetchInterval _eeCtxFetchSize = do
   _eeCtxEventThreadsCapacity <- newTVar maxT
   return $ EventEngineCtx {..}
@@ -230,7 +229,7 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
   events0 <- popEventsBatch
   return $ Forever (events0, 0, False) go
   where
-    fetchBatchSize = Numeric.getNonNegativeInt _eeCtxFetchSize
+    fetchBatchSize = unrefine _eeCtxFetchSize
 
     popEventsBatch :: m [BackendEventWithSource]
     popEventsBatch = do

@@ -65,7 +65,6 @@ import Hasura.GraphQL.Transport.WebSocket.Types
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.SchemaCache (scApiLimits)
@@ -96,6 +95,7 @@ import ListT qualified
 import Network.HTTP.Client qualified as HTTP
 import Network.HTTP.Types qualified as HTTP
 import Network.WebSockets qualified as WS
+import Refined (unrefine)
 import StmContainers.Map qualified as STMMap
 import System.Metrics.Prometheus.Counter qualified as Prometheus.Counter
 import System.Metrics.Prometheus.Histogram qualified as Prometheus.Histogram
@@ -299,7 +299,7 @@ onConn wsId requestHead ipAddress onConnHActions = do
       liftIO $
         forever $ do
           kaAction wsConn
-          sleep $ seconds (Numeric.getNonNegative $ unKeepAliveDelay keepAliveDelay)
+          sleep $ seconds (unrefine $ unKeepAliveDelay keepAliveDelay)
 
     tokenExpiryHandler wsConn = do
       expTime <- liftIO $
