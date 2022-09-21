@@ -43,7 +43,7 @@
 </span><span id="line-43"></span><span class="hs-comment">-- count, so depending on an 'InvalidationKey' provides a mechanism to force portions of the build</span><span>
 </span><span id="line-44"></span><span class="hs-comment">-- process to be reexecuted by calling 'invalidate' before running the build.</span><span>
 </span><span id="line-45"></span><span class="hs-keyword">newtype</span><span> </span><span id="InvalidationKey"><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InvalidationKey"><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689581005"><span id="local-6989586621689581007"><span id="local-6989586621689581009"><span class="annot"><span class="annottext">Int -&gt; InvalidationKey -&gt; ShowS
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689576014"><span id="local-6989586621689576016"><span id="local-6989586621689576018"><span class="annot"><span class="annottext">Int -&gt; InvalidationKey -&gt; ShowS
 [InvalidationKey] -&gt; ShowS
 InvalidationKey -&gt; String
 (Int -&gt; InvalidationKey -&gt; ShowS)
@@ -58,7 +58,7 @@ show :: InvalidationKey -&gt; String
 $cshow :: InvalidationKey -&gt; String
 showsPrec :: Int -&gt; InvalidationKey -&gt; ShowS
 $cshowsPrec :: Int -&gt; InvalidationKey -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689581000"><span id="local-6989586621689581002"><span class="annot"><span class="annottext">InvalidationKey -&gt; InvalidationKey -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689576009"><span id="local-6989586621689576011"><span class="annot"><span class="annottext">InvalidationKey -&gt; InvalidationKey -&gt; Bool
 (InvalidationKey -&gt; InvalidationKey -&gt; Bool)
 -&gt; (InvalidationKey -&gt; InvalidationKey -&gt; Bool)
 -&gt; Eq InvalidationKey
@@ -67,7 +67,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
 == :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
 $c== :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689580984"><span id="local-6989586621689580986"><span id="local-6989586621689580988"><span id="local-6989586621689580990"><span id="local-6989586621689580992"><span id="local-6989586621689580994"><span id="local-6989586621689580996"><span class="annot"><span class="annottext">Eq InvalidationKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689575993"><span id="local-6989586621689575995"><span id="local-6989586621689575997"><span id="local-6989586621689575999"><span id="local-6989586621689576001"><span id="local-6989586621689576003"><span id="local-6989586621689576005"><span class="annot"><span class="annottext">Eq InvalidationKey
 Eq InvalidationKey
 -&gt; (InvalidationKey -&gt; InvalidationKey -&gt; Ordering)
 -&gt; (InvalidationKey -&gt; InvalidationKey -&gt; Bool)
@@ -105,7 +105,7 @@ $c&lt; :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
 compare :: InvalidationKey -&gt; InvalidationKey -&gt; Ordering
 $ccompare :: InvalidationKey -&gt; InvalidationKey -&gt; Ordering
 $cp1Ord :: Eq InvalidationKey
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689580980"><span class="annot"><span class="annottext">Eq InvalidationKey
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689575989"><span class="annot"><span class="annottext">Eq InvalidationKey
 Eq InvalidationKey
 -&gt; (Accesses -&gt; InvalidationKey -&gt; InvalidationKey -&gt; Bool)
 -&gt; Cacheable InvalidationKey
@@ -124,10 +124,10 @@ $cp1Cacheable :: Eq InvalidationKey
 </span><span id="line-50"></span><span>
 </span><span id="line-51"></span><span class="annot"><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-type">invalidate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span>
 </span><span id="line-52"></span><span id="invalidate"><span class="annot"><span class="annottext">invalidate :: InvalidationKey -&gt; InvalidationKey
-</span><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-var hs-var">invalidate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span> </span><span id="local-6989586621689580978"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689580978"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; InvalidationKey
+</span><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-var hs-var">invalidate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span> </span><span id="local-6989586621689575987"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689575987"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; InvalidationKey
 </span><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689580978"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621689575987"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
