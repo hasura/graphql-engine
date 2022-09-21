@@ -15,12 +15,12 @@ import type { SubscriptionCapabilities } from './SubscriptionCapabilities';
 export type Capabilities = {
   comparisons?: ComparisonCapabilities;
   explain?: ExplainCapabilities;
-  graphqlSchema?: GraphQLTypeDefinitions;
+  graphql_schema?: GraphQLTypeDefinitions;
   metrics?: MetricsCapabilities;
   mutations?: MutationCapabilities;
   queries?: QueryCapabilities;
   relationships?: RelationshipCapabilities;
-  scalarTypes?: ScalarTypesCapabilities;
+  scalar_types?: ScalarTypesCapabilities;
   subscriptions?: SubscriptionCapabilities;
 };
 

@@ -2,7 +2,7 @@ module Test.QuerySpec.BasicSpec (spec) where
 
 import Control.Arrow ((>>>))
 import Control.Lens ((%~), (&), (?~))
-import Data.Aeson.KeyMap qualified as KeyMap
+import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
@@ -23,32 +23,31 @@ spec api sourceName config = describe "Basic Queries" $ do
       _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
     it "can query for a list of albums with a subset of columns" $ do
-      let fields = KeyMap.fromList [("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
+      let fields = Data.mkFieldsMap [("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
       let query = albumsQueryRequest & qrQuery . qFields ?~ fields
       receivedAlbums <- Data.sortResponseRowsBy "Title" <$> (api // _query) sourceName config query
 
       let filterToRequiredProperties =
-            KeyMap.filterWithKey (\propName _value -> propName == "ArtistId" || propName == "Title")
+            HashMap.filterWithKey (\(FieldName propName) _value -> propName == "ArtistId" || propName == "Title")
 
-      let expectedAlbums = Data.sortBy "Title" $ filterToRequiredProperties <$> Data.albumsRows
+      let expectedAlbums = Data.sortBy (FieldName "Title") $ filterToRequiredProperties <$> Data.albumsRows
       Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can project columns into fields with different names" $ do
-      let fields = KeyMap.fromList [("Artist_Id", Data.columnField "ArtistId"), ("Artist_Name", Data.columnField "Name")]
+      let fields = Data.mkFieldsMap [("Artist_Id", Data.columnField "ArtistId"), ("Artist_Name", Data.columnField "Name")]
       let query = artistsQueryRequest & qrQuery . qFields ?~ fields
       receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
 
       let renameProperties =
-            KeyMap.mapKeyVal
+            HashMap.mapKeys
               ( \case
-                  "ArtistId" -> "Artist_Id"
-                  "Name" -> "Artist_Name"
+                  (FieldName "ArtistId") -> (FieldName "Artist_Id")
+                  (FieldName "Name") -> (FieldName "Artist_Name")
                   other -> other
               )
-              id
 
-      let expectedArtists = Data.sortBy "ArtistId" $ renameProperties <$> Data.artistsRows
+      let expectedArtists = Data.sortBy (FieldName "ArtistId") $ renameProperties <$> Data.artistsRows
       Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
       _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
@@ -67,12 +66,12 @@ spec api sourceName config = describe "Basic Queries" $ do
 
 artistsQueryRequest :: QueryRequest
 artistsQueryRequest =
-  let fields = KeyMap.fromList [("ArtistId", Data.columnField "ArtistId"), ("Name", Data.columnField "Name")]
+  let fields = Data.mkFieldsMap [("ArtistId", Data.columnField "ArtistId"), ("Name", Data.columnField "Name")]
       query = Data.emptyQuery & qFields ?~ fields
    in QueryRequest Data.artistsTableName [] query
 
 albumsQueryRequest :: QueryRequest
 albumsQueryRequest =
-  let fields = KeyMap.fromList [("AlbumId", Data.columnField "AlbumId"), ("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
+  let fields = Data.mkFieldsMap [("AlbumId", Data.columnField "AlbumId"), ("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
       query = Data.emptyQuery & qFields ?~ fields
    in QueryRequest Data.albumsTableName [] query

@@ -31,23 +31,23 @@ mkTableName = API.TableName . (:| [])
 capabilities :: API.CapabilitiesResponse
 capabilities =
   API.CapabilitiesResponse
-    { crCapabilities =
+    { _crCapabilities =
         API.Capabilities
-          { API.cQueries = Just API.QueryCapabilities {API.qcSupportsPrimaryKeys = True},
-            API.cMutations = Nothing,
-            API.cSubscriptions = Nothing,
-            API.cScalarTypes = Nothing,
-            API.cGraphQLTypeDefinitions = Nothing,
-            API.cRelationships = Just API.RelationshipCapabilities {},
-            API.cComparisons =
+          { API._cQueries = Just API.QueryCapabilities {API._qcSupportsPrimaryKeys = True},
+            API._cMutations = Nothing,
+            API._cSubscriptions = Nothing,
+            API._cScalarTypes = Nothing,
+            API._cGraphQLTypeDefinitions = Nothing,
+            API._cRelationships = Just API.RelationshipCapabilities {},
+            API._cComparisons =
               Just
                 API.ComparisonCapabilities
                   { API._ccCrossTableComparisonCapabilities = Just API.CrossTableComparisonCapabilities {API._ctccSupportsRelations = True}
                   },
-            API.cMetrics = Just API.MetricsCapabilities {},
-            API.cExplain = Just API.ExplainCapabilities {}
+            API._cMetrics = Just API.MetricsCapabilities {},
+            API._cExplain = Just API.ExplainCapabilities {}
           },
-      crConfigSchemaResponse =
+      _crConfigSchemaResponse =
         API.ConfigSchemaResponse
           { _csrConfigSchema =
               mempty
@@ -72,369 +72,369 @@ capabilities =
 schema :: API.SchemaResponse
 schema =
   API.SchemaResponse
-    { API.srTables =
+    { API._srTables =
         [ API.TableInfo
-            { API.dtiName = mkTableName "Artist",
-              API.dtiColumns =
+            { API._tiName = mkTableName "Artist",
+              API._tiColumns =
                 [ API.ColumnInfo
-                    { API.dciName = API.ColumnName "ArtistId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "Artist primary key identifier"
+                    { API._ciName = API.ColumnName "ArtistId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "Artist primary key identifier"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Name",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The name of the artist"
+                    { API._ciName = API.ColumnName "Name",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The name of the artist"
                     }
                 ],
-              API.dtiPrimaryKey = Just [API.ColumnName "ArtistId"],
-              API.dtiDescription = Just "Collection of artists of music",
-              API.dtiForeignKeys = Nothing
+              API._tiPrimaryKey = Just [API.ColumnName "ArtistId"],
+              API._tiDescription = Just "Collection of artists of music",
+              API._tiForeignKeys = Nothing
             },
           API.TableInfo
-            { API.dtiName = mkTableName "Album",
-              API.dtiColumns =
+            { API._tiName = mkTableName "Album",
+              API._tiColumns =
                 [ API.ColumnInfo
-                    { API.dciName = API.ColumnName "AlbumId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "Album primary key identifier"
+                    { API._ciName = API.ColumnName "AlbumId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "Album primary key identifier"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Title",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The title of the album"
+                    { API._ciName = API.ColumnName "Title",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The title of the album"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "ArtistId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The ID of the artist that created the album"
+                    { API._ciName = API.ColumnName "ArtistId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The ID of the artist that created the album"
                     }
                 ],
-              API.dtiPrimaryKey = Just [API.ColumnName "AlbumId"],
-              API.dtiDescription = Just "Collection of music albums created by artists",
-              API.dtiForeignKeys =
+              API._tiPrimaryKey = Just [API.ColumnName "AlbumId"],
+              API._tiDescription = Just "Collection of music albums created by artists",
+              API._tiForeignKeys =
                 Just $
                   API.ForeignKeys $
                     HashMap.singleton (API.ConstraintName "Artist") (API.Constraint (mkTableName "Artist") (HashMap.singleton "ArtistId" "ArtistId"))
             },
           API.TableInfo
-            { API.dtiName = mkTableName "Customer",
-              API.dtiColumns =
+            { API._tiName = mkTableName "Customer",
+              API._tiColumns =
                 [ API.ColumnInfo
-                    { API.dciName = API.ColumnName "CustomerId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "Customer primary key identifier"
+                    { API._ciName = API.ColumnName "CustomerId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "Customer primary key identifier"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "FirstName",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The customer's first name"
+                    { API._ciName = API.ColumnName "FirstName",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The customer's first name"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "LastName",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The customer's last name"
+                    { API._ciName = API.ColumnName "LastName",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The customer's last name"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Company",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The customer's company name"
+                    { API._ciName = API.ColumnName "Company",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The customer's company name"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Address",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The customer's address line (street number, street)"
+                    { API._ciName = API.ColumnName "Address",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The customer's address line (street number, street)"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "City",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The customer's address city"
+                    { API._ciName = API.ColumnName "City",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The customer's address city"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "State",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The customer's address state"
+                    { API._ciName = API.ColumnName "State",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The customer's address state"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Country",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The customer's address country"
+                    { API._ciName = API.ColumnName "Country",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The customer's address country"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "PostalCode",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The customer's address postal code"
+                    { API._ciName = API.ColumnName "PostalCode",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The customer's address postal code"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Phone",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The customer's phone number"
+                    { API._ciName = API.ColumnName "Phone",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The customer's phone number"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Fax",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The customer's fax number"
+                    { API._ciName = API.ColumnName "Fax",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The customer's fax number"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Email",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The customer's email address"
+                    { API._ciName = API.ColumnName "Email",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The customer's email address"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "SupportRepId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The ID of the Employee who is this customer's support representative"
+                    { API._ciName = API.ColumnName "SupportRepId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The ID of the Employee who is this customer's support representative"
                     }
                 ],
-              API.dtiPrimaryKey = Just [API.ColumnName "CustomerId"],
-              API.dtiDescription = Just "Collection of customers who can buy tracks",
-              API.dtiForeignKeys =
+              API._tiPrimaryKey = Just [API.ColumnName "CustomerId"],
+              API._tiDescription = Just "Collection of customers who can buy tracks",
+              API._tiForeignKeys =
                 Just $
                   API.ForeignKeys $
                     HashMap.singleton (API.ConstraintName "CustomerSupportRep") (API.Constraint (mkTableName "Employee") (HashMap.singleton "SupportRepId" "EmployeeId"))
             },
           API.TableInfo
-            { API.dtiName = mkTableName "Employee",
-              API.dtiColumns =
+            { API._tiName = mkTableName "Employee",
+              API._tiColumns =
                 [ API.ColumnInfo
-                    { API.dciName = API.ColumnName "EmployeeId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "Employee primary key identifier"
+                    { API._ciName = API.ColumnName "EmployeeId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "Employee primary key identifier"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "LastName",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The employee's last name"
+                    { API._ciName = API.ColumnName "LastName",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The employee's last name"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "FirstName",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The employee's first name"
+                    { API._ciName = API.ColumnName "FirstName",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The employee's first name"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Title",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's job title"
+                    { API._ciName = API.ColumnName "Title",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's job title"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "ReportsTo",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's report"
+                    { API._ciName = API.ColumnName "ReportsTo",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's report"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "BirthDate",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's birth date"
+                    { API._ciName = API.ColumnName "BirthDate",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's birth date"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "HireDate",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's hire date"
+                    { API._ciName = API.ColumnName "HireDate",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's hire date"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Address",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's address line (street number, street)"
+                    { API._ciName = API.ColumnName "Address",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's address line (street number, street)"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "City",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's address city"
+                    { API._ciName = API.ColumnName "City",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's address city"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "State",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's address state"
+                    { API._ciName = API.ColumnName "State",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's address state"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Country",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's address country"
+                    { API._ciName = API.ColumnName "Country",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's address country"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "PostalCode",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's address postal code"
+                    { API._ciName = API.ColumnName "PostalCode",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's address postal code"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Phone",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's phone number"
+                    { API._ciName = API.ColumnName "Phone",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's phone number"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Fax",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's fax number"
+                    { API._ciName = API.ColumnName "Fax",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's fax number"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Email",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The employee's email address"
+                    { API._ciName = API.ColumnName "Email",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The employee's email address"
                     }
                 ],
-              API.dtiPrimaryKey = Just [API.ColumnName "EmployeeId"],
-              API.dtiDescription = Just "Collection of employees who work for the business",
-              API.dtiForeignKeys =
+              API._tiPrimaryKey = Just [API.ColumnName "EmployeeId"],
+              API._tiDescription = Just "Collection of employees who work for the business",
+              API._tiForeignKeys =
                 Just $
                   API.ForeignKeys $
                     HashMap.singleton (API.ConstraintName "EmployeeReportsTo") (API.Constraint (mkTableName "Employee") (HashMap.singleton "ReportsTo" "EmployeeId"))
             },
           API.TableInfo
-            { API.dtiName = mkTableName "Genre",
-              API.dtiColumns =
+            { API._tiName = mkTableName "Genre",
+              API._tiColumns =
                 [ API.ColumnInfo
-                    { API.dciName = API.ColumnName "GenreId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "Genre primary key identifier"
+                    { API._ciName = API.ColumnName "GenreId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "Genre primary key identifier"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Name",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The name of the genre"
+                    { API._ciName = API.ColumnName "Name",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The name of the genre"
                     }
                 ],
-              API.dtiPrimaryKey = Just [API.ColumnName "GenreId"],
-              API.dtiDescription = Just "Genres of music",
-              API.dtiForeignKeys = Nothing
+              API._tiPrimaryKey = Just [API.ColumnName "GenreId"],
+              API._tiDescription = Just "Genres of music",
+              API._tiForeignKeys = Nothing
             },
           API.TableInfo
-            { API.dtiName = mkTableName "Invoice",
-              API.dtiColumns =
+            { API._tiName = mkTableName "Invoice",
+              API._tiColumns =
                 [ API.ColumnInfo
-                    { API.dciName = API.ColumnName "InvoiceId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "Invoice primary key identifier"
+                    { API._ciName = API.ColumnName "InvoiceId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "Invoice primary key identifier"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "CustomerId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "ID of the customer who bought the music"
+                    { API._ciName = API.ColumnName "CustomerId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "ID of the customer who bought the music"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "InvoiceDate",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "Date of the invoice"
+                    { API._ciName = API.ColumnName "InvoiceDate",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "Date of the invoice"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "BillingAddress",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The invoice's billing address line (street number, street)"
+                    { API._ciName = API.ColumnName "BillingAddress",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The invoice's billing address line (street number, street)"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "BillingCity",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The invoice's billing address city"
+                    { API._ciName = API.ColumnName "BillingCity",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The invoice's billing address city"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "BillingState",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The invoice's billing address state"
+                    { API._ciName = API.ColumnName "BillingState",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The invoice's billing address state"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "BillingCountry",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The invoice's billing address country"
+                    { API._ciName = API.ColumnName "BillingCountry",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The invoice's billing address country"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "BillingPostalCode",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The invoice's billing address postal code"
+                    { API._ciName = API.ColumnName "BillingPostalCode",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The invoice's billing address postal code"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Total",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The total amount due on the invoice"
+                    { API._ciName = API.ColumnName "Total",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The total amount due on the invoice"
                     }
                 ],
-              API.dtiPrimaryKey = Just [API.ColumnName "InvoiceId"],
-              API.dtiDescription = Just "Collection of invoices of music purchases by a customer",
-              API.dtiForeignKeys =
+              API._tiPrimaryKey = Just [API.ColumnName "InvoiceId"],
+              API._tiDescription = Just "Collection of invoices of music purchases by a customer",
+              API._tiForeignKeys =
                 Just $
                   API.ForeignKeys $
                     HashMap.singleton (API.ConstraintName "InvoiceCustomer") $
                       API.Constraint (mkTableName "Customer") (HashMap.singleton "CustomerId" "CustomerId")
             },
           API.TableInfo
-            { API.dtiName = mkTableName "InvoiceLine",
-              API.dtiColumns =
+            { API._tiName = mkTableName "InvoiceLine",
+              API._tiColumns =
                 [ API.ColumnInfo
-                    { API.dciName = API.ColumnName "InvoiceLineId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "Invoice Line primary key identifier"
+                    { API._ciName = API.ColumnName "InvoiceLineId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "Invoice Line primary key identifier"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "InvoiceId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "ID of the invoice the line belongs to"
+                    { API._ciName = API.ColumnName "InvoiceId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "ID of the invoice the line belongs to"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "TrackId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "ID of the music track being purchased"
+                    { API._ciName = API.ColumnName "TrackId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "ID of the music track being purchased"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "UnitPrice",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "Price of each individual track unit"
+                    { API._ciName = API.ColumnName "UnitPrice",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "Price of each individual track unit"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Quantity",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "Quantity of the track purchased"
+                    { API._ciName = API.ColumnName "Quantity",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "Quantity of the track purchased"
                     }
                 ],
-              API.dtiPrimaryKey = Just [API.ColumnName "InvoiceLineId"],
-              API.dtiDescription = Just "Collection of track purchasing line items of invoices",
-              API.dtiForeignKeys =
+              API._tiPrimaryKey = Just [API.ColumnName "InvoiceLineId"],
+              API._tiDescription = Just "Collection of track purchasing line items of invoices",
+              API._tiForeignKeys =
                 Just $
                   API.ForeignKeys $
                     HashMap.fromList
@@ -443,86 +443,86 @@ schema =
                       ]
             },
           API.TableInfo
-            { API.dtiName = mkTableName "MediaType",
-              API.dtiColumns =
+            { API._tiName = mkTableName "MediaType",
+              API._tiColumns =
                 [ API.ColumnInfo
-                    { API.dciName = API.ColumnName "MediaTypeId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "Media Type primary key identifier"
+                    { API._ciName = API.ColumnName "MediaTypeId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "Media Type primary key identifier"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Name",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The name of the media type format"
+                    { API._ciName = API.ColumnName "Name",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The name of the media type format"
                     }
                 ],
-              API.dtiPrimaryKey = Just [API.ColumnName "MediaTypeId"],
-              API.dtiDescription = Just "Collection of media types that tracks can be encoded in",
-              API.dtiForeignKeys = Nothing
+              API._tiPrimaryKey = Just [API.ColumnName "MediaTypeId"],
+              API._tiDescription = Just "Collection of media types that tracks can be encoded in",
+              API._tiForeignKeys = Nothing
             },
           API.TableInfo
-            { API.dtiName = mkTableName "Track",
-              API.dtiColumns =
+            { API._tiName = mkTableName "Track",
+              API._tiColumns =
                 [ API.ColumnInfo
-                    { API.dciName = API.ColumnName "TrackId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The ID of the track"
+                    { API._ciName = API.ColumnName "TrackId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The ID of the track"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Name",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The name of the track"
+                    { API._ciName = API.ColumnName "Name",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The name of the track"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "AlbumId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The ID of the album the track belongs to"
+                    { API._ciName = API.ColumnName "AlbumId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The ID of the album the track belongs to"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "MediaTypeId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The ID of the media type the track is encoded with"
+                    { API._ciName = API.ColumnName "MediaTypeId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The ID of the media type the track is encoded with"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "GenreId",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The ID of the genre of the track"
+                    { API._ciName = API.ColumnName "GenreId",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The ID of the genre of the track"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Composer",
-                      API.dciType = API.StringTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The name of the composer of the track"
+                    { API._ciName = API.ColumnName "Composer",
+                      API._ciType = API.StringTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The name of the composer of the track"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Milliseconds",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The length of the track in milliseconds"
+                    { API._ciName = API.ColumnName "Milliseconds",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The length of the track in milliseconds"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "Bytes",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = True,
-                      API.dciDescription = Just "The size of the track in bytes"
+                    { API._ciName = API.ColumnName "Bytes",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = True,
+                      API._ciDescription = Just "The size of the track in bytes"
                     },
                   API.ColumnInfo
-                    { API.dciName = API.ColumnName "UnitPrice",
-                      API.dciType = API.NumberTy,
-                      API.dciNullable = False,
-                      API.dciDescription = Just "The price of the track"
+                    { API._ciName = API.ColumnName "UnitPrice",
+                      API._ciType = API.NumberTy,
+                      API._ciNullable = False,
+                      API._ciDescription = Just "The price of the track"
                     }
                 ],
-              API.dtiPrimaryKey = Just [API.ColumnName "TrackId"],
-              API.dtiDescription = Just "Collection of music tracks",
-              API.dtiForeignKeys =
+              API._tiPrimaryKey = Just [API.ColumnName "TrackId"],
+              API._tiDescription = Just "Collection of music tracks",
+              API._tiForeignKeys =
                 Just $
                   API.ForeignKeys $
                     HashMap.fromList

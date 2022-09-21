@@ -7,6 +7,6 @@ import type { ConfigSchemaResponse } from './ConfigSchemaResponse';
 
 export type CapabilitiesResponse = {
   capabilities: Capabilities;
-  configSchemas: ConfigSchemaResponse;
+  config_schemas: ConfigSchemaResponse;
 };
 

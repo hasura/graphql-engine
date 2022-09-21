@@ -6,6 +6,6 @@ export type QueryCapabilities = {
   /**
    * Does the agent support querying a table by primary key?
    */
-  supportsPrimaryKeys: boolean;
+  supports_primary_keys: boolean;
 };
 

@@ -213,13 +213,13 @@
           "capabilities": {
             "$ref": "#/components/schemas/Capabilities"
           },
-          "configSchemas": {
+          "config_schemas": {
             "$ref": "#/components/schemas/ConfigSchemaResponse"
           }
         },
         "required": [
           "capabilities",
-          "configSchemas"
+          "config_schemas"
         ],
         "type": "object"
       },
@@ -231,7 +231,7 @@
           "explain": {
             "$ref": "#/components/schemas/ExplainCapabilities"
           },
-          "graphqlSchema": {
+          "graphql_schema": {
             "$ref": "#/components/schemas/GraphQLTypeDefinitions"
           },
           "metrics": {
@@ -246,7 +246,7 @@
           "relationships": {
             "$ref": "#/components/schemas/RelationshipCapabilities"
           },
-          "scalarTypes": {
+          "scalar_types": {
             "$ref": "#/components/schemas/ScalarTypesCapabilities"
           },
           "subscriptions": {
@@ -257,13 +257,13 @@
       },
       "QueryCapabilities": {
         "properties": {
-          "supportsPrimaryKeys": {
+          "supports_primary_keys": {
             "description": "Does the agent support querying a table by primary key?",
             "type": "boolean"
           }
         },
         "required": [
-          "supportsPrimaryKeys"
+          "supports_primary_keys"
         ],
         "type": "object"
       },
@@ -274,9 +274,9 @@
         "type": "string"
       },
       "ScalarTypeCapabilities": {
-        "description": "Capabilities of a scalar type.\ncomparisonType: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphqlSchema`.\n",
+        "description": "Capabilities of a scalar type.\ncomparison_type: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphql_schema`.\n",
         "properties": {
-          "comparisonType": {
+          "comparison_type": {
             "$ref": "#/components/schemas/GraphQLName"
           }
         },
@@ -286,7 +286,7 @@
         "additionalProperties": {
           "$ref": "#/components/schemas/ScalarTypeCapabilities"
         },
-        "description": "A map from scalar type names to their capabilities.\nKeys must be valid GraphQL names and must be defined as scalar types in the `graphqlSchema`\n",
+        "description": "A map from scalar type names to their capabilities.\nKeys must be valid GraphQL names and must be defined as scalar types in the `graphql_schema`\n",
         "type": "object"
       },
       "GraphQLTypeDefinitions": {
@@ -320,10 +320,10 @@
       "ConfigSchemaResponse": {
         "nullable": false,
         "properties": {
-          "configSchema": {
+          "config_schema": {
             "$ref": "#/components/schemas/OpenApiSchema"
           },
-          "otherSchemas": {
+          "other_schemas": {
             "additionalProperties": {
               "$ref": "#/components/schemas/OpenApiSchema"
             },
@@ -332,8 +332,8 @@
           }
         },
         "required": [
-          "configSchema",
-          "otherSchemas"
+          "config_schema",
+          "other_schemas"
         ],
         "type": "object"
       },
@@ -716,7 +716,7 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/Constraint"
             },
-            "description": "Foreign Key Constraints",
+            "description": "Foreign key constraints",
             "nullable": true,
             "type": "object"
           },

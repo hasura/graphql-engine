@@ -55,15 +55,15 @@ import Prelude
 -- service. Specifically, the service is capable of serving queries
 -- which involve relationships.
 data Capabilities = Capabilities
-  { cQueries :: Maybe QueryCapabilities,
-    cMutations :: Maybe MutationCapabilities,
-    cSubscriptions :: Maybe SubscriptionCapabilities,
-    cScalarTypes :: Maybe ScalarTypesCapabilities,
-    cGraphQLTypeDefinitions :: Maybe GraphQLTypeDefinitions,
-    cRelationships :: Maybe RelationshipCapabilities,
-    cComparisons :: Maybe ComparisonCapabilities,
-    cMetrics :: Maybe MetricsCapabilities,
-    cExplain :: Maybe ExplainCapabilities
+  { _cQueries :: Maybe QueryCapabilities,
+    _cMutations :: Maybe MutationCapabilities,
+    _cSubscriptions :: Maybe SubscriptionCapabilities,
+    _cScalarTypes :: Maybe ScalarTypesCapabilities,
+    _cGraphQLTypeDefinitions :: Maybe GraphQLTypeDefinitions,
+    _cRelationships :: Maybe RelationshipCapabilities,
+    _cComparisons :: Maybe ComparisonCapabilities,
+    _cMetrics :: Maybe MetricsCapabilities,
+    _cExplain :: Maybe ExplainCapabilities
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (NFData, Hashable)
@@ -76,18 +76,18 @@ instance HasCodec Capabilities where
   codec =
     object "Capabilities" $
       Capabilities
-        <$> optionalField "queries" "The agent's query capabilities" .= cQueries
-        <*> optionalField "mutations" "The agent's mutation capabilities" .= cMutations
-        <*> optionalField "subscriptions" "The agent's subscription capabilities" .= cSubscriptions
-        <*> optionalField "scalarTypes" "The agent's scalar types and their capabilities" .= cScalarTypes
-        <*> optionalField "graphqlSchema" "A GraphQL Schema Document describing the agent's scalar types and input object types for comparison operators" .= cGraphQLTypeDefinitions
-        <*> optionalField "relationships" "The agent's relationship capabilities" .= cRelationships
-        <*> optionalField "comparisons" "The agent's comparison capabilities" .= cComparisons
-        <*> optionalField "metrics" "The agent's metrics capabilities" .= cMetrics
-        <*> optionalField "explain" "The agent's explain capabilities" .= cExplain
+        <$> optionalField "queries" "The agent's query capabilities" .= _cQueries
+        <*> optionalField "mutations" "The agent's mutation capabilities" .= _cMutations
+        <*> optionalField "subscriptions" "The agent's subscription capabilities" .= _cSubscriptions
+        <*> optionalField "scalar_types" "The agent's scalar types and their capabilities" .= _cScalarTypes
+        <*> optionalField "graphql_schema" "A GraphQL Schema Document describing the agent's scalar types and input object types for comparison operators" .= _cGraphQLTypeDefinitions
+        <*> optionalField "relationships" "The agent's relationship capabilities" .= _cRelationships
+        <*> optionalField "comparisons" "The agent's comparison capabilities" .= _cComparisons
+        <*> optionalField "metrics" "The agent's metrics capabilities" .= _cMetrics
+        <*> optionalField "explain" "The agent's explain capabilities" .= _cExplain
 
 data QueryCapabilities = QueryCapabilities
-  { qcSupportsPrimaryKeys :: Bool
+  { _qcSupportsPrimaryKeys :: Bool
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
@@ -97,7 +97,7 @@ instance HasCodec QueryCapabilities where
   codec =
     object "QueryCapabilities" $
       QueryCapabilities
-        <$> requiredField "supportsPrimaryKeys" "Does the agent support querying a table by primary key?" .= qcSupportsPrimaryKeys
+        <$> requiredField "supports_primary_keys" "Does the agent support querying a table by primary key?" .= _qcSupportsPrimaryKeys
 
 data MutationCapabilities = MutationCapabilities {}
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -134,7 +134,7 @@ nameCodec =
     parseName text = maybe (Left $ Text.unpack text <> " is not a valid GraphQL name") pure $ GQL.Syntax.mkName text
 
 data ScalarTypeCapabilities = ScalarTypeCapabilities
-  { stcComparisonInputObject :: Maybe GQL.Syntax.Name
+  { _stcComparisonInputObject :: Maybe GQL.Syntax.Name
   }
   deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (NFData, Hashable)
@@ -145,10 +145,10 @@ instance HasCodec ScalarTypeCapabilities where
     object
       "ScalarTypeCapabilities"
       ( ScalarTypeCapabilities
-          <$> optionalFieldWith' "comparisonType" nameCodec .= stcComparisonInputObject
+          <$> optionalFieldWith' "comparison_type" nameCodec .= _stcComparisonInputObject
       )
       <??> [ "Capabilities of a scalar type.",
-             "comparisonType: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphqlSchema`."
+             "comparison_type: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphql_schema`."
            ]
 
 newtype ScalarTypesCapabilities = ScalarTypesCapabilities
@@ -163,7 +163,7 @@ instance HasCodec ScalarTypesCapabilities where
     named "ScalarTypesCapabilities" $
       dimapCodec ScalarTypesCapabilities unScalarTypesCapabilities (hashMapCodec codec)
         <??> [ "A map from scalar type names to their capabilities.",
-               "Keys must be valid GraphQL names and must be defined as scalar types in the `graphqlSchema`"
+               "Keys must be valid GraphQL names and must be defined as scalar types in the `graphql_schema`"
              ]
 
 type TypeDefinition = GQL.Syntax.TypeDefinition () GQL.Syntax.InputValueDefinition
@@ -185,7 +185,7 @@ mkGraphQLTypeDefinitions =
       GQL.Syntax.TypeDefinitionInputObject GQL.Syntax.InputObjectTypeDefinition {..} -> _iotdName
 
 newtype GraphQLTypeDefinitions = GraphQLTypeDefinitions
-  { gtdTypeDefinitions :: InsOrdHashMap GQL.Syntax.Name TypeDefinition
+  { _gtdTypeDefinitions :: InsOrdHashMap GQL.Syntax.Name TypeDefinition
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (NFData, Hashable)
@@ -221,7 +221,7 @@ instance HasCodec GraphQLTypeDefinitions where
           . GQL.Syntax.SchemaDocument
           . fmap GQL.Syntax.TypeSystemDefinitionType
           . toList
-          . gtdTypeDefinitions
+          . _gtdTypeDefinitions
 
 data ComparisonCapabilities = ComparisonCapabilities
   {_ccCrossTableComparisonCapabilities :: Maybe CrossTableComparisonCapabilities}
@@ -266,8 +266,8 @@ instance HasCodec ExplainCapabilities where
     object "ExplainCapabilities" $ pure ExplainCapabilities
 
 data CapabilitiesResponse = CapabilitiesResponse
-  { crCapabilities :: Capabilities,
-    crConfigSchemaResponse :: ConfigSchemaResponse
+  { _crCapabilities :: Capabilities,
+    _crConfigSchemaResponse :: ConfigSchemaResponse
   }
   deriving stock (Eq, Show, Generic)
   deriving (FromJSON, ToJSON) via Autodocodec CapabilitiesResponse
@@ -276,8 +276,8 @@ instance HasCodec CapabilitiesResponse where
   codec =
     object "CapabilitiesResponse" $
       CapabilitiesResponse
-        <$> requiredField "capabilities" "The capabilities of the agent" .= crCapabilities
-        <*> requiredField "configSchemas" "The agent's configuration schemas" .= crConfigSchemaResponse
+        <$> requiredField "capabilities" "The capabilities of the agent" .= _crCapabilities
+        <*> requiredField "config_schemas" "The agent's configuration schemas" .= _crConfigSchemaResponse
 
 instance ToSchema CapabilitiesResponse where
   declareNamedSchema _ = do
@@ -287,11 +287,11 @@ instance ToSchema CapabilitiesResponse where
           mempty
             { _schemaType = Just OpenApiObject,
               _schemaNullable = Just False,
-              _schemaRequired = ["capabilities", "configSchemas"],
+              _schemaRequired = ["capabilities", "config_schemas"],
               _schemaProperties =
                 InsOrdHashMap.fromList
                   [ ("capabilities", capabilitiesSchemaRef),
-                    ("configSchemas", configSchemasSchemaRef)
+                    ("config_schemas", configSchemasSchemaRef)
                   ]
             }
 
@@ -299,11 +299,11 @@ instance ToSchema CapabilitiesResponse where
 
 lookupComparisonInputObjectDefinition :: Capabilities -> GQL.Syntax.Name -> Maybe (GQL.Syntax.InputObjectTypeDefinition GQL.Syntax.InputValueDefinition)
 lookupComparisonInputObjectDefinition Capabilities {..} typeName = do
-  scalarTypesMap <- cScalarTypes
+  scalarTypesMap <- _cScalarTypes
   ScalarTypeCapabilities {..} <- HashMap.lookup typeName $ unScalarTypesCapabilities scalarTypesMap
-  comparisonTypeName <- stcComparisonInputObject
-  typeDefinitions <- cGraphQLTypeDefinitions
-  typeDefinition <- InsOrdHashMap.lookup comparisonTypeName $ gtdTypeDefinitions typeDefinitions
+  comparisonTypeName <- _stcComparisonInputObject
+  typeDefinitions <- _cGraphQLTypeDefinitions
+  typeDefinition <- InsOrdHashMap.lookup comparisonTypeName $ _gtdTypeDefinitions typeDefinitions
   case typeDefinition of
     GQL.Syntax.TypeDefinitionInputObject inputObjectTypeDefinition -> Just inputObjectTypeDefinition
     _ -> Nothing

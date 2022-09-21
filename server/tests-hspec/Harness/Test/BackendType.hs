@@ -58,12 +58,12 @@ defaultBackendCapabilities = \case
       explain: {}
       metrics: {}
       queries:
-        supportsPrimaryKeys: true
+        supports_primary_keys: true
     |]
   DataConnectorReference ->
     Just
       [yaml|
-      graphqlSchema: |-
+      graphql_schema: |-
         scalar DateTime
 
         input DateTimeComparisons {in_year: Int
@@ -73,9 +73,9 @@ defaultBackendCapabilities = \case
       comparisons:
         cross_table:
           supports_relations: true
-      scalarTypes:
+      scalar_types:
         DateTime:
-          comparisonType: DateTimeComparisons
+          comparison_type: DateTimeComparisons
     |]
   _ -> Nothing
 

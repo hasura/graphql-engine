@@ -6,7 +6,6 @@ module Test.DataConnector.MockAgent.QueryRelationshipsSpec
 where
 
 import Data.Aeson qualified as Aeson
-import Data.Aeson.KeyMap qualified as KM
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
@@ -131,17 +130,17 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("Name", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock (We Salute You)"),
-                              ( "Genre",
+                          [ [ (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock (We Salute You)"),
+                              ( API.FieldName "Genre",
                                 API.mkRelationshipFieldValue $
                                   rowsResponse
-                                    [ [("Name", API.mkColumnFieldValue $ Aeson.String "Rock")]
+                                    [ [(API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Rock")]
                                     ]
                               ),
-                              ( "MediaType",
+                              ( API.FieldName "MediaType",
                                 API.mkRelationshipFieldValue $
                                   rowsResponse
-                                    [ [("Name", API.mkColumnFieldValue $ Aeson.String "MPEG audio file")]
+                                    [ [(API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "MPEG audio file")]
                                     ]
                               )
                             ]
@@ -205,17 +204,17 @@ tests opts = do
                             API.Query
                               { _qFields =
                                   Just $
-                                    KM.fromList
-                                      [ ("Name", API.ColumnField (API.ColumnName "Name")),
-                                        ( "Genre",
+                                    HashMap.fromList
+                                      [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name")),
+                                        ( API.FieldName "Genre",
                                           API.RelField
                                             ( API.RelationshipField
                                                 (API.RelationshipName "Genre")
                                                 API.Query
                                                   { _qFields =
                                                       Just $
-                                                        KM.fromList
-                                                          [ ("Name", API.ColumnField (API.ColumnName "Name"))
+                                                        HashMap.fromList
+                                                          [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name"))
                                                           ],
                                                     _qAggregates = Nothing,
                                                     _qLimit = Nothing,
@@ -225,15 +224,15 @@ tests opts = do
                                                   }
                                             )
                                         ),
-                                        ( "MediaType",
+                                        ( API.FieldName "MediaType",
                                           API.RelField
                                             ( API.RelationshipField
                                                 (API.RelationshipName "MediaType")
                                                 API.Query
                                                   { _qFields =
                                                       Just $
-                                                        KM.fromList
-                                                          [ ("Name", API.ColumnField (API.ColumnName "Name"))
+                                                        HashMap.fromList
+                                                          [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name"))
                                                           ],
                                                     _qAggregates = Nothing,
                                                     _qLimit = Nothing,
@@ -260,18 +259,18 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ( "Album",
+                          [ [ ( API.FieldName "Album",
                                 API.mkRelationshipFieldValue $
                                   rowsResponse
-                                    [ [ ( "Artist",
+                                    [ [ ( API.FieldName "Artist",
                                           API.mkRelationshipFieldValue $
                                             rowsResponse
-                                              [[("Name", API.mkColumnFieldValue $ Aeson.String "Zeca Pagodinho")]]
+                                              [[(API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Zeca Pagodinho")]]
                                         )
                                       ]
                                     ]
                               ),
-                              ("Name", API.mkColumnFieldValue $ Aeson.String "Camarão que Dorme e Onda Leva")
+                              (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Camarão que Dorme e Onda Leva")
                             ]
                           ]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
@@ -335,25 +334,25 @@ tests opts = do
                             API.Query
                               { _qFields =
                                   Just $
-                                    KM.fromList
-                                      [ ("Name", API.ColumnField (API.ColumnName "Name")),
-                                        ( "Album",
+                                    HashMap.fromList
+                                      [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name")),
+                                        ( API.FieldName "Album",
                                           API.RelField
                                             ( API.RelationshipField
                                                 (API.RelationshipName "Album")
                                                 API.Query
                                                   { _qFields =
                                                       Just $
-                                                        KM.fromList
-                                                          [ ( "Artist",
+                                                        HashMap.fromList
+                                                          [ ( API.FieldName "Artist",
                                                               API.RelField
                                                                 ( API.RelationshipField
                                                                     (API.RelationshipName "Artist")
                                                                     API.Query
                                                                       { _qFields =
                                                                           Just $
-                                                                            KM.fromList
-                                                                              [ ("Name", API.ColumnField (API.ColumnName "Name"))
+                                                                            HashMap.fromList
+                                                                              [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name"))
                                                                               ],
                                                                         _qAggregates = Nothing,
                                                                         _qLimit = Nothing,
@@ -411,7 +410,7 @@ tests opts = do
               DataConnector.TestCaseRequired
                 { _givenRequired =
                     let albums =
-                          [ [ ("EmployeeId", API.mkColumnFieldValue $ Aeson.Number 3)
+                          [ [ (API.FieldName "EmployeeId", API.mkColumnFieldValue $ Aeson.Number 3)
                             ]
                           ]
                      in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
@@ -468,8 +467,8 @@ tests opts = do
                             API.Query
                               { _qFields =
                                   Just $
-                                    KM.fromList
-                                      [ ("EmployeeId", API.ColumnField (API.ColumnName "EmployeeId"))
+                                    HashMap.fromList
+                                      [ (API.FieldName "EmployeeId", API.ColumnField (API.ColumnName "EmployeeId"))
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
@@ -504,5 +503,5 @@ tests opts = do
                     )
               }
 
-rowsResponse :: [[(Aeson.Key, API.FieldValue)]] -> API.QueryResponse
-rowsResponse rows = API.QueryResponse (Just $ KM.fromList <$> rows) Nothing
+rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
+rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing

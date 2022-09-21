@@ -16,7 +16,7 @@ export type TableInfo = {
    */
   description?: string | null;
   /**
-   * Foreign Key Constraints
+   * Foreign key constraints
    */
   foreign_keys?: Record<string, Constraint> | null;
   name: TableName;

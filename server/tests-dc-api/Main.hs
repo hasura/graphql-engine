@@ -40,8 +40,8 @@ tests api sourceName agentConfig capabilities = do
   Test.CapabilitiesSpec.spec api agentConfig capabilities
   Test.SchemaSpec.spec api sourceName agentConfig
   Test.QuerySpec.spec api sourceName agentConfig capabilities
-  for_ (API.cMetrics capabilities) \m -> Test.MetricsSpec.spec api m
-  for_ (API.cExplain capabilities) \_ -> Test.ExplainSpec.spec api sourceName agentConfig capabilities
+  for_ (API._cMetrics capabilities) \m -> Test.MetricsSpec.spec api m
+  for_ (API._cExplain capabilities) \_ -> Test.ExplainSpec.spec api sourceName agentConfig capabilities
 
 main :: IO ()
 main = do
@@ -72,7 +72,7 @@ throwClientError = either throwIO pure
 
 getAgentCapabilities :: Client IO (NamedRoutes Routes) -> AgentCapabilities -> IO API.Capabilities
 getAgentCapabilities api = \case
-  AutoDetect -> API.crCapabilities <$> (api // _capabilities)
+  AutoDetect -> API._crCapabilities <$> (api // _capabilities)
   Explicit capabilities -> pure capabilities
 
 applyTestConfig :: Config -> TestOptions -> Config

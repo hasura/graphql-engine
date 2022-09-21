@@ -11,9 +11,6 @@ where
 import Control.Monad.Trans.Writer.CPS qualified as CPS
 import Data.Aeson qualified as J
 import Data.Aeson.Encoding qualified as JE
-import Data.Aeson.Key qualified as K
-import Data.Aeson.KeyMap (KeyMap)
-import Data.Aeson.KeyMap qualified as KM
 import Data.Bifunctor (Bifunctor (bimap))
 import Data.ByteString qualified as BS
 import Data.ByteString.Lazy qualified as BL
@@ -162,8 +159,8 @@ mkPlan session (SourceConfig {}) ir = do
       orderBy <- traverse (translateOrderBy tableName) (_saOrderBy $ _asnArgs selectG)
       pure
         API.Query
-          { _qFields = memptyToNothing . KM.fromList $ (first (K.fromText . getFieldNameTxt)) <$> HashMap.toList _faaFields,
-            _qAggregates = memptyToNothing . KM.fromList $ (first (K.fromText . getFieldNameTxt)) <$> HashMap.toList _faaAggregates,
+          { _qFields = mapFieldNameHashMap _faaFields,
+            _qAggregates = mapFieldNameHashMap _faaAggregates,
             _qLimit =
               fmap getMin $
                 foldMap
@@ -315,8 +312,8 @@ mkPlan session (SourceConfig {}) ir = do
           API.RelationshipField
             relationshipName
             ( API.Query
-                { _qFields = memptyToNothing . KM.fromList $ (first (K.fromText . getFieldNameTxt)) <$> HashMap.toList _faaFields,
-                  _qAggregates = memptyToNothing . KM.fromList $ (first (K.fromText . getFieldNameTxt)) <$> HashMap.toList _faaAggregates,
+                { _qFields = mapFieldNameHashMap _faaFields,
+                  _qAggregates = mapFieldNameHashMap _faaAggregates,
                   _qWhere = whereClause,
                   _qLimit = Nothing,
                   _qOffset = Nothing,
@@ -662,26 +659,26 @@ reshapeAggregateFields ::
   MonadError QErr m =>
   FieldPrefix ->
   AggregateFields 'DataConnector ->
-  KeyMap J.Value ->
+  HashMap API.FieldName J.Value ->
   m J.Encoding
 reshapeAggregateFields fieldPrefix aggregateFields responseAggregates = do
   reshapedFields <- forM aggregateFields $ \(fieldName@(FieldName fieldNameText), aggregateField) ->
     case aggregateField of
       AFCount _countAggregate -> do
-        let fieldNameKey = K.fromText . getFieldNameTxt $ applyPrefix fieldPrefix fieldName
+        let fieldNameKey = API.FieldName . getFieldNameTxt $ applyPrefix fieldPrefix fieldName
         responseAggregateValue <-
-          KM.lookup fieldNameKey responseAggregates
-            `onNothing` throw500 ("Unable to find expected aggregate " <> K.toText fieldNameKey <> " in aggregates returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
+          HashMap.lookup fieldNameKey responseAggregates
+            `onNothing` throw500 ("Unable to find expected aggregate " <> API.unFieldName fieldNameKey <> " in aggregates returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
         pure (fieldNameText, J.toEncoding responseAggregateValue)
       AFOp AggregateOp {..} -> do
         reshapedColumnFields <- forM _aoFields $ \(columnFieldName@(FieldName columnFieldNameText), columnField) ->
           case columnField of
             CFCol _column _columnType -> do
               let fieldPrefix' = fieldPrefix <> prefixWith fieldName
-              let columnFieldNameKey = K.fromText . getFieldNameTxt $ applyPrefix fieldPrefix' columnFieldName
+              let columnFieldNameKey = API.FieldName . getFieldNameTxt $ applyPrefix fieldPrefix' columnFieldName
               responseAggregateValue <-
-                KM.lookup columnFieldNameKey responseAggregates
-                  `onNothing` throw500 ("Unable to find expected aggregate " <> K.toText columnFieldNameKey <> " in aggregates returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
+                HashMap.lookup columnFieldNameKey responseAggregates
+                  `onNothing` throw500 ("Unable to find expected aggregate " <> API.unFieldName columnFieldNameKey <> " in aggregates returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
               pure (columnFieldNameText, J.toEncoding responseAggregateValue)
             CFExp txt ->
               pure (columnFieldNameText, JE.text txt)
@@ -694,14 +691,14 @@ reshapeAnnFields ::
   MonadError QErr m =>
   FieldPrefix ->
   AnnFieldsG 'DataConnector Void (UnpreparedValue 'DataConnector) ->
-  KeyMap API.FieldValue ->
+  HashMap API.FieldName API.FieldValue ->
   m J.Encoding
 reshapeAnnFields fieldNamePrefix fields responseRow = do
   reshapedFields <- forM fields $ \(fieldName@(FieldName fieldNameText), field) -> do
-    let fieldNameKey = K.fromText . getFieldNameTxt $ applyPrefix fieldNamePrefix fieldName
+    let fieldNameKey = API.FieldName . getFieldNameTxt $ applyPrefix fieldNamePrefix fieldName
     let responseField =
-          KM.lookup fieldNameKey responseRow
-            `onNothing` throw500 ("Unable to find expected field " <> K.toText fieldNameKey <> " in row returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
+          HashMap.lookup fieldNameKey responseRow
+            `onNothing` throw500 ("Unable to find expected field " <> API.unFieldName fieldNameKey <> " in row returned by Data Connector agent") -- TODO(dchambers): Add pathing information for error clarity
     reshapedField <- reshapeField field responseField
     pure (fieldNameText, reshapedField)
 
@@ -749,6 +746,9 @@ reshapeAnnRelationSelect reshapeFields annRelationSelect fieldValue =
     Right subqueryResponse ->
       let annSimpleSelect = _aarAnnSelect annRelationSelect
        in reshapeFields (_asnFields annSimpleSelect) subqueryResponse
+
+mapFieldNameHashMap :: Eq v => HashMap FieldName v -> Maybe (HashMap API.FieldName v)
+mapFieldNameHashMap = memptyToNothing . HashMap.mapKeys (API.FieldName . getFieldNameTxt)
 
 memptyToNothing :: (Monoid m, Eq m) => m -> Maybe m
 memptyToNothing m = if m == mempty then Nothing else Just m

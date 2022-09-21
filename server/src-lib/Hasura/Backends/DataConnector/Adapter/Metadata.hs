@@ -117,7 +117,7 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
         runTraceTWithReporter noReporter "capabilities"
           . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
           $ genericClient // API._capabilities
-      return $ DC.DataConnectorInfo options crCapabilities crConfigSchemaResponse
+      return $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse
 
 resolveSourceConfig' ::
   MonadIO m =>
@@ -185,22 +185,22 @@ resolveDatabaseMetadata' ::
   m (Either QErr (ResolvedSource 'DataConnector))
 resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {..}}) customization =
   -- We need agents to provide the foreign key contraints inside 'API.SchemaResponse'
-  let foreignKeys = fmap API.dtiForeignKeys srTables
+  let foreignKeys = fmap API._tiForeignKeys _srTables
       tables = Map.fromList $ do
-        API.TableInfo {..} <- srTables
-        let primaryKeyColumns = Seq.fromList $ coerce <$> fromMaybe [] dtiPrimaryKey
+        API.TableInfo {..} <- _srTables
+        let primaryKeyColumns = Seq.fromList $ coerce <$> fromMaybe [] _tiPrimaryKey
         let meta =
               RQL.T.T.DBTableMetadata
                 { _ptmiOid = OID 0,
                   _ptmiColumns = do
-                    API.ColumnInfo {..} <- dtiColumns
+                    API.ColumnInfo {..} <- _tiColumns
                     pure $
                       RQL.T.C.RawColumnInfo
-                        { rciName = Witch.from dciName,
+                        { rciName = Witch.from _ciName,
                           rciPosition = 1,
-                          rciType = Witch.from dciType,
-                          rciIsNullable = dciNullable,
-                          rciDescription = fmap GQL.Description dciDescription,
+                          rciType = Witch.from _ciType,
+                          rciIsNullable = _ciNullable,
+                          rciDescription = fmap GQL.Description _ciDescription,
                           -- TODO: Add Column Mutability to the 'TableInfo'
                           rciMutability = RQL.T.C.ColumnMutability False False
                         },
@@ -208,10 +208,10 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
                   _ptmiUniqueConstraints = mempty,
                   _ptmiForeignKeys = buildForeignKeySet foreignKeys,
                   _ptmiViewInfo = Just $ RQL.T.T.ViewInfo False False False,
-                  _ptmiDescription = fmap PGDescription dtiDescription,
+                  _ptmiDescription = fmap PGDescription _tiDescription,
                   _ptmiExtraTableMetadata = ()
                 }
-        pure (coerce dtiName, meta)
+        pure (coerce _tiName, meta)
    in pure $
         pure $
           ResolvedSource
@@ -232,12 +232,12 @@ buildForeignKeySet (catMaybes -> foreignKeys) =
       foreignKeys <&> \(API.ForeignKeys constraints) ->
         constraints & HashMap.foldMapWithKey @[RQL.T.T.ForeignKeyMetadata 'DataConnector]
           \constraintName API.Constraint {..} -> maybeToList do
-            let columnMapAssocList = HashMap.foldrWithKey' (\k v acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] cColumnMapping
+            let columnMapAssocList = HashMap.foldrWithKey' (\k v acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] _cColumnMapping
             columnMapping <- NEHashMap.fromList columnMapAssocList
             let foreignKey =
                   RQL.T.T.ForeignKey
                     { _fkConstraint = RQL.T.T.Constraint (Witch.from constraintName) (OID 1),
-                      _fkForeignTable = Witch.from cForeignTable,
+                      _fkForeignTable = Witch.from _cForeignTable,
                       _fkColumnMapping = columnMapping
                     }
             pure $ RQL.T.T.ForeignKeyMetadata foreignKey

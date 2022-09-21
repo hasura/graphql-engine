@@ -8,14 +8,14 @@ import Control.Lens ((%~), (&))
 import Control.Monad (unless)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Aeson (ToJSON (..), Value)
-import Data.Aeson.KeyMap (KeyMap)
 import Data.Algorithm.Diff (Diff, PolyDiff (..), getDiff)
+import Data.HashMap.Strict (HashMap)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Text.Encoding.Error qualified as TE
 import Data.Yaml qualified as Yaml
 import GHC.Stack (HasCallStack)
-import Hasura.Backends.DataConnector.API (FieldValue, deserializeAsRelationshipFieldValue, mkRelationshipFieldValue, qrRows)
+import Hasura.Backends.DataConnector.API (FieldName, FieldValue, deserializeAsRelationshipFieldValue, mkRelationshipFieldValue, qrRows)
 import System.Console.ANSI (Color (..), ColorIntensity (..), ConsoleLayer (..), SGR (..), hSupportsANSIColor, setSGRCode)
 import System.IO (stdout)
 import Test.Hspec (Expectation, expectationFailure)
@@ -36,7 +36,7 @@ jsonShouldBe actual expected =
 
 -- | Compares two lists of response rows, but normalizes them first to remove
 -- immaterial differences that show up when diffing in JSON/YAML
-rowsShouldBe :: HasCallStack => [KeyMap FieldValue] -> [KeyMap FieldValue] -> Expectation
+rowsShouldBe :: HasCallStack => [HashMap FieldName FieldValue] -> [HashMap FieldName FieldValue] -> Expectation
 rowsShouldBe actual expected =
   (normalize <$> actual) `jsonShouldBe` (normalize <$> expected)
 
@@ -53,7 +53,7 @@ rowsShouldBe actual expected =
 -- reserializing the JSON. It can do this by making the assumption that there are no
 -- custom scalar types that look like relationship field values (true for the Chinook
 -- data set used by the agent tests).
-normalize :: KeyMap FieldValue -> KeyMap FieldValue
+normalize :: HashMap FieldName FieldValue -> HashMap FieldName FieldValue
 normalize =
   fmap
     ( \fieldValue ->

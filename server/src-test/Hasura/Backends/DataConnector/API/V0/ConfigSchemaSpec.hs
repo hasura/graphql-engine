@@ -42,18 +42,18 @@ spec = do
         jsonVal =
           [aesonQQ|
           {
-            "configSchema": {
+            "config_schema": {
               "type": "object",
               "nullable": false,
               "properties": {
-                "tables": { "$ref": "#/otherSchemas/Tables" }
+                "tables": { "$ref": "#/other_schemas/Tables" }
               }
             },
-            "otherSchemas": {
+            "other_schemas": {
               "Tables": {
                 "description": "List of tables to make available in the schema and for querying",
                 "type": "array",
-                "items": { "$ref": "#/otherSchemas/TableName" },
+                "items": { "$ref": "#/other_schemas/TableName" },
                 "nullable": true
               },
               "TableName": {
@@ -70,16 +70,16 @@ spec = do
         `shouldBe` [aesonQQ|
         {
           "required": [
-            "configSchema",
-            "otherSchemas"
+            "config_schema",
+            "other_schemas"
           ],
           "type": "object",
           "nullable": false,
           "properties": {
-            "configSchema": {
+            "config_schema": {
               "$ref": "#/components/schemas/OpenApiSchema"
             },
-            "otherSchemas": {
+            "other_schemas": {
               "additionalProperties": {
                 "$ref": "#/components/schemas/OpenApiSchema"
               },

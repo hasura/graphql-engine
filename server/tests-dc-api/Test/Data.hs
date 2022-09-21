@@ -60,6 +60,10 @@ module Test.Data
     responseRows,
     sortResponseRowsBy,
     responseAggregates,
+    mkFieldsMap,
+    insertField,
+    deleteField,
+    field,
     _ColumnFieldNumber,
     _ColumnFieldString,
     _ColumnFieldBoolean,
@@ -71,13 +75,10 @@ module Test.Data
 where
 
 import Codec.Compression.GZip qualified as GZip
-import Control.Arrow ((>>>))
+import Control.Arrow (first, (>>>))
 import Control.Lens (Index, IxValue, Ixed, Traversal', ix, (%~), (&), (^.), (^..), (^?))
-import Data.Aeson (Key, eitherDecodeStrict)
+import Data.Aeson (eitherDecodeStrict)
 import Data.Aeson qualified as J
-import Data.Aeson.Key qualified as K
-import Data.Aeson.KeyMap (KeyMap)
-import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens (_Bool, _Number, _String)
 import Data.Bifunctor (bimap)
 import Data.ByteString (ByteString)
@@ -104,10 +105,10 @@ schemaBS :: ByteString
 schemaBS = $(makeRelativeToProject "tests-dc-api/Test/Data/schema-tables.json" >>= embedFile)
 
 schemaTables :: [API.TableInfo]
-schemaTables = sortOn API.dtiName . either error id . eitherDecodeStrict $ schemaBS
+schemaTables = sortOn API._tiName . either error id . eitherDecodeStrict $ schemaBS
 
 numericColumns :: [API.ColumnName]
-numericColumns = schemaTables >>= (API.dtiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if dciType == API.NumberTy then Just dciName else Nothing))
+numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.NumberTy then Just _ciName else Nothing))
 
 chinookXmlBS :: ByteString
 chinookXmlBS = $(makeRelativeToProject "tests-dc-api/Test/Data/ChinookData.xml.gz" >>= embedFile)
@@ -115,7 +116,7 @@ chinookXmlBS = $(makeRelativeToProject "tests-dc-api/Test/Data/ChinookData.xml.g
 chinookXml :: XML.Document
 chinookXml = XML.parseLBS_ XML.def . GZip.decompress $ BSL.fromStrict chinookXmlBS
 
-readTableFromXmlIntoRows :: API.TableName -> [KeyMap API.FieldValue]
+readTableFromXmlIntoRows :: API.TableName -> [HashMap API.FieldName API.FieldValue]
 readTableFromXmlIntoRows tableName =
   rowToJsonObject <$> tableRows
   where
@@ -125,25 +126,25 @@ readTableFromXmlIntoRows tableName =
     tableRows :: [XML.Element]
     tableRows = chinookXml ^.. XML.root . XML.nodes . traverse . XML._Element . XML.named (tableNameToXmlTag tableName)
 
-    rowToJsonObject :: XML.Element -> KeyMap API.FieldValue
+    rowToJsonObject :: XML.Element -> HashMap API.FieldName API.FieldValue
     rowToJsonObject element =
       let columnElements = element ^.. XML.nodes . traverse . XML._Element
           keyValuePairs = columnElementToProperty <$> columnElements
-       in KM.fromList keyValuePairs
+       in HashMap.fromList keyValuePairs
 
-    columnElementToProperty :: XML.Element -> (K.Key, API.FieldValue)
+    columnElementToProperty :: XML.Element -> (API.FieldName, API.FieldValue)
     columnElementToProperty columnElement =
-      let name = K.fromText $ columnElement ^. XML.localName
+      let name = columnElement ^. XML.localName
           value = case columnElement ^. XML.nodes of
             [] -> API.mkColumnFieldValue $ J.Null
             _ ->
               let textValue = Text.concat $ columnElement ^.. XML.text
-               in if API.ColumnName (K.toText name) `elem` numericColumns
+               in if API.ColumnName name `elem` numericColumns
                     then case eitherDecodeStrict $ Text.encodeUtf8 textValue of
                       Left _ -> API.mkColumnFieldValue $ J.String textValue
                       Right scientific -> API.mkColumnFieldValue $ J.Number scientific
                     else API.mkColumnFieldValue $ J.String textValue
-       in (name, value)
+       in (API.FieldName name, value)
 
 mkTableName :: Text -> API.TableName
 mkTableName = API.TableName . (:| [])
@@ -151,12 +152,12 @@ mkTableName = API.TableName . (:| [])
 artistsTableName :: API.TableName
 artistsTableName = mkTableName "Artist"
 
-artistsRows :: [KeyMap API.FieldValue]
-artistsRows = sortBy "ArtistId" $ readTableFromXmlIntoRows artistsTableName
+artistsRows :: [HashMap API.FieldName API.FieldValue]
+artistsRows = sortBy (API.FieldName "ArtistId") $ readTableFromXmlIntoRows artistsTableName
 
-artistsRowsById :: HashMap Scientific (KeyMap API.FieldValue)
+artistsRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue)
 artistsRowsById =
-  HashMap.fromList $ mapMaybe (\artist -> (,artist) <$> artist ^? ix "ArtistId" . _ColumnFieldNumber) artistsRows
+  HashMap.fromList $ mapMaybe (\artist -> (,artist) <$> artist ^? field "ArtistId" . _ColumnFieldNumber) artistsRows
 
 albumsRelationshipName :: API.RelationshipName
 albumsRelationshipName = API.RelationshipName "Albums"
@@ -174,12 +175,12 @@ artistsTableRelationships =
 albumsTableName :: API.TableName
 albumsTableName = mkTableName "Album"
 
-albumsRows :: [KeyMap API.FieldValue]
-albumsRows = sortBy "AlbumId" $ readTableFromXmlIntoRows albumsTableName
+albumsRows :: [HashMap API.FieldName API.FieldValue]
+albumsRows = sortBy (API.FieldName "AlbumId") $ readTableFromXmlIntoRows albumsTableName
 
-albumsRowsById :: HashMap Scientific (KeyMap API.FieldValue)
+albumsRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue)
 albumsRowsById =
-  HashMap.fromList $ mapMaybe (\album -> (,album) <$> album ^? ix "AlbumId" . _ColumnFieldNumber) albumsRows
+  HashMap.fromList $ mapMaybe (\album -> (,album) <$> album ^? field "AlbumId" . _ColumnFieldNumber) albumsRows
 
 albumsTableRelationships :: API.TableRelationships
 albumsTableRelationships =
@@ -202,8 +203,8 @@ tracksRelationshipName = API.RelationshipName "Tracks"
 customersTableName :: API.TableName
 customersTableName = mkTableName "Customer"
 
-customersRows :: [KeyMap API.FieldValue]
-customersRows = sortBy "CustomerId" $ readTableFromXmlIntoRows customersTableName
+customersRows :: [HashMap API.FieldName API.FieldValue]
+customersRows = sortBy (API.FieldName "CustomerId") $ readTableFromXmlIntoRows customersTableName
 
 customersTableRelationships :: API.TableRelationships
 customersTableRelationships =
@@ -221,12 +222,12 @@ supportRepRelationshipName = API.RelationshipName "SupportRep"
 employeesTableName :: API.TableName
 employeesTableName = mkTableName "Employee"
 
-employeesRows :: [KeyMap API.FieldValue]
-employeesRows = sortBy "EmployeeId" $ readTableFromXmlIntoRows employeesTableName
+employeesRows :: [HashMap API.FieldName API.FieldValue]
+employeesRows = sortBy (API.FieldName "EmployeeId") $ readTableFromXmlIntoRows employeesTableName
 
-employeesRowsById :: HashMap Scientific (KeyMap API.FieldValue)
+employeesRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue)
 employeesRowsById =
-  HashMap.fromList $ mapMaybe (\employee -> (,employee) <$> employee ^? ix "EmployeeId" . _ColumnFieldNumber) employeesRows
+  HashMap.fromList $ mapMaybe (\employee -> (,employee) <$> employee ^? field "EmployeeId" . _ColumnFieldNumber) employeesRows
 
 employeesTableRelationships :: API.TableRelationships
 employeesTableRelationships =
@@ -244,26 +245,26 @@ supportRepForCustomersRelationshipName = API.RelationshipName "SupportRepForCust
 invoicesTableName :: API.TableName
 invoicesTableName = mkTableName "Invoice"
 
-invoicesRows :: [KeyMap API.FieldValue]
-invoicesRows = sortBy "InvoiceId" $ readTableFromXmlIntoRows invoicesTableName
+invoicesRows :: [HashMap API.FieldName API.FieldValue]
+invoicesRows = sortBy (API.FieldName "InvoiceId") $ readTableFromXmlIntoRows invoicesTableName
 
 invoiceLinesTableName :: API.TableName
 invoiceLinesTableName = mkTableName "InvoiceLine"
 
-invoiceLinesRows :: [KeyMap API.FieldValue]
-invoiceLinesRows = sortBy "InvoiceLineId" $ readTableFromXmlIntoRows invoiceLinesTableName
+invoiceLinesRows :: [HashMap API.FieldName API.FieldValue]
+invoiceLinesRows = sortBy (API.FieldName "InvoiceLineId") $ readTableFromXmlIntoRows invoiceLinesTableName
 
 mediaTypesTableName :: API.TableName
 mediaTypesTableName = mkTableName "MediaType"
 
-mediaTypesRows :: [KeyMap API.FieldValue]
-mediaTypesRows = sortBy "MediaTypeId" $ readTableFromXmlIntoRows mediaTypesTableName
+mediaTypesRows :: [HashMap API.FieldName API.FieldValue]
+mediaTypesRows = sortBy (API.FieldName "MediaTypeId") $ readTableFromXmlIntoRows mediaTypesTableName
 
 tracksTableName :: API.TableName
 tracksTableName = mkTableName "Track"
 
-tracksRows :: [KeyMap API.FieldValue]
-tracksRows = sortBy "TrackId" $ readTableFromXmlIntoRows tracksTableName
+tracksRows :: [HashMap API.FieldName API.FieldValue]
+tracksRows = sortBy (API.FieldName "TrackId") $ readTableFromXmlIntoRows tracksTableName
 
 tracksTableRelationships :: API.TableRelationships
 tracksTableRelationships =
@@ -296,8 +297,8 @@ genreRelationshipName = API.RelationshipName "Genre"
 genresTableName :: API.TableName
 genresTableName = mkTableName "Genre"
 
-genresRows :: [KeyMap API.FieldValue]
-genresRows = sortBy "GenreId" $ readTableFromXmlIntoRows genresTableName
+genresRows :: [HashMap API.FieldName API.FieldValue]
+genresRows = sortBy (API.FieldName "GenreId") $ readTableFromXmlIntoRows genresTableName
 
 genresTableRelationships :: API.TableRelationships
 genresTableRelationships =
@@ -315,23 +316,23 @@ emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
 sortBy :: (Ixed m, Ord (IxValue m)) => Index m -> [m] -> [m]
 sortBy propName = sortOn (^? ix propName)
 
-filterColumnsByQueryFields :: API.Query -> KeyMap API.FieldValue -> KeyMap API.FieldValue
+filterColumnsByQueryFields :: API.Query -> HashMap API.FieldName API.FieldValue -> HashMap API.FieldName API.FieldValue
 filterColumnsByQueryFields query =
-  KM.filterWithKey (\key _value -> key `elem` columns)
+  HashMap.filterWithKey (\key _value -> key `elem` columns)
   where
-    columns = KM.keys $ queryFields query
+    columns = HashMap.keys $ queryFields query
 
-filterColumns :: [Text] -> [KeyMap API.FieldValue] -> [KeyMap API.FieldValue]
+filterColumns :: [Text] -> [HashMap API.FieldName API.FieldValue] -> [HashMap API.FieldName API.FieldValue]
 filterColumns columns =
-  fmap (KM.filterWithKey (\key _value -> key `elem` columns'))
+  fmap (HashMap.filterWithKey (\key _value -> key `elem` columns'))
   where
-    columns' = K.fromText <$> columns
+    columns' = API.FieldName <$> columns
 
-renameColumns :: [(Text, Text)] -> [KeyMap API.FieldValue] -> [KeyMap API.FieldValue]
+renameColumns :: [(Text, Text)] -> [HashMap API.FieldName API.FieldValue] -> [HashMap API.FieldName API.FieldValue]
 renameColumns columns =
-  fmap (KM.fromList . fmap rename . KM.toList)
+  fmap (HashMap.fromList . fmap rename . HashMap.toList)
   where
-    columns' = bimap K.fromText K.fromText <$> columns
+    columns' = bimap API.FieldName API.FieldName <$> columns
     rename original@(key, value) =
       case find (\(k, _) -> k == key) columns' of
         Just (_, renamedKey) -> (renamedKey, value)
@@ -341,17 +342,29 @@ onlyKeepRelationships :: [API.RelationshipName] -> API.TableRelationships -> API
 onlyKeepRelationships names tableRels =
   tableRels & API.trRelationships %~ HashMap.filterWithKey (\relName _ -> relName `elem` names)
 
-queryFields :: API.Query -> KeyMap API.Field
+queryFields :: API.Query -> HashMap API.FieldName API.Field
 queryFields = fromMaybe mempty . API._qFields
 
-responseRows :: API.QueryResponse -> [KeyMap API.FieldValue]
+responseRows :: API.QueryResponse -> [HashMap API.FieldName API.FieldValue]
 responseRows = fromMaybe [] . API._qrRows
 
-sortResponseRowsBy :: Key -> API.QueryResponse -> API.QueryResponse
-sortResponseRowsBy columnName response = response & API.qrRows %~ (fmap (sortBy columnName))
+sortResponseRowsBy :: Text -> API.QueryResponse -> API.QueryResponse
+sortResponseRowsBy columnName response = response & API.qrRows %~ (fmap (sortBy (API.FieldName columnName)))
 
-responseAggregates :: API.QueryResponse -> KeyMap J.Value
+responseAggregates :: API.QueryResponse -> HashMap API.FieldName J.Value
 responseAggregates = fromMaybe mempty . API._qrAggregates
+
+mkFieldsMap :: [(Text, v)] -> HashMap API.FieldName v
+mkFieldsMap = HashMap.fromList . fmap (first API.FieldName)
+
+insertField :: Text -> v -> HashMap API.FieldName v -> HashMap API.FieldName v
+insertField fieldName = HashMap.insert (API.FieldName fieldName)
+
+deleteField :: Text -> HashMap API.FieldName v -> HashMap API.FieldName v
+deleteField fieldName = HashMap.delete (API.FieldName fieldName)
+
+field :: (Ixed m, Index m ~ API.FieldName) => Text -> Traversal' m (IxValue m)
+field fieldName = ix (API.FieldName fieldName)
 
 _ColumnFieldNumber :: Traversal' API.FieldValue Scientific
 _ColumnFieldNumber = API._ColumnFieldValue . _Number

@@ -73,7 +73,7 @@ instance BackendExecute 'DataConnector where
 buildQueryAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => RQL.SourceName -> SourceConfig -> DC.QueryPlan -> AgentClientT m EncJSON
 buildQueryAction sourceName SourceConfig {..} DC.QueryPlan {..} = do
   -- NOTE: Should this check occur during query construction in 'mkPlan'?
-  when (DC.queryHasRelations _qpRequest && isNothing (API.cRelationships _scCapabilities)) $
+  when (DC.queryHasRelations _qpRequest && isNothing (API._cRelationships _scCapabilities)) $
     throw400 NotSupported "Agents must provide their own dataloader."
   let apiQueryRequest = Witch.into @API.QueryRequest _qpRequest
   queryResponse <- (genericClient // API._query) (toTxt sourceName) _scConfig apiQueryRequest
@@ -84,7 +84,7 @@ buildQueryAction sourceName SourceConfig {..} DC.QueryPlan {..} = do
 -- otherwise, returns the IR sent to the agent.
 buildExplainAction :: (MonadIO m, MonadTrace m, MonadError QErr m) => GQL.RootFieldAlias -> RQL.SourceName -> SourceConfig -> DC.QueryPlan -> AgentClientT m EncJSON
 buildExplainAction fieldName sourceName SourceConfig {..} DC.QueryPlan {..} =
-  case API.cExplain _scCapabilities of
+  case API._cExplain _scCapabilities of
     Nothing -> pure . encJFromJValue . toExplainPlan fieldName $ _qpRequest
     Just API.ExplainCapabilities -> do
       let apiQueryRequest = Witch.into @API.QueryRequest _qpRequest

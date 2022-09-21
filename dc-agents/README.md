@@ -128,24 +128,24 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 {
   "capabilities": {
     "relationships": {},
-    "graphqlSchema": "scalar DateTime\n\ninput DateTimeComparisons {\n  in_year: Number\n}",
-    "scalarTypes": {
+    "graphql_schema": "scalar DateTime\n\ninput DateTimeComparisons {\n  in_year: Number\n}",
+    "scalar_types": {
       "DateTime": {"comparisonType": "DateTimeComparisons"}
     }
   },
-  "configSchemas": {
-    "configSchema": {
+  "config_schemas": {
+    "config_schema": {
       "type": "object",
       "nullable": false,
       "properties": {
-        "tables": { "$ref": "#/otherSchemas/Tables" }
+        "tables": { "$ref": "#/other_schemas/Tables" }
       }
     },
-    "otherSchemas": {
+    "other_schemas": {
       "Tables": {
         "description": "List of tables to make available in the schema and for querying",
         "type": "array",
-        "items": { "$ref": "#/otherSchemas/TableName" },
+        "items": { "$ref": "#/other_schemas/TableName" },
         "nullable": true
       },
       "TableName": {
@@ -159,12 +159,12 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 
 The `capabilities` section describes the _capabilities_ of the service. This includes
 - `relationships`: whether or not the agent supports relationships
-- `scalarTypes`: custom scalar types and the operations they support. See [Scalar types capabilities](#scalar-type-capabilities).
-- `graphqlSchema`: a GraphQL schema document containing type definitions referenced by the `scalarTypes` capabilities.
+- `scalar_types`: custom scalar types and the operations they support. See [Scalar types capabilities](#scalar-type-capabilities).
+- `graphql_schema`: a GraphQL schema document containing type definitions referenced by the `scalar_types` capabilities.
 
-The `configSchema` property contains an [OpenAPI 3 Schema](https://swagger.io/specification/#schema-object) object that represents the schema of the configuration object. It can use references (`$ref`) to refer to other schemas defined in the `otherSchemas` object by name.
+The `config_schema` property contains an [OpenAPI 3 Schema](https://swagger.io/specification/#schema-object) object that represents the schema of the configuration object. It can use references (`$ref`) to refer to other schemas defined in the `other_schemas` object by name.
 
-`graphql-engine` will use the `configSchema` OpenAPI 3 Schema to validate the user's configuration JSON before putting it into the `X-Hasura-DataConnector-Config` header.
+`graphql-engine` will use the `config_schema` OpenAPI 3 Schema to validate the user's configuration JSON before putting it into the `X-Hasura-DataConnector-Config` header.
 
 #### Scalar type capabilities
 
@@ -174,23 +174,23 @@ Hasura GraphQL Engine does not validate the JSON format for values of custom sca
 It passes them through transparently to the agent when they are used as GraphQL input values and returns them transparently when they are produced by the agent.
 It is the agent's responsibility to validate the values provided as GraphQL inputs.
 
-Custom scalar types are declared by adding a property to the `scalarTypes` section of the [capabilities](#capabilities-and-configuration-schema) and
-by adding scalar type declaration with the same name in the `graphqlSchema` capabilities property.
+Custom scalar types are declared by adding a property to the `scalar_types` section of the [capabilities](#capabilities-and-configuration-schema) and
+by adding scalar type declaration with the same name in the `graphql_schema` capabilities property.
 Custom comparison types can be defined by adding a `comparisonType` property to the scalar type capabilities object.
-The `comparisonType` property gives the name of a GraphQL input object type, which must be defined in the `graphqlSchema` capabilities property.
+The `comparisonType` property gives the name of a GraphQL input object type, which must be defined in the `graphql_schema` capabilities property.
 The input object type will be spliced into the `where` argument for any columns of the scalar type in the GraphQL schema.
 
 Example:
 
 ```yaml
 capabilities:
-  graphqlSchema: |
+  graphql_schema: |
     scalar DateTime
 
     input DateTimeComparisons {
       in_year: Number
     }
-  scalarTypes:
+  scalar_types:
     DateTime:
       comparisonType: DateTimeComparisons
 ```
