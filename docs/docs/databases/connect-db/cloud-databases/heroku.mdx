@@ -1,0 +1,37 @@
+---
+description: Using Hasura with Heroku Postgres database
+title: 'Cloud: Using Hasura Cloud with a Heroku Postgres database'
+keywords:
+  - hasura
+  - docs
+  - existing database
+  - guide
+  - heroku
+sidebar_label: Heroku Postgres
+sidebar_position: 10
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Using Hasura Cloud with a Heroku Postgres database
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+
+## Introduction
+
+In August of 2022, Heroku announced the
+[deprecation of their free resources](https://devcenter.heroku.com/changelog-items/2461). Starting November 28th, 2022,
+if you have a Hasura project connected to a Heroku database, you'll need to either upgrade your Heroku account or
+migrate your database to a new database provider.
+
+## Connecting to Heroku
+
+If you are interested in connecting to a Heroku database, our
+[Heroku database integration guide](/projects/heroku-url-sync.mdx) walks you through each step.
+
+## Out-of-the-box database providers
+
+If you're considering migrating your data away from Heroku, Hasura works well with popular database providers. Most of
+these providers offer generous free tiers. We have guides you can use to provision and connect a new database in a
+matter of minutes. You can check them out [here](/databases/connect-db/cloud-databases/index.mdx).
