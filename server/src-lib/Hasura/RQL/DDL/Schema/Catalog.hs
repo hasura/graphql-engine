@@ -37,7 +37,7 @@ fetchMetadataFromCatalog = do
       True
   case rows of
     [] -> pure emptyMetadata
-    [Identity (PG.AltJ metadata)] -> pure metadata
+    [Identity (PG.ViaJSON metadata)] -> pure metadata
     _ -> throw500 "multiple rows in hdb_metadata table"
 
 fetchMetadataAndResourceVersionFromCatalog :: PG.TxE QErr (Metadata, MetadataResourceVersion)
@@ -52,7 +52,7 @@ fetchMetadataAndResourceVersionFromCatalog = do
       True
   case rows of
     [] -> pure (emptyMetadata, initialResourceVersion)
-    [(PG.AltJ metadata, resourceVersion)] -> pure (metadata, MetadataResourceVersion resourceVersion)
+    [(PG.ViaJSON metadata, resourceVersion)] -> pure (metadata, MetadataResourceVersion resourceVersion)
     _ -> throw500 "multiple rows in hdb_metadata table"
 
 fetchMetadataResourceVersionFromCatalog :: PG.TxE QErr MetadataResourceVersion
@@ -72,7 +72,7 @@ fetchMetadataResourceVersionFromCatalog = do
 
 fetchMetadataNotificationsFromCatalog :: MetadataResourceVersion -> InstanceId -> PG.TxE QErr [(MetadataResourceVersion, CacheInvalidations)]
 fetchMetadataNotificationsFromCatalog (MetadataResourceVersion resourceVersion) instanceId = do
-  fmap (bimap MetadataResourceVersion PG.getAltJ)
+  fmap (bimap MetadataResourceVersion PG.getViaJSON)
     <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
@@ -103,7 +103,7 @@ insertMetadataInCatalog metadata =
     INSERT INTO hdb_catalog.hdb_metadata(id, metadata)
     VALUES (1, $1::json)
     |]
-    (Identity $ PG.AltJ metadata)
+    (Identity $ PG.ViaJSON metadata)
     True
 
 -- | Check that the specified resource version matches the currently stored one, and...
@@ -124,7 +124,7 @@ setMetadataInCatalog resourceVersion metadata = do
       WHERE hdb_catalog.hdb_metadata.resource_version = $2
     RETURNING resource_version
     |]
-      (PG.AltJ metadata, getMetadataResourceVersion resourceVersion)
+      (PG.ViaJSON metadata, getMetadataResourceVersion resourceVersion)
       True
   case rows of
     [] -> throw409 $ "metadata resource version referenced (" <> tshow (getMetadataResourceVersion resourceVersion) <> ") did not match current version"

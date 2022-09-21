@@ -402,7 +402,7 @@ fetchTablesFunctionsFromOids ::
   [OID] ->
   PG.TxET QErr m ([TableName ('Postgres pgKind)], [FunctionName ('Postgres pgKind)])
 fetchTablesFunctionsFromOids tableOids functionOids =
-  ((PG.getAltJ *** PG.getAltJ) . PG.getRow)
+  ((PG.getViaJSON *** PG.getViaJSON) . PG.getRow)
     <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
@@ -445,7 +445,7 @@ fetchTablesFunctionsFromOids tableOids functionOids =
         '[]'
       ) AS "functions"
   |]
-      (PG.AltJ $ map mkOidObject tableOids, PG.AltJ $ map mkOidObject functionOids)
+      (PG.ViaJSON $ map mkOidObject tableOids, PG.ViaJSON $ map mkOidObject functionOids)
       True
   where
     mkOidObject oid = object ["oid" .= oid]

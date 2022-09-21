@@ -127,7 +127,7 @@ prepareWithoutPlan userInfo = \case
 withUserVars :: SessionVariables -> PrepArgMap -> PrepArgMap
 withUserVars usrVars list =
   let usrVarsAsPgScalar = PGValJSON $ PG.JSON $ J.toJSON usrVars
-      prepArg = PG.toPrepVal (PG.AltJ usrVars)
+      prepArg = PG.toPrepVal (PG.ViaJSON usrVars)
    in IntMap.insert 1 (prepArg, usrVarsAsPgScalar) list
 
 -- | In prepared statements, we refer to variables by a number, not their name.

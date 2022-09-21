@@ -164,7 +164,7 @@ saveTableToCatalog (QualifiedObject sn tn) isEnum config = do
       (sn, tn, systemDefined, isEnum, configVal)
       False
   where
-    configVal = PG.AltJ $ toJSON config
+    configVal = PG.ViaJSON $ toJSON config
 
 insertRelationshipToCatalog ::
   (MonadTx m, MonadReader SystemDefined m, ToJSON a) =>
@@ -174,7 +174,7 @@ insertRelationshipToCatalog ::
   m ()
 insertRelationshipToCatalog (QualifiedObject schema table) relType (RelDef name using comment) = do
   systemDefined <- ask
-  let args = (schema, table, name, relTypeToTxt relType, PG.AltJ using, comment, systemDefined)
+  let args = (schema, table, name, relTypeToTxt relType, PG.ViaJSON using, comment, systemDefined)
   liftTx $ PG.unitQE defaultTxErrorHandler query args True
   where
     query =
@@ -197,7 +197,7 @@ addEventTriggerToCatalog qt etc = liftTx do
                        (name, type, schema_name, table_name, configuration)
            VALUES ($1, 'table', $2, $3, $4)
          |]
-    (name, sn, tn, PG.AltJ $ toJSON etc)
+    (name, sn, tn, PG.ViaJSON $ toJSON etc)
     False
   where
     QualifiedObject sn tn = qt
@@ -216,7 +216,7 @@ addComputedFieldToCatalog q =
        (table_schema, table_name, computed_field_name, definition, commentText)
      VALUES ($1, $2, $3, $4, $5)
     |]
-      (schemaName, tableName, computedField, PG.AltJ definition, commentText)
+      (schemaName, tableName, computedField, PG.ViaJSON definition, commentText)
       True
   where
     commentText = commentToMaybeText comment
@@ -233,7 +233,7 @@ addRemoteRelationshipToCatalog CreateFromSourceRelationship {..} =
        (remote_relationship_name, table_schema, table_name, definition)
        VALUES ($1, $2, $3, $4::jsonb)
   |]
-      (_crrName, schemaName, tableName, PG.AltJ _crrDefinition)
+      (_crrName, schemaName, tableName, PG.ViaJSON _crrDefinition)
       True
   where
     QualifiedObject schemaName tableName = _crrTable
@@ -253,7 +253,7 @@ addFunctionToCatalog (QualifiedObject sn fn) config = do
            (function_schema, function_name, configuration, is_system_defined)
          VALUES ($1, $2, $3, $4)
                  |]
-      (sn, fn, PG.AltJ config, systemDefined)
+      (sn, fn, PG.ViaJSON config, systemDefined)
       False
 
 addRemoteSchemaToCatalog ::
@@ -267,7 +267,7 @@ addRemoteSchemaToCatalog (RemoteSchemaMetadata name def comment _ _) =
       (name, definition, comment)
       VALUES ($1, $2, $3)
   |]
-    (name, PG.AltJ $ toJSON def, comment)
+    (name, PG.ViaJSON $ toJSON def, comment)
     True
 
 addCollectionToCatalog ::
@@ -281,7 +281,7 @@ addCollectionToCatalog (CreateCollection name defn mComment) systemDefined =
       (collection_name, collection_defn, comment, is_system_defined)
     VALUES ($1, $2, $3, $4)
   |]
-      (name, PG.AltJ defn, mComment, systemDefined)
+      (name, PG.ViaJSON defn, mComment, systemDefined)
       True
 
 addCollectionToAllowlistCatalog :: MonadTx m => CollectionName -> m ()
@@ -307,7 +307,7 @@ setCustomTypesInCatalog customTypes = liftTx do
       (custom_types)
       VALUES ($1)
   |]
-    (Identity $ PG.AltJ customTypes)
+    (Identity $ PG.ViaJSON customTypes)
     False
   where
     clearCustomTypes = do
@@ -329,7 +329,7 @@ addActionToCatalog (CreateAction actionName actionDefinition comment) = do
       (action_name, action_defn, comment)
       VALUES ($1, $2, $3)
   |]
-      (actionName, PG.AltJ actionDefinition, comment)
+      (actionName, PG.ViaJSON actionDefinition, comment)
       True
 
 addActionPermissionToCatalog :: (MonadTx m) => CreateActionPermission -> m ()
@@ -361,7 +361,7 @@ addPermissionToCatalog (QualifiedObject sn tn) (PermDef rn qdef mComment) system
                (table_schema, table_name, role_name, perm_type, perm_def, comment, is_system_defined)
            VALUES ($1, $2, $3, $4, $5 :: jsonb, $6, $7)
                 |]
-      (sn, tn, rn, permTypeToCode (reflectPermDefPermission qdef), PG.AltJ qdef, mComment, systemDefined)
+      (sn, tn, rn, permTypeToCode (reflectPermDefPermission qdef), PG.ViaJSON qdef, mComment, systemDefined)
       True
 
 addCronTriggerToCatalog :: (MonadTx m) => CronTriggerMetadata -> m ()
@@ -374,11 +374,11 @@ addCronTriggerToCatalog CronTriggerMetadata {..} = liftTx $ do
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     |]
     ( ctName,
-      PG.AltJ ctWebhook,
+      PG.ViaJSON ctWebhook,
       ctSchedule,
-      PG.AltJ <$> ctPayload,
-      PG.AltJ ctRetryConf,
-      PG.AltJ ctHeaders,
+      PG.ViaJSON <$> ctPayload,
+      PG.ViaJSON ctRetryConf,
+      PG.ViaJSON ctHeaders,
       ctIncludeInMetadata,
       ctComment
     )
@@ -400,7 +400,7 @@ fetchMetadataFromHdbTables = liftTx do
   let tableMetaMap = OMap.fromList . flip map tables $
         \(schema, name, isEnum, maybeConfig) ->
           let qualifiedName = QualifiedObject schema name
-              configuration = maybe emptyTableConfig PG.getAltJ maybeConfig
+              configuration = maybe emptyTableConfig PG.getViaJSON maybeConfig
            in (qualifiedName, mkTableMeta qualifiedName isEnum configuration)
 
   -- Fetch all the relationships
@@ -467,19 +467,19 @@ fetchMetadataFromHdbTables = liftTx do
 
     mkPermDefs pt = mapM permRowToDef . filter (\pr -> pr ^. _4 == pt)
 
-    permRowToDef (sn, tn, rn, _, PG.AltJ pDef, mComment) = do
+    permRowToDef (sn, tn, rn, _, PG.ViaJSON pDef, mComment) = do
       perm <- decodeValue pDef
       return (QualifiedObject sn tn, PermDef rn perm mComment)
 
     mkRelDefs rt = mapM relRowToDef . filter (\rr -> rr ^. _4 == rt)
 
-    relRowToDef (sn, tn, rn, _, PG.AltJ rDef, mComment) = do
+    relRowToDef (sn, tn, rn, _, PG.ViaJSON rDef, mComment) = do
       using <- decodeValue rDef
       return (QualifiedObject sn tn, RelDef rn using mComment)
 
     mkTriggerMetaDefs = mapM trigRowToDef
 
-    trigRowToDef (sn, tn, PG.AltJ configuration) = do
+    trigRowToDef (sn, tn, PG.ViaJSON configuration) = do
       conf :: EventTriggerConf ('Postgres pgKind) <- decodeValue configuration
       return (QualifiedObject sn tn, conf)
 
@@ -539,7 +539,7 @@ fetchMetadataFromHdbTables = liftTx do
           False
       pure $
         oMapFromL _fmFunction $
-          flip map l $ \(sn, fn, PG.AltJ config) ->
+          flip map l $ \(sn, fn, PG.ViaJSON config) ->
             -- function permissions were only introduced post 43rd
             -- migration, so it's impossible we get any permissions
             -- here
@@ -557,7 +557,7 @@ fetchMetadataFromHdbTables = liftTx do
           ()
           True
       where
-        fromRow (name, PG.AltJ def, comment) =
+        fromRow (name, PG.ViaJSON def, comment) =
           RemoteSchemaMetadata name def comment mempty mempty
 
     fetchCollections =
@@ -573,7 +573,7 @@ fetchMetadataFromHdbTables = liftTx do
           ()
           False
       where
-        fromRow (name, PG.AltJ defn, mComment) =
+        fromRow (name, PG.ViaJSON defn, mComment) =
           CreateCollection name defn mComment
 
     fetchAllowlist =
@@ -602,7 +602,7 @@ fetchMetadataFromHdbTables = liftTx do
           ()
           False
       pure $
-        flip map r $ \(schema, table, name, PG.AltJ definition, comment) ->
+        flip map r $ \(schema, table, name, PG.ViaJSON definition, comment) ->
           ( QualifiedObject schema table,
             ComputedFieldMetadata name definition (commentFromMaybeText comment)
           )
@@ -624,11 +624,11 @@ fetchMetadataFromHdbTables = liftTx do
           (name, webhook, schedule, payload, retryConfig, headerConfig, includeMetadata, comment) =
             CronTriggerMetadata
               { ctName = name,
-                ctWebhook = PG.getAltJ webhook,
+                ctWebhook = PG.getViaJSON webhook,
                 ctSchedule = schedule,
-                ctPayload = PG.getAltJ <$> payload,
-                ctRetryConf = PG.getAltJ retryConfig,
-                ctHeaders = PG.getAltJ headerConfig,
+                ctPayload = PG.getViaJSON <$> payload,
+                ctRetryConf = PG.getViaJSON retryConfig,
+                ctHeaders = PG.getViaJSON headerConfig,
                 ctIncludeInMetadata = includeMetadata,
                 ctComment = comment,
                 ctRequestTransform = Nothing,
@@ -637,7 +637,7 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchCustomTypes :: PG.TxE QErr CustomTypes
     fetchCustomTypes =
-      PG.getAltJ . runIdentity . PG.getRow
+      PG.getViaJSON . runIdentity . PG.getRow
         <$> PG.rawQE
           defaultTxErrorHandler
           [PG.sql|
@@ -647,7 +647,7 @@ fetchMetadataFromHdbTables = liftTx do
           False
 
     fetchActions =
-      PG.getAltJ . runIdentity . PG.getRow
+      PG.getViaJSON . runIdentity . PG.getRow
         <$> PG.rawQE
           defaultTxErrorHandler
           [PG.sql|
@@ -696,7 +696,7 @@ fetchMetadataFromHdbTables = liftTx do
           ()
           False
       pure $
-        flip map r $ \(schema, table, name, PG.AltJ definition) ->
+        flip map r $ \(schema, table, name, PG.ViaJSON definition) ->
           ( QualifiedObject schema table,
             name,
             definition

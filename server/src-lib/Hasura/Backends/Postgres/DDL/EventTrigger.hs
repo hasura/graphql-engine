@@ -350,8 +350,8 @@ insertInvocation tName invo = do
     ( iEventId invo,
       (triggerNameToTxt tName),
       fromIntegral <$> iStatus invo :: Maybe Int64,
-      PG.AltJ $ toJSON $ iRequest invo,
-      PG.AltJ $ toJSON $ iResponse invo
+      PG.ViaJSON $ toJSON $ iRequest invo,
+      PG.ViaJSON $ toJSON $ iResponse invo
     )
     True
   PG.unitQE
@@ -377,7 +377,7 @@ insertPGManualEvent (QualifiedObject schemaName tableName) triggerName rowData =
       [PG.sql|
     SELECT hdb_catalog.insert_event_log($1, $2, $3, $4, $5)
   |]
-      (schemaName, tableName, triggerName, (tshow MANUAL), PG.AltJ rowData)
+      (schemaName, tableName, triggerName, (tshow MANUAL), PG.ViaJSON rowData)
       False
 
 archiveEvents :: TriggerName -> PG.TxE QErr ()
@@ -437,7 +437,7 @@ fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
       (limit, triggerNamesTxt)
       True
   where
-    uncurryEvent (id', sourceName, tableName, triggerName, PG.AltJ payload, tries, created) =
+    uncurryEvent (id', sourceName, tableName, triggerName, PG.ViaJSON payload, tries, created) =
       Event
         { eId = id',
           eSource = source,
@@ -473,7 +473,7 @@ fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
         (Identity limit)
         True
     where
-      uncurryEvent (id', sn, tn, trn, PG.AltJ payload, tries, created) =
+      uncurryEvent (id', sn, tn, trn, PG.ViaJSON payload, tries, created) =
         Event
           { eId = id',
             eSource = SNDefault, -- in v1, there'll only be the default source

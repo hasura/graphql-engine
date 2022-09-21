@@ -29,8 +29,8 @@ newtype TestValue = TestValue {hey :: Int}
 
 instance J.FromJSON TestValue
 
-instance Show (AltJ TestValue) where
-  show (AltJ tv) = show tv
+instance Show (ViaJSON TestValue) where
+  show (ViaJSON tv) = show tv
 
 getPgUri :: (MonadIO m) => m BS.ByteString
 getPgUri = liftIO $ fromString <$> Env.getEnv "DATABASE_URL"
@@ -68,7 +68,7 @@ specJsonb = do
         Right (SingleRow (Identity (_ :: BS.ByteString))) -> True
         Left e -> error e
 
-    it "Querying 'json' from PostgreSQL into AltJ type succeeds" $ do
+    it "Querying 'json' from PostgreSQL into ViaJSON type succeeds" $ do
       pg <- getPostgresConnect
       result <-
         runTxT
@@ -76,10 +76,10 @@ specJsonb = do
           (rawQE show "select '{\"hey\":42}'::json" [] False)
 
       result `shouldSatisfy` \case
-        Right (SingleRow (Identity (AltJ (_ :: TestValue)))) -> True
+        Right (SingleRow (Identity (ViaJSON (_ :: TestValue)))) -> True
         Left e -> error e
 
-    it "Querying 'jsonb' from PostgreSQL into AltJ type succeeds" $ do
+    it "Querying 'jsonb' from PostgreSQL into ViaJSON type succeeds" $ do
       pg <- getPostgresConnect
       result <-
         runTxT
@@ -87,7 +87,7 @@ specJsonb = do
           (rawQE show "select '{\"hey\":42}'::jsonb" [] False)
 
       result `shouldSatisfy` \case
-        Right (SingleRow (Identity (AltJ (_ :: TestValue)))) -> True
+        Right (SingleRow (Identity (ViaJSON (_ :: TestValue)))) -> True
         Left e -> error e
 
 instance FromPGConnErr String where

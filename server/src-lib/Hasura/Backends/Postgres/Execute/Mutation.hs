@@ -261,8 +261,8 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
         PG.rawQE dmlTxErrorHandler sqlText (toList p) False
 
   if checkPermissionRequired cte
-    then withCheckPermission $ (first PG.getAltJ . PG.getRow) <$> mutationTx
-    else (PG.getAltJ . runIdentity . PG.getRow) <$> mutationTx
+    then withCheckPermission $ (first PG.getViaJSON . PG.getRow) <$> mutationTx
+    else (PG.getViaJSON . runIdentity . PG.getRow) <$> mutationTx
   where
     rawAliasIdentifier = "mutres__" <> qualifiedObjectToText qt
     aliasIdentifier = Identifier rawAliasIdentifier

@@ -560,7 +560,7 @@ getScheduledEventsForDeliveryTx =
   where
     getCronEventsForDelivery :: PG.TxE QErr [CronEvent]
     getCronEventsForDelivery =
-      map (PG.getAltJ . runIdentity)
+      map (PG.getViaJSON . runIdentity)
         <$> PG.listQE
           defaultTxErrorHandler
           [PG.sql|
@@ -586,7 +586,7 @@ getScheduledEventsForDeliveryTx =
 
     getOneOffEventsForDelivery :: PG.TxE QErr [OneOffScheduledEvent]
     getOneOffEventsForDelivery = do
-      map (PG.getAltJ . runIdentity)
+      map (PG.getViaJSON . runIdentity)
         <$> PG.listQE
           defaultTxErrorHandler
           [PG.sql|
@@ -623,8 +623,8 @@ insertInvocationTx invo type' = do
         |]
         ( iEventId invo,
           fromIntegral <$> iStatus invo :: Maybe Int64,
-          PG.AltJ $ J.toJSON $ iRequest invo,
-          PG.AltJ $ J.toJSON $ iResponse invo
+          PG.ViaJSON $ J.toJSON $ iRequest invo,
+          PG.ViaJSON $ J.toJSON $ iResponse invo
         )
         True
       PG.unitQE
@@ -646,8 +646,8 @@ insertInvocationTx invo type' = do
         |]
         ( iEventId invo,
           fromIntegral <$> iStatus invo :: Maybe Int64,
-          PG.AltJ $ J.toJSON $ iRequest invo,
-          PG.AltJ $ J.toJSON $ iResponse invo
+          PG.ViaJSON $ J.toJSON $ iRequest invo,
+          PG.ViaJSON $ J.toJSON $ iResponse invo
         )
         True
       PG.unitQE
@@ -795,11 +795,11 @@ insertOneOffScheduledEventTx CreateScheduledEvent {..} =
     VALUES
     ($1, $2, $3, $4, $5, $6) RETURNING id
     |]
-      ( PG.AltJ cseWebhook,
+      ( PG.ViaJSON cseWebhook,
         cseScheduleAt,
-        PG.AltJ csePayload,
-        PG.AltJ cseRetryConf,
-        PG.AltJ cseHeaders,
+        PG.ViaJSON csePayload,
+        PG.ViaJSON cseRetryConf,
+        PG.ViaJSON cseHeaders,
         cseComment
       )
       False
@@ -890,11 +890,11 @@ mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} shouldIncludeR
               }
        in S.Extractor (S.handleIfNull (S.SELit "[]") (S.SESelect selectExp)) Nothing
 
-withCount :: (Int, PG.AltJ a) -> WithOptionalTotalCount a
-withCount (count, PG.AltJ a) = WithOptionalTotalCount (Just count) a
+withCount :: (Int, PG.ViaJSON a) -> WithOptionalTotalCount a
+withCount (count, PG.ViaJSON a) = WithOptionalTotalCount (Just count) a
 
-withoutCount :: PG.AltJ a -> WithOptionalTotalCount a
-withoutCount (PG.AltJ a) = WithOptionalTotalCount Nothing a
+withoutCount :: PG.ViaJSON a -> WithOptionalTotalCount a
+withoutCount (PG.ViaJSON a) = WithOptionalTotalCount Nothing a
 
 executeWithOptionalTotalCount :: J.FromJSON a => PG.Query -> RowsCountOption -> PG.TxE QErr (WithOptionalTotalCount a)
 executeWithOptionalTotalCount sql getRowsCount =

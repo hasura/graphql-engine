@@ -285,7 +285,7 @@ executeStreamingMultiplexedQuery ::
   (MonadTx m) =>
   MultiplexedQuery ->
   [(CohortId, CohortVariables)] ->
-  m [(CohortId, B.ByteString, PG.AltJ CursorVariableValues)]
+  m [(CohortId, B.ByteString, PG.ViaJSON CursorVariableValues)]
 executeStreamingMultiplexedQuery (MultiplexedQuery query) cohorts = do
   executeQuery query cohorts
 

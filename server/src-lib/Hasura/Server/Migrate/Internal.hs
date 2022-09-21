@@ -67,14 +67,14 @@ from3To4 = liftTx $
   where
     uncurryEventTrigger ::
       ( TriggerName,
-        PG.AltJ (TriggerOpsDef ('Postgres 'Vanilla)),
+        PG.ViaJSON (TriggerOpsDef ('Postgres 'Vanilla)),
         InputWebhook,
         Int,
         Int,
-        PG.AltJ (Maybe [HeaderConf])
+        PG.ViaJSON (Maybe [HeaderConf])
       ) ->
       EventTriggerConf ('Postgres 'Vanilla)
-    uncurryEventTrigger (trn, PG.AltJ tDef, w, nr, rint, PG.AltJ headers) =
+    uncurryEventTrigger (trn, PG.ViaJSON tDef, w, nr, rint, PG.ViaJSON headers) =
       EventTriggerConf trn tDef (Just w) Nothing (RetryConf nr rint Nothing) headers Nothing Nothing Nothing
     updateEventTrigger3To4 etc@(EventTriggerConf name _ _ _ _ _ _ _ _) =
       PG.unitQ
@@ -84,7 +84,7 @@ from3To4 = liftTx $
                                             configuration = $1
                                             WHERE name = $2
                                             |]
-        (PG.AltJ $ A.toJSON etc, name)
+        (PG.ViaJSON $ A.toJSON etc, name)
         True
 
 setCatalogVersion :: MonadTx m => Text -> UTCTime -> m ()
