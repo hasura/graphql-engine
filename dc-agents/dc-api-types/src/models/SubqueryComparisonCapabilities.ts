@@ -2,7 +2,7 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export type CrossTableComparisonCapabilities = {
+export type SubqueryComparisonCapabilities = {
   /**
    * Does the agent support comparisons that involve related tables (ie. joins)?
    */

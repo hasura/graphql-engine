@@ -20,7 +20,7 @@ const scalarTypes: ScalarTypesCapabilities = {
 const capabilities: Capabilities = {
   relationships: {},
   comparisons: {
-    cross_table: {
+    subquery: {
       supports_relations: true
     }
   },

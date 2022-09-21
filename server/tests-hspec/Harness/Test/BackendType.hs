@@ -53,7 +53,7 @@ defaultBackendCapabilities = \case
       [yaml|
       relationships: {}
       comparisons:
-        cross_table:
+        subquery:
           supports_relations: true
       explain: {}
       metrics: {}
@@ -71,7 +71,7 @@ defaultBackendCapabilities = \case
         }
       relationships: {}
       comparisons:
-        cross_table:
+        subquery:
           supports_relations: true
       scalar_types:
         DateTime:

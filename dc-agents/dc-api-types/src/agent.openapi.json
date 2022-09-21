@@ -294,7 +294,7 @@
         "type": "string"
       },
       "RelationshipCapabilities": {},
-      "CrossTableComparisonCapabilities": {
+      "SubqueryComparisonCapabilities": {
         "nullable": true,
         "properties": {
           "supports_relations": {
@@ -309,8 +309,8 @@
       },
       "ComparisonCapabilities": {
         "properties": {
-          "cross_table": {
-            "$ref": "#/components/schemas/CrossTableComparisonCapabilities"
+          "subquery": {
+            "$ref": "#/components/schemas/SubqueryComparisonCapabilities"
           }
         },
         "type": "object"

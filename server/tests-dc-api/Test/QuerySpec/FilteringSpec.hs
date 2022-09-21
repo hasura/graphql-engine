@@ -163,7 +163,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
-  when (isJust $ comparisonCapabilities >>= _ccCrossTableComparisonCapabilities) $
+  when (isJust $ comparisonCapabilities >>= _ccSubqueryComparisonCapabilities) $
     describe "Comparisons in unrelated tables" $ do
       describe "can filter with a condition that requires that matching rows exist in another unrelated table" $ do
         describe "compare against a single column" $ do
@@ -218,92 +218,92 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
             Data.responseRows receivedAlbums `rowsShouldBe` []
             _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
-      when ((comparisonCapabilities >>= _ccCrossTableComparisonCapabilities <&> _ctccSupportsRelations) == Just True) $
-        describe "Comparisons in related tables" $ do
-          it "can filter by comparing against rows in a related table" $ do
-            let where' =
-                  Exists (RelatedTable Data.artistRelationshipName) $
-                    ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "Name") (ScalarValue (String "AC/DC"))
-            let query =
-                  albumsQueryRequest
-                    & qrTableRelationships .~ [Data.onlyKeepRelationships [Data.artistRelationshipName] Data.albumsTableRelationships]
-                    & qrQuery . qWhere ?~ where'
-            receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
+  when ((comparisonCapabilities >>= _ccSubqueryComparisonCapabilities <&> _ctccSupportsRelations) == Just True) $
+    describe "Comparisons in related tables" $ do
+      it "can filter by comparing against rows in a related table" $ do
+        let where' =
+              Exists (RelatedTable Data.artistRelationshipName) $
+                ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "Name") (ScalarValue (String "AC/DC"))
+        let query =
+              albumsQueryRequest
+                & qrTableRelationships .~ [Data.onlyKeepRelationships [Data.artistRelationshipName] Data.albumsTableRelationships]
+                & qrQuery . qWhere ?~ where'
+        receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
-            let artistId =
-                  Data.artistsRows
-                    & find (\artist -> (artist ^? Data.field "Name" . Data._ColumnFieldString) == Just "AC/DC")
-                    >>= (^? Data.field "ArtistId" . Data._ColumnFieldNumber)
+        let artistId =
+              Data.artistsRows
+                & find (\artist -> (artist ^? Data.field "Name" . Data._ColumnFieldString) == Just "AC/DC")
+                >>= (^? Data.field "ArtistId" . Data._ColumnFieldNumber)
 
-            let albums =
-                  Data.albumsRows
-                    & filter (\album -> (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) == artistId)
-                    & sortOn (^? Data.field "AlbumId")
+        let albums =
+              Data.albumsRows
+                & filter (\album -> (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) == artistId)
+                & sortOn (^? Data.field "AlbumId")
 
-            Data.responseRows receivedAlbums `rowsShouldBe` albums
-            _qrAggregates receivedAlbums `jsonShouldBe` Nothing
+        Data.responseRows receivedAlbums `rowsShouldBe` albums
+        _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
-          it "can filter by comparing against rows in a deeply related table" $ do
-            let where' =
-                  Exists (RelatedTable Data.albumsRelationshipName) . Exists (RelatedTable Data.tracksRelationshipName) . Exists (RelatedTable Data.genreRelationshipName) $
-                    ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "Name") (ScalarValue (String "Metal"))
-            let query =
-                  artistsQueryRequest
-                    & qrTableRelationships
-                      .~ [ Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships,
-                           Data.onlyKeepRelationships [Data.tracksRelationshipName] Data.albumsTableRelationships,
-                           Data.onlyKeepRelationships [Data.genreRelationshipName] Data.tracksTableRelationships
-                         ]
-                    & qrQuery . qWhere ?~ where'
-            receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
+      it "can filter by comparing against rows in a deeply related table" $ do
+        let where' =
+              Exists (RelatedTable Data.albumsRelationshipName) . Exists (RelatedTable Data.tracksRelationshipName) . Exists (RelatedTable Data.genreRelationshipName) $
+                ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "Name") (ScalarValue (String "Metal"))
+        let query =
+              artistsQueryRequest
+                & qrTableRelationships
+                  .~ [ Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships,
+                       Data.onlyKeepRelationships [Data.tracksRelationshipName] Data.albumsTableRelationships,
+                       Data.onlyKeepRelationships [Data.genreRelationshipName] Data.tracksTableRelationships
+                     ]
+                & qrQuery . qWhere ?~ where'
+        receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
 
-            let genreId =
-                  Data.genresRows
-                    & find (\genre -> (genre ^? Data.field "Name" . Data._ColumnFieldString) == Just "Metal")
-                    >>= (^? Data.field "GenreId" . Data._ColumnFieldNumber)
+        let genreId =
+              Data.genresRows
+                & find (\genre -> (genre ^? Data.field "Name" . Data._ColumnFieldString) == Just "Metal")
+                >>= (^? Data.field "GenreId" . Data._ColumnFieldNumber)
 
-            let albumIds =
-                  Data.tracksRows
-                    & filter (\track -> (track ^? Data.field "GenreId" . Data._ColumnFieldNumber) == genreId)
-                    & map (\track -> (track ^? Data.field "AlbumId" . Data._ColumnFieldNumber))
-                    & HashSet.fromList
+        let albumIds =
+              Data.tracksRows
+                & filter (\track -> (track ^? Data.field "GenreId" . Data._ColumnFieldNumber) == genreId)
+                & map (\track -> (track ^? Data.field "AlbumId" . Data._ColumnFieldNumber))
+                & HashSet.fromList
 
-            let artists =
-                  Data.albumsRows
-                    & filter (\album -> HashSet.member (album ^? Data.field "AlbumId" . Data._ColumnFieldNumber) albumIds)
-                    & mapMaybe (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber)
-                    & HashSet.fromList
-                    & HashSet.toList
-                    & mapMaybe (\artistId -> HashMap.lookup artistId Data.artistsRowsById)
-                    & sortOn (^? Data.field "ArtistId")
+        let artists =
+              Data.albumsRows
+                & filter (\album -> HashSet.member (album ^? Data.field "AlbumId" . Data._ColumnFieldNumber) albumIds)
+                & mapMaybe (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber)
+                & HashSet.fromList
+                & HashSet.toList
+                & mapMaybe (\artistId -> HashMap.lookup artistId Data.artistsRowsById)
+                & sortOn (^? Data.field "ArtistId")
 
-            Data.responseRows receivedArtists `rowsShouldBe` artists
-            _qrAggregates receivedArtists `jsonShouldBe` Nothing
+        Data.responseRows receivedArtists `rowsShouldBe` artists
+        _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
-          it "can filter by comparing against multiple columns in a related table" $ do
-            let where' =
-                  Exists (RelatedTable Data.albumsRelationshipName) $
-                    And
-                      [ ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "AlbumId") (ScalarValue (Number 1)),
-                        ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "Title") (ScalarValue (String "Let There Be Rock"))
-                      ]
-            let query =
-                  artistsQueryRequest
-                    & qrTableRelationships .~ [Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships]
-                    & qrQuery . qWhere ?~ where'
-            receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
+      it "can filter by comparing against multiple columns in a related table" $ do
+        let where' =
+              Exists (RelatedTable Data.albumsRelationshipName) $
+                And
+                  [ ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "AlbumId") (ScalarValue (Number 1)),
+                    ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "Title") (ScalarValue (String "Let There Be Rock"))
+                  ]
+        let query =
+              artistsQueryRequest
+                & qrTableRelationships .~ [Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships]
+                & qrQuery . qWhere ?~ where'
+        receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
 
-            let albums =
-                  Data.albumsRows
-                    & filter (\album -> (album ^? Data.field "AlbumId" . Data._ColumnFieldNumber) == Just 1 && (album ^? Data.field "Title" . Data._ColumnFieldString) == Just "Let There Be Rock")
+        let albums =
+              Data.albumsRows
+                & filter (\album -> (album ^? Data.field "AlbumId" . Data._ColumnFieldNumber) == Just 1 && (album ^? Data.field "Title" . Data._ColumnFieldString) == Just "Let There Be Rock")
 
-            let artists =
-                  Data.artistsRows
-                    & filter (\artist -> isJust $ find (\album -> (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) == (artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber)) albums)
-                    & sortOn (^? Data.field "ArtistId")
+        let artists =
+              Data.artistsRows
+                & filter (\artist -> isJust $ find (\album -> (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) == (artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber)) albums)
+                & sortOn (^? Data.field "ArtistId")
 
-            Data.responseRows receivedArtists `rowsShouldBe` artists
-            _qrAggregates receivedArtists `jsonShouldBe` Nothing
+        Data.responseRows receivedArtists `rowsShouldBe` artists
+        _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
 artistsQueryRequest :: QueryRequest
 artistsQueryRequest =

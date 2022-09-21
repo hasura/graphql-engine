@@ -10,7 +10,7 @@ export const capabilitiesResponse: CapabilitiesResponse = {
     },
     relationships: {},
     comparisons: {
-      cross_table: {
+      subquery: {
         supports_relations: true
       }
     },

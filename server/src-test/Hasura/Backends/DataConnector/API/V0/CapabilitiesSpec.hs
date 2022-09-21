@@ -120,11 +120,11 @@ genRelationshipCapabilities = pure RelationshipCapabilities {}
 genComparisonCapabilities :: MonadGen m => m ComparisonCapabilities
 genComparisonCapabilities =
   ComparisonCapabilities
-    <$> Gen.maybe genCrossTableComparisonCapabilities
+    <$> Gen.maybe genSubqueryComparisonCapabilities
 
-genCrossTableComparisonCapabilities :: MonadGen m => m CrossTableComparisonCapabilities
-genCrossTableComparisonCapabilities =
-  CrossTableComparisonCapabilities
+genSubqueryComparisonCapabilities :: MonadGen m => m SubqueryComparisonCapabilities
+genSubqueryComparisonCapabilities =
+  SubqueryComparisonCapabilities
     <$> Gen.bool
 
 genMetricsCapabilities :: MonadGen m => m MetricsCapabilities

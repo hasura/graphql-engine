@@ -42,7 +42,7 @@ capabilities =
             API._cComparisons =
               Just
                 API.ComparisonCapabilities
-                  { API._ccCrossTableComparisonCapabilities = Just API.CrossTableComparisonCapabilities {API._ctccSupportsRelations = True}
+                  { API._ccSubqueryComparisonCapabilities = Just API.SubqueryComparisonCapabilities {API._ctccSupportsRelations = True}
                   },
             API._cMetrics = Just API.MetricsCapabilities {},
             API._cExplain = Just API.ExplainCapabilities {}
