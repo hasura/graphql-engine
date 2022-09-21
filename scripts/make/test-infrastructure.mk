@@ -27,19 +27,18 @@ COCKROACH_DBUSER = root
 # function from util.sh (or anywhere else).
 DB_UTILS = source ./.buildkite/scripts/util/util.sh;
 
-ifneq ($(shell command -v sqlcmd),)
-MSSQL_SQLCMD = sqlcmd
-MSSQL_SQLCMD_PORT = $(MSSQL_PORT)
+# Use the Azure SQL Edge image instead of the SQL Server image on arm64.
+# The latter doesn't work yet.
+ifeq ($(shell uname -m),arm64)
+MSSQL_IMAGE=mcr.microsoft.com/azure-sql-edge
 else
-ifneq ($(shell [[ -e /opt/mssql-tools/bin/sqlcmd ]] && echo true),)
-MSSQL_SQLCMD = /opt/mssql-tools/bin/sqlcmd
-MSSQL_SQLCMD_PORT = $(MSSQL_PORT)
-else
-MSSQL_SQLCMD = docker compose exec --no-TTY sqlserver sqlcmd
-MSSQL_SQLCMD_PORT = 1433
-endif
+MSSQL_IMAGE=  # allow the Docker Compose file to set the image
 endif
 
+# Run `sqlcmd` in a separate image when waiting for SQL Server to start.
+MSSQL_SQLCMD = docker run --rm --platform=linux/amd64 --net=host mcr.microsoft.com/mssql-tools /opt/mssql-tools/bin/sqlcmd
+
+export MSSQL_IMAGE
 export MSSQL_SQLCMD
 
 define stop_after
@@ -99,11 +98,12 @@ start-sqlserver: spawn-sqlserver wait-for-sqlserver
 .PHONY: spawn-sqlserver
 spawn-sqlserver:
 	docker compose up -d sqlserver
+	docker compose run sqlserver-init
 
 .PHONY: wait-for-sqlserver
 wait-for-sqlserver:
 	$(DB_UTILS) wait_for_mssql $(MSSQL_PORT)
-	$(DB_UTILS) wait_for_mssql_db $(MSSQL_SQLCMD_PORT) "$(MSSQL_DBNAME)" "$(MSSQL_DBUSER)" "$(MSSQL_DBPASSWORD)"
+	$(DB_UTILS) wait_for_mssql_db $(MSSQL_PORT) "$(MSSQL_DBNAME)" "$(MSSQL_DBUSER)" "$(MSSQL_DBPASSWORD)"
 
 .PHONY: start-mysql
 ## start-mysql: start local MariaDB in Docker and wait for it to be ready
