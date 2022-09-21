@@ -34,7 +34,7 @@ module Hasura.RQL.DDL.EventTrigger
     cetqResponseTrasnform,
     cteqCleanupConfig,
     runCleanupEventTriggerLog,
-    runEventTriggerStartCleanup,
+    runEventTriggerResumeCleanup,
     runEventTriggerPauseCleanup,
     MonadEventLogCleanup (..),
     getAllEventTriggersWithCleanupConfig,
@@ -612,12 +612,12 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
         onJust (etiCleanupConfig eventTriggerInfo) $ \cleanupConfig ->
           updateCleanupStatusInMetadata @b cleanupConfig switch sourceName tableName triggerName
 
-runEventTriggerStartCleanup ::
+runEventTriggerResumeCleanup ::
   forall m.
   (MonadIO m, QErrM m, CacheRWM m, MetadataM m) =>
   TriggerLogCleanupToggleConfig ->
   m EncJSON
-runEventTriggerStartCleanup conf = toggleEventTriggerCleanupAction conf ETCSUnpaused
+runEventTriggerResumeCleanup conf = toggleEventTriggerCleanupAction conf ETCSUnpaused
 
 runEventTriggerPauseCleanup ::
   (MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m) =>

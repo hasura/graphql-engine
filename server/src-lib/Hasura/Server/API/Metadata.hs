@@ -130,7 +130,7 @@ data RQLMetadataV1
   | RMRedeliverEvent !(AnyBackend RedeliverEventQuery)
   | RMInvokeEventTrigger !(AnyBackend InvokeEventTriggerQuery)
   | RMCleanupEventTriggerLog !TriggerLogCleanupConfig
-  | RMStartEventTriggerCleanup !TriggerLogCleanupToggleConfig
+  | RMResumeEventTriggerCleanup !TriggerLogCleanupToggleConfig
   | RMPauseEventTriggerCleanup !TriggerLogCleanupToggleConfig
   | -- Remote schemas
     RMAddRemoteSchema !AddRemoteSchemaQuery
@@ -230,7 +230,7 @@ instance FromJSON RQLMetadataV1 where
       "update_remote_schema_remote_relationship" -> RMUpdateRemoteSchemaRemoteRelationship <$> args
       "delete_remote_schema_remote_relationship" -> RMDeleteRemoteSchemaRemoteRelationship <$> args
       "cleanup_event_trigger_logs" -> RMCleanupEventTriggerLog <$> args
-      "start_event_trigger_cleanups" -> RMStartEventTriggerCleanup <$> args
+      "resume_event_trigger_cleanups" -> RMResumeEventTriggerCleanup <$> args
       "pause_event_trigger_cleanups" -> RMPauseEventTriggerCleanup <$> args
       "create_cron_trigger" -> RMCreateCronTrigger <$> args
       "delete_cron_trigger" -> RMDeleteCronTrigger <$> args
@@ -469,7 +469,7 @@ queryModifiesMetadata = \case
       RMCreateEventTrigger _ -> True
       RMDeleteEventTrigger _ -> True
       RMCleanupEventTriggerLog _ -> True
-      RMStartEventTriggerCleanup _ -> True
+      RMResumeEventTriggerCleanup _ -> True
       RMPauseEventTriggerCleanup _ -> True
       RMAddRemoteSchema _ -> True
       RMUpdateRemoteSchema _ -> True
@@ -616,7 +616,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMRedeliverEvent q -> dispatchEventTrigger runRedeliverEvent q
   RMInvokeEventTrigger q -> dispatchEventTrigger runInvokeEventTrigger q
   RMCleanupEventTriggerLog q -> runCleanupEventTriggerLog q
-  RMStartEventTriggerCleanup q -> runEventTriggerStartCleanup q
+  RMResumeEventTriggerCleanup q -> runEventTriggerResumeCleanup q
   RMPauseEventTriggerCleanup q -> runEventTriggerPauseCleanup q
   RMAddRemoteSchema q -> runAddRemoteSchema env q
   RMUpdateRemoteSchema q -> runUpdateRemoteSchema env q
