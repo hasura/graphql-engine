@@ -22388,7 +22388,7 @@ updateCleanupStatusInMetadata :: forall b m. (Backend b, QErrM m, CacheRWM m, Me
 -- | Function to start/stop the cleanup action based on the event triggers
 --   supplied in TriggerLogCleanupToggleConfig conf
 toggleEventTriggerCleanupAction :: forall m. (MonadIO m, QErrM m, CacheRWM m, MetadataM m) => TriggerLogCleanupToggleConfig -> EventTriggerCleanupStatus -> m EncJSON
-runEventTriggerStartCleanup :: forall m. (MonadIO m, QErrM m, CacheRWM m, MetadataM m) => TriggerLogCleanupToggleConfig -> m EncJSON
+runEventTriggerResumeCleanup :: forall m. (MonadIO m, QErrM m, CacheRWM m, MetadataM m) => TriggerLogCleanupToggleConfig -> m EncJSON
 runEventTriggerPauseCleanup :: (MonadError QErr m, CacheRWM m, MonadIO m, MetadataM m) => TriggerLogCleanupToggleConfig -> m EncJSON
 
 -- | Collects and returns all the event triggers with cleanup config
@@ -30234,7 +30234,7 @@ RMDeleteEventTrigger :: !AnyBackend DeleteEventTriggerQuery -> RQLMetadataV1
 RMRedeliverEvent :: !AnyBackend RedeliverEventQuery -> RQLMetadataV1
 RMInvokeEventTrigger :: !AnyBackend InvokeEventTriggerQuery -> RQLMetadataV1
 RMCleanupEventTriggerLog :: !TriggerLogCleanupConfig -> RQLMetadataV1
-RMStartEventTriggerCleanup :: !TriggerLogCleanupToggleConfig -> RQLMetadataV1
+RMResumeEventTriggerCleanup :: !TriggerLogCleanupToggleConfig -> RQLMetadataV1
 RMPauseEventTriggerCleanup :: !TriggerLogCleanupToggleConfig -> RQLMetadataV1
 RMAddRemoteSchema :: !AddRemoteSchemaQuery -> RQLMetadataV1
 RMUpdateRemoteSchema :: !AddRemoteSchemaQuery -> RQLMetadataV1
