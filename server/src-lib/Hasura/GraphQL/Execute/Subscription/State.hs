@@ -49,11 +49,11 @@ import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Action
 import Hasura.RQL.Types.Common (SourceName)
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.Server.Metrics (ServerMetrics (..))
 import Hasura.Server.Prometheus (PrometheusMetrics (..))
 import Hasura.Server.Types (RequestId)
 import Language.GraphQL.Draft.Syntax qualified as G
+import Refined (unrefine)
 import StmContainers.Map qualified as STMMap
 import System.Metrics.Gauge qualified as EKG.Gauge
 import System.Metrics.Prometheus.Gauge qualified as Prometheus.Gauge
@@ -198,7 +198,7 @@ addLiveQuery
       threadRef <- forkImmortal ("pollLiveQuery." <> show pollerId) logger $
         forever $ do
           pollLiveQuery @b pollerId lqOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts poller) postPollHook
-          sleep $ Numeric.unNonNegativeDiffTime $ unRefetchInterval refetchInterval
+          sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
       STM.atomically $ STM.putTMVar (_pIOState poller) pState
@@ -288,7 +288,7 @@ addStreamSubscriptionQuery
       threadRef <- forkImmortal ("pollStreamingQuery." <> show (unPollerId pollerId)) logger $
         forever $ do
           pollStreamingQuery @b pollerId streamQOpts (source, sourceConfig) role parameterizedQueryHash query (_pCohorts handler) rootFieldName postPollHook Nothing
-          sleep $ Numeric.unNonNegativeDiffTime $ unRefetchInterval refetchInterval
+          sleep $ unrefine $ unRefetchInterval refetchInterval
       let !pState = PollerIOState threadRef pollerId
       $assertNFHere pState -- so we don't write thunks to mutable vars
       STM.atomically $ STM.putTMVar (_pIOState handler) pState

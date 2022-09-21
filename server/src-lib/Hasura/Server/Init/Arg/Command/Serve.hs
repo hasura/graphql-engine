@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 -- | The Arg Opt.Parser for the 'serve' subcommand.
 module Hasura.Server.Init.Arg.Command.Serve
   ( -- * Opt.Parser
@@ -72,7 +74,6 @@ import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg.PrettyPrinter qualified as PP
@@ -83,6 +84,7 @@ import Hasura.Server.Types qualified as Types
 import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
 import Options.Applicative qualified as Opt
+import Refined (NonNegative, Positive, Refined, refineTH)
 import Witch qualified
 
 --------------------------------------------------------------------------------
@@ -176,7 +178,7 @@ parseConnParams :: Opt.Parser Config.ConnParamsRaw
 parseConnParams =
   Config.ConnParamsRaw <$> pgStripes <*> pgConns <*> pgIdleTimeout <*> pgConnLifetime <*> pgUsePreparedStatements <*> pgPoolTimeout
   where
-    pgStripes :: Opt.Parser (Maybe Numeric.NonNegativeInt)
+    pgStripes :: Opt.Parser (Maybe (Refined NonNegative Int))
     pgStripes =
       Opt.optional $
         Opt.option
@@ -187,7 +189,7 @@ parseConnParams =
               <> Opt.help (Config._helpMessage pgStripesOption)
           )
 
-    pgConns :: Opt.Parser (Maybe Numeric.NonNegativeInt)
+    pgConns :: Opt.Parser (Maybe (Refined NonNegative Int))
     pgConns =
       Opt.optional $
         Opt.option
@@ -198,7 +200,7 @@ parseConnParams =
               <> Opt.help (Config._helpMessage pgConnsOption)
           )
 
-    pgIdleTimeout :: Opt.Parser (Maybe Numeric.NonNegativeInt)
+    pgIdleTimeout :: Opt.Parser (Maybe (Refined NonNegative Int))
     pgIdleTimeout =
       Opt.optional $
         Opt.option
@@ -208,7 +210,7 @@ parseConnParams =
               <> Opt.help (Config._helpMessage pgTimeoutOption)
           )
 
-    pgConnLifetime :: Opt.Parser (Maybe (Numeric.NonNegative Time.NominalDiffTime))
+    pgConnLifetime :: Opt.Parser (Maybe (Refined NonNegative Time.NominalDiffTime))
     pgConnLifetime =
       Opt.optional $
         Opt.option
@@ -228,7 +230,7 @@ parseConnParams =
               <> Opt.help (Config._helpMessage pgUsePreparedStatementsOption)
           )
 
-    pgPoolTimeout :: Opt.Parser (Maybe (Numeric.NonNegative Time.NominalDiffTime))
+    pgPoolTimeout :: Opt.Parser (Maybe (Refined NonNegative Time.NominalDiffTime))
     pgPoolTimeout =
       Opt.optional $
         Opt.option
@@ -238,20 +240,20 @@ parseConnParams =
               <> Opt.help (Config._helpMessage pgPoolTimeoutOption)
           )
 
-pgStripesOption :: Config.Option Numeric.NonNegativeInt
+pgStripesOption :: Config.Option (Refined NonNegative Int)
 pgStripesOption =
   Config.Option
-    { _default = Numeric.unsafeNonNegativeInt 1,
+    { _default = $$(refineTH 1),
       _envVar = "HASURA_GRAPHQL_PG_STRIPES",
       _helpMessage =
         "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1). "
           <> "New connections will be taken from a particular stripe pseudo-randomly."
     }
 
-pgConnsOption :: Config.Option Numeric.NonNegativeInt
+pgConnsOption :: Config.Option (Refined NonNegative Int)
 pgConnsOption =
   Config.Option
-    { _default = Numeric.unsafeNonNegativeInt 50,
+    { _default = $$(refineTH 50),
       _envVar = "HASURA_GRAPHQL_PG_CONNECTIONS",
       _helpMessage =
         "Maximum number of Postgres connections that can be opened per stripe (default: 50). "
@@ -259,18 +261,18 @@ pgConnsOption =
           <> "even if there is capacity in other stripes."
     }
 
-pgTimeoutOption :: Config.Option Numeric.NonNegativeInt
+pgTimeoutOption :: Config.Option (Refined NonNegative Int)
 pgTimeoutOption =
   Config.Option
-    { _default = Numeric.unsafeNonNegativeInt 180,
+    { _default = $$(refineTH 180),
       _envVar = "HASURA_GRAPHQL_PG_TIMEOUT",
       _helpMessage = "Each connection's idle time before it is closed (default: 180 sec)"
     }
 
-pgConnLifetimeOption :: Config.Option (Numeric.NonNegative Time.NominalDiffTime)
+pgConnLifetimeOption :: Config.Option (Refined NonNegative Time.NominalDiffTime)
 pgConnLifetimeOption =
   Config.Option
-    { _default = Numeric.unsafeNonNegative 600,
+    { _default = $$(refineTH 600),
       _envVar = "HASURA_GRAPHQL_PG_CONN_LIFETIME",
       _helpMessage =
         "Time from connection creation after which the connection should be destroyed and a new one "
@@ -605,7 +607,7 @@ parseMxRefetchDelay =
 mxRefetchDelayOption :: Config.Option Subscription.Options.RefetchInterval
 mxRefetchDelayOption =
   Config.Option
-    { Config._default = Subscription.Options.RefetchInterval 1,
+    { Config._default = Subscription.Options.RefetchInterval $$(refineTH 1),
       Config._envVar = "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_REFETCH_INTERVAL",
       Config._helpMessage =
         "results will only be sent once in this interval (in milliseconds) for "
@@ -625,7 +627,7 @@ parseMxBatchSize =
 mxBatchSizeOption :: Config.Option Subscription.Options.BatchSize
 mxBatchSizeOption =
   Config.Option
-    { _default = Subscription.Options.BatchSize $ Numeric.unsafeNonNegativeInt 100,
+    { _default = Subscription.Options.BatchSize $$(refineTH 100),
       _envVar = "HASURA_GRAPHQL_LIVE_QUERIES_MULTIPLEXED_BATCH_SIZE",
       _helpMessage =
         "multiplexed live queries are split into batches of the specified "
@@ -645,7 +647,7 @@ parseStreamingMxRefetchDelay =
 streamingMxRefetchDelayOption :: Config.Option Subscription.Options.RefetchInterval
 streamingMxRefetchDelayOption =
   Config.Option
-    { Config._default = Subscription.Options.RefetchInterval 1,
+    { Config._default = Subscription.Options.RefetchInterval $$(refineTH 1),
       Config._envVar = "HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_REFETCH_INTERVAL",
       Config._helpMessage =
         "results will only be sent once in this interval (in milliseconds) for "
@@ -665,7 +667,7 @@ parseStreamingMxBatchSize =
 streamingMxBatchSizeOption :: Config.Option Subscription.Options.BatchSize
 streamingMxBatchSizeOption =
   Config.Option
-    { Config._default = Subscription.Options.BatchSize $ Numeric.unsafeNonNegativeInt 100,
+    { Config._default = Subscription.Options.BatchSize $$(refineTH 100),
       Config._envVar = "HASURA_GRAPHQL_STREAMING_QUERIES_MULTIPLEXED_BATCH_SIZE",
       Config._helpMessage =
         "multiplexed live queries are split into batches of the specified "
@@ -777,7 +779,7 @@ graphqlAdminInternalErrorsOption =
       Config._helpMessage = "Enables including 'internal' information in an error response for requests made by an 'admin' (default: true)"
     }
 
-parseGraphqlEventsHttpPoolSize :: Opt.Parser (Maybe Numeric.PositiveInt)
+parseGraphqlEventsHttpPoolSize :: Opt.Parser (Maybe (Refined Positive Int))
 parseGraphqlEventsHttpPoolSize =
   Opt.optional $
     Opt.option
@@ -787,15 +789,15 @@ parseGraphqlEventsHttpPoolSize =
           <> Opt.help (Config._helpMessage graphqlEventsHttpPoolSizeOption)
       )
 
-graphqlEventsHttpPoolSizeOption :: Config.Option Numeric.PositiveInt
+graphqlEventsHttpPoolSizeOption :: Config.Option (Refined Positive Int)
 graphqlEventsHttpPoolSizeOption =
   Config.Option
-    { Config._default = Numeric.unsafePositiveInt 100,
+    { Config._default = $$(refineTH 100),
       Config._envVar = "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE",
       Config._helpMessage = "Max event processing threads (default: 100)"
     }
 
-parseGraphqlEventsFetchInterval :: Opt.Parser (Maybe (Numeric.NonNegative Milliseconds))
+parseGraphqlEventsFetchInterval :: Opt.Parser (Maybe (Refined NonNegative Milliseconds))
 parseGraphqlEventsFetchInterval =
   Opt.optional $
     Opt.option
@@ -805,10 +807,10 @@ parseGraphqlEventsFetchInterval =
           <> Opt.help (Config._helpMessage graphqlEventsFetchIntervalOption)
       )
 
-graphqlEventsFetchIntervalOption :: Config.Option (Numeric.NonNegative Milliseconds)
+graphqlEventsFetchIntervalOption :: Config.Option (Refined NonNegative Milliseconds)
 graphqlEventsFetchIntervalOption =
   Config.Option
-    { Config._default = Numeric.unsafeNonNegative (1000 :: Milliseconds),
+    { Config._default = $$(refineTH 1000),
       Config._envVar = "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL",
       Config._helpMessage = "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres (default: 1 second)."
     }
@@ -826,7 +828,7 @@ parseGraphqlAsyncActionsFetchInterval =
 asyncActionsFetchIntervalOption :: Config.Option Config.OptionalInterval
 asyncActionsFetchIntervalOption =
   Config.Option
-    { Config._default = Config.Interval $ Numeric.unsafeNonNegative (1000 :: Milliseconds),
+    { Config._default = Config.Interval $$(refineTH 1000),
       Config._envVar = "HASURA_GRAPHQL_ASYNC_ACTIONS_FETCH_INTERVAL",
       Config._helpMessage =
         "Interval in milliseconds to sleep before trying to fetch new async actions. "
@@ -878,7 +880,7 @@ parseWebSocketKeepAlive =
 webSocketKeepAliveOption :: Config.Option Config.KeepAliveDelay
 webSocketKeepAliveOption =
   Config.Option
-    { Config._default = Config.KeepAliveDelay $ Numeric.unsafeNonNegative (5 :: Seconds),
+    { Config._default = Config.KeepAliveDelay $$(refineTH 5),
       Config._envVar = "HASURA_GRAPHQL_WEBSOCKET_KEEPALIVE",
       Config._helpMessage = "Control websocket keep-alive timeout (default 5 seconds)"
     }
@@ -930,7 +932,7 @@ schemaPollIntervalOption :: Config.Option Config.OptionalInterval
 schemaPollIntervalOption =
   Config.Option
     { -- 1000 Milliseconds or 1 Second
-      Config._default = Config.Interval $ Numeric.unsafeNonNegative (1000 :: Milliseconds),
+      Config._default = Config.Interval $$(refineTH 1000),
       Config._envVar = "HASURA_GRAPHQL_SCHEMA_SYNC_POLL_INTERVAL",
       Config._helpMessage = "Interval to poll metadata storage for updates in milliseconds - Default 1000 (1s) - Set to 0 to disable"
     }
@@ -959,7 +961,7 @@ experimentalFeaturesOption =
           <> "streaming_subscriptions: A streaming subscription streams the response according to the cursor provided by the user"
     }
 
-parseEventsFetchBatchSize :: Opt.Parser (Maybe Numeric.NonNegativeInt)
+parseEventsFetchBatchSize :: Opt.Parser (Maybe (Refined NonNegative Int))
 parseEventsFetchBatchSize =
   Opt.optional $
     Opt.option
@@ -969,17 +971,17 @@ parseEventsFetchBatchSize =
           <> Opt.help (Config._helpMessage eventsFetchBatchSizeOption)
       )
 
-eventsFetchBatchSizeOption :: Config.Option Numeric.NonNegativeInt
+eventsFetchBatchSizeOption :: Config.Option (Refined NonNegative Int)
 eventsFetchBatchSizeOption =
   Config.Option
-    { Config._default = Numeric.unsafeNonNegativeInt 100,
+    { Config._default = $$(refineTH 100),
       Config._envVar = "HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE",
       Config._helpMessage =
         "The maximum number of events to be fetched from the events table in a single batch. Default 100"
           ++ "Value \"0\" implies completely disable fetching events from events table. "
     }
 
-parseGracefulShutdownTimeout :: Opt.Parser (Maybe (Numeric.NonNegative Seconds))
+parseGracefulShutdownTimeout :: Opt.Parser (Maybe (Refined NonNegative Seconds))
 parseGracefulShutdownTimeout =
   Opt.optional $
     Opt.option
@@ -989,10 +991,10 @@ parseGracefulShutdownTimeout =
           <> Opt.help (Config._helpMessage gracefulShutdownOption)
       )
 
-gracefulShutdownOption :: Config.Option (Numeric.NonNegative Seconds)
+gracefulShutdownOption :: Config.Option (Refined NonNegative Seconds)
 gracefulShutdownOption =
   Config.Option
-    { Config._default = Numeric.unsafeNonNegative (60 :: Seconds),
+    { Config._default = $$(refineTH 60),
       Config._envVar = "HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT",
       Config._helpMessage =
         "Timeout for graceful shutdown before which in-flight scheduled events, "
@@ -1012,7 +1014,7 @@ parseWebSocketConnectionInitTimeout =
 webSocketConnectionInitTimeoutOption :: Config.Option Config.WSConnectionInitTimeout
 webSocketConnectionInitTimeoutOption =
   Config.Option
-    { Config._default = Config.WSConnectionInitTimeout $ Numeric.unsafeNonNegative 3,
+    { Config._default = Config.WSConnectionInitTimeout $$(refineTH 3),
       Config._envVar = "HASURA_GRAPHQL_WEBSOCKET_CONNECTION_INIT_TIMEOUT", -- FIXME?: maybe a better name
       Config._helpMessage = "Control websocket connection_init timeout (default 3 seconds)"
     }

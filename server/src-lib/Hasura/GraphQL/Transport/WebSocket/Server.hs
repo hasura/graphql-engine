@@ -57,11 +57,11 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.Server.Init.Config (WSConnectionInitTimeout (..))
 import ListT qualified
 import Network.Wai.Extended (IpAddress)
 import Network.WebSockets qualified as WS
+import Refined (unrefine)
 import StmContainers.Map qualified as STMMap
 import System.IO.Error qualified as E
 
@@ -309,7 +309,7 @@ createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverSta
   logWSLog logger $ WSLog wsId EConnectionRequest Nothing
   -- NOTE: this timer is specific to `graphql-ws`. the server has to close the connection
   -- if the client doesn't send a `connection_init` message within the timeout period
-  wsConnInitTimer <- liftIO $ getNewWSTimer (Numeric.getNonNegative $ unWSConnectionInitTimeout wsConnInitTimeout)
+  wsConnInitTimer <- liftIO $ getNewWSTimer (unrefine $ unWSConnectionInitTimeout wsConnInitTimeout)
   status <- liftIO $ STM.readTVarIO serverStatus
   case status of
     AcceptingConns _ -> logUnexpectedExceptions $ do

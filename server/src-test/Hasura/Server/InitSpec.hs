@@ -1,3 +1,5 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.Server.InitSpec
   ( spec,
   )
@@ -7,6 +9,7 @@ where
 
 import Data.HashSet qualified as Set
 import Data.Monoid (All (..))
+import Data.Time (NominalDiffTime)
 import Database.PG.Query qualified as Query
 import Hasura.GraphQL.Execute.Subscription.Options qualified as Subscription.Options
 import Hasura.GraphQL.Schema.NamingCase qualified as NamingCase
@@ -14,7 +17,6 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging (Hasura)
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.SQL.Types qualified as MonadTx
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
@@ -23,6 +25,7 @@ import Hasura.Server.Logging qualified as Logging
 import Hasura.Server.Types qualified as Types
 import Hasura.Session qualified as UUT
 import Network.WebSockets qualified as WS
+import Refined (NonNegative, Positive, refineTH, unrefine)
 import Test.Hspec qualified as Hspec
 
 {-# ANN module ("HLint: ignore Redundant ==" :: String) #-}
@@ -166,11 +169,11 @@ mkServeOptionsSpec =
         fmap UUT.soConnParams result
           `Hspec.shouldBe` Right
             ( Query.ConnParams
-                { Query.cpStripes = Numeric.getNonNegativeInt $ UUT._default UUT.pgStripesOption,
-                  Query.cpConns = Numeric.getNonNegativeInt $ UUT._default UUT.pgConnsOption,
-                  Query.cpIdleTime = Numeric.getNonNegativeInt $ UUT._default UUT.pgTimeoutOption,
+                { Query.cpStripes = unrefine $ UUT._default UUT.pgStripesOption,
+                  Query.cpConns = unrefine $ UUT._default UUT.pgConnsOption,
+                  Query.cpIdleTime = unrefine $ UUT._default UUT.pgTimeoutOption,
                   Query.cpAllowPrepare = UUT._default UUT.pgUsePreparedStatementsOption,
-                  Query.cpMbLifetime = Just $ Numeric.getNonNegative $ UUT._default UUT.pgConnLifetimeOption,
+                  Query.cpMbLifetime = Just $ unrefine $ UUT._default UUT.pgConnLifetimeOption,
                   Query.cpTimeout = Nothing,
                   Query.cpCancel = True
                 }
@@ -210,12 +213,12 @@ mkServeOptionsSpec =
               emptyServeOptionsRaw
                 { UUT.rsoConnParams =
                     UUT.ConnParamsRaw
-                      { rcpStripes = Just (Numeric.unsafeNonNegativeInt 2),
-                        rcpConns = Just (Numeric.unsafeNonNegativeInt 3),
-                        rcpIdleTime = Just (Numeric.unsafeNonNegativeInt 4),
-                        rcpConnLifetime = Just (Numeric.unsafeNonNegative 5),
+                      { rcpStripes = Just $$(refineTH @NonNegative @Int 2),
+                        rcpConns = Just $$(refineTH @NonNegative @Int 3),
+                        rcpIdleTime = Just $$(refineTH @NonNegative @Int 4),
+                        rcpConnLifetime = Just $$(refineTH @NonNegative @NominalDiffTime 5),
                         rcpAllowPrepare = Just True,
-                        rcpPoolTimeout = Just (Numeric.unsafeNonNegative 6)
+                        rcpPoolTimeout = Just $$(refineTH @NonNegative @NominalDiffTime 6)
                       }
                 }
             -- When
@@ -656,8 +659,8 @@ mkServeOptionsSpec =
         fmap UUT.soLiveQueryOpts result
           `Hspec.shouldBe` Right
             ( Subscription.Options.SubscriptionsOptions
-                { _lqoRefetchInterval = Subscription.Options.RefetchInterval 2,
-                  _lqoBatchSize = Subscription.Options.BatchSize (Numeric.unsafeNonNegativeInt 200)
+                { _lqoRefetchInterval = Subscription.Options.RefetchInterval $$(refineTH 2),
+                  _lqoBatchSize = Subscription.Options.BatchSize $$(refineTH 200)
                 }
             )
 
@@ -679,8 +682,8 @@ mkServeOptionsSpec =
         fmap UUT.soLiveQueryOpts result
           `Hspec.shouldBe` Right
             ( Subscription.Options.SubscriptionsOptions
-                { _lqoRefetchInterval = Subscription.Options.RefetchInterval 3,
-                  _lqoBatchSize = Subscription.Options.BatchSize (Numeric.unsafeNonNegativeInt 300)
+                { _lqoRefetchInterval = Subscription.Options.RefetchInterval $$(refineTH 3),
+                  _lqoBatchSize = Subscription.Options.BatchSize $$(refineTH 300)
                 }
             )
 
@@ -715,8 +718,8 @@ mkServeOptionsSpec =
         fmap UUT.soStreamingQueryOpts result
           `Hspec.shouldBe` Right
             ( Subscription.Options.SubscriptionsOptions
-                { _lqoRefetchInterval = Subscription.Options.RefetchInterval 2,
-                  _lqoBatchSize = Subscription.Options.BatchSize (Numeric.unsafeNonNegativeInt 200)
+                { _lqoRefetchInterval = Subscription.Options.RefetchInterval $$(refineTH 2),
+                  _lqoBatchSize = Subscription.Options.BatchSize $$(refineTH 200)
                 }
             )
 
@@ -738,8 +741,8 @@ mkServeOptionsSpec =
         fmap UUT.soStreamingQueryOpts result
           `Hspec.shouldBe` Right
             ( Subscription.Options.SubscriptionsOptions
-                { _lqoRefetchInterval = Subscription.Options.RefetchInterval 3,
-                  _lqoBatchSize = Subscription.Options.BatchSize (Numeric.unsafeNonNegativeInt 300)
+                { _lqoRefetchInterval = Subscription.Options.RefetchInterval $$(refineTH 3),
+                  _lqoBatchSize = Subscription.Options.BatchSize $$(refineTH 300)
                 }
             )
 
@@ -923,17 +926,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (Numeric.unsafePositiveInt 200)
+        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right $$(refineTH @Positive @Int 200)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsHttpPoolSize = Just (Numeric.unsafePositiveInt 300)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsHttpPoolSize = Just $$(refineTH @Positive @Int 300)}
             -- When
             env = [(UUT._envVar UUT.graphqlEventsHttpPoolSizeOption, "200")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right (Numeric.unsafePositiveInt 300)
+        fmap UUT.soEventsHttpPoolSize result `Hspec.shouldBe` Right $$(refineTH @Positive @Int 300)
 
     Hspec.describe "soEventsFetchInterval" $ do
       Hspec.it "Default == 1" $ do
@@ -954,17 +957,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right (Numeric.unsafeNonNegative $ 200)
+        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Milliseconds 200)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsFetchInterval = Just $ Numeric.unsafeNonNegative 300}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsFetchInterval = Just $$(refineTH @NonNegative @Milliseconds 300)}
             -- When
             env = [(UUT._envVar UUT.graphqlEventsFetchIntervalOption, "200")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right (Numeric.unsafeNonNegative 300)
+        fmap UUT.soEventsFetchInterval result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Milliseconds 300)
 
     Hspec.describe "soAsyncActionsFetchInterval" $ do
       Hspec.it "Default == 1000" $ do
@@ -985,7 +988,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval $ Numeric.unsafeNonNegative 200)
+        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval $$(refineTH 200))
 
       Hspec.it "0 == 'Skip'" $ do
         let -- Given
@@ -999,13 +1002,13 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAsyncActionsFetchInterval = Just (UUT.Interval $ Numeric.unsafeNonNegative 300)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoAsyncActionsFetchInterval = Just (UUT.Interval $$(refineTH 300))}
             -- When
             env = [(UUT._envVar UUT.asyncActionsFetchIntervalOption, "200")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval $ Numeric.unsafeNonNegative 300)
+        fmap UUT.soAsyncActionsFetchInterval result `Hspec.shouldBe` Right (UUT.Interval $$(refineTH 300))
 
     Hspec.describe "soEnableRemoteSchemaPermissions" $ do
       Hspec.it "Default == False" $ do
@@ -1090,17 +1093,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay $ Numeric.unsafeNonNegative 10)
+        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay $$(refineTH 10))
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketKeepAlive = Just (UUT.KeepAliveDelay $ Numeric.unsafeNonNegative 20)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoWebSocketKeepAlive = Just (UUT.KeepAliveDelay $$(refineTH 20))}
             -- When
             env = [(UUT._envVar UUT.webSocketKeepAliveOption, "10")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay $ Numeric.unsafeNonNegative 20)
+        fmap (UUT.soWebSocketKeepAlive) result `Hspec.shouldBe` Right (UUT.KeepAliveDelay $$(refineTH 20))
 
     Hspec.describe "soInferFunctionPermissions" $ do
       Hspec.it "Default == FunctionPermissionsInferred" $ do
@@ -1183,7 +1186,7 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval $ Numeric.unsafeNonNegative 2000)
+        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval $$(refineTH 2000))
 
       Hspec.it "0 == Skip" $ do
         let -- Given
@@ -1197,13 +1200,13 @@ mkServeOptionsSpec =
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoSchemaPollInterval = Just (UUT.Interval $ Numeric.unsafeNonNegative 3000)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoSchemaPollInterval = Just (UUT.Interval $$(refineTH 3000))}
             -- When
             env = [(UUT._envVar UUT.schemaPollIntervalOption, "2000")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval $ Numeric.unsafeNonNegative 3000)
+        fmap (UUT.soSchemaPollInterval) result `Hspec.shouldBe` Right (UUT.Interval $$(refineTH 3000))
 
     Hspec.describe "soExperimentalFeatures" $ do
       Hspec.it "Default == mempty" $ do
@@ -1249,17 +1252,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldBe` Right (Numeric.unsafeNonNegativeInt 200)
+        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Int 200)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsFetchBatchSize = Just (Numeric.unsafeNonNegativeInt 300)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoEventsFetchBatchSize = Just $$(refineTH @NonNegative @Int 300)}
             -- When
             env = [(UUT._envVar UUT.eventsFetchBatchSizeOption, "200")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldBe` Right (Numeric.unsafeNonNegativeInt 300)
+        fmap (UUT.soEventsFetchBatchSize) result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Int 300)
 
     Hspec.describe "soGracefulShutdownTimeout" $ do
       Hspec.it "Default == 60" $ do
@@ -1282,17 +1285,17 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right (Numeric.unsafeNonNegative 200)
+        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Seconds 200)
 
       Hspec.it "Arg > Env" $ do
         let -- Given
-            rawServeOptions = emptyServeOptionsRaw {UUT.rsoGracefulShutdownTimeout = Just (Numeric.unsafeNonNegative 300)}
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoGracefulShutdownTimeout = Just $$(refineTH @NonNegative @Seconds 300)}
             -- When
             env = [(UUT._envVar UUT.gracefulShutdownOption, "200")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right (Numeric.unsafeNonNegative 300)
+        fmap (UUT.soGracefulShutdownTimeout) result `Hspec.shouldBe` Right $$(refineTH @NonNegative @Seconds 300)
 
     Hspec.describe "soWebSocketConnectionInitTimeout" $ do
       Hspec.it "Default == 3" $ do
@@ -1313,20 +1316,20 @@ mkServeOptionsSpec =
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout (Numeric.unsafeNonNegative 200))
+        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout $$(refineTH @NonNegative @Seconds 200))
 
       Hspec.it "Arg > Env" $ do
         let -- Given
             rawServeOptions =
               emptyServeOptionsRaw
-                { UUT.rsoWebSocketConnectionInitTimeout = Just (UUT.WSConnectionInitTimeout (Numeric.unsafeNonNegative 300))
+                { UUT.rsoWebSocketConnectionInitTimeout = Just (UUT.WSConnectionInitTimeout $$(refineTH @NonNegative @Seconds 300))
                 }
             -- When
             env = [(UUT._envVar UUT.webSocketConnectionInitTimeoutOption, "200")]
             -- Then
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
-        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout (Numeric.unsafeNonNegative 300))
+        fmap (UUT.soWebSocketConnectionInitTimeout) result `Hspec.shouldBe` Right (UUT.WSConnectionInitTimeout $$(refineTH @NonNegative @Seconds 300))
 
     Hspec.describe "soEnableMetadataQueryLoggingEnv" $ do
       Hspec.it "Default == MetadataQueryLoggingDisabled" $ do

@@ -81,7 +81,6 @@ import Hasura.Incremental (Cacheable)
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Logging qualified as Server.Logging
@@ -89,6 +88,7 @@ import Hasura.Server.Types qualified as Server.Types
 import Hasura.Session qualified as Session
 import Network.Wai.Handler.Warp qualified as Warp
 import Network.WebSockets qualified as WebSockets
+import Refined (NonNegative, Positive, Refined, unrefine)
 
 --------------------------------------------------------------------------------
 
@@ -285,8 +285,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoLogLevel :: Maybe Logging.LogLevel,
     rsoDevMode :: Bool,
     rsoAdminInternalErrors :: Maybe Bool,
-    rsoEventsHttpPoolSize :: Maybe Numeric.PositiveInt,
-    rsoEventsFetchInterval :: Maybe (Numeric.NonNegative Milliseconds),
+    rsoEventsHttpPoolSize :: Maybe (Refined Positive Int),
+    rsoEventsFetchInterval :: Maybe (Refined NonNegative Milliseconds),
     rsoAsyncActionsFetchInterval :: Maybe OptionalInterval,
     rsoEnableRemoteSchemaPermissions :: Schema.Options.RemoteSchemaPermissions,
     rsoWebSocketCompression :: Bool,
@@ -296,8 +296,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoSchemaPollInterval :: Maybe OptionalInterval,
     -- | See Note '$experimentalFeatures' at bottom of module
     rsoExperimentalFeatures :: Maybe (HashSet Server.Types.ExperimentalFeature),
-    rsoEventsFetchBatchSize :: Maybe Numeric.NonNegativeInt,
-    rsoGracefulShutdownTimeout :: Maybe (Numeric.NonNegative Seconds),
+    rsoEventsFetchBatchSize :: Maybe (Refined NonNegative Int),
+    rsoGracefulShutdownTimeout :: Maybe (Refined NonNegative Seconds),
     rsoWebSocketConnectionInitTimeout :: Maybe WSConnectionInitTimeout,
     rsoEnableMetadataQueryLoggingEnv :: Server.Logging.MetadataQueryLoggingMode,
     -- | stores global default naming convention
@@ -365,12 +365,12 @@ data OptionalInterval
   = -- | No polling
     Skip
   | -- | Interval time
-    Interval (Numeric.NonNegative Milliseconds)
+    Interval (Refined NonNegative Milliseconds)
   deriving (Show, Eq)
 
-msToOptionalInterval :: Numeric.NonNegative Milliseconds -> OptionalInterval
+msToOptionalInterval :: Refined NonNegative Milliseconds -> OptionalInterval
 msToOptionalInterval = \case
-  (Numeric.getNonNegative -> 0) -> Skip
+  (unrefine -> 0) -> Skip
   s -> Interval s
 
 instance FromJSON OptionalInterval where
@@ -385,19 +385,19 @@ instance ToJSON OptionalInterval where
 -- construct a 'ConnParams'
 data ConnParamsRaw = ConnParamsRaw
   { -- NOTE: Should any of these types be 'PositiveInt'?
-    rcpStripes :: Maybe Numeric.NonNegativeInt,
-    rcpConns :: Maybe Numeric.NonNegativeInt,
-    rcpIdleTime :: Maybe Numeric.NonNegativeInt,
+    rcpStripes :: Maybe (Refined NonNegative Int),
+    rcpConns :: Maybe (Refined NonNegative Int),
+    rcpIdleTime :: Maybe (Refined NonNegative Int),
     -- | Time from connection creation after which to destroy a connection and
     -- choose a different/new one.
-    rcpConnLifetime :: Maybe (Numeric.NonNegative Time.NominalDiffTime),
+    rcpConnLifetime :: Maybe (Refined NonNegative Time.NominalDiffTime),
     rcpAllowPrepare :: Maybe Bool,
     -- | See @HASURA_GRAPHQL_PG_POOL_TIMEOUT@
-    rcpPoolTimeout :: Maybe (Numeric.NonNegative Time.NominalDiffTime)
+    rcpPoolTimeout :: Maybe (Refined NonNegative Time.NominalDiffTime)
   }
   deriving (Show, Eq)
 
-newtype KeepAliveDelay = KeepAliveDelay {unKeepAliveDelay :: Numeric.NonNegative Seconds}
+newtype KeepAliveDelay = KeepAliveDelay {unKeepAliveDelay :: Refined NonNegative Seconds}
   deriving (Eq, Show)
 
 instance FromJSON KeepAliveDelay where
@@ -412,7 +412,7 @@ instance ToJSON KeepAliveDelay where
 --------------------------------------------------------------------------------
 
 -- | The timeout duration in 'Seconds' for a WebSocket connection.
-newtype WSConnectionInitTimeout = WSConnectionInitTimeout {unWSConnectionInitTimeout :: Numeric.NonNegative Seconds}
+newtype WSConnectionInitTimeout = WSConnectionInitTimeout {unWSConnectionInitTimeout :: Refined NonNegative Seconds}
   deriving newtype (Show, Eq, Ord)
 
 instance FromJSON WSConnectionInitTimeout where
@@ -451,8 +451,8 @@ data ServeOptions impl = ServeOptions
     soEnabledLogTypes :: HashSet (Logging.EngineLogType impl),
     soLogLevel :: Logging.LogLevel,
     soResponseInternalErrorsConfig :: ResponseInternalErrorsConfig,
-    soEventsHttpPoolSize :: Numeric.PositiveInt,
-    soEventsFetchInterval :: Numeric.NonNegative Milliseconds,
+    soEventsHttpPoolSize :: Refined Positive Int,
+    soEventsFetchInterval :: Refined NonNegative Milliseconds,
     soAsyncActionsFetchInterval :: OptionalInterval,
     soEnableRemoteSchemaPermissions :: Schema.Options.RemoteSchemaPermissions,
     soConnectionOptions :: WebSockets.ConnectionOptions,
@@ -462,9 +462,9 @@ data ServeOptions impl = ServeOptions
     soSchemaPollInterval :: OptionalInterval,
     -- | See note '$experimentalFeatures'
     soExperimentalFeatures :: HashSet Server.Types.ExperimentalFeature,
-    soEventsFetchBatchSize :: Numeric.NonNegativeInt,
+    soEventsFetchBatchSize :: Refined NonNegative Int,
     soDevMode :: Bool,
-    soGracefulShutdownTimeout :: Numeric.NonNegative Seconds,
+    soGracefulShutdownTimeout :: Refined NonNegative Seconds,
     soWebSocketConnectionInitTimeout :: WSConnectionInitTimeout,
     soEventingMode :: Server.Types.EventingMode,
     -- | See note '$readOnlyMode'

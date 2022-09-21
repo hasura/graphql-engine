@@ -29,9 +29,9 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (SourceName)
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.Subscription (SubscriptionType (..))
 import Hasura.Session
+import Refined (unrefine)
 
 pushResultToCohort ::
   GQResult BS.ByteString ->
@@ -90,7 +90,7 @@ pollLiveQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameterizedQ
       cohorts <- STM.atomically $ TMap.toList cohortMap
       cohortSnapshots <- mapM (STM.atomically . getCohortSnapshot) cohorts
       -- cohorts are broken down into batches specified by the batch size
-      let cohortBatches = chunksOf (Numeric.getNonNegativeInt (unBatchSize batchSize)) cohortSnapshots
+      let cohortBatches = chunksOf (unrefine (unBatchSize batchSize)) cohortSnapshots
       -- associating every batch with their BatchId
       pure $ zip (BatchId <$> [1 ..]) cohortBatches
 

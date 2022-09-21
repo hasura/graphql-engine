@@ -144,12 +144,12 @@ import Hasura.RQL.DDL.Webhook.Transform
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.SQL.Types
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Transformable qualified as HTTP
+import Refined (unrefine)
 import Text.Builder qualified as TB
 
 -- | runCronEventsGenerator makes sure that all the cron triggers
@@ -358,13 +358,10 @@ processScheduledEvent eventId eventHeaders retryCtx payload webhookUrl type' =
     let retryConf = _rctxConf retryCtx
         scheduledTime = sewpScheduledTime payload
     if convertDuration (diffUTCTime currentTime scheduledTime)
-      > Numeric.unNonNegativeDiffTime (strcToleranceSeconds retryConf)
+      > unrefine (strcToleranceSeconds retryConf)
       then processDead eventId type'
       else do
-        let timeoutSeconds =
-              round $
-                Numeric.unNonNegativeDiffTime $
-                  strcTimeoutSeconds retryConf
+        let timeoutSeconds = round $ unrefine (strcTimeoutSeconds retryConf)
             httpTimeout = HTTP.responseTimeoutMicro (timeoutSeconds * 1000000)
             (headers, decodedHeaders) = prepareHeaders eventHeaders
             extraLogCtx = ExtraLogContext eventId (sewpName payload)
@@ -442,9 +439,7 @@ retryOrMarkError eventId retryCtx err type' = do
       currentTime <- liftIO getCurrentTime
       let delay =
             fromMaybe
-              ( round $
-                  Numeric.unNonNegativeDiffTime $
-                    strcRetryIntervalSeconds retryConf
+              ( round $ unrefine (strcRetryIntervalSeconds retryConf)
               )
               mRetryHeaderSeconds
           diff = fromIntegral delay

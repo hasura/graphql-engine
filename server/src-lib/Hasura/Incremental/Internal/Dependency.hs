@@ -51,6 +51,7 @@ import Hasura.Incremental.Select
 import Hasura.Prelude
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.URI.Extended qualified as N
+import Refined (Refined, unrefine)
 import Servant.Client (BaseUrl, Scheme)
 import System.Cron.Types
 
@@ -126,6 +127,9 @@ class (Eq a) => Cacheable a where
 
 instance (Cacheable a) => Cacheable (NESeq a) where
   unchanged access = unchanged access `on` NESeq.toSeq
+
+instance (Cacheable a) => Cacheable (Refined p a) where
+  unchanged access = unchanged access `on` unrefine
 
 -- | A mapping from root 'Dependency' keys to the accesses made against those dependencies.
 newtype Accesses = Accesses {unAccesses :: DM.DMap UniqueS Access}

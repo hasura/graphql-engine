@@ -36,7 +36,6 @@ import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg
@@ -46,6 +45,7 @@ import Hasura.Server.Init.Logging
 import Hasura.Server.Logging qualified as Server.Logging
 import Hasura.Server.Types qualified as Types
 import Network.WebSockets qualified as WebSockets
+import Refined (unrefine)
 
 --------------------------------------------------------------------------------
 -- TODO(SOLOMON): Where does this note belong?
@@ -207,19 +207,19 @@ mkServeOptions ServeOptionsRaw {..} = do
   pure ServeOptions {..}
   where
     mkConnParams ConnParamsRaw {..} = do
-      cpStripes <- Numeric.getNonNegativeInt <$> withOptionDefault rcpStripes pgStripesOption
+      cpStripes <- unrefine <$> withOptionDefault rcpStripes pgStripesOption
       -- Note: by Little's Law we can expect e.g. (with 50 max connections) a
       -- hard throughput cap at 1000RPS when db queries take 50ms on average:
-      cpConns <- Numeric.getNonNegativeInt <$> withOptionDefault rcpConns pgConnsOption
-      cpIdleTime <- Numeric.getNonNegativeInt <$> withOptionDefault rcpIdleTime pgTimeoutOption
+      cpConns <- unrefine <$> withOptionDefault rcpConns pgConnsOption
+      cpIdleTime <- unrefine <$> withOptionDefault rcpIdleTime pgTimeoutOption
       cpAllowPrepare <- withOptionDefault rcpAllowPrepare pgUsePreparedStatementsOption
       -- TODO: Add newtype to allow this:
       cpMbLifetime <- do
-        lifetime <- Numeric.getNonNegative <$> withOptionDefault rcpConnLifetime pgConnLifetimeOption
+        lifetime <- unrefine <$> withOptionDefault rcpConnLifetime pgConnLifetimeOption
         if lifetime == 0
           then pure Nothing
           else pure (Just lifetime)
-      cpTimeout <- fmap Numeric.getNonNegative <$> withOption rcpPoolTimeout pgPoolTimeoutOption
+      cpTimeout <- fmap unrefine <$> withOption rcpPoolTimeout pgPoolTimeoutOption
       let cpCancel = True
       return $
         Query.ConnParams {..}

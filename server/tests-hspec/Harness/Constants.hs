@@ -1,4 +1,5 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -- | Constant configurations used throughout the test suite.
 module Harness.Constants
@@ -48,7 +49,6 @@ import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.Prelude
-import Hasura.RQL.Types.Numeric qualified as Numeric
 import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
@@ -65,6 +65,7 @@ import Hasura.Server.Types
     ReadOnlyMode (ReadOnlyModeDisabled),
   )
 import Network.WebSockets qualified as WS
+import Refined (refineTH)
 
 -------------------------------------------------------------------------------
 
@@ -268,11 +269,11 @@ serveOptions =
       soInferFunctionPermissions = Options.InferFunctionPermissions,
       soEnableMaintenanceMode = MaintenanceModeDisabled,
       -- MUST be disabled to be able to modify schema.
-      soSchemaPollInterval = Interval (Numeric.unsafeNonNegative 10),
+      soSchemaPollInterval = Interval $$(refineTH 10),
       soExperimentalFeatures = Set.singleton EFStreamingSubscriptions,
-      soEventsFetchBatchSize = Numeric.unsafeNonNegativeInt 1,
+      soEventsFetchBatchSize = $$(refineTH 1),
       soDevMode = True,
-      soGracefulShutdownTimeout = Numeric.unsafeNonNegative 0, -- Don't wait to shutdown.
+      soGracefulShutdownTimeout = $$(refineTH 0), -- Don't wait to shutdown.
       soWebSocketConnectionInitTimeout = Init._default Init.webSocketConnectionInitTimeoutOption,
       soEventingMode = EventingEnabled,
       soReadOnlyMode = ReadOnlyModeDisabled,
