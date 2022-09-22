@@ -50,3 +50,5 @@ export function get<T extends Record<string, any>, P extends Path<T>>(
   }, obj);
   return new_obj as PathValue<T, P>;
 }
+
+export const capitalize = (s: string) => s && s[0].toUpperCase() + s.slice(1);

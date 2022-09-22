@@ -63,7 +63,13 @@ export const GDCDatabaseListItem: React.FC<GDCDatabaseListItemItemProps> = ({
         >
           Reload
         </Button>
-        <Button size="sm" className="mr-xs" onClick={() => {}} disabled>
+        <Button
+          size="sm"
+          className="mr-xs"
+          onClick={() => {
+            dispatch(_push(`/data/v2/edit?database=${dataSource.name}`));
+          }}
+        >
           Edit
         </Button>
         <Button

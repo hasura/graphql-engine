@@ -14,63 +14,6 @@ import {
 
 import { NetworkArgs } from './api';
 
-export type Ref = { $ref: string };
-
-export type OneOf = { oneOf: (Property | Ref)[]; description?: string };
-
-export const isFreeFormObjectField = (
-  property: Property & { type: 'object' }
-): property is Property & {
-  type: 'object';
-  additionalProperties: true;
-} => {
-  if (!('additionalProperties' in property)) return false;
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const additionalProperties = property.additionalProperties;
-
-  return true;
-};
-
-export type Property = {
-  description?: string;
-  nullable?: boolean;
-} & (
-  | {
-      type: 'object';
-      properties: Record<string, Ref | Property | OneOf>;
-    }
-  | {
-      type: 'object';
-      additionalProperties: true;
-    }
-  | {
-      type: 'string';
-      enum?: string[];
-    }
-  | {
-      type: 'number';
-    }
-  | {
-      type: 'boolean';
-    }
-  | {
-      type: 'array';
-      items:
-        | { type: 'string' | 'number' }
-        | {
-            type: 'object';
-            properties: Record<string, Ref | Property | OneOf>;
-          }
-        | {
-            type: 'object';
-            additionalProperties: true;
-            nullable?: boolean;
-          }
-        | Ref;
-    }
-);
-
 export type AllowedTableRelationships =
   | Legacy_SourceToRemoteSchemaRelationship
   | SourceToRemoteSchemaRelationship

@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from 'react-query';
+import { useQuery } from 'react-query';
 import { useHttpClient } from '@/features/Network';
 import { Table, MetadataTable } from '@/features/MetadataAPI';
 import { DataSource, exportMetadata, Feature } from '@/features/DataSource';
@@ -84,7 +84,6 @@ const getTrackableTables = (
 
 export const useTables = ({ dataSourceName }: UseTablesProps) => {
   const httpClient = useHttpClient();
-  const queryClient = useQueryClient();
   return useQuery<TrackableTable[], Error>({
     queryKey: ['introspected-tables', dataSourceName],
     queryFn: async () => {
@@ -123,8 +122,5 @@ export const useTables = ({ dataSourceName }: UseTablesProps) => {
       return trackableTables;
     },
     refetchOnWindowFocus: false,
-    onSettled: () => {
-      queryClient.invalidateQueries(['export_metadata']);
-    },
   });
 };
