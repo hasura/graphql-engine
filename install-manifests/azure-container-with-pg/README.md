@@ -11,7 +11,7 @@ For a more detailed step-by-step guide on deplopying individual
 resources to Azure using the CLI, refer to the 
 [documentation](https://hasura.io/docs/latest/graphql/core/guides/deployment/azure-container-instances-postgres.html).
 
-[![Deploy to Azure Button](https://azuredeploy.net/deploybutton.png)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3a%2f%2fraw.githubusercontent.com%2fhasura%2fgraphql-engine%2fmaster%2finstall-manifests%2fazure-container-with-pg%2fazuredeploy.json)
 
 (The button opens Azure Portal, you might want to do a <kbd>Ctrl+Click</kbd>, to get it on a new tab)
 
