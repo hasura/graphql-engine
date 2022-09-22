@@ -17,18 +17,26 @@ cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 (
   cd ../..
   cabal build graphql-engine:exe:graphql-engine
-  make server/tests-py/.hasura-dev-python-venv
+  make server/tests-py/.hasura-dev-python-venv server/tests-py/node_modules
 )
 
 # shellcheck disable=SC1091
 source .hasura-dev-python-venv/bin/activate
 
-docker compose rm -svf postgres
-docker compose up -d postgres
+# Use the Azure SQL Edge image instead of the SQL Server image on arm64.
+# The latter doesn't work yet.
+if [[ "$(uname -m)" == 'arm64' ]]; then
+  export MSSQL_IMAGE='mcr.microsoft.com/azure-sql-edge'
+fi
 
-HASURA_GRAPHQL_PG_SOURCE_URL_1="postgresql://postgres:hasura@localhost:$(docker compose port --index 1 postgres 5432 | sd '.*:' '')/postgres"
-HASURA_GRAPHQL_PG_SOURCE_URL_2="postgresql://postgres:hasura@localhost:$(docker compose port --index 2 postgres 5432 | sd '.*:' '')/postgres"
-export HASURA_GRAPHQL_PG_SOURCE_URL_1 HASURA_GRAPHQL_PG_SOURCE_URL_2
+docker compose rm -svf citus mssql postgres
+docker compose up -d citus mssql postgres
+
+HASURA_GRAPHQL_CITUS_SOURCE_URL="postgresql://postgres:hasura@localhost:$(docker compose port citus 5432 | sed -E 's/.*://')/postgres"
+HASURA_GRAPHQL_MSSQL_SOURCE_URL="DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost,$(docker compose port mssql 1433 | sed -E 's/.*://');Uid=sa;Pwd=Password!;"
+HASURA_GRAPHQL_PG_SOURCE_URL_1="postgresql://postgres:hasura@localhost:$(docker compose port --index 1 postgres 5432 | sed -E 's/.*://')/postgres"
+HASURA_GRAPHQL_PG_SOURCE_URL_2="postgresql://postgres:hasura@localhost:$(docker compose port --index 2 postgres 5432 | sed -E 's/.*://')/postgres"
+export HASURA_GRAPHQL_CITUS_SOURCE_URL HASURA_GRAPHQL_MSSQL_SOURCE_URL HASURA_GRAPHQL_PG_SOURCE_URL_1 HASURA_GRAPHQL_PG_SOURCE_URL_2
 
 export EVENT_WEBHOOK_HEADER='MyEnvValue'
 export EVENT_WEBHOOK_HANDLER='http://localhost:5592'

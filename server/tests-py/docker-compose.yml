@@ -29,7 +29,7 @@ services:
       cabal-update:
         condition: service_completed_successfully
 
-  tests-py-on-postgres:
+  tests-py:
     build:
       context: ../..
       dockerfile: ./.buildkite/dockerfiles/server-pytest-runner/Dockerfile
@@ -43,6 +43,8 @@ services:
       - GRAPHQL_ENGINE=/src/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/x/graphql-engine/noopt/build/graphql-engine/graphql-engine
       - HASURA_GRAPHQL_DATABASE_URL=postgresql://postgres:hasura@tests-py-postgres-1/postgres
       - HASURA_GRAPHQL_DATABASE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
+      - HASURA_GRAPHQL_CITUS_SOURCE_URL=postgresql://postgres:hasura@citus/postgres
+      - HASURA_GRAPHQL_MSSQL_SOURCE_URL=DRIVER={ODBC Driver 17 for SQL Server};SERVER=mssql,1433;Uid=sa;Pwd=Password!;
       - HASURA_GRAPHQL_PG_SOURCE_URL_1=postgresql://postgres:hasura@tests-py-postgres-1/postgres
       - HASURA_GRAPHQL_PG_SOURCE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
       - HASURA_BIGQUERY_PROJECT_ID
@@ -56,8 +58,62 @@ services:
     depends_on:
       hge-build:
         condition: service_completed_successfully
+      citus:
+        condition: service_healthy
+      mssql-healthcheck:
+        condition: service_healthy
       postgres:
         condition: service_healthy
+
+  citus:
+    image: citusdata/citus:10.1@sha256:7e497e5ca18d7f2ae2a66c1d5d676b548e9221b7e6294adfb03006adad85502c
+    ports:
+      - 5432
+    environment:
+      POSTGRES_PASSWORD: "hasura"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - psql -U postgres < /dev/null && sleep 5 && psql -U postgres < /dev/null
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    volumes:
+      - /var/lib/postgresql/data
+
+  mssql:
+    # Uses a different image for arm64.
+    image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest@sha256:a098c9ff6fbb8e1c9608ad7511fa42dba8d22e0d50b48302761717840ccc26af}
+    ports:
+      - 1433
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Password!"
+      MSSQL_SA_PASSWORD: "Password!"
+    volumes:
+      - /var/opt/mssql
+
+  # This is necessary because on macOS on amd64, the `mssql/server` image is not available.
+  # We use the `azure-sql-edge` image instead, which does not ship with `sqlcmd` on amd64.
+  mssql-healthcheck:
+    image: mcr.microsoft.com/mssql-tools
+    command:
+      - sleep
+      - inf
+    init: true # handle signals correctly
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          /opt/mssql-tools/bin/sqlcmd -S 'mssql,1433' -U SA -P "Password!"
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    depends_on:
+      mssql:
+        condition: service_started
 
   postgres:
     image: cimg/postgres:14.4-postgis@sha256:492a389895568e2f89a03c0c45c19350888611001123514623551a014e83a625
