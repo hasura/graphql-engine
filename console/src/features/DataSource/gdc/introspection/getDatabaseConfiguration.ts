@@ -11,7 +11,7 @@ export const getDatabaseConfiguration = async (
 
   const result = await runMetadataQuery<{
     capabilities: CapabilitiesResponse['capabilities'];
-    config_schema_response: CapabilitiesResponse['configSchemas'];
+    config_schema_response: CapabilitiesResponse['config_schemas'];
     options: {
       uri: string;
     };
@@ -25,7 +25,10 @@ export const getDatabaseConfiguration = async (
     },
   });
 
-  return result.config_schema_response as {
+  return {
+    configSchema: result.config_schema_response.config_schema,
+    otherSchemas: result.config_schema_response.other_schemas,
+  } as {
     configSchema: Property;
     otherSchemas: Record<string, Property>;
   };

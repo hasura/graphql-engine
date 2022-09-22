@@ -8,7 +8,7 @@ export const useAvailableDrivers = () => {
     queryKey: ['get_available_drivers'],
     queryFn: async () => {
       const drivers = await DataSource(httpClient).driver.getAllSourceKinds();
-      return drivers;
+      return drivers.filter(driver => driver.release !== 'disabled');
     },
   });
 };
