@@ -534,6 +534,47 @@ class TestStreamingSubscription:
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
+    def test_streaming_subscription_with_custom_name_set_for_cursor(self, hge_ctx, ws_client):
+        '''
+            Create connection using connection_init
+        '''
+        ws_client.init_as_admin()
+
+        query = """
+        subscription ($batch_size: Int!) {
+          hge_tests_stream_query: hge_tests_users_stream(cursor: {initial_value: {userId: 0}}, batch_size: $batch_size) {
+             userId
+             name
+          }
+        }
+        """
+
+        liveQs = []
+        headers={}
+        if hge_ctx.hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        subscrPayload = { 'query': query, 'variables': { 'batch_size': 1 } }
+        respLive = ws_client.send_query(subscrPayload, query_id='stream_1', headers=headers, timeout=15)
+        liveQs.append(respLive)
+        for idx in range(2):
+          ev = next(respLive)
+          assert ev['type'] == 'data', ev
+          assert ev['id'] == 'stream_1', ev
+          # fetching two rows per batch
+          expected_payload = [ {"userId": idx + 1, "name": "Name {}".format(idx+1)}]
+          assert ev['payload']['data'] == {'hge_tests_stream_query': expected_payload}, ev['payload']['data']
+
+        # stop the streaming subscription
+        frame = {
+            'id': 'stream_1',
+            'type': 'stop'
+        }
+        ws_client.send(frame)
+
+        with pytest.raises(queue.Empty):
+            ev = ws_client.get_ws_event(3)
+
+
 
 @usefixtures('per_method_tests_db_state','ws_conn_init_graphql_ws')
 class TestSubscriptionLiveQueriesForGraphQLWS:

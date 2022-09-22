@@ -42,7 +42,7 @@ import Hasura.RQL.IR.OrderBy (OrderByItemG (OrderByItemG))
 import Hasura.RQL.IR.Select
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Column
-  ( ColumnInfo (ciColumn),
+  ( ColumnInfo (ciColumn, ciName),
     ColumnValue (cvType),
   )
 import Hasura.RQL.Types.Common
@@ -57,6 +57,7 @@ import Hasura.SQL.Types
   ( CollectableType (CollectableTypeArray, CollectableTypeScalar),
     ToSQL (toSQL),
   )
+import Language.GraphQL.Draft.Syntax qualified as G
 
 selectStreamQuerySQL ::
   forall pgKind.
@@ -86,7 +87,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
             sqlExp =
               fromResVars
                 (CollectableTypeScalar $ unsafePGColumnToBackend $ cvType (_sciInitialValue cursorArg))
-                ["cursor", getPGColTxt $ ciColumn cursorColInfo]
+                ["cursor", G.unName $ ciName cursorColInfo]
          in BoolField $ AVColumn cursorColInfo [(orderByOpExp sqlExp)]
 
       selectArgs =
@@ -107,7 +108,8 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
         asJsonAggExtr JASMultipleRows rootFldAls permLimitSubQuery $
           orderByForJsonAgg selectSource
       cursorLatestValueExp :: S.SQLExp =
-        let pgColumn = ciColumn cursorColInfo
+        let columnAlias = ciName cursorColInfo
+            pgColumn = ciColumn cursorColInfo
             mkMaxOrMinSQLExp maxOrMin col =
               S.SEFnApp maxOrMin [S.SEIdentifier col] Nothing
             maxOrMinTxt = bool "MIN" "MAX" $ basicOrderType == S.OTAsc
@@ -115,9 +117,12 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
             -- we can then directly reuse this value, otherwise if this were json encoded
             -- then we'd have to parse the value and then convert it into a text encoded value
             colExp =
-              [ S.SELit (getPGColTxt pgColumn),
+              [ S.SELit (G.unName columnAlias),
                 S.SETyAnn
-                  (mkMaxOrMinSQLExp maxOrMinTxt $ toIdentifier $ mkBaseTableColumnAlias rootFldIdentifier pgColumn)
+                  ( mkMaxOrMinSQLExp maxOrMinTxt $
+                      toIdentifier $
+                        mkBaseTableColumnAlias rootFldIdentifier pgColumn
+                  )
                   S.textTypeAnn
               ]
          in -- SELECT json_build_object ('col1', MAX(col1) :: text)
