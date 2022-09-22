@@ -1,9 +1,9 @@
 import { MetadataDataSource } from '../../../../metadata/types';
 import { ReduxState } from './../../../../types';
 
-type TableSchema = {
+export type TableSchema = {
   primary_key?: { columns: string[] };
-  columns: Array<{ column_name: string }>;
+  columns: Array<{ column_name: string; data_type: string }>;
 };
 
 type TableSchemaWithPK = {

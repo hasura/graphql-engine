@@ -3,11 +3,11 @@ import { SelectItem } from '@/components/Common/SelectInputSplitField/SelectInpu
 import { Button } from '@/new-components/Button';
 import { FieldArrayWithId } from 'react-hook-form';
 import { SortItem, SortRow } from './SortRow';
-import { FormValues } from './types';
+import { FiltersAndSortFormValues } from './types';
 
 export type SortRowsProps = {
   columns: SelectItem[];
-  fields: FieldArrayWithId<FormValues, 'sort', 'id'>[];
+  fields: FieldArrayWithId<FiltersAndSortFormValues, 'sort', 'id'>[];
   onAdd: () => void;
   onRemove: (index: number) => void;
   orders: SortItem[];

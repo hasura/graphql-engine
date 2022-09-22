@@ -1,10 +1,9 @@
 import React from 'react';
 import { SelectItem } from '@/components/Common/SelectInputSplitField/SelectInputSplitField';
-import ExportData, {
-  ExportDataProps,
-} from '@/components/Services/Data/TableBrowseRows/ExportData';
 import { Button } from '@/new-components/Button';
+import { DropdownMenu } from '@/new-components/DropdownMenu';
 import { FormProvider, useForm } from 'react-hook-form';
+import { FaFileExport } from 'react-icons/fa';
 import { OperatorItem } from './FilterRow';
 import { FilterRows } from './FilterRows';
 import { SortItem } from './SortRow';
@@ -13,24 +12,38 @@ import {
   defaultColumn,
   defaultOperator,
   defaultOrder,
-  FormValues,
+  FiltersAndSortFormValues,
 } from './types';
 import { useFilterRows } from './hooks/useFilterRows';
 import { useSortRows } from './hooks/useSortRows';
 
-/* 
-  NOTE:
-  Component created out of from FilterQuery.
-  We'll need to delete FilterQuery in the future, when the integration of Redux is complete
-  and we'll integrate FiltersSection in the Browse Rows tab.
-*/
+export const sortPlaceholder = '--';
+
+export const sortOptions: SortItem[] = [
+  {
+    label: sortPlaceholder,
+    value: sortPlaceholder,
+    disabled: true,
+  },
+  {
+    label: 'Asc',
+    value: 'asc',
+  },
+  {
+    label: 'Desc',
+    value: 'desc',
+  },
+];
 
 type FiltersSectionProps = {
   columns: SelectItem[];
   operators: OperatorItem[];
   orders: SortItem[];
-  onExport: ExportDataProps['onExport'];
-  onSubmit: (values: FormValues) => void;
+  onExport: (
+    type: 'CSV' | 'JSON',
+    formValues: FiltersAndSortFormValues
+  ) => void;
+  onSubmit: (values: FiltersAndSortFormValues) => void;
 };
 
 export const FiltersSection = ({
@@ -40,7 +53,7 @@ export const FiltersSection = ({
   onExport,
   onSubmit,
 }: FiltersSectionProps) => {
-  const methods = useForm<FormValues>({
+  const methods = useForm<FiltersAndSortFormValues>({
     defaultValues: {
       filter: [{ column: defaultColumn, operator: defaultOperator, value: '' }],
       sort: [{ column: defaultColumn, order: defaultOrder }],
@@ -58,6 +71,11 @@ export const FiltersSection = ({
 
   const { onRemoveSortRow, onAddSortRow, sortFields, showFirstRemoveOnSort } =
     useSortRows({ methods });
+
+  const exportItems = [
+    [<div onClick={handleSubmit(arg => onExport('CSV', arg))}>CSV</div>],
+    [<div onClick={handleSubmit(arg => onExport('JSON', arg))}>JSON</div>],
+  ];
 
   return (
     <FormProvider {...methods}>
@@ -90,8 +108,11 @@ export const FiltersSection = ({
               Run query
             </Button>
             <div>
-              {/* TODO: fix the dropdown */}
-              <ExportData onExport={onExport} />
+              <DropdownMenu items={exportItems}>
+                <Button icon={<FaFileExport />} iconPosition="start">
+                  Export data
+                </Button>
+              </DropdownMenu>
             </div>
           </div>
         </div>

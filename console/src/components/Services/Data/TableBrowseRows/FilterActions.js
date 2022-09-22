@@ -6,7 +6,6 @@ import {
   downloadObjectAsJsonFile,
   downloadObjectAsCsvFile,
   getCurrTimeForFileName,
-  getConfirmation,
 } from '../../../Common/utils/jsUtils';
 
 const LOADING = 'ViewTable/FilterQuery/LOADING';
@@ -121,59 +120,48 @@ const runQuery = tableSchema => {
 
 const exportDataQuery = (tableSchema, type) => {
   return (dispatch, getState) => {
-    const count = getState().tables.view.count;
-
-    const confirmed = getConfirmation(
-      `There ${
-        count === 1 ? 'is 1 row' : `are ${count} rows`
-      } selected for export.`
-    );
-    if (!confirmed) {
-      return;
-    }
-
     const state = getState().tables.view.curFilter;
-    let finalWhereClauses = state.where.$and.filter(w => {
-      const colName = Object.keys(w)[0].trim();
+    const filteredWhereClauses = state.where.$and.filter(whereClause => {
+      const colName = Object.keys(whereClause)[0].trim();
       if (colName === '') {
         return false;
       }
-      const opName = Object.keys(w[colName])[0].trim();
+      const opName = Object.keys(whereClause[colName])[0].trim();
       if (opName === '') {
         return false;
       }
       return true;
     });
 
-    finalWhereClauses = finalWhereClauses.map(w => {
-      const colName = Object.keys(w)[0];
-      const opName = Object.keys(w[colName])[0];
-      const val = w[colName][opName];
+    const finalWhereClauses = filteredWhereClauses.map(whereClause => {
+      const colName = Object.keys(whereClause)[0];
+      const opName = Object.keys(whereClause[colName])[0];
+      const val = whereClause[colName][opName];
 
       if (['$in', '$nin'].includes(opName)) {
-        w[colName][opName] = parseArray(val);
-        return w;
+        whereClause[colName][opName] = parseArray(val);
+        return whereClause;
       }
 
       const colType = tableSchema.columns.find(
         c => c.column_name === colName
       ).data_type;
       if (Integers.indexOf(colType) > 0) {
-        w[colName][opName] = parseInt(val, 10);
-        return w;
+        whereClause[colName][opName] = parseInt(val, 10);
+        return whereClause;
       }
       if (Reals.indexOf(colType) > 0) {
-        w[colName][opName] = parseFloat(val);
-        return w;
+        whereClause[colName][opName] = parseFloat(val);
+        return whereClause;
       }
       if (colType === 'boolean') {
         if (val === 'true') {
-          w[colName][opName] = true;
+          whereClause[colName][opName] = true;
         } else if (val === 'false') {
-          w[colName][opName] = false;
+          whereClause[colName][opName] = false;
         }
       }
-      return w;
+      return whereClause;
     });
     const newQuery = {
       where: { $and: finalWhereClauses },
@@ -190,10 +178,18 @@ const exportDataQuery = (tableSchema, type) => {
     const fileName = `export_${table_schema}_${table_name}_${getCurrTimeForFileName()}`;
 
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
-    dispatch(vMakeExportRequest()).then(d => {
-      if (d) {
-        if (type === 'JSON') downloadObjectAsJsonFile(fileName, d);
-        else if (type === 'CSV') downloadObjectAsCsvFile(fileName, d);
+    dispatch(vMakeExportRequest()).then(rows => {
+      if (!rows) {
+        return;
+      }
+
+      if (type === 'JSON') {
+        downloadObjectAsJsonFile(fileName, rows);
+        return;
+      }
+
+      if (type === 'CSV') {
+        downloadObjectAsCsvFile(fileName, rows);
       }
     });
   };
