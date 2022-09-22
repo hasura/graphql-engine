@@ -21,63 +21,63 @@
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Types.html"><span class="hs-identifier">Hasura.SQL.Types</span></a></span><span>
 </span><span id="line-22"></span><span>
 </span><span id="line-23"></span><span class="annot"><a href="Hasura.Backends.MSSQL.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-type">parseBoolExpOperations</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689676960"><span class="annot"><a href="#local-6989586621689676960"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689676959"><span class="annot"><a href="#local-6989586621689676959"><span class="hs-identifier hs-type">v</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689676960"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-comment">-- , TableCoreInfoRM 'MSSQL m)</span><span>
-</span><span id="line-26"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689676960"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689676959"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689677131"><span class="annot"><a href="#local-6989586621689677131"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689677130"><span class="annot"><a href="#local-6989586621689677130"><span class="hs-identifier hs-type">v</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689677131"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="hs-comment">-- , TableCoreInfoRM 'MSSQL m)</span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689677131"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689677130"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-27"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-28"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-29"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReference"><span class="hs-identifier hs-type">ColumnReference</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-30"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-31"></span><span>  </span><span class="annot"><a href="#local-6989586621689676960"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689676959"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-31"></span><span>  </span><span class="annot"><a href="#local-6989586621689677131"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689677130"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-32"></span><span id="parseBoolExpOperations"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'MSSQL m v
 -&gt; TableName
 -&gt; FieldInfoMap (FieldInfo 'MSSQL)
 -&gt; ColumnReference 'MSSQL
 -&gt; Value
 -&gt; m [OpExpG 'MSSQL v]
-</span><a href="Hasura.Backends.MSSQL.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-var hs-var">parseBoolExpOperations</span></a></span></span><span> </span><span id="local-6989586621689676958"><span class="annot"><span class="annottext">ValueParser 'MSSQL m v
-</span><a href="#local-6989586621689676958"><span class="hs-identifier hs-var">rhsParser</span></a></span></span><span> </span><span id="local-6989586621689676957"><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621689676957"><span class="hs-identifier hs-var">_table</span></a></span></span><span> </span><span id="local-6989586621689676956"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo 'MSSQL)
-</span><a href="#local-6989586621689676956"><span class="hs-identifier hs-var">_fields</span></a></span></span><span> </span><span id="local-6989586621689676955"><span class="annot"><span class="annottext">ColumnReference 'MSSQL
-</span><a href="#local-6989586621689676955"><span class="hs-identifier hs-var">columnRef</span></a></span></span><span> </span><span id="local-6989586621689676954"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689676954"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.MSSQL.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-var hs-var">parseBoolExpOperations</span></a></span></span><span> </span><span id="local-6989586621689677129"><span class="annot"><span class="annottext">ValueParser 'MSSQL m v
+</span><a href="#local-6989586621689677129"><span class="hs-identifier hs-var">rhsParser</span></a></span></span><span> </span><span id="local-6989586621689677128"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689677128"><span class="hs-identifier hs-var">_table</span></a></span></span><span> </span><span id="local-6989586621689677127"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo 'MSSQL)
+</span><a href="#local-6989586621689677127"><span class="hs-identifier hs-var">_fields</span></a></span></span><span> </span><span id="local-6989586621689677126"><span class="annot"><span class="annottext">ColumnReference 'MSSQL
+</span><a href="#local-6989586621689677126"><span class="hs-identifier hs-var">columnRef</span></a></span></span><span> </span><span id="local-6989586621689677125"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689677125"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-33"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; m [OpExpG 'MSSQL v] -&gt; m [OpExpG 'MSSQL v]
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnReference 'MSSQL -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnReference 'MSSQL
-</span><a href="#local-6989586621689676955"><span class="hs-identifier hs-var">columnRef</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m [OpExpG 'MSSQL v] -&gt; m [OpExpG 'MSSQL v])
+</span><a href="#local-6989586621689677126"><span class="hs-identifier hs-var">columnRef</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m [OpExpG 'MSSQL v] -&gt; m [OpExpG 'MSSQL v])
 -&gt; m [OpExpG 'MSSQL v] -&gt; m [OpExpG 'MSSQL v]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; Value -&gt; m [OpExpG 'MSSQL v]
-</span><a href="#local-6989586621689676952"><span class="hs-identifier hs-var">parseOperations</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnReference 'MSSQL -&gt; ColumnType 'MSSQL
+</span><a href="#local-6989586621689677123"><span class="hs-identifier hs-var">parseOperations</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnReference 'MSSQL -&gt; ColumnType 'MSSQL
 forall (backend :: BackendType).
 ColumnReference backend -&gt; ColumnType backend
 </span><a href="Hasura.RQL.Types.Column.html#columnReferenceType"><span class="hs-identifier hs-var">columnReferenceType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnReference 'MSSQL
-</span><a href="#local-6989586621689676955"><span class="hs-identifier hs-var">columnRef</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689676954"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689677126"><span class="hs-identifier hs-var">columnRef</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689677125"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-34"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-35"></span><span>    </span><span id="local-6989586621689676950"><span class="annot"><span class="annottext">parseWithTy :: ColumnType 'MSSQL -&gt; Value -&gt; m v
-</span><a href="#local-6989586621689676950"><span class="hs-identifier hs-var hs-var">parseWithTy</span></a></span></span><span> </span><span id="local-6989586621689676949"><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676949"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser 'MSSQL m v
-</span><a href="#local-6989586621689676958"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; CollectableType (ColumnType 'MSSQL)
+</span><span id="line-35"></span><span>    </span><span id="local-6989586621689677121"><span class="annot"><span class="annottext">parseWithTy :: ColumnType 'MSSQL -&gt; Value -&gt; m v
+</span><a href="#local-6989586621689677121"><span class="hs-identifier hs-var hs-var">parseWithTy</span></a></span></span><span> </span><span id="local-6989586621689677120"><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677120"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser 'MSSQL m v
+</span><a href="#local-6989586621689677129"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; CollectableType (ColumnType 'MSSQL)
 forall a. a -&gt; CollectableType a
 </span><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-var">CollectableTypeScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676949"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689677120"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span>    </span><span class="annot"><a href="#local-6989586621689676952"><span class="hs-identifier hs-type">parseOperations</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689676960"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689676959"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-38"></span><span>    </span><span id="local-6989586621689676952"><span class="annot"><span class="annottext">parseOperations :: ColumnType 'MSSQL -&gt; Value -&gt; m [OpExpG 'MSSQL v]
-</span><a href="#local-6989586621689676952"><span class="hs-identifier hs-var hs-var">parseOperations</span></a></span></span><span> </span><span id="local-6989586621689676947"><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676947"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-39"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689676945"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689676945"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">((Key, Value) -&gt; m (OpExpG 'MSSQL v))
+</span><span id="line-37"></span><span>    </span><span class="annot"><a href="#local-6989586621689677123"><span class="hs-identifier hs-type">parseOperations</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689677131"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689677130"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-38"></span><span>    </span><span id="local-6989586621689677123"><span class="annot"><span class="annottext">parseOperations :: ColumnType 'MSSQL -&gt; Value -&gt; m [OpExpG 'MSSQL v]
+</span><a href="#local-6989586621689677123"><span class="hs-identifier hs-var hs-var">parseOperations</span></a></span></span><span> </span><span id="local-6989586621689677118"><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677118"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-39"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689677116"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689677116"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">((Key, Value) -&gt; m (OpExpG 'MSSQL v))
 -&gt; [(Key, Value)] -&gt; m [OpExpG 'MSSQL v]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 (a -&gt; m b) -&gt; t a -&gt; m (t b)
 </span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; (Text, Value) -&gt; m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676943"><span class="hs-identifier hs-var">parseOperation</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676947"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">((Text, Value) -&gt; m (OpExpG 'MSSQL v))
+</span><a href="#local-6989586621689677114"><span class="hs-identifier hs-var">parseOperation</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677118"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">((Text, Value) -&gt; m (OpExpG 'MSSQL v))
 -&gt; ((Key, Value) -&gt; (Text, Value))
 -&gt; (Key, Value)
 -&gt; m (OpExpG 'MSSQL v)
@@ -93,9 +93,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; [(Key, Value)]
 forall v. KeyMap v -&gt; [(Key, v)]
 </span><span class="hs-identifier hs-var">KM.toList</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689676945"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-40"></span><span>      </span><span id="local-6989586621689676939"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689676939"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpExpG 'MSSQL v -&gt; [OpExpG 'MSSQL v]
+</span><a href="#local-6989586621689677116"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621689677110"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689677110"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpExpG 'MSSQL v -&gt; [OpExpG 'MSSQL v]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(OpExpG 'MSSQL v -&gt; [OpExpG 'MSSQL v])
 -&gt; (v -&gt; OpExpG 'MSSQL v) -&gt; v -&gt; [OpExpG 'MSSQL v]
@@ -107,84 +107,84 @@ Bool -&gt; field -&gt; OpExpG backend field
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; [OpExpG 'MSSQL v]) -&gt; m v -&gt; m [OpExpG 'MSSQL v]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; Value -&gt; m v
-</span><a href="#local-6989586621689676950"><span class="hs-identifier hs-var">parseWithTy</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676947"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689676939"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689677121"><span class="hs-identifier hs-var">parseWithTy</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677118"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689677110"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-41"></span><span>
-</span><span id="line-42"></span><span>    </span><span class="annot"><a href="#local-6989586621689676943"><span class="hs-identifier hs-type">parseOperation</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689676960"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689676959"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-43"></span><span>    </span><span id="local-6989586621689676943"><span class="annot"><span class="annottext">parseOperation :: ColumnType 'MSSQL -&gt; (Text, Value) -&gt; m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676943"><span class="hs-identifier hs-var hs-var">parseOperation</span></a></span></span><span> </span><span id="local-6989586621689676936"><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676936"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689676935"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689676935"><span class="hs-identifier hs-var">opStr</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689676934"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689676934"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (OpExpG 'MSSQL v) -&gt; m (OpExpG 'MSSQL v)
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="#local-6989586621689677114"><span class="hs-identifier hs-type">parseOperation</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689677131"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689677130"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>    </span><span id="local-6989586621689677114"><span class="annot"><span class="annottext">parseOperation :: ColumnType 'MSSQL -&gt; (Text, Value) -&gt; m (OpExpG 'MSSQL v)
+</span><a href="#local-6989586621689677114"><span class="hs-identifier hs-var hs-var">parseOperation</span></a></span></span><span> </span><span id="local-6989586621689677107"><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677107"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677106"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689677106"><span class="hs-identifier hs-var">opStr</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689677105"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689677105"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (OpExpG 'MSSQL v) -&gt; m (OpExpG 'MSSQL v)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689676935"><span class="hs-identifier hs-var">opStr</span></a></span><span> </span><span class="annot"><span class="annottext">(m (OpExpG 'MSSQL v) -&gt; m (OpExpG 'MSSQL v))
+</span><a href="#local-6989586621689677106"><span class="hs-identifier hs-var">opStr</span></a></span><span> </span><span class="annot"><span class="annottext">(m (OpExpG 'MSSQL v) -&gt; m (OpExpG 'MSSQL v))
 -&gt; m (OpExpG 'MSSQL v) -&gt; m (OpExpG 'MSSQL v)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-44"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689676935"><span class="hs-identifier hs-var">opStr</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689677106"><span class="hs-identifier hs-var">opStr</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_eq&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676933"><span class="hs-identifier hs-var">parseEq</span></a></span><span>
+</span><a href="#local-6989586621689677104"><span class="hs-identifier hs-var">parseEq</span></a></span><span>
 </span><span id="line-46"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$eq&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676933"><span class="hs-identifier hs-var">parseEq</span></a></span><span>
+</span><a href="#local-6989586621689677104"><span class="hs-identifier hs-var">parseEq</span></a></span><span>
 </span><span id="line-47"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_neq&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676932"><span class="hs-identifier hs-var">parseNeq</span></a></span><span>
+</span><a href="#local-6989586621689677103"><span class="hs-identifier hs-var">parseNeq</span></a></span><span>
 </span><span id="line-48"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$neq&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676932"><span class="hs-identifier hs-var">parseNeq</span></a></span><span>
+</span><a href="#local-6989586621689677103"><span class="hs-identifier hs-var">parseNeq</span></a></span><span>
 </span><span id="line-49"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$in&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676931"><span class="hs-identifier hs-var">parseIn</span></a></span><span>
+</span><a href="#local-6989586621689677102"><span class="hs-identifier hs-var">parseIn</span></a></span><span>
 </span><span id="line-50"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_in&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676931"><span class="hs-identifier hs-var">parseIn</span></a></span><span>
+</span><a href="#local-6989586621689677102"><span class="hs-identifier hs-var">parseIn</span></a></span><span>
 </span><span id="line-51"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$nin&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676930"><span class="hs-identifier hs-var">parseNin</span></a></span><span>
+</span><a href="#local-6989586621689677101"><span class="hs-identifier hs-var">parseNin</span></a></span><span>
 </span><span id="line-52"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_nin&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676930"><span class="hs-identifier hs-var">parseNin</span></a></span><span>
+</span><a href="#local-6989586621689677101"><span class="hs-identifier hs-var">parseNin</span></a></span><span>
 </span><span id="line-53"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_gt&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676929"><span class="hs-identifier hs-var">parseGt</span></a></span><span>
+</span><a href="#local-6989586621689677100"><span class="hs-identifier hs-var">parseGt</span></a></span><span>
 </span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$gt&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676929"><span class="hs-identifier hs-var">parseGt</span></a></span><span>
+</span><a href="#local-6989586621689677100"><span class="hs-identifier hs-var">parseGt</span></a></span><span>
 </span><span id="line-55"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_lt&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676928"><span class="hs-identifier hs-var">parseLt</span></a></span><span>
+</span><a href="#local-6989586621689677099"><span class="hs-identifier hs-var">parseLt</span></a></span><span>
 </span><span id="line-56"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$lt&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676928"><span class="hs-identifier hs-var">parseLt</span></a></span><span>
+</span><a href="#local-6989586621689677099"><span class="hs-identifier hs-var">parseLt</span></a></span><span>
 </span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_gte&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676927"><span class="hs-identifier hs-var">parseGte</span></a></span><span>
+</span><a href="#local-6989586621689677098"><span class="hs-identifier hs-var">parseGte</span></a></span><span>
 </span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$gte&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676927"><span class="hs-identifier hs-var">parseGte</span></a></span><span>
+</span><a href="#local-6989586621689677098"><span class="hs-identifier hs-var">parseGte</span></a></span><span>
 </span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_lte&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676926"><span class="hs-identifier hs-var">parseLte</span></a></span><span>
+</span><a href="#local-6989586621689677097"><span class="hs-identifier hs-var">parseLte</span></a></span><span>
 </span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$lte&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676926"><span class="hs-identifier hs-var">parseLte</span></a></span><span>
+</span><a href="#local-6989586621689677097"><span class="hs-identifier hs-var">parseLte</span></a></span><span>
 </span><span id="line-61"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$like&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676925"><span class="hs-identifier hs-var">parseLike</span></a></span><span>
+</span><a href="#local-6989586621689677096"><span class="hs-identifier hs-var">parseLike</span></a></span><span>
 </span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_like&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676925"><span class="hs-identifier hs-var">parseLike</span></a></span><span>
+</span><a href="#local-6989586621689677096"><span class="hs-identifier hs-var">parseLike</span></a></span><span>
 </span><span id="line-63"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$nlike&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676924"><span class="hs-identifier hs-var">parseNlike</span></a></span><span>
+</span><a href="#local-6989586621689677095"><span class="hs-identifier hs-var">parseNlike</span></a></span><span>
 </span><span id="line-64"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_nlike&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676924"><span class="hs-identifier hs-var">parseNlike</span></a></span><span>
+</span><a href="#local-6989586621689677095"><span class="hs-identifier hs-var">parseNlike</span></a></span><span>
 </span><span id="line-65"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_st_contains&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">BooleanOperators v -&gt; OpExpG 'MSSQL v
 forall (backend :: BackendType) field.
@@ -193,7 +193,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676922"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677093"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTContains"><span class="hs-identifier hs-var">ASTContains</span></a></span><span>
 </span><span id="line-66"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -204,7 +204,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676922"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677093"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTContains"><span class="hs-identifier hs-var">ASTContains</span></a></span><span>
 </span><span id="line-67"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -215,7 +215,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676922"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677093"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTEquals"><span class="hs-identifier hs-var">ASTEquals</span></a></span><span>
 </span><span id="line-68"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -226,7 +226,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676922"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677093"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTEquals"><span class="hs-identifier hs-var">ASTEquals</span></a></span><span>
 </span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -237,7 +237,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676922"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677093"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTIntersects"><span class="hs-identifier hs-var">ASTIntersects</span></a></span><span>
 </span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -248,7 +248,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676922"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677093"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTIntersects"><span class="hs-identifier hs-var">ASTIntersects</span></a></span><span>
 </span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -259,7 +259,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676922"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677093"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTOverlaps"><span class="hs-identifier hs-var">ASTOverlaps</span></a></span><span>
 </span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -270,7 +270,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676922"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677093"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTOverlaps"><span class="hs-identifier hs-var">ASTOverlaps</span></a></span><span>
 </span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -281,7 +281,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676922"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677093"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTWithin"><span class="hs-identifier hs-var">ASTWithin</span></a></span><span>
 </span><span id="line-74"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -292,7 +292,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676922"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677093"><span class="hs-identifier hs-var">parseGeometryOrGeographyOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTWithin"><span class="hs-identifier hs-var">ASTWithin</span></a></span><span>
 </span><span id="line-75"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -303,7 +303,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676916"><span class="hs-identifier hs-var">parseGeometryOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677087"><span class="hs-identifier hs-var">parseGeometryOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTCrosses"><span class="hs-identifier hs-var">ASTCrosses</span></a></span><span>
 </span><span id="line-76"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -314,7 +314,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676916"><span class="hs-identifier hs-var">parseGeometryOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677087"><span class="hs-identifier hs-var">parseGeometryOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTCrosses"><span class="hs-identifier hs-var">ASTCrosses</span></a></span><span>
 </span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -325,7 +325,7 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676916"><span class="hs-identifier hs-var">parseGeometryOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677087"><span class="hs-identifier hs-var">parseGeometryOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTTouches"><span class="hs-identifier hs-var">ASTTouches</span></a></span><span>
 </span><span id="line-78"></span><span>        </span><span class="annot"><span class="annottext">Text
@@ -336,11 +336,11 @@ BooleanOperators backend field -&gt; OpExpG backend field
 -&gt; m (BooleanOperators v) -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676916"><span class="hs-identifier hs-var">parseGeometryOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677087"><span class="hs-identifier hs-var">parseGeometryOp</span></a></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
 forall a. a -&gt; BooleanOperators a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ASTTouches"><span class="hs-identifier hs-var">ASTTouches</span></a></span><span>
-</span><span id="line-79"></span><span>        </span><span id="local-6989586621689676913"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689676913"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (OpExpG 'MSSQL v)
+</span><span id="line-79"></span><span>        </span><span id="local-6989586621689677084"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689677084"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (OpExpG 'MSSQL v)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m (OpExpG 'MSSQL v)) -&gt; Text -&gt; m (OpExpG 'MSSQL v)
@@ -349,100 +349,100 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;Unknown operator : &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689676913"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621689677084"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-80"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-81"></span><span>        </span><span id="local-6989586621689676910"><span class="annot"><span class="annottext">colTy :: ColumnType 'MSSQL
-</span><a href="#local-6989586621689676910"><span class="hs-identifier hs-var hs-var">colTy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnReference 'MSSQL -&gt; ColumnType 'MSSQL
+</span><span id="line-81"></span><span>        </span><span id="local-6989586621689677081"><span class="annot"><span class="annottext">colTy :: ColumnType 'MSSQL
+</span><a href="#local-6989586621689677081"><span class="hs-identifier hs-var hs-var">colTy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnReference 'MSSQL -&gt; ColumnType 'MSSQL
 forall (backend :: BackendType).
 ColumnReference backend -&gt; ColumnType backend
 </span><a href="Hasura.RQL.Types.Column.html#columnReferenceType"><span class="hs-identifier hs-var">columnReferenceType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnReference 'MSSQL
-</span><a href="#local-6989586621689676955"><span class="hs-identifier hs-var">columnRef</span></a></span><span>
+</span><a href="#local-6989586621689677126"><span class="hs-identifier hs-var">columnRef</span></a></span><span>
 </span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span>        </span><span id="local-6989586621689676909"><span class="annot"><span class="annottext">parseOne :: m v
-</span><a href="#local-6989586621689676909"><span class="hs-identifier hs-var hs-var">parseOne</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; Value -&gt; m v
-</span><a href="#local-6989586621689676950"><span class="hs-identifier hs-var">parseWithTy</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676936"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689676934"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-84"></span><span>        </span><span id="local-6989586621689676908"><span class="annot"><span class="annottext">parseManyWithType :: ColumnType 'MSSQL -&gt; m v
-</span><a href="#local-6989586621689676908"><span class="hs-identifier hs-var hs-var">parseManyWithType</span></a></span></span><span> </span><span id="local-6989586621689676907"><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676907"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser 'MSSQL m v
-</span><a href="#local-6989586621689676958"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; CollectableType (ColumnType 'MSSQL)
+</span><span id="line-83"></span><span>        </span><span id="local-6989586621689677080"><span class="annot"><span class="annottext">parseOne :: m v
+</span><a href="#local-6989586621689677080"><span class="hs-identifier hs-var hs-var">parseOne</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; Value -&gt; m v
+</span><a href="#local-6989586621689677121"><span class="hs-identifier hs-var">parseWithTy</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677107"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689677105"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-84"></span><span>        </span><span id="local-6989586621689677079"><span class="annot"><span class="annottext">parseManyWithType :: ColumnType 'MSSQL -&gt; m v
+</span><a href="#local-6989586621689677079"><span class="hs-identifier hs-var hs-var">parseManyWithType</span></a></span></span><span> </span><span id="local-6989586621689677078"><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677078"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser 'MSSQL m v
+</span><a href="#local-6989586621689677129"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; CollectableType (ColumnType 'MSSQL)
 forall a. a -&gt; CollectableType a
 </span><a href="Hasura.SQL.Types.html#CollectableTypeArray"><span class="hs-identifier hs-var">CollectableTypeArray</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676907"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689676934"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621689677078"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689677105"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-85"></span><span>
-</span><span id="line-86"></span><span>        </span><span id="local-6989586621689676933"><span class="annot"><span class="annottext">parseEq :: m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676933"><span class="hs-identifier hs-var hs-var">parseEq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; v -&gt; OpExpG 'MSSQL v
+</span><span id="line-86"></span><span>        </span><span id="local-6989586621689677104"><span class="annot"><span class="annottext">parseEq :: m (OpExpG 'MSSQL v)
+</span><a href="#local-6989586621689677104"><span class="hs-identifier hs-var hs-var">parseEq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; v -&gt; OpExpG 'MSSQL v
 forall (backend :: BackendType) field.
 Bool -&gt; field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#AEQ"><span class="hs-identifier hs-var">AEQ</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'MSSQL v) -&gt; m v -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689676909"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-87"></span><span>        </span><span id="local-6989586621689676932"><span class="annot"><span class="annottext">parseNeq :: m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676932"><span class="hs-identifier hs-var hs-var">parseNeq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; v -&gt; OpExpG 'MSSQL v
+</span><a href="#local-6989586621689677080"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-87"></span><span>        </span><span id="local-6989586621689677103"><span class="annot"><span class="annottext">parseNeq :: m (OpExpG 'MSSQL v)
+</span><a href="#local-6989586621689677103"><span class="hs-identifier hs-var hs-var">parseNeq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; v -&gt; OpExpG 'MSSQL v
 forall (backend :: BackendType) field.
 Bool -&gt; field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#ANE"><span class="hs-identifier hs-var">ANE</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'MSSQL v) -&gt; m v -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689676909"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-88"></span><span>        </span><span id="local-6989586621689676931"><span class="annot"><span class="annottext">parseIn :: m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676931"><span class="hs-identifier hs-var hs-var">parseIn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
+</span><a href="#local-6989586621689677080"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-88"></span><span>        </span><span id="local-6989586621689677102"><span class="annot"><span class="annottext">parseIn :: m (OpExpG 'MSSQL v)
+</span><a href="#local-6989586621689677102"><span class="hs-identifier hs-var hs-var">parseIn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#AIN"><span class="hs-identifier hs-var">AIN</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'MSSQL v) -&gt; m v -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; m v
-</span><a href="#local-6989586621689676908"><span class="hs-identifier hs-var">parseManyWithType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676910"><span class="hs-identifier hs-var">colTy</span></a></span><span>
-</span><span id="line-89"></span><span>        </span><span id="local-6989586621689676930"><span class="annot"><span class="annottext">parseNin :: m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676930"><span class="hs-identifier hs-var hs-var">parseNin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
+</span><a href="#local-6989586621689677079"><span class="hs-identifier hs-var">parseManyWithType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677081"><span class="hs-identifier hs-var">colTy</span></a></span><span>
+</span><span id="line-89"></span><span>        </span><span id="local-6989586621689677101"><span class="annot"><span class="annottext">parseNin :: m (OpExpG 'MSSQL v)
+</span><a href="#local-6989586621689677101"><span class="hs-identifier hs-var hs-var">parseNin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#ANIN"><span class="hs-identifier hs-var">ANIN</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'MSSQL v) -&gt; m v -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; m v
-</span><a href="#local-6989586621689676908"><span class="hs-identifier hs-var">parseManyWithType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676910"><span class="hs-identifier hs-var">colTy</span></a></span><span>
-</span><span id="line-90"></span><span>        </span><span id="local-6989586621689676929"><span class="annot"><span class="annottext">parseGt :: m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676929"><span class="hs-identifier hs-var hs-var">parseGt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
+</span><a href="#local-6989586621689677079"><span class="hs-identifier hs-var">parseManyWithType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677081"><span class="hs-identifier hs-var">colTy</span></a></span><span>
+</span><span id="line-90"></span><span>        </span><span id="local-6989586621689677100"><span class="annot"><span class="annottext">parseGt :: m (OpExpG 'MSSQL v)
+</span><a href="#local-6989586621689677100"><span class="hs-identifier hs-var hs-var">parseGt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#AGT"><span class="hs-identifier hs-var">AGT</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'MSSQL v) -&gt; m v -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689676909"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-91"></span><span>        </span><span id="local-6989586621689676928"><span class="annot"><span class="annottext">parseLt :: m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676928"><span class="hs-identifier hs-var hs-var">parseLt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
+</span><a href="#local-6989586621689677080"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-91"></span><span>        </span><span id="local-6989586621689677099"><span class="annot"><span class="annottext">parseLt :: m (OpExpG 'MSSQL v)
+</span><a href="#local-6989586621689677099"><span class="hs-identifier hs-var hs-var">parseLt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#ALT"><span class="hs-identifier hs-var">ALT</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'MSSQL v) -&gt; m v -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689676909"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-92"></span><span>        </span><span id="local-6989586621689676927"><span class="annot"><span class="annottext">parseGte :: m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676927"><span class="hs-identifier hs-var hs-var">parseGte</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
+</span><a href="#local-6989586621689677080"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-92"></span><span>        </span><span id="local-6989586621689677098"><span class="annot"><span class="annottext">parseGte :: m (OpExpG 'MSSQL v)
+</span><a href="#local-6989586621689677098"><span class="hs-identifier hs-var hs-var">parseGte</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#AGTE"><span class="hs-identifier hs-var">AGTE</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'MSSQL v) -&gt; m v -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689676909"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-93"></span><span>        </span><span id="local-6989586621689676926"><span class="annot"><span class="annottext">parseLte :: m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676926"><span class="hs-identifier hs-var hs-var">parseLte</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
+</span><a href="#local-6989586621689677080"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-93"></span><span>        </span><span id="local-6989586621689677097"><span class="annot"><span class="annottext">parseLte :: m (OpExpG 'MSSQL v)
+</span><a href="#local-6989586621689677097"><span class="hs-identifier hs-var hs-var">parseLte</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#ALTE"><span class="hs-identifier hs-var">ALTE</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'MSSQL v) -&gt; m v -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689676909"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-94"></span><span>        </span><span id="local-6989586621689676925"><span class="annot"><span class="annottext">parseLike :: m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676925"><span class="hs-identifier hs-var hs-var">parseLike</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ScalarType] -&gt; m ()
-</span><a href="#local-6989586621689676898"><span class="hs-identifier hs-var">guardType</span></a></span><span> </span><span class="annot"><span class="annottext">[ScalarType]
+</span><a href="#local-6989586621689677080"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-94"></span><span>        </span><span id="local-6989586621689677096"><span class="annot"><span class="annottext">parseLike :: m (OpExpG 'MSSQL v)
+</span><a href="#local-6989586621689677096"><span class="hs-identifier hs-var hs-var">parseLike</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ScalarType] -&gt; m ()
+</span><a href="#local-6989586621689677069"><span class="hs-identifier hs-var">guardType</span></a></span><span> </span><span class="annot"><span class="annottext">[ScalarType]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#stringTypes"><span class="hs-identifier hs-var">stringTypes</span></a></span><span> </span><span class="annot"><span class="annottext">m () -&gt; m (OpExpG 'MSSQL v) -&gt; m (OpExpG 'MSSQL v)
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
@@ -451,10 +451,10 @@ field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#ALIKE"><span class="hs-identifier hs-var">ALIKE</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'MSSQL v) -&gt; m v -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689676909"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-95"></span><span>        </span><span id="local-6989586621689676924"><span class="annot"><span class="annottext">parseNlike :: m (OpExpG 'MSSQL v)
-</span><a href="#local-6989586621689676924"><span class="hs-identifier hs-var hs-var">parseNlike</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ScalarType] -&gt; m ()
-</span><a href="#local-6989586621689676898"><span class="hs-identifier hs-var">guardType</span></a></span><span> </span><span class="annot"><span class="annottext">[ScalarType]
+</span><a href="#local-6989586621689677080"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-95"></span><span>        </span><span id="local-6989586621689677095"><span class="annot"><span class="annottext">parseNlike :: m (OpExpG 'MSSQL v)
+</span><a href="#local-6989586621689677095"><span class="hs-identifier hs-var hs-var">parseNlike</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ScalarType] -&gt; m ()
+</span><a href="#local-6989586621689677069"><span class="hs-identifier hs-var">guardType</span></a></span><span> </span><span class="annot"><span class="annottext">[ScalarType]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#stringTypes"><span class="hs-identifier hs-var">stringTypes</span></a></span><span> </span><span class="annot"><span class="annottext">m () -&gt; m (OpExpG 'MSSQL v) -&gt; m (OpExpG 'MSSQL v)
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'MSSQL v
@@ -463,47 +463,47 @@ field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#ANLIKE"><span class="hs-identifier hs-var">ANLIKE</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'MSSQL v) -&gt; m v -&gt; m (OpExpG 'MSSQL v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689676909"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><a href="#local-6989586621689677080"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
 </span><span id="line-96"></span><span>
-</span><span id="line-97"></span><span>        </span><span id="local-6989586621689676916"><span class="annot"><span class="annottext">parseGeometryOp :: (v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676916"><span class="hs-identifier hs-var hs-var">parseGeometryOp</span></a></span></span><span> </span><span id="local-6989586621689676894"><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
-</span><a href="#local-6989586621689676894"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-97"></span><span>        </span><span id="local-6989586621689677087"><span class="annot"><span class="annottext">parseGeometryOp :: (v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
+</span><a href="#local-6989586621689677087"><span class="hs-identifier hs-var hs-var">parseGeometryOp</span></a></span></span><span> </span><span id="local-6989586621689677065"><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677065"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-98"></span><span>          </span><span class="annot"><span class="annottext">[ScalarType] -&gt; m ()
-</span><a href="#local-6989586621689676898"><span class="hs-identifier hs-var">guardType</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621689677069"><span class="hs-identifier hs-var">guardType</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#GeometryType"><span class="hs-identifier hs-var">GeometryType</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">m () -&gt; m (BooleanOperators v) -&gt; m (BooleanOperators v)
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
-</span><a href="#local-6989586621689676894"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m v -&gt; m (BooleanOperators v)
+</span><a href="#local-6989586621689677065"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m v -&gt; m (BooleanOperators v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; Value -&gt; m v
-</span><a href="#local-6989586621689676892"><span class="hs-identifier hs-var">parseOneNoSess</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676910"><span class="hs-identifier hs-var">colTy</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689676934"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-99"></span><span>        </span><span id="local-6989586621689676922"><span class="annot"><span class="annottext">parseGeometryOrGeographyOp :: (v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
-</span><a href="#local-6989586621689676922"><span class="hs-identifier hs-var hs-var">parseGeometryOrGeographyOp</span></a></span></span><span> </span><span id="local-6989586621689676891"><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
-</span><a href="#local-6989586621689676891"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689677063"><span class="hs-identifier hs-var">parseOneNoSess</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677081"><span class="hs-identifier hs-var">colTy</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689677105"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-99"></span><span>        </span><span id="local-6989586621689677093"><span class="annot"><span class="annottext">parseGeometryOrGeographyOp :: (v -&gt; BooleanOperators v) -&gt; m (BooleanOperators v)
+</span><a href="#local-6989586621689677093"><span class="hs-identifier hs-var hs-var">parseGeometryOrGeographyOp</span></a></span></span><span> </span><span id="local-6989586621689677062"><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
+</span><a href="#local-6989586621689677062"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-100"></span><span>          </span><span class="annot"><span class="annottext">[ScalarType] -&gt; m ()
-</span><a href="#local-6989586621689676898"><span class="hs-identifier hs-var">guardType</span></a></span><span> </span><span class="annot"><span class="annottext">[ScalarType]
+</span><a href="#local-6989586621689677069"><span class="hs-identifier hs-var">guardType</span></a></span><span> </span><span class="annot"><span class="annottext">[ScalarType]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#geoTypes"><span class="hs-identifier hs-var">geoTypes</span></a></span><span> </span><span class="annot"><span class="annottext">m () -&gt; m (BooleanOperators v) -&gt; m (BooleanOperators v)
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">v -&gt; BooleanOperators v
-</span><a href="#local-6989586621689676891"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m v -&gt; m (BooleanOperators v)
+</span><a href="#local-6989586621689677062"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; BooleanOperators v) -&gt; m v -&gt; m (BooleanOperators v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; Value -&gt; m v
-</span><a href="#local-6989586621689676892"><span class="hs-identifier hs-var">parseOneNoSess</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676910"><span class="hs-identifier hs-var">colTy</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689676934"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-101"></span><span>        </span><span id="local-6989586621689676892"><span class="annot"><span class="annottext">parseOneNoSess :: ColumnType 'MSSQL -&gt; Value -&gt; m v
-</span><a href="#local-6989586621689676892"><span class="hs-identifier hs-var hs-var">parseOneNoSess</span></a></span></span><span> </span><span id="local-6989586621689676889"><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676889"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser 'MSSQL m v
-</span><a href="#local-6989586621689676958"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; CollectableType (ColumnType 'MSSQL)
+</span><a href="#local-6989586621689677063"><span class="hs-identifier hs-var">parseOneNoSess</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677081"><span class="hs-identifier hs-var">colTy</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689677105"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-101"></span><span>        </span><span id="local-6989586621689677063"><span class="annot"><span class="annottext">parseOneNoSess :: ColumnType 'MSSQL -&gt; Value -&gt; m v
+</span><a href="#local-6989586621689677063"><span class="hs-identifier hs-var hs-var">parseOneNoSess</span></a></span></span><span> </span><span id="local-6989586621689677060"><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677060"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser 'MSSQL m v
+</span><a href="#local-6989586621689677129"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; CollectableType (ColumnType 'MSSQL)
 forall a. a -&gt; CollectableType a
 </span><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-var">CollectableTypeScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676889"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689677060"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span>        </span><span id="local-6989586621689676898"><span class="annot"><span class="annottext">guardType :: [ScalarType] -&gt; m ()
-</span><a href="#local-6989586621689676898"><span class="hs-identifier hs-var hs-var">guardType</span></a></span></span><span> </span><span id="local-6989586621689676888"><span class="annot"><span class="annottext">[ScalarType]
-</span><a href="#local-6989586621689676888"><span class="hs-identifier hs-var">validTys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-103"></span><span>        </span><span id="local-6989586621689677069"><span class="annot"><span class="annottext">guardType :: [ScalarType] -&gt; m ()
+</span><a href="#local-6989586621689677069"><span class="hs-identifier hs-var hs-var">guardType</span></a></span></span><span> </span><span id="local-6989586621689677059"><span class="annot"><span class="annottext">[ScalarType]
+</span><a href="#local-6989586621689677059"><span class="hs-identifier hs-var">validTys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-104"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ScalarType 'MSSQL -&gt; Bool) -&gt; ColumnType 'MSSQL -&gt; Bool
@@ -512,8 +512,8 @@ forall (b :: BackendType).
 </span><a href="Hasura.RQL.Types.Column.html#isScalarColumnWhere"><span class="hs-identifier hs-var">isScalarColumnWhere</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarType -&gt; [ScalarType] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">[ScalarType]
-</span><a href="#local-6989586621689676888"><span class="hs-identifier hs-var">validTys</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676910"><span class="hs-identifier hs-var">colTy</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
+</span><a href="#local-6989586621689677059"><span class="hs-identifier hs-var">validTys</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677081"><span class="hs-identifier hs-var">colTy</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-105"></span><span>            </span><span class="annot"><span class="annottext">QErr -&gt; m ()
@@ -522,14 +522,14 @@ forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL -&gt; [ScalarType] -&gt; QErr
 forall t t. (ToTxt t, ToTxt t) =&gt; t -&gt; [t] -&gt; QErr
-</span><a href="#local-6989586621689676883"><span class="hs-identifier hs-var">buildMsg</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
-</span><a href="#local-6989586621689676910"><span class="hs-identifier hs-var">colTy</span></a></span><span> </span><span class="annot"><span class="annottext">[ScalarType]
-</span><a href="#local-6989586621689676888"><span class="hs-identifier hs-var">validTys</span></a></span><span>
+</span><a href="#local-6989586621689677054"><span class="hs-identifier hs-var">buildMsg</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
+</span><a href="#local-6989586621689677081"><span class="hs-identifier hs-var">colTy</span></a></span><span> </span><span class="annot"><span class="annottext">[ScalarType]
+</span><a href="#local-6989586621689677059"><span class="hs-identifier hs-var">validTys</span></a></span><span>
 </span><span id="line-106"></span><span>
-</span><span id="line-107"></span><span>        </span><span id="local-6989586621689676883"><span class="annot"><span class="annottext">buildMsg :: t -&gt; [t] -&gt; QErr
-</span><a href="#local-6989586621689676883"><span class="hs-identifier hs-var hs-var">buildMsg</span></a></span></span><span> </span><span id="local-6989586621689676882"><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689676882"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621689676881"><span class="annot"><span class="annottext">[t]
-</span><a href="#local-6989586621689676881"><span class="hs-identifier hs-var">expTys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-107"></span><span>        </span><span id="local-6989586621689677054"><span class="annot"><span class="annottext">buildMsg :: t -&gt; [t] -&gt; QErr
+</span><a href="#local-6989586621689677054"><span class="hs-identifier hs-var hs-var">buildMsg</span></a></span></span><span> </span><span id="local-6989586621689677053"><span class="annot"><span class="annottext">t
+</span><a href="#local-6989586621689677053"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621689677052"><span class="annot"><span class="annottext">[t]
+</span><a href="#local-6989586621689677052"><span class="hs-identifier hs-var">expTys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-108"></span><span>          </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="Hasura.Base.Error.html#err400"><span class="hs-identifier hs-var">err400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; QErr) -&gt; Text -&gt; QErr
@@ -539,7 +539,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot; is of type &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">t
-</span><a href="#local-6989586621689676882"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689677053"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">t -&gt; Text -&gt; Text
 forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;; this operator works only on columns of type &quot;</span></span><span>
@@ -552,5 +552,5 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">t -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#dquote"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="annot"><span class="annottext">[t]
-</span><a href="#local-6989586621689676881"><span class="hs-identifier hs-var">expTys</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689677052"><span class="hs-identifier hs-var">expTys</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-111"></span></pre></body></html>
