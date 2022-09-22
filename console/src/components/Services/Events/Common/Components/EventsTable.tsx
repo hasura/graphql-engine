@@ -71,7 +71,6 @@ const EventsTable: React.FC<Props> = props => {
     }
   };
   const changePage = (page: number) => {
-    console.log('no', page);
     if (filterState.offset !== page * filterState.limit) {
       setCurrentPage(page);
       runQuery({

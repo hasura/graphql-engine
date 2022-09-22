@@ -111,7 +111,9 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
                 <AceEditor
                   name={controllerName}
                   ref={editorRef}
-                  value={value}
+                  value={
+                    typeof value === 'string' ? value : JSON.stringify(value)
+                  }
                   theme={theme}
                   mode={mode}
                   readOnly={disabled}

@@ -1,5 +1,6 @@
 import { AxiosInstance } from 'axios';
 import { z } from 'zod';
+import { OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { Source, SupportedDrivers, Table } from '@/features/MetadataAPI';
 import { postgres } from './postgres';
@@ -10,7 +11,7 @@ import { gdc } from './gdc';
 import { cockroach } from './cockroach';
 import * as utils from './common/utils';
 import type {
-  Property,
+  // Property,
   IntrospectedTable,
   TableColumn,
   GetTrackableTablesProps,
@@ -25,13 +26,13 @@ import type {
   OrderBy,
 } from './types';
 
-import { createZodSchema } from './common/createZodSchema';
 import {
   exportMetadata,
   NetworkArgs,
   RunSQLResponse,
   getDriverPrefix,
 } from './api';
+import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
 
 export enum Feature {
   NotImplemented = 'Not Implemented',
@@ -62,7 +63,10 @@ export type Database = {
       httpClient: AxiosInstance,
       driver?: string
     ) => Promise<
-      | { configSchema: Property; otherSchemas: Record<string, Property> }
+      | {
+          configSchema: OpenApiSchema;
+          otherSchemas: Record<string, OpenApiSchema>;
+        }
       | Feature.NotImplemented
     >;
     getTrackableTables: (
@@ -175,7 +179,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
           if (!x) return false;
           return true;
         }, z.boolean()),
-        configuration: createZodSchema(
+        configuration: transformSchemaToZodObject(
           schema.configSchema,
           schema.otherSchemas
         ),

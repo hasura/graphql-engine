@@ -43,7 +43,6 @@ export const GraphQLFileUpload: React.FC<GraphQLFileUploadProps> = ({
         const parsedData = parseQueryString(data);
         setValue(name, parsedData);
       } catch (error) {
-        console.log('parse error', error);
         setError(name, { type: 'custom', message: 'Invalid GraphQL query' });
       }
     });

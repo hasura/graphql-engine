@@ -110,13 +110,12 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
   const nativeDrivers = drivers
     .filter(driver => driver.native)
     .map(driver => driver.name);
-
   return (
     <>
       {isGDCFeatureFlagEnabled &&
       !nativeDrivers.includes(connectionDBState.dbType) ? (
         <div className="max-w-xl">
-          <Connect
+          <Connect.CreateConnection
             name={connectionDBState.displayName}
             driver={connectionDBState.dbType}
             onDriverChange={(driver, name) => {

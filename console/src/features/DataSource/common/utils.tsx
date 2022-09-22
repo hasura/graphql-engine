@@ -1,39 +1,8 @@
-import get from 'lodash.get';
 import { FaFolder, FaTable } from 'react-icons/fa';
 import React from 'react';
 import { Table } from '@/features/MetadataAPI';
-import { IntrospectedTable, Property, Ref, TableColumn } from '../types';
+import { IntrospectedTable, TableColumn } from '../types';
 import { RunSQLResponse } from '../api';
-
-export const isProperty = (
-  value: Ref | Property | { oneOf: (Property | Ref)[] }
-): value is Property => {
-  return 'type' in value;
-};
-
-export const isRef = (
-  value: Ref | Property | { oneOf: (Property | Ref)[] }
-): value is Ref => {
-  return Object.keys(value).includes('$ref');
-};
-
-export const isOneOf = (
-  value: Ref | Property | { oneOf: (Property | Ref)[] }
-): value is { oneOf: (Property | Ref)[] } => {
-  return Object.keys(value).includes('oneOf');
-};
-
-export const getProperty = (
-  value: Ref | Property,
-  otherSchemas: Record<string, Property>
-) => {
-  if (isRef(value)) {
-    const ref = value.$ref;
-    return get(otherSchemas, ref.split('/').slice(2).join('.'));
-  }
-
-  return value;
-};
 
 export const adaptIntrospectedTables = (
   runSqlResponse: RunSQLResponse

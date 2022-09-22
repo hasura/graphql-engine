@@ -26,6 +26,7 @@ import { Nullable } from '../components/Common/utils/tsUtils';
 
 export const metadataQueryTypes = [
   'add_source',
+  'update_source',
   'drop_source',
   'reload_source',
   'track_table',

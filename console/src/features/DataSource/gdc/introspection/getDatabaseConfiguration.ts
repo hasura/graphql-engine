@@ -1,7 +1,6 @@
 import { CapabilitiesResponse } from '@hasura/dc-api-types';
 import { AxiosInstance } from 'axios';
 import { runMetadataQuery } from '../../api';
-import { Property } from '../../types';
 
 export const getDatabaseConfiguration = async (
   httpClient: AxiosInstance,
@@ -28,8 +27,5 @@ export const getDatabaseConfiguration = async (
   return {
     configSchema: result.config_schema_response.config_schema,
     otherSchemas: result.config_schema_response.other_schemas,
-  } as {
-    configSchema: Property;
-    otherSchemas: Record<string, Property>;
   };
 };
