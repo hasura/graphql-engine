@@ -121,7 +121,7 @@ export type GetTablesListAsTreeProps = {
   dataSourceName: string;
 } & NetworkArgs;
 
-type ReleaseType = 'GA' | 'Beta';
+type ReleaseType = 'GA' | 'Beta' | 'disabled';
 
 export type DriverInfoResponse = {
   name: SupportedDrivers;
