@@ -60,6 +60,7 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
     arrayRelationships <&> \rel -> do
       relTable <- askTableInfo si (riRTable rel)
       selectPermissions <- hoistMaybe $ tableSelectPermissions roleName relTable
+      guard $ spiAllowAgg selectPermissions
       let rowPermissions = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions
       relGqlName <- textToName $ relNameToTxt $ riName rel
       typeGqlName <- (<> Name.__ <> relGqlName <> Name.__ <> Name._aggregate) <$> getTableGQLName ti

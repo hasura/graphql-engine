@@ -32,7 +32,8 @@ data Permission
         permissionSource :: Text,
         permissionRole :: Text,
         permissionColumns :: [Text],
-        permissionRows :: Aeson.Value
+        permissionRows :: Aeson.Value,
+        permissionAllowAggregations :: Bool
       }
   | UpdatePermission
       { permissionTable :: Text,
@@ -56,7 +57,8 @@ selectPermission =
       permissionSource = mempty,
       permissionRole = mempty,
       permissionColumns = mempty,
-      permissionRows = [yaml|{}|]
+      permissionRows = [yaml|{}|],
+      permissionAllowAggregations = False
     }
 
 updatePermission :: Permission
@@ -143,6 +145,7 @@ createPermission backendPrefix env SelectPermission {..} = do
         permission:
           columns: *permissionColumns
           filter: *permissionRows
+          allow_aggregations: *permissionAllowAggregations
     |]
 
 dropPermission :: Text -> TestEnvironment -> Permission -> IO ()
