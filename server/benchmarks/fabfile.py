@@ -556,11 +556,11 @@ def pretty_print_regression_report_github_comment(results, skip_pr_report_names,
             for metric_name, d in metrics.items():
               if len(list(metrics.items())) == 1:  # need to waste a line if only one metric:
                 out(f"{col(d )} {                        '  ': <21s}{'│ '+bench_name_pretty         : <40}{                     metric_name: >28}{d :>12.1f} ┐")
-                out(f"{col(l1)} {                        '  ': <21s}{'│'                                 }{                              '':_>67}{''  :>12s} ┘")
+                out(f"{col(  )} {                        '  ': <21s}{'│'                                 }{                              '':_>67}{''  :>12s} ┘")
               elif metric_name == list(metrics.items())[0][0]:  # first:
                 out(f"{col(d )} {                        '  ': <21s}{'│ '+bench_name_pretty         : <40}{                     metric_name: >28}{d :>12.1f} ┐")
               elif metric_name == list(metrics.items())[-1][0]:  # last:
-                out(f"{col(l1)} {                        '  ': <21s}{'│'                                 }{               '   '+metric_name:_>67}{d :>12.1f} ┘")
+                out(f"{col(d )} {                        '  ': <21s}{'│'                                 }{               '   '+metric_name:_>67}{d :>12.1f} ┘")
               else:   # middle, omit name
                 out(f"{col(d )} {                        '  ': <21s}{'│ '                           : <40}{                     metric_name: >28}{d :>12.1f} │")
 
