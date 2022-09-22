@@ -17,6 +17,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     SubqueryComparisonCapabilities (..),
     MetricsCapabilities (..),
     ExplainCapabilities (..),
+    RawCapabilities (..),
     CapabilitiesResponse (..),
     emptyCapabilities,
     lookupComparisonInputObjectDefinition,
@@ -63,14 +64,15 @@ data Capabilities = Capabilities
     _cRelationships :: Maybe RelationshipCapabilities,
     _cComparisons :: Maybe ComparisonCapabilities,
     _cMetrics :: Maybe MetricsCapabilities,
-    _cExplain :: Maybe ExplainCapabilities
+    _cExplain :: Maybe ExplainCapabilities,
+    _cRaw :: Maybe RawCapabilities
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
 emptyCapabilities :: Capabilities
-emptyCapabilities = Capabilities Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+emptyCapabilities = Capabilities Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
@@ -85,6 +87,7 @@ instance HasCodec Capabilities where
         <*> optionalField "comparisons" "The agent's comparison capabilities" .= _cComparisons
         <*> optionalField "metrics" "The agent's metrics capabilities" .= _cMetrics
         <*> optionalField "explain" "The agent's explain capabilities" .= _cExplain
+        <*> optionalField "raw" "The agent's raw query capabilities" .= _cRaw
 
 data QueryCapabilities = QueryCapabilities
   { _qcSupportsPrimaryKeys :: Bool
@@ -264,6 +267,15 @@ data ExplainCapabilities = ExplainCapabilities {}
 instance HasCodec ExplainCapabilities where
   codec =
     object "ExplainCapabilities" $ pure ExplainCapabilities
+
+data RawCapabilities = RawCapabilities {}
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec RawCapabilities
+
+instance HasCodec RawCapabilities where
+  codec =
+    object "RawCapabilities" $ pure RawCapabilities
 
 data CapabilitiesResponse = CapabilitiesResponse
   { _crCapabilities :: Capabilities,

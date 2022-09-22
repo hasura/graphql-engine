@@ -4,12 +4,13 @@ import { getSchema } from './schema';
 import { explain, queryData } from './query';
 import { getConfig, tryGetConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse } from '@hasura/dc-api-types';
+import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse } from '@hasura/dc-api-types';
 import { connect } from './db';
 import { envToBool, envToString } from './util';
 import metrics from 'fastify-metrics';
 import prometheus from 'prom-client';
 import * as fs from 'fs'
+import { runRawOperation } from './raw';
 
 const port = Number(process.env.PORT) || 8100;
 
@@ -107,6 +108,13 @@ server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (reque
   return result;
 });
 
+// TODO: Use derived types for body and reply
+server.post<{ Body: RawRequest, Reply: RawResponse }>("/raw", async (request, _response) => {
+  server.log.info({ headers: request.headers, query: request.body, }, "schema.raw");
+  const config = getConfig(request);
+  return runRawOperation(config, sqlLogger, request.body);
+});
+
 server.post<{ Body: QueryRequest, Reply: ExplainResponse}>("/explain", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const config = getConfig(request);
@@ -156,6 +164,7 @@ server.get("/", async (request, response) => {
           <li><a href="/capabilities">GET /capabilities - Capabilities Metadata</a>
           <li><a href="/schema">GET /schema - Agent Schema</a>
           <li><a href="/query">POST /query - Query Handler</a>
+          <li><a href="/raw">POST /raw - Raw Query Handler</a>
           <li><a href="/health">GET /health - Healthcheck</a>
           <li><a href="/swagger.json">GET /swagger.json - Swagger JSON</a>
           <li><a href="/metrics">GET /metrics - Prometheus formatted metrics</a>
