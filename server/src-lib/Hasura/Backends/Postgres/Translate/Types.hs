@@ -133,7 +133,7 @@ data SelectNode = SelectNode
   { _snExtractors :: HM.HashMap Postgres.ColumnAlias Postgres.SQLExp,
     _snJoinTree :: JoinTree
   }
-  deriving stock (Eq)
+  deriving stock (Eq, Show)
 
 instance Semigroup SelectNode where
   SelectNode lExtrs lJoinTree <> SelectNode rExtrs rJoinTree =
@@ -168,7 +168,7 @@ data ObjectRelationSource = ObjectRelationSource
     _orsRelationMapping :: HM.HashMap Postgres.PGCol Postgres.PGCol,
     _orsSelectSource :: ObjectSelectSource
   }
-  deriving (Generic)
+  deriving (Generic, Show)
 
 instance Hashable ObjectRelationSource
 
@@ -179,7 +179,7 @@ data ArrayRelationSource = ArrayRelationSource
     _arsRelationMapping :: HM.HashMap Postgres.PGCol Postgres.PGCol,
     _arsSelectSource :: SelectSource
   }
-  deriving (Generic)
+  deriving (Generic, Show)
 
 instance Hashable ArrayRelationSource
 
@@ -189,7 +189,7 @@ data MultiRowSelectNode = MultiRowSelectNode
   { _mrsnTopExtractors :: [Postgres.Extractor],
     _mrsnSelectNode :: SelectNode
   }
-  deriving stock (Eq)
+  deriving stock (Eq, Show)
 
 instance Semigroup MultiRowSelectNode where
   MultiRowSelectNode lTopExtrs lSelNode <> MultiRowSelectNode rTopExtrs rSelNode =
@@ -214,7 +214,7 @@ data ArrayConnectionSource = ArrayConnectionSource
     _acsSlice :: Maybe ConnectionSlice,
     _acsSource :: SelectSource
   }
-  deriving (Generic)
+  deriving (Generic, Show)
 
 deriving instance Eq ArrayConnectionSource
 
@@ -226,7 +226,7 @@ data JoinTree = JoinTree
     _jtArrayConnections :: HM.HashMap ArrayConnectionSource MultiRowSelectNode,
     _jtComputedFieldTableSets :: HM.HashMap ComputedFieldTableSetSource MultiRowSelectNode
   }
-  deriving stock (Eq)
+  deriving stock (Eq, Show)
 
 instance Semigroup JoinTree where
   JoinTree lObjs lArrs lArrConns lCfts <> JoinTree rObjs rArrs rArrConns rCfts =

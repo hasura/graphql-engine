@@ -12,6 +12,7 @@ import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
@@ -49,6 +50,17 @@ spec = do
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Citus.setupTablesAction schema testEnv
                 ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Cockroach.setupTablesAction schema testEnv
+                ],
+              Fixture.customOptions =
+                Just $
+                  Fixture.defaultOptions
+                    { Fixture.stringifyNumbers = True,
+                      Fixture.skipTests = Just "Cockroach disabled pending oid 114 fix https://github.com/hasura/graphql-engine-mono/issues/5984"
+                    }
             },
           (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
             { Fixture.setupTeardown = \(testEnv, _) ->
@@ -203,5 +215,34 @@ tests opts = do
                  id: 1
                  name: Author 1
             |]
+
+      actual `shouldBe` expected
+
+    it "Fetch aggregated count only" \testEnvironment -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
+
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_article_aggregate:
+                  aggregate:
+                    count: 4
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  #{schemaName}_article_aggregate {
+                   aggregate {
+                      count
+                    }
+                  }
+                }
+              |]
 
       actual `shouldBe` expected

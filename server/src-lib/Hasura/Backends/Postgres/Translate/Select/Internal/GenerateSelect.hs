@@ -31,14 +31,21 @@ import Hasura.Prelude
 import Hasura.RQL.IR.Select (ConnectionSlice (SliceFirst, SliceLast))
 
 generateSQLSelect ::
-  -- | Pre join condition
+  -- | Pre join condition for lateral joins
   S.BoolExp ->
   SelectSource ->
   SelectNode ->
   S.Select
 generateSQLSelect joinCondition selectSource selectNode =
   S.mkSelect
-    { S.selExtr = [S.Extractor e $ Just a | (a, e) <- HM.toList extractors],
+    { S.selExtr =
+        case [S.Extractor e $ Just a | (a, e) <- HM.toList extractors] of
+          -- If the select list is empty we will generated code which looks like this:
+          -- > SELECT FROM ...
+          -- This works for postgres, but not for cockroach, which expects a non-empty
+          -- select list. So we add a dummy value:
+          [] -> S.dummySelectList -- SELECT 1 FROM ...
+          exts -> exts,
       S.selFrom = Just $ S.FromExp [joinedFrom],
       S.selOrderBy = nodeOrderBy,
       S.selLimit = S.LimitExp . S.intToSQLExp <$> _ssLimit nodeSlicing,
@@ -128,22 +135,23 @@ generateSQLSelect joinCondition selectSource selectNode =
               }
        in S.mkLateralFromItem select alias
 
+-- | Create a select query
 generateSQLSelectFromArrayNode ::
   SelectSource ->
   MultiRowSelectNode ->
   S.BoolExp ->
   S.Select
-generateSQLSelectFromArrayNode selectSource arraySelectNode joinCondition =
+generateSQLSelectFromArrayNode selectSource (MultiRowSelectNode topExtractors selectNode) joinCondition =
   S.mkSelect
     { S.selExtr = topExtractors,
-      S.selFrom = Just $ S.FromExp [selectFrom]
+      S.selFrom =
+        Just $
+          S.FromExp
+            [ S.mkSelFromItem
+                (generateSQLSelect joinCondition selectSource selectNode)
+                $ S.toTableAlias $ _ssPrefix selectSource
+            ]
     }
-  where
-    MultiRowSelectNode topExtractors selectNode = arraySelectNode
-    selectFrom =
-      S.mkSelFromItem
-        (generateSQLSelect joinCondition selectSource selectNode)
-        $ S.toTableAlias $ _ssPrefix selectSource
 
 mkJoinCond :: S.TableAlias -> HashMap PGCol PGCol -> S.BoolExp
 mkJoinCond baseTablepfx colMapn =

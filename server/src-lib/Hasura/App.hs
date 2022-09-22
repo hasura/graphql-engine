@@ -3,6 +3,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
+-- | Imported by 'server/src-exec/Main.hs'.
 module Hasura.App
   ( ExitCode (DatabaseMigrationError, DowngradeProcessError, MetadataCleanError, MetadataExportError, SchemaCacheInitError),
     ExitException (ExitException),
@@ -189,6 +190,7 @@ throwErrJExit reason = liftIO . throwIO . ExitException reason . BLC.toStrict . 
 -- TODO(SOLOMON): Move Into `Hasura.Server.Init`. Unable to do so
 -- currently due `throwErrExit`.
 
+-- | Parse cli arguments to graphql-engine executable.
 parseArgs :: EnabledLogTypes impl => IO (HGEOptions (ServeOptions impl))
 parseArgs = do
   rawHGEOpts <- execParser opts

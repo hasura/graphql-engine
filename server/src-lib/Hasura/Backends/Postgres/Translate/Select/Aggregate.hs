@@ -33,6 +33,9 @@ selectAggregateQuerySQL ::
   Query
 selectAggregateQuerySQL = fromBuilder . toSQL . mkAggregateSelect
 
+-- | We process aggregate queries differently because the types of aggregate queries are different.
+--   In the '_asnFields' field of an 'AnnSelectG', we will have a 'TableAggregateFieldG' instead
+--   of an 'AnnFieldG'.
 mkAggregateSelect ::
   forall pgKind.
   (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
@@ -43,7 +46,9 @@ mkAggregateSelect annAggSel =
         runWriter $
           flip runReaderT strfyNum $
             processAnnAggregateSelect sourcePrefixes rootFieldName annAggSel
+      -- select the relevant columns and subquery we want to aggregate
       selectNode = SelectNode nodeExtractors joinTree
+      -- aggregate the results into a top-level return value
       arrayNode = MultiRowSelectNode [topExtractor] selectNode
    in renameIdentifiers $
         generateSQLSelectFromArrayNode selectSource arrayNode $ BELit True
