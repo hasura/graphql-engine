@@ -62,6 +62,13 @@ type HealthApi =
     :> ConfigHeader Optional
     :> GetNoContent
 
+type RawApi =
+  "raw"
+    :> SourceNameHeader Required
+    :> ConfigHeader Required
+    :> ReqBody '[JSON] V0.RawRequest
+    :> Post '[JSON] V0.RawResponse
+
 data Prometheus
 
 -- NOTE: This seems like quite a brittle definition and we may want to be
@@ -98,13 +105,15 @@ data Routes mode = Routes
     -- | 'GET /health'
     _health :: mode :- HealthApi,
     -- | 'GET /metrics'
-    _metrics :: mode :- MetricsApi
+    _metrics :: mode :- MetricsApi,
+    -- | 'GET /metrics'
+    _raw :: mode :- RawApi
   }
   deriving stock (Generic)
 
 -- | servant-openapi3 does not (yet) support NamedRoutes so we need to compose the
 -- API the old-fashioned way using :<|> for use by @toOpenApi@
-type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> ExplainApi :<|> HealthApi :<|> MetricsApi
+type Api = CapabilitiesApi :<|> SchemaApi :<|> QueryApi :<|> ExplainApi :<|> HealthApi :<|> MetricsApi :<|> RawApi
 
 -- | Provide an OpenApi 3.0 schema for the API
 openApiSchema :: OpenApi

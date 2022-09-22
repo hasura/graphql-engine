@@ -6,6 +6,7 @@ module Hasura.Backends.DataConnector.API.V0
     module Expression,
     module OrderBy,
     module Query,
+    module Raw,
     module Explain,
     module Relationships,
     module Scalar,
@@ -22,6 +23,7 @@ import Hasura.Backends.DataConnector.API.V0.Explain as Explain
 import Hasura.Backends.DataConnector.API.V0.Expression as Expression
 import Hasura.Backends.DataConnector.API.V0.OrderBy as OrderBy
 import Hasura.Backends.DataConnector.API.V0.Query as Query
+import Hasura.Backends.DataConnector.API.V0.Raw as Raw
 import Hasura.Backends.DataConnector.API.V0.Relationships as Relationships
 import Hasura.Backends.DataConnector.API.V0.Scalar as Scalar
 import Hasura.Backends.DataConnector.API.V0.Schema as Schema

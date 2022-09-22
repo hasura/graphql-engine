@@ -57,6 +57,7 @@ defaultBackendCapabilities = \case
           supports_relations: true
       explain: {}
       metrics: {}
+      raw: {}
       queries:
         supports_primary_keys: true
     |]

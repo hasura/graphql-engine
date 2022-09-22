@@ -39,7 +39,7 @@ import Data.Data (Typeable)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as Text
 import Data.Text.Extended (ToTxt (..))
-import Data.Text.NonEmpty (NonEmptyText)
+import Data.Text.NonEmpty (NonEmptyText (unNonEmptyText))
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue (ToErrorValue (..))
@@ -120,7 +120,7 @@ instance ToJSON SourceTimeout where
 data SourceConfig = SourceConfig
   { _scEndpoint :: BaseUrl,
     _scConfig :: API.Config,
-    _scTemplate :: Maybe Text, -- TODO: Use Parsed Kriti Template
+    _scTemplate :: Maybe Text, -- TODO: Use Parsed Kriti Template, specify template language
     _scCapabilities :: API.Capabilities,
     _scSchema :: API.SchemaResponse,
     _scManager :: HTTP.Manager,
@@ -155,6 +155,9 @@ newtype DataConnectorName = DataConnectorName {unDataConnectorName :: NonEmptyTe
   deriving anyclass (Cacheable, NFData)
 
 instance Witch.From DataConnectorName NonEmptyText
+
+instance Witch.From DataConnectorName Text where
+  from = unNonEmptyText . Witch.from
 
 data DataConnectorOptions = DataConnectorOptions
   {_dcoUri :: BaseUrl}

@@ -45,7 +45,8 @@ capabilities =
                   { API._ccSubqueryComparisonCapabilities = Just API.SubqueryComparisonCapabilities {API._ctccSupportsRelations = True}
                   },
             API._cMetrics = Just API.MetricsCapabilities {},
-            API._cExplain = Just API.ExplainCapabilities {}
+            API._cExplain = Just API.ExplainCapabilities {},
+            API._cRaw = Just API.RawCapabilities {}
           },
       _crConfigSchemaResponse =
         API.ConfigSchemaResponse
@@ -573,6 +574,9 @@ healthcheckHandler _sourceName _config = pure NoContent
 metricsHandler :: Handler Text
 metricsHandler = pure "# NOTE: Metrics would go here."
 
+rawHandler :: API.SourceName -> API.Config -> API.RawRequest -> Handler API.RawResponse
+rawHandler _ _ _ = pure $ API.RawResponse [] -- NOTE: Raw query response would go here.
+
 dcMockableServer :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> I.IORef (Maybe API.Config) -> Server API.Api
 dcMockableServer mcfg mquery mQueryConfig =
   mockCapabilitiesHandler mcfg
@@ -581,6 +585,7 @@ dcMockableServer mcfg mquery mQueryConfig =
     :<|> explainHandler
     :<|> healthcheckHandler
     :<|> metricsHandler
+    :<|> rawHandler
 
 mockAgentPort :: Warp.Port
 mockAgentPort = 65006

@@ -203,6 +203,54 @@
           }
         }
       }
+    },
+    "/raw": {
+      "post": {
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-SourceName",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Hasura-DataConnector-Config",
+            "required": true,
+            "schema": {
+              "additionalProperties": true,
+              "nullable": false,
+              "type": "object"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json;charset=utf-8": {
+              "schema": {
+                "$ref": "#/components/schemas/RawRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/RawResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -242,6 +290,9 @@
           },
           "queries": {
             "$ref": "#/components/schemas/QueryCapabilities"
+          },
+          "raw": {
+            "$ref": "#/components/schemas/RawCapabilities"
           },
           "relationships": {
             "$ref": "#/components/schemas/RelationshipCapabilities"
@@ -317,6 +368,7 @@
       },
       "MetricsCapabilities": {},
       "ExplainCapabilities": {},
+      "RawCapabilities": {},
       "ConfigSchemaResponse": {
         "nullable": false,
         "properties": {
@@ -1577,6 +1629,36 @@
         },
         "required": [
           "lines",
+          "query"
+        ],
+        "type": "object"
+      },
+      "RawResponse": {
+        "properties": {
+          "rows": {
+            "description": "The rows returned by the raw query.",
+            "items": {
+              "additionalProperties": {
+                "additionalProperties": true
+              },
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "type": "object"
+      },
+      "RawRequest": {
+        "properties": {
+          "query": {
+            "description": "A string representing a raw query",
+            "type": "string"
+          }
+        },
+        "required": [
           "query"
         ],
         "type": "object"

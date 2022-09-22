@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@fastify/cors": "^8.1.0",
-    "@hasura/dc-api-types": "0.7.0",
+    "@hasura/dc-api-types": "0.8.0",
     "fastify-metrics": "^9.2.1",
     "fastify": "^4.4.0",
     "nanoid": "^3.3.4",
@@ -30,7 +30,6 @@
     "pino-pretty": "^8.1.0",
     "sequelize": "^6.21.2",
     "sqlite-parser": "^1.0.1",
-    "sqlite": "^4.1.1",
     "sqlite3": "^5.0.8",
     "sqlstring-sqlite": "^0.1.1"
   },

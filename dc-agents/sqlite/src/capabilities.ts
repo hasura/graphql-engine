@@ -15,6 +15,7 @@ export const capabilitiesResponse: CapabilitiesResponse = {
       }
     },
     explain: {},
+    raw: {},
     ... ( envToBool('METRICS') ?  { metrics: {} } : {} )
   },
 }
