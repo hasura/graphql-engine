@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useDispatch } from 'react-redux';
+import { MdRefresh } from 'react-icons/md';
 import { useNeonOAuth } from './useNeonOAuth';
 import { useNeonDatabase } from './useNeonDatabase';
 import { useCreateHasuraDatasource } from './useCreateHasuraDatasource';
@@ -116,6 +117,7 @@ export function Neon(props: {
             status: {
               status: 'error',
               buttonText: 'Try again',
+              buttonIcon: <MdRefresh />,
               errorTitle: 'Creating Neon Database failed',
               errorDescription: `Error creating database: ${neonDBCreationStatus.error}`,
             },
@@ -169,6 +171,7 @@ export function Neon(props: {
         status: {
           status: 'error',
           buttonText: 'Try again',
+          buttonIcon: <MdRefresh />,
           errorTitle: 'Error authenticating with Neon',
           errorDescription: neonOauthStatus.error.message,
         },
