@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 
@@ -12,6 +12,7 @@ export type Props = {
     | {
         status: 'error';
         buttonText: string;
+        buttonIcon: ReactElement;
         errorTitle: string;
         errorDescription: string;
       }
@@ -54,10 +55,11 @@ export function NeonBanner(props: Props) {
           <Button
             data-trackid="neon-connect-db-button"
             data-testid="neon-connect-db-button"
-            mode="primary"
+            mode={status.status === 'loading' ? 'default' : 'primary'}
             isLoading={status.status === 'loading'}
             loadingText={status.buttonText}
             size="md"
+            icon={status.status === 'error' ? status.buttonIcon : undefined}
             onClick={() => {
               if (!isButtonDisabled) {
                 onClickConnect();

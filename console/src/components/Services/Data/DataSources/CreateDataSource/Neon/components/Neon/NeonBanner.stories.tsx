@@ -1,4 +1,5 @@
 import React from 'react';
+import { MdRefresh } from 'react-icons/md';
 import { ComponentMeta, Story } from '@storybook/react';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
@@ -64,6 +65,7 @@ export const Error: Story = () => (
     status={{
       status: 'error',
       buttonText: 'Try Again',
+      buttonIcon: <MdRefresh />,
       errorTitle: 'Error creating database',
       errorDescription: 'You have exceeded the free project limit on Neon.',
     }}
