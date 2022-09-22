@@ -18,8 +18,6 @@ module Harness.Backend.Postgres
     untrackTable,
     setup,
     teardown,
-    setupPermissions,
-    teardownPermissions,
     setupTablesAction,
     setupPermissionsAction,
     setupFunctionRootFieldAction,

@@ -26,6 +26,7 @@ import Hasura.GraphQL.Schema.Parser
 import Hasura.GraphQL.Schema.Table
 import Hasura.Name qualified as Name
 import Hasura.Prelude
+import Hasura.RQL.IR qualified as IR
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
 import Hasura.RQL.IR.Value
 import Hasura.RQL.Types.Backend qualified as B
@@ -53,16 +54,19 @@ defaultAggregationPredicatesParser ::
 defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
   arrayRelationships <- fails $ return $ nonEmpty $ tableArrayRelationships ti
   aggregationFunctions <- fails $ return $ nonEmpty aggFns
+  roleName <- retrieve scRole
 
   buildAnyOptionalFields $
     arrayRelationships <&> \rel -> do
       relTable <- askTableInfo si (riRTable rel)
+      selectPermissions <- hoistMaybe $ tableSelectPermissions roleName relTable
+      let rowPermissions = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions
       relGqlName <- textToName $ relNameToTxt $ riName rel
       typeGqlName <- (<> Name.__ <> relGqlName <> Name.__ <> Name._aggregate) <$> getTableGQLName ti
 
       -- We only make a field for aggregations over a relation if at least
       -- some aggregation predicates are callable.
-      relAggregateField rel relGqlName typeGqlName
+      relAggregateField rel relGqlName typeGqlName rowPermissions
         -- We only return an InputFieldsParser for aggregation predicates,
         -- if we parse at least one aggregation predicate
         <$> buildAnyOptionalFields
@@ -100,12 +104,13 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
       RelInfo b ->
       G.Name ->
       G.Name ->
+      (IR.AnnBoolExp b (UnpreparedValue b)) ->
       (InputFieldsParser n [AggregationPredicate b (UnpreparedValue b)]) ->
       (InputFieldsParser n (Maybe (AggregationPredicatesImplementation b (UnpreparedValue b))))
-    relAggregateField rel relGqlName typeGqlName =
+    relAggregateField rel relGqlName typeGqlName rowPermissions =
       P.fieldOptional (relGqlName <> Name.__ <> Name._aggregate) Nothing
         . P.object typeGqlName Nothing
-        . fmap (AggregationPredicatesImplementation rel)
+        . fmap (AggregationPredicatesImplementation rel rowPermissions)
         . ( `P.bindFields`
               \case
                 [predicate] -> pure predicate

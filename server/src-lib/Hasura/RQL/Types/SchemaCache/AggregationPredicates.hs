@@ -24,7 +24,7 @@ defaultGetAggregationPredicateDeps ::
   (Backend b, GetAggregationPredicatesDeps b) =>
   AggregationPredicatesImplementation b (PartialSQLExp b) ->
   BoolExpM b [SchemaDependency]
-defaultGetAggregationPredicateDeps (AggregationPredicatesImplementation relInfo functions) = do
+defaultGetAggregationPredicateDeps (AggregationPredicatesImplementation relInfo _rowPermissions functions) = do
   BoolExpCtx {source, currTable} <- ask
   let relationshipName = riName relInfo
       relationshipTable = riRTable relInfo
