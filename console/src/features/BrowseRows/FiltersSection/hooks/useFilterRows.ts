@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useFieldArray, UseFormReturn } from 'react-hook-form';
 import { OperatorItem } from '../FilterRow';
-import { defaultColumn, defaultOperator, FormValues } from '../types';
+import {
+  defaultColumn,
+  defaultOperator,
+  FiltersAndSortFormValues,
+} from '../types';
 
 type UseFilterRowsProps = {
-  methods: UseFormReturn<FormValues, any>;
+  methods: UseFormReturn<FiltersAndSortFormValues, any>;
   operators: OperatorItem[];
 };
 
@@ -22,41 +26,38 @@ export const useFilterRows = ({ methods, operators }: UseFilterRowsProps) => {
   const [showFirstRemove, setShowFirstRemove] = useState(false);
 
   useEffect(() => {
-    const subscription = watch(
-      (formValues, { name: fieldName, type: eventType }) => {
-        console.log(formValues, fieldName, eventType);
-        const rowId = getRowIndex(fieldName || '');
+    const subscription = watch((formValues, { name: fieldName }) => {
+      const rowId = getRowIndex(fieldName || '');
 
-        if (
-          rowId === 0 &&
-          fieldName?.endsWith('.column') &&
-          getValues(fieldName) !== defaultColumn
-        ) {
-          setShowFirstRemove(true);
-        }
-
-        if (
-          rowId === 0 &&
-          fieldName?.endsWith('.value') &&
-          getValues(fieldName) !== ''
-        ) {
-          setShowFirstRemove(true);
-        }
-
-        if (fieldName?.endsWith('.operator')) {
-          const operatorValue = getValues(fieldName);
-          const operatorDefinition = operators.find(
-            op => op.value === operatorValue
-          );
-          setValue(
-            `filter.${rowId}.value`,
-            operatorDefinition?.defaultValue || ''
-          );
-        }
+      if (
+        rowId === 0 &&
+        fieldName?.endsWith('.column') &&
+        getValues(fieldName) !== defaultColumn
+      ) {
+        setShowFirstRemove(true);
       }
-    );
+
+      if (
+        rowId === 0 &&
+        fieldName?.endsWith('.value') &&
+        getValues(fieldName) !== ''
+      ) {
+        setShowFirstRemove(true);
+      }
+
+      if (fieldName?.endsWith('.operator')) {
+        const operatorValue = getValues(fieldName);
+        const operatorDefinition = operators.find(
+          op => op.value === operatorValue
+        );
+        setValue(
+          `filter.${rowId}.value`,
+          operatorDefinition?.defaultValue || ''
+        );
+      }
+    });
     return () => subscription.unsubscribe();
-  }, [watch]);
+  }, [watch, operators]);
 
   const onAdd = () =>
     append({

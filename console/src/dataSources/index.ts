@@ -120,7 +120,12 @@ export interface DataSourcesAPI {
     TIME?: string;
     TIMETZ?: string;
   };
-  operators: Array<{ name: string; value: string; graphqlOp: string }>;
+  operators: Array<{
+    name: string;
+    value: string;
+    graphqlOp: string;
+    defaultValue?: string;
+  }>;
   getFetchTablesListQuery: (options: {
     schemas: string[];
     tables?: QualifiedTable[];

@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { UseFormReturn, useFieldArray } from 'react-hook-form';
-import { defaultColumn, defaultOrder, FormValues } from '../types';
+import {
+  defaultColumn,
+  defaultOrder,
+  FiltersAndSortFormValues,
+} from '../types';
 
 type UseSortRowsProps = {
-  methods: UseFormReturn<FormValues, any>;
+  methods: UseFormReturn<FiltersAndSortFormValues, any>;
 };
 
 export const useSortRows = ({ methods }: UseSortRowsProps) => {
@@ -41,7 +45,7 @@ export const useSortRows = ({ methods }: UseSortRowsProps) => {
       }
     });
     return () => subscription.unsubscribe();
-  }, [watch]);
+  }, [watch, getValues]);
 
   const onRemove = (index: number) => {
     if (index > 0) {
