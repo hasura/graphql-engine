@@ -12,21 +12,21 @@
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Network.URI</span></span><span>
 </span><span id="line-14"></span><span>
-</span><span id="line-15"></span><span class="hs-keyword">instance</span><span> </span><span class="hs-pragma">{-# INCOHERENT</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span id="local-6989586621689574865"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">URI</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-16"></span><span>  </span><span id="local-6989586621689574863"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser URI
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621689574860"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689574860"><span class="hs-identifier hs-var">uri</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-17"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689574859"><span class="annot"><span class="annottext">mUrl :: Maybe URI
-</span><a href="#local-6989586621689574859"><span class="hs-identifier hs-var hs-var">mUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe URI
+</span><span id="line-15"></span><span class="hs-keyword">instance</span><span> </span><span class="hs-pragma">{-# INCOHERENT</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span id="local-6989586621689580849"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">URI</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-16"></span><span>  </span><span id="local-6989586621689580847"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser URI
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621689580844"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689580844"><span class="hs-identifier hs-var">uri</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-17"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689580843"><span class="annot"><span class="annottext">mUrl :: Maybe URI
+</span><a href="#local-6989586621689580843"><span class="hs-identifier hs-var hs-var">mUrl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe URI
 </span><span class="hs-identifier hs-var">parseURI</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Maybe URI) -&gt; String -&gt; Maybe URI
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689574860"><span class="hs-identifier hs-var">uri</span></a></span><span>
+</span><a href="#local-6989586621689580844"><span class="hs-identifier hs-var">uri</span></a></span><span>
 </span><span id="line-18"></span><span>    </span><span class="annot"><span class="annottext">Maybe URI -&gt; Parser URI -&gt; Parser URI
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe URI
-</span><a href="#local-6989586621689574859"><span class="hs-identifier hs-var">mUrl</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Parser URI
+</span><a href="#local-6989586621689580843"><span class="hs-identifier hs-var">mUrl</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Parser URI
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;not a valid URI&quot;</span></span><span class="hs-special">)</span><span>
@@ -36,8 +36,8 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;not a valid URI&quot;</span></span><span>
 </span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span class="hs-pragma">{-# INCOHERENT</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span id="local-6989586621689574849"><span id="local-6989586621689574851"><span id="local-6989586621689574853"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">URI</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-22"></span><span>  </span><span id="local-6989586621689574847"><span class="annot"><span class="annottext">toJSON :: URI -&gt; Value
+</span><span id="line-21"></span><span class="hs-keyword">instance</span><span> </span><span class="hs-pragma">{-# INCOHERENT</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span id="local-6989586621689580833"><span id="local-6989586621689580835"><span id="local-6989586621689580837"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">URI</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621689580831"><span class="annot"><span class="annottext">toJSON :: URI -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; (URI -&gt; Text) -&gt; URI -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -45,21 +45,21 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span>
 </span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span class="hs-pragma">{-# INCOHERENT</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span id="local-6989586621689574841"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">URI</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-25"></span><span>  </span><span id="local-6989586621689574839"><span class="annot"><span class="annottext">toJSONKey :: ToJSONKeyFunction URI
+</span><span id="line-24"></span><span class="hs-keyword">instance</span><span> </span><span class="hs-pragma">{-# INCOHERENT</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span id="local-6989586621689580825"><span class="annot"><span class="hs-identifier hs-type">ToJSONKey</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">URI</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-25"></span><span>  </span><span id="local-6989586621689580823"><span class="annot"><span class="annottext">toJSONKey :: ToJSONKeyFunction URI
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSONKey</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(URI -&gt; Text) -&gt; ToJSONKeyFunction URI
 forall a. (a -&gt; Text) -&gt; ToJSONKeyFunction a
 </span><span class="hs-identifier hs-var">toJSONKeyText</span></span><span> </span><span class="annot"><span class="annottext">URI -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span>
 </span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689574834"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">URI</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-28"></span><span>  </span><span id="local-6989586621689574832"><span class="annot"><span class="annottext">hashWithSalt :: Int -&gt; URI -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">hashWithSalt</span></span></span><span> </span><span id="local-6989586621689574830"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689574830"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Int
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689580818"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">URI</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621689580816"><span class="annot"><span class="annottext">hashWithSalt :: Int -&gt; URI -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">hashWithSalt</span></span></span><span> </span><span id="local-6989586621689580814"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689580814"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">hashWithSalt</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689574830"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Int) -&gt; (URI -&gt; Text) -&gt; URI -&gt; Int
+</span><a href="#local-6989586621689580814"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Int) -&gt; (URI -&gt; Text) -&gt; URI -&gt; Int
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">URI -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
