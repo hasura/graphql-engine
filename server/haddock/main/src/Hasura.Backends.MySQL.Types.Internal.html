@@ -60,15 +60,15 @@
 </span><span id="line-60"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-61"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
 </span><span id="line-62"></span><span>
-</span><span id="line-63"></span><span class="hs-keyword">data</span><span> </span><span id="Aliased"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span></span><span> </span><span id="local-6989586621689612486"><span class="annot"><a href="#local-6989586621689612486"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Aliased"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">data</span><span> </span><span id="Aliased"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span></span><span> </span><span id="local-6989586621689613143"><span class="annot"><a href="#local-6989586621689613143"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Aliased"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span></span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="aliasedThing"><span class="annot"><span class="annottext">Aliased a -&gt; a
-</span><a href="Hasura.Backends.MySQL.Types.Internal.html#aliasedThing"><span class="hs-identifier hs-var hs-var">aliasedThing</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689612486"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.Backends.MySQL.Types.Internal.html#aliasedThing"><span class="hs-identifier hs-var hs-var">aliasedThing</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689613143"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-65"></span><span>    </span><span id="aliasedAlias"><span class="annot"><span class="annottext">Aliased a -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#aliasedAlias"><span class="hs-identifier hs-var hs-var">aliasedAlias</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-66"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-67"></span><span>
 </span><span id="line-68"></span><span class="hs-comment">-- | Partial of Database.MySQL.Simple.ConnectInfo</span><span>
-</span><span id="line-69"></span><span id="local-6989586621689612481"><span id="local-6989586621689612482"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConnSourceConfig"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnSourceConfig"><span class="hs-identifier hs-var">ConnSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConnSourceConfig"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnSourceConfig"><span class="hs-identifier hs-var">ConnSourceConfig</span></a></span></span><span>
+</span><span id="line-69"></span><span id="local-6989586621689613138"><span id="local-6989586621689613139"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConnSourceConfig"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnSourceConfig"><span class="hs-identifier hs-var">ConnSourceConfig</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConnSourceConfig"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnSourceConfig"><span class="hs-identifier hs-var">ConnSourceConfig</span></a></span></span><span>
 </span><span id="line-70"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | Works with @127.0.0.1@ but not with @localhost@: https://mariadb.com/kb/en/troubleshooting-connection-issues/#localhost-and</span><span>
 </span><span id="line-71"></span><span>    </span><span id="_cscHost"><span class="annot"><span class="annottext">ConnSourceConfig -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscHost"><span class="hs-identifier hs-var hs-var">_cscHost</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span>
@@ -83,7 +83,7 @@
 </span><span id="line-76"></span><span>    </span><span id="_cscPoolSettings"><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ConnPoolSettings
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscPoolSettings"><span class="hs-identifier hs-var hs-var">_cscPoolSettings</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnPoolSettings"><span class="hs-identifier hs-type">ConnPoolSettings</span></a></span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689612470"><span id="local-6989586621689612472"><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689613127"><span id="local-6989586621689613129"><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
 (ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool)
 -&gt; (ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool)
 -&gt; Eq ConnSourceConfig
@@ -92,7 +92,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
 == :: ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
 $c== :: ConnSourceConfig -&gt; ConnSourceConfig -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612463"><span id="local-6989586621689612465"><span id="local-6989586621689612467"><span class="annot"><span class="annottext">Int -&gt; ConnSourceConfig -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613120"><span id="local-6989586621689613122"><span id="local-6989586621689613124"><span class="annot"><span class="annottext">Int -&gt; ConnSourceConfig -&gt; ShowS
 [ConnSourceConfig] -&gt; ShowS
 ConnSourceConfig -&gt; String
 (Int -&gt; ConnSourceConfig -&gt; ShowS)
@@ -107,7 +107,7 @@ show :: ConnSourceConfig -&gt; String
 $cshow :: ConnSourceConfig -&gt; String
 showsPrec :: Int -&gt; ConnSourceConfig -&gt; ShowS
 $cshowsPrec :: Int -&gt; ConnSourceConfig -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612460"><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613117"><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ()
 (ConnSourceConfig -&gt; ()) -&gt; NFData ConnSourceConfig
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ConnSourceConfig -&gt; ()
@@ -121,7 +121,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ConnSourceConfig x -&gt; ConnSourceConfig
 $cfrom :: forall x. ConnSourceConfig -&gt; Rep ConnSourceConfig x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612452"><span id="local-6989586621689612454"><span class="annot"><span class="annottext">Int -&gt; ConnSourceConfig -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613109"><span id="local-6989586621689613111"><span class="annot"><span class="annottext">Int -&gt; ConnSourceConfig -&gt; Int
 ConnSourceConfig -&gt; Int
 (Int -&gt; ConnSourceConfig -&gt; Int)
 -&gt; (ConnSourceConfig -&gt; Int) -&gt; Hashable ConnSourceConfig
@@ -141,7 +141,7 @@ $chashWithSalt :: Int -&gt; ConnSourceConfig -&gt; Int
 </span><span id="line-84"></span><span>
 </span><span id="line-85"></span><span class="hs-keyword">newtype</span><span> </span><span id="ConstraintName"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConstraintName"><span class="hs-identifier hs-var">ConstraintName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConstraintName"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConstraintName"><span class="hs-identifier hs-var">ConstraintName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unConstraintName"><span class="annot"><span class="annottext">ConstraintName -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#unConstraintName"><span class="hs-identifier hs-var hs-var">unConstraintName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-86"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689612440"><span id="local-6989586621689612442"><span id="local-6989586621689612444"><span class="annot"><span class="annottext">Int -&gt; ConstraintName -&gt; ShowS
+</span><span id="line-86"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689613097"><span id="local-6989586621689613099"><span id="local-6989586621689613101"><span class="annot"><span class="annottext">Int -&gt; ConstraintName -&gt; ShowS
 [ConstraintName] -&gt; ShowS
 ConstraintName -&gt; String
 (Int -&gt; ConstraintName -&gt; ShowS)
@@ -156,7 +156,7 @@ show :: ConstraintName -&gt; String
 $cshow :: ConstraintName -&gt; String
 showsPrec :: Int -&gt; ConstraintName -&gt; ShowS
 $cshowsPrec :: Int -&gt; ConstraintName -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612436"><span id="local-6989586621689612438"><span class="annot"><span class="annottext">ConstraintName -&gt; ConstraintName -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613093"><span id="local-6989586621689613095"><span class="annot"><span class="annottext">ConstraintName -&gt; ConstraintName -&gt; Bool
 (ConstraintName -&gt; ConstraintName -&gt; Bool)
 -&gt; (ConstraintName -&gt; ConstraintName -&gt; Bool) -&gt; Eq ConstraintName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -164,12 +164,12 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ConstraintName -&gt; ConstraintName -&gt; Bool
 == :: ConstraintName -&gt; ConstraintName -&gt; Bool
 $c== :: ConstraintName -&gt; ConstraintName -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612434"><span class="annot"><span class="annottext">ConstraintName -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613091"><span class="annot"><span class="annottext">ConstraintName -&gt; Text
 (ConstraintName -&gt; Text) -&gt; ToTxt ConstraintName
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: ConstraintName -&gt; Text
 $ctoTxt :: ConstraintName -&gt; Text
-</span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612429"><span id="local-6989586621689612431"><span class="annot"><span class="annottext">Value -&gt; Parser [ConstraintName]
+</span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613086"><span id="local-6989586621689613088"><span class="annot"><span class="annottext">Value -&gt; Parser [ConstraintName]
 Value -&gt; Parser ConstraintName
 (Value -&gt; Parser ConstraintName)
 -&gt; (Value -&gt; Parser [ConstraintName]) -&gt; FromJSON ConstraintName
@@ -179,7 +179,7 @@ parseJSONList :: Value -&gt; Parser [ConstraintName]
 $cparseJSONList :: Value -&gt; Parser [ConstraintName]
 parseJSON :: Value -&gt; Parser ConstraintName
 $cparseJSON :: Value -&gt; Parser ConstraintName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612420"><span id="local-6989586621689612422"><span id="local-6989586621689612424"><span id="local-6989586621689612426"><span class="annot"><span class="annottext">[ConstraintName] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613077"><span id="local-6989586621689613079"><span id="local-6989586621689613081"><span id="local-6989586621689613083"><span class="annot"><span class="annottext">[ConstraintName] -&gt; Value
 [ConstraintName] -&gt; Encoding
 ConstraintName -&gt; Value
 ConstraintName -&gt; Encoding
@@ -202,7 +202,7 @@ toEncoding :: ConstraintName -&gt; Encoding
 $ctoEncoding :: ConstraintName -&gt; Encoding
 toJSON :: ConstraintName -&gt; Value
 $ctoJSON :: ConstraintName -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612415"><span id="local-6989586621689612417"><span class="annot"><span class="annottext">Int -&gt; ConstraintName -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613072"><span id="local-6989586621689613074"><span class="annot"><span class="annottext">Int -&gt; ConstraintName -&gt; Int
 ConstraintName -&gt; Int
 (Int -&gt; ConstraintName -&gt; Int)
 -&gt; (ConstraintName -&gt; Int) -&gt; Hashable ConstraintName
@@ -211,12 +211,12 @@ hash :: ConstraintName -&gt; Int
 $chash :: ConstraintName -&gt; Int
 hashWithSalt :: Int -&gt; ConstraintName -&gt; Int
 $chashWithSalt :: Int -&gt; ConstraintName -&gt; Int
-</span><a href="#local-6989586621689612415"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612413"><span class="annot"><span class="annottext">ConstraintName -&gt; ()
+</span><a href="#local-6989586621689613072"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613070"><span class="annot"><span class="annottext">ConstraintName -&gt; ()
 (ConstraintName -&gt; ()) -&gt; NFData ConstraintName
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ConstraintName -&gt; ()
 $crnf :: ConstraintName -&gt; ()
-</span><a href="#local-6989586621689612413"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612410"><span class="annot"><span class="annottext">Eq ConstraintName
+</span><a href="#local-6989586621689613070"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613067"><span class="annot"><span class="annottext">Eq ConstraintName
 Eq ConstraintName
 -&gt; (Accesses -&gt; ConstraintName -&gt; ConstraintName -&gt; Bool)
 -&gt; Cacheable ConstraintName
@@ -228,7 +228,7 @@ $cp1Cacheable :: Eq ConstraintName
 </span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-87"></span><span>
 </span><span id="line-88"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-type">ToErrorValue</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConstraintName"><span class="hs-identifier hs-type">ConstraintName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-89"></span><span>  </span><span id="local-6989586621689612406"><span class="annot"><span class="annottext">toErrorValue :: ConstraintName -&gt; ErrorMessage
+</span><span id="line-89"></span><span>  </span><span id="local-6989586621689613063"><span class="annot"><span class="annottext">toErrorValue :: ConstraintName -&gt; ErrorMessage
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">toErrorValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">ErrorValue.squote</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage)
 -&gt; (ConstraintName -&gt; Text) -&gt; ConstraintName -&gt; ErrorMessage
@@ -238,7 +238,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-90"></span><span>
 </span><span id="line-91"></span><span class="hs-keyword">newtype</span><span> </span><span id="FunctionName"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#FunctionName"><span class="hs-identifier hs-var">FunctionName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FunctionName"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#FunctionName"><span class="hs-identifier hs-var">FunctionName</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unFunctionName"><span class="annot"><span class="annottext">FunctionName -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#unFunctionName"><span class="hs-identifier hs-var hs-var">unFunctionName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-92"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689612395"><span id="local-6989586621689612397"><span id="local-6989586621689612399"><span class="annot"><span class="annottext">Int -&gt; FunctionName -&gt; ShowS
+</span><span id="line-92"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689613052"><span id="local-6989586621689613054"><span id="local-6989586621689613056"><span class="annot"><span class="annottext">Int -&gt; FunctionName -&gt; ShowS
 [FunctionName] -&gt; ShowS
 FunctionName -&gt; String
 (Int -&gt; FunctionName -&gt; ShowS)
@@ -253,7 +253,7 @@ show :: FunctionName -&gt; String
 $cshow :: FunctionName -&gt; String
 showsPrec :: Int -&gt; FunctionName -&gt; ShowS
 $cshowsPrec :: Int -&gt; FunctionName -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612391"><span id="local-6989586621689612393"><span class="annot"><span class="annottext">FunctionName -&gt; FunctionName -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613048"><span id="local-6989586621689613050"><span class="annot"><span class="annottext">FunctionName -&gt; FunctionName -&gt; Bool
 (FunctionName -&gt; FunctionName -&gt; Bool)
 -&gt; (FunctionName -&gt; FunctionName -&gt; Bool) -&gt; Eq FunctionName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -261,7 +261,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: FunctionName -&gt; FunctionName -&gt; Bool
 == :: FunctionName -&gt; FunctionName -&gt; Bool
 $c== :: FunctionName -&gt; FunctionName -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612376"><span id="local-6989586621689612378"><span id="local-6989586621689612380"><span id="local-6989586621689612382"><span id="local-6989586621689612384"><span id="local-6989586621689612386"><span id="local-6989586621689612388"><span class="annot"><span class="annottext">Eq FunctionName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613033"><span id="local-6989586621689613035"><span id="local-6989586621689613037"><span id="local-6989586621689613039"><span id="local-6989586621689613041"><span id="local-6989586621689613043"><span id="local-6989586621689613045"><span class="annot"><span class="annottext">Eq FunctionName
 Eq FunctionName
 -&gt; (FunctionName -&gt; FunctionName -&gt; Ordering)
 -&gt; (FunctionName -&gt; FunctionName -&gt; Bool)
@@ -299,12 +299,12 @@ $c&lt; :: FunctionName -&gt; FunctionName -&gt; Bool
 compare :: FunctionName -&gt; FunctionName -&gt; Ordering
 $ccompare :: FunctionName -&gt; FunctionName -&gt; Ordering
 $cp1Ord :: Eq FunctionName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612373"><span class="annot"><span class="annottext">FunctionName -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613030"><span class="annot"><span class="annottext">FunctionName -&gt; Text
 (FunctionName -&gt; Text) -&gt; ToTxt FunctionName
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: FunctionName -&gt; Text
 $ctoTxt :: FunctionName -&gt; Text
-</span><a href="#local-6989586621689612373"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612369"><span id="local-6989586621689612371"><span class="annot"><span class="annottext">FromJSONKeyFunction [FunctionName]
+</span><a href="#local-6989586621689613030"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613026"><span id="local-6989586621689613028"><span class="annot"><span class="annottext">FromJSONKeyFunction [FunctionName]
 FromJSONKeyFunction FunctionName
 FromJSONKeyFunction FunctionName
 -&gt; FromJSONKeyFunction [FunctionName] -&gt; FromJSONKey FunctionName
@@ -314,7 +314,7 @@ fromJSONKeyList :: FromJSONKeyFunction [FunctionName]
 $cfromJSONKeyList :: FromJSONKeyFunction [FunctionName]
 fromJSONKey :: FromJSONKeyFunction FunctionName
 $cfromJSONKey :: FromJSONKeyFunction FunctionName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612364"><span id="local-6989586621689612366"><span class="annot"><span class="annottext">ToJSONKeyFunction [FunctionName]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613021"><span id="local-6989586621689613023"><span class="annot"><span class="annottext">ToJSONKeyFunction [FunctionName]
 ToJSONKeyFunction FunctionName
 ToJSONKeyFunction FunctionName
 -&gt; ToJSONKeyFunction [FunctionName] -&gt; ToJSONKey FunctionName
@@ -324,7 +324,7 @@ toJSONKeyList :: ToJSONKeyFunction [FunctionName]
 $ctoJSONKeyList :: ToJSONKeyFunction [FunctionName]
 toJSONKey :: ToJSONKeyFunction FunctionName
 $ctoJSONKey :: ToJSONKeyFunction FunctionName
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612359"><span id="local-6989586621689612361"><span class="annot"><span class="annottext">Value -&gt; Parser [FunctionName]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613016"><span id="local-6989586621689613018"><span class="annot"><span class="annottext">Value -&gt; Parser [FunctionName]
 Value -&gt; Parser FunctionName
 (Value -&gt; Parser FunctionName)
 -&gt; (Value -&gt; Parser [FunctionName]) -&gt; FromJSON FunctionName
@@ -334,7 +334,7 @@ parseJSONList :: Value -&gt; Parser [FunctionName]
 $cparseJSONList :: Value -&gt; Parser [FunctionName]
 parseJSON :: Value -&gt; Parser FunctionName
 $cparseJSON :: Value -&gt; Parser FunctionName
-</span><a href="#local-6989586621689612359"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612351"><span id="local-6989586621689612353"><span id="local-6989586621689612355"><span id="local-6989586621689612357"><span class="annot"><span class="annottext">[FunctionName] -&gt; Value
+</span><a href="#local-6989586621689613016"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613008"><span id="local-6989586621689613010"><span id="local-6989586621689613012"><span id="local-6989586621689613014"><span class="annot"><span class="annottext">[FunctionName] -&gt; Value
 [FunctionName] -&gt; Encoding
 FunctionName -&gt; Value
 FunctionName -&gt; Encoding
@@ -357,7 +357,7 @@ toEncoding :: FunctionName -&gt; Encoding
 $ctoEncoding :: FunctionName -&gt; Encoding
 toJSON :: FunctionName -&gt; Value
 $ctoJSON :: FunctionName -&gt; Value
-</span><a href="#local-6989586621689612351"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612347"><span id="local-6989586621689612349"><span class="annot"><span class="annottext">Int -&gt; FunctionName -&gt; Int
+</span><a href="#local-6989586621689613008"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613004"><span id="local-6989586621689613006"><span class="annot"><span class="annottext">Int -&gt; FunctionName -&gt; Int
 FunctionName -&gt; Int
 (Int -&gt; FunctionName -&gt; Int)
 -&gt; (FunctionName -&gt; Int) -&gt; Hashable FunctionName
@@ -366,7 +366,7 @@ hash :: FunctionName -&gt; Int
 $chash :: FunctionName -&gt; Int
 hashWithSalt :: Int -&gt; FunctionName -&gt; Int
 $chashWithSalt :: Int -&gt; FunctionName -&gt; Int
-</span><a href="#local-6989586621689612347"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612344"><span class="annot"><span class="annottext">Eq FunctionName
+</span><a href="#local-6989586621689613004"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689613001"><span class="annot"><span class="annottext">Eq FunctionName
 Eq FunctionName
 -&gt; (Accesses -&gt; FunctionName -&gt; FunctionName -&gt; Bool)
 -&gt; Cacheable FunctionName
@@ -375,25 +375,25 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; FunctionName -&gt; FunctionName -&gt; Bool
 $cunchanged :: Accesses -&gt; FunctionName -&gt; FunctionName -&gt; Bool
 $cp1Cacheable :: Eq FunctionName
-</span><a href="#local-6989586621689612344"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612342"><span class="annot"><span class="annottext">FunctionName -&gt; ()
+</span><a href="#local-6989586621689613001"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612999"><span class="annot"><span class="annottext">FunctionName -&gt; ()
 (FunctionName -&gt; ()) -&gt; NFData FunctionName
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: FunctionName -&gt; ()
 $crnf :: FunctionName -&gt; ()
-</span><a href="#local-6989586621689612342"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689612999"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-93"></span><span>
 </span><span id="line-94"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-type">ToErrorValue</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#FunctionName"><span class="hs-identifier hs-type">FunctionName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-95"></span><span>  </span><span id="local-6989586621689612340"><span class="annot"><span class="annottext">toErrorValue :: FunctionName -&gt; ErrorMessage
-</span><a href="#local-6989586621689612340"><span class="hs-identifier hs-var hs-var hs-var hs-var">toErrorValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
+</span><span id="line-95"></span><span>  </span><span id="local-6989586621689612997"><span class="annot"><span class="annottext">toErrorValue :: FunctionName -&gt; ErrorMessage
+</span><a href="#local-6989586621689612997"><span class="hs-identifier hs-var hs-var hs-var hs-var">toErrorValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">ErrorValue.squote</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage)
 -&gt; (FunctionName -&gt; Text) -&gt; FunctionName -&gt; ErrorMessage
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">FunctionName -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#unFunctionName"><span class="hs-identifier hs-var hs-var">unFunctionName</span></a></span><span>
 </span><span id="line-96"></span><span>
-</span><span id="line-97"></span><span id="local-6989586621689612338"><span id="local-6989586621689612339"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unColumn"><span class="annot"><span class="annottext">Column -&gt; Text
+</span><span id="line-97"></span><span id="local-6989586621689612995"><span id="local-6989586621689612996"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Column"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Column"><span class="hs-identifier hs-var">Column</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unColumn"><span class="annot"><span class="annottext">Column -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#unColumn"><span class="hs-identifier hs-var hs-var">unColumn</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689612330"><span id="local-6989586621689612332"><span id="local-6989586621689612334"><span class="annot"><span class="annottext">Int -&gt; Column -&gt; ShowS
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689612987"><span id="local-6989586621689612989"><span id="local-6989586621689612991"><span class="annot"><span class="annottext">Int -&gt; Column -&gt; ShowS
 [Column] -&gt; ShowS
 Column -&gt; String
 (Int -&gt; Column -&gt; ShowS)
@@ -406,7 +406,7 @@ show :: Column -&gt; String
 $cshow :: Column -&gt; String
 showsPrec :: Int -&gt; Column -&gt; ShowS
 $cshowsPrec :: Int -&gt; Column -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612326"><span id="local-6989586621689612328"><span class="annot"><span class="annottext">Column -&gt; Column -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612983"><span id="local-6989586621689612985"><span class="annot"><span class="annottext">Column -&gt; Column -&gt; Bool
 (Column -&gt; Column -&gt; Bool)
 -&gt; (Column -&gt; Column -&gt; Bool) -&gt; Eq Column
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -414,7 +414,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Column -&gt; Column -&gt; Bool
 == :: Column -&gt; Column -&gt; Bool
 $c== :: Column -&gt; Column -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612311"><span id="local-6989586621689612313"><span id="local-6989586621689612315"><span id="local-6989586621689612317"><span id="local-6989586621689612319"><span id="local-6989586621689612321"><span id="local-6989586621689612323"><span class="annot"><span class="annottext">Eq Column
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612968"><span id="local-6989586621689612970"><span id="local-6989586621689612972"><span id="local-6989586621689612974"><span id="local-6989586621689612976"><span id="local-6989586621689612978"><span id="local-6989586621689612980"><span class="annot"><span class="annottext">Eq Column
 Eq Column
 -&gt; (Column -&gt; Column -&gt; Ordering)
 -&gt; (Column -&gt; Column -&gt; Bool)
@@ -452,12 +452,12 @@ $c&lt; :: Column -&gt; Column -&gt; Bool
 compare :: Column -&gt; Column -&gt; Ordering
 $ccompare :: Column -&gt; Column -&gt; Ordering
 $cp1Ord :: Eq Column
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612309"><span class="annot"><span class="annottext">Column -&gt; Text
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612966"><span class="annot"><span class="annottext">Column -&gt; Text
 (Column -&gt; Text) -&gt; ToTxt Column
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: Column -&gt; Text
 $ctoTxt :: Column -&gt; Text
-</span><a href="#local-6989586621689612309"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612305"><span id="local-6989586621689612307"><span class="annot"><span class="annottext">FromJSONKeyFunction [Column]
+</span><a href="#local-6989586621689612966"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612962"><span id="local-6989586621689612964"><span class="annot"><span class="annottext">FromJSONKeyFunction [Column]
 FromJSONKeyFunction Column
 FromJSONKeyFunction Column
 -&gt; FromJSONKeyFunction [Column] -&gt; FromJSONKey Column
@@ -467,7 +467,7 @@ fromJSONKeyList :: FromJSONKeyFunction [Column]
 $cfromJSONKeyList :: FromJSONKeyFunction [Column]
 fromJSONKey :: FromJSONKeyFunction Column
 $cfromJSONKey :: FromJSONKeyFunction Column
-</span><a href="#local-6989586621689612305"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612301"><span id="local-6989586621689612303"><span class="annot"><span class="annottext">ToJSONKeyFunction [Column]
+</span><a href="#local-6989586621689612962"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612958"><span id="local-6989586621689612960"><span class="annot"><span class="annottext">ToJSONKeyFunction [Column]
 ToJSONKeyFunction Column
 ToJSONKeyFunction Column
 -&gt; ToJSONKeyFunction [Column] -&gt; ToJSONKey Column
@@ -477,7 +477,7 @@ toJSONKeyList :: ToJSONKeyFunction [Column]
 $ctoJSONKeyList :: ToJSONKeyFunction [Column]
 toJSONKey :: ToJSONKeyFunction Column
 $ctoJSONKey :: ToJSONKeyFunction Column
-</span><a href="#local-6989586621689612301"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612297"><span id="local-6989586621689612299"><span class="annot"><span class="annottext">Value -&gt; Parser [Column]
+</span><a href="#local-6989586621689612958"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612954"><span id="local-6989586621689612956"><span class="annot"><span class="annottext">Value -&gt; Parser [Column]
 Value -&gt; Parser Column
 (Value -&gt; Parser Column)
 -&gt; (Value -&gt; Parser [Column]) -&gt; FromJSON Column
@@ -487,7 +487,7 @@ parseJSONList :: Value -&gt; Parser [Column]
 $cparseJSONList :: Value -&gt; Parser [Column]
 parseJSON :: Value -&gt; Parser Column
 $cparseJSON :: Value -&gt; Parser Column
-</span><a href="#local-6989586621689612297"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612289"><span id="local-6989586621689612291"><span id="local-6989586621689612293"><span id="local-6989586621689612295"><span class="annot"><span class="annottext">[Column] -&gt; Value
+</span><a href="#local-6989586621689612954"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612946"><span id="local-6989586621689612948"><span id="local-6989586621689612950"><span id="local-6989586621689612952"><span class="annot"><span class="annottext">[Column] -&gt; Value
 [Column] -&gt; Encoding
 Column -&gt; Value
 Column -&gt; Encoding
@@ -510,7 +510,7 @@ toEncoding :: Column -&gt; Encoding
 $ctoEncoding :: Column -&gt; Encoding
 toJSON :: Column -&gt; Value
 $ctoJSON :: Column -&gt; Value
-</span><a href="#local-6989586621689612289"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612285"><span id="local-6989586621689612287"><span class="annot"><span class="annottext">Int -&gt; Column -&gt; Int
+</span><a href="#local-6989586621689612946"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612942"><span id="local-6989586621689612944"><span class="annot"><span class="annottext">Int -&gt; Column -&gt; Int
 Column -&gt; Int
 (Int -&gt; Column -&gt; Int) -&gt; (Column -&gt; Int) -&gt; Hashable Column
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
@@ -518,7 +518,7 @@ hash :: Column -&gt; Int
 $chash :: Column -&gt; Int
 hashWithSalt :: Int -&gt; Column -&gt; Int
 $chashWithSalt :: Int -&gt; Column -&gt; Int
-</span><a href="#local-6989586621689612285"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612282"><span class="annot"><span class="annottext">Eq Column
+</span><a href="#local-6989586621689612942"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612939"><span class="annot"><span class="annottext">Eq Column
 Eq Column
 -&gt; (Accesses -&gt; Column -&gt; Column -&gt; Bool) -&gt; Cacheable Column
 Accesses -&gt; Column -&gt; Column -&gt; Bool
@@ -526,12 +526,12 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; Column -&gt; Column -&gt; Bool
 $cunchanged :: Accesses -&gt; Column -&gt; Column -&gt; Bool
 $cp1Cacheable :: Eq Column
-</span><a href="#local-6989586621689612282"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612280"><span class="annot"><span class="annottext">Column -&gt; ()
+</span><a href="#local-6989586621689612939"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612937"><span class="annot"><span class="annottext">Column -&gt; ()
 (Column -&gt; ()) -&gt; NFData Column
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Column -&gt; ()
 $crnf :: Column -&gt; ()
-</span><a href="#local-6989586621689612280"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689612937"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-99"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. Column -&gt; Rep Column x)
 -&gt; (forall x. Rep Column x -&gt; Column) -&gt; Generic Column
 forall x. Rep Column x -&gt; Column
@@ -543,15 +543,15 @@ $cfrom :: forall x. Column -&gt; Rep Column x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span>
 </span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-type">ToErrorValue</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-102"></span><span>  </span><span id="local-6989586621689612276"><span class="annot"><span class="annottext">toErrorValue :: Column -&gt; ErrorMessage
-</span><a href="#local-6989586621689612276"><span class="hs-identifier hs-var hs-var hs-var hs-var">toErrorValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
+</span><span id="line-102"></span><span>  </span><span id="local-6989586621689612933"><span class="annot"><span class="annottext">toErrorValue :: Column -&gt; ErrorMessage
+</span><a href="#local-6989586621689612933"><span class="hs-identifier hs-var hs-var hs-var hs-var">toErrorValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">ErrorValue.squote</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage)
 -&gt; (Column -&gt; Text) -&gt; Column -&gt; ErrorMessage
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Column -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#unColumn"><span class="hs-identifier hs-var hs-var">unColumn</span></a></span><span>
 </span><span id="line-103"></span><span>
-</span><span id="line-104"></span><span id="local-6989586621689612274"><span id="local-6989586621689612275"></span></span><span class="hs-keyword">data</span><span> </span><span id="ScalarValue"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarValue"><span class="hs-identifier hs-var">ScalarValue</span></a></span></span><span>
+</span><span id="line-104"></span><span id="local-6989586621689612931"><span id="local-6989586621689612932"></span></span><span class="hs-keyword">data</span><span> </span><span id="ScalarValue"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarValue"><span class="hs-identifier hs-var">ScalarValue</span></a></span></span><span>
 </span><span id="line-105"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="BigValue"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#BigValue"><span class="hs-identifier hs-var">BigValue</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int32</span></span><span> </span><span class="hs-comment">-- Not Int64 due to scalar-representation</span><span>
 </span><span id="line-106"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="BinaryValue"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#BinaryValue"><span class="hs-identifier hs-var">BinaryValue</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
 </span><span id="line-107"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="BitValue"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#BitValue"><span class="hs-identifier hs-var">BitValue</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
@@ -586,7 +586,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-136"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="VarbinaryValue"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#VarbinaryValue"><span class="hs-identifier hs-var">VarbinaryValue</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
 </span><span id="line-137"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="VarcharValue"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#VarcharValue"><span class="hs-identifier hs-var">VarcharValue</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-138"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="YearValue"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#YearValue"><span class="hs-identifier hs-var">YearValue</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-139"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689612233"><span id="local-6989586621689612235"><span id="local-6989586621689612237"><span class="annot"><span class="annottext">Int -&gt; ScalarValue -&gt; ShowS
+</span><span id="line-139"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689612890"><span id="local-6989586621689612892"><span id="local-6989586621689612894"><span class="annot"><span class="annottext">Int -&gt; ScalarValue -&gt; ShowS
 [ScalarValue] -&gt; ShowS
 ScalarValue -&gt; String
 (Int -&gt; ScalarValue -&gt; ShowS)
@@ -601,7 +601,7 @@ show :: ScalarValue -&gt; String
 $cshow :: ScalarValue -&gt; String
 showsPrec :: Int -&gt; ScalarValue -&gt; ShowS
 $cshowsPrec :: Int -&gt; ScalarValue -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612225"><span id="local-6989586621689612227"><span id="local-6989586621689612229"><span id="local-6989586621689612231"><span class="annot"><span class="annottext">ReadPrec [ScalarValue]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612882"><span id="local-6989586621689612884"><span id="local-6989586621689612886"><span id="local-6989586621689612888"><span class="annot"><span class="annottext">ReadPrec [ScalarValue]
 ReadPrec ScalarValue
 Int -&gt; ReadS ScalarValue
 ReadS [ScalarValue]
@@ -621,7 +621,7 @@ readList :: ReadS [ScalarValue]
 $creadList :: ReadS [ScalarValue]
 readsPrec :: Int -&gt; ReadS ScalarValue
 $creadsPrec :: Int -&gt; ReadS ScalarValue
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612220"><span id="local-6989586621689612222"><span class="annot"><span class="annottext">ScalarValue -&gt; ScalarValue -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612877"><span id="local-6989586621689612879"><span class="annot"><span class="annottext">ScalarValue -&gt; ScalarValue -&gt; Bool
 (ScalarValue -&gt; ScalarValue -&gt; Bool)
 -&gt; (ScalarValue -&gt; ScalarValue -&gt; Bool) -&gt; Eq ScalarValue
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -629,7 +629,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ScalarValue -&gt; ScalarValue -&gt; Bool
 == :: ScalarValue -&gt; ScalarValue -&gt; Bool
 $c== :: ScalarValue -&gt; ScalarValue -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612205"><span id="local-6989586621689612207"><span id="local-6989586621689612209"><span id="local-6989586621689612211"><span id="local-6989586621689612213"><span id="local-6989586621689612215"><span id="local-6989586621689612217"><span class="annot"><span class="annottext">Eq ScalarValue
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612862"><span id="local-6989586621689612864"><span id="local-6989586621689612866"><span id="local-6989586621689612868"><span id="local-6989586621689612870"><span id="local-6989586621689612872"><span id="local-6989586621689612874"><span class="annot"><span class="annottext">Eq ScalarValue
 Eq ScalarValue
 -&gt; (ScalarValue -&gt; ScalarValue -&gt; Ordering)
 -&gt; (ScalarValue -&gt; ScalarValue -&gt; Bool)
@@ -676,7 +676,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ScalarValue x -&gt; ScalarValue
 $cfrom :: forall x. ScalarValue -&gt; Rep ScalarValue x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612195"><span id="local-6989586621689612197"><span id="local-6989586621689612199"><span id="local-6989586621689612201"><span class="annot"><span class="annottext">[ScalarValue] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612852"><span id="local-6989586621689612854"><span id="local-6989586621689612856"><span id="local-6989586621689612858"><span class="annot"><span class="annottext">[ScalarValue] -&gt; Value
 [ScalarValue] -&gt; Encoding
 ScalarValue -&gt; Value
 ScalarValue -&gt; Encoding
@@ -699,7 +699,7 @@ toEncoding :: ScalarValue -&gt; Encoding
 $ctoEncoding :: ScalarValue -&gt; Encoding
 toJSON :: ScalarValue -&gt; Value
 $ctoJSON :: ScalarValue -&gt; Value
-</span><a href="#local-6989586621689612195"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612191"><span id="local-6989586621689612193"><span class="annot"><span class="annottext">ToJSONKeyFunction [ScalarValue]
+</span><a href="#local-6989586621689612852"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612848"><span id="local-6989586621689612850"><span class="annot"><span class="annottext">ToJSONKeyFunction [ScalarValue]
 ToJSONKeyFunction ScalarValue
 ToJSONKeyFunction ScalarValue
 -&gt; ToJSONKeyFunction [ScalarValue] -&gt; ToJSONKey ScalarValue
@@ -709,7 +709,7 @@ toJSONKeyList :: ToJSONKeyFunction [ScalarValue]
 $ctoJSONKeyList :: ToJSONKeyFunction [ScalarValue]
 toJSONKey :: ToJSONKeyFunction ScalarValue
 $ctoJSONKey :: ToJSONKeyFunction ScalarValue
-</span><a href="#local-6989586621689612191"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612187"><span id="local-6989586621689612189"><span class="annot"><span class="annottext">Value -&gt; Parser [ScalarValue]
+</span><a href="#local-6989586621689612848"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612844"><span id="local-6989586621689612846"><span class="annot"><span class="annottext">Value -&gt; Parser [ScalarValue]
 Value -&gt; Parser ScalarValue
 (Value -&gt; Parser ScalarValue)
 -&gt; (Value -&gt; Parser [ScalarValue]) -&gt; FromJSON ScalarValue
@@ -719,7 +719,7 @@ parseJSONList :: Value -&gt; Parser [ScalarValue]
 $cparseJSONList :: Value -&gt; Parser [ScalarValue]
 parseJSON :: Value -&gt; Parser ScalarValue
 $cparseJSON :: Value -&gt; Parser ScalarValue
-</span><a href="#local-6989586621689612187"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cYearValue"><span id="%24cVarcharValue"><span id="%24cVarbinaryValue"><span id="%24cUnknownValue"><span id="%24cTinyValue"><span id="%24cTimeValue"><span id="%24cTimestampValue"><span id="%24cTextValue"><span id="%24cSmallValue"><span id="%24cSetValue"><span id="%24cPolygonValue"><span id="%24cPointValue"><span id="%24cNumericValue"><span id="%24cNullValue"><span id="%24cMultipolygonValue"><span id="%24cMultipointValue"><span id="%24cMultilinestringValue"><span id="%24cMediumValue"><span id="%24cLinestringValue"><span id="%24cJsonValue"><span id="%24cIntValue"><span id="%24cGeometryValue"><span id="%24cGeometrycollectionValue"><span id="%24cFloatValue"><span id="%24cEnumValue"><span id="%24cDoubleValue"><span id="%24cDecimalValue"><span id="%24cDateValue"><span id="%24cDatetimeValue"><span id="%24cCharValue"><span id="%24cBlobValue"><span id="%24cBitValue"><span id="%24cBinaryValue"><span id="%24cBigValue"><span id="%24tScalarValue"><span id="local-6989586621689612158"><span id="local-6989586621689612160"><span id="local-6989586621689612162"><span id="local-6989586621689612164"><span id="local-6989586621689612166"><span id="local-6989586621689612168"><span id="local-6989586621689612170"><span id="local-6989586621689612172"><span id="local-6989586621689612174"><span id="local-6989586621689612176"><span id="local-6989586621689612178"><span id="local-6989586621689612180"><span id="local-6989586621689612182"><span id="local-6989586621689612184"><span class="annot"><span class="annottext">Typeable ScalarValue
+</span><a href="#local-6989586621689612844"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="%24cYearValue"><span id="%24cVarcharValue"><span id="%24cVarbinaryValue"><span id="%24cUnknownValue"><span id="%24cTinyValue"><span id="%24cTimeValue"><span id="%24cTimestampValue"><span id="%24cTextValue"><span id="%24cSmallValue"><span id="%24cSetValue"><span id="%24cPolygonValue"><span id="%24cPointValue"><span id="%24cNumericValue"><span id="%24cNullValue"><span id="%24cMultipolygonValue"><span id="%24cMultipointValue"><span id="%24cMultilinestringValue"><span id="%24cMediumValue"><span id="%24cLinestringValue"><span id="%24cJsonValue"><span id="%24cIntValue"><span id="%24cGeometryValue"><span id="%24cGeometrycollectionValue"><span id="%24cFloatValue"><span id="%24cEnumValue"><span id="%24cDoubleValue"><span id="%24cDecimalValue"><span id="%24cDateValue"><span id="%24cDatetimeValue"><span id="%24cCharValue"><span id="%24cBlobValue"><span id="%24cBitValue"><span id="%24cBinaryValue"><span id="%24cBigValue"><span id="%24tScalarValue"><span id="local-6989586621689612815"><span id="local-6989586621689612817"><span id="local-6989586621689612819"><span id="local-6989586621689612821"><span id="local-6989586621689612823"><span id="local-6989586621689612825"><span id="local-6989586621689612827"><span id="local-6989586621689612829"><span id="local-6989586621689612831"><span id="local-6989586621689612833"><span id="local-6989586621689612835"><span id="local-6989586621689612837"><span id="local-6989586621689612839"><span id="local-6989586621689612841"><span class="annot"><span class="annottext">Typeable ScalarValue
 DataType
 Constr
 Typeable ScalarValue
@@ -913,12 +913,12 @@ $cgfoldl :: forall (c :: * -&gt; *).
 (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g) -&gt; ScalarValue -&gt; c ScalarValue
 $cp1Data :: Typeable ScalarValue
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612120"><span class="annot"><span class="annottext">ScalarValue -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612777"><span class="annot"><span class="annottext">ScalarValue -&gt; ()
 (ScalarValue -&gt; ()) -&gt; NFData ScalarValue
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ScalarValue -&gt; ()
 $crnf :: ScalarValue -&gt; ()
-</span><a href="#local-6989586621689612120"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612117"><span class="annot"><span class="annottext">Eq ScalarValue
+</span><a href="#local-6989586621689612777"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612774"><span class="annot"><span class="annottext">Eq ScalarValue
 Eq ScalarValue
 -&gt; (Accesses -&gt; ScalarValue -&gt; ScalarValue -&gt; Bool)
 -&gt; Cacheable ScalarValue
@@ -927,28 +927,28 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; ScalarValue -&gt; ScalarValue -&gt; Bool
 $cunchanged :: Accesses -&gt; ScalarValue -&gt; ScalarValue -&gt; Bool
 $cp1Cacheable :: Eq ScalarValue
-</span><a href="#local-6989586621689612117"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689612774"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-140"></span><span>
-</span><span id="line-141"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689612114"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-142"></span><span>  </span><span id="local-6989586621689612113"><span class="annot"><span class="annottext">hashWithSalt :: Int -&gt; ScalarValue -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">hashWithSalt</span></span></span><span> </span><span id="local-6989586621689612111"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689612111"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Int
+</span><span id="line-141"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689612771"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-142"></span><span>  </span><span id="local-6989586621689612770"><span class="annot"><span class="annottext">hashWithSalt :: Int -&gt; ScalarValue -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">hashWithSalt</span></span></span><span> </span><span id="local-6989586621689612768"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689612768"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Text -&gt; Int
 forall a. Hashable a =&gt; Int -&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">hashWithSalt</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689612111"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Int) -&gt; (ScalarValue -&gt; Text) -&gt; ScalarValue -&gt; Int
+</span><a href="#local-6989586621689612768"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Int) -&gt; (ScalarValue -&gt; Text) -&gt; ScalarValue -&gt; Int
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ScalarValue -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span>
 </span><span id="line-143"></span><span>
 </span><span id="line-144"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Text.Extended.html#ToTxt"><span class="hs-identifier hs-type">ToTxt</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-145"></span><span>  </span><span id="local-6989586621689612108"><span class="annot"><span class="annottext">toTxt :: ScalarValue -&gt; Text
+</span><span id="line-145"></span><span>  </span><span id="local-6989586621689612765"><span class="annot"><span class="annottext">toTxt :: ScalarValue -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTxt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ScalarValue -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span>
 </span><span id="line-146"></span><span>
-</span><span id="line-147"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689612100"><span id="local-6989586621689612102"><span id="local-6989586621689612104"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-148"></span><span>  </span><span id="local-6989586621689612099"><span class="annot"><span class="annottext">toJSON :: ByteString -&gt; Value
+</span><span id="line-147"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689612757"><span id="local-6989586621689612759"><span id="local-6989586621689612761"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-148"></span><span>  </span><span id="local-6989586621689612756"><span class="annot"><span class="annottext">toJSON :: ByteString -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; (ByteString -&gt; Text) -&gt; ByteString -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -956,8 +956,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">decodeUtf8With</span></span><span> </span><span class="annot"><span class="annottext">OnDecodeError
 </span><span class="hs-identifier hs-var">lenientDecode</span></span><span>
 </span><span id="line-149"></span><span>
-</span><span id="line-150"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689612094"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-151"></span><span>  </span><span id="local-6989586621689612093"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ByteString
+</span><span id="line-150"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689612751"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-151"></span><span>  </span><span id="local-6989586621689612750"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ByteString
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser ByteString) -&gt; Value -&gt; Parser ByteString
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withText</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -997,13 +997,13 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-178"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="EQ%27"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#EQ%27"><span class="hs-identifier hs-var">EQ'</span></a></span></span><span>
 </span><span id="line-179"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NEQ%27"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#NEQ%27"><span class="hs-identifier hs-var">NEQ'</span></a></span></span><span>
 </span><span id="line-180"></span><span>
-</span><span id="line-181"></span><span id="local-6989586621689612068"><span id="local-6989586621689612069"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConnPoolSettings"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnPoolSettings"><span class="hs-identifier hs-var">ConnPoolSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConnPoolSettings"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnPoolSettings"><span class="hs-identifier hs-var">ConnPoolSettings</span></a></span></span><span>
+</span><span id="line-181"></span><span id="local-6989586621689612725"><span id="local-6989586621689612726"></span></span><span class="hs-keyword">data</span><span> </span><span id="ConnPoolSettings"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnPoolSettings"><span class="hs-identifier hs-var">ConnPoolSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConnPoolSettings"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnPoolSettings"><span class="hs-identifier hs-var">ConnPoolSettings</span></a></span></span><span>
 </span><span id="line-182"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_cscIdleTimeout"><span class="annot"><span class="annottext">ConnPoolSettings -&gt; Word
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscIdleTimeout"><span class="hs-identifier hs-var hs-var">_cscIdleTimeout</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span class="hs-special">,</span><span>
 </span><span id="line-183"></span><span>    </span><span id="_cscMaxConnections"><span class="annot"><span class="annottext">ConnPoolSettings -&gt; Word
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscMaxConnections"><span class="hs-identifier hs-var hs-var">_cscMaxConnections</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word</span></span><span>
 </span><span id="line-184"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-185"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689612061"><span id="local-6989586621689612063"><span class="annot"><span class="annottext">ConnPoolSettings -&gt; ConnPoolSettings -&gt; Bool
+</span><span id="line-185"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689612718"><span id="local-6989586621689612720"><span class="annot"><span class="annottext">ConnPoolSettings -&gt; ConnPoolSettings -&gt; Bool
 (ConnPoolSettings -&gt; ConnPoolSettings -&gt; Bool)
 -&gt; (ConnPoolSettings -&gt; ConnPoolSettings -&gt; Bool)
 -&gt; Eq ConnPoolSettings
@@ -1012,7 +1012,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ConnPoolSettings -&gt; ConnPoolSettings -&gt; Bool
 == :: ConnPoolSettings -&gt; ConnPoolSettings -&gt; Bool
 $c== :: ConnPoolSettings -&gt; ConnPoolSettings -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612055"><span id="local-6989586621689612057"><span id="local-6989586621689612059"><span class="annot"><span class="annottext">Int -&gt; ConnPoolSettings -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612712"><span id="local-6989586621689612714"><span id="local-6989586621689612716"><span class="annot"><span class="annottext">Int -&gt; ConnPoolSettings -&gt; ShowS
 [ConnPoolSettings] -&gt; ShowS
 ConnPoolSettings -&gt; String
 (Int -&gt; ConnPoolSettings -&gt; ShowS)
@@ -1027,12 +1027,12 @@ show :: ConnPoolSettings -&gt; String
 $cshow :: ConnPoolSettings -&gt; String
 showsPrec :: Int -&gt; ConnPoolSettings -&gt; ShowS
 $cshowsPrec :: Int -&gt; ConnPoolSettings -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612053"><span class="annot"><span class="annottext">ConnPoolSettings -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612710"><span class="annot"><span class="annottext">ConnPoolSettings -&gt; ()
 (ConnPoolSettings -&gt; ()) -&gt; NFData ConnPoolSettings
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: ConnPoolSettings -&gt; ()
 $crnf :: ConnPoolSettings -&gt; ()
-</span><a href="#local-6989586621689612053"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ConnPoolSettings -&gt; Rep ConnPoolSettings x)
+</span><a href="#local-6989586621689612710"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. ConnPoolSettings -&gt; Rep ConnPoolSettings x)
 -&gt; (forall x. Rep ConnPoolSettings x -&gt; ConnPoolSettings)
 -&gt; Generic ConnPoolSettings
 forall x. Rep ConnPoolSettings x -&gt; ConnPoolSettings
@@ -1041,7 +1041,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep ConnPoolSettings x -&gt; ConnPoolSettings
 $cfrom :: forall x. ConnPoolSettings -&gt; Rep ConnPoolSettings x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612047"><span id="local-6989586621689612049"><span class="annot"><span class="annottext">Int -&gt; ConnPoolSettings -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612704"><span id="local-6989586621689612706"><span class="annot"><span class="annottext">Int -&gt; ConnPoolSettings -&gt; Int
 ConnPoolSettings -&gt; Int
 (Int -&gt; ConnPoolSettings -&gt; Int)
 -&gt; (ConnPoolSettings -&gt; Int) -&gt; Hashable ConnPoolSettings
@@ -1050,7 +1050,7 @@ hash :: ConnPoolSettings -&gt; Int
 $chash :: ConnPoolSettings -&gt; Int
 hashWithSalt :: Int -&gt; ConnPoolSettings -&gt; Int
 $chashWithSalt :: Int -&gt; ConnPoolSettings -&gt; Int
-</span><a href="#local-6989586621689612047"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689612704"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-186"></span><span>
 </span><span id="line-187"></span><span class="hs-keyword">data</span><span> </span><span id="FieldName"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#FieldName"><span class="hs-identifier hs-var">FieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="FieldName"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#FieldName"><span class="hs-identifier hs-var">FieldName</span></a></span></span><span>
 </span><span id="line-188"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="fName"><span class="annot"><span class="annottext">FieldName -&gt; Text
@@ -1068,10 +1068,10 @@ $chashWithSalt :: Int -&gt; ConnPoolSettings -&gt; Int
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#entityAliasText"><span class="hs-identifier hs-var hs-var">entityAliasText</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-198"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-199"></span><span>
-</span><span id="line-200"></span><span class="hs-keyword">data</span><span> </span><span id="Countable"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Countable"><span class="hs-identifier hs-var">Countable</span></a></span></span><span> </span><span id="local-6989586621689612039"><span class="annot"><a href="#local-6989586621689612039"><span class="hs-identifier hs-type">name</span></a></span></span><span>
+</span><span id="line-200"></span><span class="hs-keyword">data</span><span> </span><span id="Countable"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Countable"><span class="hs-identifier hs-var">Countable</span></a></span></span><span> </span><span id="local-6989586621689612696"><span class="annot"><a href="#local-6989586621689612696"><span class="hs-identifier hs-type">name</span></a></span></span><span>
 </span><span id="line-201"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="StarCountable"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#StarCountable"><span class="hs-identifier hs-var">StarCountable</span></a></span></span><span>
-</span><span id="line-202"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NonNullFieldCountable"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#NonNullFieldCountable"><span class="hs-identifier hs-var">NonNullFieldCountable</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="#local-6989586621689612039"><span class="hs-identifier hs-type">name</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-203"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DistinctCountable"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#DistinctCountable"><span class="hs-identifier hs-var">DistinctCountable</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="#local-6989586621689612039"><span class="hs-identifier hs-type">name</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-202"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="NonNullFieldCountable"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#NonNullFieldCountable"><span class="hs-identifier hs-var">NonNullFieldCountable</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="#local-6989586621689612696"><span class="hs-identifier hs-type">name</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-203"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DistinctCountable"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#DistinctCountable"><span class="hs-identifier hs-var">DistinctCountable</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">NonEmpty</span></span><span> </span><span class="annot"><a href="#local-6989586621689612696"><span class="hs-identifier hs-type">name</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-204"></span><span>
 </span><span id="line-205"></span><span class="hs-keyword">data</span><span> </span><span id="Aggregate"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Aggregate"><span class="hs-identifier hs-var">Aggregate</span></a></span></span><span>
 </span><span id="line-206"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CountAggregate"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#CountAggregate"><span class="hs-identifier hs-var">CountAggregate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Countable"><span class="hs-identifier hs-type">Countable</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span class="hs-special">)</span><span>
@@ -1095,28 +1095,28 @@ $chashWithSalt :: Int -&gt; ConnPoolSettings -&gt; Int
 </span><span id="line-222"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-223"></span><span>
 </span><span id="line-224"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-type">ToErrorValue</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-225"></span><span>  </span><span id="local-6989586621689612021"><span class="annot"><span class="annottext">toErrorValue :: TableName -&gt; ErrorMessage
-</span><a href="#local-6989586621689612021"><span class="hs-identifier hs-var hs-var hs-var hs-var">toErrorValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689612020"><span class="annot"><span class="annottext">Text
+</span><span id="line-225"></span><span>  </span><span id="local-6989586621689612678"><span class="annot"><span class="annottext">toErrorValue :: TableName -&gt; ErrorMessage
+</span><a href="#local-6989586621689612678"><span class="hs-identifier hs-var hs-var hs-var hs-var">toErrorValue</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689612677"><span class="annot"><span class="annottext">Text
 name :: Text
 name :: TableName -&gt; Text
-</span><a href="#local-6989586621689612020"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612019"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689612677"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689612676"><span class="annot"><span class="annottext">Maybe Text
 schema :: Maybe Text
 schema :: TableName -&gt; Maybe Text
-</span><a href="#local-6989586621689612019"><span class="hs-identifier hs-var hs-var">schema</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689612676"><span class="hs-identifier hs-var hs-var">schema</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-226"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">ErrorValue.squote</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; ErrorMessage) -&gt; Text -&gt; ErrorMessage
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; (Text -&gt; Text) -&gt; Maybe Text -&gt; Text
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689612020"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689612677"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689612020"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689612019"><span class="hs-identifier hs-var">schema</span></a></span><span>
+</span><a href="#local-6989586621689612677"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689612676"><span class="hs-identifier hs-var">schema</span></a></span><span>
 </span><span id="line-227"></span><span>
 </span><span id="line-228"></span><span class="hs-keyword">data</span><span> </span><span id="From"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#From"><span class="hs-identifier hs-var">From</span></a></span></span><span>
 </span><span id="line-229"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FromQualifiedTable"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#FromQualifiedTable"><span class="hs-identifier hs-var">FromQualifiedTable</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span class="hs-special">)</span><span>
@@ -1212,15 +1212,15 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#selectFinalWantedFields"><span class="hs-identifier hs-var hs-var">selectFinalWantedFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span>
 </span><span id="line-297"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-298"></span><span>
-</span><span id="line-299"></span><span id="local-6989586621689611977"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#mkMySQLScalarTypeName"><span class="hs-identifier hs-type">mkMySQLScalarTypeName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689611977"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689611977"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span></span><span>
+</span><span id="line-299"></span><span id="local-6989586621689612634"><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#mkMySQLScalarTypeName"><span class="hs-identifier hs-type">mkMySQLScalarTypeName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689612634"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689612634"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">G.Name</span></span></span><span>
 </span><span id="line-300"></span><span id="mkMySQLScalarTypeName"><span class="annot"><span class="annottext">mkMySQLScalarTypeName :: ScalarType -&gt; m Name
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#mkMySQLScalarTypeName"><span class="hs-identifier hs-var hs-var">mkMySQLScalarTypeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-301"></span><span>  </span><span id="local-6989586621689611975"><span class="annot"><span class="annottext">ScalarType
-</span><a href="#local-6989586621689611975"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-301"></span><span>  </span><span id="local-6989586621689612632"><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621689612632"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-302"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><span class="hs-identifier hs-var">G.mkName</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarType -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#scalarTypeDBName"><span class="hs-identifier hs-var">scalarTypeDBName</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType
-</span><a href="#local-6989586621689611975"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689612632"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-303"></span><span>      </span><span class="annot"><span class="annottext">Maybe Name -&gt; m Name -&gt; m Name
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m Name
@@ -1233,7 +1233,7 @@ forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ScalarType -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#scalarTypeDBName"><span class="hs-identifier hs-var">scalarTypeDBName</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType
-</span><a href="#local-6989586621689611975"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689612632"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; in the GraphQL schema because its name is not a &quot;</span></span><span>
@@ -1270,11 +1270,11 @@ forall a. HasCallStack =&gt; String -&gt; a
 </span><span id="line-323"></span><span class="hs-comment">-- Database.MySQL.Base.Types.Type has String, VarString and VarChar for some reason</span><span>
 </span><span id="line-324"></span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#parseMySQLScalarType"><span class="hs-identifier hs-type">parseMySQLScalarType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span>
 </span><span id="line-325"></span><span id="parseMySQLScalarType"><span class="annot"><span class="annottext">parseMySQLScalarType :: Text -&gt; ScalarType
-</span><a href="Hasura.Backends.MySQL.Types.Internal.html#parseMySQLScalarType"><span class="hs-identifier hs-var hs-var">parseMySQLScalarType</span></a></span></span><span> </span><span id="local-6989586621689611968"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689611968"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.MySQL.Types.Internal.html#parseMySQLScalarType"><span class="hs-identifier hs-var hs-var">parseMySQLScalarType</span></a></span></span><span> </span><span id="local-6989586621689612625"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689612625"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-326"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.toUpper</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689611968"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689612625"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-327"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;BIGINT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.LongLong</span></span><span>
@@ -1391,14 +1391,14 @@ forall a. HasCallStack =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">MySQLTypes.Bit</span></span><span>
 </span><span id="line-365"></span><span>    </span><span class="hs-comment">-- _ -&gt; MySQLTypes.Null</span><span>
 </span><span id="line-366"></span><span>
-</span><span id="line-367"></span><span>    </span><span id="local-6989586621689611943"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689611943"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-367"></span><span>    </span><span id="local-6989586621689612600"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689612600"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;INT&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isPrefixOf`</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689611943"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
+</span><a href="#local-6989586621689612600"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Long</span></span><span>
-</span><span id="line-368"></span><span>    </span><span id="local-6989586621689611941"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689611941"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ScalarType
+</span><span id="line-368"></span><span>    </span><span id="local-6989586621689612598"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689612598"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; ScalarType
 forall a. HasCallStack =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ScalarType) -&gt; String -&gt; ScalarType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1408,7 +1408,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689611941"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><a href="#local-6989586621689612598"><span class="hs-identifier hs-var">txt</span></a></span><span>
 </span><span id="line-369"></span><span>
 </span><span id="line-370"></span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#parseScalarValue"><span class="hs-identifier hs-type">parseScalarValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-371"></span><span id="parseScalarValue"><span class="annot"><span class="annottext">parseScalarValue :: ScalarType -&gt; Value -&gt; Either QErr ScalarValue
