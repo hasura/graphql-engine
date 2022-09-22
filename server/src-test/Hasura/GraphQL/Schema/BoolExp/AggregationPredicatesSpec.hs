@@ -22,7 +22,7 @@ import Hasura.GraphQL.Schema.BoolExp.AggregationPredicates
 import Hasura.GraphQL.Schema.Introspection (queryInputFieldsParserIntrospection)
 import Hasura.GraphQL.Schema.NamingCase (NamingCase (..))
 import Hasura.Prelude
-import Hasura.RQL.IR.BoolExp (OpExpG (AEQ))
+import Hasura.RQL.IR.BoolExp (GBoolExp (..), OpExpG (AEQ))
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
 import Hasura.RQL.IR.Value (UnpreparedValue (UVParameter))
 import Hasura.RQL.Types.Column (ColumnType (ColumnScalar), ColumnValue (..))
@@ -195,35 +195,35 @@ spec = do
                   }
                 }
               |]
-          actual <- runParserTest $ ifParser parser input
+          (actual : _) <- runParserTest $ ifParser parser input
 
-          let expected :: [AggregationPredicatesImplementation ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))]
+          let expected :: AggregationPredicatesImplementation ('Postgres 'Vanilla) (UnpreparedValue ('Postgres 'Vanilla))
               expected =
-                [ AggregationPredicatesImplementation
-                    { aggRelation = tracksRel,
-                      aggPredicate =
-                        AggregationPredicate
-                          { aggPredFunctionName = "count",
-                            aggPredArguments = AggregationPredicateArgumentsStar,
-                            aggPredDistinct = True,
-                            aggPredFilter = Nothing,
-                            aggPredPredicate =
-                              [ AEQ
-                                  True
-                                  ( UVParameter
-                                      Nothing
-                                      ( ColumnValue
-                                          { cvType = ColumnScalar PGInteger,
-                                            cvValue = PGValInteger 42
-                                          }
-                                      )
-                                  )
-                              ]
-                          }
-                    }
-                ]
+                AggregationPredicatesImplementation
+                  { aggRelation = tracksRel,
+                    aggRowPermission = BoolAnd [],
+                    aggPredicate =
+                      AggregationPredicate
+                        { aggPredFunctionName = "count",
+                          aggPredDistinct = True,
+                          aggPredFilter = Nothing,
+                          aggPredArguments = AggregationPredicateArgumentsStar,
+                          aggPredPredicate =
+                            [ AEQ
+                                True
+                                ( UVParameter
+                                    Nothing
+                                    ColumnValue
+                                      { cvType = ColumnScalar PGInteger,
+                                        cvValue = PGValInteger 42
+                                      }
+                                )
+                            ]
+                        }
+                  }
 
-          actual `shouldBe` expected
+          -- Permissions aren't in scope for this test.
+          actual {aggRowPermission = BoolAnd []} `shouldBe` expected
   where
     albumTableInfo :: TableInfo ('Postgres 'Vanilla)
     albumTableInfo =

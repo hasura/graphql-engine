@@ -12,10 +12,11 @@ module Test.Queries.AggregationPredicatesSpec (spec) where
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
-import Harness.GraphqlEngine (postGraphql)
+import Harness.GraphqlEngine (postGraphql, postGraphqlWithHeaders)
 import Harness.Quoter.Graphql (graphql)
-import Harness.Quoter.Yaml (interpolateYaml)
+import Harness.Quoter.Yaml (interpolateYaml, yaml)
 import Harness.Test.Fixture qualified as Fixture
+import Harness.Test.Permissions (Permission (..), selectPermission)
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
@@ -32,7 +33,8 @@ spec = do
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Postgres.setupTablesAction schema testEnv
+                [ Postgres.setupTablesAction schema testEnv,
+                  Postgres.setupPermissionsAction permissions testEnv
                 ],
               Fixture.customOptions =
                 Just $
@@ -72,8 +74,29 @@ schema =
         tableData =
           [ [Schema.VInt 1, Schema.VStr "Article 1", Schema.VBool False, Schema.VInt 1],
             [Schema.VInt 2, Schema.VStr "Article 2", Schema.VBool True, Schema.VInt 2],
-            [Schema.VInt 3, Schema.VStr "Article 3", Schema.VBool True, Schema.VInt 2]
+            [Schema.VInt 3, Schema.VStr "Article 3", Schema.VBool True, Schema.VInt 2],
+            [Schema.VInt 4, Schema.VStr "Article 4", Schema.VBool True, Schema.VInt 1]
           ]
+      }
+  ]
+
+permissions :: [Permission]
+permissions =
+  [ selectPermission
+      { permissionTable = "article",
+        permissionSource = "postgres",
+        permissionRole = "role-select-author-name-only",
+        permissionColumns = ["id", "title", "author_id"],
+        permissionRows =
+          [yaml|
+          published: true
+        |]
+      },
+    selectPermission
+      { permissionTable = "author",
+        permissionSource = "postgres",
+        permissionRole = "role-select-author-name-only",
+        permissionColumns = ["id", "name"]
       }
   ]
 
@@ -97,8 +120,10 @@ tests opts = do
           [interpolateYaml|
             data:
               #{schemaName}_author:
-              - name: Author 2
-                id: 2
+                - id: 1
+                  name: Author 1
+                - id: 2
+                  name: Author 2
           |]
 
         actual :: IO Value
@@ -298,3 +323,71 @@ tests opts = do
               |]
 
       actual `shouldBe` expected
+
+  it "Aggregation filters should respect select permissions on the column" \testEnvironment -> do
+    let schemaName = Schema.getSchemaName testEnvironment
+
+    let expected :: Value
+        expected =
+          [interpolateYaml|
+            errors:
+              - extensions:
+                  code: validation-failed
+                  path: $.selectionSet.#{schemaName}_author.args.where.articles_by_id_to_author_id_aggregate.count.arguments[0]
+                message: expected one of the values ['id', 'author_id', 'title'] for type '#{schemaName}_article_select_column', but found 'published'
+          |]
+
+        actual :: IO Value
+        actual =
+          postGraphqlWithHeaders
+            testEnvironment
+            [("X-Hasura-Role", "role-select-author-name-only")]
+            [graphql|
+              query {
+                #{schemaName}_author(
+                  where: {
+                    articles_by_id_to_author_id_aggregate: {
+                      count: { predicate: { _gt: 1 }, arguments: published }
+                    }
+                  }
+                ) {
+                  id
+                }
+              }
+            |]
+
+    actual `shouldBe` expected
+
+  it "Aggregation filters should respect select permissions on the row" \testEnvironment -> do
+    let schemaName = Schema.getSchemaName testEnvironment
+
+    let expected :: Value
+        expected =
+          [interpolateYaml|
+            data:
+              #{schemaName}_author:
+              - id: 1
+                name: Author 1
+          |]
+
+        actual :: IO Value
+        actual =
+          postGraphqlWithHeaders
+            testEnvironment
+            [("X-Hasura-Role", "role-select-author-name-only")]
+            [graphql|
+              query {
+                #{schemaName}_author(
+                  where: {
+                    articles_by_id_to_author_id_aggregate: {
+                      count: { predicate: { _eq: 1 }}
+                    }
+                  }
+                ) {
+                  id
+                  name
+                }
+              }
+            |]
+
+    actual `shouldBe` expected
