@@ -26,9 +26,9 @@
 </span><span id="line-26"></span><span class="hs-comment">--   NOTE: The error type is SerializedError due to KritiError not currently being exported</span><span>
 </span><span id="line-27"></span><span class="annot"><a href="Data.Aeson.Kriti.Functions.html#runKriti"><span class="hs-identifier hs-type">runKriti</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">SerializedError</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-28"></span><span id="runKriti"><span class="annot"><span class="annottext">runKriti :: Text -&gt; [(Text, Value)] -&gt; Either SerializedError Value
-</span><a href="Data.Aeson.Kriti.Functions.html#runKriti"><span class="hs-identifier hs-var hs-var">runKriti</span></a></span></span><span> </span><span id="local-6989586621689578399"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689578399"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621689578398"><span class="annot"><span class="annottext">[(Text, Value)]
-</span><a href="#local-6989586621689578398"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(KritiError -&gt; SerializedError)
+</span><a href="Data.Aeson.Kriti.Functions.html#runKriti"><span class="hs-identifier hs-var hs-var">runKriti</span></a></span></span><span> </span><span id="local-6989586621689578435"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689578435"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621689578434"><span class="annot"><span class="annottext">[(Text, Value)]
+</span><a href="#local-6989586621689578434"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(KritiError -&gt; SerializedError)
 -&gt; Either KritiError Value -&gt; Either SerializedError Value
 forall (a :: * -&gt; * -&gt; *) b c d.
 ArrowChoice a =&gt;
@@ -43,8 +43,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; HashMap Text (Value -&gt; Either CustomFunctionError Value)
 -&gt; Either KritiError Value
 </span><span class="hs-identifier hs-var">Kriti.runKritiWith</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689578399"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">[(Text, Value)]
-</span><a href="#local-6989586621689578398"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text (Value -&gt; Either CustomFunctionError Value)
+</span><a href="#local-6989586621689578435"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">[(Text, Value)]
+</span><a href="#local-6989586621689578434"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text (Value -&gt; Either CustomFunctionError Value)
 </span><a href="Data.Aeson.Kriti.Functions.html#basicFunctions"><span class="hs-identifier hs-var">basicFunctions</span></a></span><span>
 </span><span id="line-29"></span><span>
 </span><span id="line-30"></span><span class="hs-comment">-- | `Data.Aeson.Kriti.Functions.runKritiWith` attaches the basicFunctions by default.</span><span>
@@ -53,10 +53,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; [(Text, Value)]
 -&gt; HashMap Text (Value -&gt; Either CustomFunctionError Value)
 -&gt; Either SerializedError Value
-</span><a href="Data.Aeson.Kriti.Functions.html#runKritiWith"><span class="hs-identifier hs-var hs-var">runKritiWith</span></a></span></span><span> </span><span id="local-6989586621689578396"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689578396"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621689578395"><span class="annot"><span class="annottext">[(Text, Value)]
-</span><a href="#local-6989586621689578395"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span id="local-6989586621689578394"><span class="annot"><span class="annottext">HashMap Text (Value -&gt; Either CustomFunctionError Value)
-</span><a href="#local-6989586621689578394"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(KritiError -&gt; SerializedError)
+</span><a href="Data.Aeson.Kriti.Functions.html#runKritiWith"><span class="hs-identifier hs-var hs-var">runKritiWith</span></a></span></span><span> </span><span id="local-6989586621689578432"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689578432"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621689578431"><span class="annot"><span class="annottext">[(Text, Value)]
+</span><a href="#local-6989586621689578431"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span id="local-6989586621689578430"><span class="annot"><span class="annottext">HashMap Text (Value -&gt; Either CustomFunctionError Value)
+</span><a href="#local-6989586621689578430"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(KritiError -&gt; SerializedError)
 -&gt; Either KritiError Value -&gt; Either SerializedError Value
 forall (a :: * -&gt; * -&gt; *) b c d.
 ArrowChoice a =&gt;
@@ -71,14 +71,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; HashMap Text (Value -&gt; Either CustomFunctionError Value)
 -&gt; Either KritiError Value
 </span><span class="hs-identifier hs-var">Kriti.runKritiWith</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689578396"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">[(Text, Value)]
-</span><a href="#local-6989586621689578395"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Text (Value -&gt; Either CustomFunctionError Value)
+</span><a href="#local-6989586621689578432"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">[(Text, Value)]
+</span><a href="#local-6989586621689578431"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HashMap Text (Value -&gt; Either CustomFunctionError Value)
 </span><a href="Data.Aeson.Kriti.Functions.html#basicFunctions"><span class="hs-identifier hs-var">basicFunctions</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text (Value -&gt; Either CustomFunctionError Value)
 -&gt; HashMap Text (Value -&gt; Either CustomFunctionError Value)
 -&gt; HashMap Text (Value -&gt; Either CustomFunctionError Value)
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text (Value -&gt; Either CustomFunctionError Value)
-</span><a href="#local-6989586621689578394"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689578430"><span class="hs-identifier hs-var">f</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span>
 </span><span id="line-34"></span><span class="hs-comment">-- | Re-Export of the Kriti 'stdlib'</span><span>
 </span><span id="line-35"></span><span class="annot"><a href="Data.Aeson.Kriti.Functions.html#basicFunctions"><span class="hs-identifier hs-type">basicFunctions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Data.Aeson.Kriti.Functions.html#KritiFunc"><span class="hs-identifier hs-type">KritiFunc</span></a></span><span>
@@ -90,20 +90,20 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-39"></span><span class="annot"><a href="Data.Aeson.Kriti.Functions.html#environmentFunctions"><span class="hs-identifier hs-type">environmentFunctions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Data.Aeson.Kriti.Functions.html#KritiFunc"><span class="hs-identifier hs-type">KritiFunc</span></a></span><span>
 </span><span id="line-40"></span><span id="environmentFunctions"><span class="annot"><span class="annottext">environmentFunctions :: Environment
 -&gt; HashMap Text (Value -&gt; Either CustomFunctionError Value)
-</span><a href="Data.Aeson.Kriti.Functions.html#environmentFunctions"><span class="hs-identifier hs-var hs-var">environmentFunctions</span></a></span></span><span> </span><span id="local-6989586621689578392"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689578392"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.Aeson.Kriti.Functions.html#environmentFunctions"><span class="hs-identifier hs-var hs-var">environmentFunctions</span></a></span></span><span> </span><span id="local-6989586621689578428"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621689578428"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-41"></span><span>  </span><span class="annot"><span class="annottext">[(Text, Value -&gt; Either CustomFunctionError Value)]
 -&gt; HashMap Text (Value -&gt; Either CustomFunctionError Value)
 forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">M.fromList</span></span><span>
 </span><span id="line-42"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;getEnvironmentVariable&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either CustomFunctionError Value
-</span><a href="#local-6989586621689578390"><span class="hs-identifier hs-var">getEnvVar</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689578426"><span class="hs-identifier hs-var">getEnvVar</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>    </span><span class="hs-special">]</span><span>
 </span><span id="line-44"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-45"></span><span>    </span><span class="annot"><a href="#local-6989586621689578390"><span class="hs-identifier hs-type">getEnvVar</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Kriti.CustomFunctionError</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
-</span><span id="line-46"></span><span>    </span><span id="local-6989586621689578390"><span class="annot"><span class="annottext">getEnvVar :: Value -&gt; Either CustomFunctionError Value
-</span><a href="#local-6989586621689578390"><span class="hs-identifier hs-var hs-var">getEnvVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="#local-6989586621689578426"><span class="hs-identifier hs-type">getEnvVar</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Kriti.CustomFunctionError</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
+</span><span id="line-46"></span><span>    </span><span id="local-6989586621689578426"><span class="annot"><span class="annottext">getEnvVar :: Value -&gt; Either CustomFunctionError Value
+</span><a href="#local-6989586621689578426"><span class="hs-identifier hs-var hs-var">getEnvVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">J.Null</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either CustomFunctionError Value
 forall a b. b -&gt; Either a b
@@ -112,8 +112,8 @@ forall a b. b -&gt; Either a b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">J.Null</span></span><span>
-</span><span id="line-48"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621689578387"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689578387"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either CustomFunctionError Value
+</span><span id="line-48"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621689578423"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689578423"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either CustomFunctionError Value
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Either CustomFunctionError Value)
 -&gt; Value -&gt; Either CustomFunctionError Value
@@ -124,9 +124,9 @@ forall a. ToJSON a =&gt; a -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Environment -&gt; String -&gt; Maybe String
 </span><a href="Data.Environment.html#lookupEnv"><span class="hs-identifier hs-var">Env.lookupEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689578392"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="#local-6989586621689578428"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689578387"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689578423"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-49"></span><span>      </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CustomFunctionError -&gt; Either CustomFunctionError Value
 forall a b. a -&gt; Either a b
@@ -141,21 +141,21 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-52"></span><span class="annot"><a href="Data.Aeson.Kriti.Functions.html#sessionFunctions"><span class="hs-identifier hs-type">sessionFunctions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">M.HashMap</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><a href="Data.Aeson.Kriti.Functions.html#KritiFunc"><span class="hs-identifier hs-type">KritiFunc</span></a></span><span>
 </span><span id="line-53"></span><span id="sessionFunctions"><span class="annot"><span class="annottext">sessionFunctions :: Maybe SessionVariables
 -&gt; HashMap Text (Value -&gt; Either CustomFunctionError Value)
-</span><a href="Data.Aeson.Kriti.Functions.html#sessionFunctions"><span class="hs-identifier hs-var hs-var">sessionFunctions</span></a></span></span><span> </span><span id="local-6989586621689578382"><span class="annot"><span class="annottext">Maybe SessionVariables
-</span><a href="#local-6989586621689578382"><span class="hs-identifier hs-var">sessionVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Data.Aeson.Kriti.Functions.html#sessionFunctions"><span class="hs-identifier hs-var hs-var">sessionFunctions</span></a></span></span><span> </span><span id="local-6989586621689578418"><span class="annot"><span class="annottext">Maybe SessionVariables
+</span><a href="#local-6989586621689578418"><span class="hs-identifier hs-var">sessionVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 -&gt; (Value -&gt; Either CustomFunctionError Value)
 -&gt; HashMap Text (Value -&gt; Either CustomFunctionError Value)
 forall k v. Hashable k =&gt; k -&gt; v -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">M.singleton</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;getSessionVariable&quot;</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either CustomFunctionError Value
-</span><a href="#local-6989586621689578380"><span class="hs-identifier hs-var">getSessionVar</span></a></span><span>
+</span><a href="#local-6989586621689578416"><span class="hs-identifier hs-var">getSessionVar</span></a></span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-55"></span><span>    </span><span class="hs-comment">-- Returns Null if session-variables aren't passed in</span><span>
 </span><span id="line-56"></span><span>    </span><span class="hs-comment">-- Throws an error if session variable isn't found. Perhaps a version that returns null would also be useful.</span><span>
 </span><span id="line-57"></span><span>    </span><span class="hs-comment">-- Lookups are case-insensitive</span><span>
-</span><span id="line-58"></span><span>    </span><span class="annot"><a href="#local-6989586621689578380"><span class="hs-identifier hs-type">getSessionVar</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Kriti.CustomFunctionError</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
-</span><span id="line-59"></span><span>    </span><span id="local-6989586621689578380"><span class="annot"><span class="annottext">getSessionVar :: Value -&gt; Either CustomFunctionError Value
-</span><a href="#local-6989586621689578380"><span class="hs-identifier hs-var hs-var">getSessionVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-58"></span><span>    </span><span class="annot"><a href="#local-6989586621689578416"><span class="hs-identifier hs-type">getSessionVar</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Kriti.CustomFunctionError</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
+</span><span id="line-59"></span><span>    </span><span id="local-6989586621689578416"><span class="annot"><span class="annottext">getSessionVar :: Value -&gt; Either CustomFunctionError Value
+</span><a href="#local-6989586621689578416"><span class="hs-identifier hs-var hs-var">getSessionVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-60"></span><span>      </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">J.Null</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either CustomFunctionError Value
 forall a b. b -&gt; Either a b
@@ -164,25 +164,25 @@ forall a b. b -&gt; Either a b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">J.Null</span></span><span>
-</span><span id="line-61"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621689578379"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689578379"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-61"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621689578415"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689578415"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-62"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables
-</span><a href="#local-6989586621689578382"><span class="hs-identifier hs-var">sessionVars</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables
+</span><a href="#local-6989586621689578418"><span class="hs-identifier hs-var">sessionVars</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables
 -&gt; (SessionVariables -&gt; Maybe Text) -&gt; Maybe Text
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; SessionVariables -&gt; Maybe Text
 </span><a href="Hasura.Session.html#getSessionVariableValue"><span class="hs-identifier hs-var">getSessionVariableValue</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; SessionVariable
 </span><a href="Hasura.Session.html#mkSessionVariable"><span class="hs-identifier hs-var">mkSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689578379"><span class="hs-identifier hs-var">txt</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-63"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689578378"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689578378"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either CustomFunctionError Value
+</span><a href="#local-6989586621689578415"><span class="hs-identifier hs-var">txt</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-63"></span><span>          </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689578414"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689578414"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value -&gt; Either CustomFunctionError Value
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Either CustomFunctionError Value)
 -&gt; Value -&gt; Either CustomFunctionError Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689578378"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621689578414"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-64"></span><span>          </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CustomFunctionError -&gt; Either CustomFunctionError Value
 forall a b. a -&gt; Either a b
@@ -199,7 +199,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;Session variable \&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689578379"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
+</span><a href="#local-6989586621689578415"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;\&quot; not found&quot;</span></span><span>
