@@ -25122,6 +25122,7 @@ FunctionSignature :: Text -> Name -> ArgumentsSignature b -> ScalarType b -> Fun
 [fnReturnType] :: FunctionSignature (b :: BackendType) -> ScalarType b
 data ArgumentsSignature (b :: BackendType)
 ArgumentsStar :: ArgumentsSignature (b :: BackendType)
+SingleArgument :: ScalarType b -> ArgumentsSignature (b :: BackendType)
 Arguments :: NonEmpty (ArgumentSignature b) -> ArgumentsSignature (b :: BackendType)
 data ArgumentSignature (b :: BackendType)
 ArgumentSignature :: ScalarType b -> Name -> ArgumentSignature (b :: BackendType)
@@ -25661,9 +25662,9 @@ QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> Ha
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_aycd1. Lens' (QueryParametersInfo b_aycd1) (Seq (ColumnValue b_aycd1))
-qpiReusableVariableValues :: forall b_aycd1. Lens' (QueryParametersInfo b_aycd1) (HashMap Name (ColumnValue b_aycd1))
-qpiReferencedSessionVariables :: forall b_aycd1. Lens' (QueryParametersInfo b_aycd1) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_ayck3. Lens' (QueryParametersInfo b_ayck3) (Seq (ColumnValue b_ayck3))
+qpiReusableVariableValues :: forall b_ayck3. Lens' (QueryParametersInfo b_ayck3) (HashMap Name (ColumnValue b_ayck3))
+qpiReferencedSessionVariables :: forall b_ayck3. Lens' (QueryParametersInfo b_ayck3) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
@@ -25805,8 +25806,7 @@ pgkBuildFunctionRelayQueryFields :: forall r m n. (PostgresSchema pgKind, MonadB
 pgkRelayExtension :: PostgresSchema pgKind => Maybe (XRelay ('Postgres pgKind))
 
 -- | The aggregation functions that are supported by postgres variants.
---   TODO: Add more.
-_aggregationFunctions :: [FunctionSignature ('Postgres pgKind)]
+aggregationFunctions :: [FunctionSignature ('Postgres pgKind)]
 backendInsertParser :: forall pgKind m r n. MonadBuildSchema ('Postgres pgKind) r m n => SourceInfo ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> SchemaT r m (InputFieldsParser n (BackendInsert pgKind (UnpreparedValue ('Postgres pgKind))))
 buildTableRelayQueryFields :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> SourceInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> GQLNameIdentifier -> NESeq (ColumnInfo ('Postgres pgKind)) -> SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
 pgkBuildTableUpdateMutationFields :: forall r m n pgKind. (MonadBuildSchema ('Postgres pgKind) r m n, BackendTableSelectSchema ('Postgres pgKind)) => MkRootFieldName -> Scenario -> SourceInfo ('Postgres pgKind) -> TableName ('Postgres pgKind) -> TableInfo ('Postgres pgKind) -> GQLNameIdentifier -> SchemaT r m [FieldParser n (AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField UnpreparedValue) (UnpreparedValue ('Postgres pgKind)))]
@@ -25898,7 +25898,7 @@ instance Hasura.Backends.Postgres.Instances.Schema.PostgresSchema 'Hasura.SQL.Ba
 instance Hasura.Backends.Postgres.Instances.Schema.PostgresSchema 'Hasura.SQL.Backend.Cockroach
 instance (Hasura.Backends.Postgres.Instances.Schema.PostgresSchema pgKind, Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind), Hasura.SQL.Tag.HasTag ('Hasura.SQL.Backend.Postgres pgKind)) => Hasura.GraphQL.Schema.Backend.BackendTableSelectSchema ('Hasura.SQL.Backend.Postgres pgKind)
 instance (Hasura.RQL.Types.Backend.Backend ('Hasura.SQL.Backend.Postgres pgKind), Hasura.Backends.Postgres.Instances.Schema.PostgresSchema pgKind) => Hasura.GraphQL.Schema.Backend.BackendSchema ('Hasura.SQL.Backend.Postgres pgKind)
-instance Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSchema ('Hasura.SQL.Backend.Postgres pgKind)
+instance Hasura.GraphQL.Schema.Backend.BackendSchema ('Hasura.SQL.Backend.Postgres pgKind) => Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSchema ('Hasura.SQL.Backend.Postgres pgKind)
 
 module Hasura.GraphQL.Schema.Action
 
