@@ -284,7 +284,7 @@
     "less-loader": "4.1.0",
     "lint-staged": "10.2.2",
     "mini-css-extract-plugin": "0.4.5",
-    "msw": "0.29.0",
+    "msw": "0.47.3",
     "msw-storybook-addon": "1.6.3",
     "nyc": "15.0.1",
     "optimize-css-assets-webpack-plugin": "5.0.3",
