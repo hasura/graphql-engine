@@ -1,0 +1,74 @@
+---
+sidebar_label: Hasura Cloud
+sidebar_position: 1
+description: Getting Started with Hasura & BigQuery using Hasura Cloud
+keywords:
+  - hasura
+  - docs
+  - databases
+  - bigquery
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+
+# Getting started with BigQuery with Hasura Cloud
+
+Navigate to
+[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
+create a new Hasura Cloud account.
+
+Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
+
+<Thumbnail src='/img/getting-started/create-new-project_console_2.12.1.png' alt='Connect new or existing database' width='900px' />
+
+## Connecting to a BigQuery project
+
+### Pre-requisites
+
+Hasura GraphQL Engine requires the following to connect to a BigQuery project:
+
+- The [project Id](https://support.google.com/googleapi/answer/7014113?hl=en)
+- The [datasets](https://cloud.google.com/bigquery/docs/datasets-intro) that can be exposed over graphql have to be
+explicitly listed.
+- A [Service Account](https://cloud.google.com/iam/docs/service-accounts) to query the project.
+
+### Creating a Service Account
+
+- In Google Cloud's console, head to your BigQuery project.
+
+- Go to `IAM & Admin > Service Accounts > Create Service Account`
+
+<Thumbnail src='/img/databases/bigquery/getting-started/1-service-account.png' alt='Create new service account on GCP'
+           width='400px' />
+
+- Give it a name, and under roles, and grant these 3 roles:
+  - `BigQuery Metadata Viewer`
+  - `BigQuery Data Viewer`
+  - `BigQuery Job User`
+
+<Thumbnail src='/img/databases/bigquery/getting-started/2-service-account-details.png' alt='Add roles to service account on GCP' width='600px' />
+
+- Click on the created service account, `Keys > ADD KEY > Create New Key > JSON > Create`. This will download a service
+account file on your computer.
+
+### Connect BigQuery to Hasura
+
+- Update Graphql Engine with an environment variable set to the contents of the service account.
+
+<Thumbnail src='/img/databases/bigquery/bigquery-add-service-account_console_2.12.1.png' alt='Add BigQuery service account to Hasura' width='900px' />
+
+- Head to the console, in the `Connect Existing Database` page, choose `Environment Variable` under `Connect Via`, and
+fill in the necessary details:
+
+<Thumbnail src='/img/databases/bigquery/bigquery-connect-existing-database_console_2.12.0.png' alt='Connect existing BigQuery database in Hasura Cloud' width='900px' />
+
+You should now be able to track the tables that are part of the specified tables and configure relationships between
+them. As BigQuery lacks foreign key constraints, the Hasura Console cannot suggest relationships, so all relationships between
+BigQuery tables have to be manually configured.
+
+## Try out a GraphQL query
+
+Head to the `API` tab in the Console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
+creating a GraphQL query.
+
+<Thumbnail src='/img/databases/bigquery/bigquery_api-query_2.12.png' alt='Make a GraphQL query with Hasura' width='1100px' />
