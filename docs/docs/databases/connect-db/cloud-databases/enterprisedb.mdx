@@ -1,0 +1,166 @@
+---
+description: Using Hasura with an EnterpriseDB (BigAnimal) Postgres database
+title: 'Cloud: Using Hasura Cloud with an EnterpriseDB (BigAnimal) Postgres database'
+keywords:
+  - hasura
+  - docs
+  - existing database
+  - guide
+  - enterprisedb
+  - EnterpriseDB
+sidebar_label: EnterpriseDB (BigAnimal) Postgres
+sidebar_position: 9
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Using Hasura Cloud with an EnterpriseDB (BigAnimal) Postgres database
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+
+## Introduction
+
+This guide explains how to connect a new or existing EnterpriseDB (BigAnimal) Postgres database to a Hasura Cloud
+project.
+
+## Step 1: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+## Step 2: Create a Hasura Cloud project {#create-hasura-project}
+
+On the Hasura Cloud dashboard, create a new project:
+
+<Thumbnail src='/img/cloud-dbs/create-hasura-cloud-project.png' alt='Create Hasura Cloud project' />
+
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
+
+On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Connect existing database`:
+
+You will get prompted for a Postgres Database URL. We will create this in the next step and then come back here.
+
+<Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
+
+## Step 3: Create a BigAnimal Postgres DB on EnterpriseDB ([skip if you have an existing DB](#get-db-url))
+
+Log into [EnterpriseDB](https://www.enterprisedb.com/dashboard) and head to your dashboard.
+
+From your dashboard, scroll down and click `Test drive for free` in the BigAnimal section:
+
+<Thumbnail src='/img/cloud-dbs/big-animal/big-animal-test-drive.png' alt='Test drive BigAnimal' width='700px' />
+
+EnterpriseDB will create a free trial and redirect you to your BigAnimal portal. From this portal, click
+`Create New Cluster`:
+
+<Thumbnail src='/img/cloud-dbs/big-animal/big-animal-create-new-cluster.png' alt='Create new cluster' width='700px' />
+
+Select the type of cluster and provider you plan to use, then click `Next: Cluster Settings`:
+
+<Thumbnail
+  src='/img/cloud-dbs/big-animal/big-animal-cluster-type-provider.png'
+  alt='Choose type and provider'
+  width='700px'
+/>
+
+Enter a cluster name and password:
+
+<Thumbnail
+  src='/img/cloud-dbs/big-animal/big-animal-cluster-name-password.png'
+  alt='Add name and password'
+  width='700px'
+/>
+
+Choose a database type, region, and instance type:
+
+<Thumbnail
+  src='/img/cloud-dbs/big-animal/big-animal-cluster-type-region.png'
+  alt='Choose cluster type and region'
+  width='700px'
+/>
+
+Select your storage and networking requirements, then click `Create Cluster`:
+
+<Thumbnail
+  src='/img/cloud-dbs/big-animal/big-animal-storage-networking.png'
+  alt='Choose storage and networking'
+  width='700px'
+/>
+
+You'll be redirected to your BigAnimal portal and should see your cluster provisioning like this:
+
+<Thumbnail src='/img/cloud-dbs/big-animal/big-animal-provisioning.png' alt='Cluster provisioning' width='700px' />
+
+Congratulations! You've now created a BigAnimal Postgres instance on EnterpriseDB which you can use with Hasura GraphQL
+Engine. Follow the steps below to connect it to Hasura.
+
+## Step 4: Get the database connection parameters and finish connecting the database {#get-db-url}
+
+The structure of the database connection URL looks as follows:
+
+```bash
+postgresql://<user-name>:<password>@<host-server>:<port>/<database-name>
+```
+
+BigAnimal doesn't provide an out-of-the-box connection string matching the format above. Instead, we'll use the
+parameters from the `Connect` tab and pass them to Hasura.
+
+After BigAnimal has provisioned the cluster, click on the title:
+
+<Thumbnail src='/img/cloud-dbs/big-animal/big-animal-cluster-ready.png' alt='Cluster ready' width='700px' />
+
+From the cluster's dashboard, choose the `Connect` tab:
+
+<Thumbnail
+  src='/img/cloud-dbs/big-animal/big-animal-connection-parameters.png'
+  alt='Cluster connection parameters'
+  width='700px'
+/>
+
+For each of the following under `Connection Info`, click `Copy` and paste their values into the appropriate fields on
+the Hasura Console:
+
+| BigAnimal parameter | Hasura parameter |
+| ------------------- | ---------------- |
+| Dbname              | Database Name    |
+| Read/Write Host     | Host             |
+| Port                | Port             |
+| User                | Username         |
+
+Back on the Hasura Console, paste your values into the mapped field:
+
+<Thumbnail src='/img/cloud-dbs/big-animal/big-animal-connect-db.png' alt='Connect to Hasura Console' width='700px' />
+
+:::info Note
+
+BigAnimal doesn't present your password on the `Connect` tab. You'll need to provide the password you used to create the
+cluster in Hasura's `Password` field.
+
+:::
+
+Then click `Connect Database`.
+
+:::info Note
+
+For security reasons, it is recommended to set database URLs as
+[env vars](/projects/env-vars.mdx#manage-project-env-vars) and using the env vars to connect to the databases in place
+of the raw database URLs.
+
+:::
+
+Voilà. You are ready to start developing.
+
+<Thumbnail src='/img/cloud-dbs/hasura-console.png' alt='Hasura Console' />
+
+## Next steps
+
+You can check out our [30-Minute Hasura Basics Course](https://hasura.io/learn/graphql/hasura/introduction/) and other
+[GraphQL & Hasura Courses](https://hasura.io/learn/) for a more detailed introduction to Hasura.
+
+You can also click the gear icon to manage your Hasura Cloud project. (e.g. add
+[collaborators](/projects/collaborators.mdx#manage-project-collaborators),
+[env vars](/projects/env-vars.mdx#manage-project-env-vars) or
+[custom domains](/projects/domains.mdx#manage-project-domains)).
+
+<Thumbnail src='/img/getting-started/project-manage.png' alt='Project actions' width='860px' />

@@ -20,9 +20,11 @@ import Azure from '@site/static/img/cloud-dbs/logos/azure.png';
 import RollTide from '@site/static/img/cloud-dbs/logos/crunchy.png';
 import DO from '@site/static/img/cloud-dbs/logos/DO.png';
 import Elephant from '@site/static/img/cloud-dbs/logos/elephant.png';
+import Enterprise from '@site/static/img/cloud-dbs/logos/enterprisedb.png';
 import GCP from '@site/static/img/cloud-dbs/logos/gcp.png';
 import Railway from '@site/static/img/cloud-dbs/logos/railway.png';
 import Render from '@site/static/img/cloud-dbs/logos/render.png';
+import Supabase from '@site/static/img/cloud-dbs/logos/supabase.png';
 import Timescale from '@site/static/img/cloud-dbs/logos/timescaledb.png';
 import Yugabyte from '@site/static/img/cloud-dbs/logos/yugabyte.png';
 
@@ -71,6 +73,15 @@ specific cloud vendors.
       <img src={Elephant} title='ElephantSQL Postgres' alt='Connect ElephantSQL Postgres to Hasura' />
     </div>
   </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/enterprisedb'>
+    <div className='card'>
+      <img
+        src={Enterprise}
+        title='EnterpriseDB BigAnimal Postgres'
+        alt='Connect EnterpriseDB BigAnimal Postgres to Hasura'
+      />
+    </div>
+  </VersionedLink>
   <VersionedLink to='/databases/connect-db/cloud-databases/gcp'>
     <div className='card'>
       <img src={GCP} title='GCP Postgres' alt='Connect GCP Postgres to Hasura' />
@@ -84,6 +95,11 @@ specific cloud vendors.
   <VersionedLink to='/databases/connect-db/cloud-databases/render'>
     <div className='card'>
       <img src={Render} title='Render Postgres' alt='Connect Render Postgres to Hasura' />
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/supabase'>
+    <div className='card'>
+      <img src={Supabase} title='Supabase Postgres' alt='Connect Supabase Postgres to Hasura' />
     </div>
   </VersionedLink>
   <VersionedLink to='/databases/connect-db/cloud-databases/timescale-cloud'>
