@@ -29,9 +29,11 @@ This guide will show how to configure your Hasura project for easy switching bet
 ### Step 1: Setup local development of Hasura with Docker
 
 Follow the guide [here](/getting-started/docker-simple.mdx) to get up and running with Hasura GraphQL engine and
-Postgres as Docker containers in your local system. Make sure that the ENV variable for database connection in your
-local setup is same as that in your Cloud project. Also add any other ENV variables that you might have set on the Cloud
-project.
+Postgres as Docker containers in your local system. You can skip the steps involving connecting a database, as
+you'll be applying metadata from your cloud database in a later step. Make sure that the ENV variable name for
+database connection in your local setup is the same as that in your Cloud project so that your database connection
+metadata will still work and not need to be updated. The value of this variable will be updated to point
+to your local database. Also add any other ENV variables that you might have set on the Cloud project.
 
 ### Step 2: Install Hasura CLI
 
