@@ -38,12 +38,7 @@ spec = do
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Postgres.setupTablesAction schema testEnv,
                   Postgres.setupPermissionsAction permissions testEnv
-                ],
-              Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.skipTests = Just "Tests disabled until aggregation predicates are enabled for users in https://github.com/hasura/graphql-engine-mono/issues/5511"
-                    }
+                ]
             }
         ]
     )
@@ -186,7 +181,7 @@ tests opts = do
                 #{schemaName}_author(
                   where: {
                     articles_by_id_to_author_id_aggregate: {
-                      bool_and: { arguments: { arg0: published }, predicate: { _eq: false } }
+                      bool_and: { arguments: published, predicate: { _eq: false } }
                     }
                   }
                 ) {
@@ -218,7 +213,7 @@ tests opts = do
                   where: {
                     articles_by_id_to_author_id_aggregate: {
                       bool_and: {
-                        arguments: { arg0: published }
+                        arguments: published
                         predicate: { _eq: true }
                         filter: { author_id: { _neq: 2 } }
                       }
@@ -325,7 +320,7 @@ tests opts = do
                     where: {
                       articles_by_id_to_author_id_aggregate: {
                         bool_and: {
-                          arguments: { arg0: published }
+                          arguments: published
                           predicate: { _eq: true }
                           filter: { author_id: { _neq: 2 } }
                         }

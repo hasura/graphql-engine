@@ -139,36 +139,53 @@ instance PostgresSchema 'Cockroach where
 
 -- postgres schema
 
--- Not implemented yet: Pending https://github.com/hasura/graphql-engine-mono/issues/5174"
-instance AggregationPredicatesSchema ('Postgres pgKind) where
-  aggregationPredicatesParser _ _ = return Nothing
-
--- instance (BackendSchema ('Postgres pgKind)) => AggregationPredicatesSchema ('Postgres pgKind) where
---   aggregationPredicatesParser = Agg.defaultAggregationPredicatesParser aggregationFunctions
+instance (BackendSchema ('Postgres pgKind)) => AggregationPredicatesSchema ('Postgres pgKind) where
+  aggregationPredicatesParser = Agg.defaultAggregationPredicatesParser aggregationFunctions
 
 -- | The aggregation functions that are supported by postgres variants.
--- TODO: Add more.
-_aggregationFunctions :: [Agg.FunctionSignature ('Postgres pgKind)]
-_aggregationFunctions =
+aggregationFunctions :: [Agg.FunctionSignature ('Postgres pgKind)]
+aggregationFunctions =
   [ Agg.FunctionSignature
+      { fnName = "avg",
+        fnGQLName = [G.name|avg|],
+        fnReturnType = PGDouble,
+        fnArguments = Agg.SingleArgument PGDouble
+      },
+    Agg.FunctionSignature
+      { fnName = "bool_and",
+        fnGQLName = [G.name|bool_and|],
+        fnReturnType = PGBoolean,
+        fnArguments = Agg.SingleArgument PGBoolean
+      },
+    Agg.FunctionSignature
+      { fnName = "bool_or",
+        fnGQLName = [G.name|bool_or|],
+        fnReturnType = PGBoolean,
+        fnArguments = Agg.SingleArgument PGBoolean
+      },
+    Agg.FunctionSignature
       { fnName = "count",
         fnGQLName = [G.name|count|],
         fnReturnType = PGInteger,
         fnArguments = Agg.ArgumentsStar
       },
     Agg.FunctionSignature
-      { fnName = "bool_and",
-        fnGQLName = [G.name|bool_and|],
-        fnReturnType = PGBoolean,
-        fnArguments =
-          Agg.Arguments
-            ( NE.fromList
-                [ Agg.ArgumentSignature
-                    { argType = PGBoolean,
-                      argName = [G.name|arg0|]
-                    }
-                ]
-            )
+      { fnName = "max",
+        fnGQLName = [G.name|max|],
+        fnReturnType = PGDouble,
+        fnArguments = Agg.SingleArgument PGDouble
+      },
+    Agg.FunctionSignature
+      { fnName = "min",
+        fnGQLName = [G.name|min|],
+        fnReturnType = PGDouble,
+        fnArguments = Agg.SingleArgument PGDouble
+      },
+    Agg.FunctionSignature
+      { fnName = "sum",
+        fnGQLName = [G.name|sum|],
+        fnReturnType = PGDouble,
+        fnArguments = Agg.SingleArgument PGDouble
       },
     Agg.FunctionSignature
       { fnName = "corr",
@@ -187,6 +204,36 @@ _aggregationFunctions =
                     }
                 ]
             )
+      },
+    Agg.FunctionSignature
+      { fnName = "covar_samp",
+        fnGQLName = [G.name|covar_samp|],
+        fnReturnType = PGDouble,
+        fnArguments =
+          Agg.Arguments
+            ( NE.fromList
+                [ Agg.ArgumentSignature
+                    { argType = PGDouble,
+                      argName = [G.name|Y|]
+                    },
+                  Agg.ArgumentSignature
+                    { argType = PGDouble,
+                      argName = [G.name|X|]
+                    }
+                ]
+            )
+      },
+    Agg.FunctionSignature
+      { fnName = "stddev_samp",
+        fnGQLName = [G.name|stddev_samp|],
+        fnReturnType = PGDouble,
+        fnArguments = Agg.SingleArgument PGDouble
+      },
+    Agg.FunctionSignature
+      { fnName = "var_samp",
+        fnGQLName = [G.name|var_samp|],
+        fnReturnType = PGDouble,
+        fnArguments = Agg.SingleArgument PGDouble
       }
   ]
 

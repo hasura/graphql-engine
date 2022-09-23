@@ -378,6 +378,8 @@ query {
     <a href='#trueexp'>TrueExp</a>
     {` | `}
     <a href='#columnexp'>ColumnExp</a>
+    {` | `}
+    <a href='#aggregationexp'>AggregationExp</a>
   </code>
 </pre>
 
@@ -789,6 +791,96 @@ Currently, only the following type casts are supported:
 - from Postgres `jsonb` type to `string` type.
 
 :::
+
+###### AggregationExp
+
+
+<div className="parsed-literal">
+
+<pre>
+  <code>
+    {`{
+  field-name_aggregate: { `}
+    <a href='#aggregationPredicate'>AggregationPredicate</a>
+    {` }
+}`}
+  </code>
+</pre>
+
+</div>
+
+Note that each `field-name_aggregate` object may refer to only one aggregation
+predicate. Multiple aggregation predicates can be specified via the `_and`
+operator, however.
+
+_Example_
+
+```graphql
+query {
+  restaurant ( where: {
+    reviews_aggregate: {
+      average: {
+        arguments: "rating",
+        predicate: { _gt: 5 }
+      }
+    }
+  })
+  {
+    name
+  }
+```
+
+#### AggregationPredicate
+
+<div className="parsed-literal">
+
+<pre>
+  <code>{`function-name: {
+    arguments: (column-name | [column-name] | { argument-name: column-name })
+    distinct: true | false
+    filter: `} <a href='#boolexp'>BoolExp</a> {`
+    predicate: `} <a href='#operator'>Operator</a> {`
+  }`}
+  </code>
+</pre>
+
+</div>
+
+Aggregation functions may differ in the `arguments` that they support. For
+instance, `count` may take an arbitrary number of arguments, while `sum` takes
+exactly one. Certain functions take named arguments.
+
+The functions supported are specific to each backend.
+
+_Examples_
+
+```graphql
+  average: {
+    arguments: "rating",
+    predicate: { _gt: 5 }
+  }
+```
+
+```graphql
+  count: {
+    arguments: []
+    predicate: { _gt: 10 }
+  }
+```
+
+```graphql
+  count: {
+    arguments: ["name", "id"]
+    predicate: { _gt: 10 }
+  }
+```
+
+```graphql
+  corr: {
+    arguments: { X: "age", Y: "score" }
+    predicate: { _gt: 0.6 }
+  }
+```
 
 #### OrderByExp {#orderbyexp}
 

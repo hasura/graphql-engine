@@ -1967,6 +1967,83 @@ response={`{
 }`}
 />
 
+## Filter based on aggregations of nested array fields
+
+You can filter based on _aggregations_ over the elements of an array relationship field.
+
+The aggregation functions supported are:
+
+* `avg(number)`: Computes the average (arithmetic mean) of all the non-null input values.
+* `bool_and(bool)`: Returns true if **all** non-null input values are true, otherwise false.
+* `bool_or(bool)`: Returns true if **any** non-null input value is true, otherwise false.
+* `count(*)`, `count(col1, col2, ..)` : Computes the number of input rows in which the input value is not null.
+* `max(number)`: Computes the maximum of the non-null input values.
+* `min(number)`: Computes the minimum of the non-null input values.
+* `sum(number)`: Computes the sum of the non-null input values.
+* `corr(Y number, X number)`: Computes the correlation coefficient.
+* `covar_samp(Y number, X number)`: Computes the sample covariance.
+* `stddev_samp(number)`: Computes the sample standard deviation of the input values.
+* `var_samp(number)`: Computes the sample variance of the input values (square of the sample standard deviation).
+
+The semantics of the above functions is documented in the [PostgreSQL documentation](https://www.postgresql.org/docs/14/functions-aggregate.html).
+
+For the complete specification of the schema of aggregation predicates, see the [API reference: AggregationExp](/api-reference/graphql-api/query.mdx#aggregationexp).
+
+
+**Example:**
+
+Assume we have a dataset of restaurants with user-submitted reviews that contain a rating.
+
+Suppose we want to query only the best restaurants. In that case, we can filter by the average over the ratings a restaurant has received and only include restaurants that have at least some number of reviews from distinct users.
+
+<GraphiQLIDE
+  query={`query {
+  restaurant (
+    limit: 3,
+    where: {
+      _and: [
+        {
+          reviews_aggregate: {
+            average: {
+              arguments: "rating",
+              predicate: { _gt: 5 }
+            }
+          }
+        },
+        {
+          reviews_aggregate: {
+            count: {
+              arguments: ["reviewer"],
+              distinct: true,
+              predicate: { _gt: 10 }
+            }
+          }
+        }
+      ]
+    }
+  )
+  {
+    name
+  }
+}`}
+response={`{
+   "data": {
+     "restaurant": [
+       {
+         "name": "Noma",
+       },
+       {
+         "name": "Le Fouquet’s",
+       },
+       {
+         "name": "Café de Flore "
+       }
+     ]
+   }
+}`}
+/>
+
+
 ## Cast a field to a different type before filtering (\_cast)
 
 The `_cast` operator can be used to cast a field to a different type, which allows type-specific
