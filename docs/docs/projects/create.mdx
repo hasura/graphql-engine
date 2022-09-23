@@ -26,45 +26,48 @@ publicly available IP address.
 
 To begin, navigate to the `Projects` page, and click the `New Project` link.
 
-<Thumbnail src='/img/projects/create-new-project.png' alt='create new project button' width='400px' />
-
 This opens a form on the right where you can create your new project.
 
-Choose a pricing plan, select a region and optionally enter the project name for your project in this form.
+Choose a pricing plan and select a region for your project.
 
-<Thumbnail src='/img/projects/project-setup.png' alt='project setup' width='1100px' />
+<Thumbnail src='/img/projects/create-project_console_2.12.png' alt='Create new project in Hasura Console' width='900px' />
 
 Once you have completed the project setup, click `Create Project`.
 
 ## Step 2: Database setup {#cloud-projects-db-setup}
 
-To get started, Click `Launch Console` to open the Hasura console in your browser.
+Once created, you can specify a new name for your Project if you want.
+
+Then to get started, Click `Launch Console` to open the Hasura console in your browser.
 
 <Thumbnail
-  src='/img/getting-started/details-launch-console.png'
+  src='/img/projects/create-project-assign-name_console_2.12.png'
   alt='database setup with new database'
   width='900px'
 />
 
 On the Hasura console, navigate to `Data -> Manage -> Connect Database`:
 
-### New database
+### Connect or create a new database
 
-Hasura Cloud does not host databases, but does provide integrations with which you can create databases on managed cloud
-providers like Heroku. Integrations for AWS, GCP, and Azure are coming soon.
+Hasura Cloud does not host databases, but does provide integrations with which you can connect databases including from
+many 3rd party managed cloud providers. Check out a
+[list of supported databases here](/databases/index.mdx#supported-databases).
 
-To get started, choose `Create Heroku Database -> Create Database`, and follow the prompts to authenticate with Heroku.
-Hasura Cloud will integrate with your Heroku account and manage the initial setup of a dev-tier Postgres instance. You
-can always upgrade the instance and manage options later through your Heroku account.
+To get started with a demo database, choose `Create Heroku Database -> Create Database`, and follow the prompts to
+authenticate with Heroku. Hasura Cloud will integrate with your Heroku account and manage the initial setup of a
+dev-tier Postgres instance. You can always upgrade the instance and manage options later through your Heroku account.
 
-<Thumbnail src='/img/projects/project-new-database-setup.png' alt='database setup with new database' width='700px' />
+<Thumbnail src='/img/projects/create-database-heroku_console_2.12.png' alt='database setup with existing
+database' width='700px' />
 
 ### Existing database
 
 To use an existing database, choose `Connect existing database` and enter your database connection URL and enter your
 database connection string (looks like `postgres://username:password@hostname:port/dbname`).
 
-<Thumbnail src='/img/getting-started/connect-db-cloud.png' alt='database setup with existing database' width='700px' />
+<Thumbnail src='/img/projects/connect-database_console_2.12.png' alt='database setup with new database' width='700px' />
+
 
 :::info
 
@@ -80,7 +83,7 @@ For some cloud services, like GCP, you'll need to adjust your Postgres connectio
 Hasura Cloud IP address. You can copy the IP address from the copy icon in the `Hasura Cloud IP` field on the project's
 details view.
 
-<Thumbnail src='/img/projects/hasura-cloud-ip.png' alt='Hasura Cloud IP field' width='1000px' />
+<Thumbnail src='/img/projects/project-general-ip-address_console_2.12.png' alt='Hasura Cloud IP field' width='1000px' />
 
 <Thumbnail
   src='/img/projects/gcp-postgres-authorized-network.png'
@@ -101,4 +104,4 @@ Make sure your database user has the right
 
 ## More databases
 
-Support for more databases (MySQL, SQL Server etc) is coming soon.
+Support for more databases is coming soon. Stay up to date with [supported databases here](/databases/index.mdx#supported-databases).

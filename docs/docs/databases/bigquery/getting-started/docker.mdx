@@ -1,7 +1,7 @@
 ---
-sidebar_label: Getting started
+sidebar_label: Docker
 sidebar_position: 1
-description: Getting Started with Hasura & BigQuery
+description: Getting Started with Hasura & BigQuery using Docker
 keywords:
   - hasura
   - docs
@@ -11,21 +11,7 @@ keywords:
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Getting started with BigQuery
-
-## Run Hasura GraphQL engine
-
-### Using Hasura Cloud
-
-Navigate to
-[cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
-create a new Hasura Cloud account.
-
-Once you create a project on Hasura Cloud, hit the "Launch Console" button to open the Hasura Console for your project.
-
-<Thumbnail src='/img/getting-started/create-project.png' alt='Connect new or existing database' width='556px' />
-
-### Using docker
+# Getting started with BigQuery with Hasura in Docker
 
 Get the Hasura docker-compose file:
 
@@ -62,9 +48,9 @@ Head to `http://localhost:8080/console` to open the Hasura console.
 
 Hasura GraphQL engine requires the following to connect to a BigQuery project:
 
-- [Project Id](https://support.google.com/googleapi/answer/7014113?hl=en)
+- The [project Id](https://support.google.com/googleapi/answer/7014113?hl=en)
 - The [datasets](https://cloud.google.com/bigquery/docs/datasets-intro) that can be exposed over graphql have to be
-  explicitly listed.
+explicitly listed.
 - A [Service Account](https://cloud.google.com/iam/docs/service-accounts) to query the project.
 
 ### Creating a Service Account
@@ -73,50 +59,41 @@ Hasura GraphQL engine requires the following to connect to a BigQuery project:
 
 - Go to `IAM & Admin > Service Accounts > Create Service Account`
 
-  <Thumbnail src='/img/databases/bigquery/1-service-account.png' alt='Add source' width='400px' />
+<Thumbnail src='/img/databases/bigquery/getting-started/1-service-account.png' alt='Create a service account on GCP' width='400px' />
 
-- Give it a name, and under roles, and grant these 3 roles: `BigQuery Metadata Viewer`, `BigQuery Data Viewer` and
-  `BigQuery Job User`.
+- Give it a name, and under roles, and grant these 3 roles:
+  - `BigQuery Metadata Viewer`
+  - `BigQuery Data Viewer`
+  - `BigQuery Job User`
 
-  <Thumbnail src='/img/databases/bigquery/2-service-account-details.png' alt='Add source' width='600px' />
+<Thumbnail src='/img/databases/bigquery/getting-started/2-service-account-details.png' alt='Add roles to service account on GCP' width='600px' />
 
 - Click on the created service account, `Keys > ADD KEY > Create New Key > JSON > Create`. This will download a service
-  account file on your computer.
+account file on your computer.
 
 ### Connect BigQuery to Hasura
 
 - Update Graphql engine with an environment variable set to the contents of the service account.
 
-For example, this maybe done as follows if you are using docker:
+For example, this could be done as follows if you are using Docker:
 
 ```bash
 docker run -e BIGQUERY_SA_ACCOUNT=$(cat /path/to/the/service-account.json) <rest-of-the-flags>
 ```
 
-- Head to the console, in the `Connect Existing Database` page, choose `Environment Variable` under `Connect Via`, and
-  fill in the necessary details:
+- Head to the Console, in the `Connect Existing Database` page, choose `Environment Variable` under `Connect Via`, and
+fill in the necessary details:
 
-  <Thumbnail src='/img/databases/bigquery/3-connect-bigquery.png' alt='Add source' width='600px' />
+<Thumbnail src='/img/databases/bigquery/bigquery-add-service-account_console_2.12.1.png' alt='Connect
+existing BigQuery database in Hasura Cloud' width='900px' />
 
 You should now be able to track the tables that are part of the specified tables and configure relationships between
-them. As BigQuery lacks foreign key constraints, the console cannot suggest relationships, so all relationships between
+them. As BigQuery lacks foreign key constraints, the Hasura Console cannot suggest relationships, so all relationships between
 BigQuery tables have to be manually configured.
 
 ## Try out a GraphQL query
 
-Head to the `API` tab in the console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
+Head to the `API` tab in the Console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
 creating a GraphQL query.
 
-<Thumbnail src='/img/databases/ms-sql-server/6-make-graphql-query.png' alt='Make GraphQL query' width='1100px' />
-
-## Keep up to date
-
-Hasura currently supports queries on BigQuery.
-
-Please watch this space to get the latest docs on how you can try these features out via the console or by manipulating
-metadata in JSON/YAML directly.
-
-If you'd like to stay informed about the status of BigQuery support, subscribe to our newsletter and join our discord!
-
-- <https://hasura.io/newsletter/>
-- <https://discord.com/invite/hasura>
+<Thumbnail src='/img/databases/bigquery/bigquery_api-query_2.12.png' alt='Make GraphQL query in Hasura' width='1100px' />
