@@ -1,8 +1,5 @@
 {
-  "extends": [
-    "airbnb",
-    "prettier"
-  ],
+  "extends": ["airbnb", "prettier"],
   "env": {
     "browser": true,
     "node": true,
@@ -115,10 +112,7 @@
   ],
   "settings": {
     "import/resolve": {
-      "moduleDirectory": [
-        "node_modules",
-        "src"
-      ]
+      "moduleDirectory": ["node_modules", "src"]
     }
   },
   "globals": {
@@ -139,29 +133,20 @@
         "prettier"
       ],
       "parser": "@typescript-eslint/parser",
-      "files": [
-        "*.ts",
-        "*.tsx"
-      ],
+      "files": ["*.ts", "*.tsx"],
       "rules": {
         "no-useless-escape": 0,
         "no-restricted-imports": [
           "error",
           {
-            "patterns": [
-              "@/features/*/*",
-              "@/new-components/*/*"
-            ]
+            "patterns": ["@/features/*/*", "@/new-components/*/*"]
           }
         ],
         "jsx-a11y/label-has-for": [
           0,
           {
             "required": {
-              "some": [
-                "nesting",
-                "id"
-              ]
+              "some": ["nesting", "id"]
             }
           }
         ],
@@ -212,9 +197,7 @@
         "@typescript-eslint/no-var-requires": "off",
         "@typescript-eslint/no-shadow": "error",
         "@typescript-eslint/no-useless-constructor": "error",
-        "@typescript-eslint/no-unused-expressions": [
-          "error"
-        ],
+        "@typescript-eslint/no-unused-expressions": ["error"],
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/explicit-module-boundary-types": "off",
         "no-restricted-syntax": "warn",
@@ -255,12 +238,14 @@
         "react/require-default-props": "warn",
         "react/no-unused-prop-types": "warn",
         "jsx-a11y/role-supports-aria-props": "warn"
-
       }
     },
     {
       // 3) Now we enable eslint-plugin-testing-library rules or preset only for matching files!
-      "files": ["src/**/__tests__/**/*.[jt]s?(x)", "src/**/?(*.)+(spec|test).[jt]s?(x)"],
+      "files": [
+        "src/**/__tests__/**/*.[jt]s?(x)",
+        "src/**/?(*.)+(spec|test).[jt]s?(x)"
+      ],
       "extends": ["plugin:testing-library/react", "plugin:jest-dom/recommended"]
     }
   ]

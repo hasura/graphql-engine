@@ -1,8 +1,8 @@
-import { useQuery } from 'react-query';
-import { useHttpClient } from '@/features/Network';
-import { Table, MetadataTable } from '@/features/MetadataAPI';
-import { DataSource, exportMetadata, Feature } from '@/features/DataSource';
 import type { IntrospectedTable } from '@/features/DataSource';
+import { DataSource, exportMetadata, Feature } from '@/features/DataSource';
+import { MetadataTable, Table } from '@/features/MetadataAPI';
+import { useHttpClient } from '@/features/Network';
+import { useQuery } from 'react-query';
 import type { TrackableTable } from '../types';
 
 export type UseTablesProps = {
@@ -82,10 +82,16 @@ const getTrackableTables = (
     return trackableTable;
   });
 
+// adding this export so if the key changes outside code won't get out of sync
+export const tablesQueryKey = (dataSourceName: string) => [
+  'introspected-tables',
+  dataSourceName,
+];
+
 export const useTables = ({ dataSourceName }: UseTablesProps) => {
   const httpClient = useHttpClient();
   return useQuery<TrackableTable[], Error>({
-    queryKey: ['introspected-tables', dataSourceName],
+    queryKey: tablesQueryKey(dataSourceName),
     queryFn: async () => {
       const { metadata } = await exportMetadata({
         httpClient,

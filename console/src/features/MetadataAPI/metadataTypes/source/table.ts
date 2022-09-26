@@ -17,6 +17,24 @@ import {
  */
 export type Table = unknown;
 
+export type MetadataTableConfig = {
+  custom_name?: string;
+  custom_root_fields?: {
+    select?: string;
+    select_by_pk?: string;
+    select_aggregate?: string;
+    select_stream?: string;
+    insert?: string;
+    insert_one?: string;
+    update?: string;
+    update_by_pk?: string;
+    delete?: string;
+    delete_by_pk?: string;
+  };
+  column_config?: Record<string, { custom_name: string; comment: string }>;
+  comment?: string;
+};
+
 export type MetadataTable = {
   /**
    * Table definition
@@ -26,21 +44,7 @@ export type MetadataTable = {
   /**
    * Table configuration
    */
-  configuration?: {
-    custom_root_fields?: {
-      select?: string;
-      select_by_pk?: string;
-      select_aggregate?: string;
-      insert?: string;
-      insert_one?: string;
-      update?: string;
-      update_by_pk?: string;
-      delete?: string;
-      delete_by_pk?: string;
-    };
-    column_config?: Record<string, { custom_name: string; comment: string }>;
-    comment?: string;
-  };
+  configuration?: MetadataTableConfig;
 
   /**
    * Table relationships

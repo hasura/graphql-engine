@@ -1,3 +1,4 @@
+import { TrackingTableFormValues } from '@/components/Services/Data/Schema/tableTrackCustomization/types';
 import { Collapse } from '@/new-components/deprecated';
 import React, { useState } from 'react';
 import { UseFormRegisterReturn, UseFormReturn } from 'react-hook-form';
@@ -41,23 +42,9 @@ const InputField: React.FC<InputFieldProps> = ({
   );
 };
 
-export type FormValues = {
-  custom_name: string;
-  select: string;
-  select_by_pk: string;
-  select_aggregate: string;
-  select_stream: string;
-  insert: string;
-  insert_one: string;
-  update: string;
-  update_by_pk: string;
-  delete: string;
-  delete_by_pk: string;
-};
-
 type TableTrackingCustomizationFormProps = {
   initialTableName: string;
-  formMethods: UseFormReturn<FormValues>;
+  formMethods: UseFormReturn<TrackingTableFormValues>;
 };
 
 export const TableTrackingCustomizationForm: React.FC<TableTrackingCustomizationFormProps> =
