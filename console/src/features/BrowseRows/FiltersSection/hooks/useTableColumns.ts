@@ -31,7 +31,7 @@ export const useTableColumns = ({
       setTableColumns(tableColumnDefinitions);
     }
     fetchTableColumns();
-  }, [dataSourceName, httpClient, table, isUnMounted]);
+  }, [dataSourceName, table, isUnMounted]);
 
   return tableColumns;
 };
