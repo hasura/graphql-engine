@@ -27,5 +27,9 @@ export const ReduxDecorator = (
     devTools: true,
   });
 
-  return story => <Provider store={store}>{story()}</Provider>;
+  return Story => (
+    <Provider store={store}>
+      <Story />
+    </Provider>
+  );
 };

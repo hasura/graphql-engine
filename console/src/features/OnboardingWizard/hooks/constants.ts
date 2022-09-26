@@ -4,7 +4,7 @@ import globals from '@/Globals';
 export const experimentId = growthExperimentsIds.onboardingWizardV1;
 
 export const graphQlMutation = `
-mutation ($projectId: uuid!, $experimentId: String!, $kind: String!) {
+mutation trackExperimentsCohortActivity ($projectId: uuid!, $experimentId: String!, $kind: String!) {
   trackExperimentsCohortActivity(experiment: $experimentId, payload: {kind: $kind, project_id: $projectId}) {
     status
   }
