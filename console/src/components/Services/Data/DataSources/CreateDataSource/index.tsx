@@ -12,7 +12,6 @@ import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getDataSources } from '../../../../../metadata/selector';
 import { HerokuBanner } from './Neon/components/HerokuBanner/Banner';
 import { Neon } from './Neon';
-import _push from '../../push';
 
 interface Props extends InjectedProps {}
 
@@ -38,13 +37,8 @@ const CreateDataSource: React.FC<Props> = ({
           <div className={`${styles.container} mb-md`}>
             <div className="w-full mb-md">
               <Neon
-                dbCreationCallback={dataSourceName => {
-                  dispatch(_push(`/data/${dataSourceName}`));
-                }}
-                errorCallback={() => {
-                  dispatch(_push('/data/manage/connect'));
-                }}
                 allDatabases={allDataSources.map(d => d.name)}
+                dispatch={dispatch}
               />
             </div>
             <HerokuBanner />

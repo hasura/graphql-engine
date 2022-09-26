@@ -1,5 +1,4 @@
 import React from 'react';
-import { MdRefresh } from 'react-icons/md';
 import { ComponentMeta, Story } from '@storybook/react';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
@@ -13,7 +12,10 @@ export default {
 export const Base: Story = () => (
   <NeonBanner
     onClickConnect={() => window.alert('clicked connect button')}
-    status={{ status: 'default', buttonText: 'Create Neon Database for free' }}
+    status={{
+      status: 'default',
+    }}
+    buttonText="Create Neon Database for free"
   />
 );
 Base.play = async ({ canvasElement }) => {
@@ -29,8 +31,11 @@ Base.play = async ({ canvasElement }) => {
 
 export const Loading: Story = () => (
   <NeonBanner
-    onClickConnect={() => window.alert('clicked connect button')}
-    status={{ status: 'loading', buttonText: 'Authenticating' }}
+    status={{
+      status: 'loading',
+    }}
+    buttonText="Authenticating"
+    onClickConnect={() => null}
   />
 );
 Loading.play = async ({ canvasElement }) => {
@@ -45,8 +50,11 @@ Loading.play = async ({ canvasElement }) => {
 
 export const Creating: Story = () => (
   <NeonBanner
-    onClickConnect={() => window.alert('clicked connect button')}
-    status={{ status: 'loading', buttonText: 'Creating Database' }}
+    status={{
+      status: 'loading',
+    }}
+    buttonText="Creating Database"
+    onClickConnect={() => null}
   />
 );
 Creating.play = async ({ canvasElement }) => {
@@ -64,11 +72,11 @@ export const Error: Story = () => (
     onClickConnect={() => window.alert('clicked connect button')}
     status={{
       status: 'error',
-      buttonText: 'Try Again',
-      buttonIcon: <MdRefresh />,
       errorTitle: 'Error creating database',
       errorDescription: 'You have exceeded the free project limit on Neon.',
     }}
+    buttonText="Try Again"
+    icon="refresh"
   />
 );
 Error.play = async ({ canvasElement }) => {

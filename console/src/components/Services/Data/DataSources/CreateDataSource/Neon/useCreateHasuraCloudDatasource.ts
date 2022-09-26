@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { useDispatch } from 'react-redux';
 import { tracingTools } from '@/features/TracingTools';
+import { Dispatch } from '@/types';
 import {
   setDBURLInEnvVars,
   verifyProjectHealthAndConnectDataSource,
@@ -44,12 +44,11 @@ type HasuraDatasourceStatus =
       payload: HasuraDBCreationPayload;
     };
 
-export function useCreateHasuraDatasource(
+export function useCreateHasuraCloudDatasource(
   dbUrl: string,
-  dataSourceName = 'default'
+  dataSourceName = 'default',
+  dispatch: Dispatch
 ) {
-  const dispatch = useDispatch();
-
   const [state, setState] = useState<HasuraDatasourceStatus>({
     status: 'idle',
   });

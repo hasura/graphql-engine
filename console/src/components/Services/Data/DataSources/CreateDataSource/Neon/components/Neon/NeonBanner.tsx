@@ -1,29 +1,34 @@
-import React, { ReactElement } from 'react';
+import React from 'react';
+import { MdRefresh } from 'react-icons/md';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 
+const iconMap = {
+  refresh: <MdRefresh />,
+};
+
+type Status =
+  | {
+      status: 'loading';
+    }
+  | {
+      status: 'error';
+      errorTitle: string;
+      errorDescription: string;
+    }
+  | {
+      status: 'default';
+    };
+
 export type Props = {
+  status: Status;
   onClickConnect: VoidFunction;
-  status:
-    | {
-        status: 'loading';
-        buttonText: string;
-      }
-    | {
-        status: 'error';
-        buttonText: string;
-        buttonIcon: ReactElement;
-        errorTitle: string;
-        errorDescription: string;
-      }
-    | {
-        status: 'default';
-        buttonText: string;
-      };
+  buttonText: string;
+  icon?: keyof typeof iconMap;
 };
 
 export function NeonBanner(props: Props) {
-  const { status, onClickConnect } = props;
+  const { status, onClickConnect, buttonText, icon } = props;
   const isButtonDisabled = status.status === 'loading';
 
   return (
@@ -57,9 +62,9 @@ export function NeonBanner(props: Props) {
             data-testid="neon-connect-db-button"
             mode={status.status === 'loading' ? 'default' : 'primary'}
             isLoading={status.status === 'loading'}
-            loadingText={status.buttonText}
+            loadingText={buttonText}
             size="md"
-            icon={status.status === 'error' ? status.buttonIcon : undefined}
+            icon={icon ? iconMap[icon] : undefined}
             onClick={() => {
               if (!isButtonDisabled) {
                 onClickConnect();
@@ -67,7 +72,7 @@ export function NeonBanner(props: Props) {
             }}
             disabled={isButtonDisabled}
           >
-            {status.buttonText}
+            {props.buttonText}
           </Button>
         </div>
       </div>
