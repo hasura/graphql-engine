@@ -70,7 +70,8 @@ instance Has SchemaOptions SchemaEnvironment where
         { soStringifyNumbers = Options.Don'tStringifyNumbers,
           soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
           soInferFunctionPermissions = Options.InferFunctionPermissions,
-          soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters
+          soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters,
+          soIncludeUpdateManyFields = Options.IncludeUpdateManyFields
         }
 
   modifier :: (SchemaOptions -> SchemaOptions) -> SchemaEnvironment -> SchemaEnvironment

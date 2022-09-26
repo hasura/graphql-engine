@@ -148,6 +148,7 @@ buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customT
                 allActionInfos
                 customTypes
                 role
+                _sccExperimentalFeatures
             )
   let hasuraContexts = fst <$> contexts
       relayContexts = snd <$> contexts
@@ -194,10 +195,15 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
         ) = options
       schemaOptions =
         SchemaOptions
-          stringifyNum
-          dangerousBooleanCollapse
-          functionPermsCtx
-          optimizePermissionFilters
+          { soStringifyNumbers = stringifyNum,
+            soDangerousBooleanCollapse = dangerousBooleanCollapse,
+            soInferFunctionPermissions = functionPermsCtx,
+            soOptimizePermissionFilters = optimizePermissionFilters,
+            soIncludeUpdateManyFields =
+              if EFHideUpdateManyFields `Set.member` expFeatures
+                then Options.DontIncludeUpdateManyFields
+                else Options.IncludeUpdateManyFields
+          }
       schemaContext =
         SchemaContext
           HasuraSchema
@@ -345,17 +351,23 @@ buildRelayRoleContext ::
   [ActionInfo] ->
   AnnotatedCustomTypes ->
   RoleName ->
+  Set.HashSet ExperimentalFeature ->
   m (RoleContext GQLContext)
-buildRelayRoleContext options sources actions customTypes role = do
+buildRelayRoleContext options sources actions customTypes role expFeatures = do
   let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
         functionPermsCtx
         ) = options
       schemaOptions =
         SchemaOptions
-          stringifyNum
-          dangerousBooleanCollapse
-          functionPermsCtx
-          optimizePermissionFilters
+          { soStringifyNumbers = stringifyNum,
+            soDangerousBooleanCollapse = dangerousBooleanCollapse,
+            soInferFunctionPermissions = functionPermsCtx,
+            soOptimizePermissionFilters = optimizePermissionFilters,
+            soIncludeUpdateManyFields =
+              if EFHideUpdateManyFields `Set.member` expFeatures
+                then Options.DontIncludeUpdateManyFields
+                else Options.IncludeUpdateManyFields
+          }
       -- TODO: At the time of writing this, remote schema queries are not supported in relay.
       -- When they are supported, we should get do what `buildRoleContext` does. Since, they
       -- are not supported yet, we use `mempty` below for `RemoteSchemaMap`.

@@ -341,6 +341,8 @@ pgkBuildTableUpdateMutationFields ::
   C.GQLNameIdentifier ->
   SchemaT r m [FieldParser n (IR.AnnotatedUpdateG ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
 pgkBuildTableUpdateMutationFields mkRootFieldName scenario sourceInfo tableName tableInfo gqlName = do
+  -- check in schema options whether we should include multiple updates field
+  Options.SchemaOptions {soIncludeUpdateManyFields} <- retrieve id
   roleName <- retrieve scRole
   concat . maybeToList <$> runMaybeT do
     updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
@@ -366,7 +368,13 @@ pgkBuildTableUpdateMutationFields mkRootFieldName scenario sourceInfo tableName 
           tableInfo
           gqlName
 
-      pure $ singleUpdates ++ maybeToList multiUpdate
+      -- we only include the multiUpdate field if the
+      -- experimental feature 'hide_update_many_fields' is off
+      pure $ case soIncludeUpdateManyFields of
+        Options.IncludeUpdateManyFields ->
+          singleUpdates ++ maybeToList multiUpdate
+        Options.DontIncludeUpdateManyFields ->
+          singleUpdates
 
 -- | Create a parser for 'update_table_many'. This function is very similar to
 -- both 'GSB.buildTableUpdateMutationFields' and
