@@ -30,10 +30,10 @@ forall a. Monoid a =&gt; a
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_componentsSchemas :: Definitions Schema
 </span><span class="hs-identifier hs-var">_componentsSchemas</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Definitions Schema
-</span><a href="#local-6989586621689668929"><span class="hs-identifier hs-var">definitions</span></a></span><span class="hs-special">}</span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689670489"><span class="hs-identifier hs-var">definitions</span></a></span><span class="hs-special">}</span><span class="hs-special">}</span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-27"></span><span>    </span><span id="local-6989586621689668929"><span class="annot"><span class="annottext">definitions :: Definitions Schema
-</span><a href="#local-6989586621689668929"><span class="hs-identifier hs-var hs-var">definitions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definitions Schema, Schema) -&gt; Definitions Schema
+</span><span id="line-27"></span><span>    </span><span id="local-6989586621689670489"><span class="annot"><span class="annottext">definitions :: Definitions Schema
+</span><a href="#local-6989586621689670489"><span class="hs-identifier hs-var hs-var">definitions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definitions Schema, Schema) -&gt; Definitions Schema
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">((Definitions Schema, Schema) -&gt; Definitions Schema)
 -&gt; (Definitions Schema, Schema) -&gt; Definitions Schema
@@ -56,9 +56,9 @@ forall a. Monoid a =&gt; a
 -&gt; (Definitions Schema, Schema)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-29"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">NamedSchema</span></span><span> </span><span id="local-6989586621689668926"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689668926"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621689668925"><span class="annot"><span class="annottext">Schema
-</span><a href="#local-6989586621689668925"><span class="hs-identifier hs-var">codecSchema</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Proxy MetadataDTO -&gt; Declare (Definitions Schema) NamedSchema
+</span><span id="line-29"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">NamedSchema</span></span><span> </span><span id="local-6989586621689670486"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689670486"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621689670485"><span class="annot"><span class="annottext">Schema
+</span><a href="#local-6989586621689670485"><span class="hs-identifier hs-var">codecSchema</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Proxy MetadataDTO -&gt; Declare (Definitions Schema) NamedSchema
 forall value.
 HasCodec value =&gt;
 Proxy value -&gt; Declare (Definitions Schema) NamedSchema
@@ -76,10 +76,10 @@ forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
 forall a. a -&gt; Maybe a -&gt; a
 </span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MetadataDTO&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689668926"><span class="hs-identifier hs-var">mName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Schema
-</span><a href="#local-6989586621689668925"><span class="hs-identifier hs-var">codecSchema</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689670486"><span class="hs-identifier hs-var">mName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Schema
+</span><a href="#local-6989586621689670485"><span class="hs-identifier hs-var">codecSchema</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-31"></span><span>        </span><span class="annot"><span class="annottext">Schema -&gt; Declare (Definitions Schema) Schema
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Schema
-</span><a href="#local-6989586621689668925"><span class="hs-identifier hs-var">codecSchema</span></a></span><span>
+</span><a href="#local-6989586621689670485"><span class="hs-identifier hs-var">codecSchema</span></a></span><span>
 </span><span id="line-32"></span></pre></body></html>
