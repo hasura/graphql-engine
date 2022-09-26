@@ -204,13 +204,17 @@ export const DataSource = (httpClient: AxiosInstance) => ({
       NOTE: We need a set of metadata types. Until then dataSource is type-casted to `any` because `configuration` varies from DB to DB and the old metadata types contain 
       only pg databases at the moment. Changing the old types will require us to modify multiple legacy files
     */
+
     const getTrackableTables = drivers[kind].introspection?.getTrackableTables;
-    if (getTrackableTables)
+
+    if (getTrackableTables) {
       return getTrackableTables({
         dataSourceName: dataSource.name,
         configuration: dataSource.configuration,
         httpClient,
       });
+    }
+
     return Feature.NotImplemented;
   },
   getDatabaseHierarchy: async ({

@@ -1,11 +1,11 @@
-import React from 'react';
+import { useTrackTable } from '@/features/Data';
 import { Button } from '@/new-components/Button';
 import { CardedTable } from '@/new-components/CardedTable';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { useTrackSelectedTables } from '../hooks/useTrackSelectedTables';
+import React from 'react';
 import { useCheckRows } from '../hooks/useCheckRows';
-import { RenderTableRow } from './RenderTableRow';
 import { TrackableTable } from '../types';
+import { TableRow } from './TableRow';
 
 interface TrackTableProps {
   dataSourceName: string;
@@ -16,19 +16,19 @@ export const TrackedTables = (props: TrackTableProps) => {
   const filteredTables = props.tables;
 
   const checkboxRef = React.useRef<HTMLInputElement>(null);
+
   const { checkedIds, onCheck, allChecked, toggleAll, reset, inputStatus } =
     useCheckRows(filteredTables || []);
+
   React.useEffect(() => {
     if (!checkboxRef.current) return;
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
   }, [inputStatus]);
 
-  const { unTrackSelectedTables } = useTrackSelectedTables(
-    props.dataSourceName
-  );
+  const { untrackTables } = useTrackTable(props.dataSourceName);
 
   const onClick = () => {
-    unTrackSelectedTables(
+    untrackTables(
       filteredTables.filter(({ name }) => checkedIds.includes(name))
     );
     reset();
@@ -69,18 +69,16 @@ export const TrackedTables = (props: TrackTableProps) => {
         </CardedTable.TableHead>
 
         <CardedTable.TableBody>
-          {filteredTables.map(table => {
-            return (
-              <RenderTableRow
-                key={table.id}
-                table={table}
-                dataSourceName={props.dataSourceName}
-                checked={checkedIds.includes(table.id)}
-                reset={reset}
-                onChange={() => onCheck(table.id)}
-              />
-            );
-          })}
+          {filteredTables.map(table => (
+            <TableRow
+              key={table.id}
+              table={table}
+              dataSourceName={props.dataSourceName}
+              checked={checkedIds.includes(table.id)}
+              reset={reset}
+              onChange={() => onCheck(table.id)}
+            />
+          ))}
         </CardedTable.TableBody>
       </CardedTable.Table>
     </div>
