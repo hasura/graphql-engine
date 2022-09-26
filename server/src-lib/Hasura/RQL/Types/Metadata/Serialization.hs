@@ -73,6 +73,7 @@ import Hasura.RQL.Types.Metadata.Common
 import Hasura.RQL.Types.Network (Network, emptyNetwork)
 import Hasura.RQL.Types.Permission
   ( AllowedRootFields (..),
+    DelPerm (..),
     DelPermDef,
     InsPerm (..),
     InsPermDef,
@@ -298,7 +299,17 @@ sourcesToOrdJSONList sources =
                         <> catMaybes [maybeSetToMaybeOrdPair @b set, backendOnlyPair]
 
           delPermDefToOrdJSON :: Backend b => DelPermDef b -> AO.Value
-          delPermDefToOrdJSON = permDefToOrdJSON AO.toOrdered
+          delPermDefToOrdJSON = permDefToOrdJSON delPermToOrdJSON
+            where
+              delPermToOrdJSON (DelPerm filter' backendOnly) =
+                let backendOnlyPair =
+                      if backendOnly
+                        then Just ("backend_only", AO.toOrdered backendOnly)
+                        else Nothing
+                 in AO.object $
+                      [ ("filter", AO.toOrdered filter')
+                      ]
+                        <> catMaybes [backendOnlyPair]
 
           permDefToOrdJSON :: (a b -> AO.Value) -> PermDef b a -> AO.Value
           permDefToOrdJSON permToOrdJSON (PermDef role permission comment) =
