@@ -11,7 +11,7 @@
 </span><span id="line-11"></span><span class="hs-comment">-- | Revision 2 of the Metadata export format. Note that values of the types,</span><span>
 </span><span id="line-12"></span><span class="hs-comment">-- 'PlaceholderArray' and 'PlaceholderObject' are placeholders that will</span><span>
 </span><span id="line-13"></span><span class="hs-comment">-- eventually be expanded to represent more detail.</span><span>
-</span><span id="line-14"></span><span id="local-6989586621689609538"><span id="local-6989586621689609539"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataV2"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-var">MetadataV2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetadataV2"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-var">MetadataV2</span></a></span></span><span>
+</span><span id="line-14"></span><span id="local-6989586621689611027"><span id="local-6989586621689611028"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataV2"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-var">MetadataV2</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetadataV2"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-var">MetadataV2</span></a></span></span><span>
 </span><span id="line-15"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="metaV2Actions"><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2Actions"><span class="hs-identifier hs-var hs-var">metaV2Actions</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-16"></span><span>    </span><span id="metaV2Allowlist"><span class="annot"><span class="annottext">MetadataV2 -&gt; Maybe PlaceholderArray
@@ -29,7 +29,7 @@
 </span><span id="line-22"></span><span>    </span><span id="metaV2Tables"><span class="annot"><span class="annottext">MetadataV2 -&gt; PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.MetadataV2.html#metaV2Tables"><span class="hs-identifier hs-var hs-var">metaV2Tables</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderArray"><span class="hs-identifier hs-type">PlaceholderArray</span></a></span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689609523"><span id="local-6989586621689609525"><span id="local-6989586621689609527"><span class="annot"><span class="annottext">Int -&gt; MetadataV2 -&gt; ShowS
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689611012"><span id="local-6989586621689611014"><span id="local-6989586621689611016"><span class="annot"><span class="annottext">Int -&gt; MetadataV2 -&gt; ShowS
 [MetadataV2] -&gt; ShowS
 MetadataV2 -&gt; String
 (Int -&gt; MetadataV2 -&gt; ShowS)
@@ -44,7 +44,7 @@ show :: MetadataV2 -&gt; String
 $cshow :: MetadataV2 -&gt; String
 showsPrec :: Int -&gt; MetadataV2 -&gt; ShowS
 $cshowsPrec :: Int -&gt; MetadataV2 -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689609518"><span id="local-6989586621689609520"><span class="annot"><span class="annottext">MetadataV2 -&gt; MetadataV2 -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689611007"><span id="local-6989586621689611009"><span class="annot"><span class="annottext">MetadataV2 -&gt; MetadataV2 -&gt; Bool
 (MetadataV2 -&gt; MetadataV2 -&gt; Bool)
 -&gt; (MetadataV2 -&gt; MetadataV2 -&gt; Bool) -&gt; Eq MetadataV2
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -61,7 +61,7 @@ forall a.
 $cto :: forall x. Rep MetadataV2 x -&gt; MetadataV2
 $cfrom :: forall x. MetadataV2 -&gt; Rep MetadataV2 x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689609510"><span id="local-6989586621689609512"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataV2]
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689610999"><span id="local-6989586621689611001"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataV2]
 Value -&gt; Parser MetadataV2
 (Value -&gt; Parser MetadataV2)
 -&gt; (Value -&gt; Parser [MetadataV2]) -&gt; FromJSON MetadataV2
@@ -71,7 +71,7 @@ parseJSONList :: Value -&gt; Parser [MetadataV2]
 $cparseJSONList :: Value -&gt; Parser [MetadataV2]
 parseJSON :: Value -&gt; Parser MetadataV2
 $cparseJSON :: Value -&gt; Parser MetadataV2
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689609501"><span id="local-6989586621689609503"><span id="local-6989586621689609505"><span id="local-6989586621689609507"><span class="annot"><span class="annottext">[MetadataV2] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689610990"><span id="local-6989586621689610992"><span id="local-6989586621689610994"><span id="local-6989586621689610996"><span class="annot"><span class="annottext">[MetadataV2] -&gt; Value
 [MetadataV2] -&gt; Encoding
 MetadataV2 -&gt; Value
 MetadataV2 -&gt; Encoding
@@ -94,7 +94,7 @@ toEncoding :: MetadataV2 -&gt; Encoding
 $ctoEncoding :: MetadataV2 -&gt; Encoding
 toJSON :: MetadataV2 -&gt; Value
 $ctoJSON :: MetadataV2 -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689609497"><span class="annot"><span class="annottext">Typeable MetadataV2
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689610986"><span class="annot"><span class="annottext">Typeable MetadataV2
 Typeable MetadataV2
 -&gt; (Proxy MetadataV2 -&gt; Declare (Definitions Schema) NamedSchema)
 -&gt; ToSchema MetadataV2
@@ -108,9 +108,9 @@ $cdeclareNamedSchema :: Proxy MetadataV2 -&gt; Declare (Definitions Schema) Name
 $cp1ToSchema :: Typeable MetadataV2
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">OpenApi.ToSchema</span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689609493"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-28"></span><span>  </span><span id="local-6989586621689609491"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV2
-</span><a href="#local-6989586621689609491"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689610982"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV2.html#MetadataV2"><span class="hs-identifier hs-type">MetadataV2</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621689610980"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV2
+</span><a href="#local-6989586621689610980"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-29"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; ObjectCodec MetadataV2 MetadataV2 -&gt; JSONCodec MetadataV2
 forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
