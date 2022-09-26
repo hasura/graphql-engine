@@ -1,5 +1,4 @@
 import React from 'react';
-import { MdRefresh } from 'react-icons/md';
 import { ComponentMeta, Story } from '@storybook/react';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
@@ -12,8 +11,9 @@ export default {
 
 export const Base: Story = () => (
   <NeonBanner
-    onButtonClick={() => window.alert('clicked connect button')}
-    status={{ status: 'default', buttonText: 'Create a Neon Database' }}
+    onClickConnect={() => window.alert('clicked connect button')}
+    status={{ status: 'default' }}
+    buttonText="Create a Neon Database"
   />
 );
 Base.play = async ({ canvasElement }) => {
@@ -31,8 +31,9 @@ Base.play = async ({ canvasElement }) => {
 
 export const Creating: Story = () => (
   <NeonBanner
-    onButtonClick={() => window.alert('clicked connect button')}
-    status={{ status: 'loading', buttonText: 'Creating Neon Database' }}
+    onClickConnect={() => window.alert('clicked connect button')}
+    status={{ status: 'loading' }}
+    buttonText="Creating Neon Database"
   />
 );
 Creating.play = async ({ canvasElement }) => {
@@ -51,14 +52,14 @@ Creating.play = async ({ canvasElement }) => {
 
 export const Error: Story = () => (
   <NeonBanner
-    onButtonClick={() => window.alert('clicked connect button')}
+    onClickConnect={() => window.alert('clicked connect button')}
     status={{
       status: 'error',
-      buttonText: 'Try Again',
-      buttonIcon: <MdRefresh />,
       errorTitle: 'Your Neon Database connection failed',
       errorDescription: 'You have exceeded the free project limit on Neon.',
     }}
+    buttonText="Try Again"
+    icon="refresh"
   />
 );
 Error.play = async ({ canvasElement }) => {
