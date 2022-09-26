@@ -7,7 +7,7 @@
    two types have the relevant info of a type equal. This typeclass is almost
    like the <code><a href="file:///root/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/Data-Eq.html#t:Eq" title="Data.Eq">Eq</a></code> typeclass but gives the flexibility of having custom
    rules to check the equality of only the relevant data. Some use cases of
-   it are:</p><ol><li>When comparing two <code>ScalarTypeDefinition</code>, the description of the type
+   it are:</p><ol><li>When comparing two <code><a href="file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/Language-GraphQL-Draft-Syntax.html#t:ScalarTypeDefinition" title="Language.GraphQL.Draft.Syntax">ScalarTypeDefinition</a></code>, the description of the type
       doesn't matter.</li><li>The directives are represented as a list, but the order of the directives don't matter</li></ol><p>Note: When there's nothing there to discard in a type, the <code><a href="Hasura-RQL-Types-Roles-Internal.html#t:OnlyRelevantEq" title="Hasura.RQL.Types.Roles.Internal">OnlyRelevantEq</a></code> can be derived
    as (if needed)</p><p>instance OnlyRelevantEq a where
      relevantEq = (==)</p><p>NOTE: Do not export this type class from this module, as it is only intended to be used in
