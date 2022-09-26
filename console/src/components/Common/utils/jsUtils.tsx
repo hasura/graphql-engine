@@ -350,6 +350,9 @@ export const downloadObjectAsJsonFile = (fileName: string, object: any) => {
 
   downloadFile(fileNameWithSuffix, dataString);
 };
+
+export const encodeFileContent = (data: string) => encodeURIComponent(data);
+
 export const downloadObjectAsCsvFile = (
   fileName: string,
   rows: Record<string, unknown>[] = []
@@ -362,20 +365,21 @@ export const downloadObjectAsCsvFile = (
           i =>
             `"${
               typeof i === 'string' && isJsonString(i)
-                ? i.replace(/"/g, `'`) // in csv, a cell with double quotes and comma will result is bad formating
+                ? i.replace(/"/g, `'`) // in csv, a cell with double quotes and comma will result in bad formatting
                 : JSON.stringify(i, null, 2).replace(/"/g, `'`)
             }"`
         )
         .join(',')
     )
     .join('\n');
-  const csvContent = `data:text/csv;charset=utf-8,${titleRowString}\n${rowsString}`;
+
+  const csvContent = `${titleRowString}\n${rowsString}`;
+  const encodedCsvContent = encodeFileContent(csvContent);
+  const csvDataString = `data:text/csv;charset=utf-8,${encodedCsvContent}`;
 
   const fileNameWithSuffix = `${fileName}.csv`;
 
-  const encodedUri = encodeURI(csvContent);
-
-  downloadFile(fileNameWithSuffix, encodedUri);
+  downloadFile(fileNameWithSuffix, csvDataString);
 };
 export const getFileExtensionFromFilename = (filename: string) => {
   const matches = filename.match(/\.[0-9a-z]+$/i);
