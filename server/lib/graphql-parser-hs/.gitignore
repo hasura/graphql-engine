@@ -1,0 +1,11 @@
+# Haskell
+/dist-newstyle
+cabal.project.local
+
+# direnv
+/.direnv
+/.envrc.local
+
+# Nix
+/result
+/result-*
