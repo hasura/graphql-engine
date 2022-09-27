@@ -81,8 +81,8 @@ schemaInspectionTests opts = describe "Schema and Source Inspection" $ do
               |]
             )
             [yaml|
-              - - Artist
               - - Album
+              - - Artist
               - - Customer
               - - Employee
               - - Genre

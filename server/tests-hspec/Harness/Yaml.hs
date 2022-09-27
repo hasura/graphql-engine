@@ -16,13 +16,13 @@ import Data.Aeson
   )
 import Data.Aeson qualified as Aeson
 import Data.Aeson.KeyMap qualified as KM
-import Data.Aeson.KeyMap.Extended qualified as KM
-import Data.Aeson.Text qualified as Aeson.Text
+import Data.Aeson.KeyMap.Extended qualified as KM (mapWithKey)
 import Data.List (permutations)
+import Data.Set (Set)
+import Data.Set qualified as Set
 import Data.Text qualified as T
 import Data.Text.Encoding (decodeUtf8With)
 import Data.Text.Encoding.Error qualified as TE
-import Data.Text.Lazy qualified as LT
 import Data.Vector qualified as V
 import Data.Vector qualified as Vector
 import Data.Yaml qualified
@@ -66,6 +66,43 @@ combinationsObjectUsingValue fn variants = combinationsObject fn (map fromObject
 shouldReturnYaml :: HasCallStack => Fixture.Options -> IO Value -> Value -> IO ()
 shouldReturnYaml = shouldReturnYamlF pure
 
+-- | Because JSON supports numbers only up to 32 bits, some backends (such as
+-- BigQuery) send numbers as strings instead. So, for example, the floating
+-- point @2.0@ will reach us as @'2.0'@.
+--
+-- This presents an issue when we want to write tests across multiple backends:
+-- what do we do if a test should match @2.0@ for Postgres and @'2.0'@ for
+-- BigQuery? Worse still, what if it should match @'2.0'@ for BigQuery and
+-- @'2.00000000'@ for CockroachDB?
+--
+-- This function attempts to solve the problem by zipping the expected output
+-- and the actual output together, looking for any instance where we expect a
+-- number, but find a string. In these instances, we replace the string with
+-- the result of parsing that string _into_ a number - specifically, a
+-- @Scientific@. This works because @Scientific@ can support 64-bit numbers
+-- (and any arbitrary precision, for that matter), so it should be able to
+-- handle any stringified number we receive.
+--
+-- If the zipping doesn't line up, we assume this is probably a bad result and
+-- consequently should result in a failing test. In these cases, we leave the
+-- actual output exactly as-is, and wait for the test to fail.
+parseToMatch :: Value -> Value -> Value
+parseToMatch (Array expected) (Array actual) =
+  Array (Vector.zipWith parseToMatch expected actual)
+parseToMatch (Number _) (String text) =
+  case readMaybe (T.unpack text) of
+    Just actual -> Number actual
+    Nothing -> String text
+parseToMatch (Object expected) (Object actual) = do
+  let walk :: KM.KeyMap Value -> Aeson.Key -> Value -> Value
+      walk reference key current =
+        case KM.lookup key reference of
+          Just this -> parseToMatch this current
+          Nothing -> current
+
+  Object (KM.mapWithKey (walk expected) actual)
+parseToMatch _ actual = actual
+
 -- | The function @transform@ converts the returned YAML
 -- prior to comparison. It exists in IO in order to be able
 -- to easily throw exceptions for hspec purposes.
@@ -76,32 +113,15 @@ shouldReturnYaml = shouldReturnYamlF pure
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
 shouldReturnYamlF :: HasCallStack => (Value -> IO Value) -> Fixture.Options -> IO Value -> Value -> IO ()
-shouldReturnYamlF transform options actualIO rawExpected = do
-  actual <- transform =<< actualIO
+shouldReturnYamlF transform options actualIO expected = do
+  actual <-
+    actualIO >>= transform >>= \actual ->
+      pure
+        if Fixture.stringifyNumbers options
+          then parseToMatch expected actual
+          else actual
 
-  let Fixture.Options {stringifyNumbers} = options
-      expected' =
-        if stringifyNumbers
-          then stringifyExpectedToActual rawExpected actual
-          else rawExpected
-
-  expected <- transform expected'
-
-  shouldBeYaml actual expected
-
--- | TODO(jkachmar): Document.
-stringifyExpectedToActual :: Value -> Value -> Value
-stringifyExpectedToActual (Aeson.Number n) (Aeson.String _) =
-  Aeson.String (LT.toStrict . Aeson.Text.encodeToLazyText $ n)
-stringifyExpectedToActual (Aeson.Object km) (Aeson.Object km') =
-  let stringifyKV k v =
-        case KM.lookup k km' of
-          Just v' -> stringifyExpectedToActual v v'
-          Nothing -> v
-   in Aeson.Object (KM.mapWithKey stringifyKV km)
-stringifyExpectedToActual (Aeson.Array as) (Aeson.Array bs) =
-  Aeson.Array (Vector.zipWith stringifyExpectedToActual as bs)
-stringifyExpectedToActual expected _ = expected
+  actual `shouldBe` expected
 
 -- | The action @actualIO@ should produce the @expected@ YAML,
 -- represented (by the yaml package) as an aeson 'Value'.
@@ -109,16 +129,20 @@ stringifyExpectedToActual expected _ = expected
 -- We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
 shouldReturnOneOfYaml :: HasCallStack => Fixture.Options -> IO Value -> [Value] -> IO ()
-shouldReturnOneOfYaml options actualIO expecteds = do
+shouldReturnOneOfYaml Fixture.Options {stringifyNumbers} actualIO candidates = do
   actual <- actualIO
 
-  let Fixture.Options {stringifyNumbers} = options
-      fixNumbers expected =
-        if stringifyNumbers
-          then stringifyExpectedToActual expected actual
-          else expected
+  let expecteds :: Set Value
+      expecteds = Set.fromList candidates
 
-  shouldContain (map (Visual . fixNumbers) expecteds) [Visual actual]
+      actuals :: Set Value
+      actuals
+        | stringifyNumbers = Set.map (`parseToMatch` actual) expecteds
+        | otherwise = Set.singleton actual
+
+  case Set.lookupMin (Set.intersection expecteds actuals) of
+    Just match -> Visual match `shouldBe` Visual actual
+    Nothing -> map Visual (Set.toList expecteds) `shouldContain` [Visual actual]
 
 -- | We use 'Visual' internally to easily display the 'Value' as YAML
 -- when the test suite uses its 'Show' instance.
