@@ -14,8 +14,10 @@
   response:
     code: unexpected
     error: >-
-      found duplicate fields in selection set: ['user' (generated for [table
-      user in source default, table users in source default])]
+      Encountered conflicting definitions in the selection set for
+      'subscription_root' for field 'user' defined in [table user in source
+      default, table users in source default]. Fields must not be defined more
+      than once across all sources.
     path: $.args
   query:
     type: track_table

@@ -4,15 +4,17 @@ url: /v1/query
 response:
   code: unexpected
   error: >-
-    found duplicate fields in selection set for mutation root: ['update_article'
-    (generated for [table article in source default, table author in source default]),
-    'delete_article' (generated for [table article in source default, table author
-    in source default]), 'update_article_many', 'insert_article_one' (generated
-    for [table article in source default, table author in source default]), 'update_article_by_pk'
-    (generated for [table article in source default, table author in source default]),
-    'delete_article_by_pk' (generated for [table article in source default, table
-    author in source default]), 'insert_article' (generated for [table article in
-    source default, table author in source default])]
+    Encountered conflicting definitions in the selection set for 'mutation_root'
+    for fields: ['update_article' defined in [table article in source default,
+    table author in source default], 'delete_article' defined in [table article
+    in source default, table author in source default], 'update_article_many',
+    'insert_article_one' defined in [table article in source default, table
+    author in source default], 'update_article_by_pk' defined in [table article
+    in source default, table author in source default], 'delete_article_by_pk'
+    defined in [table article in source default, table author in source
+    default], 'insert_article' defined in [table article in source default,
+    table author in source default]]. Fields must not be defined more than once
+    across all sources.
   path: $.args
 query:
   type: set_table_customization

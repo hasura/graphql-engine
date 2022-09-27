@@ -185,12 +185,13 @@ safeSelectionSet ::
   Maybe Description ->
   [FieldParser origin m a] ->
   n (Parser origin 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
-safeSelectionSet name description fields
-  | null duplicates = pure $ selectionSetObject name description fields []
-  | otherwise =
-    throwError $ case description of
-      Nothing -> "found duplicate fields in selection set: " <> duplicatesList
-      Just (Description d) -> "found duplicate fields in selection set for " <> toErrorMessage d <> ": " <> duplicatesList
+safeSelectionSet name description fields =
+  case duplicatesList of
+    [] -> pure $ selectionSetObject name description fields []
+    -- singular
+    [duplicate] -> throwError $ "Encountered conflicting definitions in the selection set for " <> toErrorValue name <> " for field " <> duplicate <> ". Fields must not be defined more than once across all sources."
+    -- plural
+    printedDuplicates -> throwError $ "Encountered conflicting definitions in the selection set for " <> toErrorValue name <> " for fields: " <> toErrorValue printedDuplicates <> ". Fields must not be defined more than once across all sources."
   where
     namesOrigins :: HashMap Name [Maybe origin]
     namesOrigins = M.fromListWith (<>) $ (dName &&& (pure . dOrigin)) . fDefinition <$> fields
@@ -202,10 +203,10 @@ safeSelectionSet name description fields
        in if
               | null origins -> toErrorValue fieldName
               | any Maybe.isNothing originsM ->
-                toErrorValue fieldName <> " (generated for " <> toErrorValue origins <> " and of unknown origin)"
+                toErrorValue fieldName <> " defined in " <> toErrorValue origins <> " and of unknown origin"
               | otherwise ->
-                toErrorValue fieldName <> " (generated for " <> toErrorValue origins <> ")"
-    duplicatesList = toErrorValue $ printEntry <$> M.toList duplicates
+                toErrorValue fieldName <> " defined in " <> toErrorValue origins
+    duplicatesList = printEntry <$> M.toList duplicates
 
 -- Should this rather take a non-empty `FieldParser` list?
 -- See also Note [Selectability of tables].
