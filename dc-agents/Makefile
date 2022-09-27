@@ -36,7 +36,7 @@ start-reference-agent:
 start-sqlite-agent:
 	npm start -w sqlite
 
-TESTS_DC_API := cabal run test:tests-dc-api --
+TESTS_DC_API := cabal run dc-api:test:tests-dc-api --
 
 .PHONY: generate-types
 ## generate-types: Generates the TypeScript API types in dc-api-types

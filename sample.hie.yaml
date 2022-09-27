@@ -1,9 +1,9 @@
 cradle:
   cabal:
-    - path: "./server/src-dc-api"
-      component: "graphql-engine:lib:dc-api"
-    - path: "./server/tests-dc-api"
-      component: "graphql-engine:test:tests-dc-api"
+    - path: "./server/lib/dc-api/src"
+      component: "dc-api:lib:dc-api"
+    - path: "./server/lib/dc-api/test"
+      component: "dc-api:test:tests-dc-api"
 
     - path: "./server/src-lib"
       component: "graphql-engine:lib:graphql-engine"

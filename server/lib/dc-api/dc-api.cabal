@@ -1,0 +1,146 @@
+cabal-version: 3.0
+name: dc-api
+version: 1.0.0
+extra-source-files:
+  test/Test/Data/ChinookData.xml.gz
+  test/Test/Data/schema-tables.json
+
+flag profiling
+  description: Configures the project to be profiling-compatible
+  default: False
+  manual: True
+
+common common-all
+  default-language: Haskell2010
+  default-extensions:
+    BlockArguments
+    DataKinds
+    DeriveDataTypeable
+    DeriveFunctor
+    DeriveGeneric
+    DerivingStrategies
+    DerivingVia
+    FlexibleContexts
+    GADTs
+    GeneralizedNewtypeDeriving
+    ImportQualifiedPost
+    LambdaCase
+    MultiParamTypeClasses
+    NamedFieldPuns
+    OverloadedStrings
+    RankNTypes
+    RecordWildCards
+    ScopedTypeVariables
+    TupleSections
+    TypeApplications
+    TypeFamilies
+    TypeOperators
+
+library
+  import: common-all
+  hs-source-dirs: src
+
+  build-depends:
+    aeson,
+    autodocodec,
+    autodocodec-openapi3,
+    base,
+    bytestring,
+    deepseq,
+    extra,
+    graphql-parser,
+    hashable,
+    insert-ordered-containers,
+    lens,
+    lens-aeson,
+    openapi3,
+    scientific,
+    servant,
+    servant-client,
+    servant-client-core,
+    servant-openapi3,
+    text,
+    unordered-containers,
+    http-media
+
+  if !flag(profiling)
+    -- ghc-heap-view can't be built with profiling
+    build-depends: ghc-heap-view
+
+  exposed-modules:
+    Autodocodec.Extended
+    Hasura.Backends.DataConnector.API
+    Hasura.Backends.DataConnector.API.V0
+    Hasura.Backends.DataConnector.API.V0.Aggregate
+    Hasura.Backends.DataConnector.API.V0.Capabilities
+    Hasura.Backends.DataConnector.API.V0.Column
+    Hasura.Backends.DataConnector.API.V0.ConfigSchema
+    Hasura.Backends.DataConnector.API.V0.Expression
+    Hasura.Backends.DataConnector.API.V0.OrderBy
+    Hasura.Backends.DataConnector.API.V0.Query
+    Hasura.Backends.DataConnector.API.V0.Explain
+    Hasura.Backends.DataConnector.API.V0.Raw
+    Hasura.Backends.DataConnector.API.V0.Relationships
+    Hasura.Backends.DataConnector.API.V0.Scalar
+    Hasura.Backends.DataConnector.API.V0.Schema
+    Hasura.Backends.DataConnector.API.V0.Table
+
+test-suite tests-dc-api
+  import: common-all
+  type: exitcode-stdio-1.0
+  build-depends:
+    Diff,
+    aeson,
+    ansi-terminal,
+    autodocodec,
+    autodocodec-openapi3,
+    base,
+    bytestring,
+    case-insensitive,
+    data-fix,
+    deepseq,
+    dc-api,
+    file-embed,
+    hashable,
+    hspec,
+    hspec-core,
+    http-client,
+    lens,
+    lens-aeson,
+    mtl,
+    network-uri,
+    openapi3,
+    optparse-applicative,
+    scientific,
+    servant,
+    servant-client,
+    servant-client-core,
+    servant-openapi3,
+    text,
+    unordered-containers,
+    vector,
+    xml-conduit,
+    xml-lens,
+    yaml,
+    zlib
+  hs-source-dirs: test
+  -- Turning off optimizations is intentional; tests aren't
+  -- performance sensitive and waiting for compilation is a problem.
+  ghc-options: -Wall -O0 -threaded
+  main-is: Main.hs
+  other-modules:
+    Command
+    Paths_dc_api
+    Test.Data
+    Test.CapabilitiesSpec
+    Test.Expectations
+    Test.HealthSpec
+    Test.MetricsSpec
+    Test.ExplainSpec
+    Test.QuerySpec
+    Test.QuerySpec.AggregatesSpec
+    Test.QuerySpec.BasicSpec
+    Test.QuerySpec.FilteringSpec
+    Test.QuerySpec.OrderBySpec
+    Test.QuerySpec.RelationshipsSpec
+    Test.SchemaSpec

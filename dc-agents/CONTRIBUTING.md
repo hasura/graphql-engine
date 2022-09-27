@@ -7,7 +7,7 @@ Requirements:
 Once node is installed, run `npm ci` to restore all npm packages.
 
 ## Project Structure
-- `dc-api-types` - These are the TypeScript types, generated from the OpenAPI spec of the Data Connector Agent API. The OpenAPI spec is generated from our Haskell types in `/server/src-dc-api`.
+- `dc-api-types` - These are the TypeScript types, generated from the OpenAPI spec of the Data Connector Agent API. The OpenAPI spec is generated from our Haskell types in `/server/lib/dc-api/src`.
 - `reference` - The Reference agent that serves as an example implementation of a Data Connector agent
 - `sqlite` - The SQLite Data Connector agent
 - `sdk` - Assets that go into the Data Connector SDK zip file

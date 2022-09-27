@@ -90,7 +90,7 @@ The dataset used for testing the reference agent is sourced from:
 Run:
 
 ```sh
-cabal run graphql-engine:test:tests-dc-api -- test --agent-base-url http://localhost:8100 --agent-config '{"db": "db.chinook2.sqlite"}'
+cabal run dc-api:test:tests-dc-api -- test --agent-base-url http://localhost:8100 --agent-config '{"db": "db.chinook2.sqlite"}'
 ```
 
 From the HGE repo.

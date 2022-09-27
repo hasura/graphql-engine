@@ -22,7 +22,7 @@ import Data.Text.Encoding qualified as Text
 import Data.Version (showVersion)
 import Hasura.Backends.DataConnector.API qualified as API
 import Options.Applicative
-import Paths_graphql_engine qualified as PackageInfo
+import Paths_dc_api qualified as PackageInfo
 import Servant.Client (BaseUrl, parseBaseUrl)
 import Prelude
 
