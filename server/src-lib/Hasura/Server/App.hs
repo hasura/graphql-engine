@@ -715,6 +715,7 @@ configApiGetHandler serverCtx@ServerCtx {..} consoleAssetsDir =
                 (ES._ssStreamQueryOptions $ scSubscriptionState)
                 consoleAssetsDir
                 scExperimentalFeatures
+                scEnabledAPIs
         return (emptyHttpLogMetadata @m, JSONResp $ HttpResponse (encJFromJValue res) [])
 
 data HasuraApp = HasuraApp
