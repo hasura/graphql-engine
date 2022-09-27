@@ -59,7 +59,7 @@ spec = do
                 Just $
                   Fixture.defaultOptions
                     { Fixture.stringifyNumbers = True,
-                      Fixture.skipTests = Just "Cockroach disabled pending oid 114 fix https://github.com/hasura/graphql-engine-mono/issues/5984"
+                      Fixture.skipTests = Just "Skipping whilst we fix numerical comparison of stringified results in Hspec tests"
                     }
             },
           (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
