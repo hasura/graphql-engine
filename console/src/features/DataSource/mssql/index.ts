@@ -6,6 +6,7 @@ import {
   getFKRelationships,
   getTablesListAsTree,
 } from './introspection';
+import { getTableRows } from './query';
 
 export type MssqlTable = { schema: string; name: string };
 
@@ -48,5 +49,8 @@ export const mssql: Database = {
     getTableColumns,
     getFKRelationships,
     getTablesListAsTree,
+  },
+  query: {
+    getTableRows,
   },
 };

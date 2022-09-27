@@ -28,6 +28,28 @@ export const mockMetadata: Metadata = {
           },
         },
       },
+      {
+        name: 'bikes',
+        kind: 'mssql',
+        tables: [
+          {
+            table: {
+              name: 'customers',
+              schema: 'sales',
+            },
+          },
+        ],
+        configuration: {
+          connection_info: {
+            connection_string:
+              'DRIVER={ODBC Driver 17 for SQL Server};SERVER=host.docker.internal;DATABASE=bikes;Uid=SA;Pwd=reallyStrongPwd123',
+            pool_settings: {
+              idle_timeout: 5,
+              max_connections: 50,
+            },
+          },
+        },
+      },
     ],
   },
 };

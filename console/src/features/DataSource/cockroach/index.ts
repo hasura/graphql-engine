@@ -7,6 +7,7 @@ import {
   getFKRelationships,
   getTablesListAsTree,
 } from './introspection';
+import { getTableRows } from './query';
 
 export type CockroachDBTable = { name: string; schema: string };
 
@@ -59,6 +60,6 @@ export const cockroach: Database = {
     getTablesListAsTree,
   },
   query: {
-    getTableRows: async () => Feature.NotImplemented,
+    getTableRows,
   },
 };

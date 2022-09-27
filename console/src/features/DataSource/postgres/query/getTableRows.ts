@@ -18,7 +18,7 @@ export const getTableRows = async (props: GetTableRowsProps) => {
         source: dataSourceName,
         table,
         columns,
-        where: options?.where,
+        where: options?.where ? { $and: options.where } : undefined,
         offset: options?.offset,
         limit: options?.limit,
         order_by: options?.order_by,

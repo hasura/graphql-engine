@@ -31,8 +31,12 @@ export type MetadataTableConfig = {
     delete?: string;
     delete_by_pk?: string;
   };
-  column_config?: Record<string, { custom_name: string; comment: string }>;
+  column_config?: Record<string, { custom_name: string; comment?: string }>;
   comment?: string;
+  /**
+   * @deprecated do not use this anymore. Should be used only for backcompatiblity reasons
+   */
+  custom_column_names?: Record<string, string>;
 };
 
 export type MetadataTable = {

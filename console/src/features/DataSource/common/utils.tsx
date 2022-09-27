@@ -1,7 +1,7 @@
 import { FaFolder, FaTable } from 'react-icons/fa';
 import React from 'react';
-import { Table } from '@/features/MetadataAPI';
-import { IntrospectedTable, TableColumn } from '../types';
+import { MetadataTable, Source, Table } from '@/features/MetadataAPI';
+import { IntrospectedTable, TableColumn, TableRow } from '../types';
 import { RunSQLResponse } from '../api';
 
 export const adaptIntrospectedTables = (
@@ -79,4 +79,32 @@ export const convertToTreeData = (
       };
     }),
   ];
+};
+
+export const transformGraphqlResponse = ({
+  data,
+  tableCustomization,
+}: {
+  data: Record<string, string>[];
+  tableCustomization: MetadataTable['configuration'];
+  sourceCustomization: Source['customization'];
+  columns: string[];
+}): TableRow[] => {
+  return data.map(row => {
+    const transformedRow = Object.entries(row).reduce((acc, [key, value]) => {
+      const columnName =
+        Object.entries(tableCustomization?.column_config ?? {}).find(
+          ([, columnConfig]) => {
+            return columnConfig.custom_name === key;
+          }
+        )?.[0] ?? key;
+
+      return {
+        ...acc,
+        [columnName]: value,
+      };
+    }, {});
+
+    return transformedRow;
+  });
 };
