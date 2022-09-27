@@ -11,20 +11,21 @@ import Data.Maybe (isJust, mapMaybe)
 import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
+import Test.Data (TestData (..))
 import Test.Data qualified as Data
 import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Hspec (Spec, describe, it)
 import Prelude
 
-spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Maybe ComparisonCapabilities -> Spec
-spec api sourceName config comparisonCapabilities = describe "Filtering in Queries" $ do
+spec :: TestData -> Client IO (NamedRoutes Routes) -> SourceName -> Config -> Maybe ComparisonCapabilities -> Spec
+spec TestData {..} api sourceName config comparisonCapabilities = describe "Filtering in Queries" $ do
   it "can filter using an equality expression" $ do
     let where' = ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "AlbumId") (ScalarValue (Number 2))
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
     let expectedAlbums =
-          filter ((== Just 2) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
+          filter ((== Just 2) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -35,7 +36,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
     let expectedAlbums =
-          filter ((/= Just 2) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
+          filter ((/= Just 2) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -46,7 +47,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
     let expectedAlbums =
-          filter (flip elem [Just 2, Just 3] . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
+          filter (flip elem [Just 2, Just 3] . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -57,7 +58,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
     let expectedAlbums =
-          filter (flip notElem [Just 2, Just 3] . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
+          filter (flip notElem [Just 2, Just 3] . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -74,7 +75,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
             ( \album ->
                 (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber == Just 58) && (album ^? Data.field "Title" . Data._ColumnFieldString == Just "Stormbringer")
             )
-            Data.albumsRows
+            _tdAlbumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -84,7 +85,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
-    Data.responseRows receivedAlbums `rowsShouldBe` Data.albumsRows
+    Data.responseRows receivedAlbums `rowsShouldBe` _tdAlbumsRows
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
   it "can combine filters using an or expression" $ do
@@ -95,7 +96,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
     let expectedAlbums =
-          filter (flip elem [Just 2, Just 3] . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
+          filter (flip elem [Just 2, Just 3] . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -114,7 +115,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
     let expectedAlbums =
-          filter ((> Just 300) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
+          filter ((> Just 300) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -125,7 +126,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
     let expectedAlbums =
-          filter ((>= Just 300) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
+          filter ((>= Just 300) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -136,7 +137,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
     let expectedAlbums =
-          filter ((< Just 100) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
+          filter ((< Just 100) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -147,7 +148,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
     let expectedAlbums =
-          filter ((<= Just 100) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) Data.albumsRows
+          filter ((<= Just 100) . (^? Data.field "AlbumId" . Data._ColumnFieldNumber)) _tdAlbumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -158,7 +159,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
     let expectedAlbums =
-          filter (\album -> (album ^? Data.field "AlbumId" . Data._ColumnFieldNumber) > (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber)) Data.albumsRows
+          filter (\album -> (album ^? Data.field "AlbumId" . Data._ColumnFieldNumber) > (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber)) _tdAlbumsRows
 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
@@ -169,19 +170,19 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
         describe "compare against a single column" $ do
           it "returns all rows if matching rows exist" $ do
             let where' =
-                  Exists (UnrelatedTable Data.employeesTableName) $
+                  Exists (UnrelatedTable _tdEmployeesTableName) $
                     ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "EmployeeId") (ScalarValue (Number 1))
             let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
             receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
-            let expectedAlbums = Data.albumsRows
+            let expectedAlbums = _tdAlbumsRows
 
             Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
             _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
           it "returns no rows if matching rows do not exist" $ do
             let where' =
-                  Exists (UnrelatedTable Data.employeesTableName) $
+                  Exists (UnrelatedTable _tdEmployeesTableName) $
                     ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "EmployeeId") (ScalarValue (Number 0))
             let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
             receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
@@ -192,7 +193,7 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
         describe "compare against multiple columns" $ do
           it "returns all rows if matching rows exist" $ do
             let where' =
-                  Exists (UnrelatedTable Data.employeesTableName) $
+                  Exists (UnrelatedTable _tdEmployeesTableName) $
                     And
                       [ ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "EmployeeId") (ScalarValue (Number 1)),
                         ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "City") (ScalarValue (String "Edmonton"))
@@ -200,14 +201,14 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
             let query = albumsQueryRequest & qrQuery . qWhere ?~ where'
             receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
-            let expectedAlbums = Data.albumsRows
+            let expectedAlbums = _tdAlbumsRows
 
             Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
             _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
           it "returns no rows if matching rows do not exist" $ do
             let where' =
-                  Exists (UnrelatedTable Data.employeesTableName) $
+                  Exists (UnrelatedTable _tdEmployeesTableName) $
                     And
                       [ ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "EmployeeId") (ScalarValue (Number 1)),
                         ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "City") (ScalarValue (String "Calgary"))
@@ -222,21 +223,21 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
     describe "Comparisons in related tables" $ do
       it "can filter by comparing against rows in a related table" $ do
         let where' =
-              Exists (RelatedTable Data.artistRelationshipName) $
+              Exists (RelatedTable _tdArtistRelationshipName) $
                 ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "Name") (ScalarValue (String "AC/DC"))
         let query =
               albumsQueryRequest
-                & qrTableRelationships .~ [Data.onlyKeepRelationships [Data.artistRelationshipName] Data.albumsTableRelationships]
+                & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
                 & qrQuery . qWhere ?~ where'
         receivedAlbums <- Data.sortResponseRowsBy "AlbumId" <$> (api // _query) sourceName config query
 
         let artistId =
-              Data.artistsRows
+              _tdArtistsRows
                 & find (\artist -> (artist ^? Data.field "Name" . Data._ColumnFieldString) == Just "AC/DC")
                 >>= (^? Data.field "ArtistId" . Data._ColumnFieldNumber)
 
         let albums =
-              Data.albumsRows
+              _tdAlbumsRows
                 & filter (\album -> (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) == artistId)
                 & sortOn (^? Data.field "AlbumId")
 
@@ -245,36 +246,36 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
 
       it "can filter by comparing against rows in a deeply related table" $ do
         let where' =
-              Exists (RelatedTable Data.albumsRelationshipName) . Exists (RelatedTable Data.tracksRelationshipName) . Exists (RelatedTable Data.genreRelationshipName) $
+              Exists (RelatedTable _tdAlbumsRelationshipName) . Exists (RelatedTable _tdTracksRelationshipName) . Exists (RelatedTable _tdGenreRelationshipName) $
                 ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "Name") (ScalarValue (String "Metal"))
         let query =
               artistsQueryRequest
                 & qrTableRelationships
-                  .~ [ Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships,
-                       Data.onlyKeepRelationships [Data.tracksRelationshipName] Data.albumsTableRelationships,
-                       Data.onlyKeepRelationships [Data.genreRelationshipName] Data.tracksTableRelationships
+                  .~ [ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships,
+                       Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships,
+                       Data.onlyKeepRelationships [_tdGenreRelationshipName] _tdTracksTableRelationships
                      ]
                 & qrQuery . qWhere ?~ where'
         receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
 
         let genreId =
-              Data.genresRows
+              _tdGenresRows
                 & find (\genre -> (genre ^? Data.field "Name" . Data._ColumnFieldString) == Just "Metal")
                 >>= (^? Data.field "GenreId" . Data._ColumnFieldNumber)
 
         let albumIds =
-              Data.tracksRows
+              _tdTracksRows
                 & filter (\track -> (track ^? Data.field "GenreId" . Data._ColumnFieldNumber) == genreId)
                 & map (\track -> (track ^? Data.field "AlbumId" . Data._ColumnFieldNumber))
                 & HashSet.fromList
 
         let artists =
-              Data.albumsRows
+              _tdAlbumsRows
                 & filter (\album -> HashSet.member (album ^? Data.field "AlbumId" . Data._ColumnFieldNumber) albumIds)
                 & mapMaybe (\album -> album ^? Data.field "ArtistId" . Data._ColumnFieldNumber)
                 & HashSet.fromList
                 & HashSet.toList
-                & mapMaybe (\artistId -> HashMap.lookup artistId Data.artistsRowsById)
+                & mapMaybe (\artistId -> HashMap.lookup artistId _tdArtistsRowsById)
                 & sortOn (^? Data.field "ArtistId")
 
         Data.responseRows receivedArtists `rowsShouldBe` artists
@@ -282,37 +283,37 @@ spec api sourceName config comparisonCapabilities = describe "Filtering in Queri
 
       it "can filter by comparing against multiple columns in a related table" $ do
         let where' =
-              Exists (RelatedTable Data.albumsRelationshipName) $
+              Exists (RelatedTable _tdAlbumsRelationshipName) $
                 And
                   [ ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "AlbumId") (ScalarValue (Number 1)),
                     ApplyBinaryComparisonOperator Equal (Data.currentComparisonColumn "Title") (ScalarValue (String "Let There Be Rock"))
                   ]
         let query =
               artistsQueryRequest
-                & qrTableRelationships .~ [Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships]
+                & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
                 & qrQuery . qWhere ?~ where'
         receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
 
         let albums =
-              Data.albumsRows
+              _tdAlbumsRows
                 & filter (\album -> (album ^? Data.field "AlbumId" . Data._ColumnFieldNumber) == Just 1 && (album ^? Data.field "Title" . Data._ColumnFieldString) == Just "Let There Be Rock")
 
         let artists =
-              Data.artistsRows
+              _tdArtistsRows
                 & filter (\artist -> isJust $ find (\album -> (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) == (artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber)) albums)
                 & sortOn (^? Data.field "ArtistId")
 
         Data.responseRows receivedArtists `rowsShouldBe` artists
         _qrAggregates receivedArtists `jsonShouldBe` Nothing
+  where
+    artistsQueryRequest :: QueryRequest
+    artistsQueryRequest =
+      let fields = Data.mkFieldsMap [("ArtistId", Data.columnField "ArtistId"), ("Name", Data.columnField "Name")]
+          query = Data.emptyQuery & qFields ?~ fields
+       in QueryRequest _tdArtistsTableName [] query
 
-artistsQueryRequest :: QueryRequest
-artistsQueryRequest =
-  let fields = Data.mkFieldsMap [("ArtistId", Data.columnField "ArtistId"), ("Name", Data.columnField "Name")]
-      query = Data.emptyQuery & qFields ?~ fields
-   in QueryRequest Data.artistsTableName [] query
-
-albumsQueryRequest :: QueryRequest
-albumsQueryRequest =
-  let fields = Data.mkFieldsMap [("AlbumId", Data.columnField "AlbumId"), ("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
-      query = Data.emptyQuery & qFields ?~ fields
-   in QueryRequest Data.albumsTableName [] query
+    albumsQueryRequest :: QueryRequest
+    albumsQueryRequest =
+      let fields = Data.mkFieldsMap [("AlbumId", Data.columnField "AlbumId"), ("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
+          query = Data.emptyQuery & qFields ?~ fields
+       in QueryRequest _tdAlbumsTableName [] query

@@ -2,6 +2,7 @@
 
 module Command
   ( Command (..),
+    TestConfig (..),
     TestOptions (..),
     AgentCapabilities (..),
     parseCommandLine,
@@ -13,7 +14,7 @@ import Control.Lens (contains, modifying, use, (^.), _2)
 import Control.Lens.TH (makeLenses)
 import Control.Monad (when)
 import Control.Monad.State (State, runState)
-import Data.Aeson (eitherDecodeStrict')
+import Data.Aeson (FromJSON (..), eitherDecodeStrict')
 import Data.HashSet (HashSet)
 import Data.HashSet qualified as HashSet
 import Data.Text (Text)
@@ -30,10 +31,14 @@ data Command
   = Test TestOptions
   | ExportOpenAPISpec
 
+data TestConfig = TestConfig
+  {_tcTableNamePrefix :: [Text]}
+
 data TestOptions = TestOptions
   { _toAgentBaseUrl :: BaseUrl,
     _toAgentConfig :: API.Config,
     _toAgentCapabilities :: AgentCapabilities,
+    _toTestConfig :: TestConfig,
     _toParallelDegree :: Maybe Int,
     _toMatch :: Maybe String,
     _toSkip :: [String],
@@ -93,6 +98,18 @@ commandParser =
             (progDesc "Exports the OpenAPI specification of the Data Connector API that agents must implement")
         )
 
+testConfigParser :: Parser TestConfig
+testConfigParser =
+  TestConfig
+    <$> option
+      jsonValue
+      ( long "table-name-prefix"
+          <> short 't'
+          <> metavar "PREFIX"
+          <> help "The prefix to use for all table names, as a JSON array of strings"
+          <> value []
+      )
+
 testOptionsParser :: Parser TestOptions
 testOptionsParser =
   TestOptions
@@ -111,6 +128,7 @@ testOptionsParser =
           <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header"
       )
     <*> agentCapabilitiesParser
+    <*> testConfigParser
     <*> optional
       ( option
           positiveNonZeroInt
@@ -157,7 +175,10 @@ positiveNonZeroInt =
     if int <= 0 then readerError "Must be a positive, non-zero integer" else pure int
 
 configValue :: ReadM API.Config
-configValue = eitherReader $ (fmap API.Config . eitherDecodeStrict' . Text.encodeUtf8 . Text.pack)
+configValue = fmap API.Config jsonValue
+
+jsonValue :: FromJSON v => ReadM v
+jsonValue = eitherReader (eitherDecodeStrict' . Text.encodeUtf8 . Text.pack)
 
 agentCapabilitiesParser :: Parser AgentCapabilities
 agentCapabilitiesParser =
