@@ -29893,7 +29893,7 @@ JWTInfo :: !JWTNamespace -> !JWTClaimsFormat -> !Maybe JWTCustomClaimsMap -> JWT
 [jwtiClaimsFormat] :: JWTInfo -> !JWTClaimsFormat
 [jwtiClaimsMap] :: JWTInfo -> !Maybe JWTCustomClaimsMap
 data ServerConfig
-ServerConfig :: !Version -> !InferFunctionPermissions -> !RemoteSchemaPermissions -> !Bool -> !Bool -> !Bool -> ![JWTInfo] -> !Bool -> !LiveQueriesOptions -> !SubscriptionsOptions -> !Maybe Text -> !HashSet ExperimentalFeature -> ServerConfig
+ServerConfig :: !Version -> !InferFunctionPermissions -> !RemoteSchemaPermissions -> !Bool -> !Bool -> !Bool -> ![JWTInfo] -> !Bool -> !LiveQueriesOptions -> !SubscriptionsOptions -> !Maybe Text -> !HashSet ExperimentalFeature -> !Bool -> ServerConfig
 [scfgVersion] :: ServerConfig -> !Version
 [scfgIsFunctionPermissionsInferred] :: ServerConfig -> !InferFunctionPermissions
 [scfgIsRemoteSchemaPermissionsEnabled] :: ServerConfig -> !RemoteSchemaPermissions
@@ -29906,7 +29906,8 @@ ServerConfig :: !Version -> !InferFunctionPermissions -> !RemoteSchemaPermission
 [scfgStreamingQueries] :: ServerConfig -> !SubscriptionsOptions
 [scfgConsoleAssetsDir] :: ServerConfig -> !Maybe Text
 [scfgExperimentalFeatures] :: ServerConfig -> !HashSet ExperimentalFeature
-runGetConfig :: InferFunctionPermissions -> RemoteSchemaPermissions -> AuthMode -> Bool -> LiveQueriesOptions -> SubscriptionsOptions -> Maybe Text -> HashSet ExperimentalFeature -> ServerConfig
+[scfgIsPrometheusMetricsEnabled] :: ServerConfig -> !Bool
+runGetConfig :: InferFunctionPermissions -> RemoteSchemaPermissions -> AuthMode -> Bool -> LiveQueriesOptions -> SubscriptionsOptions -> Maybe Text -> HashSet ExperimentalFeature -> HashSet API -> ServerConfig
 isAdminSecretSet :: AuthMode -> Bool
 isAuthHookSet :: AuthMode -> Bool
 isJWTSet :: AuthMode -> Bool
