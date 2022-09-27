@@ -38,14 +38,15 @@ spec =
                 ]
             },
           (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
-            { Fixture.setupTeardown = \(testEnv, _) ->
-                [ Cockroach.setupTablesAction schema testEnv
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Cockroach.setupTablesAction schema testEnvironment,
+                  setupCockroach,
+                  setupMetadata Fixture.Cockroach testEnvironment
                 ],
               Fixture.customOptions =
                 Just $
                   Fixture.defaultOptions
-                    { Fixture.stringifyNumbers = True,
-                      Fixture.skipTests = Just "Cockroach disabled views query fix https://github.com/hasura/graphql-engine-mono/issues/5987"
+                    { Fixture.stringifyNumbers = True
                     }
             }
         ]
@@ -139,6 +140,25 @@ setupPostgres =
         Postgres.run_
           [sql|
             DROP VIEW IF EXISTS author_view
+          |]
+    }
+
+--------------------------------------------------------------------------------
+-- Cockroach setup
+
+setupCockroach :: Fixture.SetupAction
+setupCockroach =
+  Fixture.SetupAction
+    { Fixture.setupAction =
+        Cockroach.run_
+          [sql|
+            CREATE OR REPLACE VIEW hasura.author_view
+            AS SELECT id, name FROM hasura.author
+          |],
+      Fixture.teardownAction = \_ ->
+        Cockroach.run_
+          [sql|
+            DROP VIEW IF EXISTS hasura.author_view
           |]
     }
 
