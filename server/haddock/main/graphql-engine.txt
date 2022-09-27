@@ -31493,7 +31493,7 @@ mkLoggers :: (MonadIO m, MonadBaseControl IO m) => HashSet (EngineLogType Hasura
 
 -- | helper function to initialize or migrate the <tt>hdb_catalog</tt>
 --   schema (used by pro as well)
-migrateCatalogSchema :: (MonadIO m, MonadBaseControl IO m) => Environment -> Logger Hasura -> PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> Manager -> ServerConfigCtx -> SourceResolver ('Postgres 'Vanilla) -> SourceResolver 'MSSQL -> ExtensionsSchema -> m RebuildableSchemaCache
+migrateCatalogSchema :: (MonadIO m, MonadBaseControl IO m) => Environment -> Logger Hasura -> PGPool -> Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) -> Blocklist -> ServerConfigCtx -> SourceResolver ('Postgres 'Vanilla) -> SourceResolver 'MSSQL -> ExtensionsSchema -> m RebuildableSchemaCache
 
 -- | A latch for the graceful shutdown of a server process.
 newtype ShutdownLatch
