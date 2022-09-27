@@ -158,6 +158,7 @@ mkServeOptions ServeOptionsRaw {..} = do
   soCorsConfig <- mkCorsConfig rsoCorsConfig
   soEnableConsole <- withOptionSwitch rsoEnableConsole enableConsoleOption
   soConsoleAssetsDir <- withOption rsoConsoleAssetsDir consoleAssetsDirOption
+  soConsoleSentryDsn <- withOption rsoConsoleSentryDsn consoleSentryDsnOption
   soEnableTelemetry <- withOptionDefault rsoEnableTelemetry enableTelemetryOption
   soStringifyNum <-
     case rsoStringifyNum of

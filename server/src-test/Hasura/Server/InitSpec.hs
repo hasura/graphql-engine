@@ -60,6 +60,7 @@ emptyServeOptionsRaw =
       rsoCorsConfig = Nothing,
       rsoEnableConsole = False,
       rsoConsoleAssetsDir = Nothing,
+      rsoConsoleSentryDsn = Nothing,
       rsoEnableTelemetry = Nothing,
       rsoWsReadCookie = False,
       rsoStringifyNum = Options.Don'tStringifyNumbers,
@@ -503,6 +504,27 @@ mkServeOptionsSpec =
             result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
 
         fmap UUT.soConsoleAssetsDir result `Hspec.shouldBe` Right (Just "/data")
+
+    Hspec.describe "soConsoleSentryDsn" $ do
+      Hspec.it "Env > Nothing" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw
+            -- When
+            env = [(UUT._envVar UUT.consoleSentryDsnOption, "123123")]
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soConsoleSentryDsn result `Hspec.shouldBe` Right (Just "123123")
+
+      Hspec.it "Arg > Env" $ do
+        let -- Given
+            rawServeOptions = emptyServeOptionsRaw {UUT.rsoConsoleSentryDsn = Just "456456"}
+            -- When
+            env = [("HASURA_CONSOLE_SENTRY_DSN", "123123")]
+            -- Then
+            result = UUT.runWithEnv env (UUT.mkServeOptions @Hasura rawServeOptions)
+
+        fmap UUT.soConsoleSentryDsn result `Hspec.shouldBe` Right (Just "456456")
 
     Hspec.describe "soEnableTelemetry" $ do
       Hspec.it "Default == True" $ do

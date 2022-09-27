@@ -25,6 +25,7 @@ module Hasura.Server.Init.Arg.Command.Serve
     disableCorsOption,
     enableConsoleOption,
     consoleAssetsDirOption,
+    consoleSentryDsnOption,
     enableTelemetryOption,
     wsReadCookieOption,
     stringifyNumOption,
@@ -104,6 +105,7 @@ serveCommandParser =
     <*> parseCorsConfig
     <*> parseEnableConsole
     <*> parseConsoleAssetsDir
+    <*> parseConsoleSentryDsn
     <*> parseEnableTelemetry
     <*> parseWsReadCookie
     <*> parseStringifyNum
@@ -502,6 +504,24 @@ consoleAssetsDirOption =
         "A directory from which static assets required for console is served at"
           ++ "'/console/assets' path. Can be set to '/srv/console-assets' on the"
           ++ " default docker image to disable loading assets from CDN."
+    }
+
+parseConsoleSentryDsn :: Opt.Parser (Maybe Text)
+parseConsoleSentryDsn =
+  Opt.optional $
+    Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "console-sentry-dsn"
+          <> Opt.help (Config._helpMessage consoleSentryDsnOption)
+      )
+
+consoleSentryDsnOption :: Config.Option ()
+consoleSentryDsnOption =
+  Config.Option
+    { Config._default = (),
+      Config._envVar = "HASURA_CONSOLE_SENTRY_DSN",
+      Config._helpMessage =
+        "A Sentry DSN for reporting console errors"
     }
 
 -- NOTE: Should this be an 'Opt.flag'?

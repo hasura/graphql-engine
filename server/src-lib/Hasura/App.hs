@@ -708,6 +708,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soCorsConfig
           soEnableConsole
           soConsoleAssetsDir
+          soConsoleSentryDsn
           soEnableTelemetry
           _scInstanceId
           soEnabledAPIs
@@ -1067,8 +1068,8 @@ instance (Monad m) => MonadMetadataApiAuthorization (PGMetadataStorageAppT m) wh
       withPathK "args" $ throw400 AccessDenied accessDeniedErrMsg
 
 instance (Monad m) => ConsoleRenderer (PGMetadataStorageAppT m) where
-  renderConsole path authMode enableTelemetry consoleAssetsDir =
-    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir
+  renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
+    return $ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
 
 instance (Monad m) => MonadGQLExecutionCheck (PGMetadataStorageAppT m) where
   checkGQLExecution userInfo _ enableAL sc query _ = runExceptT $ do
@@ -1201,8 +1202,8 @@ instance MonadMetadataStorageQueryAPI (MetadataStorageT (PGMetadataStorageAppT C
 
 --- helper functions ---
 
-mkConsoleHTML :: Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
-mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
+mkConsoleHTML :: Text -> AuthMode -> Bool -> Maybe Text -> Maybe Text -> Either String Text
+mkConsoleHTML path authMode enableTelemetry consoleAssetsDir consoleSentryDsn =
   renderHtmlTemplate consoleTmplt $
     -- variables required to render the template
     A.object
@@ -1210,6 +1211,7 @@ mkConsoleHTML path authMode enableTelemetry consoleAssetsDir =
         "consolePath" A..= consolePath,
         "enableTelemetry" A..= boolToText enableTelemetry,
         "cdnAssets" A..= boolToText (isNothing consoleAssetsDir),
+        "consoleSentryDsn" A..= fromMaybe "" consoleSentryDsn,
         "assetsVersion" A..= consoleAssetsVersion,
         "serverVersion" A..= currentVersion,
         "consoleSentryDsn" A..= ("" :: Text)

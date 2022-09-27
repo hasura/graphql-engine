@@ -97,6 +97,7 @@ serveOptsToLog so =
           "cors_config" .= Config.soCorsConfig so,
           "enable_console" .= Config.soEnableConsole so,
           "console_assets_dir" .= Config.soConsoleAssetsDir so,
+          "console_sentry_dsn" .= Config.soConsoleSentryDsn so,
           "enable_telemetry" .= Config.soEnableTelemetry so,
           "use_prepared_statements" .= (Query.cpAllowPrepare . Config.soConnParams) so,
           "stringify_numeric_types" .= case Config.soStringifyNum so of
