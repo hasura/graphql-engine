@@ -48,7 +48,7 @@ var _ = Describe("hasura seed create", func() {
 			hgeEndPort, teardownHGE := testutil.StartHasuraWithMetadataDatabase(GinkgoT(), testutil.HasuraDockerImage)
 			hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 			sourceName = randomdata.SillyName()
-			_, teardownPG := AddDatabaseToHasura(hgeEndpoint, sourceName, "postgres")
+			_, teardownPG := testutil.AddDatabaseToHasura(GinkgoT(), hgeEndpoint, sourceName, "postgres")
 
 			testutil.RunCommandAndSucceed(testutil.CmdOpts{
 				Args: []string{"init", projectDirectory},
