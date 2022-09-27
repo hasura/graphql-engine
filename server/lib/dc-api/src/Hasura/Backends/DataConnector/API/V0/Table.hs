@@ -1,8 +1,14 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 --
 module Hasura.Backends.DataConnector.API.V0.Table
   ( TableInfo (..),
+    tiName,
+    tiColumns,
+    tiPrimaryKey,
+    tiForeignKeys,
+    tiDescription,
     TableName (..),
     ForeignKeys (..),
     ConstraintName (..),
@@ -15,6 +21,7 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
+import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data)
 import Data.HashMap.Strict (HashMap)
@@ -95,3 +102,5 @@ instance HasCodec Constraint where
       Constraint
         <$> requiredField "foreign_table" "The table referenced by the foreign key in the child table." .= _cForeignTable
         <*> requiredField "column_mapping" "The columns on which you want want to define the foreign key." .= _cColumnMapping
+
+$(makeLenses ''TableInfo)

@@ -7,7 +7,7 @@ import Data.List (sort, sortOn)
 import Hasura.Backends.DataConnector.API qualified as API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
-import Test.Data qualified as Data
+import Test.Data (TestData (..))
 import Test.Expectations (jsonShouldBe)
 import Test.Hspec (Spec, describe, it)
 import Prelude
@@ -28,13 +28,13 @@ removeForeignKeys t = t {API._tiForeignKeys = Nothing}
 extractForeignKeys :: API.TableInfo -> [API.Constraint]
 extractForeignKeys = foldMap (HashMap.elems . API.unConstraints) . API._tiForeignKeys
 
-spec :: Client IO (NamedRoutes API.Routes) -> API.SourceName -> API.Config -> Spec
-spec api sourceName config = describe "schema API" $ do
+spec :: TestData -> Client IO (NamedRoutes API.Routes) -> API.SourceName -> API.Config -> Spec
+spec TestData {..} api sourceName config = describe "schema API" $ do
   it "returns Chinook schema" $ do
     tables <- (map removeDescription . sortOn API._tiName . API._srTables) <$> (api // API._schema) sourceName config
 
     -- NOTE: Constraint names arent guaranteed to be the same across
     -- Chinook backends so we compare Constraints without their names
     -- independently from the rest of the schema.
-    (map removeForeignKeys tables) `jsonShouldBe` map (removeForeignKeys . removeDescription) Data.schemaTables
-    (map (sort . extractForeignKeys) tables) `jsonShouldBe` map (sort . extractForeignKeys) Data.schemaTables
+    (map removeForeignKeys tables) `jsonShouldBe` map (removeForeignKeys . removeDescription) _tdSchemaTables
+    (map (sort . extractForeignKeys) tables) `jsonShouldBe` map (sort . extractForeignKeys) _tdSchemaTables

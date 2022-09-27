@@ -6,19 +6,20 @@ import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
+import Test.Data (TestData (..))
 import Test.Data qualified as Data
 import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Hspec (Spec, describe, it)
 import Prelude
 
-spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
-spec api sourceName config = describe "Basic Queries" $ do
+spec :: TestData -> Client IO (NamedRoutes Routes) -> SourceName -> Config -> Spec
+spec TestData {..} api sourceName config = describe "Basic Queries" $ do
   describe "Column Fields" $ do
     it "can query for a list of artists" $ do
       let query = artistsQueryRequest
       receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
 
-      let expectedArtists = Data.artistsRows
+      let expectedArtists = _tdArtistsRows
       Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
       _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
@@ -30,7 +31,7 @@ spec api sourceName config = describe "Basic Queries" $ do
       let filterToRequiredProperties =
             HashMap.filterWithKey (\(FieldName propName) _value -> propName == "ArtistId" || propName == "Title")
 
-      let expectedAlbums = Data.sortBy (FieldName "Title") $ filterToRequiredProperties <$> Data.albumsRows
+      let expectedAlbums = Data.sortBy (FieldName "Title") $ filterToRequiredProperties <$> _tdAlbumsRows
       Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
@@ -47,7 +48,7 @@ spec api sourceName config = describe "Basic Queries" $ do
                   other -> other
               )
 
-      let expectedArtists = Data.sortBy (FieldName "ArtistId") $ renameProperties <$> Data.artistsRows
+      let expectedArtists = Data.sortBy (FieldName "ArtistId") $ renameProperties <$> _tdArtistsRows
       Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
       _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
@@ -63,15 +64,15 @@ spec api sourceName config = describe "Basic Queries" $ do
 
       page1Artists `rowsShouldBe` take 10 allArtists
       page2Artists `rowsShouldBe` take 10 (drop 10 allArtists)
+  where
+    artistsQueryRequest :: QueryRequest
+    artistsQueryRequest =
+      let fields = Data.mkFieldsMap [("ArtistId", Data.columnField "ArtistId"), ("Name", Data.columnField "Name")]
+          query = Data.emptyQuery & qFields ?~ fields
+       in QueryRequest _tdArtistsTableName [] query
 
-artistsQueryRequest :: QueryRequest
-artistsQueryRequest =
-  let fields = Data.mkFieldsMap [("ArtistId", Data.columnField "ArtistId"), ("Name", Data.columnField "Name")]
-      query = Data.emptyQuery & qFields ?~ fields
-   in QueryRequest Data.artistsTableName [] query
-
-albumsQueryRequest :: QueryRequest
-albumsQueryRequest =
-  let fields = Data.mkFieldsMap [("AlbumId", Data.columnField "AlbumId"), ("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
-      query = Data.emptyQuery & qFields ?~ fields
-   in QueryRequest Data.albumsTableName [] query
+    albumsQueryRequest :: QueryRequest
+    albumsQueryRequest =
+      let fields = Data.mkFieldsMap [("AlbumId", Data.columnField "AlbumId"), ("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
+          query = Data.emptyQuery & qFields ?~ fields
+       in QueryRequest _tdAlbumsTableName [] query

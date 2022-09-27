@@ -17,6 +17,7 @@ import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM, (//))
 import Test.CapabilitiesSpec qualified
+import Test.Data (TestData, mkTestData)
 import Test.ExplainSpec qualified
 import Test.HealthSpec qualified
 import Test.Hspec (Spec)
@@ -34,14 +35,14 @@ import Prelude
 testSourceName :: API.SourceName
 testSourceName = "dc-api-tests"
 
-tests :: Client IO (NamedRoutes Routes) -> API.SourceName -> API.Config -> API.Capabilities -> Spec
-tests api sourceName agentConfig capabilities = do
+tests :: TestData -> Client IO (NamedRoutes Routes) -> API.SourceName -> API.Config -> API.Capabilities -> Spec
+tests testData api sourceName agentConfig capabilities = do
   Test.HealthSpec.spec api sourceName agentConfig
   Test.CapabilitiesSpec.spec api agentConfig capabilities
-  Test.SchemaSpec.spec api sourceName agentConfig
-  Test.QuerySpec.spec api sourceName agentConfig capabilities
+  Test.SchemaSpec.spec testData api sourceName agentConfig
+  Test.QuerySpec.spec testData api sourceName agentConfig capabilities
   for_ (API._cMetrics capabilities) \m -> Test.MetricsSpec.spec api m
-  for_ (API._cExplain capabilities) \_ -> Test.ExplainSpec.spec api sourceName agentConfig capabilities
+  for_ (API._cExplain capabilities) \_ -> Test.ExplainSpec.spec testData api sourceName agentConfig capabilities
 
 main :: IO ()
 main = do
@@ -50,7 +51,8 @@ main = do
     Test testOptions@TestOptions {..} -> do
       api <- mkIOApiClient testOptions
       agentCapabilities <- getAgentCapabilities api _toAgentCapabilities
-      let spec = tests api testSourceName _toAgentConfig agentCapabilities
+      let testData = mkTestData _toTestConfig
+      let spec = tests testData api testSourceName _toAgentConfig agentCapabilities
       case _toExportMatchStrings of
         False -> runSpec spec (applyTestConfig defaultConfig testOptions) >>= evaluateSummary
         True -> do

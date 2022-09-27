@@ -2,53 +2,9 @@
 {-# LANGUAGE TemplateHaskell #-}
 
 module Test.Data
-  ( -- = Schema
-    schemaTables,
-    -- = Artists table
-    artistsTableName,
-    artistsRows,
-    artistsRowsById,
-    artistsTableRelationships,
-    -- = Albums table
-    albumsTableName,
-    albumsRelationshipName,
-    albumsRows,
-    albumsRowsById,
-    albumsTableRelationships,
-    artistRelationshipName,
-    tracksRelationshipName,
-    -- = Customers table
-    customersTableName,
-    customersRows,
-    customersTableRelationships,
-    supportRepRelationshipName,
-    -- = Employees table
-    employeesTableName,
-    employeesRows,
-    employeesRowsById,
-    employeesTableRelationships,
-    supportRepForCustomersRelationshipName,
-    -- = Invoices table
-    invoicesTableName,
-    invoicesRows,
-    -- = InvoiceLines table
-    invoiceLinesTableName,
-    invoiceLinesRows,
-    -- = MediaTypes table
-    mediaTypesTableName,
-    mediaTypesRows,
-    -- = Tracks table
-    tracksTableName,
-    tracksRows,
-    tracksTableRelationships,
-    invoiceLinesRelationshipName,
-    mediaTypeRelationshipName,
-    albumRelationshipName,
-    genreRelationshipName,
-    -- = Genres table
-    genresTableName,
-    genresRows,
-    genresTableRelationships,
+  ( -- = Test Data
+    TestData (..),
+    mkTestData,
     -- = Utilities
     emptyQuery,
     sortBy,
@@ -75,6 +31,7 @@ module Test.Data
 where
 
 import Codec.Compression.GZip qualified as GZip
+import Command (TestConfig (..))
 import Control.Arrow (first, (>>>))
 import Control.Lens (Index, IxValue, Ixed, Traversal', ix, (%~), (&), (^.), (^..), (^?))
 import Data.Aeson (eitherDecodeStrict)
@@ -309,6 +266,109 @@ genresTableRelationships =
             [ (tracksRelationshipName, API.Relationship tracksTableName API.ArrayRelationship joinFieldMapping)
             ]
         )
+
+data TestData = TestData
+  { -- = Schema
+    _tdSchemaTables :: [API.TableInfo],
+    -- = Artists table
+    _tdArtistsTableName :: API.TableName,
+    _tdArtistsRows :: [HashMap API.FieldName API.FieldValue],
+    _tdArtistsRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue),
+    _tdArtistsTableRelationships :: API.TableRelationships,
+    _tdAlbumsRelationshipName :: API.RelationshipName,
+    -- = Albums table
+    _tdAlbumsTableName :: API.TableName,
+    _tdAlbumsRows :: [HashMap API.FieldName API.FieldValue],
+    _tdAlbumsRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue),
+    _tdAlbumsTableRelationships :: API.TableRelationships,
+    _tdArtistRelationshipName :: API.RelationshipName,
+    _tdTracksRelationshipName :: API.RelationshipName,
+    -- = Customers table
+    _tdCustomersTableName :: API.TableName,
+    _tdCustomersRows :: [HashMap API.FieldName API.FieldValue],
+    _tdCustomersTableRelationships :: API.TableRelationships,
+    _tdSupportRepRelationshipName :: API.RelationshipName,
+    -- = Employees table
+    _tdEmployeesTableName :: API.TableName,
+    _tdEmployeesRows :: [HashMap API.FieldName API.FieldValue],
+    _tdEmployeesRowsById :: HashMap Scientific (HashMap API.FieldName API.FieldValue),
+    _tdEmployeesTableRelationships :: API.TableRelationships,
+    _tdSupportRepForCustomersRelationshipName :: API.RelationshipName,
+    -- = Invoices table
+    _tdInvoicesTableName :: API.TableName,
+    _tdInvoicesRows :: [HashMap API.FieldName API.FieldValue],
+    -- = InvoiceLines table
+    _tdInvoiceLinesTableName :: API.TableName,
+    _tdInvoiceLinesRows :: [HashMap API.FieldName API.FieldValue],
+    -- = MediaTypes table
+    _tdMediaTypesTableName :: API.TableName,
+    _tdMediaTypesRows :: [HashMap API.FieldName API.FieldValue],
+    -- = Tracks table
+    _tdTracksTableName :: API.TableName,
+    _tdTracksRows :: [HashMap API.FieldName API.FieldValue],
+    _tdTracksTableRelationships :: API.TableRelationships,
+    _tdInvoiceLinesRelationshipName :: API.RelationshipName,
+    _tdMediaTypeRelationshipName :: API.RelationshipName,
+    _tdAlbumRelationshipName :: API.RelationshipName,
+    _tdGenreRelationshipName :: API.RelationshipName,
+    -- = Genres table
+    _tdGenresTableName :: API.TableName,
+    _tdGenresRows :: [HashMap API.FieldName API.FieldValue],
+    _tdGenresTableRelationships :: API.TableRelationships
+  }
+
+mkTestData :: TestConfig -> TestData
+mkTestData TestConfig {..} =
+  TestData
+    { _tdSchemaTables = (API.tiName %~ applyTableNamePrefix _tcTableNamePrefix) <$> schemaTables,
+      _tdArtistsTableName = applyTableNamePrefix _tcTableNamePrefix artistsTableName,
+      _tdArtistsRows = artistsRows,
+      _tdArtistsRowsById = artistsRowsById,
+      _tdArtistsTableRelationships = prefixTableRelationships artistsTableRelationships,
+      _tdAlbumsRelationshipName = albumsRelationshipName,
+      _tdAlbumsTableName = applyTableNamePrefix _tcTableNamePrefix albumsTableName,
+      _tdAlbumsRows = albumsRows,
+      _tdAlbumsRowsById = albumsRowsById,
+      _tdAlbumsTableRelationships = prefixTableRelationships albumsTableRelationships,
+      _tdArtistRelationshipName = artistRelationshipName,
+      _tdTracksRelationshipName = tracksRelationshipName,
+      _tdCustomersTableName = applyTableNamePrefix _tcTableNamePrefix customersTableName,
+      _tdCustomersRows = customersRows,
+      _tdCustomersTableRelationships = prefixTableRelationships customersTableRelationships,
+      _tdSupportRepRelationshipName = supportRepRelationshipName,
+      _tdEmployeesTableName = applyTableNamePrefix _tcTableNamePrefix employeesTableName,
+      _tdEmployeesRows = employeesRows,
+      _tdEmployeesRowsById = employeesRowsById,
+      _tdEmployeesTableRelationships = prefixTableRelationships employeesTableRelationships,
+      _tdSupportRepForCustomersRelationshipName = supportRepForCustomersRelationshipName,
+      _tdInvoicesTableName = applyTableNamePrefix _tcTableNamePrefix invoicesTableName,
+      _tdInvoicesRows = invoicesRows,
+      _tdInvoiceLinesTableName = applyTableNamePrefix _tcTableNamePrefix invoiceLinesTableName,
+      _tdInvoiceLinesRows = invoiceLinesRows,
+      _tdMediaTypesTableName = applyTableNamePrefix _tcTableNamePrefix mediaTypesTableName,
+      _tdMediaTypesRows = mediaTypesRows,
+      _tdTracksTableName = applyTableNamePrefix _tcTableNamePrefix tracksTableName,
+      _tdTracksRows = tracksRows,
+      _tdTracksTableRelationships = prefixTableRelationships tracksTableRelationships,
+      _tdInvoiceLinesRelationshipName = invoiceLinesRelationshipName,
+      _tdMediaTypeRelationshipName = mediaTypeRelationshipName,
+      _tdAlbumRelationshipName = albumRelationshipName,
+      _tdGenreRelationshipName = genreRelationshipName,
+      _tdGenresTableName = applyTableNamePrefix _tcTableNamePrefix genresTableName,
+      _tdGenresRows = genresRows,
+      _tdGenresTableRelationships = prefixTableRelationships genresTableRelationships
+    }
+  where
+    prefixTableRelationships :: API.TableRelationships -> API.TableRelationships
+    prefixTableRelationships =
+      API.trSourceTable %~ applyTableNamePrefix _tcTableNamePrefix
+        >>> API.trRelationships . traverse . API.rTargetTable %~ applyTableNamePrefix _tcTableNamePrefix
+
+applyTableNamePrefix :: [Text] -> API.TableName -> API.TableName
+applyTableNamePrefix prefix tableName@(API.TableName rawTableName) =
+  case NonEmpty.nonEmpty prefix of
+    Just prefix' -> API.TableName (prefix' <> rawTableName)
+    Nothing -> tableName
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing

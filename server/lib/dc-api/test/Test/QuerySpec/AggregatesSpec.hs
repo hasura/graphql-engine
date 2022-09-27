@@ -14,20 +14,21 @@ import Data.Ord (Down (..))
 import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
+import Test.Data (TestData (..))
 import Test.Data qualified as Data
 import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Hspec (Spec, describe, it)
 import Prelude
 
-spec :: Client IO (NamedRoutes Routes) -> SourceName -> Config -> Maybe RelationshipCapabilities -> Spec
-spec api sourceName config relationshipCapabilities = describe "Aggregate Queries" $ do
+spec :: TestData -> Client IO (NamedRoutes Routes) -> SourceName -> Config -> Maybe RelationshipCapabilities -> Spec
+spec TestData {..} api sourceName config relationshipCapabilities = describe "Aggregate Queries" $ do
   describe "Star Count" $ do
     it "counts all rows" $ do
       let aggregates = Data.mkFieldsMap [("count_all", StarCount)]
       let queryRequest = invoicesQueryRequest aggregates
       response <- (api // _query) sourceName config queryRequest
 
-      let invoiceCount = length Data.invoicesRows
+      let invoiceCount = length _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("count_all", Number $ fromIntegral invoiceCount)]
 
       Data.responseAggregates response `jsonShouldBe` expectedAggregates
@@ -39,7 +40,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       let queryRequest = invoicesQueryRequest aggregates & qrQuery . qWhere ?~ where'
       response <- (api // _query) sourceName config queryRequest
 
-      let invoiceCount = length $ filter ((^? Data.field "BillingCity" . Data._ColumnFieldString) >>> (== Just "Oslo")) Data.invoicesRows
+      let invoiceCount = length $ filter ((^? Data.field "BillingCity" . Data._ColumnFieldString) >>> (== Just "Oslo")) _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("count_all", Number $ fromIntegral invoiceCount)]
 
       Data.responseAggregates response `jsonShouldBe` expectedAggregates
@@ -50,7 +51,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ 20 >>> qOffset ?~ 400)
       response <- (api // _query) sourceName config queryRequest
 
-      let invoiceCount = length . take 20 $ drop 400 Data.invoicesRows
+      let invoiceCount = length . take 20 $ drop 400 _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("count_all", Number $ fromIntegral invoiceCount)]
 
       Data.responseAggregates response `jsonShouldBe` expectedAggregates
@@ -62,7 +63,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       let queryRequest = invoicesQueryRequest aggregates
       response <- (api // _query) sourceName config queryRequest
 
-      let invoiceCount = length $ filter ((^? Data.field "BillingState" . Data._ColumnFieldString) >>> (/= Nothing)) Data.invoicesRows
+      let invoiceCount = length $ filter ((^? Data.field "BillingState" . Data._ColumnFieldString) >>> (/= Nothing)) _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("count_cols", Number $ fromIntegral invoiceCount)]
 
       Data.responseAggregates response `jsonShouldBe` expectedAggregates
@@ -75,7 +76,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       response <- (api // _query) sourceName config queryRequest
 
       let invoiceCount =
-            Data.invoicesRows
+            _tdInvoicesRows
               & filter ((^? Data.field "InvoiceId" . Data._ColumnFieldNumber) >>> (>= Just 380))
               & take 20
               & mapMaybe ((^? Data.field "BillingState" . Data._ColumnFieldString))
@@ -91,7 +92,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       let queryRequest = invoicesQueryRequest aggregates
       response <- (api // _query) sourceName config queryRequest
 
-      let billingStateCount = length . HashSet.fromList $ mapMaybe ((^? Data.field "BillingState" . Data._ColumnFieldString)) Data.invoicesRows
+      let billingStateCount = length . HashSet.fromList $ mapMaybe ((^? Data.field "BillingState" . Data._ColumnFieldString)) _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("count_cols", Number $ fromIntegral billingStateCount)]
 
       Data.responseAggregates response `jsonShouldBe` expectedAggregates
@@ -104,7 +105,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       response <- (api // _query) sourceName config queryRequest
 
       let billingStateCount =
-            Data.invoicesRows
+            _tdInvoicesRows
               & filter ((^? Data.field "InvoiceId" . Data._ColumnFieldNumber) >>> (>= Just 380))
               & take 20
               & mapMaybe ((^? Data.field "BillingState" . Data._ColumnFieldString))
@@ -122,7 +123,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       let queryRequest = invoicesQueryRequest aggregates
       response <- (api // _query) sourceName config queryRequest
 
-      let maxTotal = maximum $ mapMaybe ((^? Data.field "Total" . Data._ColumnFieldNumber)) Data.invoicesRows
+      let maxTotal = maximum $ mapMaybe ((^? Data.field "Total" . Data._ColumnFieldNumber)) _tdInvoicesRows
       let expectedAggregates = Data.mkFieldsMap [("max", Number maxTotal)]
 
       Data.responseAggregates response `jsonShouldBe` expectedAggregates
@@ -136,7 +137,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       response <- (api // _query) sourceName config queryRequest
 
       let maxTotal =
-            Data.invoicesRows
+            _tdInvoicesRows
               & filter ((^? Data.field "BillingCountry" . Data._ColumnFieldString) >>> (== Just "USA"))
               & sortOn (Down . (^? Data.field "BillingPostalCode"))
               & take 20
@@ -157,7 +158,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       let queryRequest = artistsQueryRequest aggregates
       response <- (api // _query) sourceName config queryRequest
 
-      let names = mapMaybe ((^? Data.field "Name" . Data._ColumnFieldString)) Data.artistsRows
+      let names = mapMaybe ((^? Data.field "Name" . Data._ColumnFieldString)) _tdArtistsRows
       let expectedAggregates =
             Data.mkFieldsMap
               [ ("min", aggregate (String . minimum) names),
@@ -189,9 +190,9 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       let queryRequest = invoicesQueryRequest aggregates
       response <- (api // _query) sourceName config queryRequest
 
-      let invoiceCount = length Data.invoicesRows
-      let billingStateCount = length . HashSet.fromList $ mapMaybe ((^? Data.field "BillingState" . Data._ColumnFieldString)) Data.invoicesRows
-      let maxTotal = aggregate (Number . maximum) $ mapMaybe ((^? Data.field "Total" . Data._ColumnFieldNumber)) Data.invoicesRows
+      let invoiceCount = length _tdInvoicesRows
+      let billingStateCount = length . HashSet.fromList $ mapMaybe ((^? Data.field "BillingState" . Data._ColumnFieldString)) _tdInvoicesRows
+      let maxTotal = aggregate (Number . maximum) $ mapMaybe ((^? Data.field "Total" . Data._ColumnFieldNumber)) _tdInvoicesRows
 
       let expectedAggregates =
             Data.mkFieldsMap
@@ -212,8 +213,8 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       let queryRequest = invoicesQueryRequest aggregates
       response <- (api // _query) sourceName config queryRequest
 
-      let maxInvoiceId = aggregate (Number . minimum) $ mapMaybe ((^? Data.field "InvoiceId" . Data._ColumnFieldNumber)) Data.invoicesRows
-      let maxTotal = aggregate (Number . minimum) $ mapMaybe ((^? Data.field "Total" . Data._ColumnFieldNumber)) Data.invoicesRows
+      let maxInvoiceId = aggregate (Number . minimum) $ mapMaybe ((^? Data.field "InvoiceId" . Data._ColumnFieldNumber)) _tdInvoicesRows
+      let maxTotal = aggregate (Number . minimum) $ mapMaybe ((^? Data.field "Total" . Data._ColumnFieldNumber)) _tdInvoicesRows
 
       let expectedAggregates =
             Data.mkFieldsMap
@@ -237,7 +238,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
       response <- (api // _query) sourceName config queryRequest
 
       let invoiceRows =
-            Data.invoicesRows
+            _tdInvoicesRows
               & filter ((^? Data.field "BillingCountry" . Data._ColumnFieldString) >>> (== Just "Canada"))
               & sortOn (^? Data.field "BillingAddress")
               & take 30
@@ -262,13 +263,13 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
         let joinInAlbums (artist :: HashMap FieldName FieldValue) = fromMaybe artist $ do
               artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
               let albums =
-                    Data.albumsRows
+                    _tdAlbumsRows
                       & filter ((^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
               let aggregates = Data.mkFieldsMap [("count", Number . fromIntegral $ length albums)]
               pure $ Data.insertField "Albums" (mkSubqueryResponse Nothing (Just aggregates)) artist
 
         let expectedArtists =
-              Data.artistsRows
+              _tdArtistsRows
                 & take 5
                 & fmap joinInAlbums
 
@@ -287,14 +288,14 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
         let joinInAlbums (artist :: HashMap FieldName FieldValue) = fromMaybe artist $ do
               artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
               let albums =
-                    Data.albumsRows
+                    _tdAlbumsRows
                       & filter ((^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
                       & Data.filterColumns ["AlbumId", "Title"]
               let aggregates = Data.mkFieldsMap [("count", Number . fromIntegral $ length albums)]
               pure $ Data.insertField "Albums" (mkSubqueryResponse (Just albums) (Just aggregates)) artist
 
         let expectedArtists =
-              Data.artistsRows
+              _tdArtistsRows
                 & take 5
                 & fmap joinInAlbums
 
@@ -307,7 +308,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
         let joinInMediaType (track :: HashMap FieldName FieldValue) = fromMaybe track $ do
               mediaTypeId <- track ^? Data.field "MediaTypeId" . Data._ColumnFieldNumber
               let mediaTypes =
-                    Data.mediaTypesRows
+                    _tdMediaTypesRows
                       & filter ((^? Data.field "MediaTypeId" . Data._ColumnFieldNumber) >>> (== Just mediaTypeId))
                       & Data.filterColumns ["Name"]
               pure $ Data.insertField "nodes_MediaType" (mkSubqueryResponse (Just mediaTypes) Nothing) track
@@ -315,7 +316,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
         let joinInInvoiceLines (track :: HashMap FieldName FieldValue) = fromMaybe track $ do
               trackId <- track ^? Data.field "TrackId" . Data._ColumnFieldNumber
               let invoiceLines =
-                    Data.invoiceLinesRows
+                    _tdInvoiceLinesRows
                       & filter ((^? Data.field "TrackId" . Data._ColumnFieldNumber) >>> (== Just trackId))
               let getQuantity invoiceLine = invoiceLine ^? Data.field "Quantity" . Data._ColumnFieldNumber
               let invoiceLinesAggregates = Data.mkFieldsMap [("aggregate_sum_Quantity", aggregate (Number . sum) $ mapMaybe getQuantity invoiceLines)]
@@ -324,7 +325,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
         let joinInTracks (album :: HashMap FieldName FieldValue) = fromMaybe album $ do
               albumId <- album ^? Data.field "AlbumId" . Data._ColumnFieldNumber
               let tracks =
-                    Data.tracksRows
+                    _tdTracksRows
                       & filter
                         ( \track ->
                             track ^? Data.field "AlbumId" . Data._ColumnFieldNumber == Just albumId
@@ -340,7 +341,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
         let joinInAlbums (artist :: HashMap FieldName FieldValue) = fromMaybe artist $ do
               artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
               let albums =
-                    Data.albumsRows
+                    _tdAlbumsRows
                       & filter ((^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
                       & fmap joinInTracks
                       & Data.renameColumns [("Title", "nodes_Title")]
@@ -348,7 +349,7 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
               pure $ Data.insertField "Albums_aggregate" (mkSubqueryResponse (Just albums) Nothing) artist
 
         let expectedArtists =
-              Data.artistsRows
+              _tdArtistsRows
                 & sortOn (Down . (^? Data.field "Name"))
                 & filter ((^? Data.field "Name" . Data._ColumnFieldString) >>> (\name -> name > Just "A" && name < Just "B"))
                 & drop 1
@@ -358,109 +359,109 @@ spec api sourceName config relationshipCapabilities = describe "Aggregate Querie
 
         Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
         Data.responseAggregates receivedArtists `jsonShouldBe` mempty
+  where
+    artistsWithAlbumsQuery :: (Query -> Query) -> QueryRequest
+    artistsWithAlbumsQuery modifySubquery =
+      let albumAggregates = Data.mkFieldsMap [("count", StarCount)]
+          albumsSubquery = Data.emptyQuery & qAggregates ?~ albumAggregates & modifySubquery
+          artistFields =
+            Data.mkFieldsMap
+              [ ("ArtistId", Data.columnField "ArtistId"),
+                ("Name", Data.columnField "Name"),
+                ("Albums", RelField $ RelationshipField _tdAlbumsRelationshipName albumsSubquery)
+              ]
+          artistOrderBy = OrderBy mempty $ Data.orderByColumn [] "ArtistId" Ascending :| []
+          artistQuery = Data.emptyQuery & qFields ?~ artistFields & qOrderBy ?~ artistOrderBy
+          artistsTableRelationships = Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
+       in QueryRequest _tdArtistsTableName [artistsTableRelationships] artistQuery
 
-artistsWithAlbumsQuery :: (Query -> Query) -> QueryRequest
-artistsWithAlbumsQuery modifySubquery =
-  let albumAggregates = Data.mkFieldsMap [("count", StarCount)]
-      albumsSubquery = Data.emptyQuery & qAggregates ?~ albumAggregates & modifySubquery
-      artistFields =
-        Data.mkFieldsMap
-          [ ("ArtistId", Data.columnField "ArtistId"),
-            ("Name", Data.columnField "Name"),
-            ("Albums", RelField $ RelationshipField Data.albumsRelationshipName albumsSubquery)
-          ]
-      artistOrderBy = OrderBy mempty $ Data.orderByColumn [] "ArtistId" Ascending :| []
-      artistQuery = Data.emptyQuery & qFields ?~ artistFields & qOrderBy ?~ artistOrderBy
-      artistsTableRelationships = Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships
-   in QueryRequest Data.artistsTableName [artistsTableRelationships] artistQuery
+    -- This query is basically what would be generated by this complex HGE GraphQL query
+    -- @
+    --   query {
+    --     Artist(where: {_and: [{Name: {_gt: "A"}}, {Name: {_lt: "B"}}]}, limit: 3, offset: 1, order_by: {Name: desc}) {
+    --       Name
+    --       Albums_aggregate {
+    --         nodes {
+    --           Title
+    --           Tracks_aggregate(where: {Milliseconds: {_lt: 300000}}, order_by: {Name: desc}) {
+    --             aggregate {
+    --               count
+    --             }
+    --             nodes {
+    --               Name
+    --               MediaType {
+    --                 Name
+    --               }
+    --               InvoiceLines_aggregate {
+    --                 aggregate {
+    --                   sum {
+    --                     Quantity
+    --                   }
+    --                 }
+    --               }
+    --             }
+    --           }
+    --         }
+    --       }
+    --     }
+    --   }
+    -- @
+    deeplyNestedArtistsQuery :: QueryRequest
+    deeplyNestedArtistsQuery =
+      let invoiceLinesAggregates = Data.mkFieldsMap [("aggregate_sum_Quantity", SingleColumn $ SingleColumnAggregate Sum (ColumnName "Quantity"))]
+          invoiceLinesSubquery = Data.emptyQuery & qAggregates ?~ invoiceLinesAggregates
+          mediaTypeFields = Data.mkFieldsMap [("Name", Data.columnField "Name")]
+          mediaTypeSubquery = Data.emptyQuery & qFields ?~ mediaTypeFields
+          tracksFields =
+            Data.mkFieldsMap
+              [ ("nodes_Name", Data.columnField "Name"),
+                ("nodes_MediaType", RelField $ RelationshipField _tdMediaTypeRelationshipName mediaTypeSubquery),
+                ("nodes_InvoiceLines_aggregate", RelField $ RelationshipField _tdInvoiceLinesRelationshipName invoiceLinesSubquery)
+              ]
+          tracksAggregates = Data.mkFieldsMap [("aggregate_count", StarCount)]
+          tracksWhere = ApplyBinaryComparisonOperator LessThan (Data.currentComparisonColumn "Milliseconds") (ScalarValue $ Number 300000)
+          tracksOrderBy = OrderBy mempty $ Data.orderByColumn [] "Name" Descending :| []
+          tracksSubquery = Query (Just tracksFields) (Just tracksAggregates) Nothing Nothing (Just tracksWhere) (Just tracksOrderBy)
+          albumsFields =
+            Data.mkFieldsMap
+              [ ("nodes_Title", Data.columnField "Title"),
+                ("nodes_Tracks_aggregate", RelField $ RelationshipField _tdTracksRelationshipName tracksSubquery)
+              ]
+          albumsSubquery = Data.emptyQuery & qFields ?~ albumsFields
+          artistFields =
+            Data.mkFieldsMap
+              [ ("Name", Data.columnField "Name"),
+                ("Albums_aggregate", RelField $ RelationshipField _tdAlbumsRelationshipName albumsSubquery)
+              ]
+          artistWhere =
+            And
+              [ ApplyBinaryComparisonOperator GreaterThan (Data.currentComparisonColumn "Name") (ScalarValue $ String "A"),
+                ApplyBinaryComparisonOperator LessThan (Data.currentComparisonColumn "Name") (ScalarValue $ String "B")
+              ]
+          artistOrderBy = OrderBy mempty $ Data.orderByColumn [] "Name" Descending :| []
+          artistQuery = Query (Just artistFields) Nothing (Just 3) (Just 1) (Just artistWhere) (Just artistOrderBy)
+       in QueryRequest
+            _tdArtistsTableName
+            [ Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships,
+              Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships,
+              Data.onlyKeepRelationships [_tdInvoiceLinesRelationshipName, _tdMediaTypeRelationshipName] _tdTracksTableRelationships
+            ]
+            artistQuery
 
--- | This query is basically what would be generated by this complex HGE GraphQL query
--- @
---   query {
---     Artist(where: {_and: [{Name: {_gt: "A"}}, {Name: {_lt: "B"}}]}, limit: 3, offset: 1, order_by: {Name: desc}) {
---       Name
---       Albums_aggregate {
---         nodes {
---           Title
---           Tracks_aggregate(where: {Milliseconds: {_lt: 300000}}, order_by: {Name: desc}) {
---             aggregate {
---               count
---             }
---             nodes {
---               Name
---               MediaType {
---                 Name
---               }
---               InvoiceLines_aggregate {
---                 aggregate {
---                   sum {
---                     Quantity
---                   }
---                 }
---               }
---             }
---           }
---         }
---       }
---     }
---   }
--- @
-deeplyNestedArtistsQuery :: QueryRequest
-deeplyNestedArtistsQuery =
-  let invoiceLinesAggregates = Data.mkFieldsMap [("aggregate_sum_Quantity", SingleColumn $ SingleColumnAggregate Sum (ColumnName "Quantity"))]
-      invoiceLinesSubquery = Data.emptyQuery & qAggregates ?~ invoiceLinesAggregates
-      mediaTypeFields = Data.mkFieldsMap [("Name", Data.columnField "Name")]
-      mediaTypeSubquery = Data.emptyQuery & qFields ?~ mediaTypeFields
-      tracksFields =
-        Data.mkFieldsMap
-          [ ("nodes_Name", Data.columnField "Name"),
-            ("nodes_MediaType", RelField $ RelationshipField Data.mediaTypeRelationshipName mediaTypeSubquery),
-            ("nodes_InvoiceLines_aggregate", RelField $ RelationshipField Data.invoiceLinesRelationshipName invoiceLinesSubquery)
-          ]
-      tracksAggregates = Data.mkFieldsMap [("aggregate_count", StarCount)]
-      tracksWhere = ApplyBinaryComparisonOperator LessThan (Data.currentComparisonColumn "Milliseconds") (ScalarValue $ Number 300000)
-      tracksOrderBy = OrderBy mempty $ Data.orderByColumn [] "Name" Descending :| []
-      tracksSubquery = Query (Just tracksFields) (Just tracksAggregates) Nothing Nothing (Just tracksWhere) (Just tracksOrderBy)
-      albumsFields =
-        Data.mkFieldsMap
-          [ ("nodes_Title", Data.columnField "Title"),
-            ("nodes_Tracks_aggregate", RelField $ RelationshipField Data.tracksRelationshipName tracksSubquery)
-          ]
-      albumsSubquery = Data.emptyQuery & qFields ?~ albumsFields
-      artistFields =
-        Data.mkFieldsMap
-          [ ("Name", Data.columnField "Name"),
-            ("Albums_aggregate", RelField $ RelationshipField Data.albumsRelationshipName albumsSubquery)
-          ]
-      artistWhere =
-        And
-          [ ApplyBinaryComparisonOperator GreaterThan (Data.currentComparisonColumn "Name") (ScalarValue $ String "A"),
-            ApplyBinaryComparisonOperator LessThan (Data.currentComparisonColumn "Name") (ScalarValue $ String "B")
-          ]
-      artistOrderBy = OrderBy mempty $ Data.orderByColumn [] "Name" Descending :| []
-      artistQuery = Query (Just artistFields) Nothing (Just 3) (Just 1) (Just artistWhere) (Just artistOrderBy)
-   in QueryRequest
-        Data.artistsTableName
-        [ Data.onlyKeepRelationships [Data.albumsRelationshipName] Data.artistsTableRelationships,
-          Data.onlyKeepRelationships [Data.tracksRelationshipName] Data.albumsTableRelationships,
-          Data.onlyKeepRelationships [Data.invoiceLinesRelationshipName, Data.mediaTypeRelationshipName] Data.tracksTableRelationships
-        ]
-        artistQuery
+    artistsQueryRequest :: HashMap FieldName Aggregate -> QueryRequest
+    artistsQueryRequest aggregates =
+      let query = Data.emptyQuery & qAggregates ?~ aggregates
+       in QueryRequest _tdArtistsTableName [] query
 
-artistsQueryRequest :: HashMap FieldName Aggregate -> QueryRequest
-artistsQueryRequest aggregates =
-  let query = Data.emptyQuery & qAggregates ?~ aggregates
-   in QueryRequest Data.artistsTableName [] query
+    invoicesQueryRequest :: HashMap FieldName Aggregate -> QueryRequest
+    invoicesQueryRequest aggregates =
+      let query = Data.emptyQuery & qAggregates ?~ aggregates
+       in QueryRequest _tdInvoicesTableName [] query
 
-invoicesQueryRequest :: HashMap FieldName Aggregate -> QueryRequest
-invoicesQueryRequest aggregates =
-  let query = Data.emptyQuery & qAggregates ?~ aggregates
-   in QueryRequest Data.invoicesTableName [] query
+    mkSubqueryResponse :: Maybe [HashMap FieldName FieldValue] -> Maybe (HashMap FieldName Value) -> FieldValue
+    mkSubqueryResponse rows aggregates =
+      mkRelationshipFieldValue $ QueryResponse rows aggregates
 
-mkSubqueryResponse :: Maybe [HashMap FieldName FieldValue] -> Maybe (HashMap FieldName Value) -> FieldValue
-mkSubqueryResponse rows aggregates =
-  mkRelationshipFieldValue $ QueryResponse rows aggregates
-
-aggregate :: (NonEmpty a -> Value) -> [a] -> Value
-aggregate aggFn values =
-  maybe Null aggFn $ NonEmpty.nonEmpty values
+    aggregate :: (NonEmpty a -> Value) -> [a] -> Value
+    aggregate aggFn values =
+      maybe Null aggFn $ NonEmpty.nonEmpty values
