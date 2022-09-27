@@ -63,11 +63,11 @@ func (q *QueryCollectionConfig) Build() (map[string]interface{}, metadataobject.
 
 type querycollection struct {
 	Name       yaml.Node  `yaml:"name,omitempty"`
-	Definition definition `yaml:"definition,omitempty"`
+	Definition definition `yaml:"definition"`
 }
 
 type definition struct {
-	Queries []query `yaml:"queries,omitempty"`
+	Queries []query `yaml:"queries"`
 }
 type query struct {
 	Name  yaml.Node `yaml:"name,omitempty"`

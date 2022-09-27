@@ -1,0 +1,10 @@
+{
+  "query_collections": [
+    {
+      "name": "my-collection",
+      "definition": {
+        "queries": []
+      }
+    }
+  ]
+}

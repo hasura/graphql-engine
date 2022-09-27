@@ -195,6 +195,21 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"t5",
+			"can export yaml correctly when definition.queries is an empty array in json", // see https://github.com/hasura/graphql-engine/issues/8787
+			fields{
+				MetadataDir: "metadata",
+				logger:      logrus.New(),
+			},
+			args{
+				metadata: readJsonFileAndEmitYamlNode(t, "testdata/export_test/t5/metadata.json"),
+			},
+			map[string][]byte{
+				"metadata/query_collections.yaml": readYamlFileAndEmitBytes(t, "testdata/export_test/t5/want.query_collections.yaml"),
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -217,4 +232,22 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 			}
 		})
 	}
+}
+
+func readJsonFileAndEmitYamlNode(t *testing.T, jsonFilePath string) map[string]yaml.Node {
+	t.Helper()
+	bs, err := ioutil.ReadFile(jsonFilePath)
+	assert.NoError(t, err)
+	yamlbs, err := metadatautil.JSONToYAML(bs)
+	assert.NoError(t, err)
+	var v map[string]yaml.Node
+	assert.NoError(t, yaml.Unmarshal(yamlbs, &v))
+	return v
+}
+
+func readYamlFileAndEmitBytes(t *testing.T, yamlFilePath string) []byte {
+	t.Helper()
+	bs, err := ioutil.ReadFile(yamlFilePath)
+	assert.NoError(t, err)
+	return bs
 }
