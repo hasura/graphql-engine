@@ -681,10 +681,10 @@ consoleAssetsHandler logger loggingSettings dir path = do
     headers = ("Content-Type", mimeType) : encHeader
 
 class (Monad m) => ConsoleRenderer m where
-  renderConsole :: Text -> AuthMode -> Bool -> Maybe Text -> m (Either String Text)
+  renderConsole :: Text -> AuthMode -> Bool -> Maybe Text -> Maybe Text -> m (Either String Text)
 
 instance ConsoleRenderer m => ConsoleRenderer (Tracing.TraceT m) where
-  renderConsole a b c d = lift $ renderConsole a b c d
+  renderConsole a b c d e = lift $ renderConsole a b c d e
 
 renderHtmlTemplate :: M.Template -> Value -> Either String Text
 renderHtmlTemplate template jVal =
@@ -766,6 +766,8 @@ mkWaiApp ::
   Bool ->
   -- | filepath to the console static assets directory - TODO: better type
   Maybe Text ->
+  -- | DSN for console sentry integration
+  Maybe Text ->
   -- | is telemetry enabled
   Bool ->
   -- | each application, when run, gets an 'InstanceId'. this is used at various places including
@@ -808,6 +810,7 @@ mkWaiApp
   corsCfg
   enableConsole
   consoleAssetsDir
+  consoleSentryDsn
   enableTelemetry
   instanceId
   apis
@@ -880,7 +883,7 @@ mkWaiApp
     spockApp <- liftWithStateless $ \lowerIO ->
       Spock.spockAsApp $
         Spock.spockT lowerIO $
-          httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry
+          httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentryDsn enableTelemetry
 
     let wsServerApp = WS.createWSServerApp env enabledLogTypes mode wsServerEnv wsConnInitTimeout -- TODO: Lyndon: Can we pass environment through wsServerEnv?
         stopWSServer = WS.stopWSServerApp wsServerEnv
@@ -915,9 +918,10 @@ httpApp ::
   ServerCtx ->
   Bool ->
   Maybe Text ->
+  Maybe Text ->
   Bool ->
   Spock.SpockT m ()
-httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemetry = do
+httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentryDsn enableTelemetry = do
   -- Additional spock action to run
   setupHook serverCtx
 
@@ -1157,7 +1161,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir enableTelemet
         req <- Spock.request
         let headers = Wai.requestHeaders req
             authMode = scAuthMode serverCtx
-        consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir
+        consoleHtml <- lift $ renderConsole path authMode enableTelemetry consoleAssetsDir consoleSentryDsn
         either (raiseGenericApiError logger (scLoggingSettings serverCtx) headers . internalError . T.pack) Spock.html consoleHtml
 
 raiseGenericApiError ::

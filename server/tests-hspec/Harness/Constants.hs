@@ -250,6 +250,7 @@ serveOptions =
       soCorsConfig = CCAllowAll,
       soEnableConsole = True,
       soConsoleAssetsDir = Just "../console/static/dist",
+      soConsoleSentryDsn = Nothing,
       soEnableTelemetry = False,
       soStringifyNum = Options.StringifyNumbers,
       soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
