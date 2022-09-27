@@ -102,7 +102,7 @@ import Text.XML.Lens qualified as XML
 import Prelude
 
 schemaBS :: ByteString
-schemaBS = $(makeRelativeToProject "tests-dc-api/Test/Data/schema-tables.json" >>= embedFile)
+schemaBS = $(makeRelativeToProject "test/Test/Data/schema-tables.json" >>= embedFile)
 
 schemaTables :: [API.TableInfo]
 schemaTables = sortOn API._tiName . either error id . eitherDecodeStrict $ schemaBS
@@ -111,7 +111,7 @@ numericColumns :: [API.ColumnName]
 numericColumns = schemaTables >>= (API._tiColumns >>> mapMaybe (\API.ColumnInfo {..} -> if _ciType == API.NumberTy then Just _ciName else Nothing))
 
 chinookXmlBS :: ByteString
-chinookXmlBS = $(makeRelativeToProject "tests-dc-api/Test/Data/ChinookData.xml.gz" >>= embedFile)
+chinookXmlBS = $(makeRelativeToProject "test/Test/Data/ChinookData.xml.gz" >>= embedFile)
 
 chinookXml :: XML.Document
 chinookXml = XML.parseLBS_ XML.def . GZip.decompress $ BSL.fromStrict chinookXmlBS
