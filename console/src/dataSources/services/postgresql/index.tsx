@@ -1,4 +1,5 @@
 import React from 'react';
+import { isEnvironmentSupportMultiTenantConnectionPooling } from '@/utils/proConsole';
 import { DeepRequired } from 'ts-essentials';
 
 import {
@@ -756,6 +757,8 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     prepared_statements: true,
     isolation_level: true,
     connectionSettings: true,
+    cumulativeMaxConnections:
+      isEnvironmentSupportMultiTenantConnectionPooling(globals),
     retries: true,
     extensions_schema: true,
     pool_timeout: true,

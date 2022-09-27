@@ -29,10 +29,13 @@ module.exports = {
     __DEVTOOLS__: true,
     socket: true,
     webpackIsomorphicTools: true,
+    __env: {
+      consoleType: 'oss',
+    },
     window: {
       __env: {
         nodeEnv: 'development',
-        serverVersion: 'v1.0.0',
+        serverVersion: 'v1.0.0', // FIXME : moving this to the above __env block seem to be breaking some existing tests
       },
     },
   },

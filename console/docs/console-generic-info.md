@@ -70,6 +70,7 @@ Environment variables accepted in `server` mode:
 - `SERVER_VERSION`: Hasura GraphQL Engine server version
 - `CONSOLE_MODE`: In server mode, it should be `server`
 - `IS_ADMIN_SECRET_SET`: Is GraphQl engine configured with an admin secret (`true`/`false`)
+- `HASURA_CONSOLE_TYPE`: The environment where the console is running, this could be oss, pro or cloud
 
 Here's an example `.env` file for `server` mode:
 
@@ -84,6 +85,7 @@ URL_PREFIX=/
 DATA_API_URL=http://localhost:8080
 SERVER_VERSION=v1.0.0
 CONSOLE_MODE=server
+HASURA_CONSOLE_TYPE=oss
 IS_ADMIN_SECRET_SET=true
 ```
 

@@ -1,4 +1,6 @@
 import { TriggerOperation } from '@/components/Common/FilterQuery/state';
+import globals from '@/Globals';
+import { isEnvironmentSupportMultiTenantConnectionPooling } from '@/utils/proConsole';
 import React from 'react';
 import { DeepRequired } from 'ts-essentials';
 import { DataSourcesAPI } from '../..';
@@ -234,6 +236,8 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     isolation_level: false,
     connectionSettings: true,
     retries: false,
+    cumulativeMaxConnections:
+      isEnvironmentSupportMultiTenantConnectionPooling(globals),
     extensions_schema: false,
     pool_timeout: false,
     connection_lifetime: false,

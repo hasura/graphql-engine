@@ -407,25 +407,31 @@ export type SupportedFeaturesType = {
     statementTimeout: boolean;
     tracking: boolean;
   };
-  connectDbForm: {
-    enabled: boolean;
-    connectionParameters: boolean;
-    databaseURL: boolean;
-    environmentVariable: boolean;
-    read_replicas: {
-      create: boolean;
-      edit: boolean;
-    };
-    prepared_statements: boolean;
-    isolation_level: boolean;
-    connectionSettings: boolean;
-    retries: boolean;
-    extensions_schema: boolean;
-    pool_timeout: boolean;
-    connection_lifetime: boolean;
-    ssl_certificates: boolean;
-    namingConvention: boolean;
+  connectDbForm: ConnectDbForm;
+};
+
+type ConnectDbForm = {
+  enabled: boolean;
+  connectionParameters: boolean;
+  databaseURL: boolean;
+  environmentVariable: boolean;
+  read_replicas: {
+    create: boolean;
+    edit: boolean;
   };
+  extensions_schema: boolean;
+  namingConvention: boolean;
+} & DbConnectionSettings;
+
+export type DbConnectionSettings = {
+  connectionSettings: boolean;
+  cumulativeMaxConnections: boolean;
+  retries: boolean;
+  pool_timeout: boolean;
+  connection_lifetime: boolean;
+  isolation_level: boolean;
+  prepared_statements: boolean;
+  ssl_certificates: boolean;
 };
 
 type Tables = ReduxState['tables'];

@@ -33,3 +33,16 @@ export const isMonitoringTabSupportedEnvironment = (env: ProConsoleEnv) => {
   // there should not be any other console modes
   throw new Error(`Invalid consoleMode:  ${env.consoleMode}`);
 };
+
+export const isEnvironmentSupportMultiTenantConnectionPooling = (
+  env: ProConsoleEnv
+) => {
+  if (env.consoleMode === 'server') return env.consoleType === 'cloud';
+  // cloud and current self hosted setup will have pro:true
+  // FIX ME : currently in CLI mode there is no way to differentiate cloud and pro mode
+  // This can be added once the CLI adds support of consoleType in the env vars provided to console.
+  else if (env.consoleMode === 'cli') return env.pro === true;
+
+  // there should not be any other console modes
+  throw new Error(`Invalid consoleMode:  ${env.consoleMode}`);
+};

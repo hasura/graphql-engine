@@ -10,7 +10,7 @@ import styles from './DataSources.module.scss';
 import JSONEditor from '../TablePermissions/JSONEditor';
 import { SupportedFeaturesType } from '../../../../dataSources/types';
 import { Path } from '../../../Common/utils/tsUtils';
-import ConnectionSettingsForm from './ConnectionSettingsForm';
+import ConnectionSettingsForm from './ConnectionSettings/ConnectionSettingsForm';
 import { GraphQLFieldCustomizationContainer } from './GraphQLFieldCustomization/GraphQLFieldCustomizationContainer';
 import { SampleDBTrial } from './SampleDatabase';
 
