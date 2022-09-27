@@ -18,4 +18,12 @@ describe('encodeFileContent', () => {
   it('encodes alphanumeric strings', () => {
     expect(encodeFileContent('example è 123')).toBe('example%20%C3%A8%20123');
   });
+
+  it('encodes newline characters', () => {
+    expect(encodeFileContent('sentence\nnewline')).toBe('sentence%0Anewline');
+  });
+
+  it('encodes carriage return', () => {
+    expect(encodeFileContent('sentence\rnewline')).toBe('sentence%0Dnewline');
+  });
 });
