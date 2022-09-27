@@ -13,83 +13,83 @@
 </span><span id="line-13"></span><span>
 </span><span id="line-14"></span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.Delete.html#fromDelete"><span class="hs-identifier hs-type">fromDelete</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDel"><span class="hs-identifier hs-type">IR.AnnDel</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.FromIr.html#FromIr"><span class="hs-identifier hs-type">FromIr</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Delete"><span class="hs-identifier hs-type">Delete</span></a></span><span>
 </span><span id="line-15"></span><span id="fromDelete"><span class="annot"><span class="annottext">fromDelete :: AnnDel 'MSSQL -&gt; FromIr Delete
-</span><a href="Hasura.Backends.MSSQL.FromIr.Delete.html#fromDelete"><span class="hs-identifier hs-var hs-var">fromDelete</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDel"><span class="hs-identifier hs-type">IR.AnnDel</span></a></span><span> </span><span id="local-6989586621689706843"><span class="annot"><span class="annottext">TableName 'MSSQL
-</span><a href="#local-6989586621689706843"><span class="hs-identifier hs-var">table</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689706842"><span class="annot"><span class="annottext">AnnBoolExp 'MSSQL (SQLExpression 'MSSQL)
-</span><a href="#local-6989586621689706842"><span class="hs-identifier hs-var">permFilter</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689706841"><span class="annot"><span class="annottext">AnnBoolExp 'MSSQL (SQLExpression 'MSSQL)
-</span><a href="#local-6989586621689706841"><span class="hs-identifier hs-var">whereClause</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MutationOutputG 'MSSQL Void (SQLExpression 'MSSQL)
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689706840"><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621689706840"><span class="hs-identifier hs-var">allColumns</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
+</span><a href="Hasura.Backends.MSSQL.FromIr.Delete.html#fromDelete"><span class="hs-identifier hs-var hs-var">fromDelete</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDel"><span class="hs-identifier hs-type">IR.AnnDel</span></a></span><span> </span><span id="local-6989586621689706813"><span class="annot"><span class="annottext">TableName 'MSSQL
+</span><a href="#local-6989586621689706813"><span class="hs-identifier hs-var">table</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689706812"><span class="annot"><span class="annottext">AnnBoolExp 'MSSQL (SQLExpression 'MSSQL)
+</span><a href="#local-6989586621689706812"><span class="hs-identifier hs-var">permFilter</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689706811"><span class="annot"><span class="annottext">AnnBoolExp 'MSSQL (SQLExpression 'MSSQL)
+</span><a href="#local-6989586621689706811"><span class="hs-identifier hs-var">whereClause</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MutationOutputG 'MSSQL Void (SQLExpression 'MSSQL)
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689706810"><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
+</span><a href="#local-6989586621689706810"><span class="hs-identifier hs-var">allColumns</span></a></span></span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-16"></span><span>  </span><span id="local-6989586621689706839"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689706839"><span class="hs-identifier hs-var">tableAlias</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NameTemplate -&gt; FromIr Text
+</span><span id="line-16"></span><span>  </span><span id="local-6989586621689706809"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689706809"><span class="hs-identifier hs-var">tableAlias</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NameTemplate -&gt; FromIr Text
 </span><a href="Hasura.Backends.MSSQL.FromIr.html#generateAlias"><span class="hs-identifier hs-var">generateAlias</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; NameTemplate
 </span><a href="Hasura.Backends.MSSQL.FromIr.html#TableTemplate"><span class="hs-identifier hs-var">TableTemplate</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TableName -&gt; Text
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AtableName%3ATableName"><span class="hs-identifier hs-var hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
 TableName
-</span><a href="#local-6989586621689706843"><span class="hs-identifier hs-var">table</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689706813"><span class="hs-identifier hs-var">table</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-17"></span><span>  </span><span class="annot"><span class="annottext">ReaderT EntityAlias FromIr Delete -&gt; EntityAlias -&gt; FromIr Delete
 forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
 </span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span>
 </span><span id="line-18"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-19"></span><span>        </span><span id="local-6989586621689706835"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689706835"><span class="hs-identifier hs-var">permissionsFilter</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL Expression)
+</span><span id="line-19"></span><span>        </span><span id="local-6989586621689706805"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621689706805"><span class="hs-identifier hs-var">permissionsFilter</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL Expression)
 -&gt; ReaderT EntityAlias FromIr Expression
 </span><a href="Hasura.Backends.MSSQL.FromIr.Expression.html#fromGBoolExp"><span class="hs-identifier hs-var">fromGBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp 'MSSQL (SQLExpression 'MSSQL)
 GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL Expression)
-</span><a href="#local-6989586621689706842"><span class="hs-identifier hs-var">permFilter</span></a></span><span>
-</span><span id="line-20"></span><span>        </span><span id="local-6989586621689706834"><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689706834"><span class="hs-identifier hs-var">whereExpression</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL Expression)
+</span><a href="#local-6989586621689706812"><span class="hs-identifier hs-var">permFilter</span></a></span><span>
+</span><span id="line-20"></span><span>        </span><span id="local-6989586621689706804"><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621689706804"><span class="hs-identifier hs-var">whereExpression</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL Expression)
 -&gt; ReaderT EntityAlias FromIr Expression
 </span><a href="Hasura.Backends.MSSQL.FromIr.Expression.html#fromGBoolExp"><span class="hs-identifier hs-var">fromGBoolExp</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp 'MSSQL (SQLExpression 'MSSQL)
 GBoolExp 'MSSQL (AnnBoolExpFld 'MSSQL Expression)
-</span><a href="#local-6989586621689706841"><span class="hs-identifier hs-var">whereClause</span></a></span><span>
-</span><span id="line-21"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689706833"><span class="annot"><span class="annottext">columnNames :: [ColumnName]
-</span><a href="#local-6989586621689706833"><span class="hs-identifier hs-var hs-var">columnNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ColumnInfo 'MSSQL -&gt; ColumnName)
+</span><a href="#local-6989586621689706811"><span class="hs-identifier hs-var">whereClause</span></a></span><span>
+</span><span id="line-21"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689706803"><span class="annot"><span class="annottext">columnNames :: [ColumnName]
+</span><a href="#local-6989586621689706803"><span class="hs-identifier hs-var hs-var">columnNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ColumnInfo 'MSSQL -&gt; ColumnName)
 -&gt; [ColumnInfo 'MSSQL] -&gt; [ColumnName]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">ColumnInfo 'MSSQL -&gt; ColumnName
 forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var hs-var">IR.ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo 'MSSQL]
-</span><a href="#local-6989586621689706840"><span class="hs-identifier hs-var">allColumns</span></a></span><span>
+</span><a href="#local-6989586621689706810"><span class="hs-identifier hs-var">allColumns</span></a></span><span>
 </span><span id="line-22"></span><span>        </span><span class="annot"><span class="annottext">Delete -&gt; ReaderT EntityAlias FromIr Delete
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span>
 </span><span id="line-23"></span><span>          </span><span class="annot"><span class="annottext">Delete :: Aliased TableName -&gt; DeleteOutput -&gt; TempTable -&gt; Where -&gt; Delete
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Delete"><span class="hs-identifier hs-type">Delete</span></a></span><span>
 </span><span id="line-24"></span><span>            </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:deleteTable:Delete :: Aliased TableName
-</span><a href="#local-6989586621689706830"><span class="hs-identifier hs-var">deleteTable</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689706800"><span class="hs-identifier hs-var">deleteTable</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-25"></span><span>                </span><span class="annot"><span class="annottext">Aliased :: forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span>
 </span><span id="line-26"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:aliasedAlias:Aliased :: Text
-</span><a href="#local-6989586621689706828"><span class="hs-identifier hs-var">aliasedAlias</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689706839"><span class="hs-identifier hs-var">tableAlias</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689706798"><span class="hs-identifier hs-var">aliasedAlias</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689706809"><span class="hs-identifier hs-var">tableAlias</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-27"></span><span>                    </span><span class="annot"><span class="annottext">$sel:aliasedThing:Aliased :: TableName
-</span><a href="#local-6989586621689706827"><span class="hs-identifier hs-var">aliasedThing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
+</span><a href="#local-6989586621689706797"><span class="hs-identifier hs-var">aliasedThing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TableName 'MSSQL
 TableName
-</span><a href="#local-6989586621689706843"><span class="hs-identifier hs-var">table</span></a></span><span>
+</span><a href="#local-6989586621689706813"><span class="hs-identifier hs-var">table</span></a></span><span>
 </span><span id="line-28"></span><span>                  </span><span class="hs-special">}</span><span class="hs-special">,</span><span>
 </span><span id="line-29"></span><span>              </span><span class="annot"><span class="annottext">$sel:deleteOutput:Delete :: DeleteOutput
-</span><a href="#local-6989586621689706826"><span class="hs-identifier hs-var">deleteOutput</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Deleted -&gt; [OutputColumn] -&gt; DeleteOutput
+</span><a href="#local-6989586621689706796"><span class="hs-identifier hs-var">deleteOutput</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Deleted -&gt; [OutputColumn] -&gt; DeleteOutput
 forall t. t -&gt; [OutputColumn] -&gt; Output t
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Output"><span class="hs-identifier hs-var">Output</span></a></span><span> </span><span class="annot"><span class="annottext">Deleted
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Deleted"><span class="hs-identifier hs-var">Deleted</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(ColumnName -&gt; OutputColumn) -&gt; [ColumnName] -&gt; [OutputColumn]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">ColumnName -&gt; OutputColumn
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#OutputColumn"><span class="hs-identifier hs-var">OutputColumn</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnName]
-</span><a href="#local-6989586621689706833"><span class="hs-identifier hs-var">columnNames</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689706803"><span class="hs-identifier hs-var">columnNames</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-30"></span><span>              </span><span class="annot"><span class="annottext">$sel:deleteTempTable:Delete :: TempTable
-</span><a href="#local-6989586621689706822"><span class="hs-identifier hs-var">deleteTempTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TempTableName -&gt; [ColumnName] -&gt; TempTable
+</span><a href="#local-6989586621689706792"><span class="hs-identifier hs-var">deleteTempTable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TempTableName -&gt; [ColumnName] -&gt; TempTable
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TempTable"><span class="hs-identifier hs-var">TempTable</span></a></span><span> </span><span class="annot"><span class="annottext">TempTableName
 </span><a href="Hasura.Backends.MSSQL.FromIr.Constants.html#tempTableNameDeleted"><span class="hs-identifier hs-var">tempTableNameDeleted</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnName]
-</span><a href="#local-6989586621689706833"><span class="hs-identifier hs-var">columnNames</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689706803"><span class="hs-identifier hs-var">columnNames</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-31"></span><span>              </span><span class="annot"><span class="annottext">$sel:deleteWhere:Delete :: Where
-</span><a href="#local-6989586621689706820"><span class="hs-identifier hs-var">deleteWhere</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Expression] -&gt; Where
+</span><a href="#local-6989586621689706790"><span class="hs-identifier hs-var">deleteWhere</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Expression] -&gt; Where
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Where"><span class="hs-identifier hs-var">Where</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689706835"><span class="hs-identifier hs-var">permissionsFilter</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Expression
-</span><a href="#local-6989586621689706834"><span class="hs-identifier hs-var">whereExpression</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689706805"><span class="hs-identifier hs-var">permissionsFilter</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Expression
+</span><a href="#local-6989586621689706804"><span class="hs-identifier hs-var">whereExpression</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-32"></span><span>            </span><span class="hs-special">}</span><span>
 </span><span id="line-33"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; EntityAlias
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#EntityAlias"><span class="hs-identifier hs-var">EntityAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689706839"><span class="hs-identifier hs-var">tableAlias</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689706809"><span class="hs-identifier hs-var">tableAlias</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span></pre></body></html>

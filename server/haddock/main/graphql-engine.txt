@@ -22606,7 +22606,7 @@ translateAggPredBoolExp :: forall pgKind. TableName ('Postgres pgKind) -> Identi
 translateAggPredsSubselect :: forall pgKind. Backend ('Postgres pgKind) => Identifier -> Identifier -> BoolExp -> AggregationPredicatesImplementation ('Postgres pgKind) SQLExp -> BoolExpM FromItem
 translateAggPredExtractor :: forall pgKind field. Identifier -> TableName ('Postgres pgKind) -> AggregationPredicate ('Postgres pgKind) field -> Extractor
 translateAggPredArguments :: forall pgKind. AggregationPredicateArguments ('Postgres pgKind) -> Identifier -> NonEmpty SQLExp
-translateTableRelationship :: HashMap PGCol PGCol -> Identifier -> Qual -> BoolExp
+translateTableRelationship :: HashMap PGCol PGCol -> Identifier -> BoolExpM BoolExp
 data LHSField b
 LColumn :: FieldName -> LHSField b
 LComputedField :: QualifiedFunction -> FunctionArgsExp b (SQLExpression b) -> LHSField b
@@ -25673,9 +25673,9 @@ QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> Ha
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_ayeez. Lens' (QueryParametersInfo b_ayeez) (Seq (ColumnValue b_ayeez))
-qpiReusableVariableValues :: forall b_ayeez. Lens' (QueryParametersInfo b_ayeez) (HashMap Name (ColumnValue b_ayeez))
-qpiReferencedSessionVariables :: forall b_ayeez. Lens' (QueryParametersInfo b_ayeez) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_ayee7. Lens' (QueryParametersInfo b_ayee7) (Seq (ColumnValue b_ayee7))
+qpiReusableVariableValues :: forall b_ayee7. Lens' (QueryParametersInfo b_ayee7) (HashMap Name (ColumnValue b_ayee7))
+qpiReferencedSessionVariables :: forall b_ayee7. Lens' (QueryParametersInfo b_ayee7) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select
