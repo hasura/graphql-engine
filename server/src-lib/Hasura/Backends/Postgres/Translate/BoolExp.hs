@@ -168,8 +168,7 @@ translateBoolExp = \case
       -- Convert the where clause on the relationship
       aliasRelTN <- freshIdentifier relTN
       annRelBoolExp <- withCurrentTable (S.QualifiedIdentifier aliasRelTN Nothing) (translateBoolExp nesAnn)
-      BoolExpCtx {currTableReference} <- ask
-      let tableRelExp = translateTableRelationship colMapping aliasRelTN currTableReference
+      tableRelExp <- translateTableRelationship colMapping aliasRelTN
       let innerBoolExp = S.BEBin S.AndOp tableRelExp annRelBoolExp
       return $ S.mkExists (S.FISimple relTN $ Just $ S.toTableAlias aliasRelTN) innerBoolExp
     AVComputedField (AnnComputedFieldBoolExp _ _ function sessionArgPresence cfBoolExp) -> do
@@ -238,10 +237,9 @@ translateAVAggregationPredicates
   api@(AggregationPredicatesImplementation (RelInfo {riRTable = relTableName, riMapping = colMapping}) _rowPermissions predicate) = do
     -- e.g. __be_0_<schema>_<table_name>
     relTableNameAlias <- freshIdentifier relTableName
-    BoolExpCtx {currTableReference} <- ask
+    tableRelExp <- translateTableRelationship colMapping relTableNameAlias
     let subselectAlias = Identifier "_sub"
         relTable = S.QualifiedIdentifier relTableNameAlias Nothing
-        tableRelExp = translateTableRelationship colMapping relTableNameAlias currTableReference
     subselect <-
       local
         (\e -> e {currTableReference = relTable, rootReference = relTable})
@@ -323,13 +321,16 @@ translateAggPredArguments predArgs relTableNameAlias =
     (AggregationPredicateArguments cols) ->
       S.SEQIdentifier . S.mkQIdentifier relTableNameAlias <$> cols
 
-translateTableRelationship :: HashMap PGCol PGCol -> Identifier -> S.Qual -> S.BoolExp
-translateTableRelationship colMapping relTableNameAlias currTableReference = sqlAnd $
-  flip map (M.toList colMapping) $ \(lCol, rCol) ->
-    S.BECompare
-      S.SEQ
-      (S.mkIdentifierSQLExp (S.QualifiedIdentifier relTableNameAlias Nothing) rCol)
-      (S.mkIdentifierSQLExp currTableReference lCol)
+translateTableRelationship :: HashMap PGCol PGCol -> Identifier -> BoolExpM S.BoolExp
+translateTableRelationship colMapping relTableNameAlias = do
+  BoolExpCtx {currTableReference} <- ask
+  pure $
+    sqlAnd $
+      flip map (M.toList colMapping) $ \(lCol, rCol) ->
+        S.BECompare
+          S.SEQ
+          (S.mkIdentifierSQLExp (S.QualifiedIdentifier relTableNameAlias Nothing) rCol)
+          (S.mkIdentifierSQLExp currTableReference lCol)
 
 data LHSField b
   = LColumn FieldName
