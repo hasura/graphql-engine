@@ -46,7 +46,7 @@ type Success<Status, Payload> = {
   payload: Payload;
 };
 
-type NeonIntegrationStatus =
+export type NeonIntegrationStatus =
   | Idle<'idle', EmptyPayload>
   | Loading<'authentication-loading', EmptyPayload>
   | Success<'authentication-success', EmptyPayload>
