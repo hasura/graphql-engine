@@ -329,6 +329,28 @@ func StartPGContainer(t TestingT) (connectionString string, teardown func()) {
 	return connectionString, teardown
 }
 
+func AddDatabaseToHasura(t TestingT, hgeEndpoint, sourceName, databaseKind string) (string, func()) {
+	if databaseKind == "postgres" {
+		connectionStringPG, teardownPG := StartPGContainer(t)
+		AddPGSourceToHasura(t, hgeEndpoint, connectionStringPG, sourceName)
+		return connectionStringPG, teardownPG
+	}
+	if databaseKind == "citus" {
+		connectionStringCitus, teardownCitus := StartCitusContainer(t)
+		AddCitusSourceToHasura(t, hgeEndpoint, connectionStringCitus, sourceName)
+		return connectionStringCitus, teardownCitus
+	}
+
+	if databaseKind == "mssql" {
+		mssqlPort, teardownMSSQL := StartMSSQLContainer(t)
+		connectionStringMSSQL := fmt.Sprintf("DRIVER={ODBC Driver 17 for SQL Server};SERVER=%s,%s;DATABASE=master;Uid=SA;Pwd=%s;Encrypt=no", DockerSwitchIP, mssqlPort, MSSQLPassword)
+		AddMSSQLSourceToHasura(t, hgeEndpoint, connectionStringMSSQL, sourceName)
+		return connectionStringMSSQL, teardownMSSQL
+
+	}
+	return "", nil
+}
+
 func AddMSSQLSourceToHasura(t TestingT, hasuraEndpoint, connectionString, sourceName string) {
 	url := fmt.Sprintf("%s/v1/metadata", hasuraEndpoint)
 	body := fmt.Sprintf(`
