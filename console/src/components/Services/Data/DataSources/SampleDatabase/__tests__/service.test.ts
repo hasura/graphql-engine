@@ -1,3 +1,4 @@
+import { ConsoleType } from '../../../../../../utils/envUtils';
 import {
   checkNestedFieldValueInErrJson,
   maskPostgresError,
@@ -173,7 +174,7 @@ describe('Test checkNestedFieldValueInErrJson', () => {
 describe('newSampleDBTrial test', () => {
   test('consoleType==oss', () => {
     const sampleDBTrialService = newSampleDBTrial({
-      consoleType: 'oss',
+      consoleType: 'oss' as ConsoleType,
       hasuraCloudProjectId: 'project_id',
       cohortConfig: {
         databaseUrl: 'test_db_url',
@@ -188,7 +189,7 @@ describe('newSampleDBTrial test', () => {
 
   test('consoleType==cloud, null config', () => {
     const sampleDBTrialService = newSampleDBTrial({
-      consoleType: 'cloud',
+      consoleType: 'cloud' as ConsoleType,
       hasuraCloudProjectId: 'project_id',
       cohortConfig: null,
     });
@@ -200,7 +201,7 @@ describe('newSampleDBTrial test', () => {
 
   test('consoleType==cloud', () => {
     const sampleDBTrialService = newSampleDBTrial({
-      consoleType: 'cloud',
+      consoleType: 'cloud' as ConsoleType,
       hasuraCloudProjectId: 'project_id',
       cohortConfig: {
         databaseUrl: 'test_db_url',
@@ -215,7 +216,7 @@ describe('newSampleDBTrial test', () => {
 
   test('isExploringSampleDB', () => {
     const sampleDBTrialService = newSampleDBTrial({
-      consoleType: 'cloud',
+      consoleType: 'cloud' as ConsoleType,
       hasuraCloudProjectId: 'project_id',
       cohortConfig: {
         databaseUrl: 'test_db_url',
@@ -322,7 +323,7 @@ describe('newSampleDBTrial test', () => {
 
   test('hasAddedSampleDB', () => {
     const sampleDBTrialService = newSampleDBTrial({
-      consoleType: 'cloud',
+      consoleType: 'cloud' as ConsoleType,
       hasuraCloudProjectId: 'project_id',
       cohortConfig: {
         databaseUrl: 'test_db_url',
@@ -441,7 +442,7 @@ describe('maskPostgresError tests', () => {
         errorJson: {
           status_code: '42501',
         },
-        consoleType: 'cloud',
+        consoleType: 'cloud' as ConsoleType,
       },
       output: null,
     },
@@ -468,7 +469,7 @@ describe('maskPostgresError tests', () => {
         errorJson: {
           status_code: '42501',
         },
-        consoleType: 'cloud',
+        consoleType: 'cloud' as ConsoleType,
       },
       output: maskedErrorMessage,
     },
@@ -500,7 +501,7 @@ describe('maskPostgresError tests', () => {
         errorJson: {
           status_code: '42501',
         },
-        consoleType: 'cloud',
+        consoleType: 'cloud' as ConsoleType,
       },
       output: null,
     },
@@ -535,7 +536,7 @@ describe('maskPostgresError tests', () => {
         errorJson: {
           status_code: '42501',
         },
-        consoleType: 'cloud',
+        consoleType: 'cloud' as ConsoleType,
       },
       output: null,
     },
@@ -570,7 +571,7 @@ describe('maskPostgresError tests', () => {
         errorJson: {
           status_code: '42501',
         },
-        consoleType: 'cloud',
+        consoleType: 'cloud' as ConsoleType,
       },
       output: maskedErrorMessage,
     },
@@ -614,7 +615,7 @@ describe('maskPostgresError tests', () => {
             },
           ],
         },
-        consoleType: 'cloud',
+        consoleType: 'cloud' as ConsoleType,
       },
       output: maskedErrorMessage,
     },
@@ -658,7 +659,7 @@ describe('maskPostgresError tests', () => {
             },
           ],
         },
-        consoleType: 'oss',
+        consoleType: 'oss' as ConsoleType,
       },
       output: null,
     },

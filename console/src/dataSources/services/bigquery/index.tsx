@@ -215,6 +215,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     isolation_level: false,
     connectionSettings: false,
     retries: false,
+    cumulativeMaxConnections: false,
     extensions_schema: false,
     pool_timeout: false,
     connection_lifetime: false,

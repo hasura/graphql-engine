@@ -6,8 +6,8 @@ import { isEmpty } from './components/Common/utils/jsUtils';
 import { stripTrailingSlash } from './components/Common/utils/urlUtils';
 
 import { SERVER_CONSOLE_MODE } from './constants';
+import { parseConsoleType, ConsoleType } from './utils/envUtils';
 
-type ConsoleType = 'oss' | 'cloud' | 'pro' | 'pro-lite';
 export type LuxFeature =
   | 'DatadogIntegration'
   | 'ProUser'
@@ -221,7 +221,9 @@ const globals = {
   luxDataHost: window.__env?.luxDataHost,
   userRole: window.__env?.userRole || undefined,
   userId: window.__env?.userId || undefined,
-  consoleType: window.__env?.consoleType || '',
+  consoleType: window.__env?.consoleType // FIXME : this check can be removed when the all CLI environments are set with the console type, some CLI environments could have empty consoleType
+    ? parseConsoleType(window.__env?.consoleType)
+    : ('' as ConsoleType),
   eeMode: window.__env?.eeMode === 'true',
 };
 if (globals.consoleMode === SERVER_CONSOLE_MODE) {
