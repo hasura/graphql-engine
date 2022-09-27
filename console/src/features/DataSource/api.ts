@@ -56,6 +56,22 @@ export const runQuery = async <ResponseType>({
   return result.data;
 };
 
+export const runGraphQL = async ({
+  operationName,
+  query,
+  httpClient,
+}: { operationName: string; query: string } & NetworkArgs) => {
+  try {
+    const result = await httpClient.post('v1/graphql', {
+      query,
+      operationName,
+    });
+    return result.data;
+  } catch (err) {
+    throw err;
+  }
+};
+
 export const runSQL = async ({
   source,
   sql,

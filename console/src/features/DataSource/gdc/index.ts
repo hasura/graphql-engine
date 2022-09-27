@@ -5,6 +5,7 @@ import {
   getTableColumns,
   getDatabaseConfiguration,
 } from './introspection';
+import { getTableRows } from './query';
 
 /**
  * Why is GDCTable as string[] ?
@@ -29,6 +30,6 @@ export const gdc: Database = {
     getTablesListAsTree,
   },
   query: {
-    getTableRows: async () => Feature.NotImplemented,
+    getTableRows,
   },
 };

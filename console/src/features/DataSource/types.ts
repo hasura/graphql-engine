@@ -85,24 +85,13 @@ export type GetTableRowsProps = {
 } & NetworkArgs;
 export type TableRow = Record<string, unknown>;
 
-export type validOperators =
-  | '$eq'
-  | '$ne'
-  | '$in'
-  | '$nin'
-  | '$gt'
-  | '$lt'
-  | '$gte'
-  | '$lte';
+export type validOperators = string;
 
-export type AndExp = Record<'$and', BoolExp[]>;
-export type OrExp = Record<'$or', BoolExp[]>;
-export type NotExp = Record<'$not', BoolExp[]>;
-export type ColumnExpValue = Record<validOperators | string, any>;
-export type ColumnExp = Record<string, ColumnExpValue>;
-export type BoolExp = AndExp | OrExp | NotExp | ColumnExp;
 export type SelectColumn = string | { name: string; columns: SelectColumn[] };
-export type WhereClause = BoolExp | Record<string, any>;
+export type WhereClause = Record<
+  validOperators,
+  Record<string, string | number | boolean>
+>[];
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
 export type OrderBy = {
