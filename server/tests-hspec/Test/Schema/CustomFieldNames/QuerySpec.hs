@@ -56,8 +56,7 @@ spec = do
               Fixture.customOptions =
                 Just $
                   Fixture.defaultOptions
-                    { Fixture.stringifyNumbers = True,
-                      Fixture.skipTests = Just "Cockroach disabled pending oid 114 fix https://github.com/hasura/graphql-engine-mono/issues/5984"
+                    { Fixture.stringifyNumbers = True
                     }
             },
           (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
