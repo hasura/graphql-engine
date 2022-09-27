@@ -31,11 +31,13 @@
   url: /v1/query
   status: 500
   response:
-    path: "$.args"
     code: unexpected
     error: >-
-      found duplicate fields in selection set for mutation root: ['insert_user'
-      (generated for [action insert_user, table user in source default])]
+      Encountered conflicting definitions in the selection set for
+      'mutation_root' for field 'insert_user' defined in [action insert_user,
+      table user in source default]. Fields must not be defined more than once
+      across all sources.
+    path: $.args
   query:
     type: track_table
     args:
