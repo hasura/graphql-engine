@@ -1,8 +1,11 @@
 import React from 'react';
 import { useAppDispatch } from '@/store';
 import { Button } from '@/new-components/Button';
-import _push from '../../../../components/Services/Data/push';
+import Globals from '@/Globals';
+import { hasLuxFeatureAccess } from '@/utils/cloudConsole';
 import { OnboardingAnimation, OnboardingAnimationNavbar } from './components';
+import { NeonOnboarding } from './NeonOnboarding';
+import _push from '../../../../components/Services/Data/push';
 
 type ConnectDBScreenProps = {
   skipOnboarding: () => void;
@@ -33,18 +36,32 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
       </div>
 
       <div className="flex items-center justify-between">
-        <div className="cursor-pointer text-secondary text-sm hover:text-secondary-dark">
-          <div data-trackid="onboarding-skip-button" onClick={skipOnboarding}>
-            Skip setup, continue to dashboard
-          </div>
-        </div>
-        <Button
-          data-trackid="onboarding-connect-db-button"
-          mode="primary"
-          onClick={onClick}
-        >
-          Connect Your Database
-        </Button>
+        {hasLuxFeatureAccess(Globals, 'NeonDatabaseIntegration') ? (
+          <NeonOnboarding
+            dispatch={dispatch}
+            onSkip={skipOnboarding}
+            onCompletion={completeOnboarding}
+            onError={() => console.log('error')}
+          />
+        ) : (
+          <>
+            <div className="cursor-pointer text-secondary text-sm hover:text-secondary-dark">
+              <div
+                data-trackid="onboarding-skip-button"
+                onClick={skipOnboarding}
+              >
+                Skip setup, continue to dashboard
+              </div>
+            </div>
+            <Button
+              data-trackid="onboarding-connect-db-button"
+              mode="primary"
+              onClick={onClick}
+            >
+              Connect Your Database
+            </Button>
+          </>
+        )}
       </div>
     </>
   );

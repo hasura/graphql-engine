@@ -1,4 +1,6 @@
 import { LS_KEYS } from '@/utils/localStorage';
+import { NeonIntegrationStatus } from './useNeonIntegration';
+import type { Props as NeonBannerProps } from './components/Neon/NeonBanner';
 
 export const NEON_CALLBACK_SEARCH = LS_KEYS.neonCallbackSearch;
 
@@ -27,4 +29,89 @@ export function getNeonDBName(allDatabases: string[]) {
   }
 
   return dbName;
+}
+
+export function transformNeonIntegrationStatusToNeonBannerProps(
+  neonIntegrationStatus: NeonIntegrationStatus
+): NeonBannerProps {
+  let neonBannerProps: NeonBannerProps;
+  switch (neonIntegrationStatus.status) {
+    case 'idle':
+      neonBannerProps = {
+        status: {
+          status: 'default',
+        },
+        buttonText: 'Connect Neon Database',
+        onClickConnect: neonIntegrationStatus.action,
+      };
+      break;
+    case 'authentication-loading':
+      neonBannerProps = {
+        status: {
+          status: 'loading',
+        },
+        buttonText: 'Authenticating with Neon',
+        onClickConnect: () => null,
+      };
+      break;
+    case 'authentication-error':
+      neonBannerProps = {
+        status: {
+          status: 'error',
+          errorTitle: neonIntegrationStatus.title,
+          errorDescription: neonIntegrationStatus.description,
+        },
+        buttonText: 'Try again',
+        onClickConnect: neonIntegrationStatus.action,
+        icon: 'refresh',
+      };
+      break;
+    case 'authentication-success':
+    case 'neon-database-creation-loading':
+      neonBannerProps = {
+        status: {
+          status: 'loading',
+        },
+        buttonText: 'Creating Database',
+        onClickConnect: () => null,
+      };
+      break;
+    case 'neon-database-creation-error':
+      neonBannerProps = {
+        status: {
+          status: 'error',
+          errorTitle: neonIntegrationStatus.title,
+          errorDescription: neonIntegrationStatus.description,
+        },
+        buttonText: 'Try again',
+        onClickConnect: neonIntegrationStatus.action,
+        icon: 'refresh',
+      };
+      break;
+    case 'neon-database-creation-success':
+    case 'env-var-creation-loading':
+    case 'env-var-creation-success':
+    case 'env-var-creation-error':
+    case 'hasura-source-creation-loading':
+    case 'hasura-source-creation-error':
+    case 'hasura-source-creation-success':
+      neonBannerProps = {
+        status: {
+          status: 'loading',
+        },
+        buttonText: 'Connecting to Hasura',
+        onClickConnect: () => null,
+      };
+      break;
+    default:
+      neonBannerProps = {
+        status: {
+          status: 'default',
+        },
+        buttonText: 'Connect Neon Database',
+        onClickConnect: () => null,
+      };
+      break;
+  }
+  return neonBannerProps;
 }
