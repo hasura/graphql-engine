@@ -142,6 +142,7 @@ import Hasura.Server.Types
 import Hasura.Server.Version
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
+import Network.HTTP.Client.Blocklisting (Blocklist)
 import Network.HTTP.Client.CreateManager (mkHttpManager)
 import Network.HTTP.Client.Manager (HasHttpManagerM (..))
 import Network.HTTP.Client.Transformable qualified as HTTP
@@ -378,7 +379,6 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
           soReadOnlyMode
           soDefaultNamingConvention
 
-  schemaCacheHttpManager <- liftIO $ HTTP.newManager HTTP.tlsManagerSettings
   rebuildableSchemaCache <-
     lift . flip onException (flushLogger loggerCtx) $
       migrateCatalogSchema
@@ -386,7 +386,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
         logger
         metadataDbPool
         maybeDefaultSourceConfig
-        schemaCacheHttpManager
+        mempty
         serverConfigCtx
         (mkPgSourceResolver pgLogger)
         mkMSSQLSourceResolver
@@ -436,7 +436,7 @@ migrateCatalogSchema ::
   Logger Hasura ->
   PG.PGPool ->
   Maybe (SourceConnConfiguration ('Postgres 'Vanilla)) ->
-  HTTP.Manager ->
+  Blocklist ->
   ServerConfigCtx ->
   SourceResolver ('Postgres 'Vanilla) ->
   SourceResolver ('MSSQL) ->
@@ -447,7 +447,7 @@ migrateCatalogSchema
   logger
   pool
   defaultSourceConfig
-  httpManager
+  blockList
   serverConfigCtx
   pgSourceResolver
   mssqlSourceResolver
@@ -464,6 +464,8 @@ migrateCatalogSchema
             extensionsSchema
             (_sccMaintenanceMode serverConfigCtx)
             currentTime
+      let tlsAllowList = networkTlsAllowlist $ _metaNetwork metadata
+      httpManager <- liftIO $ mkHttpManager (pure tlsAllowList) blockList
       let cacheBuildParams =
             CacheBuildParams httpManager pgSourceResolver mssqlSourceResolver serverConfigCtx
           buildReason = CatalogSync
