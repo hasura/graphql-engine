@@ -58,8 +58,7 @@ spec = do
               Fixture.customOptions =
                 Just $
                   Fixture.defaultOptions
-                    { Fixture.stringifyNumbers = True,
-                      Fixture.skipTests = Just "Skipping whilst we fix numerical comparison of stringified results in Hspec tests"
+                    { Fixture.stringifyNumbers = True
                     }
             },
           (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
