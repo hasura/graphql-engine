@@ -31,11 +31,13 @@ import Hasura.Prelude
 import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization (applyFieldNameCaseCust, applyTypeNameCaseCust)
 import Hasura.RQL.Types.Subscription
 import Hasura.RQL.Types.Table
+import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | Argument to limit the maximum number of results returned in a single batch.
@@ -257,15 +259,17 @@ selectStreamTable sourceInfo tableInfo fieldName description = runMaybeT $ do
   lift $
     memoizeOn 'selectStreamTable (_siName sourceInfo, tableName, fieldName) $ do
       pure $
-        P.subselection fieldName description tableStreamArgsParser selectionSetParser
-          <&> \(args, fields) ->
-            IR.AnnSelectStreamG
-              { IR._assnXStreamingSubscription = xStreamSubscription,
-                IR._assnFields = fields,
-                IR._assnFrom = IR.FromTable tableName,
-                IR._assnPerm = tablePermissionsInfo selectPermissions,
-                IR._assnArgs = args,
-                IR._assnStrfyNum = stringifyNumbers
-              }
+        P.setFieldParserOrigin (MOSourceObjId sourceName (AB.mkAnyBackend $ SMOTable @b tableName)) $
+          P.subselection fieldName description tableStreamArgsParser selectionSetParser
+            <&> \(args, fields) ->
+              IR.AnnSelectStreamG
+                { IR._assnXStreamingSubscription = xStreamSubscription,
+                  IR._assnFields = fields,
+                  IR._assnFrom = IR.FromTable tableName,
+                  IR._assnPerm = tablePermissionsInfo selectPermissions,
+                  IR._assnArgs = args,
+                  IR._assnStrfyNum = stringifyNumbers
+                }
   where
     tableName = tableInfoName tableInfo
+    sourceName = _siName sourceInfo
