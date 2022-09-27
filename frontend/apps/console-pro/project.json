@@ -38,9 +38,11 @@
             }
           ],
           "optimization": true,
-          "outputHashing": "all",
-          "sourceMap": false,
+          "outputHashing": "none",
+          "extractCss": false,
+          "sourceMap": true,
           "namedChunks": false,
+          "generateIndexHtml": false,
           "extractLicenses": true,
           "vendorChunk": false
         }
