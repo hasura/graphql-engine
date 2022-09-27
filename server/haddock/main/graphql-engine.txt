@@ -29323,7 +29323,7 @@ _HCServe :: Prism' (HGECommand a) a
 --   NOTE: A <a>Nothing</a> value indicates the absence of a particular
 --   flag. Hence types such as 'Maybe (HashSet X)' or 'Maybe Bool'.
 data ServeOptionsRaw impl
-ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Bool -> Bool -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> Bool -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> ServeOptionsRaw impl
+ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe TxIsolation -> Maybe AdminSecretHash -> AuthHookRaw -> Maybe JWTConfig -> Maybe RoleName -> Maybe CorsConfig -> Bool -> Maybe Text -> Maybe Text -> Maybe Bool -> Bool -> StringifyNumbers -> Maybe DangerouslyCollapseBooleans -> Maybe (HashSet API) -> Maybe RefetchInterval -> Maybe BatchSize -> Maybe RefetchInterval -> Maybe BatchSize -> Bool -> Maybe (HashSet (EngineLogType impl)) -> Maybe LogLevel -> Bool -> Maybe Bool -> Maybe (Refined Positive Int) -> Maybe (Refined NonNegative Milliseconds) -> Maybe OptionalInterval -> RemoteSchemaPermissions -> Bool -> Maybe KeepAliveDelay -> Maybe InferFunctionPermissions -> MaintenanceMode () -> Maybe OptionalInterval -> Maybe (HashSet ExperimentalFeature) -> Maybe (Refined NonNegative Int) -> Maybe (Refined NonNegative Seconds) -> Maybe WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> Maybe ExtensionsSchema -> ServeOptionsRaw impl
 [rsoPort] :: ServeOptionsRaw impl -> Maybe Port
 [rsoHost] :: ServeOptionsRaw impl -> Maybe HostPreference
 [rsoConnParams] :: ServeOptionsRaw impl -> ConnParamsRaw
@@ -29335,6 +29335,7 @@ ServeOptionsRaw :: Maybe Port -> Maybe HostPreference -> ConnParamsRaw -> Maybe 
 [rsoCorsConfig] :: ServeOptionsRaw impl -> Maybe CorsConfig
 [rsoEnableConsole] :: ServeOptionsRaw impl -> Bool
 [rsoConsoleAssetsDir] :: ServeOptionsRaw impl -> Maybe Text
+[rsoConsoleSentryDsn] :: ServeOptionsRaw impl -> Maybe Text
 [rsoEnableTelemetry] :: ServeOptionsRaw impl -> Maybe Bool
 [rsoWsReadCookie] :: ServeOptionsRaw impl -> Bool
 [rsoStringifyNum] :: ServeOptionsRaw impl -> StringifyNumbers
@@ -29428,7 +29429,7 @@ WSConnectionInitTimeout :: Refined NonNegative Seconds -> WSConnectionInitTimeou
 --   the Environment, fully processed and ready to apply when running the
 --   server.
 data ServeOptions impl
-ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> Bool -> Maybe Text -> Bool -> StringifyNumbers -> DangerouslyCollapseBooleans -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> Bool -> HashSet (EngineLogType impl) -> LogLevel -> ResponseInternalErrorsConfig -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> Bool -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> Maybe NamingCase -> ExtensionsSchema -> ServeOptions impl
+ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet AdminSecretHash -> Maybe AuthHook -> [JWTConfig] -> Maybe RoleName -> CorsConfig -> Bool -> Maybe Text -> Maybe Text -> Bool -> StringifyNumbers -> DangerouslyCollapseBooleans -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> Bool -> HashSet (EngineLogType impl) -> LogLevel -> ResponseInternalErrorsConfig -> Refined Positive Int -> Refined NonNegative Milliseconds -> OptionalInterval -> RemoteSchemaPermissions -> ConnectionOptions -> KeepAliveDelay -> InferFunctionPermissions -> MaintenanceMode () -> OptionalInterval -> HashSet ExperimentalFeature -> Refined NonNegative Int -> Bool -> Refined NonNegative Seconds -> WSConnectionInitTimeout -> EventingMode -> ReadOnlyMode -> MetadataQueryLoggingMode -> Maybe NamingCase -> ExtensionsSchema -> ServeOptions impl
 [soPort] :: ServeOptions impl -> Port
 [soHost] :: ServeOptions impl -> HostPreference
 [soConnParams] :: ServeOptions impl -> ConnParams
@@ -29440,6 +29441,7 @@ ServeOptions :: Port -> HostPreference -> ConnParams -> TxIsolation -> HashSet A
 [soCorsConfig] :: ServeOptions impl -> CorsConfig
 [soEnableConsole] :: ServeOptions impl -> Bool
 [soConsoleAssetsDir] :: ServeOptions impl -> Maybe Text
+[soConsoleSentryDsn] :: ServeOptions impl -> Maybe Text
 [soEnableTelemetry] :: ServeOptions impl -> Bool
 [soStringifyNum] :: ServeOptions impl -> StringifyNumbers
 [soDangerousBooleanCollapse] :: ServeOptions impl -> DangerouslyCollapseBooleans
@@ -29718,6 +29720,8 @@ parseEnableConsole :: Parser Bool
 enableConsoleOption :: Option Bool
 parseConsoleAssetsDir :: Parser (Maybe Text)
 consoleAssetsDirOption :: Option ()
+parseConsoleSentryDsn :: Parser (Maybe Text)
+consoleSentryDsnOption :: Option ()
 parseEnableTelemetry :: Parser (Maybe Bool)
 enableTelemetryOption :: Option Bool
 parseWsReadCookie :: Parser Bool
@@ -31397,7 +31401,7 @@ gqlExplainHandler :: forall m. (MonadIO m, MonadBaseControl IO m, MonadError QEr
 v1Alpha1PGDumpHandler :: (MonadIO m, MonadError QErr m, MonadReader HandlerCtx m) => PGDumpReqBody -> m APIResp
 consoleAssetsHandler :: (MonadIO m, HttpLog m) => Logger Hasura -> LoggingSettings -> Text -> FilePath -> ActionT m ()
 class (Monad m) => ConsoleRenderer m
-renderConsole :: ConsoleRenderer m => Text -> AuthMode -> Bool -> Maybe Text -> m (Either String Text)
+renderConsole :: ConsoleRenderer m => Text -> AuthMode -> Bool -> Maybe Text -> Maybe Text -> m (Either String Text)
 renderHtmlTemplate :: Template -> Value -> Either String Text
 
 -- | Default implementation of the <a>MonadConfigApiHandler</a>
@@ -31408,8 +31412,8 @@ HasuraApp :: !Application -> !SchemaCacheRef -> !AsyncActionSubscriptionState ->
 [_hapSchemaRef] :: HasuraApp -> !SchemaCacheRef
 [_hapAsyncActionSubscriptionState] :: HasuraApp -> !AsyncActionSubscriptionState
 [_hapShutdownWsServer] :: HasuraApp -> !IO ()
-mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> Environment -> Logger Hasura -> SQLGenCtx -> Bool -> Manager -> AuthMode -> CorsConfig -> Bool -> Maybe Text -> Bool -> InstanceId -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> ResponseInternalErrorsConfig -> Maybe SubscriptionPostPollHook -> SchemaCacheRef -> Store EmptyMetrics -> ServerMetrics -> PrometheusMetrics -> RemoteSchemaPermissions -> InferFunctionPermissions -> ConnectionOptions -> KeepAliveDelay -> MaintenanceMode () -> EventingMode -> ReadOnlyMode -> HashSet ExperimentalFeature -> HashSet (EngineLogType Hasura) -> WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> m HasuraApp
-httpApp :: forall m. (MonadIO m, MonadFix m, MonadBaseControl IO m, ConsoleRenderer m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, HasReporter m, MonadExecuteQuery m, MonadMetadataStorage (MetadataStorageT m), HasResourceLimits m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Bool -> SpockT m ()
+mkWaiApp :: forall m. (MonadIO m, MonadFix m, MonadStateless IO m, Forall (Pure m), ConsoleRenderer m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, MonadWSLog m, HasReporter m, MonadExecuteQuery m, HasResourceLimits m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> Environment -> Logger Hasura -> SQLGenCtx -> Bool -> Manager -> AuthMode -> CorsConfig -> Bool -> Maybe Text -> Maybe Text -> Bool -> InstanceId -> HashSet API -> LiveQueriesOptions -> StreamQueriesOptions -> ResponseInternalErrorsConfig -> Maybe SubscriptionPostPollHook -> SchemaCacheRef -> Store EmptyMetrics -> ServerMetrics -> PrometheusMetrics -> RemoteSchemaPermissions -> InferFunctionPermissions -> ConnectionOptions -> KeepAliveDelay -> MaintenanceMode () -> EventingMode -> ReadOnlyMode -> HashSet ExperimentalFeature -> HashSet (EngineLogType Hasura) -> WSConnectionInitTimeout -> MetadataQueryLoggingMode -> Maybe NamingCase -> m HasuraApp
+httpApp :: forall m. (MonadIO m, MonadFix m, MonadBaseControl IO m, ConsoleRenderer m, HttpLog m, UserAuthentication (TraceT m), MonadMetadataApiAuthorization m, MonadGQLExecutionCheck m, MonadConfigApiHandler m, MonadQueryLog m, HasReporter m, MonadExecuteQuery m, MonadMetadataStorage (MetadataStorageT m), HasResourceLimits m, MonadResolveSource m, MonadQueryTags m, MonadEventLogCleanup m) => (ServerCtx -> SpockT m ()) -> CorsConfig -> ServerCtx -> Bool -> Maybe Text -> Maybe Text -> Bool -> SpockT m ()
 raiseGenericApiError :: (MonadIO m, HttpLog m) => Logger Hasura -> LoggingSettings -> [Header] -> QErr -> ActionT m ()
 instance Hasura.Server.App.ConsoleRenderer m => Hasura.Server.App.ConsoleRenderer (Hasura.Tracing.TraceT m)
 instance Hasura.Server.App.MonadMetadataApiAuthorization m => Hasura.Server.App.MonadMetadataApiAuthorization (Control.Monad.Trans.Reader.ReaderT r m)
@@ -31555,7 +31559,7 @@ runInSeparateTx :: MonadIO m => TxE QErr a -> MetadataStorageT (PGMetadataStorag
 notifySchemaCacheSyncTx :: MetadataResourceVersion -> InstanceId -> CacheInvalidations -> TxE QErr ()
 getCatalogStateTx :: TxE QErr CatalogState
 setCatalogStateTx :: CatalogStateType -> Value -> TxE QErr ()
-mkConsoleHTML :: Text -> AuthMode -> Bool -> Maybe Text -> Either String Text
+mkConsoleHTML :: Text -> AuthMode -> Bool -> Maybe Text -> Maybe Text -> Either String Text
 telemetryNotice :: String
 mkPgSourceResolver :: PGLogger -> SourceResolver ('Postgres 'Vanilla)
 mkMSSQLSourceResolver :: SourceResolver 'MSSQL
