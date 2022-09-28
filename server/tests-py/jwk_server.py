@@ -2,16 +2,17 @@
 # This is useful for testing our `jwk_url` behaviour
 
 import datetime
-import requests
 from http import HTTPStatus
+import http.server
+import requests
 
-from webserver import RequestHandler, WebServer, MkHandlers, Response
+from webserver import MkHandlers, RequestHandler, Response
 
 def mkJSONResp(json_result):
     return Response(HTTPStatus.OK, json_result, {'Content-Type': 'application/json'})
 
 # fetch a valid JWK from google servers - this seemed easier than
-# generating key pairs and then constructing a JWK JSON response        
+# generating key pairs and then constructing a JWK JSON response
 jwk_url = 'https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com'
 state = {
     'cache-control': 0,
@@ -25,7 +26,7 @@ class JwkExpiresHandler(RequestHandler):
     def get(self, request):
         jwk_resp = requests.get(jwk_url)
         res = jwk_resp.json()
-        
+
         resp = mkJSONResp(res)
         if request.qs and 'error' in request.qs and 'true' in request.qs['error']:
             resp.headers['Expires'] = 'invalid-value'
@@ -36,7 +37,7 @@ class JwkExpiresHandler(RequestHandler):
                 expires_in_secs = 3
             expiry = datetime.datetime.utcnow() + datetime.timedelta(seconds=expires_in_secs)
             resp.headers['Expires'] = datetime.datetime.strftime(expiry, "%a, %d %b %Y %T GMT")
-            
+
         state['expires'] += 1
         return resp
 
@@ -56,7 +57,7 @@ class JwkCacheControlHandler(RequestHandler):
                         header_vals.append(param)
                     elif val.isnumeric():
                         header_vals.append(param + "=" + val)
-            
+
         resp = mkJSONResp(res)
         resp.headers['Cache-Control'] = ", ".join(header_vals)
         # HGE should always prefer Cache-Control over Expires header
@@ -78,7 +79,7 @@ class ResetStateHandler(RequestHandler):
         state['cache-control'] = 0
         state['expires'] = 0
         return Response(HTTPStatus.OK)
-        
+
     def get(self, request):
         return Response(HTTPStatus.METHOD_NOT_ALLOWED)
 
@@ -95,7 +96,7 @@ handlers = MkHandlers({
 })
 
 def create_server(host='127.0.0.1', port=5001):
-    return WebServer((host, port), handlers)
+    return http.server.HTTPServer((host, port), handlers)
 
 def stop_server(server):
     server.shutdown()

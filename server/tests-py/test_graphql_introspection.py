@@ -5,10 +5,12 @@ from remote_server import NodeGraphQL
 
 yaml=YAML(typ='safe', pure=True)
 
-@pytest.fixture(scope="module")
-def graphql_service():
-    svc = NodeGraphQL(["node", "remote_schemas/nodejs/index.js"], port=4001)
+@pytest.fixture(scope='class')
+@pytest.mark.early
+def graphql_service(hge_fixture_env: dict[str, str]):
+    svc = NodeGraphQL(['node', 'remote_schemas/nodejs/index.js'], port=4001)
     svc.start()
+    hge_fixture_env['GRAPHQL_SERVICE_HANDLER'] = svc.url
     yield svc
     svc.stop()
 

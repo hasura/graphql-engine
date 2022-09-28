@@ -8,34 +8,32 @@ import ports
 
 # These are the names of the environment variables that should be passed through to the HGE binary.
 # Other variables are ignored.
-_USED_ENV_VARS = set([
+_PASS_THROUGH_ENV_VARS = set([
     'PATH',  # required for basically anything to work
     'HASURA_GRAPHQL_PG_SOURCE_URL_1',
     'HASURA_GRAPHQL_PG_SOURCE_URL_2',
-    'EVENT_WEBHOOK_HEADER',
-    'EVENT_WEBHOOK_HANDLER',
-    'ACTION_WEBHOOK_HANDLER',
-    'SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN',
-    'REMOTE_SCHEMAS_WEBHOOK_DOMAIN',
-    'GRAPHQL_SERVICE_HANDLER',
-    'GRAPHQL_SERVICE_1',
-    'GRAPHQL_SERVICE_2',
-    'GRAPHQL_SERVICE_3',
 ])
+
 
 def hge_port() -> int:
     return ports.find_free_port()
 
+
 def hge_server(
     request: pytest.FixtureRequest,
+    hge_bin: str,
     hge_port: int,
+    hge_url: str,
+    hge_fixture_env: dict[str, str],
     pg_url: str,
 ) -> Optional[str]:
-    hge_url = f'http://localhost:{hge_port}'
-    hge_bin: str = request.config.getoption('--hge-bin')  # type: ignore
-    if not hge_bin:
-      return None
-    hge_env = {name: value for name, value in os.environ.items() if name in _USED_ENV_VARS}
+    hge_env: dict[str, str] = {name: value for name, value in os.environ.items() if name in _PASS_THROUGH_ENV_VARS}
+    hge_marker_env: dict[str, str] = {marker.args[0]: marker.args[1] for marker in request.node.iter_markers('hge_env') if marker.args[1] is not None}
+    env = {
+        **hge_env,
+        **hge_fixture_env,
+        **hge_marker_env,
+    }
 
     print(f'Starting GraphQL Engine on {hge_url}...')
     hge_process = subprocess.Popen(
@@ -46,7 +44,7 @@ def hge_server(
             '--server-port', str(hge_port),
             '--stringify-numeric-types',
         ],
-        env = hge_env,
+        env = env,
     )
 
     def stop():
@@ -64,8 +62,11 @@ def hge_server(
         else:
             print(f'GraphQL Engine on {hge_url} has already stopped.')
 
-    # Stop in the background so we don't hold up other tests.
-    request.addfinalizer(lambda: threading.Thread(target = stop).start())
+    # We can re-enable stopping in the background once tests no longer share a database.
+    # Until then, HGE can interfere with other tests.
+    request.addfinalizer(stop)
+    ## Stop in the background so we don't hold up other tests.
+    # request.addfinalizer(lambda: threading.Thread(target = stop).start())
 
     ports.wait_for_port(hge_port, timeout = 30)
     return hge_url

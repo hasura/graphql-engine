@@ -5,11 +5,10 @@
 """
 
 from abc import ABC, abstractmethod
-import socket
 import http.server as http
 from http import HTTPStatus
-from urllib.parse import parse_qs, urlparse
 import json
+from urllib.parse import parse_qs, urlparse
 
 
 class Response():
@@ -131,14 +130,3 @@ def MkHandlers(handlers):
             return
 
     return HTTPHandler
-
-
-class WebServer(http.HTTPServer):
-    def __init__(self, server_address, handler):
-        super().__init__(server_address, handler)
-
-    def server_bind(self):
-        print('Running http server on {0}:{1}'.format(self.server_address[0],
-                                                      self.server_address[1]))
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.server_address)

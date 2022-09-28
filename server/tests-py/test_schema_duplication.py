@@ -1,9 +1,10 @@
 #!/usrbin/env python3
 
 import pytest
+
 from validate import check_query_f
 
-@pytest.mark.usefixtures('per_method_tests_db_state')
+@pytest.mark.usefixtures('actions_fixture', 'per_method_tests_db_state')
 class TestSchemaDuplication:
 
     @classmethod

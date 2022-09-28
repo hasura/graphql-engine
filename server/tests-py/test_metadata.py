@@ -1,6 +1,7 @@
-from validate import check_query_f
-import pytest
 import os
+import pytest
+
+from validate import check_query_f
 
 usefixtures = pytest.mark.usefixtures
 
@@ -10,7 +11,7 @@ use_mutation_fixtures = usefixtures(
 )
 
 
-@usefixtures('per_method_tests_db_state')
+@usefixtures('gql_server', 'per_method_tests_db_state')
 class TestMetadata:
 
     def test_reload_metadata(self, hge_ctx):
@@ -27,7 +28,6 @@ class TestMetadata:
     def test_clear_metadata_as_user(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/metadata_as_user_err.yaml')
 
-    @pytest.mark.usefixtures('gql_server')
     def test_replace_metadata(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata.yaml')
 
@@ -40,7 +40,6 @@ class TestMetadata:
     def test_replace_metadata_v2(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/replace_metadata_v2.yaml')
 
-    @pytest.mark.usefixtures('gql_server')
     def test_replace_metadata_allow_inconsistent(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() +
                       '/replace_metadata_allow_inconsistent_inconsistent.yaml')
