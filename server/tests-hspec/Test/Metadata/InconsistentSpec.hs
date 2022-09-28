@@ -52,9 +52,6 @@ tests opts = do
         `shouldReturnYaml` expectedInconsistentYaml (Just "success") testEnvironment
 
     it "recognizes when tables have become consistent" \testEnvironment -> do
-      -- This should not be necessary.
-      postMetadata_ testEnvironment reloadMetadata
-
       postMetadata testEnvironment (replaceMetadataWithTable testEnvironment)
         `shouldReturnYaml` expectedInconsistentYaml Nothing testEnvironment
 
@@ -71,11 +68,20 @@ tests opts = do
 
   describe "replacing the metadata" do
     it "flags missing tables as inconsistent" \testEnvironment -> do
-      -- This should not be necessary.
-      postMetadata_ testEnvironment reloadMetadata
-
       postMetadata testEnvironment (replaceMetadataWithTable testEnvironment)
         `shouldReturnYaml` expectedInconsistentYaml Nothing testEnvironment
+
+    it "recognizes when tables have become consistent" \testEnvironment -> do
+      postMetadata testEnvironment (replaceMetadataWithTable testEnvironment)
+        `shouldReturnYaml` expectedInconsistentYaml Nothing testEnvironment
+
+      Postgres.createTable testEnvironment table
+
+      postMetadata testEnvironment (replaceMetadataWithTable testEnvironment)
+        `shouldReturnYaml` [yaml|
+          is_consistent: true
+          inconsistent_objects: []
+        |]
 
 reloadMetadata :: Value
 reloadMetadata =
