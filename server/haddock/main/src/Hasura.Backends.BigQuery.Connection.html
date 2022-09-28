@@ -40,7 +40,7 @@
 </span><span id="line-40"></span><span>
 </span><span id="line-41"></span><span class="hs-keyword">newtype</span><span> </span><span id="Scope"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#Scope"><span class="hs-identifier hs-var">Scope</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Scope"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#Scope"><span class="hs-identifier hs-var">Scope</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unScope"><span class="annot"><span class="annottext">Scope -&gt; Text
 </span><a href="Hasura.Backends.BigQuery.Connection.html#unScope"><span class="hs-identifier hs-var hs-var">unScope</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689640129"><span id="local-6989586621689640131"><span id="local-6989586621689640133"><span class="annot"><span class="annottext">Int -&gt; Scope -&gt; ShowS
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689640134"><span id="local-6989586621689640136"><span id="local-6989586621689640138"><span class="annot"><span class="annottext">Int -&gt; Scope -&gt; ShowS
 [Scope] -&gt; ShowS
 Scope -&gt; String
 (Int -&gt; Scope -&gt; ShowS)
@@ -53,14 +53,14 @@ show :: Scope -&gt; String
 $cshow :: Scope -&gt; String
 showsPrec :: Int -&gt; Scope -&gt; ShowS
 $cshowsPrec :: Int -&gt; Scope -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689640124"><span id="local-6989586621689640126"><span class="annot"><span class="annottext">Scope -&gt; Scope -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689640129"><span id="local-6989586621689640131"><span class="annot"><span class="annottext">Scope -&gt; Scope -&gt; Bool
 (Scope -&gt; Scope -&gt; Bool) -&gt; (Scope -&gt; Scope -&gt; Bool) -&gt; Eq Scope
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Scope -&gt; Scope -&gt; Bool
 $c/= :: Scope -&gt; Scope -&gt; Bool
 == :: Scope -&gt; Scope -&gt; Bool
 $c== :: Scope -&gt; Scope -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689640121"><span class="annot"><span class="annottext">String -&gt; Scope
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689640126"><span class="annot"><span class="annottext">String -&gt; Scope
 (String -&gt; Scope) -&gt; IsString Scope
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; Scope
@@ -73,7 +73,7 @@ $cfromString :: String -&gt; Scope
 </span><span id="line-46"></span><span>    </span><span id="_gatrAssertion"><span class="annot"><span class="annottext">GoogleAccessTokenRequest -&gt; Text
 </span><a href="Hasura.Backends.BigQuery.Connection.html#_gatrAssertion"><span class="hs-identifier hs-var hs-var">_gatrAssertion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689640111"><span id="local-6989586621689640113"><span id="local-6989586621689640115"><span class="annot"><span class="annottext">Int -&gt; GoogleAccessTokenRequest -&gt; ShowS
+</span><span id="line-48"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689640116"><span id="local-6989586621689640118"><span id="local-6989586621689640120"><span class="annot"><span class="annottext">Int -&gt; GoogleAccessTokenRequest -&gt; ShowS
 [GoogleAccessTokenRequest] -&gt; ShowS
 GoogleAccessTokenRequest -&gt; String
 (Int -&gt; GoogleAccessTokenRequest -&gt; ShowS)
@@ -88,7 +88,7 @@ show :: GoogleAccessTokenRequest -&gt; String
 $cshow :: GoogleAccessTokenRequest -&gt; String
 showsPrec :: Int -&gt; GoogleAccessTokenRequest -&gt; ShowS
 $cshowsPrec :: Int -&gt; GoogleAccessTokenRequest -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689640107"><span id="local-6989586621689640109"><span class="annot"><span class="annottext">GoogleAccessTokenRequest -&gt; GoogleAccessTokenRequest -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689640112"><span id="local-6989586621689640114"><span class="annot"><span class="annottext">GoogleAccessTokenRequest -&gt; GoogleAccessTokenRequest -&gt; Bool
 (GoogleAccessTokenRequest -&gt; GoogleAccessTokenRequest -&gt; Bool)
 -&gt; (GoogleAccessTokenRequest -&gt; GoogleAccessTokenRequest -&gt; Bool)
 -&gt; Eq GoogleAccessTokenRequest
@@ -99,7 +99,7 @@ $c/= :: GoogleAccessTokenRequest -&gt; GoogleAccessTokenRequest -&gt; Bool
 $c== :: GoogleAccessTokenRequest -&gt; GoogleAccessTokenRequest -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-49"></span><span>
-</span><span id="line-50"></span><span class="hs-special">$(</span><span id="local-6989586621689640095"><span id="local-6989586621689640097"><span id="local-6989586621689640099"><span id="local-6989586621689640101"><span id="local-6989586621689640103"><span id="local-6989586621689640105"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">5</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">False</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">GoogleAccessTokenRequest</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span class="hs-special">$(</span><span id="local-6989586621689640100"><span id="local-6989586621689640102"><span id="local-6989586621689640104"><span id="local-6989586621689640106"><span id="local-6989586621689640108"><span id="local-6989586621689640110"><span class="hs-identifier">J.deriveJSON</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">J.aesonDrop</span><span> </span><span class="hs-number">5</span><span> </span><span class="hs-identifier">J.snakeCase</span><span class="hs-special">)</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">J.omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">False</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">GoogleAccessTokenRequest</span></span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#mkTokenRequest"><span class="hs-identifier hs-type">mkTokenRequest</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#GoogleAccessTokenRequest"><span class="hs-identifier hs-type">GoogleAccessTokenRequest</span></a></span><span>
 </span><span id="line-53"></span><span id="mkTokenRequest"><span class="annot"><span class="annottext">mkTokenRequest :: Text -&gt; GoogleAccessTokenRequest
@@ -107,12 +107,12 @@ $c== :: GoogleAccessTokenRequest -&gt; GoogleAccessTokenRequest -&gt; Bool
 </span><a href="Hasura.Backends.BigQuery.Connection.html#GoogleAccessTokenRequest"><span class="hs-identifier hs-var">GoogleAccessTokenRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;urn:ietf:params:oauth:grant-type:jwt-bearer&quot;</span></span><span>
 </span><span id="line-54"></span><span>
-</span><span id="line-55"></span><span id="local-6989586621689640087"><span id="local-6989586621689640088"></span></span><span class="hs-keyword">data</span><span> </span><span id="TokenProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-var">TokenProblem</span></a></span></span><span>
+</span><span id="line-55"></span><span id="local-6989586621689640092"><span id="local-6989586621689640093"></span></span><span class="hs-keyword">data</span><span> </span><span id="TokenProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-var">TokenProblem</span></a></span></span><span>
 </span><span id="line-56"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="BearerTokenDecodeProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#BearerTokenDecodeProblem"><span class="hs-identifier hs-var">BearerTokenDecodeProblem</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">TE.UnicodeException</span></span><span>
 </span><span id="line-57"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="BearerTokenSignsaferProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#BearerTokenSignsaferProblem"><span class="hs-identifier hs-var">BearerTokenSignsaferProblem</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Cry.Error</span></span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TokenFetchProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenFetchProblem"><span class="hs-identifier hs-var">TokenFetchProblem</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONException</span></span><span>
 </span><span id="line-59"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TokenRequestNonOK"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenRequestNonOK"><span class="hs-identifier hs-var">TokenRequestNonOK</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Status</span></span><span>
-</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689640077"><span id="local-6989586621689640079"><span id="local-6989586621689640081"><span class="annot"><span class="annottext">Int -&gt; TokenProblem -&gt; ShowS
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689640082"><span id="local-6989586621689640084"><span id="local-6989586621689640086"><span class="annot"><span class="annottext">Int -&gt; TokenProblem -&gt; ShowS
 [TokenProblem] -&gt; ShowS
 TokenProblem -&gt; String
 (Int -&gt; TokenProblem -&gt; ShowS)
@@ -150,18 +150,18 @@ $cfrom :: forall x. TokenProblem -&gt; Rep TokenProblem x
 </span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenFetchProblem"><span class="hs-identifier hs-type">TokenFetchProblem</span></a></span><span> </span><span class="annot"><span class="annottext">JSONException
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;JSON exception occurred while fetching token&quot;</span></span><span>
-</span><span id="line-67"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenRequestNonOK"><span class="hs-identifier hs-type">TokenRequestNonOK</span></a></span><span> </span><span id="local-6989586621689640072"><span class="annot"><span class="annottext">Status
-</span><a href="#local-6989586621689640072"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-67"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenRequestNonOK"><span class="hs-identifier hs-type">TokenRequestNonOK</span></a></span><span> </span><span id="local-6989586621689640077"><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621689640077"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;HTTP request to fetch token failed with status &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Status -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Status
-</span><a href="#local-6989586621689640072"><span class="hs-identifier hs-var">status</span></a></span><span>
+</span><a href="#local-6989586621689640077"><span class="hs-identifier hs-var">status</span></a></span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span class="hs-keyword">data</span><span> </span><span id="ServiceAccountProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#ServiceAccountProblem"><span class="hs-identifier hs-var">ServiceAccountProblem</span></a></span></span><span>
 </span><span id="line-70"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ServiceAccountFileDecodeProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#ServiceAccountFileDecodeProblem"><span class="hs-identifier hs-var">ServiceAccountFileDecodeProblem</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689640064"><span id="local-6989586621689640066"><span id="local-6989586621689640068"><span class="annot"><span class="annottext">Int -&gt; ServiceAccountProblem -&gt; ShowS
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689640069"><span id="local-6989586621689640071"><span id="local-6989586621689640073"><span class="annot"><span class="annottext">Int -&gt; ServiceAccountProblem -&gt; ShowS
 [ServiceAccountProblem] -&gt; ShowS
 ServiceAccountProblem -&gt; String
 (Int -&gt; ServiceAccountProblem -&gt; ShowS)
@@ -178,18 +178,18 @@ showsPrec :: Int -&gt; ServiceAccountProblem -&gt; ShowS
 $cshowsPrec :: Int -&gt; ServiceAccountProblem -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>
-</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689640056"><span id="local-6989586621689640058"><span id="local-6989586621689640060"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#ServiceAccountProblem"><span class="hs-identifier hs-type">ServiceAccountProblem</span></a></span></span></span></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689640061"><span id="local-6989586621689640063"><span id="local-6989586621689640065"><span class="annot"><span class="hs-identifier hs-type">Exception</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#ServiceAccountProblem"><span class="hs-identifier hs-type">ServiceAccountProblem</span></a></span></span></span></span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span id="local-6989586621689640053"><span id="local-6989586621689640054"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationJson"><span class="hs-identifier hs-type">resolveConfigurationJson</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-76"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689640054"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689640053"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-75"></span><span id="local-6989586621689640058"><span id="local-6989586621689640059"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationJson"><span class="hs-identifier hs-type">resolveConfigurationJson</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689640059"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689640058"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-77"></span><span>  </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-78"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-type">ConfigurationJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689640053"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-comment">-- REVIEW: Can this be made polymorphic?</span><span>
-</span><span id="line-79"></span><span>  </span><span class="annot"><a href="#local-6989586621689640054"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="#local-6989586621689640053"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-78"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationJSON"><span class="hs-identifier hs-type">ConfigurationJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689640058"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-comment">-- REVIEW: Can this be made polymorphic?</span><span>
+</span><span id="line-79"></span><span>  </span><span class="annot"><a href="#local-6989586621689640059"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="#local-6989586621689640058"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-80"></span><span id="resolveConfigurationJson"><span class="annot"><span class="annottext">resolveConfigurationJson :: Environment -&gt; ConfigurationJSON a -&gt; m (Either String a)
-</span><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationJson"><span class="hs-identifier hs-var hs-var">resolveConfigurationJson</span></a></span></span><span> </span><span id="local-6989586621689640052"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689640052"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-81"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamlJSON"><span class="hs-identifier hs-type">FromYamlJSON</span></a></span><span> </span><span id="local-6989586621689640050"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689640050"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either String a -&gt; m (Either String a)
+</span><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationJson"><span class="hs-identifier hs-var hs-var">resolveConfigurationJson</span></a></span></span><span> </span><span id="local-6989586621689640057"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621689640057"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-81"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamlJSON"><span class="hs-identifier hs-type">FromYamlJSON</span></a></span><span> </span><span id="local-6989586621689640055"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689640055"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either String a -&gt; m (Either String a)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either String a -&gt; m (Either String a))
 -&gt; (a -&gt; Either String a) -&gt; a -&gt; m (Either String a)
@@ -199,15 +199,15 @@ forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; m (Either String a)) -&gt; a -&gt; m (Either String a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689640050"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvJSON"><span class="hs-identifier hs-type">FromEnvJSON</span></a></span><span> </span><span id="local-6989586621689640047"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640047"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-83"></span><span>    </span><span id="local-6989586621689640046"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640046"><span class="hs-identifier hs-var">fileContents</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; Text -&gt; m Text
+</span><a href="#local-6989586621689640055"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvJSON"><span class="hs-identifier hs-type">FromEnvJSON</span></a></span><span> </span><span id="local-6989586621689640052"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640052"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-83"></span><span>    </span><span id="local-6989586621689640051"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640051"><span class="hs-identifier hs-var">fileContents</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; Text -&gt; m Text
 forall (m :: * -&gt; *). QErrM m =&gt; Environment -&gt; Text -&gt; m Text
 </span><a href="Hasura.Backends.MSSQL.Connection.html#getEnv"><span class="hs-identifier hs-var">MSSQLConn.getEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689640052"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640047"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689640057"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640052"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-84"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String a
 forall a. FromJSON a =&gt; ByteString -&gt; Either String a
 </span><span class="hs-identifier hs-var">J.eitherDecode</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Either String a)
@@ -221,9 +221,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">TE.encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Either String a) -&gt; Text -&gt; Either String a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640046"><span class="hs-identifier hs-var">fileContents</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-85"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689640042"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689640042"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either String a -&gt; m (Either String a)
+</span><a href="#local-6989586621689640051"><span class="hs-identifier hs-var">fileContents</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-85"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689640047"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689640047"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either String a -&gt; m (Either String a)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either String a -&gt; m (Either String a))
 -&gt; (String -&gt; Either String a) -&gt; String -&gt; m (Either String a)
@@ -233,9 +233,9 @@ forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; m (Either String a)) -&gt; String -&gt; m (Either String a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689640042"><span class="hs-identifier hs-var">e</span></a></span><span>
-</span><span id="line-86"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689640041"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689640041"><span class="hs-identifier hs-var">sa</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either String a -&gt; m (Either String a)
+</span><a href="#local-6989586621689640047"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-86"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689640046"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621689640046"><span class="hs-identifier hs-var">sa</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either String a -&gt; m (Either String a)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either String a -&gt; m (Either String a))
 -&gt; (a -&gt; Either String a) -&gt; a -&gt; m (Either String a)
@@ -245,43 +245,43 @@ forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; m (Either String a)) -&gt; a -&gt; m (Either String a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689640041"><span class="hs-identifier hs-var">sa</span></a></span><span>
+</span><a href="#local-6989586621689640046"><span class="hs-identifier hs-var">sa</span></a></span><span>
 </span><span id="line-87"></span><span>
-</span><span id="line-88"></span><span id="local-6989586621689640040"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInput"><span class="hs-identifier hs-type">resolveConfigurationInput</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-89"></span><span>  </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689640040"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-88"></span><span id="local-6989586621689640045"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInput"><span class="hs-identifier hs-type">resolveConfigurationInput</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-89"></span><span>  </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689640045"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-90"></span><span>  </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-91"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInput"><span class="hs-identifier hs-type">ConfigurationInput</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-92"></span><span>  </span><span class="annot"><a href="#local-6989586621689640040"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><a href="#local-6989586621689640045"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span></span><span>
 </span><span id="line-93"></span><span id="resolveConfigurationInput"><span class="annot"><span class="annottext">resolveConfigurationInput :: Environment -&gt; ConfigurationInput -&gt; m Text
-</span><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInput"><span class="hs-identifier hs-var hs-var">resolveConfigurationInput</span></a></span></span><span> </span><span id="local-6989586621689640039"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689640039"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-94"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYaml"><span class="hs-identifier hs-type">FromYaml</span></a></span><span> </span><span id="local-6989586621689640037"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640037"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Text
+</span><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInput"><span class="hs-identifier hs-var hs-var">resolveConfigurationInput</span></a></span></span><span> </span><span id="local-6989586621689640044"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621689640044"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-94"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYaml"><span class="hs-identifier hs-type">FromYaml</span></a></span><span> </span><span id="local-6989586621689640042"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640042"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m Text
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640037"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-95"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnv"><span class="hs-identifier hs-type">FromEnv</span></a></span><span> </span><span id="local-6989586621689640035"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640035"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; Text -&gt; m Text
+</span><a href="#local-6989586621689640042"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnv"><span class="hs-identifier hs-type">FromEnv</span></a></span><span> </span><span id="local-6989586621689640040"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640040"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Environment -&gt; Text -&gt; m Text
 forall (m :: * -&gt; *). QErrM m =&gt; Environment -&gt; Text -&gt; m Text
 </span><a href="Hasura.Backends.MSSQL.Connection.html#getEnv"><span class="hs-identifier hs-var">MSSQLConn.getEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689640039"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640035"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689640044"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640040"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-96"></span><span>
-</span><span id="line-97"></span><span id="local-6989586621689640034"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInputs"><span class="hs-identifier hs-type">resolveConfigurationInputs</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-98"></span><span>  </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689640034"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-97"></span><span id="local-6989586621689640039"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInputs"><span class="hs-identifier hs-type">resolveConfigurationInputs</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-98"></span><span>  </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689640039"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-99"></span><span>  </span><span class="annot"><a href="Data.Environment.html#Environment"><span class="hs-identifier hs-type">Env.Environment</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-100"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ConfigurationInputs"><span class="hs-identifier hs-type">ConfigurationInputs</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-101"></span><span>  </span><span class="annot"><a href="#local-6989586621689640034"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span></span><span>
+</span><span id="line-101"></span><span>  </span><span class="annot"><a href="#local-6989586621689640039"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span></span><span>
 </span><span id="line-102"></span><span id="resolveConfigurationInputs"><span class="annot"><span class="annottext">resolveConfigurationInputs :: Environment -&gt; ConfigurationInputs -&gt; m [Text]
-</span><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInputs"><span class="hs-identifier hs-var hs-var">resolveConfigurationInputs</span></a></span></span><span> </span><span id="local-6989586621689640033"><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689640033"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-103"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamls"><span class="hs-identifier hs-type">FromYamls</span></a></span><span> </span><span id="local-6989586621689640031"><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689640031"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; m [Text]
+</span><a href="Hasura.Backends.BigQuery.Connection.html#resolveConfigurationInputs"><span class="hs-identifier hs-var hs-var">resolveConfigurationInputs</span></a></span></span><span> </span><span id="local-6989586621689640038"><span class="annot"><span class="annottext">Environment
+</span><a href="#local-6989586621689640038"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-103"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromYamls"><span class="hs-identifier hs-type">FromYamls</span></a></span><span> </span><span id="local-6989586621689640036"><span class="annot"><span class="annottext">[Text]
+</span><a href="#local-6989586621689640036"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; m [Text]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689640031"><span class="hs-identifier hs-var">a</span></a></span><span>
-</span><span id="line-104"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvs"><span class="hs-identifier hs-type">FromEnvs</span></a></span><span> </span><span id="local-6989586621689640029"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640029"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Bool) -&gt; [Text] -&gt; [Text]
+</span><a href="#local-6989586621689640036"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-104"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#FromEnvs"><span class="hs-identifier hs-type">FromEnvs</span></a></span><span> </span><span id="local-6989586621689640034"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640034"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Bool) -&gt; [Text] -&gt; [Text]
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><span class="hs-identifier hs-var">not</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; Bool) -&gt; (Text -&gt; Bool) -&gt; Text -&gt; Bool
@@ -296,18 +296,18 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Environment -&gt; Text -&gt; m Text
 forall (m :: * -&gt; *). QErrM m =&gt; Environment -&gt; Text -&gt; m Text
 </span><a href="Hasura.Backends.MSSQL.Connection.html#getEnv"><span class="hs-identifier hs-var">MSSQLConn.getEnv</span></a></span><span> </span><span class="annot"><span class="annottext">Environment
-</span><a href="#local-6989586621689640033"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640029"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689640038"><span class="hs-identifier hs-var">env</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640034"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-105"></span><span>
-</span><span id="line-106"></span><span id="local-6989586621689640024"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#initConnection"><span class="hs-identifier hs-type">initConnection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689640024"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-type">ServiceAccount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#RetryOptions"><span class="hs-identifier hs-type">RetryOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640024"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnection"><span class="hs-identifier hs-type">BigQueryConnection</span></a></span></span><span>
+</span><span id="line-106"></span><span id="local-6989586621689640029"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#initConnection"><span class="hs-identifier hs-type">initConnection</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689640029"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-type">ServiceAccount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#RetryOptions"><span class="hs-identifier hs-type">RetryOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640029"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnection"><span class="hs-identifier hs-type">BigQueryConnection</span></a></span></span><span>
 </span><span id="line-107"></span><span id="initConnection"><span class="annot"><span class="annottext">initConnection :: ServiceAccount
 -&gt; Text -&gt; Maybe RetryOptions -&gt; m BigQueryConnection
-</span><a href="Hasura.Backends.BigQuery.Connection.html#initConnection"><span class="hs-identifier hs-var hs-var">initConnection</span></a></span></span><span> </span><span id="local-6989586621689640023"><span class="annot"><span class="annottext">ServiceAccount
-</span><a href="#local-6989586621689640023"><span class="hs-identifier hs-var">_bqServiceAccount</span></a></span></span><span> </span><span id="local-6989586621689640022"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640022"><span class="hs-identifier hs-var">_bqProjectId</span></a></span></span><span> </span><span id="local-6989586621689640021"><span class="annot"><span class="annottext">Maybe RetryOptions
-</span><a href="#local-6989586621689640021"><span class="hs-identifier hs-var">_bqRetryOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-108"></span><span>  </span><span id="local-6989586621689640020"><span class="annot"><span class="annottext">MVar (Maybe TokenResp)
-</span><a href="#local-6989586621689640020"><span class="hs-identifier hs-var">_bqAccessTokenMVar</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (MVar (Maybe TokenResp)) -&gt; m (MVar (Maybe TokenResp))
+</span><a href="Hasura.Backends.BigQuery.Connection.html#initConnection"><span class="hs-identifier hs-var hs-var">initConnection</span></a></span></span><span> </span><span id="local-6989586621689640028"><span class="annot"><span class="annottext">ServiceAccount
+</span><a href="#local-6989586621689640028"><span class="hs-identifier hs-var">_bqServiceAccount</span></a></span></span><span> </span><span id="local-6989586621689640027"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640027"><span class="hs-identifier hs-var">_bqProjectId</span></a></span></span><span> </span><span id="local-6989586621689640026"><span class="annot"><span class="annottext">Maybe RetryOptions
+</span><a href="#local-6989586621689640026"><span class="hs-identifier hs-var">_bqRetryOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-108"></span><span>  </span><span id="local-6989586621689640025"><span class="annot"><span class="annottext">MVar (Maybe TokenResp)
+</span><a href="#local-6989586621689640025"><span class="hs-identifier hs-var">_bqAccessTokenMVar</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (MVar (Maybe TokenResp)) -&gt; m (MVar (Maybe TokenResp))
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (MVar (Maybe TokenResp)) -&gt; m (MVar (Maybe TokenResp)))
 -&gt; IO (MVar (Maybe TokenResp)) -&gt; m (MVar (Maybe TokenResp))
@@ -338,22 +338,22 @@ _bqProjectId :: Text
 _bqServiceAccount :: ServiceAccount
 </span><a href="Hasura.Backends.BigQuery.Source.html#_bqAccessTokenMVar"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-110"></span><span>
-</span><span id="line-111"></span><span id="local-6989586621689640175"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#getAccessToken"><span class="hs-identifier hs-type">getAccessToken</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689640175"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-type">ServiceAccount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640175"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-type">TokenProblem</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-111"></span><span id="local-6989586621689640180"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#getAccessToken"><span class="hs-identifier hs-type">getAccessToken</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689640180"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-type">ServiceAccount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640180"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-type">TokenProblem</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-112"></span><span id="getAccessToken"><span class="annot"><span class="annottext">getAccessToken :: ServiceAccount -&gt; m (Either TokenProblem TokenResp)
-</span><a href="Hasura.Backends.BigQuery.Connection.html#getAccessToken"><span class="hs-identifier hs-var hs-var">getAccessToken</span></a></span></span><span> </span><span id="local-6989586621689640011"><span class="annot"><span class="annottext">ServiceAccount
-</span><a href="#local-6989586621689640011"><span class="hs-identifier hs-var">sa</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-113"></span><span>  </span><span id="local-6989586621689640010"><span class="annot"><span class="annottext">Either TokenProblem ByteString
-</span><a href="#local-6989586621689640010"><span class="hs-identifier hs-var">eJwt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServiceAccount -&gt; [Scope] -&gt; m (Either TokenProblem ByteString)
+</span><a href="Hasura.Backends.BigQuery.Connection.html#getAccessToken"><span class="hs-identifier hs-var hs-var">getAccessToken</span></a></span></span><span> </span><span id="local-6989586621689640016"><span class="annot"><span class="annottext">ServiceAccount
+</span><a href="#local-6989586621689640016"><span class="hs-identifier hs-var">sa</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-113"></span><span>  </span><span id="local-6989586621689640015"><span class="annot"><span class="annottext">Either TokenProblem ByteString
+</span><a href="#local-6989586621689640015"><span class="hs-identifier hs-var">eJwt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServiceAccount -&gt; [Scope] -&gt; m (Either TokenProblem ByteString)
 forall (m :: * -&gt; *).
 MonadIO m =&gt;
 ServiceAccount -&gt; [Scope] -&gt; m (Either TokenProblem ByteString)
-</span><a href="#local-6989586621689640009"><span class="hs-identifier hs-var">encodeBearerJWT</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceAccount
-</span><a href="#local-6989586621689640011"><span class="hs-identifier hs-var">sa</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Scope
+</span><a href="#local-6989586621689640014"><span class="hs-identifier hs-var">encodeBearerJWT</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceAccount
+</span><a href="#local-6989586621689640016"><span class="hs-identifier hs-var">sa</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Scope
 </span><span class="hs-string">&quot;https://www.googleapis.com/auth/cloud-platform&quot;</span></span><span class="hs-special">]</span><span>
 </span><span id="line-114"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem ByteString
-</span><a href="#local-6989586621689640010"><span class="hs-identifier hs-var">eJwt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-115"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689640008"><span class="annot"><span class="annottext">TokenProblem
-</span><a href="#local-6989586621689640008"><span class="hs-identifier hs-var">tokenProblem</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem TokenResp -&gt; m (Either TokenProblem TokenResp)
+</span><a href="#local-6989586621689640015"><span class="hs-identifier hs-var">eJwt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-115"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689640013"><span class="annot"><span class="annottext">TokenProblem
+</span><a href="#local-6989586621689640013"><span class="hs-identifier hs-var">tokenProblem</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem TokenResp -&gt; m (Either TokenProblem TokenResp)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either TokenProblem TokenResp
  -&gt; m (Either TokenProblem TokenResp))
@@ -367,14 +367,14 @@ forall a b. a -&gt; Either a b
 -&gt; TokenProblem -&gt; m (Either TokenProblem TokenResp)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TokenProblem
-</span><a href="#local-6989586621689640008"><span class="hs-identifier hs-var">tokenProblem</span></a></span><span>
-</span><span id="line-116"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689640007"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689640007"><span class="hs-identifier hs-var">jwt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689640013"><span class="hs-identifier hs-var">tokenProblem</span></a></span><span>
+</span><span id="line-116"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689640012"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689640012"><span class="hs-identifier hs-var">jwt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-117"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either UnicodeException Text
 </span><span class="hs-identifier hs-var">TE.decodeUtf8'</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689640007"><span class="hs-identifier hs-var">jwt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-118"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689640005"><span class="annot"><span class="annottext">UnicodeException
-</span><a href="#local-6989586621689640005"><span class="hs-identifier hs-var">unicodeEx</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem TokenResp -&gt; m (Either TokenProblem TokenResp)
+</span><a href="#local-6989586621689640012"><span class="hs-identifier hs-var">jwt</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-118"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689640010"><span class="annot"><span class="annottext">UnicodeException
+</span><a href="#local-6989586621689640010"><span class="hs-identifier hs-var">unicodeEx</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem TokenResp -&gt; m (Either TokenProblem TokenResp)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either TokenProblem TokenResp
  -&gt; m (Either TokenProblem TokenResp))
@@ -394,11 +394,11 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; UnicodeException -&gt; m (Either TokenProblem TokenResp)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UnicodeException
-</span><a href="#local-6989586621689640005"><span class="hs-identifier hs-var">unicodeEx</span></a></span><span>
-</span><span id="line-119"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689640004"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640004"><span class="hs-identifier hs-var">assertion</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-120"></span><span>          </span><span id="local-6989586621689640003"><span class="annot"><span class="annottext">Response (Either JSONException TokenResp)
-</span><a href="#local-6989586621689640003"><span class="hs-identifier hs-var">tokenFetchResponse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONException</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><a href="#local-6989586621689640010"><span class="hs-identifier hs-var">unicodeEx</span></a></span><span>
+</span><span id="line-119"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689640009"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689640009"><span class="hs-identifier hs-var">assertion</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-120"></span><span>          </span><span id="local-6989586621689640008"><span class="annot"><span class="annottext">Response (Either JSONException TokenResp)
+</span><a href="#local-6989586621689640008"><span class="hs-identifier hs-var">tokenFetchResponse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONException</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-121"></span><span>            </span><span class="annot"><span class="annottext">Request -&gt; m (Response (Either JSONException TokenResp))
 forall (m :: * -&gt; *) a.
 (MonadIO m, FromJSON a) =&gt;
@@ -411,7 +411,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a. ToJSON a =&gt; a -&gt; Request -&gt; Request
 </span><span class="hs-identifier hs-var">setRequestBodyJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; GoogleAccessTokenRequest
 </span><a href="Hasura.Backends.BigQuery.Connection.html#mkTokenRequest"><span class="hs-identifier hs-var">mkTokenRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689640004"><span class="hs-identifier hs-var">assertion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Request -&gt; Request) -&gt; Request -&gt; Request
+</span><a href="#local-6989586621689640009"><span class="hs-identifier hs-var">assertion</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Request -&gt; Request) -&gt; Request -&gt; Request
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-123"></span><span>                </span><span class="annot"><span class="annottext">String -&gt; Request
@@ -419,11 +419,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;POST &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689639999"><span class="hs-identifier hs-var">tokenURL</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689640004"><span class="hs-identifier hs-var">tokenURL</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-124"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Response (Either JSONException TokenResp) -&gt; Int
 forall a. Response a -&gt; Int
 </span><span class="hs-identifier hs-var">getResponseStatusCode</span></span><span> </span><span class="annot"><span class="annottext">Response (Either JSONException TokenResp)
-</span><a href="#local-6989586621689640003"><span class="hs-identifier hs-var">tokenFetchResponse</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621689640008"><span class="hs-identifier hs-var">tokenFetchResponse</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">200</span></span><span>
@@ -457,14 +457,14 @@ forall a. Response a -&gt; Status
 -&gt; m (Either TokenProblem TokenResp)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Response (Either JSONException TokenResp)
-</span><a href="#local-6989586621689640003"><span class="hs-identifier hs-var">tokenFetchResponse</span></a></span><span>
+</span><a href="#local-6989586621689640008"><span class="hs-identifier hs-var">tokenFetchResponse</span></a></span><span>
 </span><span id="line-126"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Response (Either JSONException TokenResp)
 -&gt; Either JSONException TokenResp
 forall a. Response a -&gt; a
 </span><span class="hs-identifier hs-var">getResponseBody</span></span><span> </span><span class="annot"><span class="annottext">Response (Either JSONException TokenResp)
-</span><a href="#local-6989586621689640003"><span class="hs-identifier hs-var">tokenFetchResponse</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-127"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689639994"><span class="annot"><span class="annottext">JSONException
-</span><a href="#local-6989586621689639994"><span class="hs-identifier hs-var">jsonEx</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem TokenResp -&gt; m (Either TokenProblem TokenResp)
+</span><a href="#local-6989586621689640008"><span class="hs-identifier hs-var">tokenFetchResponse</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-127"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689639999"><span class="annot"><span class="annottext">JSONException
+</span><a href="#local-6989586621689639999"><span class="hs-identifier hs-var">jsonEx</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem TokenResp -&gt; m (Either TokenProblem TokenResp)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either TokenProblem TokenResp
  -&gt; m (Either TokenProblem TokenResp))
@@ -484,9 +484,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; JSONException -&gt; m (Either TokenProblem TokenResp)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">JSONException
-</span><a href="#local-6989586621689639994"><span class="hs-identifier hs-var">jsonEx</span></a></span><span>
-</span><span id="line-128"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689639993"><span class="annot"><span class="annottext">tr :: TokenResp
-</span><a href="#local-6989586621689639993"><span class="hs-identifier hs-var">tr</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639991"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689639999"><span class="hs-identifier hs-var">jsonEx</span></a></span><span>
+</span><span id="line-128"></span><span>              </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689639998"><span class="annot"><span class="annottext">tr :: TokenResp
+</span><a href="#local-6989586621689639998"><span class="hs-identifier hs-var">tr</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639996"><span class="annot"><span class="annottext">Integer
 _trExpiresAt :: TokenResp -&gt; Integer
 _trExpiresAt :: Integer
 </span><a href="Hasura.Backends.BigQuery.Source.html#_trExpiresAt"><span class="hs-identifier hs-var hs-var">_trExpiresAt</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
@@ -494,11 +494,11 @@ _trExpiresAt :: Integer
 </span><span id="line-130"></span><span>                </span><span class="hs-comment">-- which this token will expire, so that at the site where</span><span>
 </span><span id="line-131"></span><span>                </span><span class="hs-comment">-- we need to check if a token is nearing expiry, we only</span><span>
 </span><span id="line-132"></span><span>                </span><span class="hs-comment">-- need to compare it with the _then_ &quot;current&quot; POSIXTime.</span><span>
-</span><span id="line-133"></span><span>                </span><span id="local-6989586621689639989"><span class="annot"><span class="annottext">POSIXTime
-</span><a href="#local-6989586621689639989"><span class="hs-identifier hs-var">expiresAt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; POSIXTime
+</span><span id="line-133"></span><span>                </span><span id="local-6989586621689639994"><span class="annot"><span class="annottext">POSIXTime
+</span><a href="#local-6989586621689639994"><span class="hs-identifier hs-var">expiresAt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; POSIXTime
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689639991"><span class="hs-identifier hs-var">_trExpiresAt</span></a></span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; POSIXTime -&gt; POSIXTime
+</span><a href="#local-6989586621689639996"><span class="hs-identifier hs-var">_trExpiresAt</span></a></span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; POSIXTime -&gt; POSIXTime
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(POSIXTime -&gt; POSIXTime) -&gt; m POSIXTime -&gt; m POSIXTime
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -520,17 +520,17 @@ forall a b. b -&gt; Either a b
 -&gt; TokenResp -&gt; m (Either TokenProblem TokenResp)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TokenResp
-</span><a href="#local-6989586621689639993"><span class="hs-identifier hs-var">tr</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_trExpiresAt :: Integer
+</span><a href="#local-6989586621689639998"><span class="hs-identifier hs-var">tr</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_trExpiresAt :: Integer
 </span><a href="Hasura.Backends.BigQuery.Source.html#_trExpiresAt"><span class="hs-identifier hs-var">_trExpiresAt</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; Integer
 forall a b. (RealFrac a, Integral b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">truncate</span></span><span> </span><span class="annot"><span class="annottext">POSIXTime
-</span><a href="#local-6989586621689639989"><span class="hs-identifier hs-var">expiresAt</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689639994"><span class="hs-identifier hs-var">expiresAt</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-135"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-136"></span><span>    </span><span class="hs-comment">-- TODO: use jose for jwt encoding</span><span>
-</span><span id="line-137"></span><span>    </span><span id="local-6989586621689640186"><span class="annot"><a href="#local-6989586621689639986"><span class="hs-identifier hs-type">b64EncodeJ</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689640186"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640186"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BS.ByteString</span></span></span><span>
-</span><span id="line-138"></span><span>    </span><span id="local-6989586621689639986"><span class="annot"><span class="annottext">b64EncodeJ :: a -&gt; ByteString
-</span><a href="#local-6989586621689639986"><span class="hs-identifier hs-var hs-var">b64EncodeJ</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
-</span><a href="#local-6989586621689639985"><span class="hs-identifier hs-var">base64</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString) -&gt; (a -&gt; ByteString) -&gt; a -&gt; ByteString
+</span><span id="line-137"></span><span>    </span><span id="local-6989586621689640191"><span class="annot"><a href="#local-6989586621689639991"><span class="hs-identifier hs-type">b64EncodeJ</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621689640191"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640191"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BS.ByteString</span></span></span><span>
+</span><span id="line-138"></span><span>    </span><span id="local-6989586621689639991"><span class="annot"><span class="annottext">b64EncodeJ :: a -&gt; ByteString
+</span><a href="#local-6989586621689639991"><span class="hs-identifier hs-var hs-var">b64EncodeJ</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="#local-6989586621689639990"><span class="hs-identifier hs-var">base64</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString) -&gt; (a -&gt; ByteString) -&gt; a -&gt; ByteString
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
 </span><span class="hs-identifier hs-var">BL.toStrict</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString) -&gt; (a -&gt; ByteString) -&gt; a -&gt; ByteString
@@ -538,48 +538,48 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; ByteString
 forall a. ToJSON a =&gt; a -&gt; ByteString
 </span><span class="hs-identifier hs-var">J.encode</span></span><span>
-</span><span id="line-139"></span><span>    </span><span class="annot"><a href="#local-6989586621689639985"><span class="hs-identifier hs-type">base64</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BS.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BS.ByteString</span></span><span>
-</span><span id="line-140"></span><span>    </span><span id="local-6989586621689639985"><span class="annot"><span class="annottext">base64 :: ByteString -&gt; ByteString
-</span><a href="#local-6989586621689639985"><span class="hs-identifier hs-var hs-var">base64</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Base -&gt; ByteString -&gt; ByteString
+</span><span id="line-139"></span><span>    </span><span class="annot"><a href="#local-6989586621689639990"><span class="hs-identifier hs-type">base64</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BS.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BS.ByteString</span></span><span>
+</span><span id="line-140"></span><span>    </span><span id="local-6989586621689639990"><span class="annot"><span class="annottext">base64 :: ByteString -&gt; ByteString
+</span><a href="#local-6989586621689639990"><span class="hs-identifier hs-var hs-var">base64</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Base -&gt; ByteString -&gt; ByteString
 forall bin bout.
 (ByteArrayAccess bin, ByteArray bout) =&gt;
 Base -&gt; bin -&gt; bout
 </span><span class="hs-identifier hs-var">BAE.convertToBase</span></span><span> </span><span class="annot"><span class="annottext">Base
 </span><span class="hs-identifier hs-var">BAE.Base64URLUnpadded</span></span><span>
-</span><span id="line-141"></span><span>    </span><span class="annot"><a href="#local-6989586621689639999"><span class="hs-identifier hs-type">tokenURL</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-142"></span><span>    </span><span id="local-6989586621689639999"><span class="annot"><span class="annottext">tokenURL :: String
-</span><a href="#local-6989586621689639999"><span class="hs-identifier hs-var hs-var">tokenURL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><span id="line-141"></span><span>    </span><span class="annot"><a href="#local-6989586621689640004"><span class="hs-identifier hs-type">tokenURL</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-142"></span><span>    </span><span id="local-6989586621689640004"><span class="annot"><span class="annottext">tokenURL :: String
+</span><a href="#local-6989586621689640004"><span class="hs-identifier hs-var hs-var">tokenURL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;https://www.googleapis.com/oauth2/v4/token&quot;</span></span><span>
-</span><span id="line-143"></span><span>    </span><span class="annot"><a href="#local-6989586621689639980"><span class="hs-identifier hs-type">maxTokenLifetime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
-</span><span id="line-144"></span><span>    </span><span id="local-6989586621689639980"><span class="annot"><span class="annottext">maxTokenLifetime :: Int
-</span><a href="#local-6989586621689639980"><span class="hs-identifier hs-var hs-var">maxTokenLifetime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
+</span><span id="line-143"></span><span>    </span><span class="annot"><a href="#local-6989586621689639985"><span class="hs-identifier hs-type">maxTokenLifetime</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-144"></span><span>    </span><span id="local-6989586621689639985"><span class="annot"><span class="annottext">maxTokenLifetime :: Int
+</span><a href="#local-6989586621689639985"><span class="hs-identifier hs-var hs-var">maxTokenLifetime</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">3600</span></span><span>
-</span><span id="line-145"></span><span>    </span><span class="annot"><a href="#local-6989586621689639979"><span class="hs-identifier hs-type">truncateEquals</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B8.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B8.ByteString</span></span><span>
-</span><span id="line-146"></span><span>    </span><span id="local-6989586621689639979"><span class="annot"><span class="annottext">truncateEquals :: ByteString -&gt; ByteString
-</span><a href="#local-6989586621689639979"><span class="hs-identifier hs-var hs-var">truncateEquals</span></a></span></span><span> </span><span id="local-6989586621689639978"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639978"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-145"></span><span>    </span><span class="annot"><a href="#local-6989586621689639984"><span class="hs-identifier hs-type">truncateEquals</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B8.ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B8.ByteString</span></span><span>
+</span><span id="line-146"></span><span>    </span><span id="local-6989586621689639984"><span class="annot"><span class="annottext">truncateEquals :: ByteString -&gt; ByteString
+</span><a href="#local-6989586621689639984"><span class="hs-identifier hs-var hs-var">truncateEquals</span></a></span></span><span> </span><span id="local-6989586621689639983"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689639983"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-147"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe (ByteString, Char)
 </span><span class="hs-identifier hs-var">B8.unsnoc</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639978"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689639983"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-148"></span><span>        </span><span class="annot"><span class="annottext">Maybe (ByteString, Char)
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-149"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689639976"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639976"><span class="hs-identifier hs-var">bs'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639975"><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621689639975"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-149"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689639981"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689639981"><span class="hs-identifier hs-var">bs'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639980"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621689639980"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-150"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621689639975"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char -&gt; Bool
+</span><a href="#local-6989586621689639980"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Char -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'='</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639976"><span class="hs-identifier hs-var">bs'</span></a></span><span>
+</span><a href="#local-6989586621689639981"><span class="hs-identifier hs-var">bs'</span></a></span><span>
 </span><span id="line-151"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639978"><span class="hs-identifier hs-var">bs</span></a></span><span>
-</span><span id="line-152"></span><span>    </span><span id="local-6989586621689640217"><span class="annot"><a href="#local-6989586621689640009"><span class="hs-identifier hs-type">encodeBearerJWT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689640217"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-type">ServiceAccount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#Scope"><span class="hs-identifier hs-type">Scope</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640217"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-type">TokenProblem</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BS.ByteString</span></span><span class="hs-special">)</span></span><span>
-</span><span id="line-153"></span><span>    </span><span id="local-6989586621689640009"><span class="annot"><span class="annottext">encodeBearerJWT :: ServiceAccount -&gt; [Scope] -&gt; m (Either TokenProblem ByteString)
-</span><a href="#local-6989586621689640009"><span class="hs-identifier hs-var hs-var">encodeBearerJWT</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-type">ServiceAccount</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639971"><span id="local-6989586621689639972"><span id="local-6989586621689639973"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689639983"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><span id="line-152"></span><span>    </span><span id="local-6989586621689640222"><span class="annot"><a href="#local-6989586621689640014"><span class="hs-identifier hs-type">encodeBearerJWT</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689640222"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-type">ServiceAccount</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#Scope"><span class="hs-identifier hs-type">Scope</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640222"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-type">TokenProblem</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BS.ByteString</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-153"></span><span>    </span><span id="local-6989586621689640014"><span class="annot"><span class="annottext">encodeBearerJWT :: ServiceAccount -&gt; [Scope] -&gt; m (Either TokenProblem ByteString)
+</span><a href="#local-6989586621689640014"><span class="hs-identifier hs-var hs-var">encodeBearerJWT</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#ServiceAccount"><span class="hs-identifier hs-type">ServiceAccount</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639976"><span id="local-6989586621689639977"><span id="local-6989586621689639978"><span class="annot"><span class="annottext">Text
 PKey
 _saProjectId :: ServiceAccount -&gt; Text
 _saPrivateKey :: ServiceAccount -&gt; PKey
@@ -587,11 +587,11 @@ _saClientEmail :: ServiceAccount -&gt; Text
 _saProjectId :: Text
 _saPrivateKey :: PKey
 _saClientEmail :: Text
-</span><a href="Hasura.Backends.BigQuery.Source.html#_saProjectId"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621689639967"><span class="annot"><span class="annottext">[Scope]
-</span><a href="#local-6989586621689639967"><span class="hs-identifier hs-var">scopes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-154"></span><span>      </span><span id="local-6989586621689639966"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639966"><span class="hs-identifier hs-var">inp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Int -&gt; ByteString
-</span><a href="#local-6989586621689639965"><span class="hs-identifier hs-var">mkSigInput</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; ByteString)
+</span><a href="Hasura.Backends.BigQuery.Source.html#_saProjectId"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621689639972"><span class="annot"><span class="annottext">[Scope]
+</span><a href="#local-6989586621689639972"><span class="hs-identifier hs-var">scopes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-154"></span><span>      </span><span id="local-6989586621689639971"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689639971"><span class="hs-identifier hs-var">inp</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Int -&gt; ByteString
+</span><a href="#local-6989586621689639970"><span class="hs-identifier hs-var">mkSigInput</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; ByteString)
 -&gt; (POSIXTime -&gt; Int) -&gt; POSIXTime -&gt; ByteString
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; Int
@@ -602,8 +602,8 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">IO POSIXTime
 </span><span class="hs-identifier hs-var">getPOSIXTime</span></span><span>
-</span><span id="line-155"></span><span>      </span><span id="local-6989586621689639964"><span class="annot"><span class="annottext">Either Error ByteString
-</span><a href="#local-6989586621689639964"><span class="hs-identifier hs-var">signRes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Either Error ByteString) -&gt; m (Either Error ByteString)
+</span><span id="line-155"></span><span>      </span><span id="local-6989586621689639969"><span class="annot"><span class="annottext">Either Error ByteString
+</span><a href="#local-6989586621689639969"><span class="hs-identifier hs-var">signRes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Either Error ByteString) -&gt; m (Either Error ByteString)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Either Error ByteString) -&gt; m (Either Error ByteString))
 -&gt; IO (Either Error ByteString) -&gt; m (Either Error ByteString)
@@ -619,12 +619,12 @@ forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">SHA256
 </span><span class="hs-identifier hs-var">SHA256</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PKey -&gt; PrivateKey
 </span><a href="Hasura.Backends.BigQuery.Source.html#unPKey"><span class="hs-identifier hs-var hs-var">unPKey</span></a></span><span> </span><span class="annot"><span class="annottext">PKey
-</span><a href="#local-6989586621689639972"><span class="hs-identifier hs-var">_saPrivateKey</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639966"><span class="hs-identifier hs-var">inp</span></a></span><span>
+</span><a href="#local-6989586621689639977"><span class="hs-identifier hs-var">_saPrivateKey</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689639971"><span class="hs-identifier hs-var">inp</span></a></span><span>
 </span><span id="line-156"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either Error ByteString
-</span><a href="#local-6989586621689639964"><span class="hs-identifier hs-var">signRes</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-157"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689639961"><span class="annot"><span class="annottext">Error
-</span><a href="#local-6989586621689639961"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem ByteString
+</span><a href="#local-6989586621689639969"><span class="hs-identifier hs-var">signRes</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-157"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689639966"><span class="annot"><span class="annottext">Error
+</span><a href="#local-6989586621689639966"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem ByteString
 -&gt; m (Either TokenProblem ByteString)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either TokenProblem ByteString
@@ -645,9 +645,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; Error -&gt; m (Either TokenProblem ByteString)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Error
-</span><a href="#local-6989586621689639961"><span class="hs-identifier hs-var">e</span></a></span><span>
-</span><span id="line-158"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689639960"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639960"><span class="hs-identifier hs-var">sig</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem ByteString
+</span><a href="#local-6989586621689639966"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-158"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689639965"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689639965"><span class="hs-identifier hs-var">sig</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem ByteString
 -&gt; m (Either TokenProblem ByteString)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either TokenProblem ByteString
@@ -662,33 +662,33 @@ forall a b. b -&gt; Either a b
 -&gt; ByteString -&gt; m (Either TokenProblem ByteString)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639966"><span class="hs-identifier hs-var">inp</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+</span><a href="#local-6989586621689639971"><span class="hs-identifier hs-var">inp</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
-</span><a href="#local-6989586621689639979"><span class="hs-identifier hs-var">truncateEquals</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
-</span><a href="#local-6989586621689639985"><span class="hs-identifier hs-var">base64</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639960"><span class="hs-identifier hs-var">sig</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689639984"><span class="hs-identifier hs-var">truncateEquals</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="#local-6989586621689639990"><span class="hs-identifier hs-var">base64</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689639965"><span class="hs-identifier hs-var">sig</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-159"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-160"></span><span>        </span><span class="annot"><a href="#local-6989586621689639965"><span class="hs-identifier hs-type">mkSigInput</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BS.ByteString</span></span><span>
-</span><span id="line-161"></span><span>        </span><span id="local-6989586621689639965"><span class="annot"><span class="annottext">mkSigInput :: Int -&gt; ByteString
-</span><a href="#local-6989586621689639965"><span class="hs-identifier hs-var hs-var">mkSigInput</span></a></span></span><span> </span><span id="local-6989586621689639959"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689639959"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639958"><span class="hs-identifier hs-var">header</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+</span><span id="line-160"></span><span>        </span><span class="annot"><a href="#local-6989586621689639970"><span class="hs-identifier hs-type">mkSigInput</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">BS.ByteString</span></span><span>
+</span><span id="line-161"></span><span>        </span><span id="local-6989586621689639970"><span class="annot"><span class="annottext">mkSigInput :: Int -&gt; ByteString
+</span><a href="#local-6989586621689639970"><span class="hs-identifier hs-var hs-var">mkSigInput</span></a></span></span><span> </span><span id="local-6989586621689639964"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621689639964"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689639963"><span class="hs-identifier hs-var">header</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689639957"><span class="hs-identifier hs-var">payload</span></a></span><span>
+</span><a href="#local-6989586621689639962"><span class="hs-identifier hs-var">payload</span></a></span><span>
 </span><span id="line-162"></span><span>          </span><span class="hs-keyword">where</span><span>
-</span><span id="line-163"></span><span>            </span><span id="local-6989586621689639958"><span class="annot"><span class="annottext">header :: ByteString
-</span><a href="#local-6989586621689639958"><span class="hs-identifier hs-var hs-var">header</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-163"></span><span>            </span><span id="local-6989586621689639963"><span class="annot"><span class="annottext">header :: ByteString
+</span><a href="#local-6989586621689639963"><span class="hs-identifier hs-var hs-var">header</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-164"></span><span>              </span><span class="annot"><span class="annottext">Value -&gt; ByteString
 forall a. ToJSON a =&gt; a -&gt; ByteString
-</span><a href="#local-6989586621689639986"><span class="hs-identifier hs-var">b64EncodeJ</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ByteString) -&gt; Value -&gt; ByteString
+</span><a href="#local-6989586621689639991"><span class="hs-identifier hs-var">b64EncodeJ</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ByteString) -&gt; Value -&gt; ByteString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-165"></span><span>                </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
@@ -704,11 +704,11 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;JWT&quot;</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">)</span><span>
 </span><span id="line-168"></span><span>                  </span><span class="hs-special">]</span><span>
-</span><span id="line-169"></span><span>            </span><span id="local-6989586621689639957"><span class="annot"><span class="annottext">payload :: ByteString
-</span><a href="#local-6989586621689639957"><span class="hs-identifier hs-var hs-var">payload</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-169"></span><span>            </span><span id="local-6989586621689639962"><span class="annot"><span class="annottext">payload :: ByteString
+</span><a href="#local-6989586621689639962"><span class="hs-identifier hs-var hs-var">payload</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-170"></span><span>              </span><span class="annot"><span class="annottext">Value -&gt; ByteString
 forall a. ToJSON a =&gt; a -&gt; ByteString
-</span><a href="#local-6989586621689639986"><span class="hs-identifier hs-var">b64EncodeJ</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ByteString) -&gt; Value -&gt; ByteString
+</span><a href="#local-6989586621689639991"><span class="hs-identifier hs-var">b64EncodeJ</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ByteString) -&gt; Value -&gt; ByteString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-171"></span><span>                </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
@@ -717,7 +717,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;aud&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; String -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689639999"><span class="hs-identifier hs-var">tokenURL</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689640004"><span class="hs-identifier hs-var">tokenURL</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-173"></span><span>                    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;scope&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
@@ -727,37 +727,37 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Scope -&gt; Text
 </span><a href="Hasura.Backends.BigQuery.Connection.html#unScope"><span class="hs-identifier hs-var hs-var">unScope</span></a></span><span> </span><span class="annot"><span class="annottext">[Scope]
-</span><a href="#local-6989586621689639967"><span class="hs-identifier hs-var">scopes</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689639972"><span class="hs-identifier hs-var">scopes</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-174"></span><span>                    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;iat&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689639959"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689639964"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-175"></span><span>                    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;exp&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Int -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689639959"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621689639964"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689639980"><span class="hs-identifier hs-var">maxTokenLifetime</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689639985"><span class="hs-identifier hs-var">maxTokenLifetime</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-176"></span><span>                    </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;iss&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689639973"><span class="hs-identifier hs-var">_saClientEmail</span></a></span><span>
+</span><a href="#local-6989586621689639978"><span class="hs-identifier hs-var">_saClientEmail</span></a></span><span>
 </span><span id="line-177"></span><span>                  </span><span class="hs-special">]</span><span>
 </span><span id="line-178"></span><span>
 </span><span id="line-179"></span><span class="hs-comment">-- | Get a usable token. If the token has expired refresh it.</span><span>
-</span><span id="line-180"></span><span id="local-6989586621689640168"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#getUsableToken"><span class="hs-identifier hs-type">getUsableToken</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689640168"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnection"><span class="hs-identifier hs-type">BigQueryConnection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640168"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-type">TokenProblem</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-180"></span><span id="local-6989586621689640173"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#getUsableToken"><span class="hs-identifier hs-type">getUsableToken</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689640173"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnection"><span class="hs-identifier hs-type">BigQueryConnection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640173"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-type">TokenProblem</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-181"></span><span id="getUsableToken"><span class="annot"><span class="annottext">getUsableToken :: BigQueryConnection -&gt; m (Either TokenProblem TokenResp)
-</span><a href="Hasura.Backends.BigQuery.Connection.html#getUsableToken"><span class="hs-identifier hs-var hs-var">getUsableToken</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnection"><span class="hs-identifier hs-type">BigQueryConnection</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639952"><span class="annot"><span class="annottext">ServiceAccount
+</span><a href="Hasura.Backends.BigQuery.Connection.html#getUsableToken"><span class="hs-identifier hs-var hs-var">getUsableToken</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnection"><span class="hs-identifier hs-type">BigQueryConnection</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639957"><span class="annot"><span class="annottext">ServiceAccount
 _bqServiceAccount :: ServiceAccount
 _bqServiceAccount :: BigQueryConnection -&gt; ServiceAccount
-</span><a href="#local-6989586621689639952"><span class="hs-identifier hs-var hs-var">_bqServiceAccount</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639951"><span class="annot"><span class="annottext">MVar (Maybe TokenResp)
+</span><a href="#local-6989586621689639957"><span class="hs-identifier hs-var hs-var">_bqServiceAccount</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639956"><span class="annot"><span class="annottext">MVar (Maybe TokenResp)
 _bqAccessTokenMVar :: MVar (Maybe TokenResp)
 _bqAccessTokenMVar :: BigQueryConnection -&gt; MVar (Maybe TokenResp)
-</span><a href="#local-6989586621689639951"><span class="hs-identifier hs-var hs-var">_bqAccessTokenMVar</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689639956"><span class="hs-identifier hs-var hs-var">_bqAccessTokenMVar</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-182"></span><span>  </span><span class="annot"><span class="annottext">IO (Either TokenProblem TokenResp)
 -&gt; m (Either TokenProblem TokenResp)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
@@ -773,30 +773,30 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; IO (Either TokenProblem TokenResp)
 forall a b. MVar a -&gt; (a -&gt; IO (a, b)) -&gt; IO b
 </span><span class="hs-identifier hs-var">modifyMVar</span></span><span> </span><span class="annot"><span class="annottext">MVar (Maybe TokenResp)
-</span><a href="#local-6989586621689639951"><span class="hs-identifier hs-var">_bqAccessTokenMVar</span></a></span><span> </span><span class="annot"><span class="annottext">((Maybe TokenResp
+</span><a href="#local-6989586621689639956"><span class="hs-identifier hs-var">_bqAccessTokenMVar</span></a></span><span> </span><span class="annot"><span class="annottext">((Maybe TokenResp
   -&gt; IO (Maybe TokenResp, Either TokenProblem TokenResp))
  -&gt; IO (Either TokenProblem TokenResp))
 -&gt; (Maybe TokenResp
     -&gt; IO (Maybe TokenResp, Either TokenProblem TokenResp))
 -&gt; IO (Either TokenProblem TokenResp)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689639949"><span class="annot"><span class="annottext">Maybe TokenResp
-</span><a href="#local-6989586621689639949"><span class="hs-identifier hs-var">mTokenResp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689639954"><span class="annot"><span class="annottext">Maybe TokenResp
+</span><a href="#local-6989586621689639954"><span class="hs-identifier hs-var">mTokenResp</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-184"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe TokenResp
-</span><a href="#local-6989586621689639949"><span class="hs-identifier hs-var">mTokenResp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689639954"><span class="hs-identifier hs-var">mTokenResp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-185"></span><span>        </span><span class="annot"><span class="annottext">Maybe TokenResp
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-186"></span><span>          </span><span id="local-6989586621689639948"><span class="annot"><span class="annottext">Either TokenProblem TokenResp
-</span><a href="#local-6989586621689639948"><span class="hs-identifier hs-var">refreshedToken</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServiceAccount -&gt; IO (Either TokenProblem TokenResp)
+</span><span id="line-186"></span><span>          </span><span id="local-6989586621689639953"><span class="annot"><span class="annottext">Either TokenProblem TokenResp
+</span><a href="#local-6989586621689639953"><span class="hs-identifier hs-var">refreshedToken</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServiceAccount -&gt; IO (Either TokenProblem TokenResp)
 forall (m :: * -&gt; *).
 MonadIO m =&gt;
 ServiceAccount -&gt; m (Either TokenProblem TokenResp)
 </span><a href="Hasura.Backends.BigQuery.Connection.html#getAccessToken"><span class="hs-identifier hs-var">getAccessToken</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceAccount
-</span><a href="#local-6989586621689639952"><span class="hs-identifier hs-var">_bqServiceAccount</span></a></span><span>
+</span><a href="#local-6989586621689639957"><span class="hs-identifier hs-var">_bqServiceAccount</span></a></span><span>
 </span><span id="line-187"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem TokenResp
-</span><a href="#local-6989586621689639948"><span class="hs-identifier hs-var">refreshedToken</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-188"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689639947"><span class="annot"><span class="annottext">TokenProblem
-</span><a href="#local-6989586621689639947"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Maybe TokenResp, Either TokenProblem TokenResp)
+</span><a href="#local-6989586621689639953"><span class="hs-identifier hs-var">refreshedToken</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-188"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689639952"><span class="annot"><span class="annottext">TokenProblem
+</span><a href="#local-6989586621689639952"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Maybe TokenResp, Either TokenProblem TokenResp)
 -&gt; IO (Maybe TokenResp, Either TokenProblem TokenResp)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe TokenResp
@@ -804,89 +804,89 @@ forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TokenProblem -&gt; Either TokenProblem TokenResp
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">TokenProblem
-</span><a href="#local-6989586621689639947"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-189"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689639946"><span class="annot"><span class="annottext">TokenResp
-</span><a href="#local-6989586621689639946"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Maybe TokenResp, Either TokenProblem TokenResp)
+</span><a href="#local-6989586621689639952"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-189"></span><span>            </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689639951"><span class="annot"><span class="annottext">TokenResp
+</span><a href="#local-6989586621689639951"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Maybe TokenResp, Either TokenProblem TokenResp)
 -&gt; IO (Maybe TokenResp, Either TokenProblem TokenResp)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TokenResp -&gt; Maybe TokenResp
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">TokenResp
-</span><a href="#local-6989586621689639946"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TokenResp -&gt; Either TokenProblem TokenResp
+</span><a href="#local-6989586621689639951"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TokenResp -&gt; Either TokenProblem TokenResp
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">TokenResp
-</span><a href="#local-6989586621689639946"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-190"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689639945"><span class="annot"><span class="annottext">t :: TokenResp
-</span><a href="#local-6989586621689639945"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639944"><span class="annot"><span class="annottext">GoogleAccessToken
+</span><a href="#local-6989586621689639951"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-190"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689639950"><span class="annot"><span class="annottext">t :: TokenResp
+</span><a href="#local-6989586621689639950"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639949"><span class="annot"><span class="annottext">GoogleAccessToken
 _trAccessToken :: TokenResp -&gt; GoogleAccessToken
 _trAccessToken :: GoogleAccessToken
-</span><a href="Hasura.Backends.BigQuery.Source.html#_trAccessToken"><span class="hs-identifier hs-var hs-var">_trAccessToken</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639942"><span class="annot"><span class="annottext">Integer
+</span><a href="Hasura.Backends.BigQuery.Source.html#_trAccessToken"><span class="hs-identifier hs-var hs-var">_trAccessToken</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639947"><span class="annot"><span class="annottext">Integer
 _trExpiresAt :: Integer
 _trExpiresAt :: TokenResp -&gt; Integer
-</span><a href="#local-6989586621689639942"><span class="hs-identifier hs-var hs-var">_trExpiresAt</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-191"></span><span>          </span><span id="local-6989586621689639941"><span class="annot"><span class="annottext">POSIXTime
-</span><a href="#local-6989586621689639941"><span class="hs-identifier hs-var">pt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO POSIXTime -&gt; IO POSIXTime
+</span><a href="#local-6989586621689639947"><span class="hs-identifier hs-var hs-var">_trExpiresAt</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-191"></span><span>          </span><span id="local-6989586621689639946"><span class="annot"><span class="annottext">POSIXTime
+</span><a href="#local-6989586621689639946"><span class="hs-identifier hs-var">pt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO POSIXTime -&gt; IO POSIXTime
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO POSIXTime -&gt; IO POSIXTime) -&gt; IO POSIXTime -&gt; IO POSIXTime
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">IO POSIXTime
 </span><span class="hs-identifier hs-var">getPOSIXTime</span></span><span>
 </span><span id="line-192"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">POSIXTime
-</span><a href="#local-6989586621689639941"><span class="hs-identifier hs-var">pt</span></a></span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; POSIXTime -&gt; Bool
+</span><a href="#local-6989586621689639946"><span class="hs-identifier hs-var">pt</span></a></span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; POSIXTime -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&gt;=</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; POSIXTime
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689639942"><span class="hs-identifier hs-var">_trExpiresAt</span></a></span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; POSIXTime -&gt; POSIXTime
+</span><a href="#local-6989586621689639947"><span class="hs-identifier hs-var">_trExpiresAt</span></a></span><span> </span><span class="annot"><span class="annottext">POSIXTime -&gt; POSIXTime -&gt; POSIXTime
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">POSIXTime
 </span><span class="hs-number">10</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NominalDiffTime</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- when posix-time is greater than expires-at-minus-threshold</span><span>
 </span><span id="line-193"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-194"></span><span>              </span><span id="local-6989586621689639939"><span class="annot"><span class="annottext">Either TokenProblem TokenResp
-</span><a href="#local-6989586621689639939"><span class="hs-identifier hs-var">refreshedToken'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServiceAccount -&gt; IO (Either TokenProblem TokenResp)
+</span><span id="line-194"></span><span>              </span><span id="local-6989586621689639944"><span class="annot"><span class="annottext">Either TokenProblem TokenResp
+</span><a href="#local-6989586621689639944"><span class="hs-identifier hs-var">refreshedToken'</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ServiceAccount -&gt; IO (Either TokenProblem TokenResp)
 forall (m :: * -&gt; *).
 MonadIO m =&gt;
 ServiceAccount -&gt; m (Either TokenProblem TokenResp)
 </span><a href="Hasura.Backends.BigQuery.Connection.html#getAccessToken"><span class="hs-identifier hs-var">getAccessToken</span></a></span><span> </span><span class="annot"><span class="annottext">ServiceAccount
-</span><a href="#local-6989586621689639952"><span class="hs-identifier hs-var">_bqServiceAccount</span></a></span><span>
+</span><a href="#local-6989586621689639957"><span class="hs-identifier hs-var">_bqServiceAccount</span></a></span><span>
 </span><span id="line-195"></span><span>              </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem TokenResp
-</span><a href="#local-6989586621689639939"><span class="hs-identifier hs-var">refreshedToken'</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-196"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689639938"><span class="annot"><span class="annottext">TokenProblem
-</span><a href="#local-6989586621689639938"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Maybe TokenResp, Either TokenProblem TokenResp)
+</span><a href="#local-6989586621689639944"><span class="hs-identifier hs-var">refreshedToken'</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-196"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689639943"><span class="annot"><span class="annottext">TokenProblem
+</span><a href="#local-6989586621689639943"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Maybe TokenResp, Either TokenProblem TokenResp)
 -&gt; IO (Maybe TokenResp, Either TokenProblem TokenResp)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TokenResp -&gt; Maybe TokenResp
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">TokenResp
-</span><a href="#local-6989586621689639945"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TokenProblem -&gt; Either TokenProblem TokenResp
+</span><a href="#local-6989586621689639950"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TokenProblem -&gt; Either TokenProblem TokenResp
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">TokenProblem
-</span><a href="#local-6989586621689639938"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-197"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689639937"><span class="annot"><span class="annottext">TokenResp
-</span><a href="#local-6989586621689639937"><span class="hs-identifier hs-var">t'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Maybe TokenResp, Either TokenProblem TokenResp)
+</span><a href="#local-6989586621689639943"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-197"></span><span>                </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689639942"><span class="annot"><span class="annottext">TokenResp
+</span><a href="#local-6989586621689639942"><span class="hs-identifier hs-var">t'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(Maybe TokenResp, Either TokenProblem TokenResp)
 -&gt; IO (Maybe TokenResp, Either TokenProblem TokenResp)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TokenResp -&gt; Maybe TokenResp
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">TokenResp
-</span><a href="#local-6989586621689639937"><span class="hs-identifier hs-var">t'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TokenResp -&gt; Either TokenProblem TokenResp
+</span><a href="#local-6989586621689639942"><span class="hs-identifier hs-var">t'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TokenResp -&gt; Either TokenProblem TokenResp
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">TokenResp
-</span><a href="#local-6989586621689639937"><span class="hs-identifier hs-var">t'</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689639942"><span class="hs-identifier hs-var">t'</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-198"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">(Maybe TokenResp, Either TokenProblem TokenResp)
 -&gt; IO (Maybe TokenResp, Either TokenProblem TokenResp)
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TokenResp -&gt; Maybe TokenResp
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">TokenResp
-</span><a href="#local-6989586621689639945"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TokenResp -&gt; Either TokenProblem TokenResp
+</span><a href="#local-6989586621689639950"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TokenResp -&gt; Either TokenProblem TokenResp
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">TokenResp
-</span><a href="#local-6989586621689639945"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689639950"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-199"></span><span>
-</span><span id="line-200"></span><span id="local-6989586621689639935"><span id="local-6989586621689639936"></span></span><span class="hs-keyword">data</span><span> </span><span id="BigQueryProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#BigQueryProblem"><span class="hs-identifier hs-var">BigQueryProblem</span></a></span></span><span>
+</span><span id="line-200"></span><span id="local-6989586621689639940"><span id="local-6989586621689639941"></span></span><span class="hs-keyword">data</span><span> </span><span id="BigQueryProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#BigQueryProblem"><span class="hs-identifier hs-var">BigQueryProblem</span></a></span></span><span>
 </span><span id="line-201"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="TokenProblem"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-var">TokenProblem</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-type">TokenProblem</span></a></span><span>
-</span><span id="line-202"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689639928"><span id="local-6989586621689639930"><span id="local-6989586621689639932"><span class="annot"><span class="annottext">Int -&gt; BigQueryProblem -&gt; ShowS
+</span><span id="line-202"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689639933"><span id="local-6989586621689639935"><span id="local-6989586621689639937"><span class="annot"><span class="annottext">Int -&gt; BigQueryProblem -&gt; ShowS
 [BigQueryProblem] -&gt; ShowS
 BigQueryProblem -&gt; String
 (Int -&gt; BigQueryProblem -&gt; ShowS)
@@ -912,39 +912,39 @@ $cto :: forall x. Rep BigQueryProblem x -&gt; BigQueryProblem
 $cfrom :: forall x. BigQueryProblem -&gt; Rep BigQueryProblem x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
 </span><span id="line-203"></span><span>
-</span><span id="line-204"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689639919"><span id="local-6989586621689639921"><span id="local-6989586621689639923"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#BigQueryProblem"><span class="hs-identifier hs-type">BigQueryProblem</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-205"></span><span>  </span><span id="local-6989586621689639918"><span class="annot"><span class="annottext">toJSON :: BigQueryProblem -&gt; Value
-</span><a href="#local-6989586621689639918"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-type">TokenProblem</span></a></span><span> </span><span id="local-6989586621689639917"><span class="annot"><span class="annottext">TokenProblem
-</span><a href="#local-6989586621689639917"><span class="hs-identifier hs-var">tokenProblem</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-204"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689639924"><span id="local-6989586621689639926"><span id="local-6989586621689639928"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#BigQueryProblem"><span class="hs-identifier hs-type">BigQueryProblem</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-205"></span><span>  </span><span id="local-6989586621689639923"><span class="annot"><span class="annottext">toJSON :: BigQueryProblem -&gt; Value
+</span><a href="#local-6989586621689639923"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#TokenProblem"><span class="hs-identifier hs-type">TokenProblem</span></a></span><span> </span><span id="local-6989586621689639922"><span class="annot"><span class="annottext">TokenProblem
+</span><a href="#local-6989586621689639922"><span class="hs-identifier hs-var">tokenProblem</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-206"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;token_problem&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">TokenProblem -&gt; Text
 </span><a href="Hasura.Backends.BigQuery.Connection.html#tokenProblemMessage"><span class="hs-identifier hs-var">tokenProblemMessage</span></a></span><span> </span><span class="annot"><span class="annottext">TokenProblem
-</span><a href="#local-6989586621689639917"><span class="hs-identifier hs-var">tokenProblem</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689639922"><span class="hs-identifier hs-var">tokenProblem</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-207"></span><span>
-</span><span id="line-208"></span><span id="local-6989586621689639916"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#runBigQuery"><span class="hs-identifier hs-type">runBigQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-209"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689639916"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-208"></span><span id="local-6989586621689639921"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#runBigQuery"><span class="hs-identifier hs-type">runBigQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-209"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689639921"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-210"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#BigQueryConnection"><span class="hs-identifier hs-type">BigQueryConnection</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-211"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Request</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-212"></span><span>  </span><span class="annot"><a href="#local-6989586621689639916"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#BigQueryProblem"><span class="hs-identifier hs-type">BigQueryProblem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-212"></span><span>  </span><span class="annot"><a href="#local-6989586621689639921"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#BigQueryProblem"><span class="hs-identifier hs-type">BigQueryProblem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-213"></span><span id="runBigQuery"><span class="annot"><span class="annottext">runBigQuery :: BigQueryConnection
 -&gt; Request -&gt; m (Either BigQueryProblem (Response ByteString))
-</span><a href="Hasura.Backends.BigQuery.Connection.html#runBigQuery"><span class="hs-identifier hs-var hs-var">runBigQuery</span></a></span></span><span> </span><span id="local-6989586621689639915"><span class="annot"><span class="annottext">BigQueryConnection
-</span><a href="#local-6989586621689639915"><span class="hs-identifier hs-var">conn</span></a></span></span><span> </span><span id="local-6989586621689639914"><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689639914"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-214"></span><span>  </span><span id="local-6989586621689639913"><span class="annot"><span class="annottext">Either TokenProblem TokenResp
-</span><a href="#local-6989586621689639913"><span class="hs-identifier hs-var">eToken</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">BigQueryConnection -&gt; m (Either TokenProblem TokenResp)
+</span><a href="Hasura.Backends.BigQuery.Connection.html#runBigQuery"><span class="hs-identifier hs-var hs-var">runBigQuery</span></a></span></span><span> </span><span id="local-6989586621689639920"><span class="annot"><span class="annottext">BigQueryConnection
+</span><a href="#local-6989586621689639920"><span class="hs-identifier hs-var">conn</span></a></span></span><span> </span><span id="local-6989586621689639919"><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689639919"><span class="hs-identifier hs-var">req</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-214"></span><span>  </span><span id="local-6989586621689639918"><span class="annot"><span class="annottext">Either TokenProblem TokenResp
+</span><a href="#local-6989586621689639918"><span class="hs-identifier hs-var">eToken</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">BigQueryConnection -&gt; m (Either TokenProblem TokenResp)
 forall (m :: * -&gt; *).
 MonadIO m =&gt;
 BigQueryConnection -&gt; m (Either TokenProblem TokenResp)
 </span><a href="Hasura.Backends.BigQuery.Connection.html#getUsableToken"><span class="hs-identifier hs-var">getUsableToken</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryConnection
-</span><a href="#local-6989586621689639915"><span class="hs-identifier hs-var">conn</span></a></span><span>
+</span><a href="#local-6989586621689639920"><span class="hs-identifier hs-var">conn</span></a></span><span>
 </span><span id="line-215"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either TokenProblem TokenResp
-</span><a href="#local-6989586621689639913"><span class="hs-identifier hs-var">eToken</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-216"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689639912"><span class="annot"><span class="annottext">TokenProblem
-</span><a href="#local-6989586621689639912"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either BigQueryProblem (Response ByteString)
+</span><a href="#local-6989586621689639918"><span class="hs-identifier hs-var">eToken</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-216"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689639917"><span class="annot"><span class="annottext">TokenProblem
+</span><a href="#local-6989586621689639917"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Either BigQueryProblem (Response ByteString)
 -&gt; m (Either BigQueryProblem (Response ByteString))
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Either BigQueryProblem (Response ByteString)
@@ -965,16 +965,16 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; TokenProblem -&gt; m (Either BigQueryProblem (Response ByteString))
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TokenProblem
-</span><a href="#local-6989586621689639912"><span class="hs-identifier hs-var">e</span></a></span><span>
-</span><span id="line-217"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639911"><span class="annot"><span class="annottext">GoogleAccessToken
+</span><a href="#local-6989586621689639917"><span class="hs-identifier hs-var">e</span></a></span><span>
+</span><span id="line-217"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#TokenResp"><span class="hs-identifier hs-type">TokenResp</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639916"><span class="annot"><span class="annottext">GoogleAccessToken
 _trAccessToken :: GoogleAccessToken
 _trAccessToken :: TokenResp -&gt; GoogleAccessToken
-</span><a href="#local-6989586621689639911"><span class="hs-identifier hs-var hs-var">_trAccessToken</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639910"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689639916"><span class="hs-identifier hs-var hs-var">_trAccessToken</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689639915"><span class="annot"><span class="annottext">Integer
 _trExpiresAt :: Integer
 _trExpiresAt :: TokenResp -&gt; Integer
-</span><a href="#local-6989586621689639910"><span class="hs-identifier hs-var hs-var">_trExpiresAt</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-218"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689639909"><span class="annot"><span class="annottext">req' :: Request
-</span><a href="#local-6989586621689639909"><span class="hs-identifier hs-var hs-var">req'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; [ByteString] -&gt; Request -&gt; Request
+</span><a href="#local-6989586621689639915"><span class="hs-identifier hs-var hs-var">_trExpiresAt</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-218"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689639914"><span class="annot"><span class="annottext">req' :: Request
+</span><a href="#local-6989586621689639914"><span class="hs-identifier hs-var hs-var">req'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; [ByteString] -&gt; Request -&gt; Request
 </span><span class="hs-identifier hs-var">setRequestHeader</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;Authorization&quot;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-string">&quot;Bearer &quot;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
@@ -985,8 +985,8 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">GoogleAccessToken -&gt; Text
 </span><span class="hs-identifier hs-var">coerce</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">GoogleAccessToken
-</span><a href="#local-6989586621689639911"><span class="hs-identifier hs-var">_trAccessToken</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689639914"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><a href="#local-6989586621689639916"><span class="hs-identifier hs-var">_trAccessToken</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Request
+</span><a href="#local-6989586621689639919"><span class="hs-identifier hs-var">req</span></a></span><span>
 </span><span id="line-219"></span><span>      </span><span class="hs-comment">-- TODO: Make this catch the HTTP exceptions</span><span>
 </span><span id="line-220"></span><span>      </span><span class="annot"><span class="annottext">Response ByteString -&gt; Either BigQueryProblem (Response ByteString)
 forall a b. b -&gt; Either a b
@@ -997,41 +997,41 @@ forall a b. b -&gt; Either a b
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">BigQueryConnection -&gt; Maybe RetryOptions
 </span><a href="Hasura.Backends.BigQuery.Source.html#_bqRetryOptions"><span class="hs-identifier hs-var hs-var">_bqRetryOptions</span></a></span><span> </span><span class="annot"><span class="annottext">BigQueryConnection
-</span><a href="#local-6989586621689639915"><span class="hs-identifier hs-var">conn</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-221"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689639907"><span class="annot"><span class="annottext">RetryOptions
-</span><a href="#local-6989586621689639907"><span class="hs-identifier hs-var">opts</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RetryOptions -&gt; m (Response ByteString) -&gt; m (Response ByteString)
+</span><a href="#local-6989586621689639920"><span class="hs-identifier hs-var">conn</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-221"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689639912"><span class="annot"><span class="annottext">RetryOptions
+</span><a href="#local-6989586621689639912"><span class="hs-identifier hs-var">opts</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RetryOptions -&gt; m (Response ByteString) -&gt; m (Response ByteString)
 forall (m :: * -&gt; *) body.
 MonadIO m =&gt;
 RetryOptions -&gt; m (Response body) -&gt; m (Response body)
 </span><a href="Hasura.Backends.BigQuery.Connection.html#withGoogleApiRetries"><span class="hs-identifier hs-var">withGoogleApiRetries</span></a></span><span> </span><span class="annot"><span class="annottext">RetryOptions
-</span><a href="#local-6989586621689639907"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Request -&gt; m (Response ByteString)
+</span><a href="#local-6989586621689639912"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Request -&gt; m (Response ByteString)
 forall (m :: * -&gt; *).
 MonadIO m =&gt;
 Request -&gt; m (Response ByteString)
 </span><span class="hs-identifier hs-var">httpLBS</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689639909"><span class="hs-identifier hs-var">req'</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689639914"><span class="hs-identifier hs-var">req'</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-222"></span><span>        </span><span class="annot"><span class="annottext">Maybe RetryOptions
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Request -&gt; m (Response ByteString)
 forall (m :: * -&gt; *).
 MonadIO m =&gt;
 Request -&gt; m (Response ByteString)
 </span><span class="hs-identifier hs-var">httpLBS</span></span><span> </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621689639909"><span class="hs-identifier hs-var">req'</span></a></span><span>
+</span><a href="#local-6989586621689639914"><span class="hs-identifier hs-var">req'</span></a></span><span>
 </span><span id="line-223"></span><span>
 </span><span id="line-224"></span><span class="hs-comment">-- | Uses up to specified number retries for Google API requests with the specified base delay, uses full jitter backoff,</span><span>
 </span><span id="line-225"></span><span class="hs-comment">-- see https://aws.amazon.com/ru/blogs/architecture/exponential-backoff-and-jitter/</span><span>
 </span><span id="line-226"></span><span class="hs-comment">-- HTTP statuses for transient errors were taken from</span><span>
 </span><span id="line-227"></span><span class="hs-comment">-- https://github.com/googleapis/python-api-core/blob/34ebdcc251d4f3d7d496e8e0b78847645a06650b/google/api_core/retry.py#L112-L115</span><span>
-</span><span id="line-228"></span><span id="local-6989586621689640163"><span id="local-6989586621689640164"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#withGoogleApiRetries"><span class="hs-identifier hs-type">withGoogleApiRetries</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689640164"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#RetryOptions"><span class="hs-identifier hs-type">RetryOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640164"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="annot"><a href="#local-6989586621689640163"><span class="hs-identifier hs-type">body</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640164"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="annot"><a href="#local-6989586621689640163"><span class="hs-identifier hs-type">body</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-228"></span><span id="local-6989586621689640168"><span id="local-6989586621689640169"><span class="annot"><a href="Hasura.Backends.BigQuery.Connection.html#withGoogleApiRetries"><span class="hs-identifier hs-type">withGoogleApiRetries</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689640169"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#RetryOptions"><span class="hs-identifier hs-type">RetryOptions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640169"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="annot"><a href="#local-6989586621689640168"><span class="hs-identifier hs-type">body</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689640169"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Response</span></span><span> </span><span class="annot"><a href="#local-6989586621689640168"><span class="hs-identifier hs-type">body</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-229"></span><span id="withGoogleApiRetries"><span class="annot"><span class="annottext">withGoogleApiRetries :: RetryOptions -&gt; m (Response body) -&gt; m (Response body)
-</span><a href="Hasura.Backends.BigQuery.Connection.html#withGoogleApiRetries"><span class="hs-identifier hs-var hs-var">withGoogleApiRetries</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#RetryOptions"><span class="hs-identifier hs-type">RetryOptions</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639902"><span id="local-6989586621689639903"><span class="annot"><span class="annottext">Int
+</span><a href="Hasura.Backends.BigQuery.Connection.html#withGoogleApiRetries"><span class="hs-identifier hs-var hs-var">withGoogleApiRetries</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Source.html#RetryOptions"><span class="hs-identifier hs-type">RetryOptions</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689639907"><span id="local-6989586621689639908"><span class="annot"><span class="annottext">Int
 Microseconds
 _retryNumRetries :: RetryOptions -&gt; Int
 _retryBaseDelay :: RetryOptions -&gt; Microseconds
 _retryNumRetries :: Int
 _retryBaseDelay :: Microseconds
-</span><a href="Hasura.Backends.BigQuery.Source.html#_retryNumRetries"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621689639899"><span class="annot"><span class="annottext">m (Response body)
-</span><a href="#local-6989586621689639899"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.BigQuery.Source.html#_retryNumRetries"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621689639904"><span class="annot"><span class="annottext">m (Response body)
+</span><a href="#local-6989586621689639904"><span class="hs-identifier hs-var">action</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-230"></span><span>  </span><span class="annot"><span class="annottext">RetryPolicyM m
 -&gt; (RetryStatus -&gt; Response body -&gt; m Bool)
 -&gt; (RetryStatus -&gt; m (Response body))
@@ -1041,17 +1041,17 @@ MonadIO m =&gt;
 RetryPolicyM m
 -&gt; (RetryStatus -&gt; b -&gt; m Bool) -&gt; (RetryStatus -&gt; m b) -&gt; m b
 </span><span class="hs-identifier hs-var">Retry.retrying</span></span><span> </span><span class="annot"><span class="annottext">RetryPolicyM m
-</span><a href="#local-6989586621689639897"><span class="hs-identifier hs-var">retryPolicy</span></a></span><span> </span><span class="annot"><span class="annottext">RetryStatus -&gt; Response body -&gt; m Bool
+</span><a href="#local-6989586621689639902"><span class="hs-identifier hs-var">retryPolicy</span></a></span><span> </span><span class="annot"><span class="annottext">RetryStatus -&gt; Response body -&gt; m Bool
 forall (f :: * -&gt; *) p body.
 Applicative f =&gt;
 p -&gt; Response body -&gt; f Bool
-</span><a href="#local-6989586621689639896"><span class="hs-identifier hs-var">checkStatus</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m (Response body) -&gt; RetryStatus -&gt; m (Response body)
+</span><a href="#local-6989586621689639901"><span class="hs-identifier hs-var">checkStatus</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">m (Response body) -&gt; RetryStatus -&gt; m (Response body)
 forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">m (Response body)
-</span><a href="#local-6989586621689639899"><span class="hs-identifier hs-var">action</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689639904"><span class="hs-identifier hs-var">action</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-231"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-232"></span><span>    </span><span id="local-6989586621689639894"><span class="annot"><span class="annottext">baseDelay :: Int
-</span><a href="#local-6989586621689639894"><span class="hs-identifier hs-var hs-var">baseDelay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Int
+</span><span id="line-232"></span><span>    </span><span id="local-6989586621689639899"><span class="annot"><span class="annottext">baseDelay :: Int
+</span><a href="#local-6989586621689639899"><span class="hs-identifier hs-var hs-var">baseDelay</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Int
 forall a. Num a =&gt; Integer -&gt; a
 </span><span class="hs-identifier hs-var">fromInteger</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; Int) -&gt; (DiffTime -&gt; Integer) -&gt; DiffTime -&gt; Int
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -1060,20 +1060,20 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Microseconds -&gt; DiffTime
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var hs-var">microseconds</span></a></span><span> </span><span class="annot"><span class="annottext">Microseconds
-</span><a href="#local-6989586621689639903"><span class="hs-identifier hs-var">_retryBaseDelay</span></a></span><span>
-</span><span id="line-233"></span><span>    </span><span id="local-6989586621689639897"><span class="annot"><span class="annottext">retryPolicy :: RetryPolicyM m
-</span><a href="#local-6989586621689639897"><span class="hs-identifier hs-var hs-var">retryPolicy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; RetryPolicyM m
+</span><a href="#local-6989586621689639908"><span class="hs-identifier hs-var">_retryBaseDelay</span></a></span><span>
+</span><span id="line-233"></span><span>    </span><span id="local-6989586621689639902"><span class="annot"><span class="annottext">retryPolicy :: RetryPolicyM m
+</span><a href="#local-6989586621689639902"><span class="hs-identifier hs-var hs-var">retryPolicy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; RetryPolicyM m
 forall (m :: * -&gt; *). MonadIO m =&gt; Int -&gt; RetryPolicyM m
 </span><span class="hs-identifier hs-var">Retry.fullJitterBackoff</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689639894"><span class="hs-identifier hs-var">baseDelay</span></a></span><span> </span><span class="annot"><span class="annottext">RetryPolicyM m -&gt; RetryPolicyM m -&gt; RetryPolicyM m
+</span><a href="#local-6989586621689639899"><span class="hs-identifier hs-var">baseDelay</span></a></span><span> </span><span class="annot"><span class="annottext">RetryPolicyM m -&gt; RetryPolicyM m -&gt; RetryPolicyM m
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; RetryPolicy
 </span><span class="hs-identifier hs-var">Retry.limitRetries</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689639902"><span class="hs-identifier hs-var">_retryNumRetries</span></a></span><span>
-</span><span id="line-234"></span><span>    </span><span id="local-6989586621689639896"><span class="annot"><span class="annottext">checkStatus :: p -&gt; Response body -&gt; f Bool
-</span><a href="#local-6989586621689639896"><span class="hs-identifier hs-var hs-var">checkStatus</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689639889"><span class="annot"><span class="annottext">Response body
-</span><a href="#local-6989586621689639889"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689639907"><span class="hs-identifier hs-var">_retryNumRetries</span></a></span><span>
+</span><span id="line-234"></span><span>    </span><span id="local-6989586621689639901"><span class="annot"><span class="annottext">checkStatus :: p -&gt; Response body -&gt; f Bool
+</span><a href="#local-6989586621689639901"><span class="hs-identifier hs-var hs-var">checkStatus</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689639894"><span class="annot"><span class="annottext">Response body
+</span><a href="#local-6989586621689639894"><span class="hs-identifier hs-var">resp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-235"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; f Bool
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; f Bool) -&gt; Bool -&gt; f Bool
@@ -1081,7 +1081,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Response body -&gt; Status
 forall a. Response a -&gt; Status
 </span><span class="hs-identifier hs-var hs-var">responseStatus</span></span><span> </span><span class="annot"><span class="annottext">Response body
-</span><a href="#local-6989586621689639889"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Status -&gt; [Status] -&gt; Bool
+</span><a href="#local-6989586621689639894"><span class="hs-identifier hs-var">resp</span></a></span><span> </span><span class="annot"><span class="annottext">Status -&gt; [Status] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Status
 </span><span class="hs-identifier hs-var">tooManyRequests429</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Status
