@@ -19,7 +19,8 @@ ORMOLU_ARGS = --cabal-default-extensions
 ORMOLU_VERSION = $(shell $(ORMOLU) --version | awk 'NR==1 { print $$2 }')
 ORMOLU_CHECK_VERSION = $(shell jq '.ormolu' ./server/VERSIONS.json)
 
-SHELLCHECK = shellcheck
+# Run Shellcheck with access to any file that's sourced, relative to the script's own directory
+SHELLCHECK = shellcheck --external-sources --source-path=SCRIPTDIR
 
 .PHONY: check-hlint-version
 check-hlint-version:
