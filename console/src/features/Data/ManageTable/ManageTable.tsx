@@ -93,7 +93,7 @@ export const ManageTable = (props: ManageTableProps) => {
                 items={[
                   [
                     // TODO: To be implemented after metadata util functions have been added to the metadata library
-                    <span className="text-red-600" onClick={() => {}}>
+                    <span className="py-xs text-red-600" onClick={() => {}}>
                       Untrack {tableName}
                     </span>,
                   ],

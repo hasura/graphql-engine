@@ -63,15 +63,21 @@ export const DropdownMenu: React.FC<DropdownMenuProps> = ({
   <DropdownMenuPrimitive.Root {...options?.root}>
     <DropdownMenuTrigger {...options?.trigger}>{children}</DropdownMenuTrigger>
     <DropdownMenuPrimitive.Portal {...options?.portal}>
-      <DropdownMenuContent {...options?.content}>
-        {items.map(group => (
-          <DropdownMenuPrimitive.Group className="">
-            {group.map(item => (
-              <DropdownMenuItem {...options?.item}>{item}</DropdownMenuItem>
-            ))}
-          </DropdownMenuPrimitive.Group>
-        ))}
-      </DropdownMenuContent>
+      <DropdownMenuPrimitive.Content align="start" {...options?.content}>
+        <div className="origin-top-left absolute left-0 z-10 mt-xs w-max max-w-xs rounded shadow-md bg-white ring-1 ring-gray-300 divide-y divide-gray-300 focus:outline-none">
+          {items.map(group => (
+            <div className="py-1">
+              {group.map(item => (
+                <DropdownMenuPrimitive.Item {...options?.item}>
+                  <div className="cursor-pointer flex items-center mx-1 px-xs rounded whitespace-nowrap hover:bg-gray-100">
+                    {item}
+                  </div>
+                </DropdownMenuPrimitive.Item>
+              ))}
+            </div>
+          ))}
+        </div>
+      </DropdownMenuPrimitive.Content>
     </DropdownMenuPrimitive.Portal>
   </DropdownMenuPrimitive.Root>
 );

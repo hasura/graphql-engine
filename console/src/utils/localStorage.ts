@@ -88,6 +88,7 @@ export const LS_KEYS = {
   dataPageSizeKey: 'data:pageSize',
   derivedActions: 'actions:derivedActions',
   graphiqlQuery: 'graphiql:query',
+  graphiqlVariables: 'graphiql:variables',
   loveConsent: 'console:loveIcon',
   oneGraphExplorerCodeExporterOpen: 'graphiql:codeExporterOpen',
   oneGraphExplorerOpen: 'graphiql:explorerOpen',

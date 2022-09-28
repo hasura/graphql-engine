@@ -37,7 +37,7 @@ export const QueryCollectionHeaderMenu: React.FC<QueryCollectionHeaderMenuProps>
         items={[
           [
             <div
-              className="font-semibold"
+              className="py-xs font-semibold"
               onClick={() => {
                 // this is a workaround for a weird but caused by interaction of radix ui dialog and dropdown menu
                 setTimeout(() => {
@@ -51,7 +51,7 @@ export const QueryCollectionHeaderMenu: React.FC<QueryCollectionHeaderMenuProps>
               entry => entry.collection === queryCollection.name
             ) ? (
               <div
-                className="font-semibold"
+                className="py-xs font-semibold"
                 onClick={() => {
                   removeFromAllowList(queryCollection.name, {
                     onSuccess: () => {
@@ -101,7 +101,7 @@ export const QueryCollectionHeaderMenu: React.FC<QueryCollectionHeaderMenuProps>
           ],
           [
             <div
-              className="font-semibold text-red-600"
+              className="py-xs font-semibold text-red-600"
               onClick={() => {
                 const confirmMessage = `This will permanently delete the query collection "${queryCollection.name}"`;
                 const isOk = getConfirmation(

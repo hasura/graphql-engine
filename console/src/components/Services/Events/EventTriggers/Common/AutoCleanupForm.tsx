@@ -97,7 +97,7 @@ export const AutoCleanupForm = (props: AutoCleanupFormProps) => {
                       schedule: cron.value,
                     });
                   }}
-                  className="cursor-pointer mx-1 px-xs py-1 rounded hover:bg-gray-100"
+                  className="py-xs cursor-pointer mx-1 px-xs py-1 rounded hover:bg-gray-100"
                 >
                   <p className="mb-0 font-semibold whitespace-nowrap">
                     {cron.label}
