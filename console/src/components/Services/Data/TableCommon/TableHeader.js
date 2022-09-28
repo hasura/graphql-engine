@@ -105,6 +105,8 @@ const TableHeader = ({
           }
           dispatch={dispatch}
           property={isTableType ? 'table' : 'view'}
+          table={table}
+          source={source}
         />
         <div className={styles.nav}>
           <ul className="nav nav-pills">

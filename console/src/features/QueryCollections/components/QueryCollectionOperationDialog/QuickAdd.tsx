@@ -138,7 +138,7 @@ export const QuickAdd = (props: QuickAddProps) => {
             <div
               key={operation.name}
               onClick={() => onAdd(operation)}
-              className="cursor-pointer mx-1 px-xs py-1 rounded hover:bg-gray-100"
+              className="cursor-pointer mx-1 px-xs py-xs rounded hover:bg-gray-100"
             >
               <p className="mb-0 font-semibold whitespace-nowrap">
                 {operation.name}

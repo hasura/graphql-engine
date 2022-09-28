@@ -62,6 +62,7 @@ export const QueryCollectionsOperationsHeader: React.FC<QueryCollectionsOperatio
                     items={[
                       otherCollections.map(collection => (
                         <div
+                          className="py-xs"
                           onClick={() =>
                             moveOperationToQueryCollection(
                               collectionName,
@@ -105,6 +106,7 @@ export const QueryCollectionsOperationsHeader: React.FC<QueryCollectionsOperatio
                     items={[
                       otherCollections.map(collection => (
                         <div
+                          className="py-xs"
                           data-testid={`add-to-${collection.name}`}
                           onClick={() =>
                             addOperationToQueryCollection(

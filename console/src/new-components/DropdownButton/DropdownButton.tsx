@@ -18,6 +18,7 @@ export const DropdownButton: React.FC<DropdownButtonProps> = ({
         <FaChevronDown className="transition-transform group-radix-state-open:rotate-180 w-3 h-3" />
       }
       {...rest}
+      size="sm"
     />
   </DropdownMenu>
 );
