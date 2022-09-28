@@ -21052,9 +21052,9 @@ buildSchemaCache :: (MetadataM m, CacheRWM m) => MetadataModifier -> m ()
 --   error.
 buildSchemaCacheFor :: (QErrM m, CacheRWM m, MetadataM m) => MetadataObjId -> MetadataModifier -> m ()
 
--- | Like <a>buildSchemaCache</a>, but fails if there is any inconsistent
+-- | Requests the schema cache, and fails if there is any inconsistent
 --   metadata.
-buildSchemaCacheStrict :: (QErrM m, CacheRWM m, MetadataM m) => m ()
+throwOnInconsistencies :: (QErrM m, CacheRWM m) => m ()
 
 -- | Executes the given action, and if any new <a>InconsistentMetadata</a>s
 --   are added to the schema cache as a result of its execution, raises an
@@ -22291,21 +22291,21 @@ CreateEventTriggerQuery :: SourceName -> TriggerName -> TableName b -> Maybe (Su
 [_cetqRequestTransform] :: CreateEventTriggerQuery (b :: BackendType) -> Maybe RequestTransform
 [_cetqResponseTrasnform] :: CreateEventTriggerQuery (b :: BackendType) -> Maybe MetadataResponseTransform
 [_cteqCleanupConfig] :: CreateEventTriggerQuery (b :: BackendType) -> Maybe AutoTriggerLogCleanupConfig
-cteqCleanupConfig :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (Maybe Text)
-cetqWebhook :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (Maybe InputWebhook)
-cetqUpdate :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (Maybe (SubscribeOpSpec b_atjew))
-cetqTable :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (TableName b_atjew)
-cetqSource :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) SourceName
-cetqRetryConf :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (Maybe RequestTransform)
-cetqReplace :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) Bool
-cetqName :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) TriggerName
-cetqInsert :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (Maybe (SubscribeOpSpec b_atjew))
-cetqHeaders :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (Maybe Bool)
-cetqDelete :: forall b_atjew. Lens' (CreateEventTriggerQuery b_atjew) (Maybe (SubscribeOpSpec b_atjew))
+cteqCleanupConfig :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (Maybe Text)
+cetqWebhook :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (Maybe InputWebhook)
+cetqUpdate :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (Maybe (SubscribeOpSpec b_atjcy))
+cetqTable :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (TableName b_atjcy)
+cetqSource :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) SourceName
+cetqRetryConf :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (Maybe RequestTransform)
+cetqReplace :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) Bool
+cetqName :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) TriggerName
+cetqInsert :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (Maybe (SubscribeOpSpec b_atjcy))
+cetqHeaders :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (Maybe Bool)
+cetqDelete :: forall b_atjcy. Lens' (CreateEventTriggerQuery b_atjcy) (Maybe (SubscribeOpSpec b_atjcy))
 data DeleteEventTriggerQuery (b :: BackendType)
 DeleteEventTriggerQuery :: SourceName -> TriggerName -> DeleteEventTriggerQuery (b :: BackendType)
 [_detqSource] :: DeleteEventTriggerQuery (b :: BackendType) -> SourceName
@@ -25673,9 +25673,9 @@ QueryParametersInfo :: HashMap Name (ColumnValue b) -> Seq (ColumnValue b) -> Ha
 --   This information is used to determine a cohort's required session
 --   variables
 [_qpiReferencedSessionVariables] :: QueryParametersInfo (b :: BackendType) -> HashSet SessionVariable
-qpiSyntheticVariableValues :: forall b_ayeiw. Lens' (QueryParametersInfo b_ayeiw) (Seq (ColumnValue b_ayeiw))
-qpiReusableVariableValues :: forall b_ayeiw. Lens' (QueryParametersInfo b_ayeiw) (HashMap Name (ColumnValue b_ayeiw))
-qpiReferencedSessionVariables :: forall b_ayeiw. Lens' (QueryParametersInfo b_ayeiw) (HashSet SessionVariable)
+qpiSyntheticVariableValues :: forall b_ayegy. Lens' (QueryParametersInfo b_ayegy) (Seq (ColumnValue b_ayegy))
+qpiReusableVariableValues :: forall b_ayegy. Lens' (QueryParametersInfo b_ayegy) (HashMap Name (ColumnValue b_ayegy))
+qpiReferencedSessionVariables :: forall b_ayegy. Lens' (QueryParametersInfo b_ayegy) (HashSet SessionVariable)
 
 -- | Checks if the provided arguments are valid values for their
 --   corresponding types. | Generates SQL of the format "select

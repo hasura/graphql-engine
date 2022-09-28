@@ -40,7 +40,7 @@
 </span><span id="line-40"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="QTQuery"><span class="annot"><a href="Hasura.QueryTags.html#QTQuery"><span class="hs-identifier hs-var">QTQuery</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.QueryTags.html#QueryMetadata"><span class="hs-identifier hs-type">QueryMetadata</span></a></span><span>
 </span><span id="line-41"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QTMutation"><span class="annot"><a href="Hasura.QueryTags.html#QTMutation"><span class="hs-identifier hs-var">QTMutation</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.QueryTags.html#MutationMetadata"><span class="hs-identifier hs-type">MutationMetadata</span></a></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QTLiveQuery"><span class="annot"><a href="Hasura.QueryTags.html#QTLiveQuery"><span class="hs-identifier hs-var">QTLiveQuery</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.QueryTags.html#LivequeryMetadata"><span class="hs-identifier hs-type">LivequeryMetadata</span></a></span><span>
-</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677220"><span id="local-6989586621689677222"><span id="local-6989586621689677224"><span class="annot"><span class="annottext">Int -&gt; QueryTags -&gt; ShowS
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677411"><span id="local-6989586621689677413"><span id="local-6989586621689677415"><span class="annot"><span class="annottext">Int -&gt; QueryTags -&gt; ShowS
 [QueryTags] -&gt; ShowS
 QueryTags -&gt; String
 (Int -&gt; QueryTags -&gt; ShowS)
@@ -59,7 +59,7 @@ $cshowsPrec :: Int -&gt; QueryTags -&gt; ShowS
 </span><span id="line-44"></span><span>
 </span><span id="line-45"></span><span class="hs-comment">-- | query-tags as SQL comment which is appended to the prepared SQL statement</span><span>
 </span><span id="line-46"></span><span class="hs-keyword">newtype</span><span> </span><span id="QueryTagsComment"><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-var">QueryTagsComment</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryTagsComment"><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsComment"><span class="hs-identifier hs-var">QueryTagsComment</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unQueryTagsComment"><span class="annot"><span class="annottext">QueryTagsComment -&gt; Text
-</span><a href="Hasura.QueryTags.html#_unQueryTagsComment"><span class="hs-identifier hs-var hs-var">_unQueryTagsComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677211"><span id="local-6989586621689677213"><span id="local-6989586621689677215"><span class="annot"><span class="annottext">Int -&gt; QueryTagsComment -&gt; ShowS
+</span><a href="Hasura.QueryTags.html#_unQueryTagsComment"><span class="hs-identifier hs-var hs-var">_unQueryTagsComment</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677402"><span id="local-6989586621689677404"><span id="local-6989586621689677406"><span class="annot"><span class="annottext">Int -&gt; QueryTagsComment -&gt; ShowS
 [QueryTagsComment] -&gt; ShowS
 QueryTagsComment -&gt; String
 (Int -&gt; QueryTagsComment -&gt; ShowS)
@@ -74,7 +74,7 @@ show :: QueryTagsComment -&gt; String
 $cshow :: QueryTagsComment -&gt; String
 showsPrec :: Int -&gt; QueryTagsComment -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryTagsComment -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689677207"><span id="local-6989586621689677209"><span class="annot"><span class="annottext">QueryTagsComment -&gt; QueryTagsComment -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689677398"><span id="local-6989586621689677400"><span class="annot"><span class="annottext">QueryTagsComment -&gt; QueryTagsComment -&gt; Bool
 (QueryTagsComment -&gt; QueryTagsComment -&gt; Bool)
 -&gt; (QueryTagsComment -&gt; QueryTagsComment -&gt; Bool)
 -&gt; Eq QueryTagsComment
@@ -88,7 +88,7 @@ $c== :: QueryTagsComment -&gt; QueryTagsComment -&gt; Bool
 </span><span id="line-48"></span><span class="hs-keyword">type</span><span> </span><span id="Attribute"><span class="annot"><a href="Hasura.QueryTags.html#Attribute"><span class="hs-identifier hs-var">Attribute</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span>
 </span><span id="line-49"></span><span>
 </span><span id="line-50"></span><span class="hs-keyword">newtype</span><span> </span><span id="QueryTagsAttributes"><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-var">QueryTagsAttributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="QueryTagsAttributes"><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-var">QueryTagsAttributes</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unQueryTagsAttributes"><span class="annot"><span class="annottext">QueryTagsAttributes -&gt; [Attribute]
-</span><a href="Hasura.QueryTags.html#_unQueryTagsAttributes"><span class="hs-identifier hs-var hs-var">_unQueryTagsAttributes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.QueryTags.html#Attribute"><span class="hs-identifier hs-type">Attribute</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677199"><span id="local-6989586621689677201"><span id="local-6989586621689677203"><span class="annot"><span class="annottext">Int -&gt; QueryTagsAttributes -&gt; ShowS
+</span><a href="Hasura.QueryTags.html#_unQueryTagsAttributes"><span class="hs-identifier hs-var hs-var">_unQueryTagsAttributes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.QueryTags.html#Attribute"><span class="hs-identifier hs-type">Attribute</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677390"><span id="local-6989586621689677392"><span id="local-6989586621689677394"><span class="annot"><span class="annottext">Int -&gt; QueryTagsAttributes -&gt; ShowS
 [QueryTagsAttributes] -&gt; ShowS
 QueryTagsAttributes -&gt; String
 (Int -&gt; QueryTagsAttributes -&gt; ShowS)
@@ -103,7 +103,7 @@ show :: QueryTagsAttributes -&gt; String
 $cshow :: QueryTagsAttributes -&gt; String
 showsPrec :: Int -&gt; QueryTagsAttributes -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryTagsAttributes -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689677195"><span id="local-6989586621689677197"><span class="annot"><span class="annottext">QueryTagsAttributes -&gt; QueryTagsAttributes -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689677386"><span id="local-6989586621689677388"><span class="annot"><span class="annottext">QueryTagsAttributes -&gt; QueryTagsAttributes -&gt; Bool
 (QueryTagsAttributes -&gt; QueryTagsAttributes -&gt; Bool)
 -&gt; (QueryTagsAttributes -&gt; QueryTagsAttributes -&gt; Bool)
 -&gt; Eq QueryTagsAttributes
@@ -138,7 +138,7 @@ forall a. Monoid a =&gt; a
 </span><span id="line-62"></span><span>    </span><span id="qmParameterizedQueryHash"><span class="annot"><span class="annottext">QueryMetadata -&gt; ParameterizedQueryHash
 </span><a href="Hasura.QueryTags.html#qmParameterizedQueryHash"><span class="hs-identifier hs-var hs-var">qmParameterizedQueryHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span><span>
 </span><span id="line-63"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677185"><span id="local-6989586621689677187"><span id="local-6989586621689677189"><span class="annot"><span class="annottext">Int -&gt; QueryMetadata -&gt; ShowS
+</span><span id="line-64"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677376"><span id="local-6989586621689677378"><span id="local-6989586621689677380"><span class="annot"><span class="annottext">Int -&gt; QueryMetadata -&gt; ShowS
 [QueryMetadata] -&gt; ShowS
 QueryMetadata -&gt; String
 (Int -&gt; QueryMetadata -&gt; ShowS)
@@ -165,7 +165,7 @@ $cshowsPrec :: Int -&gt; QueryMetadata -&gt; ShowS
 </span><span id="line-70"></span><span>    </span><span id="mmParameterizedQueryHash"><span class="annot"><span class="annottext">MutationMetadata -&gt; ParameterizedQueryHash
 </span><a href="Hasura.QueryTags.html#mmParameterizedQueryHash"><span class="hs-identifier hs-var hs-var">mmParameterizedQueryHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span><span>
 </span><span id="line-71"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677175"><span id="local-6989586621689677177"><span id="local-6989586621689677179"><span class="annot"><span class="annottext">Int -&gt; MutationMetadata -&gt; ShowS
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677366"><span id="local-6989586621689677368"><span id="local-6989586621689677370"><span class="annot"><span class="annottext">Int -&gt; MutationMetadata -&gt; ShowS
 [MutationMetadata] -&gt; ShowS
 MutationMetadata -&gt; String
 (Int -&gt; MutationMetadata -&gt; ShowS)
@@ -188,7 +188,7 @@ $cshowsPrec :: Int -&gt; MutationMetadata -&gt; ShowS
 </span><span id="line-76"></span><span>    </span><span id="lqmParameterizedQueryHash"><span class="annot"><span class="annottext">LivequeryMetadata -&gt; ParameterizedQueryHash
 </span><a href="Hasura.QueryTags.html#lqmParameterizedQueryHash"><span class="hs-identifier hs-var hs-var">lqmParameterizedQueryHash</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.ParameterizedQueryHash.html#ParameterizedQueryHash"><span class="hs-identifier hs-type">ParameterizedQueryHash</span></a></span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677167"><span id="local-6989586621689677169"><span id="local-6989586621689677171"><span class="annot"><span class="annottext">Int -&gt; LivequeryMetadata -&gt; ShowS
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689677358"><span id="local-6989586621689677360"><span id="local-6989586621689677362"><span class="annot"><span class="annottext">Int -&gt; LivequeryMetadata -&gt; ShowS
 [LivequeryMetadata] -&gt; ShowS
 LivequeryMetadata -&gt; String
 (Int -&gt; LivequeryMetadata -&gt; ShowS)
@@ -208,36 +208,36 @@ $cshowsPrec :: Int -&gt; LivequeryMetadata -&gt; ShowS
 </span><span id="line-80"></span><span class="annot"><a href="Hasura.QueryTags.html#encodeQueryTags"><span class="hs-identifier hs-type">encodeQueryTags</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTags"><span class="hs-identifier hs-type">QueryTags</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-type">QueryTagsAttributes</span></a></span><span>
 </span><span id="line-81"></span><span id="encodeQueryTags"><span class="annot"><span class="annottext">encodeQueryTags :: QueryTags -&gt; QueryTagsAttributes
 </span><a href="Hasura.QueryTags.html#encodeQueryTags"><span class="hs-identifier hs-var hs-var">encodeQueryTags</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTQuery"><span class="hs-identifier hs-type">QTQuery</span></a></span><span> </span><span id="local-6989586621689677166"><span class="annot"><span class="annottext">QueryMetadata
-</span><a href="#local-6989586621689677166"><span class="hs-identifier hs-var">queryMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
+</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTQuery"><span class="hs-identifier hs-type">QTQuery</span></a></span><span> </span><span id="local-6989586621689677357"><span class="annot"><span class="annottext">QueryMetadata
+</span><a href="#local-6989586621689677357"><span class="hs-identifier hs-var">queryMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
 </span><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-var">QueryTagsAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">([Attribute] -&gt; QueryTagsAttributes)
 -&gt; [Attribute] -&gt; QueryTagsAttributes
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">QueryMetadata -&gt; [Attribute]
-</span><a href="#local-6989586621689677165"><span class="hs-identifier hs-var">encodeQueryMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">QueryMetadata
-</span><a href="#local-6989586621689677166"><span class="hs-identifier hs-var">queryMetadata</span></a></span><span>
-</span><span id="line-83"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTMutation"><span class="hs-identifier hs-type">QTMutation</span></a></span><span> </span><span id="local-6989586621689677164"><span class="annot"><span class="annottext">MutationMetadata
-</span><a href="#local-6989586621689677164"><span class="hs-identifier hs-var">mutationMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
+</span><a href="#local-6989586621689677356"><span class="hs-identifier hs-var">encodeQueryMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">QueryMetadata
+</span><a href="#local-6989586621689677357"><span class="hs-identifier hs-var">queryMetadata</span></a></span><span>
+</span><span id="line-83"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTMutation"><span class="hs-identifier hs-type">QTMutation</span></a></span><span> </span><span id="local-6989586621689677355"><span class="annot"><span class="annottext">MutationMetadata
+</span><a href="#local-6989586621689677355"><span class="hs-identifier hs-var">mutationMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
 </span><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-var">QueryTagsAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">([Attribute] -&gt; QueryTagsAttributes)
 -&gt; [Attribute] -&gt; QueryTagsAttributes
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MutationMetadata -&gt; [Attribute]
-</span><a href="#local-6989586621689677163"><span class="hs-identifier hs-var">encodeMutationMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">MutationMetadata
-</span><a href="#local-6989586621689677164"><span class="hs-identifier hs-var">mutationMetadata</span></a></span><span>
-</span><span id="line-84"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTLiveQuery"><span class="hs-identifier hs-type">QTLiveQuery</span></a></span><span> </span><span id="local-6989586621689677162"><span class="annot"><span class="annottext">LivequeryMetadata
-</span><a href="#local-6989586621689677162"><span class="hs-identifier hs-var">livequeryMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
+</span><a href="#local-6989586621689677354"><span class="hs-identifier hs-var">encodeMutationMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">MutationMetadata
+</span><a href="#local-6989586621689677355"><span class="hs-identifier hs-var">mutationMetadata</span></a></span><span>
+</span><span id="line-84"></span><span>  </span><span class="annot"><a href="Hasura.QueryTags.html#QTLiveQuery"><span class="hs-identifier hs-type">QTLiveQuery</span></a></span><span> </span><span id="local-6989586621689677353"><span class="annot"><span class="annottext">LivequeryMetadata
+</span><a href="#local-6989586621689677353"><span class="hs-identifier hs-var">livequeryMetadata</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; QueryTagsAttributes
 </span><a href="Hasura.QueryTags.html#QueryTagsAttributes"><span class="hs-identifier hs-var">QueryTagsAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">([Attribute] -&gt; QueryTagsAttributes)
 -&gt; [Attribute] -&gt; QueryTagsAttributes
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">LivequeryMetadata -&gt; [Attribute]
 forall a. IsString a =&gt; LivequeryMetadata -&gt; [(a, Text)]
-</span><a href="#local-6989586621689677161"><span class="hs-identifier hs-var">encodeLivequeryMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">LivequeryMetadata
-</span><a href="#local-6989586621689677162"><span class="hs-identifier hs-var">livequeryMetadata</span></a></span><span>
+</span><a href="#local-6989586621689677352"><span class="hs-identifier hs-var">encodeLivequeryMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">LivequeryMetadata
+</span><a href="#local-6989586621689677353"><span class="hs-identifier hs-var">livequeryMetadata</span></a></span><span>
 </span><span id="line-85"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-86"></span><span>    </span><span class="hs-comment">-- TODO: how do we want to encode RootFieldAlias?</span><span>
 </span><span id="line-87"></span><span>    </span><span class="hs-comment">-- Currently uses ToTxt instance, which produces &quot;namespace.fieldname&quot;</span><span>
-</span><span id="line-88"></span><span>    </span><span id="local-6989586621689677165"><span class="annot"><span class="annottext">encodeQueryMetadata :: QueryMetadata -&gt; [Attribute]
-</span><a href="#local-6989586621689677165"><span class="hs-identifier hs-var hs-var">encodeQueryMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryMetadata"><span class="hs-identifier hs-type">QueryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689677157"><span id="local-6989586621689677158"><span id="local-6989586621689677159"><span id="local-6989586621689677160"><span class="annot"><span class="annottext">Maybe Name
+</span><span id="line-88"></span><span>    </span><span id="local-6989586621689677356"><span class="annot"><span class="annottext">encodeQueryMetadata :: QueryMetadata -&gt; [Attribute]
+</span><a href="#local-6989586621689677356"><span class="hs-identifier hs-var hs-var">encodeQueryMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#QueryMetadata"><span class="hs-identifier hs-type">QueryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689677348"><span id="local-6989586621689677349"><span id="local-6989586621689677350"><span id="local-6989586621689677351"><span class="annot"><span class="annottext">Maybe Name
 ParameterizedQueryHash
 RequestId
 RootFieldAlias
@@ -249,32 +249,32 @@ qmParameterizedQueryHash :: QueryMetadata -&gt; ParameterizedQueryHash
 qmFieldName :: QueryMetadata -&gt; RootFieldAlias
 qmOperationName :: QueryMetadata -&gt; Maybe Name
 qmRequestId :: QueryMetadata -&gt; RequestId
-</span><a href="#local-6989586621689677157"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689677348"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-89"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;request_id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RequestId -&gt; Text
 </span><a href="Hasura.Server.Types.html#unRequestId"><span class="hs-identifier hs-var hs-var">unRequestId</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621689677160"><span class="hs-identifier hs-var">qmRequestId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689677351"><span class="hs-identifier hs-var">qmRequestId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-90"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;field_name&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RootFieldAlias -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621689677158"><span class="hs-identifier hs-var">qmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689677349"><span class="hs-identifier hs-var">qmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-91"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;parameterized_query_hash&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text) -&gt; ByteString -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ByteString
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#unParamQueryHash"><span class="hs-identifier hs-var hs-var">unParamQueryHash</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621689677157"><span class="hs-identifier hs-var">qmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689677348"><span class="hs-identifier hs-var">qmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-93"></span><span>        </span><span class="annot"><span class="annottext">[Attribute] -&gt; [Attribute] -&gt; [Attribute]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; [Attribute]
 </span><a href="Hasura.QueryTags.html#operationNameAttributes"><span class="hs-identifier hs-var">operationNameAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689677159"><span class="hs-identifier hs-var">qmOperationName</span></a></span><span>
+</span><a href="#local-6989586621689677350"><span class="hs-identifier hs-var">qmOperationName</span></a></span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span>    </span><span id="local-6989586621689677163"><span class="annot"><span class="annottext">encodeMutationMetadata :: MutationMetadata -&gt; [Attribute]
-</span><a href="#local-6989586621689677163"><span class="hs-identifier hs-var hs-var">encodeMutationMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#MutationMetadata"><span class="hs-identifier hs-type">MutationMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689677148"><span id="local-6989586621689677149"><span id="local-6989586621689677150"><span id="local-6989586621689677151"><span class="annot"><span class="annottext">Maybe Name
+</span><span id="line-95"></span><span>    </span><span id="local-6989586621689677354"><span class="annot"><span class="annottext">encodeMutationMetadata :: MutationMetadata -&gt; [Attribute]
+</span><a href="#local-6989586621689677354"><span class="hs-identifier hs-var hs-var">encodeMutationMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#MutationMetadata"><span class="hs-identifier hs-type">MutationMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689677339"><span id="local-6989586621689677340"><span id="local-6989586621689677341"><span id="local-6989586621689677342"><span class="annot"><span class="annottext">Maybe Name
 ParameterizedQueryHash
 RequestId
 RootFieldAlias
@@ -286,59 +286,59 @@ mmParameterizedQueryHash :: MutationMetadata -&gt; ParameterizedQueryHash
 mmFieldName :: MutationMetadata -&gt; RootFieldAlias
 mmOperationName :: MutationMetadata -&gt; Maybe Name
 mmRequestId :: MutationMetadata -&gt; RequestId
-</span><a href="#local-6989586621689677148"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689677339"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-96"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;request_id&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RequestId -&gt; Text
 </span><a href="Hasura.Server.Types.html#unRequestId"><span class="hs-identifier hs-var hs-var">unRequestId</span></a></span><span> </span><span class="annot"><span class="annottext">RequestId
-</span><a href="#local-6989586621689677151"><span class="hs-identifier hs-var">mmRequestId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689677342"><span class="hs-identifier hs-var">mmRequestId</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-97"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;field_name&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RootFieldAlias -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621689677149"><span class="hs-identifier hs-var">mmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689677340"><span class="hs-identifier hs-var">mmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-98"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;parameterized_query_hash&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text) -&gt; ByteString -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ByteString
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#unParamQueryHash"><span class="hs-identifier hs-var hs-var">unParamQueryHash</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621689677148"><span class="hs-identifier hs-var">mmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689677339"><span class="hs-identifier hs-var">mmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-99"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-100"></span><span>        </span><span class="annot"><span class="annottext">[Attribute] -&gt; [Attribute] -&gt; [Attribute]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Name -&gt; [Attribute]
 </span><a href="Hasura.QueryTags.html#operationNameAttributes"><span class="hs-identifier hs-var">operationNameAttributes</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621689677150"><span class="hs-identifier hs-var">mmOperationName</span></a></span><span>
+</span><a href="#local-6989586621689677341"><span class="hs-identifier hs-var">mmOperationName</span></a></span><span>
 </span><span id="line-101"></span><span>
-</span><span id="line-102"></span><span>    </span><span id="local-6989586621689677161"><span class="annot"><span class="annottext">encodeLivequeryMetadata :: LivequeryMetadata -&gt; [(a, Text)]
-</span><a href="#local-6989586621689677161"><span class="hs-identifier hs-var hs-var">encodeLivequeryMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#LivequeryMetadata"><span class="hs-identifier hs-type">LivequeryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689677146"><span id="local-6989586621689677147"><span class="annot"><span class="annottext">ParameterizedQueryHash
+</span><span id="line-102"></span><span>    </span><span id="local-6989586621689677352"><span class="annot"><span class="annottext">encodeLivequeryMetadata :: LivequeryMetadata -&gt; [(a, Text)]
+</span><a href="#local-6989586621689677352"><span class="hs-identifier hs-var hs-var">encodeLivequeryMetadata</span></a></span></span><span> </span><span class="annot"><a href="Hasura.QueryTags.html#LivequeryMetadata"><span class="hs-identifier hs-type">LivequeryMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689677337"><span id="local-6989586621689677338"><span class="annot"><span class="annottext">ParameterizedQueryHash
 RootFieldAlias
 lqmParameterizedQueryHash :: ParameterizedQueryHash
 lqmFieldName :: RootFieldAlias
 lqmParameterizedQueryHash :: LivequeryMetadata -&gt; ParameterizedQueryHash
 lqmFieldName :: LivequeryMetadata -&gt; RootFieldAlias
-</span><a href="#local-6989586621689677146"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689677337"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-103"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;field_name&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">RootFieldAlias -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">RootFieldAlias
-</span><a href="#local-6989586621689677147"><span class="hs-identifier hs-var">lqmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689677338"><span class="hs-identifier hs-var">lqmFieldName</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-104"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
 </span><span class="hs-string">&quot;parameterized_query_hash&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Text) -&gt; ByteString -&gt; Text
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash -&gt; ByteString
 </span><a href="Hasura.GraphQL.ParameterizedQueryHash.html#unParamQueryHash"><span class="hs-identifier hs-var hs-var">unParamQueryHash</span></a></span><span> </span><span class="annot"><span class="annottext">ParameterizedQueryHash
-</span><a href="#local-6989586621689677146"><span class="hs-identifier hs-var">lqmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689677337"><span class="hs-identifier hs-var">lqmParameterizedQueryHash</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-105"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-106"></span><span>
 </span><span id="line-107"></span><span class="annot"><a href="Hasura.QueryTags.html#operationNameAttributes"><span class="hs-identifier hs-type">operationNameAttributes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">GQL.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-108"></span><span id="operationNameAttributes"><span class="annot"><span class="annottext">operationNameAttributes :: Maybe Name -&gt; [Attribute]
 </span><a href="Hasura.QueryTags.html#operationNameAttributes"><span class="hs-identifier hs-var hs-var">operationNameAttributes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Attribute] -&gt; (Name -&gt; [Attribute]) -&gt; Maybe Name -&gt; [Attribute]
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
-</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689677144"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689677144"><span class="hs-identifier hs-var">opName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689677335"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621689677335"><span class="hs-identifier hs-var">opName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;operation_name&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var hs-var">GQL.unName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621689677144"><span class="hs-identifier hs-var">opName</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689677335"><span class="hs-identifier hs-var">opName</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-109"></span></pre></body></html>
