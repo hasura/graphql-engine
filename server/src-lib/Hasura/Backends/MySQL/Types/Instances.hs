@@ -199,8 +199,8 @@ instance Semigroup Top where
 instance J.FromJSON ConnPoolSettings where
   parseJSON = J.withObject "MySQL pool settings" $ \o ->
     ConnPoolSettings
-      <$> o J..:? "max_connections" J..!= _cscMaxConnections defaultConnPoolSettings
-      <*> o J..:? "idle_timeout" J..!= _cscIdleTimeout defaultConnPoolSettings
+      <$> o J..:? "idle_timeout" J..!= _cscIdleTimeout defaultConnPoolSettings
+      <*> o J..:? "max_connections" J..!= _cscMaxConnections defaultConnPoolSettings
 
 $(J.deriveToJSON hasuraJSON ''ConnPoolSettings)
 
