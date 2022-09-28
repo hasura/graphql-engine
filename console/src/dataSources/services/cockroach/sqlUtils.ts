@@ -1143,41 +1143,6 @@ export const frequentlyUsedColumns: FrequentlyUsedColumn[] = [
     typeText: 'timestamp',
     default: 'now()',
   },
-  {
-    name: 'updated_at',
-    validFor: ['add', 'modify'],
-    type: 'timestamptz',
-    typeText: 'timestamp',
-    default: 'now()',
-    defaultText: 'now() + trigger to set value on update',
-    dependentSQLGenerator: (schemaName, tableName, columnName) => {
-      const upSql = `
-CREATE OR REPLACE FUNCTION "${schemaName}"."set_current_timestamp_${columnName}"()
-RETURNS TRIGGER AS $$
-DECLARE
-  _new record;
-BEGIN
-  _new := NEW;
-  _new."${columnName}" = NOW();
-  RETURN _new;
-END;
-$$ LANGUAGE plpgsql;
-CREATE TRIGGER "set_${schemaName}_${tableName}_${columnName}"
-BEFORE UPDATE ON "${schemaName}"."${tableName}"
-FOR EACH ROW
-EXECUTE PROCEDURE "${schemaName}"."set_current_timestamp_${columnName}"();
-COMMENT ON TRIGGER "set_${schemaName}_${tableName}_${columnName}" ON "${schemaName}"."${tableName}" 
-IS 'trigger to set value of column "${columnName}" to current timestamp on row update';
-`;
-
-      const downSql = `DROP TRIGGER IF EXISTS "set_${schemaName}_${tableName}_${columnName}" ON "${schemaName}"."${tableName}";`;
-
-      return {
-        upSql,
-        downSql,
-      };
-    },
-  },
 ];
 
 export const getFKRelations = (options: {
