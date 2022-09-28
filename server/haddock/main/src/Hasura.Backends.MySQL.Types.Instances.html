@@ -329,10 +329,10 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="#local-6989586621689641327"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Word)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;max_connections&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Word) -&gt; Word -&gt; Parser Word
+</span><span class="hs-string">&quot;idle_timeout&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Word) -&gt; Word -&gt; Parser Word
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="annot"><span class="annottext">ConnPoolSettings -&gt; Word
-</span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscMaxConnections"><span class="hs-identifier hs-var hs-var">_cscMaxConnections</span></a></span><span> </span><span class="annot"><span class="annottext">ConnPoolSettings
+</span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscIdleTimeout"><span class="hs-identifier hs-var hs-var">_cscIdleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">ConnPoolSettings
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#defaultConnPoolSettings"><span class="hs-identifier hs-var">defaultConnPoolSettings</span></a></span><span>
 </span><span id="line-203"></span><span>      </span><span class="annot"><span class="annottext">Parser (Word -&gt; ConnPoolSettings)
 -&gt; Parser Word -&gt; Parser ConnPoolSettings
@@ -341,10 +341,10 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 </span><a href="#local-6989586621689641327"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Word)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><span class="hs-string">&quot;idle_timeout&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Word) -&gt; Word -&gt; Parser Word
+</span><span class="hs-string">&quot;max_connections&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser (Maybe Word) -&gt; Word -&gt; Parser Word
 forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="annot"><span class="annottext">ConnPoolSettings -&gt; Word
-</span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscIdleTimeout"><span class="hs-identifier hs-var hs-var">_cscIdleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">ConnPoolSettings
+</span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscMaxConnections"><span class="hs-identifier hs-var hs-var">_cscMaxConnections</span></a></span><span> </span><span class="annot"><span class="annottext">ConnPoolSettings
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#defaultConnPoolSettings"><span class="hs-identifier hs-var">defaultConnPoolSettings</span></a></span><span>
 </span><span id="line-204"></span><span>
 </span><span id="line-205"></span><span class="hs-special">$(</span><span id="local-6989586621689641314"><span id="local-6989586621689641316"><span id="local-6989586621689641318"><span id="local-6989586621689641320"><span class="hs-identifier">J.deriveToJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ConnPoolSettings</span></span></span></span></span><span class="hs-special">)</span><span>
