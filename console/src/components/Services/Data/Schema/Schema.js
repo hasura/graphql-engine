@@ -4,6 +4,7 @@ import Helmet from 'react-helmet';
 import { Link } from 'react-router';
 
 import { Button } from '@/new-components/Button';
+import { BsBoxArrowUpRight } from 'react-icons/bs';
 import _push from '../push';
 import {
   setTableName,
@@ -47,11 +48,12 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { TrackableFunctionsList } from './FunctionsList';
 import { getTrackableFunctions } from './utils';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
-import { FaCog, FaDatabase, FaFolder } from 'react-icons/fa';
+import { FaCog, FaDatabase, FaFolder, FaPlusCircle } from 'react-icons/fa';
 import { TableTrackingCustomizationModalContainer } from './tableTrackCustomization/TableTrackingCustomizationContainer';
 import { modalKeySelector } from '../../../../store/modal/modal.selectors';
 import { showModal, hideModal } from '../../../../store/modal/modal.actions';
 import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
+import { EmptyState } from './components/EmptyState/EmptyState';
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -260,7 +262,7 @@ class Schema extends Component {
       functionsList,
       trackedFunctions
     );
-    const getCreateBtn = () => {
+    const getCreateBtn = (size = 'md') => {
       let createBtn = null;
 
       if (migrationMode && isFeatureSupported('tables.create.enabled')) {
@@ -275,9 +277,12 @@ class Schema extends Component {
         createBtn = (
           <Button
             mode="primary"
-            className={styles.add_mar_left}
+            size={size}
+            className="p-0 m-0 ml-sm"
             data-test="data-create-table"
             onClick={handleClick}
+            iconPosition="start"
+            icon={<FaPlusCircle className="h-3" />}
             data-trackid="data-tab-create-table-button"
           >
             Create Table
@@ -669,6 +674,64 @@ class Schema extends Component {
         </div>
       );
     };
+
+    const getContent = () => {
+      if (
+        getSchemaTables(schema, currentSchema).length === 0 &&
+        currentDriver !== 'bigquery'
+      ) {
+        return (
+          <>
+            <h2 className={`text-3xl font-bold display-inline`}>
+              {currentSchema}
+            </h2>
+            <hr className="my-md" />
+            <EmptyState
+              title="It looks like you don't currently have any tables in your schema"
+              subtitle="Need help getting started?"
+              buttons={[
+                <Button
+                  onClick={() => {
+                    window.open(
+                      'https://hasura.io/docs/latest/getting-started/getting-started-cloud/#step-4-try-out-hasura'
+                    );
+                  }}
+                  size="sm"
+                  iconPosition="end"
+                  icon={<BsBoxArrowUpRight className="h-3" />}
+                >
+                  Learn more about creating tables
+                </Button>,
+                getCreateBtn('sm'),
+              ]}
+            />
+          </>
+        );
+      }
+      return (
+        <>
+          <div className="flex">
+            <h2 className={`text-3xl font-bold display-inline`}>
+              {currentSchema}
+            </h2>
+            {getCreateBtn()}
+          </div>
+          <hr className="my-md" />
+          {getCurrentSchemaSection()}
+          <hr className="my-md" />
+          {getUntrackedTablesSection()}
+          {isFeatureSupported('tables.relationships.track') &&
+            getUntrackedRelationsSection()}
+          {getUntrackedFunctionsSection(
+            isFeatureSupported('functions.track.enabled')
+          )}
+          {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
+            getNonTrackableFunctionsSection()}
+          <hr className="my-md" />
+        </>
+      );
+    };
+
     return (
       <RightContainer>
         {modalKey === TableTrackingCustomizationModalKey && (
@@ -698,24 +761,7 @@ class Schema extends Component {
                 },
               ]}
             />
-            <div className={styles.display_flex}>
-              <h2 className={`${styles.headerText} ${styles.display_inline}`}>
-                {currentSchema}
-              </h2>
-              {getCreateBtn()}
-            </div>
-            <hr className="my-md" />
-            {getCurrentSchemaSection()}
-            <hr className="my-md" />
-            {getUntrackedTablesSection()}
-            {isFeatureSupported('tables.relationships.track') &&
-              getUntrackedRelationsSection()}
-            {getUntrackedFunctionsSection(
-              isFeatureSupported('functions.track.enabled')
-            )}
-            {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
-              getNonTrackableFunctionsSection()}
-            <hr className="my-md" />
+            {getContent()}
           </div>
         </div>
       </RightContainer>
