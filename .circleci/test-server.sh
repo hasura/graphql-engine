@@ -4,6 +4,7 @@ set -euo pipefail
 echo "Running tests on node $CIRCLE_NODE_INDEX of $CIRCLE_NODE_TOTAL"
 
 if [ -z "$SERVER_TEST_TO_RUN" ]; then
+	# shellcheck disable=SC2016
 	echo 'Please specify $SERVER_TEST_TO_RUN'
 	exit 1
 else
@@ -12,15 +13,22 @@ fi
 
 ### Functions
 
+# Disable the following warning:
+# > Note that A && B || C is not if-then-else. C may run when A is true.
+# We want this behavior, as we want to continue even if `kill` fails.
+# shellcheck disable=SC2015
 stop_services() {
 	echo "killing and waiting for spawned services"
 
-	[ -n "$HGE_PIDS" ] && kill -s INT $HGE_PIDS || true
-	[ -n "$WH_PID" ] && kill $WH_PID || true
-	[ -n "$WHC_PID" ] && kill $WHC_PID || true
-	[ -n "$GQL_SERVER_PID" ] && kill $GQL_SERVER_PID || true
+	[[ -n "${HGE_PIDS[*]}" ]] && kill -s INT "${HGE_PIDS[@]}" || true
+	[[ -n "$WH_PID" ]] && kill "$WH_PID" || true
+	[[ -n "$WHC_PID" ]] && kill "$WHC_PID" || true
+	[[ -n "$GQL_SERVER_PID" ]] && kill "$GQL_SERVER_PID" || true
 
-	wait $HGE_PIDS $WH_PID $WHC_PID $GQL_SERVER_PID || true
+	[[ -n "${HGE_PIDS[*]}" ]] && wait "${HGE_PIDS[@]}" || true
+	[[ -n "$WH_PID" ]] && wait "$WH_PID" || true
+	[[ -n "$WHC_PID" ]] && wait "$WHC_PID" || true
+	[[ -n "$GQL_SERVER_PID" ]] && wait "$GQL_SERVER_PID" || true
 }
 
 time_elapsed() {
@@ -28,18 +36,18 @@ time_elapsed() {
 }
 
 fail_if_port_busy() {
-	local PORT=$1
-	if nc -z localhost $PORT; then
+	local PORT="$1"
+	if nc -z localhost "$PORT"; then
 		echo "Port $PORT is busy. Exiting"
 		exit 1
 	fi
 }
 
 wait_for_port() {
-	local PORT=$1
+	local PORT="$1"
 	echo "waiting for $PORT"
 	for _ in $(seq 1 60); do
-		nc -z localhost $PORT && echo "port $PORT is ready" && return
+		nc -z localhost "$PORT" && echo "port $PORT is ready" && return
 		echo -n .
 		sleep 0.25
 	done
@@ -113,17 +121,17 @@ webhook_tests_check_root() {
 }
 
 kill_hge_servers() {
-	kill -s INT $HGE_PIDS || true
-	wait $HGE_PIDS || true
-	HGE_PIDS=""
+	kill -s INT "${HGE_PIDS[@]}" || true
+	wait "${HGE_PIDS[@]}" || true
+	HGE_PIDS=()
 }
 
 HGE_INDEX=1
 run_hge_with_args() {
 	i=$((HGE_INDEX++))
 	set -x
-	"$GRAPHQL_ENGINE" "$@" 2>&1 >"$OUTPUT_FOLDER/graphql-engine-${i}.log" &
-	HGE_PIDS="$HGE_PIDS $!"
+	"$GRAPHQL_ENGINE" "$@" >"$OUTPUT_FOLDER/graphql-engine-${i}.log" 2>&1 &
+	HGE_PIDS=("${HGE_PIDS[@]}" $!)
 	set +x
 }
 
@@ -141,6 +149,7 @@ source_data_sources_utils() {
 	# to avoid sourcing for every server job & test.
 	# https://github.com/hasura/graphql-engine-mono/pull/1526#discussion_r661411538
 	SCRIPTS_SOURCE=$CIRCLECI_FOLDER/../scripts
+	# shellcheck source=../scripts/data-sources-util.sh
 	source "$SCRIPTS_SOURCE/data-sources-util.sh"
 }
 
@@ -155,7 +164,7 @@ if [ -z "${HASURA_GRAPHQL_DATABASE_URL_2:-}" ]; then
 fi
 
 CIRCLECI_FOLDER="${BASH_SOURCE[0]%/*}"
-cd $CIRCLECI_FOLDER
+cd "$CIRCLECI_FOLDER"
 CIRCLECI_FOLDER="$PWD"
 
 PYTEST_ROOT="$CIRCLECI_FOLDER/../server/tests-py"
@@ -163,7 +172,7 @@ PYTEST_ROOT="$CIRCLECI_FOLDER/../server/tests-py"
 OUTPUT_FOLDER=${OUTPUT_FOLDER:-"$CIRCLECI_FOLDER/test-server-output"}
 mkdir -p "$OUTPUT_FOLDER"
 
-cd $PYTEST_ROOT
+cd "$PYTEST_ROOT"
 
 for port in 8080 8081 9876 5592 5000 5001 5593 5594; do
 	fail_if_port_busy $port
@@ -215,7 +224,7 @@ PYTEST_PARALLEL_ARGS=(
 	--pg-urls "$HASURA_GRAPHQL_DATABASE_URL" "${HASURA_GRAPHQL_DATABASE_URL_2}"
 )
 
-HGE_PIDS=""
+HGE_PIDS=()
 WH_PID=""
 WHC_PID=""
 GQL_SERVER_PID=""
@@ -290,8 +299,9 @@ jwt-rs512)
 
 	init_jwt
 
-	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key }')"
+	HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key }')"
+	export HASURA_GRAPHQL_ADMIN_SECRET HASURA_GRAPHQL_JWT_SECRET
 
 	start_multiple_hge_servers
 
@@ -307,8 +317,9 @@ jwt-ed25519)
 
 	init_jwt
 
-	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key }')"
+	HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key }')"
+	export HASURA_GRAPHQL_ADMIN_SECRET HASURA_GRAPHQL_JWT_SECRET
 
 	start_multiple_hge_servers
 
@@ -326,11 +337,13 @@ jwt-stringified)
 
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_format: "stringified_json"}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , claims_format: "stringified_json"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_format: "stringified_json"}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , claims_format: "stringified_json"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
@@ -344,11 +357,13 @@ jwt-audience-check-single-string)
 
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , audience: "myapp-1234"}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , audience: "myapp-1234"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , audience: "myapp-1234"}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , audience: "myapp-1234"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
@@ -360,12 +375,15 @@ jwt-audience-check-list-string)
 
 	init_jwt
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , audience: ["myapp-1234", "myapp-9876"]}')"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , audience: ["myapp-1234", "myapp-9876"]}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , audience: ["myapp-1234", "myapp-9876"]}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , audience: ["myapp-1234", "myapp-9876"]}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
@@ -379,11 +397,13 @@ jwt-issuer-check)
 
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , issuer: "https://hasura.com"}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , issuer: "https://hasura.com"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , issuer: "https://hasura.com"}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , issuer: "https://hasura.com"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
@@ -398,36 +418,45 @@ jwt-with-claims-namespace-path)
 	init_jwt
 
 	# hasura claims at one level of nesting
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura_claims"}')"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura_claims"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_namespace_path: "$.hasura_claims"}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , claims_namespace_path: "$.hasura_claims"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
 	unset HASURA_GRAPHQL_JWT_SECRET
 
 	# hasura claims at two levels of nesting with claims_namespace_path containing special character
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura['\''claims%'\'']"}')"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , claims_namespace_path: "$.hasura['\''claims%'\'']"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_namespace_path: "$.hasura['\''claims%'\'']"}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , claims_namespace_path: "$.hasura['\''claims%'\'']"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
 	unset HASURA_GRAPHQL_JWT_SECRET
 
 	# hasura claims at the root of the JWT token
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_namespace_path: "$"}')"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , claims_namespace_path: "$"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_namespace_path: "$"}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , claims_namespace_path: "$"}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
@@ -440,13 +469,15 @@ jwt-claims-map-with-json-path-values)
 
 	init_jwt
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed"}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default"}}}')"
-
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed"}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default"}}}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapBasic
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed"}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default"}}}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed"}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default"}}}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapBasic
 
@@ -454,12 +485,15 @@ jwt-claims-map-with-json-path-values)
 
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with claims_map and values are json path with default values set) #####################################>\n"
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id", "default":"1"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed", "default":["user","editor"]}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default","default":"user"}}}')"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id", "default":"1"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed", "default":["user","editor"]}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default","default":"user"}}}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapBasic
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id", "default":"1"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed", "default":["user","editor"]}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default","default":"user"}}}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id", "default":"1"}, "x-hasura-allowed-roles": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.allowed", "default":["user","editor"]}, "x-hasura-default-role": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].role.default","default":"user"}}}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapBasic
 
@@ -470,12 +504,16 @@ jwt-with-expiry-time-leeway)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET AND JWT (with JWT config allowing for leeway) #####################################>\n"
 
 	init_jwt
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , allowed_skew: 60}')"
+
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , allowed_skew: 60}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py::TestJWTExpirySkew
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , allowed_skew: 60}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , allowed_skew: 60}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py::TestJWTExpirySkew
 
@@ -488,13 +526,15 @@ jwt-claims-map-with-literal-values)
 
 	init_jwt
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": ["user","editor"], "x-hasura-default-role": "user","x-hasura-custom-header":"custom-value"}}')"
-
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": ["user","editor"], "x-hasura-default-role": "user","x-hasura-custom-header":"custom-value"}}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapWithStaticHasuraClaimsMapValues
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": ["user","editor"], "x-hasura-default-role": "user","x-hasura-custom-header":"custom-value"}}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , claims_map: {"x-hasura-user-id": {"path":"$.['"'"'https://myapp.com/jwt/claims'"'"'].user.id"}, "x-hasura-allowed-roles": ["user","editor"], "x-hasura-default-role": "user","x-hasura-custom-header":"custom-value"}}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt_claims_map.py::TestJWTClaimsMapWithStaticHasuraClaimsMapValues
 
@@ -507,12 +547,15 @@ jwt-cookie)
 
 	init_jwt
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , header: {"type": "Cookie", "name": "hasura_user"}}')"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , header: {"type": "Cookie", "name": "hasura_user"}}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/jwt_private.key" test_jwt.py
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/ed25519_jwt_public.key)" '{ type: "Ed25519", key: $key , header: {"type": "Cookie", "name": "hasura_user"}}')"
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/ed25519_jwt_public.key")" '{ type: "Ed25519", key: $key , header: {"type": "Cookie", "name": "hasura_user"}}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	init_hge_and_test_jwt "ssl/ed25519_jwt_private.key" test_jwt.py
 
@@ -524,9 +567,11 @@ jwt-cookie-unauthorized-role)
 
 	init_jwt
 
-	export HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat $OUTPUT_FOLDER/ssl/jwt_public.key)" '{ type: "RS512", key: $key , header: {"type": "Cookie", "name": "hasura_user"}}')"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 	export HASURA_GRAPHQL_UNAUTHORIZED_ROLE="anonymous"
+
+	HASURA_GRAPHQL_JWT_SECRET="$(jq -n --arg key "$(cat "$OUTPUT_FOLDER/ssl/jwt_public.key")" '{ type: "RS512", key: $key , header: {"type": "Cookie", "name": "hasura_user"}}')"
+	export HASURA_GRAPHQL_JWT_SECRET
 
 	run_hge_with_args serve
 
@@ -881,8 +926,8 @@ query-logs)
 	# we are doing this instead of calling run_hge_with_args, because we want to save in a custom log file
 	set -x
 	export LOGGING_TEST_LOGFILE_PATH="$OUTPUT_FOLDER/graphql-engine-verbose-logging.log"
-	"$GRAPHQL_ENGINE" serve 2>&1 >"$LOGGING_TEST_LOGFILE_PATH" &
-	HGE_PIDS="$HGE_PIDS $!"
+	"$GRAPHQL_ENGINE" serve >"$LOGGING_TEST_LOGFILE_PATH" 2>&1 &
+	HGE_PIDS=("${HGE_PIDS[@]}" $!)
 	set +x
 
 	wait_for_port 8080
@@ -910,8 +955,8 @@ startup-db-calls)
 	# we are doing this instead of calling run_hge_with_args, because we want to save in a custom log file
 	set -x
 	export LOGGING_TEST_LOGFILE_PATH="$OUTPUT_FOLDER/graphql-engine-verbose-logging-db.log"
-	"$GRAPHQL_ENGINE" serve 2>&1 >"$LOGGING_TEST_LOGFILE_PATH" &
-	HGE_PIDS="$HGE_PIDS $!"
+	"$GRAPHQL_ENGINE" serve >"$LOGGING_TEST_LOGFILE_PATH" 2>&1 &
+	HGE_PIDS=("${HGE_PIDS[@]}" $!)
 	set +x
 
 	wait_for_port 8080
@@ -1002,7 +1047,7 @@ remote-schema-https)
 
 	export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="${OLD_REMOTE_SCHEMAS_WEBHOOK_DOMAIN}"
 	kill_hge_servers
-	kill $GQL_SERVER_PID
+	kill "$GQL_SERVER_PID"
 	;;
 
 
@@ -1321,7 +1366,7 @@ else:
 
 	# create pgbouncer user
 	id pgbouncer || useradd pgbouncer
-	cd $CIRCLECI_FOLDER
+	cd "$CIRCLECI_FOLDER"
 	mkdir -p pgbouncer
 	chown -R pgbouncer:pgbouncer pgbouncer
 
@@ -1340,7 +1385,7 @@ admin_users = postgres' >pgbouncer/pgbouncer.ini
 	# start pgbouncer
 	pgbouncer -u pgbouncer -d pgbouncer/pgbouncer.ini
 
-	cd $PYTEST_ROOT
+	cd "$PYTEST_ROOT"
 	sleep 2
 
 	# start 1st server
@@ -1360,12 +1405,12 @@ admin_users = postgres' >pgbouncer/pgbouncer.ini
 	# Shutdown pgbouncer
 	psql "postgresql://postgres:postgres@localhost:6543/pgbouncer" -c "SHUTDOWN;" || true
 
-	cd $CIRCLECI_FOLDER
+	cd "$CIRCLECI_FOLDER"
 
 	# start pgbouncer again
 	pgbouncer -u pgbouncer -d pgbouncer/pgbouncer.ini
 
-	cd $PYTEST_ROOT
+	cd "$PYTEST_ROOT"
 
 	# sleep for 20 seconds
 	sleep 20
@@ -1455,6 +1500,7 @@ backend-citus)
 backend-bigquery)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH BIGQUERY BACKEND ###########################################>\n"
 
+	# shellcheck source=../scripts/bigquery.sh
 	source "$CIRCLECI_FOLDER/../scripts/bigquery.sh" && verify_bigquery_pytest_env
 
 	run_hge_with_args serve
