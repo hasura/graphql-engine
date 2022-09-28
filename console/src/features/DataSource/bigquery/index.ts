@@ -12,7 +12,7 @@ export const bigquery: Database = {
   introspection: {
     getDriverInfo: async () => ({
       name: 'bigquery',
-      displayName: 'Big Query',
+      displayName: 'BigQuery',
       release: 'GA',
     }),
     getDatabaseConfiguration: async () => {
