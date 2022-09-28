@@ -542,14 +542,7 @@
 
     .navSideBarActive {
       border-bottom: 4px solid #ffc627;
-
-      svg {
-        color: #ffc627;
-      }
-
-      p {
-        color: #ffc627;
-      }
+      color: #ffc627 !important;
     }
 
     li:hover {
@@ -1336,7 +1329,7 @@
 .consoleNotificationPanel {
   width: 460px;
   padding: 0;
-  left: auto;
+  left: auto !important;
   border: none;
   user-select: none;
   -webkit-box-shadow: -3px 4px 10px 0px rgba(0, 0, 0, 0.1);

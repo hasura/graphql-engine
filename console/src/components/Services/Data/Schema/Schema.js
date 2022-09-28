@@ -414,7 +414,7 @@ class Schema extends Component {
                     title="customize table before tracking"
                     size="sm"
                     icon={<FaCog />}
-                    className="ml-2"
+                    className={`ml-2 ${styles.display_inline}`}
                     onClick={onCustomizeTableButtonClick}
                   />
                 </div>
