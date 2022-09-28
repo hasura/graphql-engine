@@ -217,13 +217,17 @@ type: run_sql
 args:
   source: postgres
   sql: |
-      SELECT tag, object_identity FROM hasura.ddl_history ORDER BY object_identity;
+      SELECT tag, object_identity FROM hasura.ddl_history ORDER BY object_identity COLLATE "C";
           |]
       )
       [yaml|
 result:
 - - tag
   - object_identity
+- - CREATE TRIGGER
+  - '"notify_hasura_users_INSERT_INSERT" on hasura.users'
+- - CREATE FUNCTION
+  - hdb_catalog."notify_hasura_users_INSERT_INSERT"()
 - - CREATE TABLE
   - hdb_catalog.event_invocation_logs
 - - CREATE INDEX
@@ -244,10 +248,6 @@ result:
   - hdb_catalog.hdb_source_catalog_version_one_row
 - - CREATE FUNCTION
   - hdb_catalog.insert_event_log(pg_catalog.text,pg_catalog.text,pg_catalog.text,pg_catalog.text,pg_catalog.json)
-- - CREATE FUNCTION
-  - hdb_catalog."notify_hasura_users_INSERT_INSERT"()
-- - CREATE TRIGGER
-  - '"notify_hasura_users_INSERT_INSERT" on hasura.users'
 result_type: TuplesOk
 |]
   it "only reloading the metadata should not recreate the SQL triggers" $ \(testEnvironment, _) -> do
