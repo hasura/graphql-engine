@@ -12,10 +12,12 @@ from conftest import use_action_fixtures
 TODO:- Test Actions metadata
 """
 
-@pytest.fixture(scope="module")
-def graphql_service():
-    svc = NodeGraphQL(["node", "remote_schemas/nodejs/actions_remote_join_schema.js"], port=4001)
+@pytest.fixture(scope='class')
+@pytest.mark.early
+def graphql_service(hge_fixture_env: dict[str, str]):
+    svc = NodeGraphQL(['node', 'remote_schemas/nodejs/actions_remote_join_schema.js'], port=4001)
     svc.start()
+    hge_fixture_env['GRAPHQL_SERVICE_HANDLER'] = svc.url
     yield svc
     svc.stop()
 
@@ -798,7 +800,7 @@ class TestCreateActionNestedTypeWithRelation:
     def test_create_sync_action_with_nested_output_and_nested_relation(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/create_sync_action_with_nested_output_and_nested_relation.yaml')
 
-@pytest.mark.usefixtures('postgis', 'per_class_tests_db_state')
+@pytest.mark.usefixtures('postgis', 'actions_fixture', 'per_class_tests_db_state')
 class TestSetCustomTypes:
 
     @classmethod
@@ -820,7 +822,7 @@ class TestSetCustomTypes:
     def test_drop_relationship(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/drop_relationship.yaml')
 
-@pytest.mark.usefixtures('per_class_tests_db_state')
+@pytest.mark.usefixtures('actions_fixture', 'per_class_tests_db_state')
 class TestActionsMetadata:
 
     @classmethod

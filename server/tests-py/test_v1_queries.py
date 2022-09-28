@@ -649,6 +649,7 @@ class TestCreatePermission:
         return "queries/v1/permissions"
 
 # All these tests fail. So it should be fine to not have a cleanup after tests
+@pytest.mark.hge_env('EVENT_WEBHOOK_HEADER', 'MyEnvValue')
 class TestNonEmptyText:
 
     def test_create_event_trigger(self, hge_ctx):

@@ -6,6 +6,7 @@ import sqlalchemy
 import sys
 import threading
 import time
+from typing import Optional
 
 from context import HGECtx, HGECtxGQLServer, ActionsWebhookServer, EvtsWebhookServer, GQLWsClient, PytestConf, GraphQLWSClient
 import fixtures.hge
@@ -51,12 +52,6 @@ def pytest_addoption(parser):
     )
     parser.addoption(
         "--hge-jwt-conf", metavar="HGE_JWT_CONF", help="The JWT conf", required=False
-    )
-
-    parser.addoption(
-        "--test-cors", action="store_true",
-        required=False,
-        help="Run testcases for CORS configuration"
     )
 
     parser.addoption(
@@ -333,16 +328,40 @@ def per_backend_test_class(request: pytest.FixtureRequest):
 def per_backend_test_function(request: pytest.FixtureRequest):
     return per_backend_tests_fixture(request)
 
+@pytest.fixture(scope='session')
+def pg_version(request) -> int:
+    pg_url: str = request.config.workerinput["pg-url"]
+    with sqlalchemy.create_engine(pg_url).connect() as connection:
+        row = connection.execute('show server_version_num').fetchone()
+        if not row:
+            raise Exception('Could not get the PostgreSQL version.')
+        return int(row['server_version_num']) // 10000
+
 @pytest.fixture(scope='class')
 def pg_url(request) -> str:
     return request.config.workerinput["pg-url"]
 
-@pytest.fixture(scope='class')
-def hge_url(request, hge_server) -> str:
+# Any test caught by this would also be caught by `hge_skip_function`, but
+# this is faster.
+@pytest.fixture(scope='class', autouse=True)
+def hge_skip_class(request: pytest.FixtureRequest, hge_server: Optional[str]):
+    hge_skip(request, hge_server)
+
+@pytest.fixture(scope='function', autouse=True)
+def hge_skip_function(request: pytest.FixtureRequest, hge_server: Optional[str]):
+    hge_skip(request, hge_server)
+
+def hge_skip(request: pytest.FixtureRequest, hge_server: Optional[str]):
+    # Let `hge_server` manage this stuff.
     if hge_server:
-        return hge_server
-    else:
-        return request.config.workerinput["hge-url"]
+        return
+    # Ensure that the correct environment variables have been set for the given test.
+    hge_marker_env: dict[str, str] = {marker.args[0]: marker.args[1] for marker in request.node.iter_markers('hge_env')}
+    incorrect_env = {name: value for name, value in hge_marker_env.items() if os.getenv(name) != value}
+    if len(incorrect_env) > 0:
+        pytest.skip(
+            'This test expects the following environment variables: '
+            + ', '.join([f'{name!r} = {value!r}' for name, value in incorrect_env.items()]))
 
 @pytest.fixture(scope='class')
 def postgis(pg_url):
@@ -356,20 +375,55 @@ def postgis(pg_url):
         if re.match('^3\\.', postgis_version):
             connection.execute('CREATE EXTENSION IF NOT EXISTS postgis_raster')
 
+@pytest.fixture(scope='session')
+def hge_bin(request: pytest.FixtureRequest) -> Optional[str]:
+    return request.config.getoption('--hge-bin')  # type: ignore
+
 @pytest.fixture(scope='class')
-def hge_port():
+def hge_port() -> int:
     return fixtures.hge.hge_port()
+
+@pytest.fixture(scope='class')
+def hge_url(request: pytest.FixtureRequest, hge_bin: Optional[str], hge_port: int) -> str:
+    if hge_bin:
+        return f'http://localhost:{hge_port}'
+    else:
+        return request.config.workerinput['hge-url']  # type: ignore
+
+# A hack to inject environment variables from other fixtures into HGE.
+# All of this is because we cannot cleanly express dependencies between
+# fixtures of the form "this loads before that, IF that is loaded".
+#
+# This is marked as "early" so the `fixture-order` plugin ensures that it is
+# loaded _before_ `hge_server`. Similarly, any fixture using it must be at
+# the same scope level and also marked as "early", to ensure that it is
+# mutated before `hge_server` uses the data.
+#
+# In short, we use `early` to ensure that writes happen before reads.
+@pytest.fixture(scope='class')
+@pytest.mark.early
+def hge_fixture_env() -> dict[str, str]:
+    return {}
+
+@pytest.fixture(scope='class')
+def hge_key(request) -> Optional[str]:
+    return request.config.getoption('--hge-key')
 
 @pytest.fixture(scope='class')
 def hge_server(
     request: pytest.FixtureRequest,
+    hge_bin: Optional[str],
     hge_port: int,
+    hge_url: str,
+    hge_fixture_env: dict[str, str],
     pg_url: str,
-):
-    return fixtures.hge.hge_server(request, hge_port, pg_url)
+) -> Optional[str]:
+    if not hge_bin:
+      return None
+    return fixtures.hge.hge_server(request, hge_bin, hge_port, hge_url, hge_fixture_env, pg_url)
 
 @pytest.fixture(scope='class')
-def hge_ctx(request, hge_url, pg_url):
+def hge_ctx(request, hge_url, pg_url, hge_server):
     hge_ctx = HGECtx(hge_url, pg_url, request.config)
 
     yield hge_ctx
@@ -378,26 +432,28 @@ def hge_ctx(request, hge_url, pg_url):
     time.sleep(1)  # TODO why do we sleep here?
 
 @pytest.fixture(scope='class')
-def evts_webhook(request):
-    webhook_httpd = EvtsWebhookServer(server_address=('127.0.0.1', 5592))
+@pytest.mark.early
+def evts_webhook(hge_fixture_env: dict[str, str]):
+    webhook_httpd = EvtsWebhookServer(server_address=('localhost', 5592))
     web_server = threading.Thread(target=webhook_httpd.serve_forever)
     web_server.start()
+    hge_fixture_env['EVENT_WEBHOOK_HANDLER'] = webhook_httpd.url
     yield webhook_httpd
     webhook_httpd.shutdown()
     webhook_httpd.server_close()
     web_server.join()
 
 @pytest.fixture(scope='class')
-def actions_fixture(hge_ctx):
-    if hge_ctx.is_default_backend:
-        pg_version = hge_ctx.pg_version
-        if pg_version < 100000: # version less than 10.0
-            pytest.skip('Actions are not supported on Postgres version < 10')
+@pytest.mark.early
+def actions_fixture(pg_version: int, hge_url: str, hge_key: Optional[str], hge_fixture_env: dict[str, str]):
+    if pg_version < 10:
+        pytest.skip('Actions are not supported on Postgres version < 10')
 
     # Start actions' webhook server
-    webhook_httpd = ActionsWebhookServer(hge_ctx, server_address=('127.0.0.1', 5593))
+    webhook_httpd = ActionsWebhookServer(hge_url, hge_key, server_address=('localhost', 5593))
     web_server = threading.Thread(target=webhook_httpd.serve_forever)
     web_server.start()
+    hge_fixture_env['ACTION_WEBHOOK_HANDLER'] = webhook_httpd.url
     yield webhook_httpd
     webhook_httpd.shutdown()
     webhook_httpd.server_close()
@@ -434,10 +490,12 @@ def pro_tests_fixtures(hge_ctx):
         return
 
 @pytest.fixture(scope='class')
-def scheduled_triggers_evts_webhook(request):
-    webhook_httpd = EvtsWebhookServer(server_address=('127.0.0.1', 5594))
+@pytest.mark.early
+def scheduled_triggers_evts_webhook(hge_fixture_env: dict[str, str]):
+    webhook_httpd = EvtsWebhookServer(server_address=('localhost', 5594))
     web_server = threading.Thread(target=webhook_httpd.serve_forever)
     web_server.start()
+    hge_fixture_env['SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN'] = webhook_httpd.url
     yield webhook_httpd
     webhook_httpd.shutdown()
     webhook_httpd.server_close()
@@ -445,12 +503,13 @@ def scheduled_triggers_evts_webhook(request):
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
-def gql_server(request):
+def gql_server(request, hge_fixture_env: dict[str, str]):
     port = 5000
     hge_urls: list[str] = request.config.getoption('--hge-urls')
     graphql_server.set_hge_urls(hge_urls)
     server = HGECtxGQLServer(port=port)
     server.start_server()
+    hge_fixture_env['REMOTE_SCHEMAS_WEBHOOK_DOMAIN'] = server.url
     ports.wait_for_port(port)
     yield server
     server.stop_server()

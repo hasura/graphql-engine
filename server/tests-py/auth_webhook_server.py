@@ -2,7 +2,8 @@
 Sample auth webhook to receive a cookie and respond
 """
 from http import HTTPStatus
-from webserver import RequestHandler, WebServer, MkHandlers, Response
+import http.server
+from webserver import MkHandlers, RequestHandler, Response
 
 class CookieAuth(RequestHandler):
     def get(self, request):
@@ -13,7 +14,7 @@ class CookieAuth(RequestHandler):
         cookieHdrs = []
         if 'cookie' in headers and headers['cookie']:
             res = {'x-hasura-role': 'admin'}
-            
+
             for k, v in headers.items():
                 if 'response-set-cookie' in k:
                     hdr = ('Set-Cookie', v)
@@ -28,7 +29,7 @@ class CookieAuth(RequestHandler):
         print('auth POST request')
         headers = {k.lower(): v for k, v in request.json['headers'].items()}
         cookieHdrs = []
-        
+
         if 'cookie' in headers and headers['cookie']:
             res = {'x-hasura-role': 'admin'}
 
@@ -48,7 +49,7 @@ handlers = MkHandlers({
 })
 
 def create_server(host='127.0.0.1', port=9876):
-    return WebServer((host, port), handlers)
+    return http.server.HTTPServer((host, port), handlers)
 
 def stop_server(server):
     server.shutdown()

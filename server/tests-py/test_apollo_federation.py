@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import os
 import pytest
 import requests
 from remote_server import NodeGraphQL
@@ -13,11 +12,7 @@ def make_request(url, query):
     resp = requests.post(url, json=payload)
     return resp
 
-experimental_features = os.getenv('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES')
-
-@pytest.mark.skipif(
-    experimental_features is None or not 'apollo_federation' in experimental_features,
-    reason="This test expects the (apollo_federation) experimental feature turned on")
+@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'apollo_federation')
 @pytest.mark.usefixtures('per_class_tests_db_state')
 class TestApolloFederation:
 
@@ -25,9 +20,11 @@ class TestApolloFederation:
     def dir(cls):
         return 'queries/apollo_federation'
 
-    def test_apollo_federated_server_with_hge_only(self,hge_ctx):
+    def test_apollo_federated_server_with_hge_only(self, hge_url: str):
         # start the node server
-        fed_server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_only.js"])
+        fed_server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_only.js"], env={
+            'HGE_URL': hge_url,
+        })
         fed_server.start()
 
         # run a GQL query
@@ -48,10 +45,13 @@ class TestApolloFederation:
         assert resp.status_code == 200, resp.text
         assert 'data' in resp.text
 
-    def test_apollo_federated_server_with_hge_and_apollo_graphql_server(self,hge_ctx):
+    def test_apollo_federated_server_with_hge_and_apollo_graphql_server(self, hge_url: str):
         # start the node servers
-        server_1 = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_server_1.js"])
+        server_1 = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_server_1.js"], env={
+            'HGE_URL': hge_url,
+        })
         server_env = {
+            'HGE_URL': hge_url,
             'OTHER_URL': server_1.url,
         }
         fed_server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_and_server1.js"], env=server_env)

@@ -137,6 +137,14 @@ services:
     deploy:
       replicas: 2
 
+  postgres-healthy:
+    image: busybox
+    command:
+      - 'true'
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 volumes:
   cabal-cache:
   hge-dist:

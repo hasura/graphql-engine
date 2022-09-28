@@ -564,7 +564,6 @@ cors-domains)
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--test-cors \
 		test_cors.py
 
 	kill_hge_servers
@@ -799,6 +798,8 @@ naming-conventions)
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM"
 	run_hge_with_args serve
 	wait_for_port 8080
+
+	unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \

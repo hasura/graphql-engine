@@ -71,7 +71,10 @@ class TestGraphQLInsert:
 class TestGraphQLInsertIdentityColumn:
 
     @pytest.fixture(autouse=True)
-    def transact(self, hge_ctx):
+    def transact(self, pg_version, hge_ctx):
+        if pg_version < 10:
+            pytest.skip("Identity columns are not supported in Postgres version < 10")
+
         setup_q = {
             'type': 'bulk',
             'args': [
@@ -95,12 +98,10 @@ class TestGraphQLInsertIdentityColumn:
                 'sql': 'DROP TABLE table_identity_column'
             }
         }
-        if hge_ctx.pg_version >= 100000:
-            hge_ctx.v1q(setup_q)
-            yield
-            hge_ctx.v1q(teardown_q)
-        else:
-            pytest.skip("Identity columns are not supported in Postgres version < 10")
+
+        hge_ctx.v1q(setup_q)
+        yield
+        hge_ctx.v1q(teardown_q)
 
     # https://github.com/hasura/graphql-engine/issues/7557
     def test_insert_into_identity_column(self, hge_ctx):

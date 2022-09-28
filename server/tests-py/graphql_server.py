@@ -3,6 +3,7 @@
 import copy
 from enum import Enum
 import graphene
+import http.server
 from http import HTTPStatus
 import time
 import ssl
@@ -10,7 +11,7 @@ import sys
 from urllib.parse import urlparse
 
 from graphql import GraphQLError
-from webserver import RequestHandler, WebServer, MkHandlers, Response
+from webserver import MkHandlers, RequestHandler, Response
 
 HGE_URLS=[]
 
@@ -878,8 +879,8 @@ handlers = MkHandlers({
 })
 
 
-def create_server(host='127.0.0.1', port=5000):
-    return WebServer((host, port), handlers)
+def create_server(host='localhost', port=0):
+    return http.server.HTTPServer((host, port), handlers)
 
 def stop_server(server):
     server.shutdown()

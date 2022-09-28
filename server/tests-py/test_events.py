@@ -4,7 +4,7 @@ import queue
 import sqlalchemy
 import time
 
-import utils
+from context import EvtsWebhookServer, HGECtx
 from utils import *
 from validate import check_query_f, check_event, check_event_transformed, check_events
 
@@ -192,11 +192,11 @@ class TestEventCreateAndDeleteMSSQL:
 # - checks that we're processing with the concurrency and backpressure
 #   characteristics we expect
 # - ensures all events are successfully processed
-#
-# NOTE: this expects:
-#   HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE=8
-#   HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE=100  (the default)
-@pytest.mark.backend('mssql','postgres')
+@pytest.mark.backend('mssql', 'postgres')
+# Set a known batch size for assertions.
+@pytest.mark.hge_env('HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE', str(100))
+# Set the HTTP pool size to trigger backpressure upon flooding.
+@pytest.mark.hge_env('HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE', str(8))
 @usefixtures("per_method_tests_db_state")
 class TestEventFloodPostgresMSSQL(object):
 
@@ -204,7 +204,7 @@ class TestEventFloodPostgresMSSQL(object):
     def dir(cls):
         return 'queries/event_triggers/flood'
 
-    def test_flood(self, hge_ctx, evts_webhook):
+    def test_flood(self, hge_ctx: HGECtx, evts_webhook: EvtsWebhookServer):
         table = {"schema": "hge_tests", "name": "test_flood"}
 
         # Trigger a bunch of events; hasura will begin processing but block on /block
@@ -267,7 +267,7 @@ class TestEventFloodPostgresMSSQL(object):
                 assert resp['result'][1][0] == 200
 
         # Rather than sleep arbitrarily, loop until assertions pass:
-        utils.until_asserts_pass(30, check_backpressure)
+        until_asserts_pass(30, check_backpressure)
         # ...then make sure we're truly stable:
         time.sleep(3)
         check_backpressure()
@@ -451,11 +451,10 @@ class TestCreateEventQueryPostgresMSSQL(object):
         check_event(hge_ctx, evts_webhook, "t1_all", table, "DELETE", exp_ev_data)
 
 
-    def test_partitioned_table_basic_insert(self, hge_ctx, evts_webhook):
-        if (hge_ctx.backend == "postgres"):
-            if hge_ctx.pg_version < 110000:
+    def test_partitioned_table_basic_insert(self, pg_version, hge_ctx, evts_webhook):
+        if hge_ctx.backend == "postgres":
+            if pg_version < 11:
                 pytest.skip('Event triggers on partioned tables are not supported in Postgres versions < 11')
-                return
             hge_ctx.v1q_f(self.dir() + '/partition_table_setup.yaml')
             table = { "schema":"hge_tests", "name": "measurement"}
 
@@ -549,7 +548,8 @@ class TestEventRetryConfPostgresMSSQL(object):
         except queue.Empty:
             pass
 
-@pytest.mark.backend('mssql','postgres')
+@pytest.mark.backend('mssql', 'postgres')
+@pytest.mark.hge_env('EVENT_WEBHOOK_HEADER', 'MyEnvValue')
 @usefixtures('per_method_tests_db_state')
 class TestEventHeadersPostgresMSSQL(object):
 

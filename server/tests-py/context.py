@@ -19,7 +19,7 @@ import string
 import subprocess
 import threading
 import time
-from typing import Any
+from typing import Any, Optional
 from urllib.parse import urlparse
 import websocket
 
@@ -313,6 +313,8 @@ class GraphQLWSClient():
         self.wst.join()
 
 class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
+    hge_url: str
+    hge_key: Optional[str]
 
     def do_GET(self):
         self.send_response(HTTPStatus.OK)
@@ -646,12 +648,18 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
     def execute_query(self, query):
         headers = {}
-        admin_secret = self.hge_ctx.hge_key
+        admin_secret = self.hge_key
         if admin_secret is not None:
             headers['X-Hasura-Admin-Secret'] = admin_secret
-        code, resp, _ = self.hge_ctx.anyq('/v1/graphql', query, headers)
-        self.log_message(json.dumps(resp))
-        return code, resp
+        resp = requests.post(
+            self.hge_url + '/v1/graphql',
+            json=query,
+            headers=headers,
+            timeout=60,
+        )
+        data = resp.json(object_pairs_hook=OrderedDict)
+        self.log_message(json.dumps(data))
+        return resp.status_code, data
 
     def _send_response(self, status, body):
         self.log_request(status)
@@ -663,16 +671,23 @@ class ActionsWebhookHandler(http.server.BaseHTTPRequestHandler):
 
 
 class ActionsWebhookServer(http.server.HTTPServer):
-    def __init__(self, hge_ctx, server_address):
+    def __init__(self, hge_url, hge_key, server_address):
         handler = ActionsWebhookHandler
-        handler.hge_ctx = hge_ctx
+        handler.hge_url = hge_url
+        handler.hge_key = hge_key
         super().__init__(server_address, handler)
 
     def server_bind(self):
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.bind(self.server_address)
 
+    @property
+    def url(self):
+        return f'http://{self.server_address[0]}:{self.server_address[1]}'
+
 class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
+    server: 'EvtsWebhookServer'
+
     def do_GET(self):
         self.send_response(HTTPStatus.OK)
         self.end_headers()
@@ -740,15 +755,15 @@ class EvtsWebhookServer(ThreadedHTTPServer):
             # wait()s will block again (hence the simple self.unblocked flag)
             self.unblocked_wait.notify_all()
 
-    def server_bind(self):
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.server_address)
-
     def get_event(self, timeout):
         return self.resp_queue.get(timeout=timeout)
 
     def is_queue_empty(self):
         return self.resp_queue.empty
+
+    @property
+    def url(self):
+        return f'http://{self.server_address[0]}:{self.server_address[1]}'
 
 class HGECtxGQLServer:
     def __init__(self, port: int):
@@ -768,6 +783,10 @@ class HGECtxGQLServer:
             graphql_server.stop_server(self.server)
             self.thread.join()
         self.is_running = False
+
+    @property
+    def url(self):
+        return f'http://{self.server.server_address[0]}:{self.server.server_address[1]}'
 
 class HGECtx:
 
@@ -829,12 +848,6 @@ class HGECtx:
           except requests.exceptions.RequestException as e:
               self.teardown()
               raise HGECtxError(repr(e))
-
-        # Postgres version
-        if self.is_default_backend:
-            with self.sql_query('show server_version_num') as result:
-                pg_version_text = result.first()['server_version_num']
-            self.pg_version = int(pg_version_text)
 
     def reflect_tables(self):
         self.meta.reflect(bind=self.engine)
@@ -899,10 +912,6 @@ class HGECtx:
     def sql(self, q):
         with self.engine.connect() as conn:
             conn.execute(q)
-
-    # This allows us to use the result of the query in a callback, before closing the connection.
-    def sql_query(self, q):
-        return HGECtxQuery(self.engine, q)
 
     def execute_query(self, q, url_path, headers = {}, expected_status_code = 200):
         h = headers.copy()
@@ -977,16 +986,3 @@ class HGECtx:
 
     def v1GraphqlExplain(self, q, headers = {}, expected_status_code = 200):
         return self.execute_query(q, '/v1/graphql/explain', headers, expected_status_code)
-
-class HGECtxQuery:
-    def __init__(self, engine: sqlalchemy.engine.Engine, query: str):
-        self.engine = engine
-        self.query = query
-
-    def __enter__(self):
-        self.connection = self.engine.connect()
-        return self.connection.execute(self.query)
-
-    def __exit__(self, _exc_type, _exc_val, _exc_tb):
-        if self.connection:
-            self.connection.close()
