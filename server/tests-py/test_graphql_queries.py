@@ -1302,10 +1302,9 @@ use_function_permission_fixtures = pytest.mark.usefixtures(
 )
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@use_function_permission_fixtures
+@pytest.mark.usefixtures('per_method_tests_db_state')
+@pytest.mark.hge_env('HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS', 'false')
 class TestGraphQLQueryFunctionPermissions:
-    # These tests are skipped unless the test-suite is run with '--test-function-permissions'
-
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/functions/permissions/'

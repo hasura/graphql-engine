@@ -811,9 +811,7 @@ class HGECtx:
             if self.hge_jwt_algo == "Ed25519":
                 self.hge_jwt_algo = "EdDSA"
         self.webhook_insecure = config.getoption('--test-webhook-insecure')
-        self.metadata_disabled = config.getoption('--test-metadata-disabled')
         self.may_skip_test_teardown = False
-        self.function_permissions = config.getoption('--test-function-permissions')
         self.streaming_subscriptions = config.getoption('--test-streaming-subscriptions')
 
         # This will be GC'd, but we also explicitly dispose() in teardown()
@@ -835,6 +833,9 @@ class HGECtx:
         self.default_backend = 'postgres'
         self.is_default_backend = self.backend == self.default_backend
 
+        enabled_apis_str = os.environ.get('HASURA_GRAPHQL_ENABLED_APIS')
+        enabled_apis = set(enabled_apis_str.split(',')) if enabled_apis_str else None
+
         env_version = os.getenv('VERSION')
         if env_version:
             self.version = env_version
@@ -842,7 +843,7 @@ class HGECtx:
             # HGE version
             result = subprocess.run(['../../scripts/get-version.sh'], shell=False, stdout=subprocess.PIPE, check=True)
             self.version = result.stdout.decode('utf-8').strip()
-        if self.is_default_backend and not self.metadata_disabled and not config.getoption('--skip-schema-setup'):
+        if self.is_default_backend and (not enabled_apis or 'metadata' in enabled_apis) and not config.getoption('--skip-schema-setup'):
           try:
               self.v2q_f("queries/" + self.backend_suffix("clear_db")+ ".yaml")
           except requests.exceptions.RequestException as e:

@@ -16,7 +16,7 @@ cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
 (
   cd ../..
-  cabal build graphql-engine:exe:graphql-engine
+  cabal build -j graphql-engine:exe:graphql-engine
   make server/tests-py/.hasura-dev-python-venv server/tests-py/node_modules
 )
 

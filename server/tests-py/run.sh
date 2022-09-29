@@ -36,20 +36,25 @@ HASURA_GRAPHQL_ENGINE_SERVER_PYTEST_RUNNER_SHA="$(
 )"
 export HASURA_GRAPHQL_ENGINE_SERVER_PYTEST_RUNNER_SHA
 
-if [[ $# -gt 0 ]]; then
-  SERVER_TEST_TO_RUN="$1"
-else
-  SERVER_TEST_TO_RUN='no-auth'
-fi
-export SERVER_TEST_TO_RUN
-
 # Use the Azure SQL Edge image instead of the SQL Server image on arm64.
 # The latter doesn't work yet.
 if [[ "$(uname -m)" == 'arm64' ]]; then
   export MSSQL_IMAGE='mcr.microsoft.com/azure-sql-edge'
 fi
 
-# tear down databases beforehand
-docker compose rm -svf citus mssql postgres
+if [[ $# -gt 0 ]]; then
+  SERVER_TESTS_TO_RUN=("$@")
+else
+  SERVER_TESTS_TO_RUN=('no-auth')
+fi
 
-docker compose up hge-build tests-py
+echo "*** Building HGE ***"
+docker compose run hge-build
+
+for SERVER_TEST_TO_RUN in "${SERVER_TESTS_TO_RUN[@]}"; do
+  export SERVER_TEST_TO_RUN
+  echo
+  echo "*** Running test suite: ${SERVER_TEST_TO_RUN} ***"
+  docker compose rm -svf citus mssql postgres # tear down databases beforehand
+  docker compose run tests-py
+done
