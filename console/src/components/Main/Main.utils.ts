@@ -13,8 +13,9 @@ export const isBlockActive = ({
 }: IsBlockActiveArgs) => {
   const currentActiveBlock = getPathRoot(pathname);
 
-  if (isDefaultBlock) {
-    return currentActiveBlock === '';
+  // return true for defaultBlock when on console '/' path
+  if (isDefaultBlock && currentActiveBlock === '') {
+    return true;
   }
 
   const block = getPathRoot(blockPath);
