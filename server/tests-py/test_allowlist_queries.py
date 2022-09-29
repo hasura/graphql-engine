@@ -6,8 +6,9 @@ from context import PytestConf
 
 usefixtures = pytest.mark.usefixtures
 
-if not PytestConf.config.getoption("--test-allowlist-queries"):
-    pytest.skip("flag --test-allowlist-queries is not set. Cannot run tests for allowlist queries", allow_module_level=True)
+pytestmark = [
+    pytest.mark.hge_env('HASURA_GRAPHQL_ENABLE_ALLOWLIST', 'true')
+]
 
 @pytest.mark.parametrize("transport", ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')

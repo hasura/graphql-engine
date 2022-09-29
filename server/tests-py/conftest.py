@@ -8,6 +8,7 @@ import threading
 import time
 from typing import Optional
 
+import auth_webhook_server
 from context import HGECtx, HGECtxGQLServer, ActionsWebhookServer, EvtsWebhookServer, GQLWsClient, PytestConf, GraphQLWSClient
 import fixtures.hge
 import graphql_server
@@ -62,25 +63,10 @@ def pytest_addoption(parser):
     )
 
     parser.addoption(
-        "--test-metadata-disabled", action="store_true",
-        help="Run Test cases with metadata queries being disabled"
-    )
-
-    parser.addoption(
-        "--test-graphql-disabled", action="store_true",
-        help="Run Test cases with GraphQL queries being disabled"
-    )
-
-    parser.addoption(
         "--test-hge-scale-url",
         metavar="<url>",
         required=False,
         help="Run testcases for horizontal scaling"
-    )
-
-    parser.addoption(
-        "--test-allowlist-queries", action="store_true",
-        help="Run Test cases with allowlist queries enabled"
     )
 
     parser.addoption(
@@ -97,13 +83,6 @@ def pytest_addoption(parser):
         default=False,
         required=False,
         help="Run testcases for startup database calls"
-    )
-
-    parser.addoption(
-        "--test-function-permissions",
-        action="store_true",
-        required=False,
-        help="Run manual function permission tests"
     )
 
     parser.addoption(
@@ -181,13 +160,6 @@ This option may result in test failures if the schema has to change between the 
     )
 
     parser.addoption(
-        "--enable-remote-schema-permissions",
-        action="store_true",
-        default=False,
-        help="Flag to indicate if the graphql-engine has enabled remote schema permissions",
-    )
-
-    parser.addoption(
         "--redis-url",
         metavar="REDIS_URL",
         help="redis url for cache server",
@@ -205,12 +177,6 @@ This option may result in test failures if the schema has to change between the 
         action="store_true",
         default=False,
         help="Flag to specify if the pro tests are to be run"
-    )
-
-    parser.addoption(
-        "--test-developer-api-enabled", action="store_true",
-        help="Run Test cases with the Developer API Enabled",
-        default=False
     )
 
     parser.addoption(
@@ -460,22 +426,21 @@ def actions_fixture(pg_version: int, hge_url: str, hge_key: Optional[str], hge_f
     web_server.join()
 
 use_action_fixtures = pytest.mark.usefixtures(
-    "actions_fixture",
+    'actions_fixture',
     'per_class_db_schema_for_mutation_tests',
     'per_method_db_data_for_mutation_tests'
 )
 
 @pytest.fixture(scope='class')
-def functions_permissions_fixtures(hge_ctx):
-    if not hge_ctx.function_permissions:
-        pytest.skip('These tests are meant to be run with --test-function-permissions set')
-        return
-
-use_function_permission_fixtures = pytest.mark.usefixtures(
-    'per_class_db_schema_for_mutation_tests',
-    'per_method_db_data_for_mutation_tests',
-    'functions_permissions_fixtures'
-)
+@pytest.mark.early
+def auth_hook(hge_fixture_env: dict[str, str]):
+    server = auth_webhook_server.create_server()
+    server_thread = threading.Thread(target = server.serve_forever)
+    server_thread.start()
+    hge_fixture_env['HASURA_GRAPHQL_AUTH_HOOK'] = 'http://localhost:9876/auth'
+    ports.wait_for_port(server.server_port)
+    yield server
+    auth_webhook_server.stop_server(server)
 
 @pytest.fixture(scope='class')
 def streaming_subscriptions_fixtures(hge_ctx):

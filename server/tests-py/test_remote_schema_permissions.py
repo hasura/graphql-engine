@@ -2,12 +2,13 @@
 
 import pytest
 
-from validate import check_query_f
-from remote_server import NodeGraphQL
 from context import PytestConf
+from remote_server import NodeGraphQL
+from validate import check_query_f
 
-if not PytestConf.config.getoption('--enable-remote-schema-permissions'):
-    pytest.skip('--enable-remote-schema-permissions is missing, skipping remote schema permissions tests', allow_module_level=True)
+pytestmark = [
+    pytest.mark.hge_env('HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS', 'true'),
+]
 
 @pytest.fixture(scope='class')
 @pytest.mark.early

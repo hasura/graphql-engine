@@ -12,6 +12,7 @@ def url(hge_ctx):
     ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws', path='/v1alpha1/graphql')
     return ws_url.geturl()
 
+@pytest.mark.usefixtures('auth_hook')
 class TestWebsocketInitCookie():
     """
     test if cookie is sent when initing the websocket connection, is our auth

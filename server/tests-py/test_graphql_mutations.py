@@ -1,6 +1,6 @@
 import pytest
+
 from validate import check_query_f, check_query, get_conf_f
-from conftest import use_function_permission_fixtures
 
 
 # Marking all tests in this module that server upgrade tests can be run
@@ -797,7 +797,8 @@ class TestGraphQLMutateEnums:
 
 # Tracking VOLATILE SQL functions as mutations, or queries (#1514)
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
-@use_function_permission_fixtures
+@use_mutation_fixtures
+@pytest.mark.hge_env('HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS', 'false')
 class TestGraphQLMutationFunctions:
     @classmethod
     def dir(cls):

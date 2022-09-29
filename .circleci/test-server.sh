@@ -22,12 +22,10 @@ stop_services() {
 
 	[[ -n "${HGE_PIDS[*]}" ]] && kill -s INT "${HGE_PIDS[@]}" || true
 	[[ -n "$WH_PID" ]] && kill "$WH_PID" || true
-	[[ -n "$WHC_PID" ]] && kill "$WHC_PID" || true
 	[[ -n "$GQL_SERVER_PID" ]] && kill "$GQL_SERVER_PID" || true
 
 	[[ -n "${HGE_PIDS[*]}" ]] && wait "${HGE_PIDS[@]}" || true
 	[[ -n "$WH_PID" ]] && wait "$WH_PID" || true
-	[[ -n "$WHC_PID" ]] && wait "$WHC_PID" || true
 	[[ -n "$GQL_SERVER_PID" ]] && wait "$GQL_SERVER_PID" || true
 }
 
@@ -226,7 +224,6 @@ PYTEST_PARALLEL_ARGS=(
 
 HGE_PIDS=()
 WH_PID=""
-WHC_PID=""
 GQL_SERVER_PID=""
 
 trap stop_services ERR
@@ -623,10 +620,6 @@ auth-webhook-cookie)
 	export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
-	python3 auth_webhook_server.py >"$OUTPUT_FOLDER/cookie_webhook.log" 2>&1 &
-	WHC_PID=$!
-	wait_for_port 9876
-
 	run_hge_with_args serve
 	wait_for_port 8080
 
@@ -645,10 +638,6 @@ ws-init-cookie-read-cors-enabled)
 	export HASURA_GRAPHQL_AUTH_HOOK="http://localhost:9876/auth"
 	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-
-	python3 auth_webhook_server.py >"$OUTPUT_FOLDER/cookie_webhook.log" 2>&1 &
-	WHC_PID=$!
-	wait_for_port 9876
 
 	run_hge_with_args serve
 	wait_for_port 8080
@@ -672,10 +661,6 @@ ws-init-cookie-noread)
 
 	wait_for_port 8080
 
-	python3 auth_webhook_server.py >"$OUTPUT_FOLDER/cookie_webhook.log" 2>&1 &
-	WHC_PID=$!
-	wait_for_port 9876
-
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
 		--test-ws-init-cookie=noread \
@@ -694,13 +679,10 @@ ws-init-cookie-read-cors-disabled)
 	run_hge_with_args serve --disable-cors
 	wait_for_port 8080
 
-	python3 auth_webhook_server.py >"$OUTPUT_FOLDER/cookie_webhook.log" 2>&1 &
-	WHC_PID=$!
-	wait_for_port 9876
-
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--test-ws-init-cookie=read test_websocket_init_cookie.py
+		--test-ws-init-cookie=read \
+		test_websocket_init_cookie.py
 
 	kill_hge_servers
 	;;
@@ -715,25 +697,8 @@ ws-graphql-api-disabled)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	python3 auth_webhook_server.py >"$OUTPUT_FOLDER/cookie_webhook.log" 2>&1 &
-	WHC_PID=$!
-	wait_for_port 9876
-
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--test-graphql-disabled \
-		test_apis_disabled.py
-
-	kill_hge_servers
-
-	unset HASURA_GRAPHQL_ENABLED_APIS
-
-	run_hge_with_args serve --enabled-apis metadata
-	wait_for_port 8080
-
-	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--test-graphql-disabled \
 		test_apis_disabled.py
 
 	kill_hge_servers
@@ -750,24 +715,8 @@ ws-metadata-api-disabled)
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	python3 auth_webhook_server.py >"$OUTPUT_FOLDER/cookie_webhook.log" 2>&1 &
-	WHC_PID=$!
-	wait_for_port 9876
-
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--test-metadata-disabled \
-		test_apis_disabled.py
-
-	kill_hge_servers
-	unset HASURA_GRAPHQL_ENABLED_APIS
-
-	run_hge_with_args serve --enabled-apis graphql
-	wait_for_port 8080
-
-	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--test-metadata-disabled \
 		test_apis_disabled.py
 
 	kill_hge_servers
@@ -783,7 +732,6 @@ remote-schema-permissions)
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--enable-remote-schema-permissions \
 		test_remote_schema_permissions.py
 
 	unset HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS
@@ -801,11 +749,9 @@ function-permissions)
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--test-function-permissions \
 		test_graphql_queries.py::TestGraphQLQueryFunctionPermissions
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--test-function-permissions \
 		test_graphql_mutations.py::TestGraphQLMutationFunctions
 
 	unset HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS
@@ -826,8 +772,6 @@ roles-inheritance)
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--enable-remote-schema-permissions \
-		--test-function-permissions \
 		test_roles_inheritance.py
 
 	unset HASURA_GRAPHQL_ADMIN_SECRET
@@ -1190,12 +1134,6 @@ apollo-federation)
 	;;
 
 allowlist-queries)
-	# allowlist queries test
-	# unset HASURA_GRAPHQL_AUTH_HOOK
-	# unset HASURA_GRAPHQL_AUTH_HOOK_MODE
-	# unset HASURA_GRAPHQL_JWT_SECRET
-	# unset HASURA_GRAPHQL_ENABLE_ALLOWLIST
-
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ALLOWLIST QUERIES ########> \n"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 	export HASURA_GRAPHQL_ENABLE_ALLOWLIST=true
@@ -1205,22 +1143,9 @@ allowlist-queries)
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--test-allowlist-queries \
 		test_allowlist_queries.py
 
 	kill_hge_servers
-	unset HASURA_GRAPHQL_ENABLE_ALLOWLIST
-
-	run_hge_with_args serve --enable-allowlist
-	wait_for_port 8080
-
-	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--test-allowlist-queries \
-		test_allowlist_queries.py
-
-	kill_hge_servers
-	# end allowlist queries test
 	;;
 
 developer-api-tests)
@@ -1233,7 +1158,7 @@ developer-api-tests)
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		--hge-key="$HASURA_GRAPHQL_ADMIN_SECRET" \
-		--test-developer-api-enabled test_dev_endpoints.py
+		test_dev_endpoints.py
 
 	unset HASURA_GRAPHQL_ENABLED_APIS
 

@@ -56,8 +56,6 @@ services:
       - output:/output
     working_dir: /src
     depends_on:
-      hge-build:
-        condition: service_completed_successfully
       citus:
         condition: service_healthy
       mssql-healthcheck:
