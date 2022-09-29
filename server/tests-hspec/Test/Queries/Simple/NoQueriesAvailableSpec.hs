@@ -46,13 +46,12 @@ spec = do
                   },
                 (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
                   { Fixture.setupTeardown = \(testEnv, _) ->
-                      [ Cockroach.setupTablesAction schema testEnv
+                      [ Cockroach.setupTablesAction tables testEnv
                       ],
                     Fixture.customOptions =
                       Just $
                         Fixture.defaultOptions
-                          { Fixture.stringifyNumbers = True,
-                            Fixture.skipTests = Just "Cockroach disabled pending no queries available message fix https://github.com/hasura/graphql-engine-mono/issues/5985"
+                          { Fixture.stringifyNumbers = True
                           }
                   },
                 (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
