@@ -15,9 +15,9 @@
 
 ## Try it out in 60 seconds
 
-1. Step 1: Deploy Hasura as a [docker image](https://hasura.io/docs/latest/getting-started/docker-simple/) or with nothing but your browser at [Hasura Cloud](https://cloud.hasura.io)
-3. Step 2: Run [this SQL (gist)](https://gist.github.com/coco98/803b70ec3fdd48cbe388bd25fcbfcd0e) that creates a table and loads some sample data
-4. Step 3: Run a GraphQL subscription to start streaming!
+1. Step 1: Deploy with nothing but your browser at [Hasura Cloud](https://cloud.hasura.io) (or run with [Docker](https://hasura.io/docs/latest/getting-started/docker-simple/))
+2. Step 2: Run [this SQL (gist)](https://gist.github.com/coco98/803b70ec3fdd48cbe388bd25fcbfcd0e) that creates a table and loads some sample data
+3. Step 3: Run a GraphQL subscription to start streaming!
 ```graphql
 subscription {
   messages (cursor: {initial_value: {id: "0"}}, batch_size: 5) {
