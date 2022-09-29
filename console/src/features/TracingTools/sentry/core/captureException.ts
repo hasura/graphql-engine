@@ -14,5 +14,5 @@ type Contexts = Record<ContextKind, Context>;
 	that we want the engineering team to be alerted about
 */
 export function captureException(err: Error, contexts?: Contexts) {
-  Sentry.captureException(err, contexts);
+  Sentry.captureException(err, { contexts });
 }

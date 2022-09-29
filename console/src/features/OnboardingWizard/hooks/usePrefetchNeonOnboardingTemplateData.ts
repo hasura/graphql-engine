@@ -5,8 +5,8 @@ import {
   NEON_MIGRATIONS_PATH,
   NEON_IMAGE_PATH,
   NEON_QUERY_PATH,
-} from './constants';
-import { fetchTemplateDataQueryFn } from './utils';
+} from '../constants';
+import { fetchTemplateDataQueryFn } from '../utils';
 
 /**
  * Prefetch migrations and metadata file contents for NEON onboarding. Use it to get data early

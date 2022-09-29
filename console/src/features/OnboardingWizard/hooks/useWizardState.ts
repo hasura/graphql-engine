@@ -1,81 +1,37 @@
 import { useEffect, useState } from 'react';
 import { GrowthExperimentsClient } from '@/features/GrowthExperiments';
-import { cloudDataServiceApiClient } from '@/hooks/cloudDataServiceApiClient';
-import {
-  experimentId,
-  graphQlMutation,
-  onboardingCompleteVariables,
-  skippedOnboardingVariables,
-} from './constants';
-import { isExperimentActive, shouldShowOnboarding } from './utils';
+import { experimentId } from '../constants';
+import { isExperimentActive, shouldShowOnboarding } from '../utils';
 
-type ResponseDataOnMutation = {
-  data: {
-    trackExperimentsCohortActivity: {
-      status: string;
-    };
-  };
-};
+type WizardState = 'landing-page' | 'template-summary' | 'hidden';
 
 export function useWizardState(
-  growthExperimentsClient: GrowthExperimentsClient
+  growthExperimentsClient: GrowthExperimentsClient,
+  hasNeonAccess = false
 ) {
-  // lux works with cookie auth and doesn't require admin-secret header
-  const headers = {
-    'content-type': 'application/json',
-  };
-
-  const { getAllExperimentConfig, setAllExperimentConfig } =
-    growthExperimentsClient;
+  const { getAllExperimentConfig } = growthExperimentsClient;
   const experimentData = getAllExperimentConfig();
 
-  const [isWizardOpen, setIsWizardOpen] = useState(
-    shouldShowOnboarding(experimentData, experimentId) &&
+  const [state, setState] = useState<WizardState>(
+    shouldShowOnboarding(experimentData, experimentId, hasNeonAccess) &&
       isExperimentActive(experimentData, experimentId)
+      ? 'landing-page'
+      : 'hidden'
   );
 
   useEffect(() => {
-    setIsWizardOpen(
-      shouldShowOnboarding(experimentData, experimentId) &&
-        isExperimentActive(experimentData, experimentId)
-    );
-  }, [experimentData]);
+    // this effect is only used to update the wizard state for initial async fetching of experiments config
+    // it only takes care of "showing" the wizard, but not hiding it, hence the check for `hidden`
+    // hiding wizard is taken care of by setting the wizard state directly to "hidden"
+    const wizardState =
+      shouldShowOnboarding(experimentData, experimentId, hasNeonAccess) &&
+      isExperimentActive(experimentData, experimentId)
+        ? 'landing-page'
+        : 'hidden';
+    if (wizardState !== 'hidden') {
+      setState(wizardState);
+    }
+  }, [growthExperimentsClient.getAllExperimentConfig()]);
 
-  const skipOnboarding = () => {
-    setIsWizardOpen(false);
-
-    // mutate server data
-    cloudDataServiceApiClient<ResponseDataOnMutation, ResponseDataOnMutation>(
-      graphQlMutation,
-      skippedOnboardingVariables,
-      headers
-    )
-      .then(() => {
-        // refetch the fresh data and update the `growthExperimentConfigClient`
-        setAllExperimentConfig();
-      })
-      .catch(error => {
-        console.error(error);
-      });
-  };
-
-  const completeOnboarding = () => {
-    setIsWizardOpen(false);
-
-    // mutate server data
-    cloudDataServiceApiClient<ResponseDataOnMutation, ResponseDataOnMutation>(
-      graphQlMutation,
-      onboardingCompleteVariables,
-      headers
-    )
-      .then(() => {
-        // refetch the fresh data and update the `growthExperimentConfigClient`
-        setAllExperimentConfig();
-      })
-      .catch(error => {
-        console.error(error);
-      });
-  };
-
-  return { isWizardOpen, skipOnboarding, completeOnboarding };
+  return { state, setState };
 }

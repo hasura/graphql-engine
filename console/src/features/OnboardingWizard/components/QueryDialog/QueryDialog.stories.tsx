@@ -56,7 +56,7 @@ Base.args = {
 Base.play = async ({ args, canvasElement }) => {
   const canvas = within(canvasElement);
   const runButton = canvas.getByText('Run Query');
-  const skipButton = canvas.getByText('Cancel, continue to my dashboard');
+  const skipButton = canvas.getByText('Skip getting started tutorial');
 
   // Expect element renders successfully
   expect(canvas.getByText('👋 Welcome to Hasura!')).toBeVisible();

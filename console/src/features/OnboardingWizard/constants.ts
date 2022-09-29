@@ -43,5 +43,45 @@ export const skippedOnboardingVariables = {
   kind: 'skipped_onboarding',
 };
 
+export const neonOAuthStartVariables = {
+  ...mutationVariables,
+  kind: 'neon_login_start',
+};
+
+export const neonOAuthCompleteVariables = {
+  ...mutationVariables,
+  kind: 'neon_login_complete',
+};
+
+export const neonDbCreationStartVariables = {
+  ...mutationVariables,
+  kind: 'neon_db_creation_start',
+};
+
+export const neonDbCreationCompleteVariables = {
+  ...mutationVariables,
+  kind: 'neon_db_creation_complete',
+};
+
+export const hasuraSourceCreationStart = {
+  ...mutationVariables,
+  kind: 'hasura_source_creation_start',
+};
+
+export const hasuraSourceCreationComplete = {
+  ...mutationVariables,
+  kind: 'hasura_source_creation_complete',
+};
+
+export const templateSummaryRunQueryClick = {
+  ...mutationVariables,
+  kind: 'run_query_click',
+};
+
+export const templateSummaryRunQuerySkip = {
+  ...mutationVariables,
+  kind: 'run_query_skip',
+};
+
 // A stale time of 5 minutes for use in useQuery hook
 export const staleTime = 5 * 60 * 1000;
