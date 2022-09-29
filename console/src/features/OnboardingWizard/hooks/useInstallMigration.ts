@@ -5,8 +5,8 @@ import { RunSQLResponse } from '@/features/DataSource';
 import { Api } from '@/hooks/apiUtils';
 import { useAppSelector } from '@/store';
 import { useMutation, useQuery } from 'react-query';
-import { fetchTemplateDataQueryFn } from './utils';
-import { staleTime } from './constants';
+import { fetchTemplateDataQueryFn } from '../utils';
+import { staleTime } from '../constants';
 
 type MutationFnArgs = {
   sql: string;

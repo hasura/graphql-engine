@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useInstallMigration } from './useInstallMigration';
-import { NEON_METADATA_PATH, NEON_MIGRATIONS_PATH } from './constants';
+import { NEON_METADATA_PATH, NEON_MIGRATIONS_PATH } from '../constants';
 import { useInstallMetadata } from './useInstallMetadata';
 
 /**

@@ -6,8 +6,8 @@ import { HasuraMetadataV3 } from '@/metadata/types';
 import { MetadataResponse } from '@/features/MetadataAPI';
 import { useAppSelector } from '@/store';
 import { useMutation, useQuery } from 'react-query';
-import { staleTime } from './constants';
-import { fetchTemplateDataQueryFn, transformOldMetadata } from './utils';
+import { staleTime } from '../constants';
+import { fetchTemplateDataQueryFn, transformOldMetadata } from '../utils';
 
 type MutationFnArgs = {
   newMetadata: HasuraMetadataV3;

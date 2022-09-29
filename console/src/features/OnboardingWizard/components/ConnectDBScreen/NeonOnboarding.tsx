@@ -40,7 +40,7 @@ export function NeonOnboarding(props: {
   );
 
   return (
-    <div>
+    <div className="w-full">
       <div className="w-full mb-sm">
         <NeonBanner {...neonBannerProps} />
       </div>
@@ -50,7 +50,7 @@ export function NeonOnboarding(props: {
           data-trackid="onboarding-skip-button"
           onClick={onSkip}
         >
-          Skip setup, continue to console
+          Skip getting started tutorial
         </a>
       </div>
     </div>

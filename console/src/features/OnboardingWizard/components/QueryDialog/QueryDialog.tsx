@@ -55,7 +55,7 @@ export function QueryDialog(props: Props) {
             className="pb-2 pt-4 cursor-pointer text-secondary text-sm hover:text-secondary-darkr"
             onClick={onSkipHandler}
           >
-            Cancel, continue to my dashboard
+            Skip getting started tutorial
           </div>
           <div className="py-2">
             <Button
