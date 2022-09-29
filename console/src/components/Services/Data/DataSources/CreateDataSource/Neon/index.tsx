@@ -32,3 +32,5 @@ export function Neon(props: { allDatabases: string[]; dispatch: Dispatch }) {
 
   return <NeonBanner {...neonBannerProps} />;
 }
+
+export { useNeonIntegration } from './useNeonIntegration';

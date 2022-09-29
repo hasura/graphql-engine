@@ -16,6 +16,12 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
   const { skipOnboarding, completeOnboarding } = props;
   const dispatch = useAppDispatch();
 
+  const onError = (error?: string) => {
+    if (error) {
+      throw new Error(error);
+    }
+  };
+
   const onClick = () => {
     // TODO: Due to routing being slow on prod, but wizard closing instantaneously, this causes
     // a flicker of `<Api />` tab before routing to `/data`.
@@ -41,7 +47,7 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
             dispatch={dispatch}
             onSkip={skipOnboarding}
             onCompletion={completeOnboarding}
-            onError={() => console.log('error')}
+            onError={onError}
           />
         ) : (
           <>

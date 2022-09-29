@@ -4,29 +4,24 @@ import { useNeonIntegration } from '@/components/Services/Data/DataSources/Creat
 import { transformNeonIntegrationStatusToNeonBannerProps } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/utils';
 import { NeonBanner } from '../NeonConnectBanner/NeonBanner';
 import _push from '../../../../components/Services/Data/push';
-
-const useTemplateGallery = (
-  onSuccess: VoidFunction,
-  onError: VoidFunction,
-  dispatch: Dispatch
-) => {
-  return {
-    install: () => {
-      dispatch(_push(`/data/default`));
-    },
-  };
-};
+import {
+  useInstallTemplate,
+  usePrefetchNeonOnboardingTemplateData,
+} from '../../hooks';
 
 export function NeonOnboarding(props: {
   dispatch: Dispatch;
   onSkip: VoidFunction;
   onCompletion: VoidFunction;
-  onError: VoidFunction;
+  onError: (errorMsg?: string) => void;
 }) {
   const { dispatch, onSkip, onCompletion, onError } = props;
 
-  // Sample function
-  const { install } = useTemplateGallery(onCompletion, onError, dispatch);
+  // Prefetch Neon related template data from github repo
+  usePrefetchNeonOnboardingTemplateData();
+
+  // Memoised function used to install the template
+  const { install } = useInstallTemplate('default', onCompletion, onError);
 
   const neonIntegrationStatus = useNeonIntegration(
     'default',
