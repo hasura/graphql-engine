@@ -1,11 +1,11 @@
-import pytest
-from validate import assert_response_code, check_query_f, check_query, get_conf_f
-from context import PytestConf
-
 import json
-import textwrap
+import pytest
 import ruamel.yaml as yaml
+import textwrap
 import warnings
+
+from context import PytestConf
+from validate import assert_response_code, check_query_f, get_conf_f
 
 # Mark that all tests in this module can be run as server upgrade tests
 pytestmark = pytest.mark.allow_server_upgrade_test
@@ -1303,6 +1303,7 @@ use_function_permission_fixtures = pytest.mark.usefixtures(
 
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @pytest.mark.usefixtures('per_method_tests_db_state')
+@pytest.mark.admin_secret
 @pytest.mark.hge_env('HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS', 'false')
 class TestGraphQLQueryFunctionPermissions:
     @classmethod

@@ -24,6 +24,7 @@ def hge_server(
     hge_bin: str,
     hge_port: int,
     hge_url: str,
+    hge_key: Optional[str],
     hge_fixture_env: dict[str, str],
     pg_url: str,
 ) -> Optional[str]:
@@ -35,6 +36,8 @@ def hge_server(
         **hge_marker_env,
     }
 
+    hge_key_args = ['--admin-secret', hge_key] if hge_key else []
+
     print(f'Starting GraphQL Engine on {hge_url}...')
     hge_process = subprocess.Popen(
         args = [
@@ -43,6 +46,7 @@ def hge_server(
             'serve',
             '--server-port', str(hge_port),
             '--stringify-numeric-types',
+            *hge_key_args,
         ],
         env = env,
     )

@@ -12,18 +12,20 @@ def make_request(url, query):
     resp = requests.post(url, json=payload)
     return resp
 
-@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'apollo_federation')
 @pytest.mark.usefixtures('per_class_tests_db_state')
+@pytest.mark.admin_secret
+@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'apollo_federation')
 class TestApolloFederation:
 
     @classmethod
     def dir(cls):
         return 'queries/apollo_federation'
 
-    def test_apollo_federated_server_with_hge_only(self, hge_url: str):
+    def test_apollo_federated_server_with_hge_only(self, hge_url: str, hge_key: str):
         # start the node server
         fed_server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_only.js"], env={
             'HGE_URL': hge_url,
+            'HASURA_GRAPHQL_ADMIN_SECRET': hge_key,
         })
         fed_server.start()
 
@@ -45,16 +47,16 @@ class TestApolloFederation:
         assert resp.status_code == 200, resp.text
         assert 'data' in resp.text
 
-    def test_apollo_federated_server_with_hge_and_apollo_graphql_server(self, hge_url: str):
+    def test_apollo_federated_server_with_hge_and_apollo_graphql_server(self, hge_url: str, hge_key: str):
         # start the node servers
         server_1 = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_server_1.js"], env={
             'HGE_URL': hge_url,
         })
-        server_env = {
+        fed_server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_and_server1.js"], env={
             'HGE_URL': hge_url,
             'OTHER_URL': server_1.url,
-        }
-        fed_server = NodeGraphQL(["node", "remote_schemas/nodejs/apollo_federated_server_with_hge_and_server1.js"], env=server_env)
+            'HASURA_GRAPHQL_ADMIN_SECRET': hge_key,
+        })
 
         server_1.start()
         fed_server.start()
@@ -80,8 +82,8 @@ class TestApolloFederation:
         assert resp.status_code == 200, resp.text
         assert 'data' in resp.text
 
-    def test_apollo_federation_fields(self,hge_ctx):
+    def test_apollo_federation_fields(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/root_fields.yaml')
 
-    def test_apollo_federation_entities(self,hge_ctx):
+    def test_apollo_federation_entities(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/entities.yaml')

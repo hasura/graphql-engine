@@ -1,6 +1,5 @@
 import requests
 import pytest
-from context import PytestConf
 
 """
 
@@ -25,6 +24,7 @@ def get_headers(hge_ctx, role='admin'):
     headers['x-hasura-role'] = role
     return headers
 
+@pytest.mark.admin_secret
 @pytest.mark.hge_env('HASURA_GRAPHQL_ENABLED_APIS', 'metadata,graphql,developer,config,pgdump')
 class TestDevEndpoints:
 

@@ -6,6 +6,7 @@ from context import PytestConf
 
 pytestmark = [
     pytest.mark.usefixtures('auth_hook'),
+    pytest.mark.admin_secret,
     pytest.mark.hge_env('HASURA_GRAPHQL_AUTH_HOOK_MODE', 'POST'),
 ]
 

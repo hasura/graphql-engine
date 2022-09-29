@@ -14,6 +14,7 @@ if not PytestConf.config.getoption("--test-auth-webhook-header"):
     pytest.skip("--test-auth-webhook-header flag is missing, skipping tests", allow_module_level=True)
 
 @pytest.mark.usefixtures('auth_hook', 'per_class_tests_db_state')
+@pytest.mark.admin_secret
 class TestWebhookHeaderCookie(object):
     '''
         To run the test, run an instance of the auth_webhook server using `python3 auth_webhook_server.py`
