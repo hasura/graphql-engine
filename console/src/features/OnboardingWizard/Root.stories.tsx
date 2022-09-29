@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentMeta, Story } from '@storybook/react';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { useQueryClient } from 'react-query';
-import { Root } from './Root';
+import { RootWithCloudCheck as Root } from './Root';
 import {
   baseHandlers,
   fetchAnsweredSurveysHandler,
