@@ -1,5 +1,7 @@
 import React from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
+import globals from '@/Globals';
+import { isCloudConsole } from '@/utils/cloudConsole';
 import { TopHeaderBar, ConnectDBScreen } from './components';
 import { useWizardState } from './hooks';
 import { GrowthExperimentsClient } from '../GrowthExperiments';
@@ -12,7 +14,7 @@ type Props = {
 /**
  * Parent container for the onboarding wizard. Takes care of assembling and rendering all steps.
  */
-export function Root(props: Props) {
+function Root(props: Props) {
   const { growthExperimentsClient } = props;
 
   // dialog cannot be reopened once closed
@@ -55,4 +57,15 @@ export function Root(props: Props) {
       </Dialog.Content>
     </Dialog.Root>
   );
+}
+
+export function RootWithCloudCheck(props: Props) {
+  /*
+   * Don't render Root component if current context is not cloud-console
+   * and current user is not project owner
+   */
+  if (isCloudConsole(globals)) {
+    return null;
+  }
+  return <Root {...props} />;
 }
