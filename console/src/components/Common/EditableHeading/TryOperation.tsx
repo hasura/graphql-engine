@@ -55,7 +55,7 @@ export const TryOperation = (props: Props) => {
           : 'cursor-not-allowed text-muted'
       )}
     >
-      Streaming Subscription
+      Subscription - Streaming
       <Badge className="mx-2" color="yellow">
         New
       </Badge>
@@ -97,7 +97,7 @@ export const TryOperation = (props: Props) => {
               className="py-xs w-full flex justify-between align-center"
               data-trackid="data-tab-btn-try-subscriptions"
             >
-              Subscription
+              Subscription - Live query
               <div className="text-muted">
                 <FaArrowRight className="w-3 h-3" />
               </div>
@@ -116,7 +116,7 @@ export const TryOperation = (props: Props) => {
         ]}
       >
         <FaFlask className="mr-xs" />
-        Try it
+        Try GraphQL
       </DropdownButton>
     );
   }
@@ -133,7 +133,7 @@ export const TryOperation = (props: Props) => {
         onClick={undefined}
       >
         <FaFlask className="mr-xs" />
-        Try it
+        Try GraphQL
       </DropdownButton>
     </Tooltip>
   );
