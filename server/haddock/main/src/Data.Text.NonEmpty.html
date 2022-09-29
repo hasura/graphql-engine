@@ -21,9 +21,9 @@
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Lift</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Q</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">TExp</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">lift</span></span><span class="hs-special">)</span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Test.QuickCheck</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">QC</span></span><span>
 </span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span id="local-6989586621689588579"><span id="local-6989586621689588580"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="NonEmptyText"><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-var">NonEmptyText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NonEmptyText"><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-var">NonEmptyText</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unNonEmptyText"><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
+</span><span id="line-24"></span><span id="local-6989586621689588616"><span id="local-6989586621689588617"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="NonEmptyText"><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-var">NonEmptyText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NonEmptyText"><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-var">NonEmptyText</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unNonEmptyText"><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
 </span><a href="Data.Text.NonEmpty.html#unNonEmptyText"><span class="hs-identifier hs-var hs-var">unNonEmptyText</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">}</span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689588572"><span id="local-6989586621689588574"><span id="local-6989586621689588576"><span class="annot"><span class="annottext">Int -&gt; NonEmptyText -&gt; ShowS
+</span><span id="line-25"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689588609"><span id="local-6989586621689588611"><span id="local-6989586621689588613"><span class="annot"><span class="annottext">Int -&gt; NonEmptyText -&gt; ShowS
 [NonEmptyText] -&gt; ShowS
 NonEmptyText -&gt; String
 (Int -&gt; NonEmptyText -&gt; ShowS)
@@ -38,7 +38,7 @@ show :: NonEmptyText -&gt; String
 $cshow :: NonEmptyText -&gt; String
 showsPrec :: Int -&gt; NonEmptyText -&gt; ShowS
 $cshowsPrec :: Int -&gt; NonEmptyText -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588567"><span id="local-6989586621689588569"><span class="annot"><span class="annottext">NonEmptyText -&gt; NonEmptyText -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588604"><span id="local-6989586621689588606"><span class="annot"><span class="annottext">NonEmptyText -&gt; NonEmptyText -&gt; Bool
 (NonEmptyText -&gt; NonEmptyText -&gt; Bool)
 -&gt; (NonEmptyText -&gt; NonEmptyText -&gt; Bool) -&gt; Eq NonEmptyText
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -46,7 +46,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: NonEmptyText -&gt; NonEmptyText -&gt; Bool
 == :: NonEmptyText -&gt; NonEmptyText -&gt; Bool
 $c== :: NonEmptyText -&gt; NonEmptyText -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588551"><span id="local-6989586621689588553"><span id="local-6989586621689588555"><span id="local-6989586621689588557"><span id="local-6989586621689588559"><span id="local-6989586621689588561"><span id="local-6989586621689588563"><span class="annot"><span class="annottext">Eq NonEmptyText
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588588"><span id="local-6989586621689588590"><span id="local-6989586621689588592"><span id="local-6989586621689588594"><span id="local-6989586621689588596"><span id="local-6989586621689588598"><span id="local-6989586621689588600"><span class="annot"><span class="annottext">Eq NonEmptyText
 Eq NonEmptyText
 -&gt; (NonEmptyText -&gt; NonEmptyText -&gt; Ordering)
 -&gt; (NonEmptyText -&gt; NonEmptyText -&gt; Bool)
@@ -84,7 +84,7 @@ $c&lt; :: NonEmptyText -&gt; NonEmptyText -&gt; Bool
 compare :: NonEmptyText -&gt; NonEmptyText -&gt; Ordering
 $ccompare :: NonEmptyText -&gt; NonEmptyText -&gt; Ordering
 $cp1Ord :: Eq NonEmptyText
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588546"><span id="local-6989586621689588548"><span class="annot"><span class="annottext">Int -&gt; NonEmptyText -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588583"><span id="local-6989586621689588585"><span class="annot"><span class="annottext">Int -&gt; NonEmptyText -&gt; Int
 NonEmptyText -&gt; Int
 (Int -&gt; NonEmptyText -&gt; Int)
 -&gt; (NonEmptyText -&gt; Int) -&gt; Hashable NonEmptyText
@@ -93,7 +93,7 @@ hash :: NonEmptyText -&gt; Int
 $chash :: NonEmptyText -&gt; Int
 hashWithSalt :: Int -&gt; NonEmptyText -&gt; Int
 $chashWithSalt :: Int -&gt; NonEmptyText -&gt; Int
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588537"><span id="local-6989586621689588539"><span id="local-6989586621689588541"><span id="local-6989586621689588543"><span class="annot"><span class="annottext">[NonEmptyText] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588574"><span id="local-6989586621689588576"><span id="local-6989586621689588578"><span id="local-6989586621689588580"><span class="annot"><span class="annottext">[NonEmptyText] -&gt; Value
 [NonEmptyText] -&gt; Encoding
 NonEmptyText -&gt; Value
 NonEmptyText -&gt; Encoding
@@ -116,7 +116,7 @@ toEncoding :: NonEmptyText -&gt; Encoding
 $ctoEncoding :: NonEmptyText -&gt; Encoding
 toJSON :: NonEmptyText -&gt; Value
 $ctoJSON :: NonEmptyText -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588532"><span id="local-6989586621689588534"><span class="annot"><span class="annottext">ToJSONKeyFunction [NonEmptyText]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588569"><span id="local-6989586621689588571"><span class="annot"><span class="annottext">ToJSONKeyFunction [NonEmptyText]
 ToJSONKeyFunction NonEmptyText
 ToJSONKeyFunction NonEmptyText
 -&gt; ToJSONKeyFunction [NonEmptyText] -&gt; ToJSONKey NonEmptyText
@@ -126,7 +126,7 @@ toJSONKeyList :: ToJSONKeyFunction [NonEmptyText]
 $ctoJSONKeyList :: ToJSONKeyFunction [NonEmptyText]
 toJSONKey :: ToJSONKeyFunction NonEmptyText
 $ctoJSONKey :: ToJSONKeyFunction NonEmptyText
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588527"><span id="local-6989586621689588529"><span class="annot"><span class="annottext">NonEmptyText -&gt; Q Exp
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">ToJSONKey</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588564"><span id="local-6989586621689588566"><span class="annot"><span class="annottext">NonEmptyText -&gt; Q Exp
 NonEmptyText -&gt; Q (TExp NonEmptyText)
 (NonEmptyText -&gt; Q Exp)
 -&gt; (NonEmptyText -&gt; Q (TExp NonEmptyText)) -&gt; Lift NonEmptyText
@@ -135,12 +135,12 @@ liftTyped :: NonEmptyText -&gt; Q (TExp NonEmptyText)
 $cliftTyped :: NonEmptyText -&gt; Q (TExp NonEmptyText)
 lift :: NonEmptyText -&gt; Q Exp
 $clift :: NonEmptyText -&gt; Q Exp
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588524"><span class="annot"><span class="annottext">NonEmptyText -&gt; PrepArg
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Lift</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588561"><span class="annot"><span class="annottext">NonEmptyText -&gt; PrepArg
 (NonEmptyText -&gt; PrepArg) -&gt; ToPrepArg NonEmptyText
 forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
 toPrepVal :: NonEmptyText -&gt; PrepArg
 $ctoPrepVal :: NonEmptyText -&gt; PrepArg
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588521"><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588558"><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
 (NonEmptyText -&gt; Text) -&gt; ToTxt NonEmptyText
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: NonEmptyText -&gt; Text
@@ -154,15 +154,15 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep NonEmptyText x -&gt; NonEmptyText
 $cfrom :: forall x. NonEmptyText -&gt; Rep NonEmptyText x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588515"><span class="annot"><span class="annottext">NonEmptyText -&gt; ()
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689588552"><span class="annot"><span class="annottext">NonEmptyText -&gt; ()
 (NonEmptyText -&gt; ()) -&gt; NFData NonEmptyText
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: NonEmptyText -&gt; ()
 $crnf :: NonEmptyText -&gt; ()
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689588511"><span class="annot"><span class="hs-identifier hs-type">QC.Arbitrary</span></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-28"></span><span>  </span><span id="local-6989586621689588509"><span class="annot"><span class="annottext">arbitrary :: Gen NonEmptyText
+</span><span id="line-27"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689588548"><span class="annot"><span class="hs-identifier hs-type">QC.Arbitrary</span></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621689588546"><span class="annot"><span class="annottext">arbitrary :: Gen NonEmptyText
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-var">NonEmptyText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; NonEmptyText)
 -&gt; (String -&gt; Text) -&gt; String -&gt; NonEmptyText
@@ -183,27 +183,27 @@ forall a. [a] -&gt; Gen a
 </span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe NonEmptyText
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-32"></span><span class="annot"><a href="Data.Text.NonEmpty.html#mkNonEmptyText"><span class="hs-identifier hs-var">mkNonEmptyText</span></a></span><span> </span><span id="local-6989586621689588501"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689588501"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Maybe NonEmptyText
+</span><span id="line-32"></span><span class="annot"><a href="Data.Text.NonEmpty.html#mkNonEmptyText"><span class="hs-identifier hs-var">mkNonEmptyText</span></a></span><span> </span><span id="local-6989586621689588538"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689588538"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Maybe NonEmptyText
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">(NonEmptyText -&gt; Maybe NonEmptyText)
 -&gt; NonEmptyText -&gt; Maybe NonEmptyText
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-var">NonEmptyText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689588501"><span class="hs-identifier hs-var">text</span></a></span><span>
+</span><a href="#local-6989586621689588538"><span class="hs-identifier hs-var">text</span></a></span><span>
 </span><span id="line-33"></span><span>
 </span><span id="line-34"></span><span class="annot"><a href="Data.Text.NonEmpty.html#mkNonEmptyTextUnsafe"><span class="hs-identifier hs-type">mkNonEmptyTextUnsafe</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span>
 </span><span id="line-35"></span><span id="mkNonEmptyTextUnsafe"><span class="annot"><span class="annottext">mkNonEmptyTextUnsafe :: Text -&gt; NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#mkNonEmptyTextUnsafe"><span class="hs-identifier hs-var hs-var">mkNonEmptyTextUnsafe</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-var">NonEmptyText</span></a></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span id="local-6989586621689588634"><span class="annot"><a href="Data.Text.NonEmpty.html#parseNonEmptyText"><span class="hs-identifier hs-type">parseNonEmptyText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621689588634"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689588634"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span>
+</span><span id="line-37"></span><span id="local-6989586621689588671"><span class="annot"><a href="Data.Text.NonEmpty.html#parseNonEmptyText"><span class="hs-identifier hs-type">parseNonEmptyText</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621689588671"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689588671"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span>
 </span><span id="line-38"></span><span id="parseNonEmptyText"><span class="annot"><span class="annottext">parseNonEmptyText :: Text -&gt; m NonEmptyText
-</span><a href="Data.Text.NonEmpty.html#parseNonEmptyText"><span class="hs-identifier hs-var hs-var">parseNonEmptyText</span></a></span></span><span> </span><span id="local-6989586621689588499"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689588499"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe NonEmptyText
+</span><a href="Data.Text.NonEmpty.html#parseNonEmptyText"><span class="hs-identifier hs-var hs-var">parseNonEmptyText</span></a></span></span><span> </span><span id="local-6989586621689588536"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689588536"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#mkNonEmptyText"><span class="hs-identifier hs-var">mkNonEmptyText</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689588499"><span class="hs-identifier hs-var">text</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe NonEmptyText -&gt; m NonEmptyText -&gt; m NonEmptyText
+</span><a href="#local-6989586621689588536"><span class="hs-identifier hs-var">text</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe NonEmptyText -&gt; m NonEmptyText -&gt; m NonEmptyText
 forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-operator hs-var">`onNothing`</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; m NonEmptyText
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
@@ -221,8 +221,8 @@ forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m NonEmptyText
 forall (m :: * -&gt; *) a b c.
 Monad m =&gt;
 (a -&gt; m b) -&gt; (b -&gt; m c) -&gt; a -&gt; m c
-</span><span class="hs-operator hs-var">&gt;=&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689588496"><span class="annot"><span class="annottext">NonEmptyText
-</span><a href="#local-6989586621689588496"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[||</span><span class="hs-identifier">text</span><span class="hs-special">||]</span><span>
+</span><span class="hs-operator hs-var">&gt;=&gt;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689588533"><span class="annot"><span class="annottext">NonEmptyText
+</span><a href="#local-6989586621689588533"><span class="hs-identifier hs-var">text</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[||</span><span class="hs-identifier">text</span><span class="hs-special">||]</span><span>
 </span><span id="line-42"></span><span>
 </span><span id="line-43"></span><span class="annot"><a href="Data.Text.NonEmpty.html#nonEmptyTextCodec"><span class="hs-identifier hs-type">nonEmptyTextCodec</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONCodec</span></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span>
 </span><span id="line-44"></span><span id="nonEmptyTextCodec"><span class="annot"><span class="annottext">nonEmptyTextCodec :: JSONCodec NonEmptyText
@@ -236,12 +236,12 @@ forall oldOutput newOutput newInput oldInput context.
 -&gt; Codec context oldInput oldOutput
 -&gt; Codec context newInput newOutput
 </span><span class="hs-identifier hs-var">bimapCodec</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String NonEmptyText
-</span><a href="#local-6989586621689588495"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
-</span><a href="#local-6989586621689588494"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">Codec Value Text Text
+</span><a href="#local-6989586621689588532"><span class="hs-identifier hs-var">dec</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
+</span><a href="#local-6989586621689588531"><span class="hs-identifier hs-var">enc</span></a></span><span> </span><span class="annot"><span class="annottext">Codec Value Text Text
 </span><span class="hs-identifier hs-var">textCodec</span></span><span>
 </span><span id="line-45"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-46"></span><span>    </span><span id="local-6989586621689588495"><span class="annot"><span class="annottext">dec :: Text -&gt; Either String NonEmptyText
-</span><a href="#local-6989586621689588495"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe NonEmptyText -&gt; Either String NonEmptyText
+</span><span id="line-46"></span><span>    </span><span id="local-6989586621689588532"><span class="annot"><span class="annottext">dec :: Text -&gt; Either String NonEmptyText
+</span><a href="#local-6989586621689588532"><span class="hs-identifier hs-var hs-var">dec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe NonEmptyText -&gt; Either String NonEmptyText
 forall a b. a -&gt; Maybe b -&gt; Either a b
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">maybeToEither</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;empty string not allowed&quot;</span></span><span> </span><span class="annot"><span class="annottext">(Maybe NonEmptyText -&gt; Either String NonEmptyText)
@@ -252,8 +252,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe NonEmptyText
 forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#parseNonEmptyText"><span class="hs-identifier hs-var">parseNonEmptyText</span></a></span><span>
-</span><span id="line-47"></span><span>    </span><span id="local-6989586621689588494"><span class="annot"><span class="annottext">enc :: NonEmptyText -&gt; Text
-</span><a href="#local-6989586621689588494"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
+</span><span id="line-47"></span><span>    </span><span id="local-6989586621689588531"><span class="annot"><span class="annottext">enc :: NonEmptyText -&gt; Text
+</span><a href="#local-6989586621689588531"><span class="hs-identifier hs-var hs-var">enc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Text
 </span><a href="Data.Text.NonEmpty.html#unNonEmptyText"><span class="hs-identifier hs-var hs-var">unNonEmptyText</span></a></span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="hs-comment">-- | Construct 'NonEmptyText' literals at compile-time via quasiquotation.</span><span>
@@ -282,43 +282,43 @@ quoteDec :: String -&gt; Q [Dec]
 quoteDec :: forall p a. p -&gt; a
 </span><span class="hs-identifier hs-var hs-var">quoteDec</span></span><span class="hs-special">}</span><span>
 </span><span id="line-53"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-54"></span><span>    </span><span id="local-6989586621689588490"><span class="annot"><span class="annottext">quotePat :: p -&gt; a
-</span><a href="#local-6989586621689588490"><span class="hs-identifier hs-var hs-var">quotePat</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
+</span><span id="line-54"></span><span>    </span><span id="local-6989586621689588527"><span class="annot"><span class="annottext">quotePat :: p -&gt; a
+</span><a href="#local-6989586621689588527"><span class="hs-identifier hs-var hs-var">quotePat</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; a
 forall a. HasCallStack =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;nonEmptyTextQQ does not support quoting patterns&quot;</span></span><span>
-</span><span id="line-55"></span><span>    </span><span id="local-6989586621689588489"><span class="annot"><span class="annottext">quoteType :: p -&gt; a
-</span><a href="#local-6989586621689588489"><span class="hs-identifier hs-var hs-var">quoteType</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621689588526"><span class="annot"><span class="annottext">quoteType :: p -&gt; a
+</span><a href="#local-6989586621689588526"><span class="hs-identifier hs-var hs-var">quoteType</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; a
 forall a. HasCallStack =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;nonEmptyTextQQ does not support quoting types&quot;</span></span><span>
-</span><span id="line-56"></span><span>    </span><span id="local-6989586621689588488"><span class="annot"><span class="annottext">quoteDec :: p -&gt; a
-</span><a href="#local-6989586621689588488"><span class="hs-identifier hs-var hs-var">quoteDec</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
+</span><span id="line-56"></span><span>    </span><span id="local-6989586621689588525"><span class="annot"><span class="annottext">quoteDec :: p -&gt; a
+</span><a href="#local-6989586621689588525"><span class="hs-identifier hs-var hs-var">quoteDec</span></a></span></span><span> </span><span class="annot"><span class="annottext">p
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; a
 forall a. HasCallStack =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;nonEmptyTextQQ does not support quoting declarations&quot;</span></span><span>
-</span><span id="line-57"></span><span>    </span><span id="local-6989586621689588491"><span class="annot"><span class="annottext">quoteExp :: String -&gt; Q Exp
-</span><a href="#local-6989586621689588491"><span class="hs-identifier hs-var hs-var">quoteExp</span></a></span></span><span> </span><span id="local-6989586621689588486"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689588486"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe NonEmptyText
+</span><span id="line-57"></span><span>    </span><span id="local-6989586621689588528"><span class="annot"><span class="annottext">quoteExp :: String -&gt; Q Exp
+</span><a href="#local-6989586621689588528"><span class="hs-identifier hs-var hs-var">quoteExp</span></a></span></span><span> </span><span id="local-6989586621689588523"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621689588523"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#mkNonEmptyText"><span class="hs-identifier hs-var">mkNonEmptyText</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689588486"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-58"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689588485"><span class="annot"><span class="annottext">NonEmptyText
-</span><a href="#local-6989586621689588485"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Q Exp
+</span><a href="#local-6989586621689588523"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-58"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621689588522"><span class="annot"><span class="annottext">NonEmptyText
+</span><a href="#local-6989586621689588522"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">NonEmptyText -&gt; Q Exp
 forall t. Lift t =&gt; t -&gt; Q Exp
 </span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">NonEmptyText
-</span><a href="#local-6989586621689588485"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><a href="#local-6989586621689588522"><span class="hs-identifier hs-var">result</span></a></span><span>
 </span><span id="line-59"></span><span>      </span><span class="annot"><span class="annottext">Maybe NonEmptyText
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Exp
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;empty string not allowed&quot;</span></span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689588482"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-62"></span><span>  </span><span id="local-6989586621689588480"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser NonEmptyText
+</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689588519"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621689588517"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser NonEmptyText
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Text -&gt; Parser NonEmptyText) -&gt; Value -&gt; Parser NonEmptyText
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
@@ -327,8 +327,8 @@ forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#parseNonEmptyText"><span class="hs-identifier hs-var">parseNonEmptyText</span></a></span><span>
 </span><span id="line-63"></span><span>
-</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689588475"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621689588473"><span class="annot"><span class="annottext">fromJSONKey :: FromJSONKeyFunction NonEmptyText
+</span><span id="line-64"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689588512"><span class="annot"><span class="hs-identifier hs-type">FromJSONKey</span></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621689588510"><span class="annot"><span class="annottext">fromJSONKey :: FromJSONKeyFunction NonEmptyText
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromJSONKey</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Parser NonEmptyText) -&gt; FromJSONKeyFunction NonEmptyText
 forall a. (Text -&gt; Parser a) -&gt; FromJSONKeyFunction a
 </span><span class="hs-identifier hs-var">FromJSONKeyTextParser</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser NonEmptyText
@@ -336,9 +336,9 @@ forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#parseNonEmptyText"><span class="hs-identifier hs-var">parseNonEmptyText</span></a></span><span>
 </span><span id="line-66"></span><span>
 </span><span id="line-67"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.FromCol</span></a></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-68"></span><span>  </span><span id="local-6989586621689588468"><span class="annot"><span class="annottext">fromCol :: Maybe ByteString -&gt; Either Text NonEmptyText
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCol</span></a></span></span><span> </span><span id="local-6989586621689588466"><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621689588466"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-68"></span><span>  </span><span id="local-6989586621689588505"><span class="annot"><span class="annottext">fromCol :: Maybe ByteString -&gt; Either Text NonEmptyText
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromCol</span></a></span></span><span> </span><span id="local-6989586621689588503"><span class="annot"><span class="annottext">Maybe ByteString
+</span><a href="#local-6989586621689588503"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-69"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; Maybe NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#mkNonEmptyText"><span class="hs-identifier hs-var">mkNonEmptyText</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Maybe NonEmptyText)
 -&gt; Either Text Text -&gt; Either Text (Maybe NonEmptyText)
@@ -346,7 +346,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text Text
 forall a. FromCol a =&gt; Maybe ByteString -&gt; Either Text a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.fromCol</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ByteString
-</span><a href="#local-6989586621689588466"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><a href="#local-6989586621689588503"><span class="hs-identifier hs-var">bs</span></a></span><span>
 </span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">Either Text (Maybe NonEmptyText)
 -&gt; (Maybe NonEmptyText -&gt; Either Text NonEmptyText)
 -&gt; Either Text NonEmptyText
@@ -363,8 +363,8 @@ forall a b. a -&gt; Either a b
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span>
 </span><span id="line-71"></span><span>
-</span><span id="line-72"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689588462"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-73"></span><span>  </span><span id="local-6989586621689588460"><span class="annot"><span class="annottext">codec :: JSONCodec NonEmptyText
-</span><a href="#local-6989586621689588460"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONCodec NonEmptyText
+</span><span id="line-72"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689588499"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-73"></span><span>  </span><span id="local-6989586621689588497"><span class="annot"><span class="annottext">codec :: JSONCodec NonEmptyText
+</span><a href="#local-6989586621689588497"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">JSONCodec NonEmptyText
 </span><a href="Data.Text.NonEmpty.html#nonEmptyTextCodec"><span class="hs-identifier hs-var">nonEmptyTextCodec</span></a></span><span>
 </span><span id="line-74"></span></pre></body></html>
