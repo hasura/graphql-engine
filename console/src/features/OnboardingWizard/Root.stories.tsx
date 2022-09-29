@@ -2,7 +2,7 @@ import React from 'react';
 import { ComponentMeta, Story } from '@storybook/react';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { useQueryClient } from 'react-query';
-import { RootWithCloudCheck as Root } from './Root';
+import { RootWithoutCloudCheck } from './Root';
 import {
   baseHandlers,
   fetchAnsweredSurveysHandler,
@@ -13,9 +13,9 @@ import { surveysQueryKey } from '../Surveys/constants';
 
 export default {
   title: 'features/Onboarding Wizard/Root',
-  component: Root,
+  component: RootWithoutCloudCheck,
   decorators: [ReactQueryDecorator()],
-} as ComponentMeta<typeof Root>;
+} as ComponentMeta<typeof RootWithoutCloudCheck>;
 
 export const WithSurvey: Story = () => {
   const queryClient = useQueryClient();
@@ -25,7 +25,9 @@ export const WithSurvey: Story = () => {
   });
 
   return (
-    <Root growthExperimentsClient={mockGrowthClient.enabledWithoutActivity} />
+    <RootWithoutCloudCheck
+      growthExperimentsClient={mockGrowthClient.enabledWithoutActivity}
+    />
   );
 };
 
@@ -41,7 +43,9 @@ export const WithoutSurvey: Story = () => {
   });
 
   return (
-    <Root growthExperimentsClient={mockGrowthClient.enabledWithoutActivity} />
+    <RootWithoutCloudCheck
+      growthExperimentsClient={mockGrowthClient.enabledWithoutActivity}
+    />
   );
 };
 

@@ -7,7 +7,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { GrowthExperimentsClient } from '../GrowthExperiments';
 import { baseHandlers } from './mocks/handlers.mock';
 import { mockGrowthClient } from './mocks/constants';
-import { OnboardingWizard } from '.';
+import { RootWithoutCloudCheck } from './Root';
 
 const server = setupServer(...baseHandlers());
 
@@ -30,7 +30,7 @@ const OnboardingWizardRender = async (
   render(
     <ReduxProvider store={store} key="provider">
       <QueryClientProvider client={reactQueryClient}>
-        <OnboardingWizard growthExperimentsClient={mockedGrowthClient} />
+        <RootWithoutCloudCheck growthExperimentsClient={mockedGrowthClient} />
       </QueryClientProvider>
     </ReduxProvider>
   );

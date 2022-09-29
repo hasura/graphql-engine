@@ -64,8 +64,10 @@ export function RootWithCloudCheck(props: Props) {
    * Don't render Root component if current context is not cloud-console
    * and current user is not project owner
    */
-  if (isCloudConsole(globals)) {
+  if (!isCloudConsole(globals)) {
     return null;
   }
   return <Root {...props} />;
 }
+
+export const RootWithoutCloudCheck = Root;
