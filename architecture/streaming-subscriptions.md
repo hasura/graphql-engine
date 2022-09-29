@@ -85,15 +85,15 @@ In this post, we will look at the architecture of streaming subscriptions, how o
 
 - [Try it out](#try-it-out-in-60-seconds)
 - [Common use-cases](#use-cases)
-  - [Stream log-like data](#stream-log-like-data)
+  - [Stream log-like data](#stream-events-or-log-like-data)
   - [Create messaging channels](#create-messaging-channels)
   - [Capture and stream data changes on an existing table](#capture-and-stream-data-changes-on-an-existing-table)
-  - [Create a fire-and-forget channel for ephemeral data ](#create-a-fire-and-forget-channel-for-ephemeral-data )
+  - [Create a fire-and-forget channel for ephemeral data ](#create-a-fire-and-forget-channel-for-ephemeral-data-with-postgres)
 - [Architecture](#notes-on-architecture)
     - [Making GraphQL calls efficieint](#making-graphql-calls-efficient)
     - [Batching](#batching-multiple-streaming-consumers-into-one-sql-query)
     - [Handling Authorization with predicate pushdown](#handling-authorization-with-predicate-push-down)
-    - [Backpressure and Scaling](#handling-backpressure)
+    - [Backpressure and Scaling](#managing-backpressure)
 - [Performance Benchmarks](#performance-benchmarks)
 - [Next steps](#next-steps)
 
