@@ -780,7 +780,8 @@ const makeMigrationCall = (
   shouldSkipSchemaReload,
   skipExecution = false,
   isRetry = false,
-  source = getState().tables.currentDataSource
+  source = getState().tables.currentDataSource,
+  shouldShowNotifications = true
 ) => {
   const { resourceVersion } = getState().metadata;
   const upQuery = {
@@ -837,7 +838,7 @@ const makeMigrationCall = (
       }
       dispatch(updateSchemaInfo());
     }
-    if (successMsg) {
+    if (successMsg && shouldShowNotifications) {
       dispatch(showSuccessNotification(successMsg));
     }
     customOnSuccess(data, globals.consoleMode, currMigrationMode);
@@ -846,44 +847,46 @@ const makeMigrationCall = (
     const errorDetails = getErrorMessage('', err);
     const errorDetailsLines = errorDetails.split('\n');
 
-    dispatch(
-      showNotification(
-        {
-          title: errMsg,
-          level: 'error',
-          message: (
-            <p>
-              {errorDetailsLines.map((m, i) => (
-                <div key={i}>{m}</div>
-              ))}
-              <br />
-              Do you want to drop the dependent items as well?
-            </p>
-          ),
-          autoDismiss: 0,
-          action: {
-            label: 'Continue',
-            callback: () =>
-              makeMigrationCall(
-                dispatch,
-                getState,
-                cascadeUpQueries(upQueries, isPgCascade), // cascaded new up queries
-                downQueries,
-                migrationName,
-                customOnSuccess,
-                customOnError,
-                requestMsg,
-                successMsg,
-                errorMsg,
-                shouldSkipSchemaReload,
-                false,
-                true // prevent further retry
-              ),
+    if (shouldShowNotifications) {
+      dispatch(
+        showNotification(
+          {
+            title: errMsg,
+            level: 'error',
+            message: (
+              <p>
+                {errorDetailsLines.map((m, i) => (
+                  <div key={i}>{m}</div>
+                ))}
+                <br />
+                Do you want to drop the dependent items as well?
+              </p>
+            ),
+            autoDismiss: 0,
+            action: {
+              label: 'Continue',
+              callback: () =>
+                makeMigrationCall(
+                  dispatch,
+                  getState,
+                  cascadeUpQueries(upQueries, isPgCascade), // cascaded new up queries
+                  downQueries,
+                  migrationName,
+                  customOnSuccess,
+                  customOnError,
+                  requestMsg,
+                  successMsg,
+                  errorMsg,
+                  shouldSkipSchemaReload,
+                  false,
+                  true // prevent further retry
+                ),
+            },
           },
-        },
-        'error'
-      )
-    );
+          'error'
+        )
+      );
+    }
   };
 
   const onError = err => {
@@ -904,7 +907,10 @@ const makeMigrationCall = (
   };
 
   dispatch({ type: MAKE_REQUEST });
-  dispatch(showSuccessNotification(requestMsg));
+
+  if (shouldShowNotifications) {
+    dispatch(showSuccessNotification(requestMsg));
+  }
   return dispatch(
     requestAction(url, options, REQUEST_SUCCESS, REQUEST_ERROR)
   ).then(onSuccess, onError);

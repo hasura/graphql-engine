@@ -281,7 +281,8 @@ export const addDataSource =
       | 'use_prepared_statements'
       | 'ssl_configuration'
       | 'isolation_level'
-    >[]
+    >[],
+    shouldShowNotifications = true
   ): Thunk<Promise<void | ReduxState>, MetadataActions> =>
   (dispatch, getState) => {
     const upQuery = addSource(data.driver, data.payload, replicas);
@@ -306,23 +307,25 @@ export const addDataSource =
       };
       return dispatch(exportMetadata()).then(() => {
         dispatch(fetchDataInit(data.payload.name, data.driver));
-        dispatch(
-          showNotification(
-            {
-              title: `Data source ${
-                !isEdit ? 'added' : 'updated'
-              } successfully!`,
-              level: 'success',
-              autoDismiss: 0,
-              alternateActionButtonProps: {
-                label: 'View Database',
-                onClick: onButtonClick,
-                trackId: 'data-tab-view-database-notification-button-add-db',
+        if (shouldShowNotifications) {
+          dispatch(
+            showNotification(
+              {
+                title: `Data source ${
+                  !isEdit ? 'added' : 'updated'
+                } successfully!`,
+                level: 'success',
+                autoDismiss: 0,
+                alternateActionButtonProps: {
+                  label: 'View Database',
+                  onClick: onButtonClick,
+                  trackId: 'data-tab-view-database-notification-button-add-db',
+                },
               },
-            },
-            'success'
-          )
-        );
+              'success'
+            )
+          );
+        }
         if (successCb) successCb();
         return getState();
       });
@@ -350,7 +353,8 @@ export const addDataSource =
       false,
       false,
       false,
-      data.payload.name
+      data.payload.name,
+      shouldShowNotifications
     );
   };
 

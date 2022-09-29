@@ -138,7 +138,8 @@ export const connectDataSource = (
   >[],
   isEditState = false,
   isRenameSource = false,
-  currentName = ''
+  currentName = '',
+  shouldShowNotification = true
 ) => {
   let connectionParams: ConnectionParams | undefined;
   let databaseURL: string | { from_env: string } =
@@ -220,7 +221,8 @@ export const connectDataSource = (
       )
     );
   }
-  return dispatch(addDataSource(data, cb, replicas));
+
+  return dispatch(addDataSource(data, cb, replicas, shouldShowNotification));
 };
 
 export const removeEmptyValues = (obj: any) =>
