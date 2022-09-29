@@ -1,36 +1,85 @@
-# Instant streaming APIs (GraphQL) with built-in authorization for Postgres
+# Instant streaming GraphQL APIs with built-in authorization for Postgres
 
-This post discusses a recent capability added to Hasura GraphQL Engine: Streaming data over GraphQL subscriptions for Postgres.
-
-## TL;DR 
-
-If you have a large amount of data, or "fast moving" data in Postgres, Hasura now allows you to instantly create an API for clients to fetch that data as a continuous stream. This API can be safely exposed to internal or external HTTP clients.
-
-- Uses GraphQL subscriptions, and works with any GraphQL client that supports subscriptions over websockets
-- Each client can maintain an independent stream cursor (aka offset) and prevent any dropped or missing events - not just fire-and-forget
-- Each client can only read relevant events in a stream: Create fine-grained authorization rules at a "row" (or event) and "column" (or field) level, that integrates with any authentication provider
-- Use relationships to enrich event payload data with data in other models at query time
-- Scale to a massive number of concurrent clients. This post discusses a [benchmark of streaming to 1M clients concurrently](#performance-benchmarks) streaming data with **independent stream offsets** and **independent authz rules** 
-- Works with new or existing data in any Postgres database and with read-replicas
-- No special configuration around sticky sessions, back-pressure, dropped connections, roll-outs, scaling out etc required
+[Hasura](https://hasura.io) provides a streaming GraphQL API (subscriptions) on your Postgres database, so that you can securely stream data to apps and services with minimal setup. [Try it out](#try-it-out-in-60-seconds)!
 
 ![Streaming Subscription Getting Started](https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/streaming-subs.gif)
 
-## Motivation
+1. **No additional moving parts**:
+    - You don't need a custom SDK. There is no duplication of data and no need to deal with consuming events and data from multiple sources of truth (eg: a queue and a persistent DB)
+    - You don't worry about missing events, duplicate events or data-synchronization on the client
+2. **Fine-grained RLS style authorization**: Control what data and fields in the data are consumable by the client
+3. **Scale with Postgres**: Scale reads the way you would scale Postgres reads, and scale writes the way you would scale Postgres ingestion (or in-case of a firehose, ingest into a buffer first).
+4. **Zero-ops websockets**: 
+    - Hasura handles horizontally scaling your websockets layer, cursor management and authorization with predicate push-down. 
+    - Benchmarked to handle 1M concurrent GraphQL clients streaming from 10000 channels with 1M events ingested every minute - on a single instance of Postgres RDS.
 
-Today we have a variety of solutions to ingest and store a large amount of data or a stream of data. 
-However, once this data has been captured, securely exposing this data as a continuous stream to a large number of HTTP clients concurrently is a challenge. 
+## Try it out in 60 seconds
 
-These are the challenges that Hasura aims to address:
-1. Allow for authorization rules so that clients can only consume the subset of the stream they have access to
-2. Prevent missing events and allow each client to move through its stream independently
-3. Scale and manage websocket connections to support hundreds of thousands to millions of HTTP clients concurrently 
+1. Step 1: Deploy Hasura as a [docker image](https://hasura.io/docs/latest/getting-started/docker-simple/) or with nothing but your browser at [Hasura Cloud](https://cloud.hasura.io)
+3. Step 2: Run [this SQL (gist)](https://gist.github.com/coco98/803b70ec3fdd48cbe388bd25fcbfcd0e) that creates a table and loads some sample data
+4. Step 3: Run a GraphQL subscription to start streaming!
+```graphql
+subscription {
+  messages (cursor: {initial_value: {id: "0"}}, batch_size: 5) {
+    id
+    message
+  }
+}
+```
 
-Hasura's new streaming API on Postgres addresses these challenges so that teams focus on how their streams are modelled and secured instead of building and scaling the API.
+## How Hasura makes consuming a stream of data easy
 
-![Before / after Hasura](https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/motivation-before-after-hasura.png)
+### 1. Consuming a stream at the edge
+Exposing your stream data to clients at the edge is hard for the following reasons.
 
-## Table of contents
+| Challenge | The problem | Hasura approach |
+|-----------|-------------|-----------------|
+| Authorization | Clients should only be able to consume specific events and specific fields in events | Hasura provides an RLS style authorization policy that allows fine-grained control |
+| Sticky sessions & horizontal scaling | When clients or servers drop connections, resuming the stream is hard | Hasura runs as a stateless container and any Hasura instance can resume a dropped connection from any client |
+| Historical data & synchronization | A client that is consuming events from a stream, might need access to older data. Cursors need to be synchronized across multiple sources of truth | Hasura provides a streaming API with a cursor-based pagination like abstraction. The only source of truth is Postgres |
+| Enriching event payloads with data that is not a part of the event | When a client consumes an event, it might require access to data that is not a part of that event payload and comes through a relationship. Eg: `message.user.email` | Hasura streams over a GraphQL API that allows access to any models that are set up as relationships |
+| Missing & duplicate events | Exactly-once delivery is challenging to clients on the edge | Hasura's streaming GraphQL API allows the client to stream starting from a cursor value, almost like paginating and guarantees exactly-once delivery |
+
+
+### 2. Concurrent writers to an append-only table (optional)
+The key constraint that Hasura requires to make consuming a stream easy is by requiring that Hasura is reading from a table that has append-only guarantees while reading.
+
+The order in which data is added to the stream can have different requirements. Concurrent writers into a single table in Postgres (or a queue) can cause events to be added to the stream, in a different order from which they are consumed. 
+
+Publishing events to an append-only table can be done in 2 possible ways.
+
+**Option 1: Allow concurrent writers, but force ordering**
+- If you're ingesting data concurrently into Postgres, Hasura provides a trigger that can be attached to your table. This trigger creates an `event_id` which is guaranteed to be a monotonically increasing `bigint` on the table, and is in the order in which they are written. The trigger allows for partitioning the id sequence on any column, in case streams are only consumed from data in the same partition. This is useful, because the ordering guarantee is not provided if you were using a `serial` or using a `timestamp` because concurrent transactions might *commit* in an order that is different from a sequence value or the timestamp value.
+
+**Option 2: Use a single writer with batch loading**
+- If you're ingesting data into a queue first then once the data is pulled of the queue and written into Postgres, you can ensure that a single writer batch loads data into the table so that commit order and id orders are maintained. If you have a *firehose* of events being sent to your backend, we recommend ingesting into a queue like a redis-stream or kafka first and then bulk/batch inserting that into an append-only Postgres table.
+
+## Scalability
+
+Scaling streaming is hard. Here are our benchmarks to help you understand the limits of this approach and what to do when you blow past those limits. 
+
+### Consumption (streaming clients)
+
+Hasura is able to effectively map hundreds of GraphQL clients to a single Postgres connection when consuming a stream. Scaling reads is thus a matter of scaling the number of available read connections on Postgres. This is easy to do achieve first by scaling vertically, and then scaling horizontally by adding more read-replicas. The primary cost of scaling with read-replicas is latency, since there is a replication lag from the primary to the replica.
+
+On a single large instance of Postgres RDS, we show that 1M GraphQL clients are easily able to stream data concurrently via this benchmark.
+
+<img src="https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/performance-db-conn-load.png" alt="Postgres connection load" width="500px" />
+
+### Ingestion (publishing)
+
+The ingestion bottleneck is Postgres. Broadly there are 3 ways of scaling Postgres writes:
+0. Use common Postgres practices to start improving latency (eg: remove constraints, unnecessary indexes etc)
+1. Vertically scale your Postgres instance
+2. Use a sharded Postgres flavour (eg: Hasura already supports Citus/Hyperscale, Yugabyte. Cockroach support coming soon)
+3. Ingest data into a queue like Kafka or a redis stream first, and then bulk/batch insert the data into Postgres
+
+Furthermore, as Hasura adds support for databases that support horizontally scaling out writes (eg: Cassandra), this becomes easier.
+Currently however, since all your data is in your own Postgres database, evolving your architecture steadily is tractable!
+
+-------------------------------
+
+## Advanced reading
 
 In this post, we will look at the architecture of streaming subscriptions, how our batching and multiplexing implementation works with declarative authorization. We will take a look at initial performance benchmarks that test for high concurrency and large volumes of data. And finally, we’ll highlight a few common use-cases and modeling patterns. 
 
@@ -47,32 +96,6 @@ In this post, we will look at the architecture of streaming subscriptions, how o
     - [Backpressure and Scaling](#handling-backpressure)
 - [Performance Benchmarks](#performance-benchmarks)
 - [Next steps](#next-steps)
-
-## Try it out in 60 seconds
-
-1. Step 1: Deploy Hasura as a [docker image](https://hasura.io/docs/latest/getting-started/docker-simple/) or on [Hasura Cloud](https://cloud.hasura.io)
-2. Step 2: Connect a Postgres database to Hasura as a source:
-  - Connect a new or existing Postgres database to it
-3. Step 3: Track an existing table, or create a new table with an monotonically increasing, unique id (eg: bigserial).
-
-```sql
-CREATE TABLE public.message (
-  id integer NOT NULL,
-  username text NOT NULL,
-  text text NOT NULL,
-  "timestamp" timestamp with time zone DEFAULT now() NOT NULL
-);
-```
-
-4. Step 4: Run a GraphQL subscription to try out the streaming API on that table
-
-```graphql
-message_stream {
-  id
-  username
-  text
-}
-```
 
 ## Use-cases
 
@@ -129,7 +152,7 @@ Notes on preventing load on the primary:
 Note on capturing data from the WAL:
 - LR slots are expensive. Maintaining unique cursors and authorization rules for each HTTP client can get prohibitively expensive. Instead, capture data from the WAL and insert that into a flattened table in a second Postgres. This table will now contain the entire WAL, and Hasura can help clients stream data from that table.
 
-### Create a fire-and-forget channel for ephemeral data
+### Create a fire-and-forget channel for ephemeral data with Postgres
 
 Typing indicators, live locations sharing, multiplayer mouse-pointer like information are ideal candidates for fire-and-forget type channels. These types of applications usually require lower e2e latency as well.
 
@@ -139,7 +162,7 @@ Architecture:
 
 ![Ephemeral](https://graphql-engine-cdn.hasura.io/assets/blog/streaming-subscriptions/use-case-ephemeral.png)
 
-Note: The advantage of using Postgres is that we can leverage its query engine for authorization (via Hasura's predicate push down) and independent cursors per stream. Furthermore, the data retention policy can also be fine-grained and controlled quite easily. Furthermore, given that Hasura allows adding multiple Postgres instances to the same GraphQL Engine configuration, we can tune an entirely separate Postgres server to trade increased read & write performance for data-loss.
+Note: The advantage of using Postgres is that we can leverage its query engine for authorization (via Hasura's predicate push down) and independent cursors per stream. Data retention can also be fine-grained and controlled quite easily. Furthermore, given that Hasura allows adding multiple Postgres instances to the same GraphQL Engine configuration, we can tune an entirely separate Postgres server to trade increased read & write performance for data-loss.
 
 ## Notes on architecture
 
@@ -262,7 +285,7 @@ Here is how the load scales:
 - DB CPU percentage at peak usage was 15%
 - Peak Hasura CPU usage was 20%
 
-## Next steps:
+## Give us your feedback!
 
 If you have a streaming workload, try Hasura out and feel free to reach out to us for questions, feedback and for any other architectural discussions. 
 
