@@ -798,6 +798,7 @@ class TestGraphQLMutateEnums:
 # Tracking VOLATILE SQL functions as mutations, or queries (#1514)
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @use_mutation_fixtures
+@pytest.mark.admin_secret
 @pytest.mark.hge_env('HASURA_GRAPHQL_INFER_FUNCTION_PERMISSIONS', 'false')
 class TestGraphQLMutationFunctions:
     @classmethod

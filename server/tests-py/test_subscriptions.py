@@ -1,111 +1,104 @@
-#!/usr/bin/env python3
-
-import datetime
-import time
-import pytest
-import json
-import queue
-from validate import check_query_f
 from collections import OrderedDict
-from utils import insert_many
+import json
+import pytest
+import queue
 from ruamel.yaml import YAML
+import time
+import uuid
 
-usefixtures = pytest.mark.usefixtures
+from validate import check_query_f
+from utils import insert_many
+
 yaml=YAML(typ='safe', pure=True)
 
-@pytest.fixture(scope='class')
-def ws_conn_init(hge_ctx, ws_client):
-    init_ws_conn(hge_ctx, ws_client)
+usefixtures = pytest.mark.usefixtures
 
 @pytest.fixture(scope='class')
-def ws_conn_init_graphql_ws(hge_ctx, ws_client_graphql_ws):
-    init_graphql_ws_conn(hge_ctx, ws_client_graphql_ws)
+def ws_conn_init(hge_key, ws_client):
+    init_ws_conn(hge_key, ws_client)
+
+@pytest.fixture(scope='class')
+def ws_conn_init_graphql_ws(hge_key, ws_client_graphql_ws):
+    init_graphql_ws_conn(hge_key, ws_client_graphql_ws)
 
 '''
     Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
 '''
 
-def init_ws_conn(hge_ctx, ws_client, payload = None):
-    if payload is None:
-        payload = {}
-        if hge_ctx.hge_key is not None:
-            payload = {
-                'headers' : {
-                    'X-Hasura-Admin-Secret': hge_ctx.hge_key
-                }
-            }
-
+# This is used in other test files! Be careful when modifying it.
+def init_ws_conn(hge_key, ws_client, payload = None):
     init_msg = {
         'type': 'connection_init',
-        'payload': payload,
+        'payload': payload or ws_payload(hge_key),
     }
     ws_client.send(init_msg)
     ev = ws_client.get_ws_event(3)
     assert ev['type'] == 'connection_ack', ev
 
-def init_graphql_ws_conn(hge_ctx, ws_client_graphql_ws, payload = None):
-    if payload is None:
-        payload = {}
-        if hge_ctx.hge_key is not None:
-            payload = {
-                'headers' : {
-                    'X-Hasura-Admin-Secret': hge_ctx.hge_key
-                }
-            }
-
+def init_graphql_ws_conn(hge_key, ws_client_graphql_ws):
     init_msg = {
         'type': 'connection_init',
-        'payload': payload,
+        'payload': ws_payload(hge_key),
     }
     ws_client_graphql_ws.send(init_msg)
     ev = ws_client_graphql_ws.get_ws_event(3)
     assert ev['type'] == 'connection_ack', ev
 
-def get_explain_graphql_query_response(hge_ctx, query, variables, user_headers = {}):
-    admin_secret = hge_ctx.hge_key
+def ws_payload(hge_key):
+    if hge_key is not None:
+        return {
+            'headers': {
+                'X-Hasura-Admin-Secret': hge_key,
+            }
+        }
+    else:
+        return {}
+
+def get_explain_graphql_query_response(hge_ctx, hge_key, query, variables, user_headers = {}):
     headers = {}
-    if admin_secret is not None:
-        headers['X-Hasura-Admin-Secret'] = admin_secret
+    if hge_key is not None:
+        headers['X-Hasura-Admin-Secret'] = hge_key
 
     request = { 'query': { 'query': query, 'variables': variables }, 'user': user_headers }
     status_code, response, _ = hge_ctx.anyq('/v1/graphql/explain', request, headers)
     assert status_code == 200, (request, status_code, response)
     return response
 
-class TestSubscriptionCtrl(object):
+@pytest.mark.no_admin_secret
+class TestSubscriptionCtrlWithoutSecret(object):
+    def test_connection(self, ws_client):
+        ws_client.recreate_conn()
+        init_ws_conn(None, ws_client)
 
-    def test_init_without_payload(self, hge_ctx, ws_client):
-        if hge_ctx.hge_key is not None:
-            pytest.skip("Payload is needed when admin secret is set")
-        init_msg = {
-            'type': 'connection_init'
-        }
-        ws_client.send(init_msg)
-        ev = ws_client.get_ws_event(15)
-        assert ev['type'] == 'connection_ack', ev
-
-
-    '''
-        Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
-    '''
-
-    def test_init(self, hge_ctx, ws_client):
-        init_ws_conn(hge_ctx, ws_client)
-
-    '''
-        Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_terminate
-    '''
-
-    def test_connection_terminate(self, hge_ctx, ws_client):
         obj = {
             'type': 'connection_terminate'
         }
         ws_client.send(obj)
         with pytest.raises(queue.Empty):
-            ev = ws_client.get_ws_event(3)
+            ws_client.get_ws_event(3)
+
+@pytest.mark.admin_secret
+class TestSubscriptionCtrl(object):
+    '''
+    References:
+    https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_init
+    https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_connection_terminate
+    '''
+
+    def test_connection(self, hge_key, ws_client):
+        ws_client.recreate_conn()
+        init_ws_conn(hge_key, ws_client)
+
+        obj = {
+            'type': 'connection_terminate'
+        }
+        ws_client.send(obj)
+        with pytest.raises(queue.Empty):
+            ws_client.get_ws_event(3)
 
 @pytest.mark.backend('mssql', 'postgres')
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')
+@pytest.mark.admin_secret
 class TestSubscriptionBasic:
     @classmethod
     def dir(cls):
@@ -129,6 +122,7 @@ class TestSubscriptionBasic:
     '''
 
     def test_start(self, ws_client):
+        id = str(uuid.uuid4())
         query = """
         subscription {
         hge_tests_test_t1(order_by: {c1: desc}, limit: 1) {
@@ -138,7 +132,7 @@ class TestSubscriptionBasic:
         }
         """
         obj = {
-            'id': '1',
+            'id': id,
             'payload': {
                 'query': query
             },
@@ -148,13 +142,13 @@ class TestSubscriptionBasic:
         '''
             Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_data
         '''
-        ev = ws_client.get_ws_query_event('1',15)
-        assert ev['type'] == 'data' and ev['id'] == '1', ev
+        ev = ws_client.get_ws_query_event(id, 15)
+        assert ev['type'] == 'data' and ev['id'] == id, ev
 
     '''
         Refer https://github.com/apollographql/subscriptions-transport-ws/blob/01e0b2b65df07c52f5831cce5c858966ba095993/src/server.ts#L306
     '''
-    @pytest.mark.skip(reason="refer https://github.com/hasura/graphql-engine/pull/387#issuecomment-421343098")
+    @pytest.mark.skip(reason="refer to https://github.com/hasura/graphql-engine/pull/387#issuecomment-421343098")
     def test_start_duplicate(self, ws_client):
         self.test_start(ws_client)
 
@@ -187,7 +181,7 @@ class TestSubscriptionBasic:
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_complete
     '''
 
-    def test_complete(self, hge_ctx, ws_client):
+    def test_complete(self, ws_client):
         query = """
         query {
           hge_tests_test_t1(order_by: {c1: desc}, limit: 1) {
@@ -215,6 +209,7 @@ class TestSubscriptionBasic:
 ## FIXME: There's an issue with the tests being parametrized with both
 ##        postgres and mssql data sources enabled(See issue #2084).
 @usefixtures('per_method_tests_db_state', 'ws_conn_init_graphql_ws')
+@pytest.mark.admin_secret
 class TestSubscriptionBasicGraphQLWS:
     @classmethod
     def dir(cls):
@@ -224,10 +219,10 @@ class TestSubscriptionBasicGraphQLWS:
     def test_negative(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/negative_test.yaml', transport, gqlws=True)
 
-    def test_connection_error(self, hge_ctx, ws_client_graphql_ws):
+    def test_connection_error(self, hge_key, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
             ws_client_graphql_ws.create_conn()
-            if hge_ctx.hge_key == None:
+            if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
                 ws_client_graphql_ws.init_as_admin()
@@ -236,13 +231,15 @@ class TestSubscriptionBasicGraphQLWS:
         ev = ws_client_graphql_ws.get_conn_close_state()
         assert ev == True, ev
 
-    def test_start(self, hge_ctx, ws_client_graphql_ws):
+    def test_start(self, hge_key, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
             ws_client_graphql_ws.create_conn()
-            if hge_ctx.hge_key == None:
+            if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
                 ws_client_graphql_ws.init_as_admin()
+
+        id = str(uuid.uuid4())
         query = """
         subscription {
         hge_tests_test_t1(order_by: {c1: desc}, limit: 1) {
@@ -252,30 +249,30 @@ class TestSubscriptionBasicGraphQLWS:
         }
         """
         obj = {
-            'id': '1',
+            'id': id,
             'payload': {
                 'query': query
             },
             'type': 'subscribe'
         }
         ws_client_graphql_ws.send(obj)
-        ev = ws_client_graphql_ws.get_ws_query_event('1',15)
-        assert ev['type'] == 'next' and ev['id'] == '1', ev
+        ev = ws_client_graphql_ws.get_ws_query_event(id, 15)
+        assert ev['type'] == 'next' and ev['id'] == id, ev
 
-    @pytest.mark.skip(reason="refer https://github.com/hasura/graphql-engine/pull/387#issuecomment-421343098")
-    def test_start_duplicate(self, hge_ctx, ws_client_graphql_ws):
+    @pytest.mark.skip(reason="refer to https://github.com/hasura/graphql-engine/pull/387#issuecomment-421343098")
+    def test_start_duplicate(self, hge_key, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
             ws_client_graphql_ws.create_conn()
-            if hge_ctx.hge_key == None:
+            if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
                 ws_client_graphql_ws.init_as_admin()
-        self.test_start(ws_client_graphql_ws)
+        self.test_start(hge_key, ws_client_graphql_ws)
 
-    def test_stop_without_id(self, hge_ctx, ws_client_graphql_ws):
+    def test_stop_without_id(self, hge_key, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
             ws_client_graphql_ws.create_conn()
-            if hge_ctx.hge_key == None:
+            if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
                 ws_client_graphql_ws.init_as_admin()
@@ -287,10 +284,10 @@ class TestSubscriptionBasicGraphQLWS:
         ev = ws_client_graphql_ws.get_conn_close_state()
         assert ev == True, ev
 
-    def test_stop(self, hge_ctx, ws_client_graphql_ws):
+    def test_stop(self, hge_key, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
             ws_client_graphql_ws.create_conn()
-            if hge_ctx.hge_key == None:
+            if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
                 ws_client_graphql_ws.init_as_admin()
@@ -303,10 +300,10 @@ class TestSubscriptionBasicGraphQLWS:
         with pytest.raises(queue.Empty):
             ev = ws_client_graphql_ws.get_ws_event(3)
 
-    def test_start_after_stop(self, hge_ctx, ws_client_graphql_ws):
+    def test_start_after_stop(self, hge_key, hge_ctx, ws_client_graphql_ws):
         if ws_client_graphql_ws.get_conn_close_state():
             ws_client_graphql_ws.create_conn()
-            if hge_ctx.hge_key == None:
+            if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
                 ws_client_graphql_ws.init_as_admin()
@@ -316,10 +313,11 @@ class TestSubscriptionBasicGraphQLWS:
             ws_client_graphql_ws.clear_queue()
         self.test_stop(hge_ctx, ws_client_graphql_ws)
 
-    def test_complete(self, hge_ctx, ws_client_graphql_ws):
+    def test_complete(self, hge_key, ws_client_graphql_ws):
+        id = str(uuid.uuid4())
         if ws_client_graphql_ws.get_conn_close_state():
             ws_client_graphql_ws.create_conn()
-            if hge_ctx.hge_key == None:
+            if hge_key == None:
                 ws_client_graphql_ws.init()
             else:
                 ws_client_graphql_ws.init_as_admin()
@@ -332,27 +330,28 @@ class TestSubscriptionBasicGraphQLWS:
         }
         """
         obj = {
-            'id': '2',
+            'id': id,
             'payload': {
                 'query': query
             },
             'type': 'subscribe'
         }
         ws_client_graphql_ws.send(obj)
-        ev = ws_client_graphql_ws.get_ws_query_event('2',3)
-        assert ev['type'] == 'next' and ev['id'] == '2', ev
+        ev = ws_client_graphql_ws.get_ws_query_event(id, 3)
+        assert ev['type'] == 'next' and ev['id'] == id, ev
         # Check for complete type
-        ev = ws_client_graphql_ws.get_ws_query_event('2',3)
-        assert ev['type'] == 'complete' and ev['id'] == '2', ev
+        ev = ws_client_graphql_ws.get_ws_query_event(id, 3)
+        assert ev['type'] == 'complete' and ev['id'] == id, ev
 
 @usefixtures('per_method_tests_db_state','ws_conn_init')
+@pytest.mark.admin_secret
 class TestSubscriptionLiveQueries:
 
     @classmethod
     def dir(cls):
         return 'queries/subscriptions/live_queries'
 
-    def test_live_queries(self, hge_ctx, ws_client):
+    def test_live_queries(self, hge_key, ws_client):
         '''
             Create connection using connection_init
         '''
@@ -375,8 +374,8 @@ class TestSubscriptionLiveQueries:
         for i, resultLimit in queries:
             query = queryTmplt.replace('{0}',str(i))
             headers={}
-            if hge_ctx.hge_key is not None:
-                headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+            if hge_key is not None:
+                headers['X-Hasura-Admin-Secret'] = hge_key
             subscrPayload = { 'query': query, 'variables': { 'result_limit': resultLimit } }
             respLive = ws_client.send_query(subscrPayload, query_id='live_'+str(i), headers=headers, timeout=15)
             liveQs.append(respLive)
@@ -427,14 +426,15 @@ class TestSubscriptionLiveQueries:
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-@usefixtures('per_method_tests_db_state','ws_conn_init','streaming_subscriptions_fixtures')
+@usefixtures('per_method_tests_db_state', 'ws_conn_init')
+@pytest.mark.hge_env('HASURA_GRAPHQL_EXPERIMENTAL_FEATURES', 'streaming_subscriptions')
 class TestStreamingSubscription:
 
     @classmethod
     def dir(cls):
         return 'queries/subscriptions/streaming'
 
-    def test_basic_streaming_subscription_existing_static_data(self, hge_ctx, ws_client):
+    def test_basic_streaming_subscription_existing_static_data(self, hge_key, hge_ctx, ws_client):
         '''
             Create connection using connection_init
         '''
@@ -455,8 +455,8 @@ class TestStreamingSubscription:
         for i in range(10):
             articles_to_insert.append({"id": i + 1, "title": "Article title {}".format(i + 1)})
         insert_many(hge_ctx, {"schema": "hge_tests", "name": "articles"}, articles_to_insert)
-        if hge_ctx.hge_key is not None:
-            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        if hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_key
         subscrPayload = { 'query': query, 'variables': { 'batch_size': 2 } }
         respLive = ws_client.send_query(subscrPayload, query_id='stream_1', headers=headers, timeout=15)
         liveQs.append(respLive)
@@ -478,7 +478,7 @@ class TestStreamingSubscription:
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-    def test_streaming_subscriptions_with_concurrent_data_inserts(self, hge_ctx, ws_client):
+    def test_streaming_subscriptions_with_concurrent_data_inserts(self, ws_client):
         '''
             Create connection using connection_init
         '''
@@ -534,7 +534,7 @@ class TestStreamingSubscription:
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-    def test_streaming_subscription_with_custom_name_set_for_cursor(self, hge_ctx, ws_client):
+    def test_streaming_subscription_with_custom_name_set_for_cursor(self, hge_key, ws_client):
         '''
             Create connection using connection_init
         '''
@@ -551,8 +551,8 @@ class TestStreamingSubscription:
 
         liveQs = []
         headers={}
-        if hge_ctx.hge_key is not None:
-            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        if hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_key
         subscrPayload = { 'query': query, 'variables': { 'batch_size': 1 } }
         respLive = ws_client.send_query(subscrPayload, query_id='stream_1', headers=headers, timeout=15)
         liveQs.append(respLive)
@@ -574,16 +574,15 @@ class TestStreamingSubscription:
         with pytest.raises(queue.Empty):
             ev = ws_client.get_ws_event(3)
 
-
-
-@usefixtures('per_method_tests_db_state','ws_conn_init_graphql_ws')
+@usefixtures('per_method_tests_db_state', 'ws_conn_init_graphql_ws')
+@pytest.mark.admin_secret
 class TestSubscriptionLiveQueriesForGraphQLWS:
 
     @classmethod
     def dir(cls):
         return 'queries/subscriptions/live_queries'
 
-    def test_live_queries(self, hge_ctx, ws_client_graphql_ws):
+    def test_live_queries(self, hge_key, ws_client_graphql_ws):
         '''
             Create connection using connection_init
         '''
@@ -606,8 +605,8 @@ class TestSubscriptionLiveQueriesForGraphQLWS:
         for i, resultLimit in queries:
             query = queryTmplt.replace('{0}',str(i))
             headers={}
-            if hge_ctx.hge_key is not None:
-                headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+            if hge_key is not None:
+                headers['X-Hasura-Admin-Secret'] = hge_key
             subscrPayload = { 'query': query, 'variables': { 'result_limit': resultLimit } }
             respLive = ws_client_graphql_ws.send_query(subscrPayload, query_id='live_'+str(i), headers=headers, timeout=15)
             liveQs.append(respLive)
@@ -658,13 +657,14 @@ class TestSubscriptionLiveQueriesForGraphQLWS:
 
 @pytest.mark.backend('mssql', 'postgres')
 @usefixtures('per_class_tests_db_state')
+@pytest.mark.admin_secret
 class TestSubscriptionMultiplexingPostgresMSSQL:
 
     @classmethod
     def dir(cls):
         return 'queries/subscriptions/multiplexing'
 
-    def test_extraneous_session_variables_are_discarded_from_query(self, hge_ctx):
+    def test_extraneous_session_variables_are_discarded_from_query(self, hge_key, hge_ctx):
         with open(self.dir() + '/articles_query.yaml') as c:
             config = yaml.load(c)
 
@@ -673,7 +673,7 @@ class TestSubscriptionMultiplexingPostgresMSSQL:
                 "X-Hasura-Role":"public",
                 "X-Hasura-User-Id":"1"      # extraneous session variable
         }
-        response = get_explain_graphql_query_response(hge_ctx, query, {}, session_variables)
+        response = get_explain_graphql_query_response(hge_ctx, hge_key, query, {}, session_variables)
         # The input session variables should be ignored because the only check for the role is
         # if `is_public` is `true`
         assert response["variables"]["session"] == {}, response["variables"]
@@ -683,35 +683,37 @@ class TestSubscriptionMultiplexingPostgresMSSQL:
                 "X-Hasura-User-Id":"1",
                 "X-Hasura-Allowed-Ids":"{1,3,4}" # extraneous session variable
         }
-        response = get_explain_graphql_query_response(hge_ctx, query, {}, session_variables)
+        response = get_explain_graphql_query_response(hge_ctx, hge_key, query, {}, session_variables)
         # The input session variable should not be ignored because the `user` role can only
         # select those roles where `user_id = X-Hasura-User-Id`
         assert response["variables"]["session"] == {'x-hasura-user-id':"1"}, response["variables"]
 
 # test case for https://github.com/hasura/graphql-engine-mono/issues/3689
 @usefixtures('per_class_tests_db_state')
+@pytest.mark.admin_secret
 class TestSubscriptionMultiplexingPostgres:
 
     @classmethod
     def dir(cls):
         return 'queries/subscriptions/multiplexing'
 
-    def test_simple_variables_are_parameterized(self, hge_ctx):
+    def test_simple_variables_are_parameterized(self, hge_key, hge_ctx):
         with open(self.dir() + '/articles_query_simple_variable.yaml') as c:
             config = yaml.load(c)
 
-        response = get_explain_graphql_query_response(hge_ctx, config['query'], config['variables'], {})
+        response = get_explain_graphql_query_response(hge_ctx, hge_key, config['query'], config['variables'], {})
         assert response["variables"]["synthetic"] == ['1'], response["variables"]
 
-    def test_array_variables_are_parameterized(self, hge_ctx):
+    def test_array_variables_are_parameterized(self, hge_key, hge_ctx):
         with open(self.dir() + '/articles_query_array_variable.yaml') as c:
             config = yaml.load(c)
 
-        response = get_explain_graphql_query_response(hge_ctx, config['query'], config['variables'], {})
+        response = get_explain_graphql_query_response(hge_ctx, hge_key, config['query'], config['variables'], {})
         assert response["variables"]["synthetic"] == ['{1,2,3}'], response["variables"]
 
 @pytest.mark.backend('postgres')
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')
+@pytest.mark.admin_secret
 class TestSubscriptionUDFWithSessionArg:
     """
     Test a user-defined function which uses the entire session variables as argument
@@ -730,11 +732,11 @@ class TestSubscriptionUDFWithSessionArg:
     def dir(cls):
         return 'queries/subscriptions/udf_session_args'
 
-    def test_user_defined_function_with_session_argument(self, hge_ctx, ws_client):
+    def test_user_defined_function_with_session_argument(self, hge_key, ws_client):
         ws_client.init_as_admin()
         headers = {'x-hasura-role': 'user', 'x-hasura-user-id': '42'}
-        if hge_ctx.hge_key is not None:
-            headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
+        if hge_key is not None:
+            headers['X-Hasura-Admin-Secret'] = hge_key
         payload = {'query': self.query}
         resp = ws_client.send_query(payload, headers=headers, timeout=15)
         ev = next(resp)
@@ -743,6 +745,7 @@ class TestSubscriptionUDFWithSessionArg:
 
 @pytest.mark.backend('mssql', 'postgres')
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')
+@pytest.mark.admin_secret
 class TestSubscriptionCustomizedSourceMSSQLPostgres:
     @classmethod
     def dir(cls):
@@ -754,7 +757,8 @@ class TestSubscriptionCustomizedSourceMSSQLPostgres:
         Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_complete
     '''
 
-    def test_complete(self, hge_ctx, ws_client):
+    def test_complete(self, ws_client):
+        id = str(uuid.uuid4())
         query = """
         subscription MySubscription {
             a: my_source {
@@ -766,7 +770,7 @@ class TestSubscriptionCustomizedSourceMSSQLPostgres:
         }
         """
         obj = {
-            'id': '1',
+            'id': id,
             'payload': {
                 'query': query
             },
@@ -776,11 +780,11 @@ class TestSubscriptionCustomizedSourceMSSQLPostgres:
         '''
             Refer: https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md#gql_data
         '''
-        ev = ws_client.get_ws_query_event('1',15)
-        assert ev['type'] == 'data' and ev['id'] == '1', ev
+        ev = ws_client.get_ws_query_event(id, 15)
+        assert ev['type'] == 'data' and ev['id'] == id, ev
         assert ev['payload']['data']['a'] == OrderedDict([('b', [OrderedDict([('id', 1), ('name', 'Author 1')]), OrderedDict([('id', 2), ('name', 'Author 2')])])]), ev
 
-    def test_double_alias(self, hge_ctx, ws_client):
+    def test_double_alias(self, ws_client):
         '''
         This should give an error even though @_multiple_top_level_fields is specified.
         The two different aliases for `my_source` mean that we would have to wrap different
@@ -819,6 +823,7 @@ class TestSubscriptionCustomizedSourceMSSQLPostgres:
 
 @pytest.mark.backend('mssql')
 @usefixtures('per_class_tests_db_state', 'ws_conn_init')
+@pytest.mark.admin_secret
 class TestSubscriptionMSSQLChunkedResults:
     @classmethod
     def dir(cls):

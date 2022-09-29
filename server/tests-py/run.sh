@@ -49,12 +49,12 @@ else
 fi
 
 echo "*** Building HGE ***"
-docker compose run hge-build
+docker compose run --rm hge-build
 
 for SERVER_TEST_TO_RUN in "${SERVER_TESTS_TO_RUN[@]}"; do
   export SERVER_TEST_TO_RUN
   echo
   echo "*** Running test suite: ${SERVER_TEST_TO_RUN} ***"
   docker compose rm -svf citus mssql postgres # tear down databases beforehand
-  docker compose run tests-py
+  docker compose run --rm tests-py
 done

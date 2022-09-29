@@ -6,6 +6,7 @@ from remote_server import NodeGraphQL
 from validate import check_query_f
 
 pytestmark = [
+    pytest.mark.admin_secret,
     pytest.mark.hge_env('HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS', 'true'),
 ]
 

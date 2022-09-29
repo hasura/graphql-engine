@@ -790,10 +790,9 @@ class HGECtxGQLServer:
 
 class HGECtx:
 
-    def __init__(self, hge_url, pg_url, config):
-
+    def __init__(self, hge_url, pg_url, hge_key, enabled_apis, config):
         self.http = requests.Session()
-        self.hge_key = config.getoption('--hge-key')
+        self.hge_key = hge_key
         self.timeout = 120  # BigQuery can take a while
         self.hge_url = hge_url
         self.pg_url = pg_url
@@ -812,7 +811,6 @@ class HGECtx:
                 self.hge_jwt_algo = "EdDSA"
         self.webhook_insecure = config.getoption('--test-webhook-insecure')
         self.may_skip_test_teardown = False
-        self.streaming_subscriptions = config.getoption('--test-streaming-subscriptions')
 
         # This will be GC'd, but we also explicitly dispose() in teardown()
         self.engine = sqlalchemy.create_engine(self.pg_url)
@@ -832,9 +830,6 @@ class HGECtx:
         self.backend = config.getoption('--backend')
         self.default_backend = 'postgres'
         self.is_default_backend = self.backend == self.default_backend
-
-        enabled_apis_str = os.environ.get('HASURA_GRAPHQL_ENABLED_APIS')
-        enabled_apis = set(enabled_apis_str.split(',')) if enabled_apis_str else None
 
         env_version = os.getenv('VERSION')
         if env_version:
