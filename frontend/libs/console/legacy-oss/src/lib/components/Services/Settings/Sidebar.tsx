@@ -73,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   sectionsData.push({
     key: 'allow-list',
-    link: '/settings/allow-list',
+    link: '/api/allow-list',
     dataTestVal: 'allow-list-link',
     title: 'Allow List',
   });

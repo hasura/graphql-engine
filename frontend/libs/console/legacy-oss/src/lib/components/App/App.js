@@ -10,6 +10,7 @@ import { telemetryNotificationShown } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
 import globals from '../../Globals';
 import styles from './App.module.scss';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 import { theme } from '../UIKit/theme';
 

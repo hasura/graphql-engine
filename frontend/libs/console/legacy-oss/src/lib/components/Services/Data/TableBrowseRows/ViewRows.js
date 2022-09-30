@@ -32,19 +32,20 @@ import {
 
 import { Button } from '@/new-components/Button';
 
+import { FilterSectionContainer } from '@/features/BrowseRows/FiltersSection/FiltersSectionContainer';
+import { PaginationWithOnlyNavContainer } from '@/new-components/PaginationWithOnlyNav/PaginationWithOnlyNavContainer';
+
 import {
   setOrderCol,
   setOrderType,
   removeOrder,
   runQuery,
   setOffset,
-  setLimit,
   addOrder,
 } from './FilterActions';
 
 import _push from '../push';
 import { ordinalColSort } from '../utils';
-import FilterQuery from './FilterQuery';
 import Spinner from '../../../Common/Spinner/Spinner';
 
 import { E_SET_EDITITEM } from './EditActions';
@@ -66,10 +67,8 @@ import {
   getPersistedCollapsedColumns,
   persistColumnOrderChange,
   getPersistedColumnsOrder,
-  persistPageSizeChange,
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
-import { inputStyles } from '../constants';
 
 const ViewRows = props => {
   const {
@@ -92,7 +91,6 @@ const ViewRows = props => {
     count,
     expandedRow,
     manualTriggers = [],
-    location,
     readOnlyMode,
     shouldHidePagination,
     currentSource,
@@ -721,44 +719,6 @@ const ViewRows = props => {
     disableBulkSelect
   );
 
-  const getFilterQuery = () => {
-    let _filterQuery = null;
-
-    if (!isSingleRow) {
-      if (curRelName === activePath[curDepth] || curDepth === 0) {
-        // Rendering only if this is the activePath or this is the root
-
-        let wheres = [{ '': { '': '' } }];
-        if ('where' in curFilter && '$and' in curFilter.where) {
-          wheres = [...curFilter.where.$and];
-        }
-
-        let orderBy = [{ column: '', type: 'asc', nulls: 'last' }];
-        if ('order_by' in curFilter) {
-          orderBy = [...curFilter.order_by];
-        }
-
-        const offset = 'offset' in curFilter ? curFilter.offset : 0;
-
-        _filterQuery = (
-          <FilterQuery
-            curQuery={curQuery}
-            whereAnd={wheres}
-            tableSchema={tableSchema}
-            orderBy={orderBy}
-            dispatch={dispatch}
-            count={count}
-            tableName={curTableName}
-            offset={offset}
-            urlQuery={location && location.query}
-          />
-        );
-      }
-    }
-
-    return _filterQuery;
-  };
-
   const getSelectedRowsSection = () => {
     const handleDeleteItems = () => {
       const pkClauses = selectedRows.map(row =>
@@ -873,6 +833,11 @@ const ViewRows = props => {
     return _childComponent;
   };
 
+  const [userQuery, setUserQuery] = useState({
+    where: { $and: [] },
+    order_by: [],
+  });
+
   const renderTableBody = () => {
     if (isProgressing) {
       return (
@@ -976,72 +941,30 @@ const ViewRows = props => {
 
     const handlePageChange = page => {
       if (curFilter.offset !== page * curFilter.limit) {
-        dispatch(setOffset(page * curFilter.limit));
-        dispatch(runQuery(tableSchema));
         setSelectedRows([]);
       }
     };
 
     const handlePageSizeChange = size => {
       if (curFilter.size !== size) {
-        dispatch(setLimit(size));
-        dispatch(setOffset(0));
-        dispatch(runQuery(tableSchema));
         setSelectedRows([]);
-        persistPageSizeChange(size);
       }
-    };
-
-    const PaginationWithOnlyNav = () => {
-      const newPage = curFilter.offset / curFilter.limit;
-      return (
-        <div className="flex ml-sm mr-sm justify-around">
-          <div>
-            <Button
-              onClick={() => handlePageChange(newPage - 1)}
-              disabled={curFilter.offset === 0}
-              data-test="custom-pagination-prev"
-            >
-              Prev
-            </Button>
-          </div>
-          <div className="w-1/3">
-            <select
-              className={inputStyles}
-              value={curFilter.limit}
-              onChange={e => {
-                e.persist();
-                handlePageSizeChange(parseInt(e.target.value, 10) || 10);
-              }}
-              data-test="pagination-select"
-            >
-              <option disabled value="">
-                --
-              </option>
-              <option value={5}>5 rows</option>
-              <option value={10}>10 rows</option>
-              <option value={20}>20 rows</option>
-              <option value={25}>25 rows</option>
-              <option value={50}>50 rows</option>
-              <option value={100}>100 rows</option>
-            </select>
-          </div>
-          <div>
-            <Button
-              onClick={() => handlePageChange(newPage + 1)}
-              disabled={curRows.length === 0}
-              data-test="custom-pagination-next"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      );
     };
 
     const paginationProps = {};
     if (useCustomPagination) {
-      paginationProps.PaginationComponent = PaginationWithOnlyNav;
+      paginationProps.PaginationComponent = () => (
+        <PaginationWithOnlyNavContainer
+          limit={curFilter.limit}
+          offset={curFilter.offset}
+          onChangePage={handlePageChange}
+          onChangePageSize={handlePageSizeChange}
+          pageSize={curFilter.size}
+          rows={curRows}
+          tableSchema={tableSchema}
+          userQuery={userQuery}
+        />
+      );
     }
 
     return (
@@ -1084,9 +1007,18 @@ const ViewRows = props => {
     isVisible = true;
   }
 
+  const isFilterSectionVisible =
+    !isSingleRow && (curRelName === activePath[curDepth] || curDepth === 0);
+
   return (
     <div className={isVisible ? '' : 'hide '}>
-      {getFilterQuery()}
+      {isFilterSectionVisible && (
+        <FilterSectionContainer
+          dataSourceName={currentSource}
+          table={{ schema: tableSchema.table_schema, name: curTableName }}
+          onRunQuery={newUserQuery => setUserQuery(newUserQuery)}
+        />
+      )}
       <div className="w-fit ml-0 mt-md">
         {getSelectedRowsSection()}
         <div>

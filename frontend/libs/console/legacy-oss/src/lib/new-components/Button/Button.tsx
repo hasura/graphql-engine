@@ -60,7 +60,7 @@ const buttonModesStyles: Record<ButtonModes, string> = {
 };
 
 const sharedButtonStyle =
-  'items-center justify-center inline-flex items-center text-sm font-sans font-semibold bg-gradient-to-t border rounded shadow-sm focus-visible:outline-none focus-visible:bg-gradient-to-t focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-yellow-400 disabled:opacity-60';
+  'items-center max-w-full justify-center inline-flex items-center text-sm font-sans font-semibold bg-gradient-to-t border rounded shadow-sm focus-visible:outline-none focus-visible:bg-gradient-to-t focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-yellow-400 disabled:opacity-60';
 
 const fullWidth = 'w-full';
 
@@ -108,7 +108,7 @@ export const Button = (props: ButtonProps) => {
       {isLoading ? (
         <>
           {loadingText ? (
-            <span className="whitespace-nowrap">{loadingText}</span>
+            <span className="whitespace-nowrap mr-2">{loadingText}</span>
           ) : null}
           <CgSpinner
             className={`animate-spin ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`}
@@ -120,15 +120,15 @@ export const Button = (props: ButtonProps) => {
             ? React.cloneElement(icon, {
                 className: `inline-flex ${children && 'mr-2'} ${
                   size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
-                }`,
+                } ${icon.props.className}`,
               })
             : null}
-          <span className="whitespace-nowrap">{children}</span>
+          <span className="whitespace-nowrap max-w-full">{children}</span>
           {icon && iconPosition === 'end'
             ? React.cloneElement(icon, {
                 className: `inline-flex ${children && 'ml-2'} ${
                   size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
-                }`,
+                } ${icon.props.className}`,
               })
             : null}
         </>

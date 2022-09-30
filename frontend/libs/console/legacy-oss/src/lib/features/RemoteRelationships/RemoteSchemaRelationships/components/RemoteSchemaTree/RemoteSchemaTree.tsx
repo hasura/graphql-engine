@@ -18,7 +18,8 @@ import {
   getCheckedKeys,
 } from './utils';
 
-export interface RemoteSchemaTreeProps {
+export interface RemoteSchemaTreeProps
+  extends React.ComponentProps<typeof AntTree> {
   /**
    * Graphql schema for setting new permissions.
    */
@@ -37,6 +38,7 @@ export const RemoteSchemaTree = ({
   rootFields,
   setRelationshipFields,
   fields,
+  ...rest
 }: RemoteSchemaTreeProps) => {
   const tree: TreeNode[] = useMemo(
     () =>
@@ -156,6 +158,7 @@ export const RemoteSchemaTree = ({
       checkedKeys={checkedKeys}
       // disable animation onExpand to improve performance
       motion={null}
+      {...rest}
     />
   );
 };

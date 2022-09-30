@@ -1430,7 +1430,7 @@ const deleteConstraintSql = (tableName, cName) => {
   };
 };
 
-const saveTableCommentSql = () => {
+const saveTableCommentSql = tableType => {
   return (dispatch, getState) => {
     const source = getState().tables.currentDataSource;
     const updatedComment =
@@ -1439,16 +1439,34 @@ const saveTableCommentSql = () => {
     const currentSchema = getState().tables.currentSchema;
     const tableName = getState().tables.currentTable;
 
-    const commentQueryUp = dataSource.getAlterTableCommentSql({
-      tableName,
-      schemaName: currentSchema,
-      comment: updatedComment ?? null,
-    });
-    const commentDownQuery = dataSource.getAlterTableCommentSql({
-      tableName,
-      schemaName: currentSchema,
-      comment: null,
-    });
+    // For now the saveTableCommentSql is also used for views, we need to make a check
+    // tableType should be returned by findViewType in ModifyView.js
+    const property = `${tableType}`.toLowerCase();
+
+    const commentQueryUp =
+      property === 'view'
+        ? dataSource.getAlterViewCommentSql({
+            viewName: tableName,
+            schemaName: currentSchema,
+            comment: updatedComment ?? null,
+          })
+        : dataSource.getAlterTableCommentSql({
+            tableName,
+            schemaName: currentSchema,
+            comment: updatedComment ?? null,
+          });
+    const commentDownQuery =
+      property === 'view'
+        ? dataSource.getAlterViewCommentSql({
+            viewName: tableName,
+            schemaName: currentSchema,
+            comment: null,
+          })
+        : dataSource.getAlterTableCommentSql({
+            tableName,
+            schemaName: currentSchema,
+            comment: null,
+          });
 
     const migration = new Migration();
     migration.add(
@@ -1457,8 +1475,7 @@ const saveTableCommentSql = () => {
     );
 
     // Apply migrations
-    const migrationName =
-      'alter_table_' + currentSchema + '_' + tableName + '_update_comment';
+    const migrationName = `alter_${property}_${currentSchema}_${tableName}_update_comment`;
 
     const requestMsg = 'Updating Comment...';
     const successMsg = 'Comment Updated';

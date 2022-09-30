@@ -22,10 +22,12 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
       <div onClick={toggleHandler} role="button" tabIndex={0}>
         <div className="flex items-center">
           <div className="text-gray-600 font-semibold mr-xs break-all">
-            {dataSource.name}
+            {dataSource.name}{' '}
+            <span className="font-normal">
+              ({driverToLabel[dataSource.driver]})
+            </span>
           </div>
           <div className="flex ml-auto w-full sm:w-6/12">
-            <span className="mr-xs">({driverToLabel[dataSource.driver]})</span>
             {!!dataSource?.read_replicas?.length && (
               <span className="mr-xs inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-gray-800">
                 {dataSource.read_replicas.length} Replicas

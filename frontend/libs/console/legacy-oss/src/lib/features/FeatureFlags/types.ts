@@ -11,7 +11,8 @@ export type FeatureFlagStatus =
   | 'alpha'
   | 'beta'
   | 'release candidate'
-  | 'stable';
+  | 'stable'
+  | 'experimental';
 
 export type FeatureFlagId = string;
 

@@ -121,6 +121,7 @@ const Add: React.FC<Props> = ({ dispatch }) => {
         onClick={save}
         disabled={loading}
         data-test="create-schedule-event"
+        data-trackid="events-tab-button-create-schedule-trigger"
       >
         {loading ? 'Creating...' : 'Create scheduled event'}
       </Button>

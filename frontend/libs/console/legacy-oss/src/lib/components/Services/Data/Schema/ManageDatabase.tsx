@@ -2,8 +2,13 @@ import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
 import { FaExclamationTriangle, FaEye, FaTimes } from 'react-icons/fa';
-
+import { ManageAgents } from '@/features/ManageAgents';
 import { Button } from '@/new-components/Button';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags';
+import { nativeDrivers } from '@/features/DataSource';
 import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -13,6 +18,7 @@ import {
   removeDataSource,
   reloadDataSource,
 } from '../../../../metadata/actions';
+import { GDCDatabaseListItem } from './components/GDCDatabaseListItem';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getDataSources } from '../../../../metadata/selector';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
@@ -204,9 +210,17 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
   inconsistentObjects,
   location,
   dataHeaders,
+  sourcesFromMetadata,
 }) => {
   useEffect(() => {
-    if (dataSources.length === 0 && !autoRedirectedToConnectPage) {
+    if (sourcesFromMetadata.length === 0 && !autoRedirectedToConnectPage) {
+      /**
+       * Because the getDataSources() doesn't list the GDC sources, the Data tab will redirect to the /connect page
+       * thinking that are no sources available in Hasura, even if there are GDC sources connected to it. Modifying getDataSources()
+       * to list gdc sources is a huge task that involves modifying redux state variables.
+       * So a quick workaround is to check from the actual metadata if any sources are present -
+       * Combined with checks between getDataSources() and metadata -> we know the remaining sources are GDC sources. In such a case redirect to the manage db route
+       */
       dispatch(_push('/data/manage/connect'));
       autoRedirectedToConnectPage = true;
     }
@@ -214,6 +228,10 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
 
   const { show: shouldShowVPCBanner, dismiss: dismissVPCBanner } =
     useVPCBannerVisibility();
+
+  const { enabled: isDCAgentsManageUIEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.gdcId
+  );
 
   const crumbs = [
     {
@@ -304,20 +322,38 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
                 </th>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {dataSources.length ? (
-                  dataSources.map(data => (
-                    <DatabaseListItem
-                      key={data.name}
-                      dataSource={data}
-                      inconsistentObjects={inconsistentObjects}
-                      pushRoute={pushRoute}
-                      onEdit={onEdit}
-                      onReload={onReload}
-                      onRemove={onRemove}
-                      dispatch={dispatch}
-                      dataHeaders={dataHeaders}
-                    />
-                  ))
+                {sourcesFromMetadata.length ? (
+                  sourcesFromMetadata.map(source => {
+                    if (nativeDrivers.includes(source.kind)) {
+                      const data = dataSources.find(
+                        s => s.name === source.name
+                      );
+                      if (!data) return null;
+
+                      return (
+                        <DatabaseListItem
+                          key={data.name}
+                          dataSource={data}
+                          inconsistentObjects={inconsistentObjects}
+                          pushRoute={pushRoute}
+                          onEdit={onEdit}
+                          onReload={onReload}
+                          onRemove={onRemove}
+                          dispatch={dispatch}
+                          dataHeaders={dataHeaders}
+                        />
+                      );
+                    }
+                    if (isDCAgentsManageUIEnabled)
+                      return (
+                        <GDCDatabaseListItem
+                          dataSource={{ name: source.name, kind: source.kind }}
+                          inconsistentObjects={inconsistentObjects}
+                          dispatch={dispatch}
+                        />
+                      );
+                    return null;
+                  })
                 ) : (
                   <td colSpan={3} className="text-center px-sm py-xs">
                     You don&apos;t have any data sources connected, please
@@ -328,6 +364,12 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
             </table>
           </div>
         </div>
+
+        {isDCAgentsManageUIEnabled ? (
+          <div className="mt-lg">
+            <ManageAgents />
+          </div>
+        ) : null}
       </div>
     </RightContainer>
   );
@@ -342,6 +384,7 @@ const mapStateToProps = (state: ReduxState) => {
     currentSchema: state.tables.currentSchema,
     inconsistentObjects: state.metadata.inconsistentObjects,
     location: state?.routing?.locationBeforeTransitions,
+    sourcesFromMetadata: state?.metadata?.metadataObject?.sources ?? [],
   };
 };
 

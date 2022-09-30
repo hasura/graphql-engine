@@ -1,6 +1,7 @@
 import React from 'react';
+import { hasLuxFeatureAccess } from '@/utils/cloudConsole';
+import Globals from '@/Globals';
 import { Tabs } from '../../../Common/Layout/ReusableTabs/ReusableTabs';
-import Globals from '../../../../Globals';
 import styles from './DataSources.module.scss';
 
 const tabs: Tabs = {
@@ -8,15 +9,21 @@ const tabs: Tabs = {
     display_text: 'Connect Existing Database',
   },
 };
-if (Globals.hasuraCloudTenantId && Globals.herokuOAuthClientId) {
+
+// this condition is true only for Hasura Cloud projects
+if (Globals.consoleType === 'cloud' && Globals.hasuraCloudTenantId) {
+  const tabTitle = hasLuxFeatureAccess(Globals, 'NeonDatabaseIntegration')
+    ? 'Create New Database'
+    : 'Create Heroku Database';
+
   tabs.create = {
     display: (
       <div className={styles.display_flex}>
-        <div className={styles.add_mar_right_mid}>Create Heroku Database</div>
+        <div className={styles.add_mar_right_mid}>{tabTitle}</div>
         <div className={styles.free_badge}>Free</div>
       </div>
     ),
-    display_text: 'Create Heroku Database',
+    display_text: tabTitle,
   };
 }
 

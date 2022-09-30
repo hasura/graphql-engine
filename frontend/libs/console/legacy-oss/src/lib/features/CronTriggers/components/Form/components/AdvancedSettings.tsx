@@ -1,7 +1,7 @@
 import React from 'react';
 import { IconTooltip } from '@/new-components/Tooltip';
 import { InputField, Radio } from '@/new-components/Form';
-import { Collapse } from '@/new-components/Collapse';
+import { Collapse } from '@/new-components/deprecated';
 import { RequestHeadersSelector } from '@/new-components/RequestHeadersSelector';
 
 export const AdvancedSettings = () => {

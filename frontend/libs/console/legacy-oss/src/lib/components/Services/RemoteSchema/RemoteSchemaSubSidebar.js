@@ -103,6 +103,7 @@ const RemoteSchemaSubSidebar = ({
       heading={`Remote Schemas (${dataList.length ?? 0})`}
       addLink={`${appPrefix}/manage/add`}
       addLabel={'Add'}
+      addTrackId="remote-schemas-tab-button-add-remote-schema-sidebar"
       addTestString={'remote-schema-sidebar-add-table'}
       childListTestString={'remote-schema-table-links'}
     >

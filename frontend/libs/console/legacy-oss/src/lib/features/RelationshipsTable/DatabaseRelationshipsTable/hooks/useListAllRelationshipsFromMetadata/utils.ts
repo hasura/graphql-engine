@@ -1,16 +1,18 @@
 import {
+  TableFkRelationships,
   isLegacyFkConstraint,
-  LegacyRemoteSchemaRelationship,
+} from '@/features/DataSource';
+import {
+  Legacy_SourceToRemoteSchemaRelationship,
   LocalTableArrayRelationship,
   LocalTableObjectRelationship,
   ManualArrayRelationship,
   ManualObjectRelationship,
-  RemoteDBRelationship,
-  RemoteSchemaRelationship,
+  SourceToSourceRelationship,
+  SourceToRemoteSchemaRelationship,
   SameTableObjectRelationship,
   Table,
-  TableFkRelationships,
-} from '@/features/DataSource';
+} from '@/features/MetadataAPI';
 import { getRemoteFieldPath } from '@/features/RelationshipsTable';
 import { Relationship } from '../../types';
 
@@ -29,7 +31,7 @@ export const getTargetColumns = (
 export const adaptRemoteSchemaRelationship = (
   dataSourceName: string,
   table: Table,
-  relationship: RemoteSchemaRelationship
+  relationship: SourceToRemoteSchemaRelationship
 ): Relationship & { type: 'toRemoteSchema' } => {
   return {
     name: relationship.name,
@@ -55,7 +57,7 @@ export const adaptRemoteSchemaRelationship = (
 export const adaptLegacyRemoteSchemaRelationship = (
   dataSourceName: string,
   table: Table,
-  relationship: LegacyRemoteSchemaRelationship
+  relationship: Legacy_SourceToRemoteSchemaRelationship
 ): Relationship & { type: 'toRemoteSchema' } => {
   return {
     name: relationship.name,
@@ -79,7 +81,7 @@ export const adaptLegacyRemoteSchemaRelationship = (
 export const adaptRemoteDBRelationship = (
   dataSourceName: string,
   table: Table,
-  relationship: RemoteDBRelationship
+  relationship: SourceToSourceRelationship
 ): Relationship & { type: 'toSource' } => {
   return {
     name: relationship.name,

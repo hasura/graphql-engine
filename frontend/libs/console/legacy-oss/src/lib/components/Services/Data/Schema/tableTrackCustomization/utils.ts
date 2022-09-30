@@ -1,22 +1,14 @@
+import {
+  GetTablePayloadArgs,
+  QualifiedTable,
+  TrackingTableFormValues,
+} from '@/components/Services/Data/Schema/tableTrackCustomization/types';
 import { Driver } from '@/dataSources';
-
-export type TrackingTableFormPlaceholders = {
-  custom_name: string;
-  select: string;
-  select_by_pk: string;
-  select_aggregate: string;
-  select_stream: string;
-  insert: string;
-  insert_one: string;
-  update: string;
-  update_by_pk: string;
-  delete: string;
-  delete_by_pk: string;
-};
+import { MetadataTableConfig } from '@/features/MetadataAPI';
 
 export const getTrackingTableFormPlaceholders = (
   tableName: string
-): TrackingTableFormPlaceholders => {
+): TrackingTableFormValues => {
   return {
     custom_name: `${tableName} (default)`,
     select: `${tableName} (default)`,
@@ -32,6 +24,32 @@ export const getTrackingTableFormPlaceholders = (
   };
 };
 
+export const buildConfigFromFormValues = (
+  values: TrackingTableFormValues
+): MetadataTableConfig => {
+  // we want to only add properties if a value is "truthy"/not empty
+
+  const config: MetadataTableConfig = {};
+  // the shape of the form type almost matches the config type
+  const { custom_name, ...remainingValues } = values;
+
+  if (custom_name) config.custom_name = custom_name;
+
+  let prop: keyof typeof remainingValues;
+
+  for (prop in remainingValues) {
+    if (remainingValues[prop]) {
+      if (!config.custom_root_fields) {
+        // initialize obj if not yet created
+        config.custom_root_fields = {};
+      }
+      config.custom_root_fields[prop] = remainingValues[prop];
+    }
+  }
+
+  return config;
+};
+
 export const getDriverPrefix = (driver: Driver) =>
   driver === 'postgres' ? 'pg' : driver;
 
@@ -39,24 +57,6 @@ export const getTrackTableType = (driver: Driver) => {
   const prefix = getDriverPrefix(driver);
   return `${prefix}_track_table`;
 };
-
-type GetTablePayloadArgs = {
-  driver: Driver;
-  schema: string;
-  tableName: string;
-};
-
-type BigQueryQualifiedTable = {
-  dataset: string;
-};
-
-type SchemaQualifiedTable = {
-  schema: string;
-};
-
-export type QualifiedTable = {
-  name: string;
-} & (BigQueryQualifiedTable | SchemaQualifiedTable);
 
 export const getQualifiedTable = ({
   driver,

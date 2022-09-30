@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="18" viewBox="0 0 24 18">
+    <defs>
+        <style>
+            .cls-1{fill:none;stroke:#505050;stroke-linecap:round;stroke-linejoin:round;stroke-width:2px}
+        </style>
+    </defs>
+    <g id="eye_1_" data-name="eye (1)" transform="translate(0 -3)">
+        <path id="Path_1905" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" class="cls-1" data-name="Path 1905"/>
+        <circle id="Ellipse_461" cx="3" cy="3" r="3" class="cls-1" data-name="Ellipse 461" transform="translate(9 9)"/>
+    </g>
+</svg>

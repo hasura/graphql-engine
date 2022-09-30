@@ -1,4 +1,4 @@
-import { Table } from '@/features/DataSource';
+import { Table } from '@/features/MetadataAPI';
 
 type SourceDef = {
   source: string;

@@ -4,7 +4,7 @@ type ResponseBodyOnSuccess = {
   message: 'success';
 };
 
-type ResponseBodyMetadataTypeError = {
+export type ResponseBodyMetadataTypeError = {
   code: string;
   error: string;
   path: string;

@@ -47,6 +47,7 @@ const Main: React.FC<Props> = props => {
             onClick={onSave}
             mode="primary"
             disabled={state.loading.add}
+            data-trackid="events-tab-button-create-cron-trigger"
           >
             Create
           </Button>

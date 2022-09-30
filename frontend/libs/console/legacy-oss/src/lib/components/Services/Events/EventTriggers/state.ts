@@ -6,6 +6,7 @@ import {
   EventTrigger,
   RetryConf,
   DatabaseInfo,
+  EventTriggerAutoCleanup,
 } from '../types';
 import { Header, defaultHeader } from '../../../Common/Headers/Headers';
 import {
@@ -27,9 +28,10 @@ export type LocalEventTriggerState = {
   headers: Header[];
   source: string;
   isAllColumnChecked: boolean;
+  cleanupConfig: EventTriggerAutoCleanup;
 };
 
-const defaultState: LocalEventTriggerState = {
+export const defaultState: LocalEventTriggerState = {
   name: '',
   table: {
     name: '',
@@ -54,6 +56,14 @@ const defaultState: LocalEventTriggerState = {
   headers: [defaultHeader],
   source: '',
   isAllColumnChecked: true,
+  cleanupConfig: {
+    schedule: '0 0 * * *',
+    batch_size: 10000,
+    clear_older_than: 168,
+    timeout: 60,
+    clean_invocation_logs: false,
+    paused: true,
+  },
 };
 
 export const parseServerETDefinition = (
@@ -89,6 +99,8 @@ export const parseServerETDefinition = (
     retryConf: etConf.retry_conf,
     headers: parseServerHeaders(eventTrigger.configuration.headers),
     isAllColumnChecked: etDef?.update?.columns === '*',
+    cleanupConfig:
+      eventTrigger.configuration?.cleanup_config ?? defaultState.cleanupConfig,
   };
 };
 
@@ -173,6 +185,12 @@ export const useEventTrigger = (initState?: LocalEventTriggerState) => {
         setState(s => ({
           ...s,
           isAllColumnChecked: !s.isAllColumnChecked,
+        }));
+      },
+      cleanupConfig: (cleanupConfig: EventTriggerAutoCleanup) => {
+        setState(s => ({
+          ...s,
+          cleanupConfig,
         }));
       },
     },

@@ -55,6 +55,7 @@ import {
   PERM_SET_FILTER,
   PERM_SET_FILTER_SAME_AS,
   PERM_TOGGLE_FIELD,
+  PERM_TOGGLE_SELECT_FIELD,
   PERM_TOGGLE_ALL_FIELDS,
   PERM_ALLOW_ALL,
   PERM_TOGGLE_MODIFY_LIMIT,
@@ -417,7 +418,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
 
       return returnState;
 
-    case PERM_TOGGLE_FIELD:
+    case PERM_TOGGLE_SELECT_FIELD:
       const tablePrimaryKeys = getPrimaryKeysFromTable(schemas, modifyState);
       return produce(modifyState, draft => {
         const newPermissionsState = updatePermissionsState(
@@ -440,6 +441,22 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           hasSelectedPrimaryKey
         );
       });
+
+    case PERM_TOGGLE_FIELD:
+      return {
+        ...modifyState,
+        permissionsState: {
+          ...updatePermissionsState(
+            modifyState.permissionsState,
+            action.fieldType,
+            toggleField(
+              modifyState.permissionsState[modifyState.permissionsState.query],
+              action.fieldName,
+              action.fieldType
+            )
+          ),
+        },
+      };
 
     case PERM_REMOVE_ACCESS:
       return {

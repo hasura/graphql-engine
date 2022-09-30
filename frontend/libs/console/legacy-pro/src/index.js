@@ -1,1 +1,1 @@
-export * from './lib/console-legacy-pro';
+export { Main } from './lib/client';

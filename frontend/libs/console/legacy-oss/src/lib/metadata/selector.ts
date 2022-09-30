@@ -291,6 +291,7 @@ export const getEventTriggers = createSelector(getMetadata, metadata => {
               retry_conf: trigger.retry_conf,
               webhook: trigger.webhook || '',
               webhook_from_env: trigger.webhook_from_env,
+              cleanup_config: trigger.cleanup_config,
             },
             request_transform: trigger.request_transform,
           })) || [];
@@ -305,11 +306,13 @@ export const getManualEventsTriggers = createSelector(
   getEventTriggers,
   getCurrentSchema,
   getCurrentTable,
-  (triggers, schema, table) => {
+  getCurrentSource,
+  (triggers, schema, table, source) => {
     return triggers.filter(
       t =>
         t.table_name === table &&
         t.schema_name === schema &&
+        t.source === source &&
         t.configuration.definition.enable_manual
     );
   }
@@ -338,6 +341,7 @@ export const getEventTriggerByName = createSelector(
               retry_conf: trigger.retry_conf,
               webhook: trigger.webhook || '',
               webhook_from_env: trigger.webhook_from_env,
+              cleanup_config: trigger.cleanup_config,
             },
             request_transform: trigger.request_transform,
           };

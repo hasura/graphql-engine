@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { isCloudConsole, hasLuxFeatureAccess } from '@/utils/cloudConsole';
 import Globals from '../../../../../Globals';
 import Heroku from './Heroku';
 import { HerokuSession } from './Heroku/types';
@@ -9,6 +10,8 @@ import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import Tabbed from '../TabbedDataSourceConnection';
 import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getDataSources } from '../../../../../metadata/selector';
+import { HerokuBanner } from './Neon/components/HerokuBanner/Banner';
+import { Neon } from './Neon';
 
 interface Props extends InjectedProps {}
 
@@ -17,20 +20,38 @@ const CreateDataSource: React.FC<Props> = ({
   dispatch,
   allDataSources,
 }) => {
-  if (!Globals.herokuOAuthClientId || !Globals.hasuraCloudTenantId) {
+  // this condition fails for everything other than a Hasura Cloud project
+  if (!isCloudConsole(Globals)) {
     throw new NotFoundError();
   }
+
+  const showNeonIntegration =
+    hasLuxFeatureAccess(Globals, 'NeonDatabaseIntegration') &&
+    Globals.neonOAuthClientId &&
+    Globals.neonRootDomain;
 
   return (
     <Tabbed tabName="create">
       <div className={styles.connect_db_content}>
-        <div className={`${styles.container}`}>
-          <Heroku
-            session={herokuSession}
-            dispatch={dispatch}
-            allDataSources={allDataSources}
-          />
-        </div>
+        {showNeonIntegration ? (
+          <div className={`${styles.container} mb-md`}>
+            <div className="w-full mb-md">
+              <Neon
+                allDatabases={allDataSources.map(d => d.name)}
+                dispatch={dispatch}
+              />
+            </div>
+            <HerokuBanner />
+          </div>
+        ) : (
+          <div className={`${styles.container} mb-md`}>
+            <Heroku
+              session={herokuSession}
+              dispatch={dispatch}
+              allDataSources={allDataSources}
+            />
+          </div>
+        )}
       </div>
     </Tabbed>
   );

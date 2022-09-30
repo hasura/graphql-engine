@@ -82,6 +82,15 @@ export type ETOperationColumn = {
   enabled: boolean;
 };
 
+export type EventTriggerAutoCleanup = {
+  schedule?: string;
+  batch_size?: number;
+  clear_older_than?: number;
+  timeout?: number;
+  clean_invocation_logs: boolean;
+  paused: boolean;
+};
+
 export type EventTriggerOperationDefinition = {
   columns: string[] | '*';
 };
@@ -100,6 +109,7 @@ export type EventTrigger = {
     retry_conf: RetryConf;
     webhook: Nullable<string>;
     webhook_from_env?: Nullable<string>;
+    cleanup_config?: EventTriggerAutoCleanup;
   };
   request_transform?: RequestTransform;
 };

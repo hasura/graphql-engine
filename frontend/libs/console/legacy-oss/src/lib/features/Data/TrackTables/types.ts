@@ -1,4 +1,4 @@
-import { MetadataTable, Table } from '@/features/DataSource';
+import { MetadataTableConfig, Table } from '@/features/MetadataAPI';
 
 export type TrackableTable = {
   /**
@@ -25,18 +25,14 @@ export type TrackableTable = {
    *	used for filtering in the future versions.
    */
   type: string;
-} & (
-  | {
-      /* Represent whether a table is tracked or not, pretty self explanatory */
-      is_tracked: false;
-    }
-  | {
-      is_tracked: true;
 
-      /**
-       * Configuration data for a tracked table. Should be applicable only after the
-       * table is tracked.
-       */
-      configuration?: MetadataTable['configuration'];
-    }
-);
+  is_tracked: boolean;
+
+  /**
+   * Configuration data for a table.
+   * Can be present if adding configurationg and tracking an untracked table or if tracked table has configuraiton data
+   * In other words, the UI needs this property for is_tracked: false objects so
+   * configuration can be added prior to applying changes
+   */
+  configuration?: MetadataTableConfig;
+};

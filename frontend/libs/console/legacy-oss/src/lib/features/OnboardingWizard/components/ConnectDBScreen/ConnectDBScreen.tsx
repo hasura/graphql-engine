@@ -21,9 +21,9 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
   };
 
   return (
-    <div className="max-w-5xl p-md ml-auto mr-auto mt-xl">
+    <>
       <h1 className="text-xl font-semibold text-cloud-darkest">
-        Welcome to your new Hasura project
+        Welcome to your new Hasura project!
       </h1>
       <p>Let&apos;s get started by connecting your first database</p>
 
@@ -46,6 +46,6 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
           Connect Your Database
         </Button>
       </div>
-    </div>
+    </>
   );
 }

@@ -6,10 +6,10 @@ import Globals from '../../../../../../Globals';
 import { showErrorNotification } from '../../../../Common/Notification';
 import {
   exchangeHerokuCode,
-  generateRandomString,
   getPersistedHerokuCallbackSearch,
   clearPersistedHerokuCallbackSearch,
 } from './utils';
+import { generateRandomString } from '../utils';
 
 const HEROKU_OAUTH_CLIENT_ID = Globals.herokuOAuthClientId;
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import React, { useEffect, useReducer } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import {
@@ -31,12 +32,14 @@ import {
 import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
 import requestAction from '@/utils/requestAction';
 import Endpoints from '@/Endpoints';
+import defaultState from '@/components/Services/Events/EventTriggers/state';
 import {
   getValidateTransformOptions,
   parseValidateApiData,
   getTransformState,
 } from '@/components/Common/ConfigureTransformation/utils';
 import { Button } from '@/new-components/Button';
+import { isProConsole } from '@/utils/proConsole';
 import { getSourceDriver } from '../../../Data/utils';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import { getEventRequestSampleInput } from '../utils';
@@ -57,6 +60,7 @@ import {
   getDataSources,
   getEventTriggerByName,
 } from '../../../../../metadata/selector';
+import { AutoCleanupForm } from '../Common/AutoCleanupForm';
 
 interface Props extends InjectedProps {}
 
@@ -384,6 +388,16 @@ const Modify: React.FC<Props> = props => {
             requestUrlTransformOnChange={requestUrlTransformOnChange}
             requestPayloadTransformOnChange={requestPayloadTransformOnChange}
           />
+          {isProConsole(window.__env) && (
+            <div className="mb-md">
+              <AutoCleanupForm
+                onChange={setState.cleanupConfig}
+                cleanupConfig={
+                  state?.cleanupConfig || defaultState.cleanupConfig
+                }
+              />
+            </div>
+          )}
           {!readOnlyMode && (
             <div className="mb-md">
               <span className="mr-md">

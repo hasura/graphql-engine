@@ -1,7 +1,9 @@
+/* eslint-disable no-underscore-dangle */
 import React from 'react';
+import { Collapsible } from '@/new-components/Collapsible';
+import { isProConsole } from '@/utils/proConsole';
 import { LocalEventTriggerState } from '../state';
 import Headers, { Header } from '../../../../Common/Headers/Headers';
-import CollapsibleToggle from '../../../../Common/CollapsibleToggle/CollapsibleToggle';
 import RetryConfEditor from '../../Common/Components/RetryConfEditor';
 import * as tooltip from '../Common/Tooltips';
 import { Operations } from '../Common/Operations';
@@ -12,11 +14,13 @@ import {
   ETOperationColumn,
   EventTriggerOperation,
   RetryConf,
+  EventTriggerAutoCleanup,
 } from '../../types';
 import ColumnList from '../Common/ColumnList';
 import FormLabel from './FormLabel';
 import DebouncedDropdownInput from '../Common/DropdownWrapper';
 import { inputStyles, heading } from '../../constants';
+import { AutoCleanupForm } from '../Common/AutoCleanupForm';
 
 type CreateETFormProps = {
   state: LocalEventTriggerState;
@@ -34,6 +38,7 @@ type CreateETFormProps = {
   handleRetryConfChange: (r: RetryConf) => void;
   handleHeadersChange: (h: Header[]) => void;
   handleToggleAllColumn: () => void;
+  handleAutoCleanupChange: (config: EventTriggerAutoCleanup) => void;
 };
 
 const CreateETForm: React.FC<CreateETFormProps> = props => {
@@ -48,6 +53,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
       operations,
       operationColumns,
       isAllColumnChecked,
+      cleanupConfig,
     },
     databaseInfo,
     dataSourcesList,
@@ -63,9 +69,11 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
     handleRetryConfChange,
     handleHeadersChange,
     handleToggleAllColumn,
+    handleAutoCleanupChange,
   } = props;
 
   const supportedDrivers = getSupportedDrivers('events.triggers.add');
+
   return (
     <>
       <FormLabel
@@ -190,9 +198,25 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
         </small>
       </div>
       <hr className="my-md" />
-      <CollapsibleToggle
-        title={<h4 className={heading}>Advanced Settings</h4>}
-        testId="advanced-settings"
+      {isProConsole(window.__env) && (
+        <>
+          <div className="mb-md">
+            <div className="mb-md cursor-pointer">
+              <AutoCleanupForm
+                cleanupConfig={cleanupConfig}
+                onChange={handleAutoCleanupChange}
+              />
+            </div>
+          </div>
+          <hr className="my-md" />
+        </>
+      )}
+      <Collapsible
+        triggerChildren={
+          <h2 className="text-lg font-semibold mb-xs flex items-center mb-0">
+            Advanced Settings
+          </h2>
+        }
       >
         <div>
           <div>
@@ -232,7 +256,7 @@ const CreateETForm: React.FC<CreateETFormProps> = props => {
             <Headers headers={headers} setHeaders={handleHeadersChange} />
           </div>
         </div>
-      </CollapsibleToggle>
+      </Collapsible>
       <hr className="my-md" />
     </>
   );

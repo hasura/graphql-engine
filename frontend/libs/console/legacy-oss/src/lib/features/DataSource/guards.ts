@@ -1,14 +1,14 @@
 import {
-  AllowedTableRelationships,
-  LegacyRemoteSchemaRelationship,
+  Legacy_SourceToRemoteSchemaRelationship,
   LocalTableArrayRelationship,
   LocalTableObjectRelationship,
   ManualArrayRelationship,
   ManualObjectRelationship,
-  RemoteDBRelationship,
-  RemoteSchemaRelationship,
+  SourceToRemoteSchemaRelationship,
+  SourceToSourceRelationship,
   SameTableObjectRelationship,
-} from './types';
+} from '@/features/MetadataAPI';
+import { AllowedTableRelationships } from './types';
 
 function isArrayOfStrings(value: any): value is string[] {
   return Array.isArray(value) && value.every(item => typeof item === 'string');
@@ -16,7 +16,7 @@ function isArrayOfStrings(value: any): value is string[] {
 
 export const isRemoteDBRelationship = (
   relationship: AllowedTableRelationships
-): relationship is RemoteDBRelationship => {
+): relationship is SourceToSourceRelationship => {
   if (!('definition' in relationship)) return false;
 
   const definition = relationship.definition;
@@ -25,7 +25,7 @@ export const isRemoteDBRelationship = (
 
   // turn off "obj is declared but never used."
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const remoteDBRelationshipDefinition: RemoteDBRelationship['definition'] =
+  const remoteDBRelationshipDefinition: SourceToSourceRelationship['definition'] =
     definition;
 
   return true;
@@ -33,7 +33,7 @@ export const isRemoteDBRelationship = (
 
 export const isRemoteSchemaRelationship = (
   relationship: AllowedTableRelationships
-): relationship is RemoteSchemaRelationship => {
+): relationship is SourceToRemoteSchemaRelationship => {
   if (!('definition' in relationship)) return false;
 
   const definition = relationship.definition;
@@ -42,7 +42,7 @@ export const isRemoteSchemaRelationship = (
 
   // turn off "obj is declared but never used."
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const remoteSchemarelationshipDefinition: RemoteSchemaRelationship['definition'] =
+  const remoteSchemarelationshipDefinition: SourceToRemoteSchemaRelationship['definition'] =
     definition;
 
   return true;
@@ -50,7 +50,7 @@ export const isRemoteSchemaRelationship = (
 
 export const isLegacyRemoteSchemaRelationship = (
   relationship: AllowedTableRelationships
-): relationship is LegacyRemoteSchemaRelationship => {
+): relationship is Legacy_SourceToRemoteSchemaRelationship => {
   return (
     'definition' in relationship && 'hasura_fields' in relationship.definition
   );

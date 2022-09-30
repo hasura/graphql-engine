@@ -16,6 +16,12 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["libs/console/legacy-oss/src/lib/*"],
+      "@hasura/console-oss/lib/main": ["libs/console/legacy-oss/src/exports/main.js"],
+      "@hasura/console-oss": ["libs/console/legacy-oss/src/exports/main.js"],
+      "@hasura/console-oss/lib/hoc": ["libs/console/legacy-oss/src/exports/index.js"],
+      "@hasura/console-oss/lib/app": ["libs/console/legacy-oss/src/exports/app.js"],
+      "@hasura/console-oss/lib/appState": ["libs/console/legacy-oss/src/exports/appState.js"],
+      "@hasura/console-oss/lib/constants": ["libs/console/legacy-oss/src/exports/constants.js"],
       "@hasura/console/legacy-oss": ["libs/console/legacy-oss/src/index.ts"],
       "@hasura/console/legacy-pro": ["libs/console/legacy-pro/src/index.js"]
     }

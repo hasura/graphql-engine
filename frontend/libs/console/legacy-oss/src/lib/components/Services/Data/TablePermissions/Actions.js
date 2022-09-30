@@ -28,6 +28,7 @@ export const PERM_SET_FILTER_TYPE = 'ModifyTable/PERM_SET_FILTER_TYPE';
 export const PERM_SET_FILTER = 'ModifyTable/PERM_SET_FILTER';
 export const PERM_SET_FILTER_SAME_AS = 'ModifyTable/PERM_SET_FILTER_SAME_AS';
 export const PERM_TOGGLE_FIELD = 'ModifyTable/PERM_TOGGLE_FIELD';
+export const PERM_TOGGLE_SELECT_FIELD = 'ModifyTable/PERM_TOGGLE_SELECT_FIELD';
 export const PERM_TOGGLE_ALL_FIELDS = 'ModifyTable/PERM_TOGGLE_ALL_FIELDS';
 export const PERM_ALLOW_ALL = 'ModifyTable/PERM_ALLOW_ALL';
 export const PERM_TOGGLE_ENABLE_LIMIT = 'ModifyTable/PERM_TOGGLE_ENABLE_LIMIT';
@@ -86,6 +87,11 @@ const permSetFilterSameAs = (filter, filterType) => ({
 });
 const permToggleField = (fieldType, fieldName) => ({
   type: PERM_TOGGLE_FIELD,
+  fieldType,
+  fieldName,
+});
+const permToggleSelectField = (fieldType, fieldName) => ({
+  type: PERM_TOGGLE_SELECT_FIELD,
   fieldType,
   fieldName,
 });
@@ -881,6 +887,7 @@ export {
   permSetFilter,
   permSetFilterSameAs,
   permToggleField,
+  permToggleSelectField,
   permToggleAllFields,
   permCloseEdit,
   permSetRoleName,

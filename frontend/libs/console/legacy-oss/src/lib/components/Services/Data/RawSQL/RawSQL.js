@@ -36,6 +36,13 @@ import { services } from '../../../../dataSources/services';
 import { isFeatureSupported, setDriver } from '../../../../dataSources';
 import { fetchDataInit, UPDATE_CURRENT_DATA_SOURCE } from '../DataActions';
 import { unsupportedRawSQLDrivers } from './utils';
+import { nativeDrivers } from '@/features/DataSource';
+import { useRunSQL } from './hooks/useRunSQL';
+import { useFireNotification } from '@/new-components/Notifications';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags';
 
 const checkChangeLang = (sql, selectedDriver) => {
   return (
@@ -80,9 +87,24 @@ const RawSQL = ({
   isTableTrackChecked,
   migrationMode,
   allSchemas,
-  sources,
+  // sources,
   currentDataSource,
+  metadataSources,
 }) => {
+  const { enabled: areGDCFeaturesEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.gdcId
+  );
+  const { fireNotification } = useFireNotification();
+  const { fetchRunSQLResult, data, isLoading } = useRunSQL({
+    onError: err => {
+      fireNotification({
+        type: 'error',
+        title: 'failed to run SQL statement',
+        message: err?.message,
+      });
+    },
+  });
+
   const [statementTimeout, setStatementTimeout] = useState(
     Number(getLSItem(LS_KEYS.rawSqlStatementTimeout)) || 10
   );
@@ -94,14 +116,25 @@ const RawSQL = ({
   const [suggestLangChange, setSuggestLangChange] = useState(false);
 
   useEffect(() => {
-    const driver = getSourceDriver(sources, selectedDatabase);
+    const driver = getSourceDriver(metadataSources, selectedDatabase);
     setSelectedDriver(driver);
+
+    if (!nativeDrivers.includes(driver)) {
+      setStatementTimeout(null);
+      return;
+    }
+
     if (!isFeatureSupported('rawSQL.statementTimeout'))
       setStatementTimeout(null);
-  }, [selectedDatabase, sources]);
+  }, [selectedDatabase, metadataSources]);
 
   const dropDownSelectorValueChange = value => {
-    const driver = getSourceDriver(sources, value);
+    const driver = getSourceDriver(metadataSources, value);
+    if (!nativeDrivers.includes(driver)) {
+      setSelectedDatabase(value);
+      return;
+    }
+
     dispatch({
       type: UPDATE_CURRENT_DATA_SOURCE,
       source: value,
@@ -134,6 +167,15 @@ const RawSQL = ({
   }, [sql, selectedDriver]);
 
   const submitSQL = () => {
+    if (!nativeDrivers.includes(selectedDriver)) {
+      fetchRunSQLResult({
+        driver: selectedDriver,
+        dataSourceName: selectedDatabase,
+        sql: sqlText,
+      });
+      return;
+    }
+
     if (!sqlText) {
       setLSItem(LS_KEYS.rawSQLKey, '');
       return;
@@ -451,16 +493,22 @@ const RawSQL = ({
             <b>Database</b>
           </label>{' '}
           <DropDownSelector
-            options={sources.map(source => ({
-              name: source.name,
-              driver: source.driver,
-            }))}
+            options={metadataSources
+              .filter(source => {
+                if (areGDCFeaturesEnabled) return source;
+                return nativeDrivers.includes(source.kind);
+              })
+              .map(source => ({
+                name: source.name,
+                driver: source.kind,
+              }))}
             defaultValue={currentDataSource}
             onChange={dropDownSelectorValueChange}
           />
         </div>
         <div className={`${styles.padd_left_remove} col-xs-10`}>
-          {unsupportedRawSQLDrivers.includes(selectedDriver) && getSQLSection()}
+          {!unsupportedRawSQLDrivers.includes(selectedDriver) &&
+            getSQLSection()}
         </div>
 
         <div
@@ -492,6 +540,7 @@ const RawSQL = ({
             mode="primary"
             data-test="run-sql"
             disabled={!sqlText.length}
+            isLoading={isLoading}
           >
             Run!
           </Button>
@@ -513,14 +562,22 @@ const RawSQL = ({
 
       {getMigrationWarningModal()}
 
-      <div className={styles.add_mar_bottom}>
-        {resultType &&
-          resultType !== 'command' &&
-          result &&
-          result?.length > 0 && (
-            <ResultTable rows={result} headers={resultHeaders} />
+      {nativeDrivers.includes(selectedDriver) ? (
+        <div className={styles.add_mar_bottom}>
+          {resultType &&
+            resultType !== 'command' &&
+            result &&
+            result?.length > 0 && (
+              <ResultTable rows={result} headers={resultHeaders} />
+            )}
+        </div>
+      ) : (
+        <div className={styles.add_mar_bottom}>
+          {data && data.result.length > 0 && (
+            <ResultTable rows={data.result.slice(1)} headers={data.result[0]} />
           )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -551,6 +608,7 @@ const mapStateToProps = state => ({
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   sources: getDataSources(state),
   currentDataSource: state.tables.currentDataSource,
+  metadataSources: state.metadata.metadataObject.sources,
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);

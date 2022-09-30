@@ -1,18 +1,9 @@
 import { renderHook } from '@testing-library/react-hooks';
-import { QueryClient, QueryClientProvider, UseQueryResult } from 'react-query';
-import React from 'react';
+import { UseQueryResult } from 'react-query';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
-import { Provider } from 'react-redux';
-import { store } from '../../../../store';
 import { useTableColumns } from '../useTableColumns';
-
-const queryClient = new QueryClient();
-const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <Provider store={store}>
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  </Provider>
-);
+import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 
 const exportMetadataMockResponse = {
   resource_version: 3,

@@ -1,6 +1,9 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import { DownOutlined, RightOutlined } from '@ant-design/icons';
-import { GDC_TREE_VIEW_DEV } from '@/utils/featureFlags';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags'; // Run time flag
 import {
   FaDatabase,
   FaFolder,
@@ -405,7 +408,11 @@ const TreeView: React.FC<TreeViewProps> = ({
     onDatabaseChange(dataSource);
   };
 
-  if (items.length === 0) {
+  const { enabled: isGDCTreeViewEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.gdcId
+  );
+
+  if (items.length === 0 && !isGDCTreeViewEnabled) {
     return preLoadState ? (
       <div className={styles.treeNav}>
         <span className={`${styles.title} ${styles.padd_bottom_small}`}>
@@ -449,7 +456,7 @@ const TreeView: React.FC<TreeViewProps> = ({
           schemaLoading={schemaLoading}
         />
       ))}
-      {GDC_TREE_VIEW_DEV === 'enabled' ? (
+      {isGDCTreeViewEnabled ? (
         <div id="tree-container" className="inline-block">
           <GDCTree onSelect={gdcItemClick} />
         </div>

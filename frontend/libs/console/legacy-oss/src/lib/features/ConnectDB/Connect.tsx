@@ -1,12 +1,11 @@
 import React from 'react';
-
 import { Button } from '@/new-components/Button';
 import { Form, InputField } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
-
 import { Configuration } from './components/Configuration';
 import { useLoadSchema, useSubmit } from './hooks';
 import { Driver } from './components/Driver';
+import { EditConnection } from './EditConnection';
 
 interface Props {
   name: string;
@@ -14,9 +13,9 @@ interface Props {
   onDriverChange: (driver: string, name: string) => void;
 }
 
-export const Connect = ({ name, driver, onDriverChange }: Props) => {
+const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
   const {
-    data: { schemas, drivers, defaultValues },
+    data: { schema, drivers, defaultValues },
     isLoading,
     isError,
   } = useLoadSchema({
@@ -38,7 +37,7 @@ export const Connect = ({ name, driver, onDriverChange }: Props) => {
     return <IndicatorCard>Loading</IndicatorCard>;
   }
 
-  if (!schemas) {
+  if (!schema) {
     return (
       <IndicatorCard>
         Unable to retrieve any valid configuration settings
@@ -53,7 +52,7 @@ export const Connect = ({ name, driver, onDriverChange }: Props) => {
   return (
     <Form
       key={`${defaultValues.name}-${defaultValues.driver}` || 'new-connection'}
-      schema={schemas}
+      schema={schema}
       onSubmit={submit}
       options={{
         defaultValues,
@@ -68,9 +67,6 @@ export const Connect = ({ name, driver, onDriverChange }: Props) => {
             <Driver onDriverChange={onDriverChange} />
 
             <div className="max-w-xl">
-              <p className="flex items-center font-semibold text-gray-600 mb-xs">
-                Configuration
-              </p>
               <Configuration name="configuration" />
             </div>
             <Button type="submit" mode="primary" isLoading={submitIsLoading}>
@@ -88,4 +84,9 @@ export const Connect = ({ name, driver, onDriverChange }: Props) => {
       }}
     </Form>
   );
+};
+
+export const Connect = {
+  CreateConnection,
+  EditConnection,
 };
