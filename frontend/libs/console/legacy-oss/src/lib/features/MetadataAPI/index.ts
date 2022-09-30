@@ -32,3 +32,4 @@ export { useArrayRelationships } from './hooks/useArrayRelationships';
 export { useLocalRelationships } from './hooks/useLocalRelationships';
 
 export * from './types';
+export * from './metadataTypes';

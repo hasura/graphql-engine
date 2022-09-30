@@ -1,11 +1,11 @@
-import type { TrackingTableFormPlaceholders } from '../utils';
-
 import {
   getDriverPrefix,
   getQualifiedTable,
   getTrackTableType,
   getTrackingTableFormPlaceholders,
 } from '../utils';
+
+import { TrackingTableFormValues } from '../types';
 
 describe('getDriverPrefix', () => {
   it.each`
@@ -63,7 +63,7 @@ describe('getTableObjectType', () => {
 
 describe('getTrackingTableFormPlaceholders', () => {
   it('returns the placeholder', () => {
-    const expected: TrackingTableFormPlaceholders = {
+    const expected: TrackingTableFormValues = {
       custom_name: 'customizeTableName (default)',
 
       select: 'customizeTableName (default)',

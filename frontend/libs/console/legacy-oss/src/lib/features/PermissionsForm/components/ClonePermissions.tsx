@@ -2,7 +2,7 @@ import React from 'react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 
 import { Button } from '@/new-components/Button';
-import { Collapse } from '@/new-components/Collapse';
+import { Collapse } from '@/new-components/deprecated';
 import { useIsDisabled } from '../hooks/useIsDisabled';
 import { QueryType } from '../types';
 

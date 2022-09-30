@@ -82,3 +82,58 @@ export const Form = React.forwardRef(
     );
   }
 );
+
+type TFormValues = Record<string, unknown>;
+
+type Schema = ZodType<TFormValues, ZodTypeDef, TFormValues>;
+
+export const UpdatedForm = <FormSchema extends Schema>(
+  props: FormProps<zodInfer<FormSchema>, FormSchema> & {
+    autoFocus?: Path<zodInfer<FormSchema>>;
+    trigger?: boolean;
+  }
+) => {
+  const {
+    id,
+    options,
+    schema,
+    onSubmit,
+    className,
+    children,
+    autoFocus,
+    trigger,
+    ...rest
+  } = props;
+
+  const methods = useForm<zodInfer<FormSchema>>({
+    ...options,
+    resolver: schema && zodResolver(schema),
+  });
+
+  React.useEffect(() => {
+    if (autoFocus) {
+      methods.setFocus(autoFocus);
+    }
+    if (trigger) {
+      methods.trigger();
+    }
+  }, [trigger, autoFocus, methods]);
+
+  return (
+    <FormProvider {...methods}>
+      <form
+        id={id}
+        className={`space-y-md bg-legacybg p-4 ${className || ''}`}
+        onSubmit={methods.handleSubmit(onSubmit)}
+        {...rest}
+      >
+        {children(methods)}
+      </form>
+    </FormProvider>
+  );
+};
+
+UpdatedForm.defaultProps = {
+  autoFocus: undefined,
+  trigger: false,
+};

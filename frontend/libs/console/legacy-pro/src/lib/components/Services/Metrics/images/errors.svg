@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <defs>
+        <style>
+            .cls-1{fill:#505050}.cls-2{fill:none}
+        </style>
+    </defs>
+    <g id="Group_3620" data-name="Group 3620" transform="translate(-88 -204)">
+        <path id="outline-error_outline-24px" d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5A10 10 0 1 0 22 12 10 10 0 0 0 11.99 2zM12 20a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" class="cls-1" transform="translate(88 204)"/>
+        <path id="Rectangle_3983" d="M0 0h24v24H0z" class="cls-2" data-name="Rectangle 3983" transform="translate(88 204)"/>
+    </g>
+</svg>

@@ -12,7 +12,7 @@ export const useLoadSchema = ({ name, driver }: Args) => {
   const httpClient = useHttpClient();
   const results = useQueries([
     {
-      queryKey: ['validation-schemas'],
+      queryKey: ['validation-schema', driver],
       queryFn: async () =>
         DataSource(httpClient).connectDB.getFormSchema(driver),
     },
@@ -37,14 +37,14 @@ export const useLoadSchema = ({ name, driver }: Args) => {
   const isError =
     results.some(result => result.isError) || defaultValuesIsError;
 
-  const [schemasResult, driversResult] = results;
+  const [schemaResult, driversResult] = results;
 
-  const schemas = schemasResult.data;
+  const schema = schemaResult.data;
   const drivers = driversResult.data;
 
   const error = results.some(result => result.error) || defaultValuesError;
   return {
-    data: { schemas, drivers, defaultValues },
+    data: { schema, drivers, defaultValues },
     isLoading,
     isError,
     error,

@@ -9,7 +9,7 @@ import { PGFunction } from '@/dataSources/services/postgresql/types';
 import { generateTableDef } from '@/dataSources';
 import { InputField } from '@/new-components/Form';
 import { IconTooltip } from '@/new-components/Tooltip';
-import { Collapse } from '@/new-components/Collapse';
+import { Collapse } from '@/new-components/deprecated';
 import { getIngForm } from '../../../components/Services/Data/utils';
 
 import JSONEditor from './JSONEditor';

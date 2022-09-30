@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" 
+    xmlns:xlink="http://www.w3.org/1999/xlink" 
+    xmlns:svgjs="http://svgjs.com/svgjs" viewBox="0 0 24 24" height="24" width="24">
+    <title>Exported from Streamline App (https://app.streamlineicons.com)</title>
+    <g transform="matrix(1,0,0,1,0,0)">
+        <path d="M 5.5,18.928C1.667,15.346,1.463,9.334,5.046,5.501c3.115-3.333,8.159-3.981,12.015-1.545 " stroke="#000000" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d="M 18.5,9.498v-4.5H23 " stroke="#000000" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d="M 5.5,14.498v4.5H1 " stroke="#000000" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        <path d="M 18.5,5.071c3.831,3.585,4.03,9.597,0.446,13.428c-3.131,3.346-8.204,3.98-12.063,1.507" stroke="#000000" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    </g>
+</svg>

@@ -32,6 +32,8 @@ COMMIT TRANSACTION;"
 
 exports[`postgresql datasource tests getAlterTableCommentSql should generate SQL for modifying table comment 1`] = `"comment on table \\"public\\".\\"users\\" is E'user\\\\'s comment'"`;
 
+exports[`postgresql datasource tests getAlterViewCommentSql should generate SQL for modifying view comment 1`] = `"comment on view \\"public\\".\\"view_users\\" is E'user\\\\'s comment'"`;
+
 exports[`postgresql datasource tests getDataTriggerInvocations should generate SQL to fetch invocations for an event 1`] = `
 "SELECT *
     FROM \\"hdb_catalog\\".\\"event_invocation_logs\\"

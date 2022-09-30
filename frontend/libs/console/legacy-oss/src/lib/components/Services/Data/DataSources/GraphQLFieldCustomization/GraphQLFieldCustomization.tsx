@@ -1,4 +1,4 @@
-import { Collapse } from '@/new-components/Collapse';
+import { Collapse } from '@/new-components/deprecated';
 import { IconTooltip } from '@/new-components/Tooltip';
 import React from 'react';
 import { FormRow } from './FormRow';

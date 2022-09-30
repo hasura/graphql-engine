@@ -35,6 +35,7 @@ import {
   getAdditionalColumnsInfoQuerySql,
   getAlterTableCommentSql,
   getAlterColumnCommentSql,
+  getAlterViewCommentSql,
   getAlterFunctionCommentSql,
 } from './sqlUtils';
 import { getTableSupportedQueries } from '../postgresql';
@@ -254,5 +255,6 @@ WHERE
   violationActions,
   getAlterTableCommentSql,
   getAlterColumnCommentSql,
+  getAlterViewCommentSql,
   getAlterFunctionCommentSql,
 };

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="baseline-list_alt-24px" width="24" height="24" viewBox="0 0 24 24">
+    <defs>
+        <style>
+            .cls-1{fill:#505050}.cls-2{fill:none}
+        </style>
+    </defs>
+    <path id="Path_1900" d="M19 5v14H5V5h14m1.1-2H3.9a.9.9 0 0 0-.9.9v16.2a.967.967 0 0 0 .9.9h16.2a1.061 1.061 0 0 0 .9-.9V3.9a.967.967 0 0 0-.9-.9zM11 7h6v2h-6zm0 4h6v2h-6zm0 4h6v2h-6zM7 7h2v2H7zm0 4h2v2H7zm0 4h2v2H7z" class="cls-1" data-name="Path 1900"/>
+    <path id="Path_1901" d="M0 0h24v24H0z" class="cls-2" data-name="Path 1901"/>
+</svg>

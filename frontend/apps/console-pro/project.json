@@ -21,7 +21,8 @@
         ],
         "styles": ["apps/console-pro/src/styles.css"],
         "scripts": [],
-        "webpackConfig": "@nrwl/react/plugins/webpack"
+        "webpackConfig": "apps/console-ce/custom-webpack.config.js",
+        "postcssConfig": "apps/console-ce/postcss.config.js"
       },
       "configurations": {
         "development": {

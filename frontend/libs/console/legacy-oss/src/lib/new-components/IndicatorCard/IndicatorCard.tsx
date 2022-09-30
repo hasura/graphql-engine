@@ -59,7 +59,7 @@ export const IndicatorCard = ({
       ) : null}
       <div>
         {headline ? <p className="font-semibold">{headline}</p> : null}
-        <p>{children}</p>
+        <p className="m-0">{children}</p>
       </div>
     </div>
   );

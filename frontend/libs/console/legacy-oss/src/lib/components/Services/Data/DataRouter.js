@@ -34,6 +34,7 @@ import { setDriver } from '../../../dataSources';
 import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 import { getSourcesFromMetadata } from '../../../metadata/selector';
 import { ManageContainer } from '@/features/Data';
+import { Connect } from '@/features/ConnectDB';
 
 const makeDataRouter = (
   connect,
@@ -54,6 +55,7 @@ const makeDataRouter = (
 
       <Route path="v2">
         <Route path="manage" component={ManageContainer} />
+        <Route path="edit" component={Connect.EditConnection} />
       </Route>
 
       <Route path="manage" component={ConnectedDatabaseManagePage} />

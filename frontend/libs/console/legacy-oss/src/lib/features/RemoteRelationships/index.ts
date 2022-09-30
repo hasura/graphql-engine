@@ -3,3 +3,4 @@ export * from './RemoteSchemaRelationships/components/RemoteSchemaToRemoteSchema
 export * from './RemoteSchemaRelationships/components/RemoteSchemaToDB';
 export * from './RemoteDBRelationships/DbToRSRelationships/DbToRsForm';
 export * from './RemoteSchemaRelationships/types';
+export * from './RemoteSchemaRelationships/components/RemoteSchemaTree';

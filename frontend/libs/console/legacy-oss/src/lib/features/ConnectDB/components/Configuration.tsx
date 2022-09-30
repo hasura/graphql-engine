@@ -2,16 +2,10 @@ import React from 'react';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 import { useFormContext } from 'react-hook-form';
-
-import {
-  DataSource,
-  SupportedDrivers,
-  Feature,
-  isFreeFormObjectField,
-} from '@/features/DataSource';
+import { SupportedDrivers } from '@/features/MetadataAPI';
+import { DataSource, Feature } from '@/features/DataSource';
+import { OpenApi3Form } from '@/features/OpenApi3Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
-
-import { Field } from './Fields';
 
 const useConfigSchema = (driver: SupportedDrivers) => {
   const httpClient = useHttpClient();
@@ -52,11 +46,7 @@ export const Configuration = ({ name }: Props) => {
     return <IndicatorCard>Loading configuration info...</IndicatorCard>;
   }
 
-  if (
-    !schema ||
-    schema.configSchema.type !== 'object' ||
-    isFreeFormObjectField(schema.configSchema)
-  )
+  if (!schema)
     return (
       <IndicatorCard status="negative">
         Unable to find a valid schema for the {driver}
@@ -65,14 +55,11 @@ export const Configuration = ({ name }: Props) => {
 
   return (
     <>
-      {Object.entries(schema.configSchema.properties).map(([key, value]) => (
-        <Field
-          key={key}
-          property={value}
-          otherSchemas={schema.otherSchemas}
-          name={`${name}.${key}`}
-        />
-      ))}
+      <OpenApi3Form
+        name={name}
+        schemaObject={schema.configSchema}
+        references={schema.otherSchemas}
+      />
     </>
   );
 };

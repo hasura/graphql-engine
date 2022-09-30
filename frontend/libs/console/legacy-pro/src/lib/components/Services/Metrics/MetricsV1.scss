@@ -1,0 +1,521 @@
+@import '../../Common/Common.scss';
+
+.negativeMT_xl {
+  margin-top: -16px;
+}
+
+.apiHealthHeader {
+  /* Dropdown */
+
+  .dropdown {
+    display: inline-block;
+
+    > .menu {
+      position: absolute;
+      margin-top: 8px;
+      background: #fff;
+      padding: 4px 0;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      opacity: 0;
+      top: -1000px;
+      transition: opacity 0.1s ease-in-out;
+      z-index: 10;
+
+      &.active {
+        top: inherit;
+        opacity: 1;
+      }
+      .link {
+        cursor: pointer;
+      }
+      .link.active {
+        background: #f2f5f9;
+      }
+      > {
+        a > li,
+        li {
+          display: block;
+          padding: 6px 12px;
+          color: #17202b;
+        }
+
+        a > li.link:hover,
+        li.link:hover {
+          background: #f9fafb;
+        }
+      }
+    }
+  }
+  /* Buttons */
+
+  button {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    background-color: #f9fafb;
+    background-image: linear-gradient(180deg, #fff, #f9fafb 90%);
+    color: #374151;
+    border: 1px solid #d1d5db;
+    font-weight: 600;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    outline: 0;
+    box-shadow: rgb(209, 213, 219) 0px 1px 0px 0px;
+
+    &:hover {
+      border: 1px solid #9ca3af;
+    }
+
+    &.primary {
+      background: #f9c444;
+      box-shadow: rgb(209, 213, 219) 0px 1px 0px 0px;
+      border: 1px solid #c1911c;
+      color: #374151;
+    }
+
+    &:active,
+    &.primary:active {
+      background-image: none;
+      box-shadow: none;
+    }
+
+    &.outline {
+      color: #5c94c8;
+      border: 1px solid #5c94c8;
+      background: transparent;
+      background-image: none;
+      box-shadow: none;
+    }
+
+    &.blank {
+      color: #5c94c8;
+      background: transparent;
+      background-image: none;
+      border: 0;
+      box-shadow: none;
+
+      &:hover {
+        background: transparent;
+      }
+    }
+
+    &:active,
+    &.primary:active {
+      background-image: none;
+      box-shadow: none;
+    }
+
+    > ion-icon {
+      font-size: 18px;
+      vertical-align: -4px;
+
+      &.small {
+        font-size: 16px;
+        vertical-align: -2px;
+      }
+    }
+
+    &.sm > ion-icon {
+      font-size: 13px;
+      vertical-align: -2px;
+    }
+  }
+
+  .sm > ion-icon {
+    font-size: 13px;
+    vertical-align: -2px;
+  }
+
+  button {
+    &.sm {
+      font-size: 12px;
+      padding: 4px 8px;
+    }
+
+    &:focus {
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px,
+        rgb(249, 197, 68) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px;
+    }
+  }
+
+  /* Dropdown */
+
+  .dropdown {
+    display: inline-block;
+
+    > .menu {
+      position: absolute;
+      margin-top: 8px;
+      background: #fff;
+      padding: 4px 0;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      opacity: 0;
+      top: -1000px;
+      transition: opacity 0.1s ease-in-out;
+      z-index: 10;
+
+      &.active {
+        top: inherit;
+        opacity: 1;
+      }
+
+      > {
+        a > li,
+        li {
+          display: block;
+          padding: 6px 12px;
+          color: #17202b;
+          min-width: fit-content;
+          white-space: nowrap;
+        }
+
+        a > li.link:hover,
+        li.link:hover {
+          background: #f9fafb;
+        }
+      }
+    }
+  }
+}
+.tree {
+  &:not(:empty) {
+    &:before {
+      display: block;
+      position: absolute;
+      content: '';
+    }
+    &:after {
+      display: block;
+      position: absolute;
+      content: '';
+    }
+  }
+  ul {
+    &:not(:empty) {
+      &:before {
+        display: block;
+        position: absolute;
+        content: '';
+      }
+      &:after {
+        display: block;
+        position: absolute;
+        content: '';
+      }
+    }
+    position: relative;
+    margin: 0;
+    padding: 0;
+  }
+  li {
+    &:not(:empty) {
+      &:before {
+        display: block;
+        position: absolute;
+        content: '';
+      }
+      &:after {
+        display: block;
+        position: absolute;
+        content: '';
+      }
+    }
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    > div {
+      display: inline-block;
+    }
+  }
+}
+.tree.horizontal {
+  li {
+    display: flex;
+    align-items: center;
+    margin-left: 40px;
+    > div {
+      margin: 8px 0;
+    }
+    &:before {
+      border-left: 1px solid #ccc;
+      height: 100%;
+      width: 0;
+      top: 0;
+      left: -20px;
+    }
+    &:first-child {
+      &:before {
+        height: 50%;
+        top: 50%;
+      }
+    }
+    &:last-child {
+      &:before {
+        height: 50%;
+        bottom: 50%;
+        top: auto;
+      }
+    }
+    &:after {
+      border-top: 1px solid #ccc;
+      height: 0;
+      width: 20px;
+      top: 50%;
+      left: -20px;
+    }
+    ul {
+      &:after {
+        border-top: 1px solid #ccc;
+        height: 0;
+        width: 20px;
+        top: 50%;
+        left: -20px;
+        left: 0;
+      }
+    }
+    &:only-child {
+      &:before {
+        content: none;
+      }
+    }
+  }
+  > li {
+    &:only-child {
+      margin-left: 0;
+      &:before {
+        content: none;
+      }
+      &:after {
+        content: none;
+      }
+    }
+  }
+}
+.ul_pad_remove {
+  margin: 0;
+  padding: 0;
+}
+.sourceHealth {
+  .dagCard {
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    min-width: 240px;
+    &:focus {
+      box-shadow: rgb(255, 255, 255) 0px 0px 0px 2px,
+        rgb(249, 197, 68) 0px 0px 0px 4px, rgba(0, 0, 0, 0) 0px 0px 0px 0px;
+    }
+    @media screen and (min-width: 1200px) {
+      min-width: 15vw;
+    }
+    * {
+      .search {
+        opacity: 0;
+        padding-left: 4px;
+      }
+    }
+  }
+  .dagCardClickable {
+    cursor: pointer;
+
+    &:hover {
+      border: 1px solid #17202b;
+      * {
+        .search {
+          opacity: 1;
+        }
+      }
+    }
+  }
+  .active {
+    border: 1px solid rgb(242, 139, 49);
+    box-shadow: 0 0 0 4px rgba(249, 197, 68, 0.2);
+  }
+
+  .dagHeader {
+    padding: 4px 8px;
+    color: #273848;
+    background: #dae0e8;
+    border-bottom: 1px solid #d1d5db;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    align-items: baseline;
+    p {
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+  .dagHeaderOnly {
+    padding: 4px 8px;
+    color: #273848;
+    background: #dae0e8;
+    align-items: baseline;
+    border-bottom: 1px solid #d1d5db;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    p {
+      margin: 0;
+      line-height: 1.5;
+    }
+  }
+  .dagContainer {
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+  }
+
+  .dagBodyGroup {
+    padding: 8px;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+  .dagBody {
+    padding: 4px 8px;
+    background: #fff;
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+  }
+  .cardLink {
+    color: #297393;
+    .hoverArrow {
+      opacity: 0;
+      color: #6b7280;
+    }
+    &:hover {
+      .hoverArrow {
+        opacity: 1;
+      }
+    }
+  }
+  .actionLinkLayout {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  @media only screen and (max-width: 1140px) {
+    .header-info {
+      display: none;
+    }
+  }
+  @media only screen and (max-width: 1020px) {
+    .header-aux {
+      display: none;
+    }
+  }
+  @media only screen and (max-width: 820px) {
+    .nav-pill {
+      font-size: 13px;
+      padding: 6px;
+    }
+  }
+  @media only screen and (max-width: 708px) {
+    .nav-pill {
+      font-size: 12px;
+      padding: 6px;
+      text-align: center;
+      > i {
+        font-size: 14px;
+        width: 100%;
+      }
+    }
+  }
+  @media only screen and (max-width: 620px) {
+    .header-logo {
+      width: 38px;
+      overflow-x: hidden;
+    }
+  }
+  @media only screen and (max-width: 520px) {
+    .nav-pill {
+      font-size: 10px;
+      padding: 6px;
+      text-align: center;
+      > i {
+        font-size: 12px;
+        width: 100%;
+      }
+    }
+    .header-logo {
+      display: none;
+    }
+    .header {
+      padding: 0 8px;
+    }
+  }
+
+  .card {
+    background: #fff;
+    padding: 16px;
+    border-radius: 4px;
+    border: 1px solid #d1d5db;
+    table {
+      > tbody {
+        > tr {
+          > td {
+            padding: 8px;
+            border-bottom: 1px solid #d1d5db;
+            vertical-align: middle;
+          }
+        }
+      }
+      > thead {
+        > tr {
+          > th {
+            padding: 8px;
+            border-bottom: 1px solid #d1d5db;
+            vertical-align: middle;
+          }
+        }
+      }
+    }
+  }
+  .databaseInfoCardCol {
+    margin-top: 54px;
+    padding: 0 2rem;
+  }
+}
+
+.placeholder_outline {
+  padding: 32px 16px;
+  font-weight: 600;
+  text-align: center;
+  border: 1px dashed #6c7381;
+  color: #6c7381;
+  background: #dae0e8;
+  border-radius: 4px;
+}
+
+.tooltipIcon {
+  font-size: 15px;
+  margin-left: 5px;
+}
+
+.topRequestWrapper {
+  height: 120;
+}
+
+.sourecHealth_botton_pad {
+  padding-bottom: 80px;
+}
+
+.apiHealthTooltip {
+  width: 300px;
+  min-width: 300px;
+}
+
+ .lineHeight_sm{
+  line-height: 1rem;
+ }
+ .lineHeight_md{
+  line-height: 3rem;
+ }

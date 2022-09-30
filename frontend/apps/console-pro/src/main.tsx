@@ -1,11 +1,11 @@
+// import './environments/environment';
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom';
-
-import App from './app/App';
+import { Main } from '@hasura/console/legacy-pro';
 
 ReactDOM.render(
   <StrictMode>
-    <App />
+    <Main />
   </StrictMode>,
-  document.getElementById('root') as HTMLElement
+  document.getElementById('content') as HTMLElement
 );

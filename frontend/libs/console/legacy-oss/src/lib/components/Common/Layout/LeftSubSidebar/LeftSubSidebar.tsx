@@ -11,6 +11,7 @@ interface Props extends React.ComponentProps<'div'> {
   heading: string;
   addLink: string;
   addLabel: string;
+  addTrackId: string;
   addTestString: string;
   childListTestString: string;
 }
@@ -22,6 +23,7 @@ const LeftSubSidebar: React.FC<Props> = props => {
     heading,
     addLink,
     addLabel,
+    addTrackId,
     addTestString,
     children,
     childListTestString,
@@ -36,7 +38,12 @@ const LeftSubSidebar: React.FC<Props> = props => {
           className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
         >
           <Link className={styles.padd_remove_full} to={addLink}>
-            <Button size="sm" mode="default" data-test={addTestString}>
+            <Button
+              size="sm"
+              mode="default"
+              data-test={addTestString}
+              data-trackid={addTrackId}
+            >
               {addLabel}
             </Button>
           </Link>

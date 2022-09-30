@@ -102,6 +102,7 @@ export const LS_KEYS = {
   featureFlag: 'console:featureFlag',
   permissionConfirmationModalStatus:
     'console:permissionConfirmationModalStatus',
+  neonCallbackSearch: 'neon:authCallbackSearch',
 };
 
 export const clearGraphiqlLS = () => {

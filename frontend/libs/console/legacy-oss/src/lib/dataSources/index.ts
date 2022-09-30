@@ -120,7 +120,12 @@ export interface DataSourcesAPI {
     TIME?: string;
     TIMETZ?: string;
   };
-  operators: Array<{ name: string; value: string; graphqlOp: string }>;
+  operators: Array<{
+    name: string;
+    value: string;
+    graphqlOp: string;
+    defaultValue?: string;
+  }>;
   getFetchTablesListQuery: (options: {
     schemas: string[];
     tables?: QualifiedTable[];
@@ -287,6 +292,15 @@ export interface DataSourcesAPI {
     comment: string;
     columnName: string;
     columnType?: string;
+  }) => string;
+  getAlterViewCommentSql: ({
+    viewName,
+    schemaName,
+    comment,
+  }: {
+    viewName: string;
+    schemaName: string;
+    comment: string;
   }) => string;
   getAlterFunctionCommentSql: ({
     functionName,

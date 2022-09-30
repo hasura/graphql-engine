@@ -7,7 +7,7 @@ import {
 import { setupServer } from 'msw/node';
 import { configureStore } from '@reduxjs/toolkit';
 import { Provider } from 'react-redux';
-import { RequestHandler } from 'msw/lib/types/handlers/RequestHandler';
+import { RestHandler } from 'msw/lib';
 import {
   templateGalleryReducer,
   fetchGlobalSchemaSharingConfiguration,
@@ -21,7 +21,7 @@ beforeAll(() => server.listen());
 afterEach(() => server.resetHandlers());
 afterAll(() => server.close());
 
-const schemaGalleryModalBodyRender = async (...handlers: RequestHandler[]) => {
+const schemaGalleryModalBodyRender = async (...handlers: RestHandler[]) => {
   server.use(networkStubs.rootJson, ...handlers);
   const store = configureStore<any>({
     reducer: {

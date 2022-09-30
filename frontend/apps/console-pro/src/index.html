@@ -7,8 +7,127 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
+    <script src="https://graphql-engine-cdn.hasura.io/pro-console/assets/common/js/lottie.min.js"></script>
+    <script>
+
+      // Needed since if the env var is not defined, it won't be replaced with undefined but keep as the string
+      const getEnv = (value) => value.startsWith('%NX') ? undefined : value;
+      const getEnvAsBool = (value) => Boolean(getEnv(value))
+
+      const serverEnvVars = {
+        dataApiUrl: getEnv('%NX_DATA_API_URL%'),
+        adminSecret: getEnv('%NX_ADMIN_SECRET%'),
+        isAdminSecretSet: getEnvAsBool('%NX_IS_ADMIN_SECRET_SET%'),
+        consoleMode: getEnv('%NX_CONSOLE_MODE%'),
+        nodeEnv: getEnv('%NODE_ENV%'),
+        serverVersion: getEnv('%NX_SERVER_VERSION%'),
+        urlPrefix: getEnv('%NX_URL_PREFIX%'),
+        consolePath: getEnv('%NX_CONSOLE_PATH%'),
+        enableTelemetry: getEnvAsBool('%NX_ENABLE_TELEMETRY%'),
+        assetsPath: getEnv('%NX_ASSETS_PATH%'),
+        assetsVersion: getEnv('%NX_ASSETS_VERSION%'),
+        cdnAssets: getEnvAsBool('%NX_CDN_ASSETS%'),
+        herokuOAuthClientId: getEnv('%NX_HEROKU_OAUTH_CLIENT_ID%') || '',
+        tenantID: getEnv('%NX_HASURA_CLOUD_TENANT_ID%') || '',
+        projectID: getEnv('%NX_HASURA_CLOUD_PROJECT_ID%') || '',
+        cloudRootDomain: getEnv('%NX_HASURA_CLOUD_ROOT_DOMAIN%'),
+        consoleType: getEnv('%NX_HASURA_CONSOLE_TYPE%'),
+
+        consoleId: getEnv('%NX_HASURA_CLIENT_ID%'),
+        hasuraOAuthUrl: getEnv('%NX_HASURA_OAUTH_URL%'),
+        hasuraOAuthScopes: getEnv('%NX_HASURA_OAUTH_SCOPES%'),
+        consoleSentryDsn: getEnv('%NX_HASURA_CONSOLE_SENTRY_DSN%')
+      };
+
+      const cliEnvVars = {
+        apiPort: getEnv('%NX_API_PORT%'),
+        apiHost: getEnv('%NX_API_HOST%'),
+        dataApiUrl: getEnv('%NX_DATA_API_URL%'),
+        adminSecret: getEnv('%NX_ADMIN_SECRET%'),
+        consoleMode: getEnv('%NX_CONSOLE_MODE%'),
+        nodeEnv: getEnv('%NODE_ENV%'),
+        enableTelemetry: getEnvAsBool('%NX_ENABLE_TELEMETRY%'),
+        assetsPath: getEnv('%NX_ASSETS_PATH%'),
+        assetsVersion: getEnv('%NX_ASSETS_VERSION%'),
+        serverVersion: getEnv('%NX_SERVER_VERSION%'),
+        cdnAssets: getEnvAsBool('%NX_CDN_ASSETS%'),
+        herokuOAuthClientId: getEnv('%NX_HEROKU_OAUTH_CLIENT_ID%') || '',
+        tenantID: getEnv('%NX_HASURA_CLOUD_TENANT_ID%') || '',
+        projectID: getEnv('%NX_HASURA_CLOUD_PROJECT_ID%') || '',
+        cloudRootDomain: getEnv('%NX_HASURA_CLOUD_ROOT_DOMAIN%'),
+
+        projectId: getEnv('%NX_PROJECT_ID%'),
+        projectName: getEnv('%NX_PROJECT_NAME%'),
+        hasuraMetricsUrl: getEnv('%NX_HASURA_METRICS_URL%'),
+        pro: getEnvAsBool('%NX_IS_PRO%'),
+        consoleSentryDsn: getEnv('%NX_HASURA_CONSOLE_SENTRY_DSN%')
+      };
+
+      const envVars =
+        getEnv('%NX_CONSOLE_MODE%') === 'cli' ? cliEnvVars : serverEnvVars;
+
+      window.__env = envVars;
+
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+  <style>
+    .loadingWrapper {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      width: 95px;
+      position: fixed;
+      top: calc(50% - 0px);
+      left: calc(50% - 1px);
+      margin: 15px 0;
+      transform: translate(-50%, -50%);
+      min-height: 330px;
+      max-height: 330px;
+    }
+
+    #loading {
+      height: 97px;
+      width: 95px;
+    }
+  </style>
+  <style>
+    .content {
+      display: 'none';
+      opacity: 0;
+      transition: opacity .20s linear;
+    }
+
+    .content.show {
+      display: 'block';
+      opacity: 1;
+      transition: opacity .20s linear;
+    }
+
+    .loadingPlaceholder {
+      font-size: 2em;
+      font-family: sans-serif;
+      color: #848484;
+    }
+  </style>
+  <div class="loadingWrapper">
+    <div id="loading"><span class="loadingPlaceholder">Loading...</span></div>
+  </div>
+  <div id="content" class="content"></div>
+  <script>
+    var loaderJson = { "v": "5.6.5", "fr": 29.9700012207031, "ip": 0, "op": 50.0000020365418, "w": 640, "h": 664, "nm": "Test", "ddd": 0, "assets": [], "layers": [{ "ddd": 0, "ind": 1, "ty": 4, "nm": "Has_Loader", "sr": 1, "ks": { "o": { "a": 0, "k": 100, "ix": 11 }, "r": { "a": 0, "k": 0, "ix": 10 }, "p": { "a": 0, "k": [320, 332, 0], "ix": 2 }, "a": { "a": 0, "k": [0, 0, 0], "ix": 1 }, "s": { "a": 0, "k": [100, 100, 100], "ix": 6 } }, "ao": 0, "ef": [{ "ty": 5, "nm": "Glow", "np": 16, "mn": "ADBE Glo2", "ix": 1, "en": 1, "ef": [{ "ty": 7, "nm": "Glow Based On", "mn": "ADBE Glo2-0001", "ix": 1, "v": { "a": 0, "k": 2, "ix": 1 } }, { "ty": 0, "nm": "Glow Threshold", "mn": "ADBE Glo2-0002", "ix": 2, "v": { "a": 0, "k": 165, "ix": 2 } }, { "ty": 0, "nm": "Glow Radius", "mn": "ADBE Glo2-0003", "ix": 3, "v": { "a": 0, "k": 9, "ix": 3 } }, { "ty": 0, "nm": "Glow Intensity", "mn": "ADBE Glo2-0004", "ix": 4, "v": { "a": 0, "k": 3.14, "ix": 4 } }, { "ty": 7, "nm": "Composite Original", "mn": "ADBE Glo2-0005", "ix": 5, "v": { "a": 0, "k": 1, "ix": 5 } }, { "ty": 7, "nm": "Glow Operation", "mn": "ADBE Glo2-0006", "ix": 6, "v": { "a": 0, "k": 3, "ix": 6 } }, { "ty": 7, "nm": "Glow Colors", "mn": "ADBE Glo2-0007", "ix": 7, "v": { "a": 0, "k": 1, "ix": 7 } }, { "ty": 7, "nm": "Color Looping", "mn": "ADBE Glo2-0008", "ix": 8, "v": { "a": 0, "k": 1, "ix": 8 } }, { "ty": 0, "nm": "Color Loops", "mn": "ADBE Glo2-0009", "ix": 9, "v": { "a": 0, "k": 1, "ix": 9 } }, { "ty": 0, "nm": "Color Phase", "mn": "ADBE Glo2-0010", "ix": 10, "v": { "a": 0, "k": 0, "ix": 10 } }, { "ty": 0, "nm": "A & B Midpoint", "mn": "ADBE Glo2-0011", "ix": 11, "v": { "a": 0, "k": 0.399, "ix": 11 } }, { "ty": 2, "nm": "Color A", "mn": "ADBE Glo2-0012", "ix": 12, "v": { "a": 0, "k": [0.054911028594, 0.756203949451, 0.932031273842, 1], "ix": 12 } }, { "ty": 2, "nm": "Color B", "mn": "ADBE Glo2-0013", "ix": 13, "v": { "a": 0, "k": [0.154860839248, 0.823230743408, 0.877925872803, 1], "ix": 13 } }, { "ty": 7, "nm": "Glow Dimensions", "mn": "ADBE Glo2-0014", "ix": 14, "v": { "a": 0, "k": 1, "ix": 14 } }] }, { "ty": 5, "nm": "Bevel Alpha", "np": 6, "mn": "ADBE Bevel Alpha", "ix": 2, "en": 1, "ef": [{ "ty": 0, "nm": "Edge Thickness", "mn": "ADBE Bevel Alpha-0001", "ix": 1, "v": { "a": 0, "k": 5.5, "ix": 1 } }, { "ty": 0, "nm": "Light Angle", "mn": "ADBE Bevel Alpha-0002", "ix": 2, "v": { "a": 0, "k": -60, "ix": 2 } }, { "ty": 2, "nm": "Light Color", "mn": "ADBE Bevel Alpha-0003", "ix": 3, "v": { "a": 0, "k": [0.491807639599, 0.975367665291, 0.960389733315, 1], "ix": 3 } }, { "ty": 0, "nm": "Light Intensity", "mn": "ADBE Bevel Alpha-0004", "ix": 4, "v": { "a": 0, "k": 0.98, "ix": 4 } }] }], "shapes": [{ "ind": 0, "ty": "sh", "ix": 1, "ks": { "a": 0, "k": { "i": [[0, 0], [0, 0], [11.581, -7.457], [-0.06, -8.975], [-2.599, -4.042], [0, 0], [2.885, -3.178], [0, 0], [-10.202, -9.264], [-6.38, 0.114], [-4.612, 5.079], [0, 0], [-2.442, -3.518], [0, 0], [-2.764, -1.954], [-8.24, 5.188], [0, 0], [-0.023, 8.972], [2.562, 4.065]], "o": [[0, 0], [-7.449, -11.589], [-7.223, 4.641], [0.032, 4.806], [0, 0], [2.321, 3.611], [0, 0], [-9.256, 10.199], [4.731, 4.286], [6.862, -0.123], [0, 0], [2.774, -3.263], [0, 0], [1.804, 2.864], [8.846, 6.256], [0, 0], [7.262, -4.575], [0.012, -4.804], [0, 0]], "v": [[30.223, 22.398], [-15.951, -49.421], [-50.468, -56.925], [-61.969, -35.408], [-57.655, -21.91], [-26.093, 27.184], [-27.048, 38.691], [-75.813, 92.424], [-74.101, 127.716], [-56.874, 134.188], [-38.819, 126], [-2.69, 83.508], [7.638, 84.015], [33.24, 120.898], [40.047, 128.328], [68.006, 129.221], [68.009, 129.221], [79.702, 107.81], [75.514, 94.276]], "c": true }, "ix": 2 }, "nm": "Path 1", "mn": "ADBE Vector Shape - Group", "hd": false }, { "ind": 1, "ty": "sh", "ix": 2, "ks": { "a": 0, "k": { "i": [[111.882, 2.075], [1.955, 105.441], [-111.882, -2.075], [-1.955, -105.441]], "o": [[-105.441, -1.953], [-2.075, -111.884], [105.442, 1.955], [2.075, 111.883]], "v": [[-3.5, 240.22], [-196.936, 46.786], [3.987, -154.139], [197.424, 39.297]], "c": true }, "ix": 2 }, "nm": "Path 2", "mn": "ADBE Vector Shape - Group", "hd": false }, { "ind": 2, "ty": "sh", "ix": 3, "ks": { "a": 0, "k": { "i": [[-8.548, 20.747], [22.742, 65.887], [0.846, -13.161], [0, 0], [33.497, -16.37], [5.191, 3.274], [50.767, 0], [40.034, -25.312], [5.683, 2.126], [4.061, 63.146], [0, 0], [5.898, -11.796], [-17.141, -41.375], [7.125, -21.275], [-0.48, -30.286], [-136.864, -1.806], [0, 144.354], [8.695, 25.911]], "o": [[17.068, -41.429], [-5.897, -11.796], [0, 0], [-3.977, 61.838], [-5.513, 2.695], [-39.985, -25.222], [-50.869, 0], [-5.128, 3.243], [-34.304, -12.827], [0, 0], [-0.847, -13.161], [-22.775, 65.983], [8.588, 20.729], [-9.082, 27.119], [2.167, 136.86], [144.794, 1.911], [0, -28.839], [-7.14, -21.274]], "v": [[248.117, -104.732], [242.893, -296.845], [218.446, -291.897], [218.165, -287.512], [157.866, -175.108], [138.348, -176.402], [0.244, -216.226], [-138.097, -176.253], [-155.273, -174.372], [-217.677, -287.512], [-217.958, -291.897], [-242.406, -296.845], [-247.556, -104.553], [-245.664, -39.285], [-258.988, 47.236], [-3.258, 302.284], [259.509, 43.041], [246.098, -39.443]], "c": true }, "ix": 2 }, "nm": "Path 3", "mn": "ADBE Vector Shape - Group", "hd": false }, { "ty": "st", "c": { "a": 0, "k": [0.117647058824, 0.705882352941, 0.83137254902, 1], "ix": 3 }, "o": { "a": 0, "k": 100, "ix": 4 }, "w": { "a": 0, "k": 16, "ix": 5 }, "lc": 1, "lj": 1, "ml": 4, "bm": 0, "nm": "Stroke 1", "mn": "ADBE Vector Graphic - Stroke", "hd": false }, { "ty": "tm", "s": { "a": 1, "k": [{ "i": { "x": [0.667], "y": [1] }, "o": { "x": [0.333], "y": [0] }, "t": 0, "s": [100] }, { "t": 44.0000017921567, "s": [0] }], "ix": 1 }, "e": { "a": 0, "k": 100, "ix": 2 }, "o": { "a": 0, "k": 0, "ix": 3 }, "m": 1, "ix": 5, "nm": "Trim Paths 1", "mn": "ADBE Vector Filter - Trim", "hd": false }], "ip": 0, "op": 900.000036657751, "st": 0, "bm": 0 }], "markers": [] }
+    var element = document.getElementById("loading");
+    if (window.lottie) {
+      element.innerHTML = "";
+      lottie.loadAnimation({
+        container: element, // the dom element that will contain the animation
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData: loaderJson // the path to the animation json
+      });
+    }
+  </script>
+  <script src="https://graphql-engine-cdn.hasura.io/pro-console/wasm_exec.js" charSet="UTF-8"></script>
   </body>
 </html>

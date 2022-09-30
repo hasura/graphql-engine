@@ -28,14 +28,19 @@ export type CheckboxProps = FieldWrapperPassThroughProps & {
    * Flag to indicate if the field is disabled
    */
   disabled?: boolean;
+  /**
+   * Removing styling only necessary for the error placeholder
+   */
+  noErrorPlaceholder?: boolean;
 };
 
 export const Checkbox: React.FC<CheckboxProps> = ({
   name,
-  options,
+  options = [],
   orientation = 'vertical',
   disabled = false,
   dataTest,
+  noErrorPlaceholder,
   ...wrapperProps
 }: CheckboxProps) => {
   const {
@@ -45,11 +50,16 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 
   const maybeError = get(errors, name) as FieldError | undefined;
   return (
-    <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
+    <FieldWrapper
+      noErrorPlaceholder={noErrorPlaceholder}
+      id={name}
+      {...wrapperProps}
+      error={maybeError}
+    >
       <div
         className={clsx(
           'flex',
-          { vertical: 'flex-col', horizontal: 'flex-row gap-6' }[orientation]
+          { vertical: 'flex-col', horizontal: 'flex-row ' }[orientation]
         )}
       >
         {options.map(({ label, value, disabled: optionDisabled = false }) => {

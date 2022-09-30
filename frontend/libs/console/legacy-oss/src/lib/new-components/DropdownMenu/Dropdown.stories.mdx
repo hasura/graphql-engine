@@ -1,0 +1,96 @@
+import { Canvas, Meta, Story, ArgsTable } from '@storybook/addon-docs';
+import { action } from '@storybook/addon-actions';
+
+import { TemplateStoriesFactory } from '@/utils/StoryUtils';
+import { Button } from '@/new-components/Button';
+import { DropdownMenu } from '@/new-components/DropdownMenu';
+import { FaChevronUp } from 'react-icons/fa';
+
+<Meta
+  title="components/Dropdown Menu 🧬"
+  component={DropdownMenu}
+  parameters={{
+    docs: { source: { type: 'code' } },
+    chromatic: { disableSnapshot: true },
+  }}
+  decorators={[Story => <div className={'p-4'}>{Story()}</div>]}
+/>
+
+# DropdownMenu ⚛️
+
+- [🧰 Overview](#-overview)
+- [🐙 Code on Github](https://github.com/hasura/graphql-engine-mono/tree/main/console/src/new-components/DropdownMenu/DropdownMenu.tsx)
+
+## 🧰 Overview
+
+A component that display an element that opens a dropdownMenu menu.
+
+### Basic usage
+
+```ts
+import { DropdownMenu } from '@/new-components/DropdownMenu';
+```
+
+```tsx
+<DropdownMenu
+  items={[
+    ['Action', <span className="text-red-600">Destructive Action</span>],
+    ['Another action'],
+  ]}
+>
+  The DropdownMenu label
+</DropdownMenu>
+```
+
+<Canvas>
+  <Story name="Overview">
+    <div>
+      <DropdownMenu
+        items={[
+          ['Action', <span className="text-red-600">Destructive Action</span>],
+          ['Another action'],
+        ]}
+      >
+        The DropdownMenu label
+      </DropdownMenu>
+    </div>
+  </Story>
+</Canvas>
+
+#### 🚦 Usage
+
+- The dropdownMenu button is used for opening a contextual menu with list of actions
+- The `items` prop is an array of array of react nodes (each array is a group of items) that will be rendered in the dropdownMenu
+- The `children` of this component is the component (usually a button) that opens the menu
+- the `options` is an object of props that will be passed to radix ui components
+
+## ⚙️ API
+
+export const Template = args => <DropdownMenu {...args} />;
+
+<Canvas>
+  <Story
+    name="API playground"
+    args={{
+      items: [
+        ['Action', <span className="text-red-600">Destructive</span>],
+        ['Another action', 'Another action'],
+      ],
+      children: 'Label',
+    }}
+  >
+    {Template.bind({})}
+  </Story>
+</Canvas>
+
+<details open>
+  <summary className="mdx-collapsible-section">
+    <p className="mdx-collapsible-section__chevron">
+      <strong>&gt;</strong>
+    </p>
+    <p className="mdx-collapsible-section__label">
+      <strong>Show/hide</strong> props
+    </p>
+  </summary>
+  <ArgsTable story="API playground" />
+</details>

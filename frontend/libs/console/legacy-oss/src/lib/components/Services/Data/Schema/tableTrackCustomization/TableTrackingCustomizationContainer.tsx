@@ -2,6 +2,7 @@ import {
   getTableBrowseRoute,
   getTableModifyRoute,
 } from '@/components/Common/utils/routesUtils';
+import { TrackingTableFormValues as FormValues } from '@/components/Services/Data/Schema/tableTrackCustomization/types';
 import { Driver } from '@/dataSources';
 import {
   allowedMetadataTypes,
@@ -16,7 +17,6 @@ import { ThunkDispatch } from 'redux-thunk';
 import { REQUEST_SUCCESS, updateSchemaInfo } from '../../DataActions';
 import { setSidebarLoading } from '../../DataSubSidebar';
 import _push from '../../push';
-import { FormValues } from './TableTrackingCustomizationForm';
 import {
   TableTrackingCustomizationModal,
   TableTrackingCustomizationModalProps,
@@ -33,7 +33,6 @@ export const TableTrackingCustomizationModalContainer: React.FC<TableTrackingCus
     const { fireNotification } = useFireNotification();
     const dispatch: ThunkDispatch<ReduxState, unknown, AnyAction> =
       useDispatch();
-
     const mutation = useMetadataMigration({
       onSuccess: () => {
         dispatch({ type: REQUEST_SUCCESS });

@@ -422,6 +422,15 @@ export interface ComputedFieldDefinition {
  * NOTE: The metadata type doesn't QUITE match the 'create' arguments here
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/event-triggers.html#create-event-trigger
  */
+
+export interface EventTriggerAutoCleanup {
+  schedule: string;
+  batch_size: number;
+  clear_older_than: number;
+  timeout: number;
+  clean_invocation_logs: boolean;
+  paused: boolean;
+}
 export interface EventTrigger {
   /** Name of the event trigger */
   name: TriggerName;
@@ -436,6 +445,8 @@ export interface EventTrigger {
   headers?: ServerHeader[];
   /** Request transformation object */
   request_transform?: RequestTransform;
+  /** Auto-cleanup configuration object */
+  cleanup_config?: EventTriggerAutoCleanup;
 }
 
 export interface EventTriggerDefinition {

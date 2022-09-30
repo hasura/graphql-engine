@@ -378,6 +378,7 @@ const AddAction: React.FC<AddActionProps> = ({
             disabled={!allowSave}
             onClick={onSubmit}
             data-test="create-action-btn"
+            data-trackid="actions-tab-create-action-button"
           >
             Create Action
           </Button>

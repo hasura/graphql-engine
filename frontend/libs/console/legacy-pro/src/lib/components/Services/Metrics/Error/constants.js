@@ -1,0 +1,71 @@
+import {
+  FILTER_TYPE_DROPDOWN,
+  FILTER_TYPE_DROPDOWN_DEFAULT,
+  FILTER_TYPE_INPUT,
+  TIME_RANGE_BY_HOUR,
+  TIME_RANGE_BY_DAY,
+  TIME_RANGE_BY_6_HOURS,
+  TIME_RANGE_BY_12_HOURS,
+  OPERATION_ID_SYMBOL,
+  OPERATION_NAME_SYMBOL,
+  OPERATION_TYPE_SYMBOL,
+  ROLE_SYMBOL,
+  ERROR_CODE_SYMBOL,
+  CLIENT_NAME_SYMBOL,
+  TIME_RANGE_SYMBOL,
+  TRANSPORT_SYMBOL,
+} from '../constants';
+
+/* Convert filter map into -> [
+ *  {
+ *    type: DROPDOWN,
+ *    value: OPERATION_TYPE_SYMBOL
+ *  }
+ * ]
+ * Easier to filter and stuff
+ * */
+
+export const FILTER_MAP = {
+  [TIME_RANGE_SYMBOL]: FILTER_TYPE_DROPDOWN_DEFAULT,
+  [OPERATION_NAME_SYMBOL]: FILTER_TYPE_INPUT,
+  [OPERATION_TYPE_SYMBOL]: FILTER_TYPE_DROPDOWN,
+  [ROLE_SYMBOL]: FILTER_TYPE_DROPDOWN,
+  [ERROR_CODE_SYMBOL]: FILTER_TYPE_DROPDOWN,
+  [CLIENT_NAME_SYMBOL]: FILTER_TYPE_DROPDOWN,
+  [TRANSPORT_SYMBOL]: FILTER_TYPE_DROPDOWN,
+};
+
+export const GROUP_BY_COLUMNS = [
+  OPERATION_ID_SYMBOL,
+  OPERATION_NAME_SYMBOL,
+  OPERATION_TYPE_SYMBOL,
+  ROLE_SYMBOL,
+  ERROR_CODE_SYMBOL,
+  CLIENT_NAME_SYMBOL,
+  TRANSPORT_SYMBOL,
+];
+
+export const DEFAULT_GROUP_BY = [ERROR_CODE_SYMBOL, OPERATION_NAME_SYMBOL];
+
+export const defaultColumns = ['error_count', 'project_id'];
+
+export const aliasedColumns = {
+  role: 'user_role',
+};
+
+export const actualTypeToAlias = {
+  user_role: 'role',
+};
+
+export const PERCENT_OF_ERROR_SYMBOL = '% of errors';
+
+export const customHeaders = [PERCENT_OF_ERROR_SYMBOL];
+
+export const timeRangeFilters = [
+  TIME_RANGE_BY_HOUR,
+  TIME_RANGE_BY_6_HOURS,
+  TIME_RANGE_BY_12_HOURS,
+  TIME_RANGE_BY_DAY,
+];
+
+export const singleSelectFilters = [TIME_RANGE_SYMBOL];

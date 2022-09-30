@@ -1,0 +1,166 @@
+@import "../Common/Common.scss";
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.loginSeperator {
+  text-transform: uppercase;
+  text-align: center;
+}
+
+
+.formContainer {
+  margin-top: -200px;
+}
+
+.loginAlternative {
+  line-height: 34px;
+}
+
+.loginWrapper {
+  width: 350px;
+  background-color: #fff;
+  padding: 15px;
+  border-radius: 5px;
+  -webkit-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.3);
+  box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.3);
+}
+
+.mainWrapper {
+  background-color: #F8FAFB;
+}
+.input_addon_group {
+  margin-bottom: 10px;
+  padding: 0 15px;
+  min-width: 50px;
+  .input_group {
+    width: 100%;
+    .loginLoader {
+      cursor: pointer;
+      font-size: 20px;
+    }
+    .loginIcon
+    {
+      width: 20px;
+      cursor: pointer;
+    }
+    .input_group_addon {
+      background-color: #e2e2e2;
+      height: 50px;
+      width: 50px;
+      min-width: 50px;
+      max-width: 50px;
+      border: 0;
+      cursor: pointer;
+    }
+    .input_addon_group
+    {
+      cursor: pointer;
+    }
+    input:focus {
+      border: 1px solid #999;
+    }
+
+    .form_input {
+      border: 1px solid #e2e2e2;
+      border-radius: 5px;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      height: 50px;
+      -webkit-box-shadow: none;
+    }
+  }
+}
+
+.signin_btn {
+   padding: 0 15px;
+   padding-bottom: 15px;
+   padding-top: 10px;
+
+   button {
+      width: 100%;
+      padding: 0 0;
+      background-color: #3D4C7E;
+      border: 0 solid #3D4C7E;
+      color: #fff;
+      height: 44px;
+      position: relative;
+      border-radius: 5px;
+      font-size: 14px;
+      font-family: 'Gudea';
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      .signin_btn_img {
+        background-color: rgba(0,0,0,.3);
+        width: 50px;
+        height: 44px;
+        display: inline-block;
+        // position: absolute;
+        // left: 0;
+        // top: 0;
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+        align-items: center;
+        justify-content: center;
+        display: flex;
+        img
+        {
+          width: 20px;
+          display: inline-block;
+        }
+      }
+      .signin_btn_content {
+        display: inline-block;
+        font-size: 14px;
+        color: #fff;
+        width: calc(100% - 50px);
+      }
+   }
+   button:hover {
+     background-color: #2C3965;
+   }
+   button:focus, button:active {
+     background-color: #2C3965 !important;
+   }
+}
+
+.loginHeading {
+  text-transform: uppercase;
+  text-align: center;
+  font-size: 16px;
+  font-family: 'Gudea';
+  color: #4d4d4d;
+  font-weight: bold;
+
+  .text {
+    border-bottom: 1px solid #dcdcdc;
+    width: 100px;
+    margin: 10px auto;
+  }
+}
+
+.hasuraLogo {
+  width: 100px;
+  padding-bottom: 20px;
+  margin: 0 auto;
+}
+
+.loginCenter {
+  margin-top: -100px;
+}
+
+.adminSecretLink:hover {
+  text-decoration: underline;
+}
+
+.adminSecretLink {
+  cursor: pointer;
+  padding-left: 15px;
+}

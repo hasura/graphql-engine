@@ -1,10 +1,24 @@
 /* eslint no-underscore-dangle: 0 */
-import { SERVER_CONSOLE_MODE } from './constants';
 import { getFeaturesCompatibility } from './helpers/versionUtils';
-import { stripTrailingSlash } from './components/Common/utils/urlUtils';
+
+import { sentry } from './features/TracingTools/sentry';
 import { isEmpty } from './components/Common/utils/jsUtils';
+import { stripTrailingSlash } from './components/Common/utils/urlUtils';
+
+import { SERVER_CONSOLE_MODE } from './constants';
 
 type ConsoleType = 'oss' | 'cloud' | 'pro' | 'pro-lite';
+export type LuxFeature =
+  | 'DatadogIntegration'
+  | 'ProUser'
+  | 'CloudUser'
+  | 'V1V2Migration'
+  | 'GithubIntegration'
+  | 'CloudDedicatedVPC'
+  | 'GCPSupport'
+  | 'Avalara'
+  | 'NeonDatabaseIntegration'
+  | string;
 
 type UUID = string;
 
@@ -18,6 +32,7 @@ type OSSServerEnv = {
   serverVersion: string; // e.g. "v2.7.0"
   urlPrefix: string; // e.g. "/console"
   cdnAssets: boolean;
+  consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
 };
 
 type ProServerEnv = {
@@ -30,6 +45,7 @@ type ProServerEnv = {
   isAdminSecretSet: boolean;
   serverVersion: string;
   urlPrefix: string;
+  consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
 };
 
 type ProLiteServerEnv = {
@@ -42,6 +58,7 @@ type ProLiteServerEnv = {
   isAdminSecretSet: boolean;
   serverVersion: string;
   urlPrefix: string;
+  consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
 };
 
 type CloudUserRole = 'owner' | 'user';
@@ -64,6 +81,11 @@ type CloudServerEnv = {
   tenantID: UUID;
   urlPrefix: string;
   userRole: CloudUserRole;
+  neonOAuthClientId?: string;
+  neonRootDomain?: string;
+  allowedLuxFeatures?: LuxFeature[];
+  userId?: string;
+  consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
 };
 
 type OSSCliEnv = {
@@ -78,6 +100,7 @@ type OSSCliEnv = {
   enableTelemetry: boolean;
   serverVersion: string;
   urlPrefix: string;
+  consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
 };
 
 export type CloudCliEnv = {
@@ -100,11 +123,15 @@ export type CloudCliEnv = {
   pro: true;
   projectId: UUID;
   isAdminSecretSet: boolean;
+  consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
 };
 
 type ProCliEnv = CloudCliEnv;
 type ProLiteCliEnv = CloudCliEnv;
 
+// Until this non-discriminated-union-based `EnvVars` exist, please keep the following spreadsheet
+// https://docs.google.com/spreadsheets/d/10feBESWKCfFuh7g9436Orp4i4fNoQxjnt5xxhrrdtJo/edit#gid=0
+// updated with all the env vars that the Console receives and their possible values. The spreadsheet acts as the source of truth for the environment variables, at the moment
 export type EnvVars = {
   nodeEnv?: string;
   apiHost?: string;
@@ -124,6 +151,12 @@ export type EnvVars = {
   eeMode?: string;
   consoleId?: string;
   userRole?: string;
+  neonOAuthClientId?: string;
+  neonRootDomain?: string;
+  allowedLuxFeatures?: LuxFeature[];
+  userId?: string;
+  cdnAssets?: boolean;
+  consoleSentryDsn?: string; // Corresponds to the HASURA_CONSOLE_SENTRY_DSN environment variable
 } & (
   | OSSServerEnv
   | CloudServerEnv
@@ -138,6 +171,11 @@ export type EnvVars = {
 declare global {
   interface Window {
     __env: EnvVars;
+    /**
+     * Consuming Heap is allowed only through the TracingTools/heap module, never directly.
+     * @deprecated (when marked as deprecated, the IDE shows it as strikethrough'ed, helping the
+     * developers realize that they should not use it)
+     */
     heap?: {
       addUserProperties: (properties: Record<string, string>) => void;
     };
@@ -154,6 +192,7 @@ const globals = {
   apiPort: window.__env?.apiPort,
   dataApiUrl: stripTrailingSlash(window.__env?.dataApiUrl || ''), // overridden below if server mode
   urlPrefix: stripTrailingSlash(window.__env?.urlPrefix || '/'), // overridden below if server mode in production
+  consoleSentryDsn: sentry.parseSentryDsn(window.__env?.consoleSentryDsn),
   adminSecret: window.__env?.adminSecret || null, // gets updated after login/logout in server mode
   isAdminSecretSet:
     window.__env?.isAdminSecretSet ||
@@ -175,9 +214,13 @@ const globals = {
   herokuOAuthClientId: window.__env?.herokuOAuthClientId,
   hasuraCloudTenantId: window.__env?.tenantID,
   hasuraCloudProjectId: window.__env?.projectID,
+  neonOAuthClientId: window.__env?.neonOAuthClientId,
+  neonRootDomain: window.__env?.neonRootDomain,
+  allowedLuxFeatures: window.__env?.allowedLuxFeatures || [],
   cloudDataApiUrl: `${window.location?.protocol}//data.${window.__env?.cloudRootDomain}`,
   luxDataHost: window.__env?.luxDataHost,
   userRole: window.__env?.userRole || undefined,
+  userId: window.__env?.userId || undefined,
   consoleType: window.__env?.consoleType || '',
   eeMode: window.__env?.eeMode === 'true',
 };

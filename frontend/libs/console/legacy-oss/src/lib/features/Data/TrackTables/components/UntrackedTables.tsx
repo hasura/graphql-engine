@@ -4,11 +4,11 @@ import { Button } from '@/new-components/Button';
 import { CardedTable } from '@/new-components/CardedTable';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 // import { useTables } from '../hooks/useTables';
-import { useTrackSelectedTables } from '../hooks/useTrackSelectedTables';
 
+import { useTrackTable } from '@/features/Data';
 import { useCheckRows } from '../hooks/useCheckRows';
-import { RenderTableRow } from './RenderTableRow';
 import { TrackableTable } from '../types';
+import { TableRow } from './TableRow';
 
 interface TrackTableProps {
   dataSourceName: string;
@@ -26,13 +26,10 @@ export const UntrackedTables = (props: TrackTableProps) => {
     checkboxRef.current.indeterminate = inputStatus === 'indeterminate';
   }, [inputStatus]);
 
-  const { trackSelectedTables } = useTrackSelectedTables();
+  const { trackTables } = useTrackTable(props.dataSourceName);
 
   const onClick = () => {
-    trackSelectedTables(
-      props.dataSourceName,
-      props.tables.filter(({ name }) => checkedIds.includes(name))
-    );
+    trackTables(props.tables.filter(({ name }) => checkedIds.includes(name)));
     reset();
   };
 
@@ -71,18 +68,16 @@ export const UntrackedTables = (props: TrackTableProps) => {
         </CardedTable.TableHead>
 
         <CardedTable.TableBody>
-          {filteredTables.map(table => {
-            return (
-              <RenderTableRow
-                key={table.id}
-                table={table}
-                dataSourceName={props.dataSourceName}
-                checked={checkedIds.includes(table.id)}
-                reset={reset}
-                onChange={() => onCheck(table.id)}
-              />
-            );
-          })}
+          {filteredTables.map(table => (
+            <TableRow
+              key={table.id}
+              table={table}
+              dataSourceName={props.dataSourceName}
+              checked={checkedIds.includes(table.id)}
+              reset={reset}
+              onChange={() => onCheck(table.id)}
+            />
+          ))}
         </CardedTable.TableBody>
       </CardedTable.Table>
     </div>

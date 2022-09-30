@@ -39,15 +39,15 @@ class ReloadRemoteSchema extends Component {
         )
       );
     };
-    const buttonText = isReloading ? 'Reloading' : 'Reload';
+
     return (
       <div className="inline-block">
         <Button
+          isLoading={isReloading}
           data-test="data-reload-metadata"
-          size="sm"
           onClick={reloadRemoteMetadataHandler}
         >
-          {buttonText}
+          Reload
         </Button>
       </div>
     );

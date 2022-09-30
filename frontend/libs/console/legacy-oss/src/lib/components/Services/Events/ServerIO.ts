@@ -64,6 +64,7 @@ import _push from '../Data/push';
 import { RequestTransformState } from '../../Common/ConfigureTransformation/stateDefaults';
 import { getRequestTransformObject } from '../../Common/ConfigureTransformation/utils';
 import { getSourceDriver } from '../Data/utils';
+import defaultState from '../Events/EventTriggers/state';
 
 export const addScheduledTrigger =
   (
@@ -460,6 +461,10 @@ export const modifyEventTrigger =
         break;
       }
       default:
+        upQuery.args.cleanup_config = {
+          ...defaultState.cleanupConfig,
+          ...state.cleanupConfig,
+        };
         break;
     }
     const migration = new Migration();

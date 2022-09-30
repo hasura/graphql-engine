@@ -19,7 +19,6 @@ import settingsContainer from './components/Services/Settings/Container';
 import ApiContainer from './components/Services/ApiExplorer/Container';
 import metadataOptionsConnector from './components/Services/Settings/MetadataOptions/MetadataOptions';
 import metadataStatusConnector from './components/Services/Settings/MetadataStatus/MetadataStatus';
-import allowedQueriesConnector from './components/Services/Settings/AllowedQueries/AllowedQueries';
 import inheritedRolesConnector from './components/Services/Settings/InheritedRoles/InheritedRoles';
 import logoutConnector from './components/Services/Settings/Logout/Logout';
 import aboutConnector from './components/Services/Settings/About/About';
@@ -30,7 +29,8 @@ import HelpPage from './components/Services/Support/HelpPage';
 import FormRestView from './components/Services/ApiExplorer/Rest/Form';
 import RestListView from './components/Services/ApiExplorer/Rest/List';
 import DetailsView from './components/Services/ApiExplorer/Rest/Details';
-import TempHerokuCallback from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
+import { HerokuCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
+import { NeonCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Neon/TempCallback';
 import InsecureDomains from './components/Services/Settings/InsercureDomains/AllowInsecureDomains';
 import {
   checkFeatureSupport,
@@ -38,6 +38,7 @@ import {
 } from './helpers/versionUtils';
 import AuthContainer from './components/Services/Auth/AuthContainer';
 import { FeatureFlags } from './features/FeatureFlags';
+import { AllowListDetail } from './components/Services/AllowList';
 
 const routes = store => {
   // load hasuractl migration status
@@ -101,7 +102,8 @@ const routes = store => {
     >
       {/*Temp route, it'll be in dashboard*/}
       <Route path="login" component={generatedLoginConnector(connect)} />
-      <Route path="heroku-callback" component={TempHerokuCallback} />
+      <Route path="heroku-callback" component={HerokuCallbackHandler} />
+      <Route path="neon-integration/callback" component={NeonCallbackHandler} />
       <Route path="" component={AuthContainer}>
         <Route
           path=""
@@ -126,6 +128,13 @@ const routes = store => {
               <Route path="details/:name" component={DetailsView} />
               <Route path="edit/:name" component={FormRestView} />
             </Route>
+            <Route path="allow-list">
+              <IndexRedirect to="detail" />
+              <Route
+                path="detail(/:name)(/:section)"
+                component={AllowListDetail}
+              />
+            </Route>
           </Route>
 
           <Route
@@ -141,10 +150,6 @@ const routes = store => {
             <Route
               path="metadata-status"
               component={metadataStatusConnector(connect)}
-            />
-            <Route
-              path="allow-list"
-              component={allowedQueriesConnector(connect)}
             />
             <Route path="logout" component={logoutConnector(connect)} />
             <Route path="about" component={aboutConnector(connect)} />
