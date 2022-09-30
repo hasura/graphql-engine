@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { useQuery } from 'react-query';
 import { tracingTools } from '@/features/TracingTools';
+import { Dispatch } from '@/types';
 import {
-  NEON_ONBOARDING_QUERY_KEY,
   staleTime,
   templateSummaryRunQueryClickVariables,
   templateSummaryRunQuerySkipVariables,
@@ -11,6 +11,8 @@ import { QueryDialog } from './QueryDialog';
 import {
   fetchTemplateDataQueryFn,
   getQueryFromSampleQueries,
+  runQueryInGraphiQL,
+  fillSampleQueryInGraphiQL,
   emitOnboardingEvent,
 } from '../../utils';
 
@@ -34,25 +36,21 @@ query lookupArtist {
 }
 `;
 
-// TODO use an actual function
-const runSampleQueryInGraphiQL = (query: string) => {
-  return Promise.resolve(query);
-};
-
 type Props = {
   templateUrl: string;
   dismiss: VoidFunction;
+  dispatch: Dispatch;
 };
 
 export function TemplateSummary(props: Props) {
-  const { templateUrl, dismiss } = props;
+  const { templateUrl, dismiss, dispatch } = props;
   const schemaImagePath = `${templateUrl}/diagram.png`;
   const sampleQueriesPath = `${templateUrl}/sample.graphql`;
 
   const [sampleQuery, setSampleQuery] = React.useState(defaultQuery);
 
-  useQuery({
-    queryKey: [NEON_ONBOARDING_QUERY_KEY, sampleQueriesPath],
+  const { data: sampleQueriesData } = useQuery({
+    queryKey: sampleQueriesPath,
     queryFn: () => fetchTemplateDataQueryFn(sampleQueriesPath, {}),
     staleTime,
     onSuccess: (allQueries: string) => {
@@ -86,13 +84,19 @@ export function TemplateSummary(props: Props) {
     },
   });
 
+  // this effect makes sure that the query is filled in GraphiQL as soon as possible
+  React.useEffect(() => {
+    if (sampleQueriesData) {
+      fillSampleQueryInGraphiQL(sampleQuery, dispatch);
+    }
+  }, [sampleQueriesData, sampleQuery]);
+
+  // this runs the query that is prefilled in graphiql
   const onRunHandler = () => {
     emitOnboardingEvent(templateSummaryRunQueryClickVariables);
-    runSampleQueryInGraphiQL(sampleQuery).then(() => {
-      dismiss();
-    });
+    runQueryInGraphiQL();
+    dismiss();
   };
-
   const onSkipHandler = () => {
     emitOnboardingEvent(templateSummaryRunQuerySkipVariables);
     dismiss();
