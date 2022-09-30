@@ -5,6 +5,7 @@ import {
   setDBURLInEnvVars,
   verifyProjectHealthAndConnectDataSource,
 } from '../utils';
+import { NeonIntegrationContext } from './utils';
 import { setDBConnectionDetails } from '../../../DataActions';
 import {
   connectDataSource,
@@ -47,7 +48,8 @@ type HasuraDatasourceStatus =
 export function useCreateHasuraCloudDatasource(
   dbUrl: string,
   dataSourceName = 'default',
-  dispatch: Dispatch
+  dispatch: Dispatch,
+  context: NeonIntegrationContext
 ) {
   const [state, setState] = useState<HasuraDatasourceStatus>({
     status: 'idle',
@@ -81,7 +83,12 @@ export function useCreateHasuraCloudDatasource(
           getDefaultState({
             dbConnection: connectionConfig,
           }),
-          successCallback
+          successCallback,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          context === 'data-manage-create'
         );
       } catch (e) {
         errorCallback();

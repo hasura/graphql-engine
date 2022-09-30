@@ -4,6 +4,7 @@ import { useNeonOAuth } from './useNeonOAuth';
 import { useNeonDatabase } from './useNeonDatabase';
 import { useCreateHasuraCloudDatasource } from './useCreateHasuraCloudDatasource';
 import { setDBConnectionDetails } from '../../../DataActions';
+import { NeonIntegrationContext } from './utils';
 
 type EmptyPayload = Record<string, never>;
 
@@ -65,7 +66,8 @@ export function useNeonIntegration(
   dataSourceName: string,
   dbCreationCallback: (dataSourceName: string) => void, // TODO use NeonIntegrationStatus as a parameter
   failureCallback: VoidFunction, // TODO use NeonIntegrationStatus as a parameter
-  dispatch: Dispatch
+  dispatch: Dispatch,
+  context: NeonIntegrationContext
 ): NeonIntegrationStatus {
   const { startNeonOAuth, neonOauthStatus } = useNeonOAuth();
 
@@ -81,7 +83,8 @@ export function useNeonIntegration(
         ? neonDBCreationStatus.payload.databaseUrl || ''
         : '',
       dataSourceName,
-      dispatch
+      dispatch,
+      context
     );
 
   useEffect(() => {

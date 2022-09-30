@@ -6,6 +6,9 @@ import { HasuraMetadataV3 } from '@/metadata/types';
 import {
   skippedOnboardingVariables,
   onboardingCompleteVariables,
+  templateSummaryRunQueryClickVariables,
+  templateSummaryRunQuerySkipVariables,
+  hasuraSourceCreationStartVariables,
   graphQlMutation,
 } from './constants';
 
@@ -33,9 +36,11 @@ export function shouldShowOnboarding(
   // onboarding skipped/completion is different with the new Neon flow
   if (hasNeonAccess) {
     if (
-      userActivity?.skipped_onboarding ||
-      userActivity?.onboarding_complete ||
-      userActivity?.hasura_source_creation_complete
+      userActivity?.[skippedOnboardingVariables.kind] ||
+      userActivity?.[onboardingCompleteVariables.kind] ||
+      userActivity?.[hasuraSourceCreationStartVariables.kind] ||
+      userActivity?.[templateSummaryRunQuerySkipVariables.kind] ||
+      userActivity?.[templateSummaryRunQueryClickVariables.kind]
     ) {
       return false;
     }
@@ -86,6 +91,17 @@ export const persistOnboardingCompletion = () => {
   });
 };
 
+export const emitOnboardingEvent = (variables: Record<string, unknown>) => {
+  // mutate server data
+  cloudDataServiceApiClient<ResponseDataOnMutation, ResponseDataOnMutation>(
+    graphQlMutation,
+    variables,
+    cloudHeaders
+  ).catch(error => {
+    // TODO throw Sentry alert
+    console.error(error);
+  });
+};
 /**
  * Utility function to be used as a react query QueryFn, which does a `GET` request to
  * fetch our requested object, and returns a promise.

@@ -31,12 +31,6 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
     pushToConnectDBPage();
   };
 
-  const onUnexpectedNeonOnboardingError = (error?: string) => {
-    // TODO raise sentry alert
-    console.error(error);
-    pushToConnectDBPage();
-  };
-
   const skipLandingPage = React.useCallback(() => {
     persistSkippedOnboarding();
     dismissOnboarding();
@@ -58,9 +52,8 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
         {hasNeonAccess ? (
           <NeonOnboarding
             dispatch={dispatch}
-            onSkip={dismissOnboarding}
-            onCompletion={proceed}
-            onError={onUnexpectedNeonOnboardingError}
+            dismiss={dismissOnboarding}
+            proceed={proceed}
           />
         ) : (
           <>

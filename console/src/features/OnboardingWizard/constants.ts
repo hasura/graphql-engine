@@ -7,12 +7,23 @@ import { BASE_URL_TEMPLATE } from '@/components/Services/Data/Schema/TemplateGal
 // But in order to save api calls, we directly fetch the migraion and metadata files, without querying config.
 const ROOT_DIR = 'postgres';
 const TEMPLATE_DIR = 'getting-started';
-const NEON_TEMPLATE_BASE_PATH = `${BASE_URL_TEMPLATE}/${ROOT_DIR}/${TEMPLATE_DIR}`;
+export const NEON_TEMPLATE_BASE_PATH = `${BASE_URL_TEMPLATE}/${ROOT_DIR}/${TEMPLATE_DIR}`;
 
-export const NEON_METADATA_PATH = `${NEON_TEMPLATE_BASE_PATH}/metadata.json`;
-export const NEON_MIGRATIONS_PATH = `${NEON_TEMPLATE_BASE_PATH}/migration.sql`;
-export const NEON_QUERY_PATH = `${NEON_TEMPLATE_BASE_PATH}/sample.graphql`;
-export const NEON_IMAGE_PATH = `${NEON_TEMPLATE_BASE_PATH}/diagram.png`;
+export const getMetadataUrl = (baseUrl: string) => {
+  return `${baseUrl}/metadata.json`;
+};
+
+export const getMigrationUrl = (baseUrl: string) => {
+  return `${baseUrl}/migration.sql`;
+};
+
+export const getSampleQueriesUrl = (baseUrl: string) => {
+  return `${baseUrl}/sample.graphql`;
+};
+
+export const getSchemaImageUrl = (baseUrl: string) => {
+  return `${baseUrl}/diagram.png`;
+};
 
 export const NEON_ONBOARDING_QUERY_KEY = 'neonOnboarding';
 
@@ -63,24 +74,42 @@ export const neonDbCreationCompleteVariables = {
   kind: 'neon_db_creation_complete',
 };
 
-export const hasuraSourceCreationStart = {
+export const hasuraSourceCreationStartVariables = {
   ...mutationVariables,
   kind: 'hasura_source_creation_start',
 };
 
-export const hasuraSourceCreationComplete = {
+export const hasuraSourceCreationCompleteVariables = {
   ...mutationVariables,
   kind: 'hasura_source_creation_complete',
 };
 
-export const templateSummaryRunQueryClick = {
+export const installTemplateStartVariables = {
+  ...mutationVariables,
+  kind: 'install_template_start',
+};
+
+export const installTemplateCompleteVariables = {
+  ...mutationVariables,
+  kind: 'install_template_complete',
+};
+
+export const templateSummaryRunQueryClickVariables = {
   ...mutationVariables,
   kind: 'run_query_click',
 };
 
-export const templateSummaryRunQuerySkip = {
+export const templateSummaryRunQuerySkipVariables = {
   ...mutationVariables,
   kind: 'run_query_skip',
+};
+
+export const getNeonOnboardingErrorVariables = (code: string) => {
+  return {
+    ...mutationVariables,
+    kind: 'neon_onboarding_error',
+    error_code: code,
+  };
 };
 
 // A stale time of 5 minutes for use in useQuery hook

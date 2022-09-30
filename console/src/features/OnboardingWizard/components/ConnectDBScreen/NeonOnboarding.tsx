@@ -7,37 +7,75 @@ import _push from '../../../../components/Services/Data/push';
 import {
   useInstallTemplate,
   usePrefetchNeonOnboardingTemplateData,
+  useEmitOnboardingEvents,
 } from '../../hooks';
+import { NEON_TEMPLATE_BASE_PATH } from '../../constants';
+import { persistSkippedOnboarding } from '../../utils';
 
 export function NeonOnboarding(props: {
   dispatch: Dispatch;
-  onSkip: VoidFunction;
-  onCompletion: VoidFunction;
-  onError: (errorMsg?: string) => void;
+  dismiss: VoidFunction;
+  proceed: VoidFunction;
 }) {
-  const { dispatch, onSkip, onCompletion, onError } = props;
+  const [installingTemplate, setInstallingTemplate] = React.useState(false);
+
+  const { dispatch, dismiss, proceed } = props;
+
+  const onSkipHandler = () => {
+    persistSkippedOnboarding();
+    dismiss();
+  };
+
+  const onSuccessHandler = () => {
+    proceed();
+  };
+
+  const onErrorHanlder = () => {
+    dispatch(_push('/data/manage/connect'));
+    dismiss();
+  };
 
   // Prefetch Neon related template data from github repo
-  usePrefetchNeonOnboardingTemplateData();
+  usePrefetchNeonOnboardingTemplateData(NEON_TEMPLATE_BASE_PATH);
 
   // Memoised function used to install the template
-  const { install } = useInstallTemplate('default', onCompletion, onError);
+  const { install } = useInstallTemplate(
+    'default',
+    NEON_TEMPLATE_BASE_PATH,
+    onSuccessHandler,
+    onErrorHanlder
+  );
 
   const neonIntegrationStatus = useNeonIntegration(
     'default',
     () => {
+      setInstallingTemplate(true);
       install();
     },
     () => {
-      onError();
-      dispatch(_push(`/data/manage/connect`));
+      onErrorHanlder();
     },
-    dispatch
+    dispatch,
+    'onboarding'
   );
+
+  // emit onboarding events to the database
+  useEmitOnboardingEvents(neonIntegrationStatus, installingTemplate);
+
+  // allow skipping only when an action is not in-progress
+  const allowSkipping =
+    neonIntegrationStatus.status === 'idle' ||
+    neonIntegrationStatus.status === 'authentication-error' ||
+    neonIntegrationStatus.status === 'neon-database-creation-error';
 
   const neonBannerProps = transformNeonIntegrationStatusToNeonBannerProps(
     neonIntegrationStatus
   );
+
+  // show template install status when template is installing
+  neonBannerProps.buttonText = installingTemplate
+    ? 'Installing Sample Schema'
+    : neonBannerProps.buttonText;
 
   return (
     <div className="w-full">
@@ -46,9 +84,16 @@ export function NeonOnboarding(props: {
       </div>
       <div className="flex justify-start items-center w-full">
         <a
-          className="w-auto text-secondary cursor-pointer text-sm hover:text-secondary-dark"
+          className={`w-auto text-secondary cursor-pointer text-sm hover:text-secondary-dark ${
+            allowSkipping ? 'cursor-pointer' : 'cursor-not-allowed'
+          }`}
           data-trackid="onboarding-skip-button"
-          onClick={onSkip}
+          title={!allowSkipping ? 'Please wait...' : undefined}
+          onClick={() => {
+            if (allowSkipping) {
+              onSkipHandler();
+            }
+          }}
         >
           Skip getting started tutorial
         </a>

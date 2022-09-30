@@ -31,6 +31,8 @@ export function getNeonDBName(allDatabases: string[]) {
   return dbName;
 }
 
+export type NeonIntegrationContext = 'onboarding' | 'data-manage-create';
+
 export function transformNeonIntegrationStatusToNeonBannerProps(
   neonIntegrationStatus: NeonIntegrationStatus
 ): NeonBannerProps {

@@ -1,11 +1,17 @@
 import * as React from 'react';
 import { useQuery } from 'react-query';
 import { tracingTools } from '@/features/TracingTools';
-import { NEON_ONBOARDING_QUERY_KEY, staleTime } from '../../constants';
+import {
+  NEON_ONBOARDING_QUERY_KEY,
+  staleTime,
+  templateSummaryRunQueryClickVariables,
+  templateSummaryRunQuerySkipVariables,
+} from '../../constants';
 import { QueryDialog } from './QueryDialog';
 import {
   fetchTemplateDataQueryFn,
   getQueryFromSampleQueries,
+  emitOnboardingEvent,
 } from '../../utils';
 
 const defaultQuery = `
@@ -31,11 +37,6 @@ query lookupArtist {
 // TODO use an actual function
 const runSampleQueryInGraphiQL = (query: string) => {
   return Promise.resolve(query);
-};
-
-// TODO use an actual function
-const emitSkipRunQueryEvent = () => {
-  return Promise.resolve();
 };
 
 type Props = {
@@ -86,13 +87,14 @@ export function TemplateSummary(props: Props) {
   });
 
   const onRunHandler = () => {
+    emitOnboardingEvent(templateSummaryRunQueryClickVariables);
     runSampleQueryInGraphiQL(sampleQuery).then(() => {
       dismiss();
     });
   };
 
   const onSkipHandler = () => {
-    emitSkipRunQueryEvent();
+    emitOnboardingEvent(templateSummaryRunQuerySkipVariables);
     dismiss();
   };
 
