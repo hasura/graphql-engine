@@ -541,3 +541,9 @@ export const getCheckConstraintBoolExp = (check: string) => {
 };
 
 export * from './graphqlUtil';
+
+export const replaceAllStringOccurrences = (
+  str: string,
+  find: string,
+  replace: string
+) => str.replace(new RegExp(find, 'g'), replace);

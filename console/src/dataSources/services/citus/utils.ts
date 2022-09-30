@@ -1,3 +1,4 @@
+import isObject from 'lodash.isobject';
 import { QualifiedTable, TableConfig } from './../../../metadata/types';
 import Endpoints from '../../../Endpoints';
 import { ReduxState } from '../../../types';
@@ -20,6 +21,7 @@ import {
   getGraphQLQueryBase,
 } from '../../common';
 import { WhereClause } from '../../../components/Common/utils/v1QueryUtils';
+import { replaceAllStringOccurrences } from '../../common/index';
 
 type Tables = ReduxState['tables'];
 
@@ -299,6 +301,13 @@ const getInsertRequestBody = (
     processedData[columnConfig[key]?.custom_name || key] = value;
   });
   const values = Object.entries(processedData).map(([key, value]) => {
+    if (isObject(value)) {
+      return `${key}: ${replaceAllStringOccurrences(
+        JSON.stringify(value),
+        '"',
+        ''
+      )}`;
+    }
     return `${key}: ${typeof value === 'string' ? `"${value}"` : value}`;
   });
   const returning = Object.keys(processedData).join('\n');
