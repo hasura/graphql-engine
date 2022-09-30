@@ -4,7 +4,7 @@ import { createHistory } from 'history';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
 import { ReduxState } from '@/types';
-import { TableSchema } from '@/components/Services/Data/TableBrowseRows/utils';
+import { NormalizedTable } from '@/dataSources/types';
 import { Integers, Reals } from '../../../components/Services/Data/constants';
 import { vMakeTableRequests } from '../../../components/Services/Data/TableBrowseRows/ViewActions';
 import { sortPlaceholder } from './FiltersSection';
@@ -163,7 +163,7 @@ export const filterValidUserQuery = (userQuery: UserQuery): UserQuery => {
 };
 
 type RunFilterQuery = {
-  tableSchema: TableSchema;
+  tableSchema: NormalizedTable;
   whereAnd: UserQuery['where']['$and'];
   orderBy: UserQuery['order_by'];
   limit: number;

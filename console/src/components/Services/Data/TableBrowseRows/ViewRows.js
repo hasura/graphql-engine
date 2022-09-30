@@ -1013,11 +1013,13 @@ const ViewRows = props => {
   return (
     <div className={isVisible ? '' : 'hide '}>
       {isFilterSectionVisible && (
-        <FilterSectionContainer
-          dataSourceName={currentSource}
-          table={{ schema: tableSchema.table_schema, name: curTableName }}
-          onRunQuery={newUserQuery => setUserQuery(newUserQuery)}
-        />
+        <div className="mt-4">
+          <FilterSectionContainer
+            dataSourceName={currentSource}
+            table={{ schema: tableSchema.table_schema, name: curTableName }}
+            onRunQuery={newUserQuery => setUserQuery(newUserQuery)}
+          />
+        </div>
       )}
       <div className="w-fit ml-0 mt-md">
         {getSelectedRowsSection()}

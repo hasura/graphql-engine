@@ -57,9 +57,11 @@ export const bigquerySqlQueries: DatasourceSqlQueries = {
     -- test_id = ${'schemas' in options ? 'multi' : 'single'}_foreign_key
     select []`;
   },
-  getTableColumnsSql({ name, schema }: QualifiedTable): string {
-    if (!schema || !name) throw Error('empty parameters are not allowed!');
+  getTableColumnsSql(table: QualifiedTable): string {
+    const { name } = table;
+    const schemaName = table?.dataset || table.schema;
+    if (!schemaName || !name) throw Error('empty parameters are not allowed!');
 
-    return `SELECT * FROM ${schema}.INFORMATION_SCHEMA.COLUMNS WHERE table_name = '${name}';`;
+    return `SELECT * FROM ${schemaName}.INFORMATION_SCHEMA.COLUMNS WHERE table_name = '${name}';`;
   },
 };

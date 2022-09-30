@@ -14,6 +14,8 @@ import {
 
 import { NetworkArgs } from './api';
 
+export type { BigQueryTable } from './bigquery';
+
 export type AllowedTableRelationships =
   | Legacy_SourceToRemoteSchemaRelationship
   | SourceToRemoteSchemaRelationship

@@ -84,10 +84,19 @@ const getFormattedValue = (
   if (
     CockroachDataTypes.character.includes(type) ||
     CockroachDataTypes.dateTime.includes(type)
-  )
+  ) {
+    if (Array.isArray(value)) {
+      return JSON.stringify(value);
+    }
     return `"${value}"`;
+  }
 
-  if (CockroachDataTypes.numeric.includes(type)) return value;
+  if (CockroachDataTypes.numeric.includes(type)) {
+    if (Array.isArray(value)) {
+      return JSON.stringify(value);
+    }
+    return value;
+  }
 
   return value;
 };
