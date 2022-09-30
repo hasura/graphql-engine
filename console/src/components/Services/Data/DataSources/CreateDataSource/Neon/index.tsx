@@ -23,7 +23,8 @@ export function Neon(props: { allDatabases: string[]; dispatch: Dispatch }) {
     getNeonDBName(allDatabases),
     pushToDatasource,
     pushToConnectDBPage,
-    dispatch
+    dispatch,
+    'data-manage-create'
   );
 
   const neonBannerProps = transformNeonIntegrationStatusToNeonBannerProps(

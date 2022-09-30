@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { useQueryClient } from 'react-query';
 import {
-  NEON_METADATA_PATH,
-  NEON_MIGRATIONS_PATH,
-  NEON_IMAGE_PATH,
-  NEON_QUERY_PATH,
+  getMetadataUrl,
+  getMigrationUrl,
+  getSampleQueriesUrl,
+  getSchemaImageUrl,
 } from '../constants';
 import { fetchTemplateDataQueryFn } from '../utils';
 
@@ -13,21 +13,30 @@ import { fetchTemplateDataQueryFn } from '../utils';
  * so data is ready by the time we need it. For example this could be fired while Neon
  * DB is being created.
  */
-export const usePrefetchNeonOnboardingTemplateData = () => {
+export const usePrefetchNeonOnboardingTemplateData = (
+  templateBaseUrl: string
+) => {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    queryClient.prefetchQuery(NEON_MIGRATIONS_PATH, () =>
-      fetchTemplateDataQueryFn(NEON_MIGRATIONS_PATH, {})
+    const metadataUrl = getMetadataUrl(templateBaseUrl);
+    queryClient.prefetchQuery(metadataUrl, () =>
+      fetchTemplateDataQueryFn(metadataUrl, {})
     );
-    queryClient.prefetchQuery(NEON_METADATA_PATH, () =>
-      fetchTemplateDataQueryFn(NEON_METADATA_PATH, {})
+
+    const migrationUrl = getMigrationUrl(templateBaseUrl);
+    queryClient.prefetchQuery(migrationUrl, () =>
+      fetchTemplateDataQueryFn(migrationUrl, {})
     );
-    queryClient.prefetchQuery(NEON_IMAGE_PATH, () =>
-      fetchTemplateDataQueryFn(NEON_IMAGE_PATH, {})
+
+    const sampleQueriesUrl = getSampleQueriesUrl(templateBaseUrl);
+    queryClient.prefetchQuery(sampleQueriesUrl, () =>
+      fetchTemplateDataQueryFn(sampleQueriesUrl, {})
     );
-    queryClient.prefetchQuery(NEON_QUERY_PATH, () =>
-      fetchTemplateDataQueryFn(NEON_QUERY_PATH, {})
+
+    const schemaImageUrl = getSchemaImageUrl(templateBaseUrl);
+    queryClient.prefetchQuery(schemaImageUrl, () =>
+      fetchTemplateDataQueryFn(schemaImageUrl, {})
     );
   }, []);
 };

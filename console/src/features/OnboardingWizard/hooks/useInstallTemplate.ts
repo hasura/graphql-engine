@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useInstallMigration } from './useInstallMigration';
-import { NEON_METADATA_PATH, NEON_MIGRATIONS_PATH } from '../constants';
+import { getMetadataUrl, getMigrationUrl } from '../constants';
 import { useInstallMetadata } from './useInstallMetadata';
 
 /**
@@ -10,13 +10,14 @@ import { useInstallMetadata } from './useInstallMetadata';
  */
 export function useInstallTemplate(
   dataSourceName: string,
+  templateBaseUrl: string,
   onSuccessCb: () => void,
   onErrorCb: (errorMsg?: string) => void
 ) {
   // fetch the function to apply metadata
   const { updateMetadata } = useInstallMetadata(
     dataSourceName,
-    NEON_METADATA_PATH,
+    getMetadataUrl(templateBaseUrl),
     onSuccessCb,
     onErrorCb
   );
@@ -24,7 +25,7 @@ export function useInstallTemplate(
   // fetch the function to apply migration
   const { performMigration } = useInstallMigration(
     dataSourceName,
-    NEON_MIGRATIONS_PATH,
+    getMigrationUrl(templateBaseUrl),
     // install metadata only if migrations has been applied successfully
     () => {
       if (updateMetadata) {
