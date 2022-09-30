@@ -10,7 +10,7 @@ PANE_HEIGHT = $(shell tmux display -p "\#{pane_height}" || echo 30 )
 # this needs to make it into ghcid: https://github.com/biegunka/terminal-size/pull/16
 define run_ghcid_hspec_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HSPEC_MATCH="$(2)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+		HSPEC_MATCH="$(2)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main" \
 			--width=$(PANE_WIDTH) \
 			--height=$(PANE_HEIGHT); \
@@ -22,7 +22,7 @@ endef
 
 define run_ghcid_main_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
-		HSPEC_MATCH="$(3)" ghcid -c "cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
+		HSPEC_MATCH="$(3)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main" \
 			--setup ":set args $(2)" \
 			--width=$(PANE_WIDTH) \
@@ -103,5 +103,3 @@ ghcid-library-pro:
 ## ghcid-test-unit: build and run unit tests in ghcid
 ghcid-test-unit: remove-tix-file
 	$(call run_ghcid_main_tests,graphql-engine:graphql-engine-tests,unit)
-
-
