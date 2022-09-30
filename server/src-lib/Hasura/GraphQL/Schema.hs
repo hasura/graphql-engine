@@ -190,7 +190,7 @@ buildRoleContext ::
       G.SchemaIntrospection
     )
 buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures = do
-  let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
+  let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters bigqueryStringNumericInput,
         functionPermsCtx
         ) = options
       schemaOptions =
@@ -202,7 +202,8 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
             soIncludeUpdateManyFields =
               if EFHideUpdateManyFields `Set.member` expFeatures
                 then Options.DontIncludeUpdateManyFields
-                else Options.IncludeUpdateManyFields
+                else Options.IncludeUpdateManyFields,
+            soBigQueryStringNumericInput = bigqueryStringNumericInput
           }
       schemaContext =
         SchemaContext
@@ -354,7 +355,7 @@ buildRelayRoleContext ::
   Set.HashSet ExperimentalFeature ->
   m (RoleContext GQLContext)
 buildRelayRoleContext options sources actions customTypes role expFeatures = do
-  let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters,
+  let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters bigqueryStringNumericInput,
         functionPermsCtx
         ) = options
       schemaOptions =
@@ -366,7 +367,8 @@ buildRelayRoleContext options sources actions customTypes role expFeatures = do
             soIncludeUpdateManyFields =
               if EFHideUpdateManyFields `Set.member` expFeatures
                 then Options.DontIncludeUpdateManyFields
-                else Options.IncludeUpdateManyFields
+                else Options.IncludeUpdateManyFields,
+            soBigQueryStringNumericInput = bigqueryStringNumericInput
           }
       -- TODO: At the time of writing this, remote schema queries are not supported in relay.
       -- When they are supported, we should get do what `buildRoleContext` does. Since, they

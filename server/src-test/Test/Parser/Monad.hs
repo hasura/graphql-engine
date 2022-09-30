@@ -71,7 +71,8 @@ instance Has SchemaOptions SchemaEnvironment where
           soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
           soInferFunctionPermissions = Options.InferFunctionPermissions,
           soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters,
-          soIncludeUpdateManyFields = Options.IncludeUpdateManyFields
+          soIncludeUpdateManyFields = Options.IncludeUpdateManyFields,
+          soBigQueryStringNumericInput = Options.EnableBigQueryStringNumericInput
         }
 
   modifier :: (SchemaOptions -> SchemaOptions) -> SchemaEnvironment -> SchemaEnvironment
