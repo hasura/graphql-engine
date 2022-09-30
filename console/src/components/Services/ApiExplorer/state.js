@@ -68,6 +68,10 @@ const defaultState = {
   headerFocus: false,
   mode: persistedGraphiqlMode,
   loading: false,
+  graphiql: {
+    query: '',
+    forceIntrospectAt: undefined,
+  },
 };
 
 export default defaultState;

@@ -1,8 +1,14 @@
 import { parse, print } from 'graphql';
 import { ExperimentConfig } from '@/features/GrowthExperiments';
+import { Dispatch } from '@/types';
 import { cloudDataServiceApiClient } from '@/hooks/cloudDataServiceApiClient';
 import { Api } from '@/hooks/apiUtils';
 import { HasuraMetadataV3 } from '@/metadata/types';
+import {
+  clickRunQueryButton,
+  forceGraphiQLIntrospection,
+  forceChangeGraphiqlQuery,
+} from '../../components/Services/ApiExplorer/OneGraphExplorer/utils';
 import {
   skippedOnboardingVariables,
   onboardingCompleteVariables,
@@ -189,3 +195,20 @@ export function getQueryFromSampleQueries(
     definitions: [queryDef],
   });
 }
+
+export const runQueryInGraphiQL = () => {
+  clickRunQueryButton();
+};
+
+export const fillSampleQueryInGraphiQL = (
+  query: string,
+  dispatch: Dispatch
+) => {
+  forceGraphiQLIntrospection(dispatch);
+
+  // this timeout makes sure that there's a delay in setting query after introspection has been fired
+  // this timeout does not intend to wait for introspection to finish
+  setTimeout(() => {
+    forceChangeGraphiqlQuery(query, dispatch);
+  }, 500);
+};

@@ -6,6 +6,7 @@ import { hasLuxFeatureAccess, isCloudConsole } from '@/utils/cloudConsole';
 import { TopHeaderBar, ConnectDBScreen, TemplateSummary } from './components';
 
 import { useWizardState } from './hooks';
+import { NEON_TEMPLATE_BASE_PATH } from './constants';
 import { GrowthExperimentsClient } from '../GrowthExperiments';
 import { useFamiliaritySurveyData, HasuraFamiliaritySurvey } from '../Surveys';
 
@@ -24,7 +25,10 @@ function Root(props: Props) {
   const hasNeonAccess = hasLuxFeatureAccess(globals, 'NeonDatabaseIntegration');
 
   // dialog cannot be reopened once closed
-  const { state, setState } = useWizardState(growthExperimentsClient);
+  const { state, setState } = useWizardState(
+    growthExperimentsClient,
+    hasNeonAccess
+  );
 
   const {
     showFamiliaritySurvey,
@@ -33,8 +37,7 @@ function Root(props: Props) {
     onOptionClick: familiaritySurveyOnOptionClick,
   } = useFamiliaritySurveyData();
 
-  const templateBaseUrl =
-    'https://raw.githubusercontent.com/hasura/template-gallery/main/postgres/getting-started';
+  const templateBaseUrl = NEON_TEMPLATE_BASE_PATH;
 
   const transitionToTemplateSummary = () => {
     setState('template-summary');
@@ -77,7 +80,11 @@ function Root(props: Props) {
     }
     case 'template-summary': {
       return (
-        <TemplateSummary templateUrl={templateBaseUrl} dismiss={dismiss} />
+        <TemplateSummary
+          templateUrl={templateBaseUrl}
+          dismiss={dismiss}
+          dispatch={dispatch}
+        />
       );
     }
     case 'hidden':
