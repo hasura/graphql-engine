@@ -14,7 +14,7 @@
 </span><span id="line-14"></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">data</span><span> </span><span id="CompressionType"><span class="annot"><a href="Hasura.Server.Compression.html#CompressionType"><span class="hs-identifier hs-var">CompressionType</span></a></span></span><span>
 </span><span id="line-16"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CTGZip"><span class="annot"><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span></span><span>
-</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689596944"><span id="local-6989586621689596946"><span id="local-6989586621689596948"><span class="annot"><span class="annottext">Int -&gt; CompressionType -&gt; ShowS
+</span><span id="line-17"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689597167"><span id="local-6989586621689597169"><span id="local-6989586621689597171"><span class="annot"><span class="annottext">Int -&gt; CompressionType -&gt; ShowS
 [CompressionType] -&gt; ShowS
 CompressionType -&gt; String
 (Int -&gt; CompressionType -&gt; ShowS)
@@ -29,7 +29,7 @@ show :: CompressionType -&gt; String
 $cshow :: CompressionType -&gt; String
 showsPrec :: Int -&gt; CompressionType -&gt; ShowS
 $cshowsPrec :: Int -&gt; CompressionType -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689596939"><span id="local-6989586621689596941"><span class="annot"><span class="annottext">CompressionType -&gt; CompressionType -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689597162"><span id="local-6989586621689597164"><span class="annot"><span class="annottext">CompressionType -&gt; CompressionType -&gt; Bool
 (CompressionType -&gt; CompressionType -&gt; Bool)
 -&gt; (CompressionType -&gt; CompressionType -&gt; Bool)
 -&gt; Eq CompressionType
@@ -53,23 +53,23 @@ $c== :: CompressionType -&gt; CompressionType -&gt; Bool
 </span><span id="line-26"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">BL.ByteString</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NH.Header</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Compression.html#CompressionType"><span class="hs-identifier hs-type">CompressionType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span id="compressResponse"><span class="annot"><span class="annottext">compressResponse :: RequestHeaders
 -&gt; ByteString -&gt; (ByteString, Maybe Header, Maybe CompressionType)
-</span><a href="Hasura.Server.Compression.html#compressResponse"><span class="hs-identifier hs-var hs-var">compressResponse</span></a></span></span><span> </span><span id="local-6989586621689596937"><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621689596937"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621689596936"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689596936"><span class="hs-identifier hs-var">unCompressedResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689596935"><span class="annot"><span class="annottext">compressionTypeM :: Maybe CompressionType
-</span><a href="#local-6989586621689596935"><span class="hs-identifier hs-var hs-var">compressionTypeM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestHeaders -&gt; Maybe CompressionType
+</span><a href="Hasura.Server.Compression.html#compressResponse"><span class="hs-identifier hs-var hs-var">compressResponse</span></a></span></span><span> </span><span id="local-6989586621689597160"><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621689597160"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span> </span><span id="local-6989586621689597159"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689597159"><span class="hs-identifier hs-var">unCompressedResp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689597158"><span class="annot"><span class="annottext">compressionTypeM :: Maybe CompressionType
+</span><a href="#local-6989586621689597158"><span class="hs-identifier hs-var hs-var">compressionTypeM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">RequestHeaders -&gt; Maybe CompressionType
 </span><a href="Hasura.Server.Compression.html#getAcceptedCompression"><span class="hs-identifier hs-var">getAcceptedCompression</span></a></span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621689596937"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
-</span><span id="line-29"></span><span>      </span><span id="local-6989586621689596933"><span class="annot"><span class="annottext">appendCompressionType :: (ByteString, Maybe Header)
+</span><a href="#local-6989586621689597160"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
+</span><span id="line-29"></span><span>      </span><span id="local-6989586621689597156"><span class="annot"><span class="annottext">appendCompressionType :: (ByteString, Maybe Header)
 -&gt; (ByteString, Maybe Header, Maybe CompressionType)
-</span><a href="#local-6989586621689596933"><span class="hs-identifier hs-var hs-var">appendCompressionType</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689596932"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689596932"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689596931"><span class="annot"><span class="annottext">Maybe Header
-</span><a href="#local-6989586621689596931"><span class="hs-identifier hs-var">headerM</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689596932"><span class="hs-identifier hs-var">res</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Header
-</span><a href="#local-6989586621689596931"><span class="hs-identifier hs-var">headerM</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe CompressionType
-</span><a href="#local-6989586621689596935"><span class="hs-identifier hs-var">compressionTypeM</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-30"></span><span>      </span><span id="local-6989586621689596930"><span class="annot"><span class="annottext">gzipCompressionParams :: CompressParams
-</span><a href="#local-6989586621689596930"><span class="hs-identifier hs-var hs-var">gzipCompressionParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689597156"><span class="hs-identifier hs-var hs-var">appendCompressionType</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689597155"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689597155"><span class="hs-identifier hs-var">res</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689597154"><span class="annot"><span class="annottext">Maybe Header
+</span><a href="#local-6989586621689597154"><span class="hs-identifier hs-var">headerM</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689597155"><span class="hs-identifier hs-var">res</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Header
+</span><a href="#local-6989586621689597154"><span class="hs-identifier hs-var">headerM</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe CompressionType
+</span><a href="#local-6989586621689597158"><span class="hs-identifier hs-var">compressionTypeM</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>      </span><span id="local-6989586621689597153"><span class="annot"><span class="annottext">gzipCompressionParams :: CompressParams
+</span><a href="#local-6989586621689597153"><span class="hs-identifier hs-var hs-var">gzipCompressionParams</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-31"></span><span>        </span><span class="hs-comment">-- See Note [Compression ratios]</span><span>
 </span><span id="line-32"></span><span>        </span><span class="annot"><span class="annottext">CompressParams
 </span><span class="hs-identifier hs-var">GZ.defaultCompressParams</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">compressLevel :: CompressionLevel
@@ -78,24 +78,24 @@ $c== :: CompressionType -&gt; CompressionType -&gt; Bool
 </span><span class="hs-number">1</span></span><span class="hs-special">}</span><span>
 </span><span id="line-33"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">(ByteString, Maybe Header)
 -&gt; (ByteString, Maybe Header, Maybe CompressionType)
-</span><a href="#local-6989586621689596933"><span class="hs-identifier hs-var">appendCompressionType</span></a></span><span> </span><span class="annot"><span class="annottext">((ByteString, Maybe Header)
+</span><a href="#local-6989586621689597156"><span class="hs-identifier hs-var">appendCompressionType</span></a></span><span> </span><span class="annot"><span class="annottext">((ByteString, Maybe Header)
  -&gt; (ByteString, Maybe Header, Maybe CompressionType))
 -&gt; (ByteString, Maybe Header)
 -&gt; (ByteString, Maybe Header, Maybe CompressionType)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe CompressionType
-</span><a href="#local-6989586621689596935"><span class="hs-identifier hs-var">compressionTypeM</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689597158"><span class="hs-identifier hs-var">compressionTypeM</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-34"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="annot"><span class="annottext">CompressionType
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CompressParams -&gt; ByteString -&gt; ByteString
 </span><span class="hs-identifier hs-var">GZ.compressWith</span></span><span> </span><span class="annot"><span class="annottext">CompressParams
-</span><a href="#local-6989586621689596930"><span class="hs-identifier hs-var">gzipCompressionParams</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689596936"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Header -&gt; Maybe Header
+</span><a href="#local-6989586621689597153"><span class="hs-identifier hs-var">gzipCompressionParams</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689597159"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Header -&gt; Maybe Header
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Header
 </span><a href="Hasura.Server.Utils.html#gzipHeader"><span class="hs-identifier hs-var">gzipHeader</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-35"></span><span>        </span><span class="annot"><span class="annottext">Maybe CompressionType
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689596936"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Header
+</span><a href="#local-6989586621689597159"><span class="hs-identifier hs-var">unCompressedResp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Header
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>
@@ -104,13 +104,13 @@ forall a. Maybe a
 </span><span id="line-39"></span><span class="hs-comment">-- https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding</span><span>
 </span><span id="line-40"></span><span class="annot"><a href="Hasura.Server.Compression.html#getAcceptedCompression"><span class="hs-identifier hs-type">getAcceptedCompression</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">NH.RequestHeaders</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Compression.html#CompressionType"><span class="hs-identifier hs-type">CompressionType</span></a></span><span>
 </span><span id="line-41"></span><span id="getAcceptedCompression"><span class="annot"><span class="annottext">getAcceptedCompression :: RequestHeaders -&gt; Maybe CompressionType
-</span><a href="Hasura.Server.Compression.html#getAcceptedCompression"><span class="hs-identifier hs-var hs-var">getAcceptedCompression</span></a></span></span><span> </span><span id="local-6989586621689596925"><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621689596925"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span>
+</span><a href="Hasura.Server.Compression.html#getAcceptedCompression"><span class="hs-identifier hs-var hs-var">getAcceptedCompression</span></a></span></span><span> </span><span id="local-6989586621689597148"><span class="annot"><span class="annottext">RequestHeaders
+</span><a href="#local-6989586621689597148"><span class="hs-identifier hs-var">reqHeaders</span></a></span></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;gzip&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Bool
 forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><span class="hs-operator hs-var">`elem`</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689596923"><span class="hs-identifier hs-var">acceptEncodingVals</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CompressionType -&gt; Maybe CompressionType
+</span><a href="#local-6989586621689597146"><span class="hs-identifier hs-var">acceptEncodingVals</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">CompressionType -&gt; Maybe CompressionType
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">CompressionType
 </span><a href="Hasura.Server.Compression.html#CTGZip"><span class="hs-identifier hs-var">CTGZip</span></a></span><span>
@@ -119,12 +119,12 @@ forall a. a -&gt; Maybe a
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-44"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-45"></span><span>    </span><span id="local-6989586621689596923"><span class="annot"><span class="annottext">acceptEncodingVals :: [Text]
-</span><a href="#local-6989586621689596923"><span class="hs-identifier hs-var hs-var">acceptEncodingVals</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-45"></span><span>    </span><span id="local-6989586621689597146"><span class="annot"><span class="annottext">acceptEncodingVals :: [Text]
+</span><a href="#local-6989586621689597146"><span class="hs-identifier hs-var hs-var">acceptEncodingVals</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">(Header -&gt; [Text]) -&gt; RequestHeaders -&gt; [Text]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; [Text]
-</span><a href="#local-6989586621689596921"><span class="hs-identifier hs-var">splitHeaderVal</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; [Text])
+</span><a href="#local-6989586621689597144"><span class="hs-identifier hs-var">splitHeaderVal</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; [Text])
 -&gt; (Header -&gt; ByteString) -&gt; Header -&gt; [Text]
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Header -&gt; ByteString
@@ -134,18 +134,18 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-47"></span><span>        </span><span class="annot"><span class="annottext">(Header -&gt; Bool) -&gt; RequestHeaders -&gt; RequestHeaders
 forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
-</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689596919"><span class="annot"><span class="annottext">Header
-</span><a href="#local-6989586621689596919"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Header -&gt; HeaderName
+</span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689597142"><span class="annot"><span class="annottext">Header
+</span><a href="#local-6989586621689597142"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Header -&gt; HeaderName
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">Header
-</span><a href="#local-6989586621689596919"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderName -&gt; Bool
+</span><a href="#local-6989586621689597142"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">HeaderName -&gt; HeaderName -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-identifier hs-var">NH.hAcceptEncoding</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestHeaders
-</span><a href="#local-6989586621689596925"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
-</span><span id="line-48"></span><span>    </span><span id="local-6989586621689596921"><span class="annot"><span class="annottext">splitHeaderVal :: ByteString -&gt; [Text]
-</span><a href="#local-6989586621689596921"><span class="hs-identifier hs-var hs-var">splitHeaderVal</span></a></span></span><span> </span><span id="local-6989586621689596917"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689596917"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; [Text] -&gt; [Text]
+</span><a href="#local-6989586621689597148"><span class="hs-identifier hs-var">reqHeaders</span></a></span><span>
+</span><span id="line-48"></span><span>    </span><span id="local-6989586621689597144"><span class="annot"><span class="annottext">splitHeaderVal :: ByteString -&gt; [Text]
+</span><a href="#local-6989586621689597144"><span class="hs-identifier hs-var hs-var">splitHeaderVal</span></a></span></span><span> </span><span id="local-6989586621689597140"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689597140"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; [Text] -&gt; [Text]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.strip</span></span><span> </span><span class="annot"><span class="annottext">([Text] -&gt; [Text]) -&gt; [Text] -&gt; [Text]
@@ -156,7 +156,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689596917"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><a href="#local-6989586621689597140"><span class="hs-identifier hs-var">bs</span></a></span><span>
 </span><span id="line-49"></span><span>
 </span><span id="line-50"></span><span class="hs-comment">{-
 Note [Compression ratios]
