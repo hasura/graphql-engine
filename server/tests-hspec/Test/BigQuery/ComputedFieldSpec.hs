@@ -94,7 +94,7 @@ setupFunctions testEnv =
       articleTableSQL = unSchemaName schemaName <> ".article"
    in [ Fixture.SetupAction
           { Fixture.setupAction =
-              BigQuery.runSql_ $
+              BigQuery.run_ $
                 T.unpack $
                   T.unwords $
                     [ "CREATE TABLE FUNCTION ",
@@ -108,13 +108,13 @@ setupFunctions testEnv =
                       ");"
                     ],
             Fixture.teardownAction = \_ ->
-              BigQuery.runSql_ $
+              BigQuery.run_ $
                 T.unpack $
                   "DROP TABLE FUNCTION " <> fetch_articles_returns_table schemaName <> ";"
           },
         Fixture.SetupAction
           { Fixture.setupAction =
-              BigQuery.runSql_ $
+              BigQuery.run_ $
                 T.unpack $
                   T.unwords $
                     [ "CREATE TABLE FUNCTION ",
@@ -127,13 +127,13 @@ setupFunctions testEnv =
                       ");"
                     ],
             Fixture.teardownAction = \_ ->
-              BigQuery.runSql_ $
+              BigQuery.run_ $
                 T.unpack $
                   "DROP TABLE FUNCTION " <> fetch_articles schemaName <> ";"
           },
         Fixture.SetupAction
           { Fixture.setupAction =
-              BigQuery.runSql_ $
+              BigQuery.run_ $
                 T.unpack $
                   T.unwords $
                     [ "CREATE TABLE FUNCTION ",
@@ -146,7 +146,7 @@ setupFunctions testEnv =
                       ");"
                     ],
             Fixture.teardownAction = \_ ->
-              BigQuery.runSql_ $
+              BigQuery.run_ $
                 T.unpack $
                   "DROP TABLE FUNCTION " <> fetch_articles_no_user_args_returns_table schemaName <> ";"
           }
