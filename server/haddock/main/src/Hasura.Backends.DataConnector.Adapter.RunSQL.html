@@ -28,7 +28,7 @@
 </span><span id="line-27"></span><span>    </span><span id="_dcSql"><span class="annot"><span class="annottext">DataConnectorRunSQL -&gt; Text
 </span><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#_dcSql"><span class="hs-identifier hs-var hs-var">_dcSql</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689747273"><span id="local-6989586621689747275"><span id="local-6989586621689747277"><span class="annot"><span class="annottext">Int -&gt; DataConnectorRunSQL -&gt; ShowS
+</span><span id="line-29"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689756500"><span id="local-6989586621689756502"><span id="local-6989586621689756504"><span class="annot"><span class="annottext">Int -&gt; DataConnectorRunSQL -&gt; ShowS
 [DataConnectorRunSQL] -&gt; ShowS
 DataConnectorRunSQL -&gt; String
 (Int -&gt; DataConnectorRunSQL -&gt; ShowS)
@@ -43,7 +43,7 @@ show :: DataConnectorRunSQL -&gt; String
 $cshow :: DataConnectorRunSQL -&gt; String
 showsPrec :: Int -&gt; DataConnectorRunSQL -&gt; ShowS
 $cshowsPrec :: Int -&gt; DataConnectorRunSQL -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689747268"><span id="local-6989586621689747270"><span class="annot"><span class="annottext">DataConnectorRunSQL -&gt; DataConnectorRunSQL -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689756495"><span id="local-6989586621689756497"><span class="annot"><span class="annottext">DataConnectorRunSQL -&gt; DataConnectorRunSQL -&gt; Bool
 (DataConnectorRunSQL -&gt; DataConnectorRunSQL -&gt; Bool)
 -&gt; (DataConnectorRunSQL -&gt; DataConnectorRunSQL -&gt; Bool)
 -&gt; Eq DataConnectorRunSQL
@@ -54,8 +54,8 @@ $c/= :: DataConnectorRunSQL -&gt; DataConnectorRunSQL -&gt; Bool
 $c== :: DataConnectorRunSQL -&gt; DataConnectorRunSQL -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689747264"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#DataConnectorRunSQL"><span class="hs-identifier hs-type">DataConnectorRunSQL</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-32"></span><span>  </span><span id="local-6989586621689747262"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DataConnectorRunSQL
+</span><span id="line-31"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689756491"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#DataConnectorRunSQL"><span class="hs-identifier hs-type">DataConnectorRunSQL</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-32"></span><span>  </span><span id="local-6989586621689756489"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DataConnectorRunSQL
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
 -&gt; (Object -&gt; Parser DataConnectorRunSQL)
 -&gt; Value
@@ -68,32 +68,32 @@ forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 -&gt; Value
 -&gt; Parser DataConnectorRunSQL
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689747259"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689747259"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-33"></span><span>    </span><span id="local-6989586621689747258"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689747258"><span class="hs-identifier hs-var">_dcSql</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689747259"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621689756486"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689756486"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-33"></span><span>    </span><span id="local-6989586621689756485"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689756485"><span class="hs-identifier hs-var">_dcSql</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689756486"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser Text
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;sql&quot;</span></span><span>
-</span><span id="line-34"></span><span>    </span><span id="local-6989586621689747256"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689747256"><span class="hs-identifier hs-var">_dcSource</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689747259"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser SourceName
+</span><span id="line-34"></span><span>    </span><span id="local-6989586621689756483"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621689756483"><span class="hs-identifier hs-var">_dcSource</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689756486"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser SourceName
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;source&quot;</span></span><span>
 </span><span id="line-35"></span><span>    </span><span class="hs-keyword">do</span><span>
 </span><span id="line-36"></span><span>      </span><span class="hs-comment">-- Throw errors on unsupported operations</span><span>
-</span><span id="line-37"></span><span>      </span><span id="local-6989586621689747255"><span class="annot"><span class="annottext">Maybe Bool
-</span><a href="#local-6989586621689747255"><span class="hs-identifier hs-var">cascade</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689747259"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Bool)
+</span><span id="line-37"></span><span>      </span><span id="local-6989586621689756482"><span class="annot"><span class="annottext">Maybe Bool
+</span><a href="#local-6989586621689756482"><span class="hs-identifier hs-var">cascade</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689756486"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Bool)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;cascade&quot;</span></span><span>
 </span><span id="line-38"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Parser () -&gt; Parser ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Bool
-</span><a href="#local-6989586621689747255"><span class="hs-identifier hs-var">cascade</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Bool -&gt; Maybe Bool -&gt; Bool
+</span><a href="#local-6989586621689756482"><span class="hs-identifier hs-var">cascade</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Bool -&gt; Maybe Bool -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Maybe Bool
 forall a. a -&gt; Maybe a
@@ -103,16 +103,16 @@ forall a. a -&gt; Maybe a
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Cascade not supported for raw data connector queries&quot;</span></span><span>
-</span><span id="line-40"></span><span>      </span><span id="local-6989586621689747252"><span class="annot"><span class="annottext">Maybe Bool
-</span><a href="#local-6989586621689747252"><span class="hs-identifier hs-var">readOnly</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689747259"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Bool)
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621689756479"><span class="annot"><span class="annottext">Maybe Bool
+</span><a href="#local-6989586621689756479"><span class="hs-identifier hs-var">readOnly</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689756486"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">Object -&gt; Key -&gt; Parser (Maybe Bool)
 forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;read_only&quot;</span></span><span>
 </span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">Bool -&gt; Parser () -&gt; Parser ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">when</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Bool
-</span><a href="#local-6989586621689747252"><span class="hs-identifier hs-var">readOnly</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Bool -&gt; Maybe Bool -&gt; Bool
+</span><a href="#local-6989586621689756479"><span class="hs-identifier hs-var">readOnly</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Bool -&gt; Maybe Bool -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Maybe Bool
 forall a. a -&gt; Maybe a
@@ -131,24 +131,24 @@ _dcSource :: SourceName
 _dcSql :: Text
 _dcSql :: Text
 _dcSource :: SourceName
-</span><a href="#local-6989586621689747256"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621689756483"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689747245"><span id="local-6989586621689747247"><span id="local-6989586621689747249"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#DataConnectorRunSQL"><span class="hs-identifier hs-type">DataConnectorRunSQL</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-46"></span><span>  </span><span id="local-6989586621689747243"><span class="annot"><span class="annottext">toJSON :: DataConnectorRunSQL -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#DataConnectorRunSQL"><span class="hs-identifier hs-type">DataConnectorRunSQL</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689747240"><span id="local-6989586621689747241"><span class="annot"><span class="annottext">Text
+</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689756472"><span id="local-6989586621689756474"><span id="local-6989586621689756476"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#DataConnectorRunSQL"><span class="hs-identifier hs-type">DataConnectorRunSQL</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621689756470"><span class="annot"><span class="annottext">toJSON :: DataConnectorRunSQL -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#DataConnectorRunSQL"><span class="hs-identifier hs-type">DataConnectorRunSQL</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689756467"><span id="local-6989586621689756468"><span class="annot"><span class="annottext">Text
 SourceName
 _dcSql :: Text
 _dcSource :: SourceName
 _dcSql :: DataConnectorRunSQL -&gt; Text
 _dcSource :: DataConnectorRunSQL -&gt; SourceName
-</span><a href="#local-6989586621689747240"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689756467"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-48"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;sql&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689747240"><span class="hs-identifier hs-var">_dcSql</span></a></span><span>
+</span><a href="#local-6989586621689756467"><span class="hs-identifier hs-var">_dcSql</span></a></span><span>
 </span><span id="line-49"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-50"></span><span>
 </span><span id="line-51"></span><span class="hs-comment">-- TODO:</span><span>
@@ -170,21 +170,21 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span id="line-67"></span><span class="hs-comment">-- in this PR.</span><span>
 </span><span id="line-68"></span><span class="hs-comment">--</span><span>
 </span><span id="line-69"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#runSQL"><span class="hs-identifier hs-type">runSQL</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-70"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689747237"><span class="annot"><a href="#local-6989586621689747237"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689747237"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747237"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747237"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689747237"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689756464"><span class="annot"><a href="#local-6989586621689756464"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-71"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadIO</span></span><span> </span><span class="annot"><a href="#local-6989586621689756464"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689756464"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689756464"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689756464"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#DataConnectorName"><span class="hs-identifier hs-type">DataConnectorName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-73"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#DataConnectorRunSQL"><span class="hs-identifier hs-type">DataConnectorRunSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-74"></span><span>  </span><span class="annot"><a href="#local-6989586621689747237"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-74"></span><span>  </span><span class="annot"><a href="#local-6989586621689756464"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
 </span><span id="line-75"></span><span id="runSQL"><span class="annot"><span class="annottext">runSQL :: DataConnectorName -&gt; DataConnectorRunSQL -&gt; m EncJSON
-</span><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#runSQL"><span class="hs-identifier hs-var hs-var">runSQL</span></a></span></span><span> </span><span id="local-6989586621689747236"><span class="annot"><span class="annottext">DataConnectorName
-</span><a href="#local-6989586621689747236"><span class="hs-identifier hs-var">methodConnectorName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#DataConnectorRunSQL"><span class="hs-identifier hs-type">DataConnectorRunSQL</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689747234"><span id="local-6989586621689747235"><span class="annot"><span class="annottext">Text
+</span><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#runSQL"><span class="hs-identifier hs-var hs-var">runSQL</span></a></span></span><span> </span><span id="local-6989586621689756463"><span class="annot"><span class="annottext">DataConnectorName
+</span><a href="#local-6989586621689756463"><span class="hs-identifier hs-var">methodConnectorName</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#DataConnectorRunSQL"><span class="hs-identifier hs-type">DataConnectorRunSQL</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689756461"><span id="local-6989586621689756462"><span class="annot"><span class="annottext">Text
 SourceName
 _dcSql :: Text
 _dcSource :: SourceName
 _dcSql :: DataConnectorRunSQL -&gt; Text
 _dcSource :: DataConnectorRunSQL -&gt; SourceName
-</span><a href="#local-6989586621689747234"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-76"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689747225"><span id="local-6989586621689747226"><span id="local-6989586621689747227"><span id="local-6989586621689747228"><span id="local-6989586621689747229"><span id="local-6989586621689747230"><span id="local-6989586621689747231"><span id="local-6989586621689747232"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621689756461"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.Types.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689756452"><span id="local-6989586621689756453"><span id="local-6989586621689756454"><span id="local-6989586621689756455"><span id="local-6989586621689756456"><span id="local-6989586621689756457"><span id="local-6989586621689756458"><span id="local-6989586621689756459"><span class="annot"><span class="annottext">Maybe Int
 Maybe Text
 SchemaResponse
 Capabilities
@@ -213,16 +213,16 @@ forall (b :: BackendType) (m :: * -&gt; *).
 (CacheRM m, MonadError QErr m, Backend b, MetadataM m) =&gt;
 SourceName -&gt; m (SourceConfig b)
 </span><a href="Hasura.RQL.Types.SchemaCache.html#askSourceConfig"><span class="hs-identifier hs-var">askSourceConfig</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#DataConnector"><span class="hs-identifier hs-type">DataConnector</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689747235"><span class="hs-identifier hs-var">_dcSource</span></a></span><span>
+</span><a href="#local-6989586621689756462"><span class="hs-identifier hs-var">_dcSource</span></a></span><span>
 </span><span id="line-77"></span><span>
 </span><span id="line-78"></span><span>  </span><span class="hs-comment">-- There is no way to know if the source prefix matches the backend type until we have `SourceConfig` available.</span><span>
 </span><span id="line-79"></span><span>  </span><span class="annot"><span class="annottext">Bool -&gt; m () -&gt; m ()
 forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><span class="hs-identifier hs-var">unless</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DataConnectorName
-</span><a href="#local-6989586621689747225"><span class="hs-identifier hs-var">_scDataConnectorName</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorName -&gt; DataConnectorName -&gt; Bool
+</span><a href="#local-6989586621689756452"><span class="hs-identifier hs-var">_scDataConnectorName</span></a></span><span> </span><span class="annot"><span class="annottext">DataConnectorName -&gt; DataConnectorName -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
-</span><a href="#local-6989586621689747236"><span class="hs-identifier hs-var">methodConnectorName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621689756463"><span class="hs-identifier hs-var">methodConnectorName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-80"></span><span>    </span><span class="annot"><span class="annottext">QErr -&gt; m ()
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwError</span></span><span>
@@ -236,7 +236,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName -&gt; Text
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
-</span><a href="#local-6989586621689747236"><span class="hs-identifier hs-var">methodConnectorName</span></a></span><span>
+</span><a href="#local-6989586621689756463"><span class="hs-identifier hs-var">methodConnectorName</span></a></span><span>
 </span><span id="line-84"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -245,7 +245,7 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; Text
 </span><a href="Hasura.RQL.Types.Common.html#sourceNameToText"><span class="hs-identifier hs-var">sourceNameToText</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689747235"><span class="hs-identifier hs-var">_dcSource</span></a></span><span>
+</span><a href="#local-6989586621689756462"><span class="hs-identifier hs-var">_dcSource</span></a></span><span>
 </span><span id="line-86"></span><span>              </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -255,17 +255,17 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName -&gt; Text
 forall source target. From source target =&gt; source -&gt; target
 </span><span class="hs-identifier hs-var">Witch.from</span></span><span> </span><span class="annot"><span class="annottext">DataConnectorName
-</span><a href="#local-6989586621689747225"><span class="hs-identifier hs-var">_scDataConnectorName</span></a></span><span>
+</span><a href="#local-6989586621689756452"><span class="hs-identifier hs-var">_scDataConnectorName</span></a></span><span>
 </span><span id="line-88"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-89"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span>
-</span><span id="line-91"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689747213"><span class="annot"><span class="annottext">clientEnv :: ClientEnv
-</span><a href="#local-6989586621689747213"><span class="hs-identifier hs-var hs-var">clientEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Manager -&gt; BaseUrl -&gt; ClientEnv
+</span><span id="line-91"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689756440"><span class="annot"><span class="annottext">clientEnv :: ClientEnv
+</span><a href="#local-6989586621689756440"><span class="hs-identifier hs-var hs-var">clientEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Manager -&gt; BaseUrl -&gt; ClientEnv
 </span><span class="hs-identifier hs-var">mkClientEnv</span></span><span> </span><span class="annot"><span class="annottext">Manager
-</span><a href="#local-6989586621689747227"><span class="hs-identifier hs-var">_scManager</span></a></span><span> </span><span class="annot"><span class="annottext">BaseUrl
-</span><a href="#local-6989586621689747232"><span class="hs-identifier hs-var">_scEndpoint</span></a></span><span>
-</span><span id="line-92"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689747212"><span class="annot"><span class="annottext">client :: ClientM RawResponse
-</span><a href="#local-6989586621689747212"><span class="hs-identifier hs-var hs-var">client</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Routes (AsClientT ClientM)
+</span><a href="#local-6989586621689756454"><span class="hs-identifier hs-var">_scManager</span></a></span><span> </span><span class="annot"><span class="annottext">BaseUrl
+</span><a href="#local-6989586621689756459"><span class="hs-identifier hs-var">_scEndpoint</span></a></span><span>
+</span><span id="line-92"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689756439"><span class="annot"><span class="annottext">client :: ClientM RawResponse
+</span><a href="#local-6989586621689756439"><span class="hs-identifier hs-var hs-var">client</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Routes (AsClientT ClientM)
 forall (routes :: * -&gt; *) (m :: * -&gt; *).
 (HasClient m (ToServantApi routes),
  GenericServant routes (AsClientT m),
@@ -285,13 +285,13 @@ forall mode. Routes mode -&gt; mode :- RawApi
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var hs-var">API._raw</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SourceName -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621689747235"><span class="hs-identifier hs-var">_dcSource</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Config
-</span><a href="#local-6989586621689747231"><span class="hs-identifier hs-var">_scConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; RawRequest
+</span><a href="#local-6989586621689756462"><span class="hs-identifier hs-var">_dcSource</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Config
+</span><a href="#local-6989586621689756458"><span class="hs-identifier hs-var">_scConfig</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; RawRequest
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-var">RawRequest</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689747234"><span class="hs-identifier hs-var">_dcSql</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689756461"><span class="hs-identifier hs-var">_dcSql</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-93"></span><span>
-</span><span id="line-94"></span><span>  </span><span id="local-6989586621689747208"><span class="annot"><span class="annottext">Either ClientError RawResponse
-</span><a href="#local-6989586621689747208"><span class="hs-identifier hs-var">resultsE</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Either ClientError RawResponse)
+</span><span id="line-94"></span><span>  </span><span id="local-6989586621689756435"><span class="annot"><span class="annottext">Either ClientError RawResponse
+</span><a href="#local-6989586621689756435"><span class="hs-identifier hs-var">resultsE</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO (Either ClientError RawResponse)
 -&gt; m (Either ClientError RawResponse)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><span class="hs-identifier hs-var">liftIO</span></span><span> </span><span class="annot"><span class="annottext">(IO (Either ClientError RawResponse)
@@ -303,8 +303,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; ClientEnv -&gt; IO (Either ClientError RawResponse)
 forall a. ClientM a -&gt; ClientEnv -&gt; IO (Either ClientError a)
 </span><span class="hs-identifier hs-var">runClientM</span></span><span> </span><span class="annot"><span class="annottext">ClientM RawResponse
-</span><a href="#local-6989586621689747212"><span class="hs-identifier hs-var">client</span></a></span><span> </span><span class="annot"><span class="annottext">ClientEnv
-</span><a href="#local-6989586621689747213"><span class="hs-identifier hs-var">clientEnv</span></a></span><span>
+</span><a href="#local-6989586621689756439"><span class="hs-identifier hs-var">client</span></a></span><span> </span><span class="annot"><span class="annottext">ClientEnv
+</span><a href="#local-6989586621689756440"><span class="hs-identifier hs-var">clientEnv</span></a></span><span>
 </span><span id="line-95"></span><span>
 </span><span id="line-96"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RawResponse -&gt; [[(Text, Value)]]
 </span><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#tupleRows"><span class="hs-identifier hs-var">tupleRows</span></a></span><span> </span><span class="annot"><span class="annottext">(RawResponse -&gt; [[(Text, Value)]])
@@ -312,9 +312,9 @@ forall a. ClientM a -&gt; ClientEnv -&gt; IO (Either ClientError a)
 -&gt; Either ClientError [[(Text, Value)]]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Either ClientError RawResponse
-</span><a href="#local-6989586621689747208"><span class="hs-identifier hs-var">resultsE</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-97"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689747204"><span class="annot"><span class="annottext">ClientError
-</span><a href="#local-6989586621689747204"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689756435"><span class="hs-identifier hs-var">resultsE</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689756431"><span class="annot"><span class="annottext">ClientError
+</span><a href="#local-6989586621689756431"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">QErr -&gt; m EncJSON
 forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">throwError</span></span><span>
@@ -330,7 +330,7 @@ forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ClientError -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">ClientError
-</span><a href="#local-6989586621689747204"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689756431"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>          </span><span class="hs-special">}</span><span>
 </span><span id="line-102"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -344,18 +344,18 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.RQL.DDL.Schema.html#RunSQLRes"><span class="hs-identifier hs-var">RunSQLRes</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;CommandOk&quot;</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">J.Null</span></span><span>
-</span><span id="line-103"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689747199"><span class="annot"><span class="annottext">results :: [[(Text, Value)]]
-</span><a href="#local-6989586621689747199"><span class="hs-identifier hs-var">results</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span id="local-6989586621689747198"><span class="annot"><span class="annottext">[(Text, Value)]
-</span><a href="#local-6989586621689747198"><span class="hs-identifier hs-var">firstRow</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[[(Text, Value)]]
+</span><span id="line-103"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689756426"><span class="annot"><span class="annottext">results :: [[(Text, Value)]]
+</span><a href="#local-6989586621689756426"><span class="hs-identifier hs-var">results</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span id="local-6989586621689756425"><span class="annot"><span class="annottext">[(Text, Value)]
+</span><a href="#local-6989586621689756425"><span class="hs-identifier hs-var">firstRow</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[[(Text, Value)]]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-104"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689747197"><span class="annot"><span class="annottext">toRow :: [(a, b)] -&gt; [b]
-</span><a href="#local-6989586621689747197"><span class="hs-identifier hs-var hs-var">toRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((a, b) -&gt; b) -&gt; [(a, b)] -&gt; [b]
+</span><span id="line-104"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689756424"><span class="annot"><span class="annottext">toRow :: [(a, b)] -&gt; [b]
+</span><a href="#local-6989586621689756424"><span class="hs-identifier hs-var hs-var">toRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((a, b) -&gt; b) -&gt; [(a, b)] -&gt; [b]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(a, b) -&gt; b
 forall a b. (a, b) -&gt; b
 </span><span class="hs-identifier hs-var">snd</span></span><span>
-</span><span id="line-105"></span><span>          </span><span id="local-6989586621689747196"><span class="annot"><span class="annottext">toHeader :: [(Text, b)] -&gt; [Value]
-</span><a href="#local-6989586621689747196"><span class="hs-identifier hs-var hs-var">toHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Text, b) -&gt; Value) -&gt; [(Text, b)] -&gt; [Value]
+</span><span id="line-105"></span><span>          </span><span id="local-6989586621689756423"><span class="annot"><span class="annottext">toHeader :: [(Text, b)] -&gt; [Value]
+</span><a href="#local-6989586621689756423"><span class="hs-identifier hs-var hs-var">toHeader</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((Text, b) -&gt; Value) -&gt; [(Text, b)] -&gt; [Value]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(((Text, b) -&gt; Value) -&gt; [(Text, b)] -&gt; [Value])
 -&gt; ((Text, b) -&gt; Value) -&gt; [(Text, b)] -&gt; [Value]
@@ -384,35 +384,35 @@ forall a. ToJSON a =&gt; a -&gt; Value
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(Text, Value)] -&gt; [Value]
 forall b. [(Text, b)] -&gt; [Value]
-</span><a href="#local-6989586621689747196"><span class="hs-identifier hs-var">toHeader</span></a></span><span> </span><span class="annot"><span class="annottext">[(Text, Value)]
-</span><a href="#local-6989586621689747198"><span class="hs-identifier hs-var">firstRow</span></a></span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; [[Value]] -&gt; [[Value]]
+</span><a href="#local-6989586621689756423"><span class="hs-identifier hs-var">toHeader</span></a></span><span> </span><span class="annot"><span class="annottext">[(Text, Value)]
+</span><a href="#local-6989586621689756425"><span class="hs-identifier hs-var">firstRow</span></a></span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; [[Value]] -&gt; [[Value]]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">([(Text, Value)] -&gt; [Value]) -&gt; [[(Text, Value)]] -&gt; [[Value]]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">[(Text, Value)] -&gt; [Value]
 forall a b. [(a, b)] -&gt; [b]
-</span><a href="#local-6989586621689747197"><span class="hs-identifier hs-var">toRow</span></a></span><span> </span><span class="annot"><span class="annottext">[[(Text, Value)]]
-</span><a href="#local-6989586621689747199"><span class="hs-identifier hs-var">results</span></a></span><span>
+</span><a href="#local-6989586621689756424"><span class="hs-identifier hs-var">toRow</span></a></span><span> </span><span class="annot"><span class="annottext">[[(Text, Value)]]
+</span><a href="#local-6989586621689756426"><span class="hs-identifier hs-var">results</span></a></span><span>
 </span><span id="line-107"></span><span>
 </span><span id="line-108"></span><span class="annot"><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#tupleRows"><span class="hs-identifier hs-type">tupleRows</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-type">API.RawResponse</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">]</span><span>
 </span><span id="line-109"></span><span id="tupleRows"><span class="annot"><span class="annottext">tupleRows :: RawResponse -&gt; [[(Text, Value)]]
-</span><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#tupleRows"><span class="hs-identifier hs-var hs-var">tupleRows</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-type">API.RawResponse</span></a></span><span> </span><span id="local-6989586621689747193"><span class="annot"><span class="annottext">[HashMap Text Value]
-</span><a href="#local-6989586621689747193"><span class="hs-identifier hs-var">rs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[HashMap Text Value]
-</span><a href="#local-6989586621689747193"><span class="hs-identifier hs-var">rs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="Hasura.Backends.DataConnector.Adapter.RunSQL.html#tupleRows"><span class="hs-identifier hs-var hs-var">tupleRows</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/dc-api-1.0.0/opt/doc/html/dc-api/src"><span class="hs-identifier hs-type">API.RawResponse</span></a></span><span> </span><span id="local-6989586621689756420"><span class="annot"><span class="annottext">[HashMap Text Value]
+</span><a href="#local-6989586621689756420"><span class="hs-identifier hs-var">rs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">[HashMap Text Value]
+</span><a href="#local-6989586621689756420"><span class="hs-identifier hs-var">rs</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-110"></span><span>  </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-111"></span><span>  </span><span id="local-6989586621689747192"><span class="annot"><span class="annottext">xs :: [HashMap Text Value]
-</span><a href="#local-6989586621689747192"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span id="local-6989586621689747191"><span class="annot"><span class="annottext">HashMap Text Value
-</span><a href="#local-6989586621689747191"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[HashMap Text Value]
+</span><span id="line-111"></span><span>  </span><span id="local-6989586621689756419"><span class="annot"><span class="annottext">xs :: [HashMap Text Value]
+</span><a href="#local-6989586621689756419"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span id="local-6989586621689756418"><span class="annot"><span class="annottext">HashMap Text Value
+</span><a href="#local-6989586621689756418"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span> </span><span class="annot"><span class="annottext">[HashMap Text Value]
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-112"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689747190"><span class="annot"><span class="annottext">ks :: [Text]
-</span><a href="#local-6989586621689747190"><span class="hs-identifier hs-var hs-var">ks</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Text Value -&gt; [Text]
+</span><span id="line-112"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621689756417"><span class="annot"><span class="annottext">ks :: [Text]
+</span><a href="#local-6989586621689756417"><span class="hs-identifier hs-var hs-var">ks</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HashMap Text Value -&gt; [Text]
 forall k v. HashMap k v -&gt; [k]
 </span><span class="hs-identifier hs-var">H.keys</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text Value
-</span><a href="#local-6989586621689747191"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-113"></span><span>        </span><span id="local-6989586621689747188"><span class="annot"><span class="annottext">lookupKeys :: HashMap Text Value -&gt; [(Text, Value)]
-</span><a href="#local-6989586621689747188"><span class="hs-identifier hs-var hs-var">lookupKeys</span></a></span></span><span> </span><span id="local-6989586621689747187"><span class="annot"><span class="annottext">HashMap Text Value
-</span><a href="#local-6989586621689747187"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689747186"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689747186"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[(Text, Value)]
+</span><a href="#local-6989586621689756418"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-113"></span><span>        </span><span id="local-6989586621689756415"><span class="annot"><span class="annottext">lookupKeys :: HashMap Text Value -&gt; [(Text, Value)]
+</span><a href="#local-6989586621689756415"><span class="hs-identifier hs-var hs-var">lookupKeys</span></a></span></span><span> </span><span id="local-6989586621689756414"><span class="annot"><span class="annottext">HashMap Text Value
+</span><a href="#local-6989586621689756414"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621689756413"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689756413"><span class="hs-identifier hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[(Text, Value)]
 -&gt; (Value -&gt; [(Text, Value)]) -&gt; Maybe Value -&gt; [(Text, Value)]
 forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><span class="hs-identifier hs-var">maybe</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Text, Value) -&gt; [(Text, Value)]
@@ -421,20 +421,20 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 -&gt; (Value -&gt; (Text, Value)) -&gt; Value -&gt; [(Text, Value)]
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689747186"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe Value -&gt; [(Text, Value)]) -&gt; Maybe Value -&gt; [(Text, Value)]
+</span><a href="#local-6989586621689756413"><span class="hs-identifier hs-var">k</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe Value -&gt; [(Text, Value)]) -&gt; Maybe Value -&gt; [(Text, Value)]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; HashMap Text Value -&gt; Maybe Value
 forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">H.lookup</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689747186"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Value
-</span><a href="#local-6989586621689747187"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; [(Text, Value)]) -&gt; [Text] -&gt; [(Text, Value)]
+</span><a href="#local-6989586621689756413"><span class="hs-identifier hs-var">k</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text Value
+</span><a href="#local-6989586621689756414"><span class="hs-identifier hs-var">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Text -&gt; [(Text, Value)]) -&gt; [Text] -&gt; [(Text, Value)]
 forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">[Text]
-</span><a href="#local-6989586621689747190"><span class="hs-identifier hs-var">ks</span></a></span><span>
+</span><a href="#local-6989586621689756417"><span class="hs-identifier hs-var">ks</span></a></span><span>
 </span><span id="line-114"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">(HashMap Text Value -&gt; [(Text, Value)])
 -&gt; [HashMap Text Value] -&gt; [[(Text, Value)]]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">HashMap Text Value -&gt; [(Text, Value)]
-</span><a href="#local-6989586621689747188"><span class="hs-identifier hs-var">lookupKeys</span></a></span><span> </span><span class="annot"><span class="annottext">[HashMap Text Value]
-</span><a href="#local-6989586621689747192"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><a href="#local-6989586621689756415"><span class="hs-identifier hs-var">lookupKeys</span></a></span><span> </span><span class="annot"><span class="annottext">[HashMap Text Value]
+</span><a href="#local-6989586621689756419"><span class="hs-identifier hs-var">xs</span></a></span><span>
 </span><span id="line-115"></span></pre></body></html>
