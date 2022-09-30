@@ -72,6 +72,7 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
         -- if we parse at least one aggregation predicate
         <$> (collectOptionalFieldsNE . succeedingBranchesNE)
           ( aggregationFunctions <&> \FunctionSignature {..} -> do
+              let relFunGqlName = typeGqlName <> Name.__ <> fnGQLName <> Name.__ <> Name._arguments <> Name.__ <> Name._columns
               aggPredicateField fnGQLName typeGqlName <$> unfuse do
                 aggPredArguments <-
                   -- We only include an aggregation predicate if we are able to
@@ -86,7 +87,7 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
                       AggregationPredicateArguments . (NE.:| [])
                         <$> fuse
                           ( P.field Name._arguments Nothing
-                              <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar typ)) relGqlName si relTable)
+                              <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar typ)) relFunGqlName si relTable)
                           )
                     Arguments args ->
                       AggregationPredicateArguments
@@ -95,7 +96,7 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
                               . P.object (typeGqlName <> Name.__ <> fnGQLName <> Name.__ <> Name._arguments) Nothing
                               <$> collectFieldsNE
                                 ( args `for` \ArgumentSignature {..} ->
-                                    P.field argName Nothing <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar argType)) relGqlName si relTable)
+                                    P.field argName Nothing <$> fails (tableSelectColumnsPredEnum (== (ColumnScalar argType)) relFunGqlName si relTable)
                                 )
                           )
 
