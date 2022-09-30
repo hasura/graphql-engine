@@ -8,7 +8,6 @@
 -- (dataset field, manual_configuration field etc)
 module Harness.Backend.BigQuery
   ( run_,
-    runSql_,
     getServiceAccount,
     getProjectId,
     createTable,
@@ -49,7 +48,7 @@ import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment (..))
 import Hasura.Backends.BigQuery.Connection (initConnection)
 import Hasura.Backends.BigQuery.Execute qualified as Execute
-import Hasura.Backends.BigQuery.Source (ServiceAccount)
+import Hasura.Backends.BigQuery.Source (BigQueryConnection, ServiceAccount)
 import Hasura.Prelude
 
 getServiceAccount :: HasCallStack => IO ServiceAccount
@@ -60,38 +59,13 @@ getProjectId = getEnvString Constants.bigqueryProjectIdVar
 
 -- | Run a plain Standard SQL string against the server, ignore the
 -- result. Just checks for errors.
-run_ :: (HasCallStack) => ServiceAccount -> Text -> String -> IO ()
-run_ serviceAccount projectId query = do
-  conn <- initConnection serviceAccount projectId Nothing
-  res <- Execute.executeBigQuery conn Execute.BigQuery {Execute.query = fromString query, Execute.parameters = mempty}
-  res `onLeft` (`bigQueryError` query)
+run_ :: HasCallStack => String -> IO ()
+run_ query = do
+  void $
+    runWithRetry
+      (\conn -> (Execute.executeBigQuery conn Execute.BigQuery {Execute.query = fromString query, Execute.parameters = mempty}))
 
-runSql_ :: HasCallStack => String -> IO ()
-runSql_ query = do
-  serviceAccount <- getServiceAccount
-  projectId <- getProjectId
-  catch
-    ( bracket
-        (initConnection serviceAccount projectId Nothing)
-        (const (pure ()))
-        (\conn -> void $ handleResult <$> (Execute.executeBigQuery conn Execute.BigQuery {Execute.query = fromString query, Execute.parameters = mempty}))
-    )
-    ( \(e :: SomeException) ->
-        error
-          ( unlines
-              [ "BigQuery error:",
-                show e,
-                "SQL was:",
-                query
-              ]
-          )
-    )
-  where
-    handleResult :: Either Execute.ExecuteProblem () -> IO ()
-    handleResult (Left _) = throwString "Error handling bigquery"
-    handleResult (Right ()) = pure ()
-
-bigQueryError :: HasCallStack => Execute.ExecuteProblem -> String -> IO ()
+bigQueryError :: HasCallStack => Execute.ExecuteProblem -> String -> IO a
 bigQueryError e query =
   error
     ( unlines
@@ -104,36 +78,19 @@ bigQueryError e query =
 
 -- | create a new BigQuery dataset
 createDataset :: SchemaName -> IO ()
-createDataset schemaName = do
-  serviceAccount <- getServiceAccount
-  projectId <- getProjectId
-  conn <- initConnection serviceAccount projectId Nothing
-  res <- runExceptT $ Execute.insertDataset conn (unSchemaName schemaName)
-  case res of
-    Right _ -> pure ()
-    Left e -> bigQueryError e mempty
+createDataset schemaName =
+  void $ runWithRetry (\conn -> Execute.insertDataset conn $ unSchemaName schemaName)
 
 -- | remove a new BigQuery dataset, used at the end of tests to clean up
 removeDataset :: SchemaName -> IO ()
-removeDataset schemaName = do
-  serviceAccount <- getServiceAccount
-  projectId <- getProjectId
-  conn <- initConnection serviceAccount projectId Nothing
-  res <- runExceptT $ Execute.deleteDataset conn (unSchemaName schemaName)
-  case res of
-    Right _ -> pure ()
-    Left e -> bigQueryError e mempty
+removeDataset schemaName =
+  void $ runWithRetry (\conn -> Execute.deleteDataset conn $ unSchemaName schemaName)
 
 -- | Serialize Table into a SQL statement, as needed, and execute it on the BigQuery backend
 createTable :: SchemaName -> Schema.Table -> IO ()
 createTable schemaName table@Schema.Table {tableName, tableColumns} = do
-  serviceAccount <- getServiceAccount
-  projectId <- getProjectId
-
-  run_
-    serviceAccount
-    projectId
-    $ T.unpack $
+  run_ $
+    T.unpack $
       T.unwords
         ( [ "CREATE TABLE",
             unSchemaName schemaName <> "." <> tableName,
@@ -196,13 +153,8 @@ serialize = \case
 -- | Serialize Table into an SQL DROP statement and execute it
 dropTable :: SchemaName -> Schema.Table -> IO ()
 dropTable schemaName Schema.Table {tableName} = do
-  serviceAccount <- getServiceAccount
-  projectId <- getProjectId
-
-  run_
-    serviceAccount
-    projectId
-    $ T.unpack $
+  run_ $
+    T.unpack $
       T.unwords
         [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
           unSchemaName schemaName <> "." <> tableName,
@@ -344,3 +296,23 @@ retryIfJobRateLimitExceeded action = retry 0
             sleep (seconds $ 2 ^ retryNumber)
             retry (retryNumber + 1)
           else throwIO err
+
+-- | Run action with exponential backoff
+runWithRetry :: (BigQueryConnection -> ExceptT Execute.ExecuteProblem IO a) -> IO a
+runWithRetry action = do
+  let retry retryNumber = do
+        serviceAccount <- getServiceAccount
+        projectId <- getProjectId
+        conn <- initConnection serviceAccount projectId Nothing
+        res <- runExceptT $ action conn
+        case res of
+          Right a -> pure a
+          Left e
+            | "Retrying the job with back-off as described in the BigQuery SLA should solve the problem"
+                `T.isInfixOf` Execute.executeProblemMessage Execute.InsecurelyShowDetails e,
+              retryNumber <= maxRetriesRateLimitExceeded -> do
+              -- exponential backoff
+              sleep (seconds $ 2 ^ retryNumber)
+              retry (retryNumber + 1)
+          Left e -> bigQueryError e mempty
+  retry 0
