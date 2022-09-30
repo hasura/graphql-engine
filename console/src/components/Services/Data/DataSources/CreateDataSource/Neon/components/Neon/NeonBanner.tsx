@@ -42,21 +42,20 @@ export function NeonBanner(props: Props) {
         </span>
       </div>
       <img
-        src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/neon_banner.png"
+        src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/neon.jpg"
         alt="neon_banner"
+        className="rounded"
       />
       <div className="mt-sm mb-sm text-gray-700 text-lg">
         <b>Hasura</b> + <b>Neon</b> are partners now!
       </div>
       <div className="flex justify-between items-center mb-sm">
-        <div className="w-3/4 text-md text-gray-700">
-          <p>
-            The multi-cloud fully managed Postgres with a generous free tier. We
-            separated storage and compute to offer autoscaling, branching, and
-            bottomless storage.
-          </p>
+        <div className="w-[70%] text-md text-gray-700">
+          The multi-cloud fully managed Postgres with a generous free tier. We
+          separated storage and compute to offer autoscaling, branching, and
+          bottomless storage.
         </div>
-        <div className="flex w-1/4 justify-end">
+        <div>
           <Button
             data-trackid="neon-connect-db-button"
             data-testid="neon-connect-db-button"
@@ -72,7 +71,7 @@ export function NeonBanner(props: Props) {
             }}
             disabled={isButtonDisabled}
           >
-            {props.buttonText}
+            <div className="text-xs 2xl:text-sm">{props.buttonText}</div>
           </Button>
         </div>
       </div>
