@@ -119,7 +119,12 @@ buildPostgresSpecs = do
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-        let sqlGenCtx = SQLGenCtx Options.Don'tStringifyNumbers Options.Don'tDangerouslyCollapseBooleans Options.Don'tOptimizePermissionFilters
+        let sqlGenCtx =
+              SQLGenCtx
+                Options.Don'tStringifyNumbers
+                Options.Don'tDangerouslyCollapseBooleans
+                Options.Don'tOptimizePermissionFilters
+                Options.EnableBigQueryStringNumericInput
             maintenanceMode = MaintenanceModeDisabled
             readOnlyMode = ReadOnlyModeDisabled
             serverConfigCtx =

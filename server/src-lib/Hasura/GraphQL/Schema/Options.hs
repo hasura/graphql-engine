@@ -8,6 +8,7 @@ module Hasura.GraphQL.Schema.Options
     RemoteSchemaPermissions (..),
     OptimizePermissionFilters (..),
     IncludeUpdateManyFields (..),
+    BigQueryStringNumericInput (..),
   )
 where
 
@@ -21,7 +22,8 @@ data SchemaOptions = SchemaOptions
     soDangerousBooleanCollapse :: DangerouslyCollapseBooleans,
     soInferFunctionPermissions :: InferFunctionPermissions,
     soOptimizePermissionFilters :: OptimizePermissionFilters,
-    soIncludeUpdateManyFields :: IncludeUpdateManyFields
+    soIncludeUpdateManyFields :: IncludeUpdateManyFields,
+    soBigQueryStringNumericInput :: BigQueryStringNumericInput
   }
 
 -- | Should we represent numbers in our responses as numbers, or strings?
@@ -105,4 +107,10 @@ instance ToJSON RemoteSchemaPermissions where
 data OptimizePermissionFilters
   = OptimizePermissionFilters
   | Don'tOptimizePermissionFilters
+  deriving (Eq, Show)
+
+-- | Should we enable string-accepting scalar parsers for BigQuery sources
+data BigQueryStringNumericInput
+  = EnableBigQueryStringNumericInput
+  | DisableBigQueryStringNumericInput
   deriving (Eq, Show)
