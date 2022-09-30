@@ -3,7 +3,7 @@ import { persistPageSizeChange } from '@/components/Services/Data/TableBrowseRow
 import { runFilterQuery } from '@/features/BrowseRows';
 import type { UserQuery } from '@/features/BrowseRows';
 import { useAppDispatch } from '@/store';
-import { TableSchema } from '@/components/Services/Data/TableBrowseRows/utils';
+import { NormalizedTable } from '@/dataSources/types';
 import {
   setLimit,
   setOffset,
@@ -20,7 +20,7 @@ type PaginationWithOnlyNavContainerProps = {
   onChangePageSize: PaginationWithOnlyNavProps['changePageSize'];
   pageSize: number;
   rows: PaginationWithOnlyNavProps['rows'];
-  tableSchema: TableSchema;
+  tableSchema: NormalizedTable;
   userQuery: UserQuery;
 };
 

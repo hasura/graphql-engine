@@ -58,10 +58,19 @@ const columnDataTypes = {
 const operators = [
   { name: 'equals', value: '$eq', graphqlOp: '_eq' },
   { name: 'not equals', value: '$ne', graphqlOp: '_neq' },
+  { name: 'in', value: '$in', graphqlOp: '_in', defaultValue: '[]' },
+  { name: 'nin', value: '$nin', graphqlOp: '_nin', defaultValue: '[]' },
   { name: '>', value: '$gt', graphqlOp: '_gt' },
   { name: '<', value: '$lt', graphqlOp: '_lt' },
   { name: '>=', value: '$gte', graphqlOp: '_gte' },
   { name: '<=', value: '$lte', graphqlOp: '_lte' },
+  { name: 'like', value: '$like', graphqlOp: '_like', defaultValue: '%%' },
+  {
+    name: 'not like',
+    value: '$nlike',
+    graphqlOp: '_nlike',
+    defaultValue: '%%',
+  },
 ];
 
 // createSQLRegex matches one or more sql for creating view, table or functions, and extracts the type, schema, name and also if it is a partition.

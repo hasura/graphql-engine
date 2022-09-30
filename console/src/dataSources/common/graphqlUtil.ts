@@ -1,7 +1,7 @@
 import { CustomRootFields, TableConfig } from './../../metadata/types';
 import {
   OrderBy,
-  WhereClause,
+  WhereClauseRecord,
 } from '../../components/Common/utils/v1QueryUtils';
 import { ReduxState } from '../../types';
 import { BaseTableColumn, Relationship, Table } from '../types';
@@ -82,25 +82,29 @@ export const RqlToGraphQlOp = (op: string) => {
 };
 
 export const generateWhereClauseQueryString = (
-  wheres: WhereClause[],
+  wheres: WhereClauseRecord[],
   columnTypeInfo: BaseTableColumn[],
   tableConfiguration: TableConfig,
   getFormattedValue: (type: string, value: any) => string | number | undefined
 ): string | null => {
   const columnConfig = tableConfiguration?.column_config ?? {};
-  const whereClausesArr = wheres.map((i: Record<string, any>) => {
-    const columnName = Object.keys(i)[0];
-    const RqlOperator = Object.keys(i[columnName])[0];
-    const value = i[columnName][RqlOperator];
-    const type = columnTypeInfo?.find(
+  const whereClausesArr = wheres.map(whereClause => {
+    const columnName = Object.keys(whereClause)[0];
+    const rqlOperator = Object.keys(whereClause[columnName])[0];
+    const value = whereClause[columnName][rqlOperator];
+    const currentColumnInfo = columnTypeInfo?.find(
       c => c.column_name === columnName
-    )?.data_type_name;
-    return `${
-      columnConfig[columnName]?.custom_name ?? columnName
-    }: {${RqlToGraphQlOp(RqlOperator)}: ${getFormattedValue(
-      type || 'varchar',
-      value
-    )} }`;
+    );
+
+    // NOTE: the usage of `data_type` has been introduced as a workaround to support BigQuery, for which `data_type_name` is not defined here
+    const columnType =
+      currentColumnInfo?.data_type_name || currentColumnInfo?.data_type;
+
+    const queryColumnName = columnConfig[columnName]?.custom_name ?? columnName;
+    const operator = RqlToGraphQlOp(rqlOperator);
+    const formattedValue = getFormattedValue(columnType || 'varchar', value);
+
+    return `${queryColumnName}: {${operator}: ${formattedValue} }`;
   });
   return whereClausesArr.length
     ? `where: {${whereClausesArr.join(',')}}`
@@ -128,7 +132,7 @@ export const getGraphQLQueryBase = ({
     throw new Error('Error in finding column info for table');
   }
 
-  let whereConditions: WhereClause[] = [];
+  let whereConditions: WhereClauseRecord[] = [];
   let isRelationshipView = false;
   if (view.query?.where) {
     if (view.query.where.$and) {

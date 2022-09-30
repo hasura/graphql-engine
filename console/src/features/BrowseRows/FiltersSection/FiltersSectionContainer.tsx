@@ -18,14 +18,15 @@ import {
 } from './FiltersSectionContainer.utils';
 import { FiltersSection, sortOptions } from './FiltersSection';
 import { FiltersAndSortFormValues, UserQuery } from './types';
-import { Table, useTableSchema } from './hooks/useTableSchema';
+import { useTableSchema } from './hooks/useTableSchema';
+import type { BrowseRowsTable } from './hooks/useTableSchema.utils';
 import { useTableColumns } from './hooks/useTableColumns';
 import { useTableName } from './hooks/useTableName';
 
 type FilterSectionContainerProps = {
   onRunQuery: (userQuery: UserQuery) => void | null;
   dataSourceName: string;
-  table: Table;
+  table: BrowseRowsTable;
 };
 
 const replaceAllDotsWithUnderscore = (text: string) => text.replace(/\./g, '_');
@@ -65,6 +66,11 @@ export const FilterSectionContainer = ({
   }, []);
 
   const onSubmit = (userQuery: UserQuery) => {
+    if (!tableSchema) {
+      console.error('tableSchema is not defined', tableSchema);
+      return;
+    }
+
     dispatch(setOffset(0));
     setUrlParams(userQuery.where.$and, userQuery.order_by);
     dispatch(

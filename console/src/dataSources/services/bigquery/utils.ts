@@ -3,26 +3,13 @@ import {
   getGraphQLQueryBase,
   QueryBody,
 } from '@/dataSources/common';
-import {
-  OrderBy,
-  WhereClause,
-} from '../../../components/Common/utils/v1QueryUtils';
 import Endpoints from '../../../Endpoints';
 import { TableConfig } from '../../../metadata/types';
 import { ReduxState } from '../../../types';
-import { BaseTableColumn, Relationship, Table } from '../../types';
+import { Relationship } from '../../types';
 import { isEmpty } from '../../../components/Common/utils/jsUtils';
 
 type Tables = ReduxState['tables'];
-interface GetGraphQLQuery {
-  allSchemas: Table[];
-  view: Tables['view'];
-  originalTable: string;
-  currentSchema: string;
-  isExport?: boolean;
-  tableConfiguration: TableConfig;
-  defaultSchema: string;
-}
 
 export const BigQueryDataTypes = {
   character: ['STRING'],
@@ -56,57 +43,21 @@ const getFormattedValue = (
   if (
     BigQueryDataTypes.character.includes(type) ||
     BigQueryDataTypes.dateTime.includes(type)
-  )
+  ) {
+    if (Array.isArray(value)) {
+      return JSON.stringify(value);
+    }
     return `"${value}"`;
+  }
 
-  if (BigQueryDataTypes.numeric.includes(type)) return value;
+  if (BigQueryDataTypes.numeric.includes(type)) {
+    if (Array.isArray(value)) {
+      return JSON.stringify(value);
+    }
+    return value;
+  }
 
   return value;
-};
-
-const RqlToGraphQlOp = (op: string) => {
-  if (!op || !op?.startsWith('$')) return 'none';
-  return (
-    operators.find(_op => _op.value === op)?.graphqlOp ?? op.replace('$', '_')
-  );
-};
-
-const generateWhereClauseQueryString = (
-  wheres: WhereClause[],
-  columnTypeInfo: BaseTableColumn[],
-  tableConfiguration: TableConfig
-): string | null => {
-  const columnConfig = tableConfiguration?.column_config ?? {};
-  const whereClausesArr = wheres.map((i: Record<string, any>) => {
-    const columnName = Object.keys(i)[0];
-    const RqlOperator = Object.keys(i[columnName])[0];
-    const value = i[columnName][RqlOperator];
-    const type = columnTypeInfo?.find(
-      c => c.column_name === columnName
-    )?.data_type_name;
-    return `${
-      columnConfig[columnName]?.custom_name ?? columnName
-    }: {${RqlToGraphQlOp(RqlOperator)}: ${getFormattedValue(
-      type || 'varchar',
-      value
-    )} }`;
-  });
-  return whereClausesArr.length
-    ? `where: {${whereClausesArr.join(',')}}`
-    : null;
-};
-
-const generateSortClauseQueryString = (
-  sorts: OrderBy[],
-  tableConfiguration: TableConfig
-): string | null => {
-  const columnConfig = tableConfiguration?.column_config ?? {};
-  const sortClausesArr = sorts.map((i: OrderBy) => {
-    return `${columnConfig[i.column]?.custom_name ?? i.column}: ${i.type}`;
-  });
-  return sortClausesArr.length
-    ? `order_by: {${sortClausesArr.join(',')}}`
-    : null;
 };
 
 const getColQuery = (
@@ -126,79 +77,6 @@ const getColQuery = (
         '\n'
       )} }`;
   });
-};
-
-export const getGraphQLQueryForBrowseRows = ({
-  allSchemas,
-  view,
-  originalTable,
-  currentSchema,
-  isExport = false,
-  tableConfiguration,
-  defaultSchema,
-}: GetGraphQLQuery) => {
-  const currentTable: Table | undefined = allSchemas?.find(
-    (t: Table) =>
-      t.table_name === originalTable && t.table_schema === currentSchema
-  );
-  const columnTypeInfo: BaseTableColumn[] = currentTable?.columns || [];
-  const relationshipInfo: Relationship[] = currentTable?.relationships || [];
-
-  if (!columnTypeInfo) {
-    throw new Error('Error in finding column info for table');
-  }
-
-  let whereConditions: WhereClause[] = [];
-  let isRelationshipView = false;
-  if (view.query.where) {
-    if (view.query.where.$and) {
-      whereConditions = view.query.where.$and;
-    } else {
-      isRelationshipView = true;
-      whereConditions = Object.keys(view.query.where)
-        .filter(k => view.query.where[k])
-        .map(k => {
-          const obj = {} as any;
-          obj[k] = { $eq: view.query.where[k] };
-          return obj;
-        });
-    }
-  }
-  const sortConditions: OrderBy[] = [];
-  if (view.query.order_by) {
-    sortConditions.push(...view.query.order_by);
-  }
-  const limit = isExport ? null : `limit: ${view.curFilter.limit}`;
-  const offset = isExport
-    ? null
-    : `offset: ${!isRelationshipView ? view.curFilter.offset : 0}`;
-  const clauses = `${[
-    generateWhereClauseQueryString(
-      whereConditions,
-      columnTypeInfo,
-      tableConfiguration
-    ),
-    generateSortClauseQueryString(sortConditions, tableConfiguration),
-    limit,
-    offset,
-  ]
-    .filter(Boolean)
-    .join(',')}`;
-
-  return `query TableRows {
-      ${
-        currentSchema === defaultSchema
-          ? originalTable
-          : `${currentSchema}_${originalTable}`
-      } ${clauses && `(${clauses})`} {
-          ${getColQuery(
-            view.query.columns,
-            view.curFilter.limit,
-            relationshipInfo,
-            tableConfiguration
-          ).join('\n')}
-    }
-  }`;
 };
 
 export const getTableRowRequestBody = ({

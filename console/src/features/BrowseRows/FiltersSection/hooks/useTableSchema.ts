@@ -1,14 +1,18 @@
 import { NormalizedTable } from '@/dataSources/types';
 import { useAppSelector } from '@/store';
+import { getTableSchemaName } from './useTableSchema.utils';
+import type { BrowseRowsTable } from './useTableSchema.utils';
 
-// NOTE: temporary type, to be replaced when GDC is ready
-export type Table = { schema: string; name: string };
-
-export const useTableSchema = (table: Table) => {
-  const tableSchema = useAppSelector(state =>
+export const useTableSchema = (table: BrowseRowsTable) => {
+  const tableSchema: NormalizedTable | null = useAppSelector(state =>
     state.tables.allSchemas.find((schema: NormalizedTable) => {
+      const tableSchemaName = getTableSchemaName(table);
+      if (!tableSchemaName) {
+        return null;
+      }
+
       return (
-        schema.table_schema === table?.schema &&
+        schema.table_schema === tableSchemaName &&
         schema.table_name === table?.name
       );
     })

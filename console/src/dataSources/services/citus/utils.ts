@@ -85,10 +85,18 @@ const getFormattedValue = (
     CitusDataTypes.character.includes(type) ||
     CitusDataTypes.dateTime.includes(type)
   ) {
+    if (Array.isArray(value)) {
+      return JSON.stringify(value);
+    }
     return `"${value}"`;
   }
 
-  if (CitusDataTypes.numeric.includes(type)) return value;
+  if (CitusDataTypes.numeric.includes(type)) {
+    if (Array.isArray(value)) {
+      return JSON.stringify(value);
+    }
+    return value;
+  }
   return undefined;
 };
 

@@ -181,7 +181,12 @@ type ColumnExpValue = Record<validOperators | string, any>;
 type ColumnExp = Record<string, ColumnExpValue>;
 type BoolExp = AndExp | OrExp | NotExp | ColumnExp;
 
-export type WhereClause = BoolExp | Record<string, any>;
+type ColumnName = string;
+type Operator = string;
+type ClauseValue = string | string[] | number | number[];
+type OperatorValue = Record<Operator, ClauseValue>;
+export type WhereClauseRecord = Record<ColumnName, OperatorValue>;
+export type WhereClause = BoolExp | WhereClauseRecord;
 
 export const makeOrderBy = (
   column: string,
