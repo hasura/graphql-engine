@@ -231,9 +231,9 @@ runScript file = do
       readProcessWithExitCode &quot;/bin/sh&quot; [] $ T.unpack fileContent
   when (exitCode /= ExitSuccess) $
     fail $
-      &quot;Running shell script &quot; ++ fp ++ &quot; failed with exit code : &quot;
+      &quot;Running shell script &quot; ++ fp ++ &quot; failed with exit code: &quot;
         ++ show exitCode
-        ++ &quot; and with error : &quot;
+        ++ &quot; and with error: &quot;
         ++ stdErr
   [||stdOut||]
 -}</span><span>
