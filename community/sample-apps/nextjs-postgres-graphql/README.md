@@ -1,22 +1,25 @@
 # nextjs-postgres-graphql
 
-Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgres as database using this awesome library: [withData](https://github.com/adamsoffer/next-apollo).
+Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgres as database using [Apollo Client](https://www.apollographql.com/apollo-clients).
 
-[![Edit nextjs-postgres-graphql](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/github/hasura/graphql-engine/tree/master/community/sample-apps/nextjs-postgres-graphql?fontsize=14)
+[![Edit nextjs-postgres-graphql](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/next-apollo-2rffsi)
 
 ![Nextjs Postgres GraphQL](./assets/nextjs-postgres-graphql.png)
 
 # Tutorial
 
 - Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
-  
+
   [![Deploy to Hasura Cloud](https://graphql-engine-cdn.hasura.io/img/deploy_to_hasura.png)](https://cloud.hasura.io/signup)
 
-- Get the Hasura app URL (say `nextjs-graphql.hasura.app`)
+- Get the GraphQL API URL for your Hasura app from settings (say `nextjs-graphql.hasura.app`)
+
+- Get the `Admin Secret`
+  ![Hasura Variables](./assets/hasura-variables.png)
 
 - Create `author` table:
-  
-  Open Hasura console: visit https://nextjs-graphql.hasura.app on a browser  
+
+  Open Hasura console: visit <https://nextjs-graphql.hasura.app> on a browser  
   Navigate to `Data` section in the top nav bar and create a table as follows:
 
   ![Create author table](../gatsby-postgres-graphql/assets/add_table.jpg)
@@ -30,81 +33,116 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
   ![Insert data into author table](../gatsby-postgres-graphql/assets/browse_rows.jpg)
 
 - Clone this repo:
+
   ```bash
   git clone https://github.com/hasura/graphql-engine
   cd graphql-engine/community/sample-apps/nextjs-postgres-graphql
   ```
 
 - Install npm modules:
+
   ```bash
   npm install
   ```
 
-- Create config.js as follows, in this step we are configuring `withData` with an `httpLink` to connect to a valid GraphQL server URL.
-  ```js
-  import { withData } from 'next-apollo'
-  import { HttpLink } from 'apollo-link-http'
-  
-  // can also be a function that accepts a `context` object (SSR only) and returns a config
-  const config = {
-    link: new HttpLink({
-      uri: 'https://my-app.hasura.app/v1/graphql', // <- Configure GraphQL Server URL (must be absolute)
-    })
-  }
+- Rename the `.env.example` to `.env` and set the following variables
 
-  export default withData(config)
+  - `NEXT_PUBLIC_HASURA_APP_URL`:- to your GraphQL API URL
+  - `NEXT_PUBLIC_HASURA_ADMIN_SECRET`:- to your Hasura Admin Secret
+
+- Create config.js as follows :
+  - In the first step, we initialize ApolloClient by passing its constructor a configuration object with the `uri`, `cache`, and `headers`.
+
+  - In the second step, we create the HOC component using the `withApollo` function that takes 2 inputs:
+    1) a callback that returns the ApolloClient object.
+    1) an object with a prop: `render` - used to wrap **your** pages with `<ApolloProvider>`
+
+  ```jsx
+
+  import withApollo from 'next-with-apollo';
+  import { ApolloClient, ApolloProvider, InMemoryCache} from '@apollo/client';
+
+  // creating the Apollo Client
+  const client = new ApolloClient({
+        headers: {
+          'x-hasura-admin-secret': process.env.NEXT_PUBLIC_HASURA_ADMIN_SECRET
+        },
+        uri: process.env.NEXT_PUBLIC_HASURA_APP_URL,  // <- Configure GraphQL Server URL (must be absolute)
+        cache: new InMemoryCache(),
+      });
+
+  export default withApollo(
+    () => {
+      return client
+    },
+    {
+      // providing the Apollo Client access to the pages
+      render: ({ Page, props }) => {
+        return (
+          <ApolloProvider client={props.apollo}>
+            <Page {...props} />
+          </ApolloProvider>
+        );
+      }
+    }
+  );
+  
   ```
 
-- Wrap your page component with `Query` component from `react-apollo` so that appropriate data can be fetched while the page is SSRed
-    - GraphQL query
+- GraphQL query
 
-      ```js
+  - GraphQL query
 
-      const query = gql`
-      	query {
-      	  author {
-      	    id
-      	    name
-      	  }
-      	}
-      `
+    ```graphql
 
-      ```
-    - Wrap your component with `Query`
-      ```js
+    const QUERY = gql`
+     query {
+       author {
+         id
+         name
+       }
+     }
+    `
 
-        <Query    // <- Wrap the component which requires data with Query component from react-apollo
-          query={ query }
-          fetchPolicy={ 'cache-and-network' }
-        >
-          {({ loading, data, error }) => {
-            if(error) {
-              return (<div>Error..</div>);
-            }
-            return (
-              <div>
-                <h1>My Authors </h1>
-                <AuthorList authors={data ? data.author: []} />
-              </div>
-            );
-        }}
-        </Query>
+    ```
 
-      ```
+  - Execute the `QUERY` query using the `useQuery` hook and fetch the Author data from the Hasura GraphQL server.
 
+    ```jsx
+
+    const Index = () => {
+      const { data, loading, error } = useQuery(QUERY);
+
+      if (loading) {
+        return <h2>Loading...</h2>;
+      }
+
+      if (error) {
+        return <h2>Error..</h2>;
+      }
+
+      return (
+        <div>
+          <h1>My Authors </h1>
+          <AuthorList authors={data ? data.author : []} />
+        </div>
+      );
+    };
+
+    export default withApollo(Index);
+    
+    ```
 
 - Run the app:
+
   ```bash
   npm run dev -- -p 8000
   ```
+
 - Test the app
   Visit [http://localhost:8000](http://localhost:8000) to view the app
 
-  ![Demo app](../gatsby-postgres-graphql/assets/test_app.jpg)
-
-# How it works
-
-  It uses [next-apollo](https://github.com/adamsoffer/next-apollo#how-does-it-work) underneath which ensures that data requirement is satisfied before it is rendered on the server and next.js takes care of the rest.
+  ![Demo app](./assets/demo-app.png)
 
 # Contributing
 

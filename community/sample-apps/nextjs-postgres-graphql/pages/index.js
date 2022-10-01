@@ -1,37 +1,33 @@
-import gql from 'graphql-tag'
-import { Query } from 'react-apollo'
-import withData from '../config';
+import { useQuery, gql } from "@apollo/client";
+import AuthorList from "./AuthorList";
+import withApollo from "../config";
 
-import AuthorList from './AuthorList';
+const QUERY = gql`
+  query {
+    author {
+      id
+      name
+    }
+  }
+`;
 
-const query = gql`
-	query {
-	  author {
-	    id
-	    name
-	  }
-	}
-`
+const Index = () => {
+  const { data, loading, error } = useQuery(QUERY);
 
-const Index = ({ authors } ) => {
+  if (loading) {
+    return <h2>Loading...</h2>;
+  }
+
+  if (error) {
+    return <h2>Error..</h2>;
+  }
+
   return (
-    <Query    // <- Wrapping the main component with Query component from react-apollo
-      query={ query }
-      fetchPolicy={ 'cache-and-network' }
-    >
-      {({ loading, data, error }) => {
-        if(error) {
-          return (<div>Error..</div>);
-        }
-        return (
-          <div>
-            <h1>My Authors </h1>
-            <AuthorList authors={data ? data.author: []} />
-          </div>
-        );
-      }}
-    </Query>
+    <div>
+      <h1>My Authors </h1>
+      <AuthorList authors={data ? data.author : []} />
+    </div>
   );
 };
 
-export default withData(Index)
+export default withApollo(Index);
