@@ -344,7 +344,7 @@ instance (Backend b) => FromJSON (TableMetadata b) where
     let unexpectedKeys = getUnexpectedKeys o
     unless (null unexpectedKeys) $
       fail $
-        "unexpected keys when parsing TableMetadata : "
+        "unexpected keys when parsing TableMetadata: "
           <> show (HS.toList unexpectedKeys)
 
     TableMetadata

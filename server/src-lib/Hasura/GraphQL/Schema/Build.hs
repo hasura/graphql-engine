@@ -214,7 +214,7 @@ buildTableStreamingSubscriptionFields ::
 buildTableStreamingSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo tableIdentifier = do
   tCase <- asks getter
   let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
-      selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner : " <>> tableName
+      selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner: " <>> tableName
       selectStreamName =
         runMkRootFieldName mkRootFieldName $
           setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier

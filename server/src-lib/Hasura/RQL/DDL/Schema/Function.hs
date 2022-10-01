@@ -63,7 +63,7 @@ trackFunctionP1 sourceName qf = do
   unless (isJust $ AB.unpackAnyBackend @b =<< Map.lookup sourceName (scSources rawSchemaCache)) $
     throw400 NotExists $ sourceName <<> " is not a known " <> reify (backendTag @b) <<> " source"
   when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache) $
-    throw400 AlreadyTracked $ "function already tracked : " <>> qf
+    throw400 AlreadyTracked $ "function already tracked: " <>> qf
   let qt = functionToTable @b qf
   when (isJust $ unsafeTableInfo @b sourceName qt $ scSources rawSchemaCache) $
     throw400 NotSupported $ "table with name " <> qf <<> " already exists"

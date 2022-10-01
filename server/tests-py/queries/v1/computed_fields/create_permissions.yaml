@@ -60,8 +60,8 @@
       name: select_permission user in table author in source default
       type: select_permission
     path: $.args
-    error: 'Inconsistent object: in table "author": in permission for role "user": computed
-      field "random" does not exist'
+    error: 'Inconsistent object: in table "author": in permission for role "user":
+      computed field "random" does not exist'
     code: invalid-configuration
 - description: Create select permission with computed field which returns a set of
     table
@@ -95,14 +95,14 @@
           schema: public
           name: author
       reason: 'Inconsistent object: in table "author": in permission for role "user":
-        select permissions on computed field "get_articles" are auto-derived from the
-        permissions on its returning table "article" and cannot be specified manually'
+        select permissions on computed field "get_articles" are auto-derived from
+        the permissions on its returning table "article" and cannot be specified manually'
       name: select_permission user in table author in source default
       type: select_permission
     path: $.args
-    error: 'Inconsistent object: in table "author": in permission for role "user": select
-      permissions on computed field "get_articles" are auto-derived from the permissions
-      on its returning table "article" and cannot be specified manually'
+    error: 'Inconsistent object: in table "author": in permission for role "user":
+      select permissions on computed field "get_articles" are auto-derived from the
+      permissions on its returning table "article" and cannot be specified manually'
     code: invalid-configuration
 - description: Create select permission on article table
   url: /v1/query
@@ -143,10 +143,10 @@
       table: author
       name: full_name
   response:
-    path: $.args
-    error: 'cannot drop due to the following dependent objects : permission author.user.select
-      in source "default"'
     code: dependency-error
+    error: 'cannot drop due to the following dependent objects: permission author.user.select
+      in source "default"'
+    path: $.args
 - description: Drop a computed field with cascade
   url: /v1/query
   status: 200

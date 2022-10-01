@@ -76,7 +76,7 @@ parseBoolExpOperations rhsParser _table _fields columnRef value =
         "$st_crosses" -> ABackendSpecific <$> parseGeometryOp ASTCrosses
         "_st_touches" -> ABackendSpecific <$> parseGeometryOp ASTTouches
         "$st_touches" -> ABackendSpecific <$> parseGeometryOp ASTTouches
-        x -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
+        x -> throw400 UnexpectedPayload $ "Unknown operator: " <> x
       where
         colTy = columnReferenceType columnRef
 

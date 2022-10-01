@@ -2,30 +2,30 @@
   url: /v1/query
   status: 400
   response:
+    code: invalid-configuration
+    error: 'Inconsistent object: in action "action_create_fail"; Async action relations
+      cannot be used with object fields: "someNestedObj"'
     internal:
     - definition:
+        comment:
         definition:
+          arguments:
+          - description:
+            name: someInput
+            type: String!
+          forward_client_headers: false
+          handler: http://some.random/endpoint
+          headers: []
           kind: asynchronous
           output_type: UserIdObj_Fail
-          arguments:
-          - name: someInput
-            type: String!
-            description:
-          headers: []
-          handler: http://some.random/endpoint
-          type: mutation
           timeout: 30
-          forward_client_headers: false
+          type: mutation
         name: action_create_fail
-        comment:
-      reason: 'Inconsistent object: in action "action_create_fail"; Async action relations
-        cannot be used with object fields : "someNestedObj"'
       name: action action_create_fail
+      reason: 'Inconsistent object: in action "action_create_fail"; Async action relations
+        cannot be used with object fields: "someNestedObj"'
       type: action
-    path: "$.args[1].args"
-    error: 'Inconsistent object: in action "action_create_fail"; Async action relations
-      cannot be used with object fields : "someNestedObj"'
-    code: invalid-configuration
+    path: $.args[1].args
   query:
     type: bulk
     args:

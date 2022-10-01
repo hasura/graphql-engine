@@ -185,7 +185,7 @@ instance Hashable SchemaDependency
 reportDependentObjectsExist :: (MonadError QErr m) => [SchemaObjId] -> m ()
 reportDependentObjectsExist dependentObjects =
   throw400 DependencyError $
-    "cannot drop due to the following dependent objects : "
+    "cannot drop due to the following dependent objects: "
       <> reportSchemaObjs dependentObjects
 
 purgeSourceAndSchemaDependencies ::

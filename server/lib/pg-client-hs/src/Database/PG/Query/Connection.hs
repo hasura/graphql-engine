@@ -203,7 +203,7 @@ initPQConn ci logger =
 
     whenSerVerNotOk v =
       throwIO $
-        PGConnErr $ "Unsupported postgres version : " <> fromString (show v)
+        PGConnErr $ "Unsupported postgres version: " <> fromString (show v)
 
     whenSerVerOk conn = do
       -- Set some parameters and check the response
@@ -331,7 +331,7 @@ checkResult conn mRes =
       msg <- liftIO $ readConnErr conn
       let whenConnOk =
             throwPGIntErr $
-              PGIUnexpected $ "Fatal, OOM maybe? : " <> msg
+              PGIUnexpected $ "Fatal error (perhaps an OOM): " <> msg
       isConnOk >>= bool (whenConnNotOk msg) whenConnOk
     Just res -> do
       st <- lift $ PQ.resultStatus res
@@ -348,7 +348,7 @@ checkResult conn mRes =
         _ ->
           throwPGIntErr $
             PGIUnexpected $
-              "Unexpected execStatus : " <> Text.pack (show st)
+              "Unexpected execStatus: " <> Text.pack (show st)
   where
     isConnOk = do
       connSt <- lift $ PQ.status conn

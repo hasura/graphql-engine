@@ -1,6 +1,6 @@
 - description: Track table
   url: /v1/query
-  status: 200  
+  status: 200
   response:
     message: success
   query:
@@ -10,11 +10,11 @@
 
 - description: Track already untracked table
   url: /v1/query
-  status: 400  
+  status: 400
   response:
-    path: $.args
-    error: 'view/table already tracked : "author"'
     code: already-tracked
+    error: 'view/table already tracked: "author"'
+    path: $.args
   query:
     type: track_table
     args:
@@ -24,7 +24,7 @@
   url: /v1/query
   status: 200
   response:
-  - id: 1 
+  - id: 1
     name: Author 1
   - id: 2
     name: Author 2
@@ -33,13 +33,13 @@
     args:
       table: author
       columns:
-        - id
-        - name
+      - id
+      - name
 
 #Untrack table
 - description: Untrack table
   url: /v1/query
-  status: 200  
+  status: 200
   response:
     message: success
   query:
@@ -51,11 +51,11 @@
 #Untrack table
 - description: Untrack table
   url: /v1/query
-  status: 400  
+  status: 400
   response:
-    path: $.args
-    error: 'view/table already untracked : "author"'
     code: already-untracked
+    error: 'view/table already untracked: "author"'
+    path: $.args
   query:
     type: untrack_table
     args:
@@ -74,6 +74,6 @@
     args:
       table: author
       columns:
-        - id
-        - name
+      - id
+      - name
 

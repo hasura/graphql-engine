@@ -426,7 +426,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
   (userInfo, origReqHdrs, ipAddress) <- case userInfoM of
     CSInitialised WsClientState {..} -> return (wscsUserInfo, wscsReqHeaders, wscsIpAddress)
     CSInitError initErr -> do
-      let e = "cannot start as connection_init failed with : " <> initErr
+      let e = "cannot start as connection_init failed with: " <> initErr
       withComplete $ sendStartErr e
     CSNotInitialised _ _ -> do
       let e = "start received before the connection is initialised"

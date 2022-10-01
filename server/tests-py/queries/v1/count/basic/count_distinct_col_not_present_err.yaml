@@ -2,9 +2,9 @@ description: Count number of authors with atleast one published article
 url: /v1/query
 status: 400
 response:
-  path: $.args.distinct[0]
-  error: ! 'no such column exists : "author_name"'
   code: permission-denied
+  error: 'no such column exists: "author_name"'
+  path: $.args.distinct[0]
 query:
   type: count
   args:

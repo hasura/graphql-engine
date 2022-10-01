@@ -181,7 +181,7 @@ args:
       responseValue
         `shouldBeYaml` [yaml|
 path: $
-error: 'cannot drop due to the following dependent objects : event-trigger hasura.users.users_name_created_at
+error: 'cannot drop due to the following dependent objects: event-trigger hasura.users.users_name_created_at
                    in source "postgres"'
 code: dependency-error
                                         |]
