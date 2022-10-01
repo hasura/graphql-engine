@@ -307,7 +307,7 @@ parseBoolExpOperations' rhsParser rootTable fieldInfoMap columnRef value =
         -- "_cast" -> parseCast
         -- "$cast" -> parseCast
 
-        x -> throw400 UnexpectedPayload $ "Unknown operator : " <> x
+        x -> throw400 UnexpectedPayload $ "Unknown operator: " <> x
       where
         parseOne = parseWithTy columnType val
         parseManyWithType ty = rhsParser (CollectableTypeArray ty) val

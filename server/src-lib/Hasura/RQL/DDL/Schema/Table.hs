@@ -134,7 +134,7 @@ trackExistingTableOrViewP1 ::
 trackExistingTableOrViewP1 source tableName = do
   sourceInfo <- askSourceInfo source
   when (isTableTracked @b sourceInfo tableName) $
-    throw400 AlreadyTracked $ "view/table already tracked : " <>> tableName
+    throw400 AlreadyTracked $ "view/table already tracked: " <>> tableName
   let functionName = tableToFunction @b tableName
   when (isJust $ Map.lookup functionName $ _siFunctions @b sourceInfo) $
     throw400 NotSupported $ "function with name " <> tableName <<> " already exists"
@@ -343,7 +343,7 @@ unTrackExistingTableOrViewP1 (UntrackTable source vn _) = do
   schemaCache <- askSchemaCache
   void $
     unsafeTableInfo @b source vn (scSources schemaCache)
-      `onNothing` throw400 AlreadyUntracked ("view/table already untracked : " <>> vn)
+      `onNothing` throw400 AlreadyUntracked ("view/table already untracked: " <>> vn)
 
 unTrackExistingTableOrViewP2 ::
   forall b m.

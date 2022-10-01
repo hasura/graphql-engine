@@ -170,7 +170,7 @@ checkPermOnCol pt allowedCols col = do
     throw400 PermissionDenied $ permErrMsg role
   where
     permErrMsg role
-      | role == adminRoleName = "no such column exists : " <>> col
+      | role == adminRoleName = "no such column exists: " <>> col
       | otherwise =
         "role " <> role <<> " does not have permission to " <> permTypeToCode pt <> " column " <>> col
 
@@ -185,7 +185,7 @@ checkSelectPermOnScalarComputedField selPermInfo computedField = do
     throw400 PermissionDenied $ permErrMsg role
   where
     permErrMsg role
-      | role == adminRoleName = "no such computed field exists : " <>> computedField
+      | role == adminRoleName = "no such computed field exists: " <>> computedField
       | otherwise =
         "role " <> role <<> " does not have permission to select computed field" <>> computedField
 

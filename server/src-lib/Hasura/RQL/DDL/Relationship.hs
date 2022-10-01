@@ -313,7 +313,7 @@ purgeRelDep (SOSourceObj _ exists)
     pure $ dropPermissionInMetadata rn pt
 purgeRelDep d =
   throw500 $
-    "unexpected dependency of relationship : "
+    "unexpected dependency of relationship: "
       <> reportSchemaObj d
 
 --------------------------------------------------------------------------------

@@ -89,7 +89,7 @@ the column is used in some permission), you would see an error.
 
    {
        "path": "$.args",
-       "error": "cannot drop due to the following dependent objects : permission author.user.select"
+       "error": "cannot drop due to the following dependent objects: permission author.user.select"
    }
 
 We can however, cascade these changes.
@@ -144,7 +144,7 @@ you would see an error.
 
    {
        "path": "$.args",
-       "error": "cannot drop due to the following dependent objects : constraint article.article_author_id_fkey"
+       "error": "cannot drop due to the following dependent objects: constraint article.article_author_id_fkey"
    }
 
 We can however, cascade these changes.

@@ -288,7 +288,7 @@ colMismatch expected actual =
     mconcat
       [ "Expected ",
         show expected,
-        " column(s), but found : ",
+        " column(s), but found: ",
         show actual
       ]
 

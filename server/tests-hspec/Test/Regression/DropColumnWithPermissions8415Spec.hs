@@ -116,7 +116,7 @@ tests opts = do
     let expected =
           [yaml|
             code: dependency-error
-            error: 'cannot drop due to the following dependent objects : permission hasura.author.user.update
+            error: 'cannot drop due to the following dependent objects: permission hasura.author.user.update
               in source "postgres"'
             path: "$"
           |]

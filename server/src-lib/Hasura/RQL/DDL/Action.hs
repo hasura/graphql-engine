@@ -180,7 +180,7 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
                     (_aotRelationships aot')
             unless (null relationshipsWithNonTopLevelFields) $
               throw400 ConstraintError $
-                "Relationships cannot be defined with nested object fields : "
+                "Relationships cannot be defined with nested object fields: "
                   <> commaSeparated (dquote . _atrName <$> relationshipsWithNonTopLevelFields)
           AOTScalar _ -> pure ()
     case _adType of
@@ -190,7 +190,7 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
         AOTScalar _ -> pure ()
         AOTObject aot' ->
           unless (null (_aotRelationships aot') || null nestedObjects) $
-            throw400 ConstraintError $ "Async action relations cannot be used with object fields : " <> commaSeparated (dquote . _ofdName <$> nestedObjects)
+            throw400 ConstraintError $ "Async action relations cannot be used with object fields: " <> commaSeparated (dquote . _ofdName <$> nestedObjects)
     pure aot
   resolvedWebhook <- resolveWebhook env _adHandler
   let webhookEnvRecord = EnvRecord (printURLTemplate $ unInputWebhook _adHandler) resolvedWebhook

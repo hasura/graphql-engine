@@ -298,7 +298,7 @@ processTablesDiff source preActionTables tablesDiff = do
     ti <-
       onNothing
         (M.lookup oldQtn preActionTables)
-        (throw500 $ "old table metadata not found in cache : " <>> oldQtn)
+        (throw500 $ "old table metadata not found in cache: " <>> oldQtn)
     alterTableInMetadata source (_tiCoreInfo ti) tableDiff
   where
     TablesDiff droppedTables alteredTables = tablesDiff
@@ -403,7 +403,7 @@ alterColumnsInMetadata source alteredCols fields sc tn =
               unless (null typeDepObjs) $
                 throw400 DependencyError $
                   "cannot change type of column " <> oldName <<> " in table "
-                    <> tn <<> " because of the following dependencies : "
+                    <> tn <<> " because of the following dependencies: "
                     <> reportSchemaObjs typeDepObjs
             | otherwise -> pure ()
 
