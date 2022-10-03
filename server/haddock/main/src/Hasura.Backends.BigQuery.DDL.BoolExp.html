@@ -17,63 +17,63 @@
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Types.html"><span class="hs-identifier">Hasura.SQL.Types</span></a></span><span>
 </span><span id="line-18"></span><span>
 </span><span id="line-19"></span><span class="annot"><a href="Hasura.Backends.BigQuery.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-type">parseBoolExpOperations</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-20"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689746003"><span class="annot"><a href="#local-6989586621689746003"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689746002"><span class="annot"><a href="#local-6989586621689746002"><span class="hs-identifier hs-type">v</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-21"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746003"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-22"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746003"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746002"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-20"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689746021"><span class="annot"><a href="#local-6989586621689746021"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689746020"><span class="annot"><a href="#local-6989586621689746020"><span class="hs-identifier hs-type">v</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746021"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-22"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ValueParser"><span class="hs-identifier hs-type">ValueParser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746021"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746020"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-23"></span><span>  </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-24"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-25"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnReference"><span class="hs-identifier hs-type">ColumnReference</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-27"></span><span>  </span><span class="annot"><a href="#local-6989586621689746003"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746002"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-27"></span><span>  </span><span class="annot"><a href="#local-6989586621689746021"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746020"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-28"></span><span id="parseBoolExpOperations"><span class="annot"><span class="annottext">parseBoolExpOperations :: ValueParser 'BigQuery m v
 -&gt; TableName
 -&gt; FieldInfoMap (FieldInfo 'BigQuery)
 -&gt; ColumnReference 'BigQuery
 -&gt; Value
 -&gt; m [OpExpG 'BigQuery v]
-</span><a href="Hasura.Backends.BigQuery.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-var hs-var">parseBoolExpOperations</span></a></span></span><span> </span><span id="local-6989586621689745999"><span class="annot"><span class="annottext">ValueParser 'BigQuery m v
-</span><a href="#local-6989586621689745999"><span class="hs-identifier hs-var">rhsParser</span></a></span></span><span> </span><span id="local-6989586621689745998"><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621689745998"><span class="hs-identifier hs-var">_table</span></a></span></span><span> </span><span id="local-6989586621689745997"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo 'BigQuery)
-</span><a href="#local-6989586621689745997"><span class="hs-identifier hs-var">_fields</span></a></span></span><span> </span><span id="local-6989586621689745996"><span class="annot"><span class="annottext">ColumnReference 'BigQuery
-</span><a href="#local-6989586621689745996"><span class="hs-identifier hs-var">columnRef</span></a></span></span><span> </span><span id="local-6989586621689745995"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689745995"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.BigQuery.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-var hs-var">parseBoolExpOperations</span></a></span></span><span> </span><span id="local-6989586621689746017"><span class="annot"><span class="annottext">ValueParser 'BigQuery m v
+</span><a href="#local-6989586621689746017"><span class="hs-identifier hs-var">rhsParser</span></a></span></span><span> </span><span id="local-6989586621689746016"><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621689746016"><span class="hs-identifier hs-var">_table</span></a></span></span><span> </span><span id="local-6989586621689746015"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo 'BigQuery)
+</span><a href="#local-6989586621689746015"><span class="hs-identifier hs-var">_fields</span></a></span></span><span> </span><span id="local-6989586621689746014"><span class="annot"><span class="annottext">ColumnReference 'BigQuery
+</span><a href="#local-6989586621689746014"><span class="hs-identifier hs-var">columnRef</span></a></span></span><span> </span><span id="local-6989586621689746013"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689746013"><span class="hs-identifier hs-var">value</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-29"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; m [OpExpG 'BigQuery v] -&gt; m [OpExpG 'BigQuery v]
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnReference 'BigQuery -&gt; Text
 forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnReference 'BigQuery
-</span><a href="#local-6989586621689745996"><span class="hs-identifier hs-var">columnRef</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m [OpExpG 'BigQuery v] -&gt; m [OpExpG 'BigQuery v])
+</span><a href="#local-6989586621689746014"><span class="hs-identifier hs-var">columnRef</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m [OpExpG 'BigQuery v] -&gt; m [OpExpG 'BigQuery v])
 -&gt; m [OpExpG 'BigQuery v] -&gt; m [OpExpG 'BigQuery v]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery -&gt; Value -&gt; m [OpExpG 'BigQuery v]
-</span><a href="#local-6989586621689745992"><span class="hs-identifier hs-var">parseOperations</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnReference 'BigQuery -&gt; ColumnType 'BigQuery
+</span><a href="#local-6989586621689746010"><span class="hs-identifier hs-var">parseOperations</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnReference 'BigQuery -&gt; ColumnType 'BigQuery
 forall (backend :: BackendType).
 ColumnReference backend -&gt; ColumnType backend
 </span><a href="Hasura.RQL.Types.Column.html#columnReferenceType"><span class="hs-identifier hs-var">columnReferenceType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnReference 'BigQuery
-</span><a href="#local-6989586621689745996"><span class="hs-identifier hs-var">columnRef</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689745995"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621689746014"><span class="hs-identifier hs-var">columnRef</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689746013"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-31"></span><span>    </span><span id="local-6989586621689745990"><span class="annot"><span class="annottext">parseWithTy :: ColumnType 'BigQuery -&gt; Value -&gt; m v
-</span><a href="#local-6989586621689745990"><span class="hs-identifier hs-var hs-var">parseWithTy</span></a></span></span><span> </span><span id="local-6989586621689745989"><span class="annot"><span class="annottext">ColumnType 'BigQuery
-</span><a href="#local-6989586621689745989"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser 'BigQuery m v
-</span><a href="#local-6989586621689745999"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'BigQuery -&gt; CollectableType (ColumnType 'BigQuery)
+</span><span id="line-31"></span><span>    </span><span id="local-6989586621689746008"><span class="annot"><span class="annottext">parseWithTy :: ColumnType 'BigQuery -&gt; Value -&gt; m v
+</span><a href="#local-6989586621689746008"><span class="hs-identifier hs-var hs-var">parseWithTy</span></a></span></span><span> </span><span id="local-6989586621689746007"><span class="annot"><span class="annottext">ColumnType 'BigQuery
+</span><a href="#local-6989586621689746007"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser 'BigQuery m v
+</span><a href="#local-6989586621689746017"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'BigQuery -&gt; CollectableType (ColumnType 'BigQuery)
 forall a. a -&gt; CollectableType a
 </span><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-var">CollectableTypeScalar</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
-</span><a href="#local-6989586621689745989"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689746007"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span>    </span><span class="annot"><a href="#local-6989586621689745992"><span class="hs-identifier hs-type">parseOperations</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689746003"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746002"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-34"></span><span>    </span><span id="local-6989586621689745992"><span class="annot"><span class="annottext">parseOperations :: ColumnType 'BigQuery -&gt; Value -&gt; m [OpExpG 'BigQuery v]
-</span><a href="#local-6989586621689745992"><span class="hs-identifier hs-var hs-var">parseOperations</span></a></span></span><span> </span><span id="local-6989586621689745987"><span class="annot"><span class="annottext">ColumnType 'BigQuery
-</span><a href="#local-6989586621689745987"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-35"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689745985"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689745985"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">((Key, Value) -&gt; m (OpExpG 'BigQuery v))
+</span><span id="line-33"></span><span>    </span><span class="annot"><a href="#local-6989586621689746010"><span class="hs-identifier hs-type">parseOperations</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689746021"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746020"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-34"></span><span>    </span><span id="local-6989586621689746010"><span class="annot"><span class="annottext">parseOperations :: ColumnType 'BigQuery -&gt; Value -&gt; m [OpExpG 'BigQuery v]
+</span><a href="#local-6989586621689746010"><span class="hs-identifier hs-var hs-var">parseOperations</span></a></span></span><span> </span><span id="local-6989586621689746005"><span class="annot"><span class="annottext">ColumnType 'BigQuery
+</span><a href="#local-6989586621689746005"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-35"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621689746003"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621689746003"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">((Key, Value) -&gt; m (OpExpG 'BigQuery v))
 -&gt; [(Key, Value)] -&gt; m [OpExpG 'BigQuery v]
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 (a -&gt; m b) -&gt; t a -&gt; m (t b)
 </span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'BigQuery -&gt; (Text, Value) -&gt; m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745983"><span class="hs-identifier hs-var">parseOperation</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
-</span><a href="#local-6989586621689745987"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">((Text, Value) -&gt; m (OpExpG 'BigQuery v))
+</span><a href="#local-6989586621689746001"><span class="hs-identifier hs-var">parseOperation</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
+</span><a href="#local-6989586621689746005"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">((Text, Value) -&gt; m (OpExpG 'BigQuery v))
 -&gt; ((Key, Value) -&gt; (Text, Value))
 -&gt; (Key, Value)
 -&gt; m (OpExpG 'BigQuery v)
@@ -89,9 +89,9 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Object -&gt; [(Key, Value)]
 forall v. KeyMap v -&gt; [(Key, v)]
 </span><span class="hs-identifier hs-var">KM.toList</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621689745985"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-36"></span><span>      </span><span id="local-6989586621689745979"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689745979"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpExpG 'BigQuery v -&gt; [OpExpG 'BigQuery v]
+</span><a href="#local-6989586621689746003"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621689745997"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689745997"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OpExpG 'BigQuery v -&gt; [OpExpG 'BigQuery v]
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(OpExpG 'BigQuery v -&gt; [OpExpG 'BigQuery v])
 -&gt; (v -&gt; OpExpG 'BigQuery v) -&gt; v -&gt; [OpExpG 'BigQuery v]
@@ -103,76 +103,76 @@ Bool -&gt; field -&gt; OpExpG backend field
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; [OpExpG 'BigQuery v]) -&gt; m v -&gt; m [OpExpG 'BigQuery v]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery -&gt; Value -&gt; m v
-</span><a href="#local-6989586621689745990"><span class="hs-identifier hs-var">parseWithTy</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
-</span><a href="#local-6989586621689745987"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689745979"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689746008"><span class="hs-identifier hs-var">parseWithTy</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
+</span><a href="#local-6989586621689746005"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689745997"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span>    </span><span class="annot"><a href="#local-6989586621689745983"><span class="hs-identifier hs-type">parseOperation</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689746003"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746002"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-39"></span><span>    </span><span id="local-6989586621689745983"><span class="annot"><span class="annottext">parseOperation :: ColumnType 'BigQuery -&gt; (Text, Value) -&gt; m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745983"><span class="hs-identifier hs-var hs-var">parseOperation</span></a></span></span><span> </span><span id="local-6989586621689745976"><span class="annot"><span class="annottext">ColumnType 'BigQuery
-</span><a href="#local-6989586621689745976"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689745975"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689745975"><span class="hs-identifier hs-var">opStr</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689745974"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689745974"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (OpExpG 'BigQuery v) -&gt; m (OpExpG 'BigQuery v)
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="#local-6989586621689746001"><span class="hs-identifier hs-type">parseOperation</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689746021"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#OpExpG"><span class="hs-identifier hs-type">OpExpG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689746020"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621689746001"><span class="annot"><span class="annottext">parseOperation :: ColumnType 'BigQuery -&gt; (Text, Value) -&gt; m (OpExpG 'BigQuery v)
+</span><a href="#local-6989586621689746001"><span class="hs-identifier hs-var hs-var">parseOperation</span></a></span></span><span> </span><span id="local-6989586621689745994"><span class="annot"><span class="annottext">ColumnType 'BigQuery
+</span><a href="#local-6989586621689745994"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689745993"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689745993"><span class="hs-identifier hs-var">opStr</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689745992"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689745992"><span class="hs-identifier hs-var">val</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (OpExpG 'BigQuery v) -&gt; m (OpExpG 'BigQuery v)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#withPathK"><span class="hs-identifier hs-var">withPathK</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689745975"><span class="hs-identifier hs-var">opStr</span></a></span><span> </span><span class="annot"><span class="annottext">(m (OpExpG 'BigQuery v) -&gt; m (OpExpG 'BigQuery v))
+</span><a href="#local-6989586621689745993"><span class="hs-identifier hs-var">opStr</span></a></span><span> </span><span class="annot"><span class="annottext">(m (OpExpG 'BigQuery v) -&gt; m (OpExpG 'BigQuery v))
 -&gt; m (OpExpG 'BigQuery v) -&gt; m (OpExpG 'BigQuery v)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-40"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689745975"><span class="hs-identifier hs-var">opStr</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621689745993"><span class="hs-identifier hs-var">opStr</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-41"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_eq&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745973"><span class="hs-identifier hs-var">parseEq</span></a></span><span>
+</span><a href="#local-6989586621689745991"><span class="hs-identifier hs-var">parseEq</span></a></span><span>
 </span><span id="line-42"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$eq&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745973"><span class="hs-identifier hs-var">parseEq</span></a></span><span>
+</span><a href="#local-6989586621689745991"><span class="hs-identifier hs-var">parseEq</span></a></span><span>
 </span><span id="line-43"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_neq&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745972"><span class="hs-identifier hs-var">parseNeq</span></a></span><span>
+</span><a href="#local-6989586621689745990"><span class="hs-identifier hs-var">parseNeq</span></a></span><span>
 </span><span id="line-44"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$neq&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745972"><span class="hs-identifier hs-var">parseNeq</span></a></span><span>
+</span><a href="#local-6989586621689745990"><span class="hs-identifier hs-var">parseNeq</span></a></span><span>
 </span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$in&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745971"><span class="hs-identifier hs-var">parseIn</span></a></span><span>
+</span><a href="#local-6989586621689745989"><span class="hs-identifier hs-var">parseIn</span></a></span><span>
 </span><span id="line-46"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_in&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745971"><span class="hs-identifier hs-var">parseIn</span></a></span><span>
+</span><a href="#local-6989586621689745989"><span class="hs-identifier hs-var">parseIn</span></a></span><span>
 </span><span id="line-47"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$nin&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745970"><span class="hs-identifier hs-var">parseNin</span></a></span><span>
+</span><a href="#local-6989586621689745988"><span class="hs-identifier hs-var">parseNin</span></a></span><span>
 </span><span id="line-48"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_nin&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745970"><span class="hs-identifier hs-var">parseNin</span></a></span><span>
+</span><a href="#local-6989586621689745988"><span class="hs-identifier hs-var">parseNin</span></a></span><span>
 </span><span id="line-49"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_gt&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745969"><span class="hs-identifier hs-var">parseGt</span></a></span><span>
+</span><a href="#local-6989586621689745987"><span class="hs-identifier hs-var">parseGt</span></a></span><span>
 </span><span id="line-50"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$gt&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745969"><span class="hs-identifier hs-var">parseGt</span></a></span><span>
+</span><a href="#local-6989586621689745987"><span class="hs-identifier hs-var">parseGt</span></a></span><span>
 </span><span id="line-51"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_lt&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745968"><span class="hs-identifier hs-var">parseLt</span></a></span><span>
+</span><a href="#local-6989586621689745986"><span class="hs-identifier hs-var">parseLt</span></a></span><span>
 </span><span id="line-52"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$lt&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745968"><span class="hs-identifier hs-var">parseLt</span></a></span><span>
+</span><a href="#local-6989586621689745986"><span class="hs-identifier hs-var">parseLt</span></a></span><span>
 </span><span id="line-53"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_gte&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745967"><span class="hs-identifier hs-var">parseGte</span></a></span><span>
+</span><a href="#local-6989586621689745985"><span class="hs-identifier hs-var">parseGte</span></a></span><span>
 </span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$gte&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745967"><span class="hs-identifier hs-var">parseGte</span></a></span><span>
+</span><a href="#local-6989586621689745985"><span class="hs-identifier hs-var">parseGte</span></a></span><span>
 </span><span id="line-55"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;_lte&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745966"><span class="hs-identifier hs-var">parseLte</span></a></span><span>
+</span><a href="#local-6989586621689745984"><span class="hs-identifier hs-var">parseLte</span></a></span><span>
 </span><span id="line-56"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$lte&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745966"><span class="hs-identifier hs-var">parseLte</span></a></span><span>
+</span><a href="#local-6989586621689745984"><span class="hs-identifier hs-var">parseLte</span></a></span><span>
 </span><span id="line-57"></span><span>        </span><span class="hs-comment">-- TODO: support column operators</span><span>
 </span><span id="line-58"></span><span>
-</span><span id="line-59"></span><span>        </span><span id="local-6989586621689745965"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689745965"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (OpExpG 'BigQuery v)
+</span><span id="line-59"></span><span>        </span><span id="local-6989586621689745983"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689745983"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m (OpExpG 'BigQuery v)
 forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m (OpExpG 'BigQuery v)) -&gt; Text -&gt; m (OpExpG 'BigQuery v)
@@ -181,94 +181,94 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-string">&quot;Unknown operator: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689745965"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621689745983"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-60"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-61"></span><span>        </span><span id="local-6989586621689745962"><span class="annot"><span class="annottext">colTy :: ColumnType 'BigQuery
-</span><a href="#local-6989586621689745962"><span class="hs-identifier hs-var hs-var">colTy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnReference 'BigQuery -&gt; ColumnType 'BigQuery
+</span><span id="line-61"></span><span>        </span><span id="local-6989586621689745980"><span class="annot"><span class="annottext">colTy :: ColumnType 'BigQuery
+</span><a href="#local-6989586621689745980"><span class="hs-identifier hs-var hs-var">colTy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnReference 'BigQuery -&gt; ColumnType 'BigQuery
 forall (backend :: BackendType).
 ColumnReference backend -&gt; ColumnType backend
 </span><a href="Hasura.RQL.Types.Column.html#columnReferenceType"><span class="hs-identifier hs-var">columnReferenceType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnReference 'BigQuery
-</span><a href="#local-6989586621689745996"><span class="hs-identifier hs-var">columnRef</span></a></span><span>
-</span><span id="line-62"></span><span>        </span><span id="local-6989586621689745961"><span class="annot"><span class="annottext">parseOne :: m v
-</span><a href="#local-6989586621689745961"><span class="hs-identifier hs-var hs-var">parseOne</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery -&gt; Value -&gt; m v
-</span><a href="#local-6989586621689745990"><span class="hs-identifier hs-var">parseWithTy</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
-</span><a href="#local-6989586621689745976"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689745974"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-63"></span><span>        </span><span id="local-6989586621689745960"><span class="annot"><span class="annottext">parseManyWithType :: ColumnType 'BigQuery -&gt; m v
-</span><a href="#local-6989586621689745960"><span class="hs-identifier hs-var hs-var">parseManyWithType</span></a></span></span><span> </span><span id="local-6989586621689745959"><span class="annot"><span class="annottext">ColumnType 'BigQuery
-</span><a href="#local-6989586621689745959"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser 'BigQuery m v
-</span><a href="#local-6989586621689745999"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'BigQuery -&gt; CollectableType (ColumnType 'BigQuery)
+</span><a href="#local-6989586621689746014"><span class="hs-identifier hs-var">columnRef</span></a></span><span>
+</span><span id="line-62"></span><span>        </span><span id="local-6989586621689745979"><span class="annot"><span class="annottext">parseOne :: m v
+</span><a href="#local-6989586621689745979"><span class="hs-identifier hs-var hs-var">parseOne</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery -&gt; Value -&gt; m v
+</span><a href="#local-6989586621689746008"><span class="hs-identifier hs-var">parseWithTy</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
+</span><a href="#local-6989586621689745994"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689745992"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-63"></span><span>        </span><span id="local-6989586621689745978"><span class="annot"><span class="annottext">parseManyWithType :: ColumnType 'BigQuery -&gt; m v
+</span><a href="#local-6989586621689745978"><span class="hs-identifier hs-var hs-var">parseManyWithType</span></a></span></span><span> </span><span id="local-6989586621689745977"><span class="annot"><span class="annottext">ColumnType 'BigQuery
+</span><a href="#local-6989586621689745977"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ValueParser 'BigQuery m v
+</span><a href="#local-6989586621689746017"><span class="hs-identifier hs-var">rhsParser</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType 'BigQuery -&gt; CollectableType (ColumnType 'BigQuery)
 forall a. a -&gt; CollectableType a
 </span><a href="Hasura.SQL.Types.html#CollectableTypeArray"><span class="hs-identifier hs-var">CollectableTypeArray</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
-</span><a href="#local-6989586621689745959"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689745974"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><a href="#local-6989586621689745977"><span class="hs-identifier hs-var">ty</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621689745992"><span class="hs-identifier hs-var">val</span></a></span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span>        </span><span id="local-6989586621689745973"><span class="annot"><span class="annottext">parseEq :: m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745973"><span class="hs-identifier hs-var hs-var">parseEq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; v -&gt; OpExpG 'BigQuery v
+</span><span id="line-65"></span><span>        </span><span id="local-6989586621689745991"><span class="annot"><span class="annottext">parseEq :: m (OpExpG 'BigQuery v)
+</span><a href="#local-6989586621689745991"><span class="hs-identifier hs-var hs-var">parseEq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; v -&gt; OpExpG 'BigQuery v
 forall (backend :: BackendType) field.
 Bool -&gt; field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#AEQ"><span class="hs-identifier hs-var">AEQ</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'BigQuery v) -&gt; m v -&gt; m (OpExpG 'BigQuery v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689745961"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-66"></span><span>        </span><span id="local-6989586621689745972"><span class="annot"><span class="annottext">parseNeq :: m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745972"><span class="hs-identifier hs-var hs-var">parseNeq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; v -&gt; OpExpG 'BigQuery v
+</span><a href="#local-6989586621689745979"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-66"></span><span>        </span><span id="local-6989586621689745990"><span class="annot"><span class="annottext">parseNeq :: m (OpExpG 'BigQuery v)
+</span><a href="#local-6989586621689745990"><span class="hs-identifier hs-var hs-var">parseNeq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; v -&gt; OpExpG 'BigQuery v
 forall (backend :: BackendType) field.
 Bool -&gt; field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#ANE"><span class="hs-identifier hs-var">ANE</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'BigQuery v) -&gt; m v -&gt; m (OpExpG 'BigQuery v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689745961"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-67"></span><span>        </span><span id="local-6989586621689745971"><span class="annot"><span class="annottext">parseIn :: m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745971"><span class="hs-identifier hs-var hs-var">parseIn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
+</span><a href="#local-6989586621689745979"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-67"></span><span>        </span><span id="local-6989586621689745989"><span class="annot"><span class="annottext">parseIn :: m (OpExpG 'BigQuery v)
+</span><a href="#local-6989586621689745989"><span class="hs-identifier hs-var hs-var">parseIn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#AIN"><span class="hs-identifier hs-var">AIN</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'BigQuery v) -&gt; m v -&gt; m (OpExpG 'BigQuery v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery -&gt; m v
-</span><a href="#local-6989586621689745960"><span class="hs-identifier hs-var">parseManyWithType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
-</span><a href="#local-6989586621689745962"><span class="hs-identifier hs-var">colTy</span></a></span><span>
-</span><span id="line-68"></span><span>        </span><span id="local-6989586621689745970"><span class="annot"><span class="annottext">parseNin :: m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745970"><span class="hs-identifier hs-var hs-var">parseNin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
+</span><a href="#local-6989586621689745978"><span class="hs-identifier hs-var">parseManyWithType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
+</span><a href="#local-6989586621689745980"><span class="hs-identifier hs-var">colTy</span></a></span><span>
+</span><span id="line-68"></span><span>        </span><span id="local-6989586621689745988"><span class="annot"><span class="annottext">parseNin :: m (OpExpG 'BigQuery v)
+</span><a href="#local-6989586621689745988"><span class="hs-identifier hs-var hs-var">parseNin</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#ANIN"><span class="hs-identifier hs-var">ANIN</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'BigQuery v) -&gt; m v -&gt; m (OpExpG 'BigQuery v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery -&gt; m v
-</span><a href="#local-6989586621689745960"><span class="hs-identifier hs-var">parseManyWithType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
-</span><a href="#local-6989586621689745962"><span class="hs-identifier hs-var">colTy</span></a></span><span>
-</span><span id="line-69"></span><span>        </span><span id="local-6989586621689745969"><span class="annot"><span class="annottext">parseGt :: m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745969"><span class="hs-identifier hs-var hs-var">parseGt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
+</span><a href="#local-6989586621689745978"><span class="hs-identifier hs-var">parseManyWithType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'BigQuery
+</span><a href="#local-6989586621689745980"><span class="hs-identifier hs-var">colTy</span></a></span><span>
+</span><span id="line-69"></span><span>        </span><span id="local-6989586621689745987"><span class="annot"><span class="annottext">parseGt :: m (OpExpG 'BigQuery v)
+</span><a href="#local-6989586621689745987"><span class="hs-identifier hs-var hs-var">parseGt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#AGT"><span class="hs-identifier hs-var">AGT</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'BigQuery v) -&gt; m v -&gt; m (OpExpG 'BigQuery v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689745961"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-70"></span><span>        </span><span id="local-6989586621689745968"><span class="annot"><span class="annottext">parseLt :: m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745968"><span class="hs-identifier hs-var hs-var">parseLt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
+</span><a href="#local-6989586621689745979"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-70"></span><span>        </span><span id="local-6989586621689745986"><span class="annot"><span class="annottext">parseLt :: m (OpExpG 'BigQuery v)
+</span><a href="#local-6989586621689745986"><span class="hs-identifier hs-var hs-var">parseLt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#ALT"><span class="hs-identifier hs-var">ALT</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'BigQuery v) -&gt; m v -&gt; m (OpExpG 'BigQuery v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689745961"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-71"></span><span>        </span><span id="local-6989586621689745967"><span class="annot"><span class="annottext">parseGte :: m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745967"><span class="hs-identifier hs-var hs-var">parseGte</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
+</span><a href="#local-6989586621689745979"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-71"></span><span>        </span><span id="local-6989586621689745985"><span class="annot"><span class="annottext">parseGte :: m (OpExpG 'BigQuery v)
+</span><a href="#local-6989586621689745985"><span class="hs-identifier hs-var hs-var">parseGte</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#AGTE"><span class="hs-identifier hs-var">AGTE</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'BigQuery v) -&gt; m v -&gt; m (OpExpG 'BigQuery v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689745961"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
-</span><span id="line-72"></span><span>        </span><span id="local-6989586621689745966"><span class="annot"><span class="annottext">parseLte :: m (OpExpG 'BigQuery v)
-</span><a href="#local-6989586621689745966"><span class="hs-identifier hs-var hs-var">parseLte</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
+</span><a href="#local-6989586621689745979"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><span id="line-72"></span><span>        </span><span id="local-6989586621689745984"><span class="annot"><span class="annottext">parseLte :: m (OpExpG 'BigQuery v)
+</span><a href="#local-6989586621689745984"><span class="hs-identifier hs-var hs-var">parseLte</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">v -&gt; OpExpG 'BigQuery v
 forall (backend :: BackendType) field.
 field -&gt; OpExpG backend field
 </span><a href="Hasura.RQL.IR.BoolExp.html#ALTE"><span class="hs-identifier hs-var">ALTE</span></a></span><span> </span><span class="annot"><span class="annottext">(v -&gt; OpExpG 'BigQuery v) -&gt; m v -&gt; m (OpExpG 'BigQuery v)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m v
-</span><a href="#local-6989586621689745961"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
+</span><a href="#local-6989586621689745979"><span class="hs-identifier hs-var">parseOne</span></a></span><span>
 </span><span id="line-73"></span></pre></body></html>

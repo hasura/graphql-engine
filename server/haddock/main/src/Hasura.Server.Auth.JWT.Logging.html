@@ -29,7 +29,7 @@
 </span><span id="line-29"></span><span>    </span><span id="JFEJwkParseError"><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEJwkParseError"><span class="hs-identifier hs-var">JFEJwkParseError</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Error parsing the expiry of the JWK</span><span>
 </span><span id="line-31"></span><span>    </span><span id="JFEExpiryParseError"><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEExpiryParseError"><span class="hs-identifier hs-var">JFEExpiryParseError</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689610057"><span id="local-6989586621689610059"><span id="local-6989586621689610061"><span class="annot"><span class="annottext">Int -&gt; JwkFetchError -&gt; ShowS
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689610079"><span id="local-6989586621689610081"><span id="local-6989586621689610083"><span class="annot"><span class="annottext">Int -&gt; JwkFetchError -&gt; ShowS
 [JwkFetchError] -&gt; ShowS
 JwkFetchError -&gt; String
 (Int -&gt; JwkFetchError -&gt; ShowS)
@@ -46,22 +46,22 @@ showsPrec :: Int -&gt; JwkFetchError -&gt; ShowS
 $cshowsPrec :: Int -&gt; JwkFetchError -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span>
-</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689610049"><span id="local-6989586621689610051"><span id="local-6989586621689610053"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JwkFetchError"><span class="hs-identifier hs-type">JwkFetchError</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-35"></span><span>  </span><span id="local-6989586621689610047"><span class="annot"><span class="annottext">toJSON :: JwkFetchError -&gt; Value
+</span><span id="line-34"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689610071"><span id="local-6989586621689610073"><span id="local-6989586621689610075"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JwkFetchError"><span class="hs-identifier hs-type">JwkFetchError</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-35"></span><span>  </span><span id="local-6989586621689610069"><span class="annot"><span class="annottext">toJSON :: JwkFetchError -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-36"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEHttpException"><span class="hs-identifier hs-type">JFEHttpException</span></a></span><span> </span><span id="local-6989586621689610045"><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621689610045"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-36"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEHttpException"><span class="hs-identifier hs-type">JFEHttpException</span></a></span><span> </span><span id="local-6989586621689610067"><span class="annot"><span class="annottext">HttpException
+</span><a href="#local-6989586621689610067"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-37"></span><span>      </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;http_exception&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; HttpException -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">HttpException
-</span><a href="#local-6989586621689610045"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-38"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEHttpError"><span class="hs-identifier hs-type">JFEHttpError</span></a></span><span> </span><span id="local-6989586621689610042"><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621689610042"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span id="local-6989586621689610041"><span class="annot"><span class="annottext">Status
-</span><a href="#local-6989586621689610041"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span id="local-6989586621689610040"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689610040"><span class="hs-identifier hs-var">body</span></a></span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689610067"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEHttpError"><span class="hs-identifier hs-type">JFEHttpError</span></a></span><span> </span><span id="local-6989586621689610064"><span class="annot"><span class="annottext">URI
+</span><a href="#local-6989586621689610064"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span id="local-6989586621689610063"><span class="annot"><span class="annottext">Status
+</span><a href="#local-6989586621689610063"><span class="hs-identifier hs-var">status</span></a></span></span><span> </span><span id="local-6989586621689610062"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621689610062"><span class="hs-identifier hs-var">body</span></a></span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-39"></span><span>      </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span>
@@ -70,48 +70,48 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Status -&gt; Int
 </span><span class="hs-identifier hs-var hs-var">HTTP.statusCode</span></span><span> </span><span class="annot"><span class="annottext">Status
-</span><a href="#local-6989586621689610041"><span class="hs-identifier hs-var">status</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689610063"><span class="hs-identifier hs-var">status</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-41"></span><span>          </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;url&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">URI -&gt; Text
 forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">URI
-</span><a href="#local-6989586621689610042"><span class="hs-identifier hs-var">url</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689610064"><span class="hs-identifier hs-var">url</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-42"></span><span>          </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;response&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
 </span><span class="hs-identifier hs-var">BL.toStrict</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621689610040"><span class="hs-identifier hs-var">body</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689610062"><span class="hs-identifier hs-var">body</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-43"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-44"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEJwkParseError"><span class="hs-identifier hs-type">JFEJwkParseError</span></a></span><span> </span><span id="local-6989586621689610035"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689610035"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span id="local-6989586621689610034"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689610034"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEJwkParseError"><span class="hs-identifier hs-type">JFEJwkParseError</span></a></span><span> </span><span id="local-6989586621689610057"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689610057"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span id="local-6989586621689610056"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689610056"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689610035"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621689610057"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689610034"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-46"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEExpiryParseError"><span class="hs-identifier hs-type">JFEExpiryParseError</span></a></span><span> </span><span id="local-6989586621689610033"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689610033"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span id="local-6989586621689610032"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689610032"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621689610056"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-46"></span><span>    </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JFEExpiryParseError"><span class="hs-identifier hs-type">JFEExpiryParseError</span></a></span><span> </span><span id="local-6989586621689610055"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689610055"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span id="local-6989586621689610054"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621689610054"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689610033"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621689610055"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689610032"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621689610054"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="hs-keyword">data</span><span> </span><span id="JwkRefreshLog"><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JwkRefreshLog"><span class="hs-identifier hs-var">JwkRefreshLog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="JwkRefreshLog"><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JwkRefreshLog"><span class="hs-identifier hs-var">JwkRefreshLog</span></a></span></span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="jrlLogLevel"><span class="annot"><span class="annottext">JwkRefreshLog -&gt; LogLevel
@@ -121,7 +121,7 @@ forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span id="line-52"></span><span>    </span><span id="jrlError"><span class="annot"><span class="annottext">JwkRefreshLog -&gt; Maybe JwkFetchError
 </span><a href="Hasura.Server.Auth.JWT.Logging.html#jrlError"><span class="hs-identifier hs-var hs-var">jrlError</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JwkFetchError"><span class="hs-identifier hs-type">JwkFetchError</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-53"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-54"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689610022"><span id="local-6989586621689610024"><span id="local-6989586621689610026"><span class="annot"><span class="annottext">Int -&gt; JwkRefreshLog -&gt; ShowS
+</span><span id="line-54"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689610044"><span id="local-6989586621689610046"><span id="local-6989586621689610048"><span class="annot"><span class="annottext">Int -&gt; JwkRefreshLog -&gt; ShowS
 [JwkRefreshLog] -&gt; ShowS
 JwkRefreshLog -&gt; String
 (Int -&gt; JwkRefreshLog -&gt; ShowS)
@@ -138,36 +138,36 @@ showsPrec :: Int -&gt; JwkRefreshLog -&gt; ShowS
 $cshowsPrec :: Int -&gt; JwkRefreshLog -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span>
-</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689610015"><span id="local-6989586621689610017"><span id="local-6989586621689610019"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JwkRefreshLog"><span class="hs-identifier hs-type">JwkRefreshLog</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-57"></span><span>  </span><span id="local-6989586621689610014"><span class="annot"><span class="annottext">toJSON :: JwkRefreshLog -&gt; Value
-</span><a href="#local-6989586621689610014"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JwkRefreshLog"><span class="hs-identifier hs-type">JwkRefreshLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689610013"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689610013"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span id="local-6989586621689610012"><span class="annot"><span class="annottext">Maybe JwkFetchError
-</span><a href="#local-6989586621689610012"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689610037"><span id="local-6989586621689610039"><span id="local-6989586621689610041"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JwkRefreshLog"><span class="hs-identifier hs-type">JwkRefreshLog</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621689610036"><span class="annot"><span class="annottext">toJSON :: JwkRefreshLog -&gt; Value
+</span><a href="#local-6989586621689610036"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JwkRefreshLog"><span class="hs-identifier hs-type">JwkRefreshLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689610035"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621689610035"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span id="local-6989586621689610034"><span class="annot"><span class="annottext">Maybe JwkFetchError
+</span><a href="#local-6989586621689610034"><span class="hs-identifier hs-var">err</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-58"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">object</span></span><span>
 </span><span id="line-59"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;message&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe Text -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689610013"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621689610035"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;error&quot;</span></span><span> </span><span class="annot"><span class="annottext">Key -&gt; Maybe JwkFetchError -&gt; Pair
 forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Maybe JwkFetchError
-</span><a href="#local-6989586621689610012"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621689610034"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-61"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-62"></span><span>
 </span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.Logging.html#ToEngineLog"><span class="hs-identifier hs-type">ToEngineLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.Logging.html#JwkRefreshLog"><span class="hs-identifier hs-type">JwkRefreshLog</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621689610008"><span class="annot"><span class="annottext">toEngineLog :: JwkRefreshLog -&gt; (LogLevel, EngineLogType Hasura, Value)
-</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621689610006"><span class="annot"><span class="annottext">JwkRefreshLog
-</span><a href="#local-6989586621689610006"><span class="hs-identifier hs-var">jwkRefreshLog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621689610030"><span class="annot"><span class="annottext">toEngineLog :: JwkRefreshLog -&gt; (LogLevel, EngineLogType Hasura, Value)
+</span><a href="Hasura.Logging.html#toEngineLog"><span class="hs-identifier hs-var hs-var hs-var hs-var">toEngineLog</span></a></span></span><span> </span><span id="local-6989586621689610028"><span class="annot"><span class="annottext">JwkRefreshLog
+</span><a href="#local-6989586621689610028"><span class="hs-identifier hs-var">jwkRefreshLog</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-65"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JwkRefreshLog -&gt; LogLevel
 </span><a href="Hasura.Server.Auth.JWT.Logging.html#jrlLogLevel"><span class="hs-identifier hs-var hs-var">jrlLogLevel</span></a></span><span> </span><span class="annot"><span class="annottext">JwkRefreshLog
-</span><a href="#local-6989586621689610006"><span class="hs-identifier hs-var">jwkRefreshLog</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InternalLogTypes -&gt; EngineLogType Hasura
+</span><a href="#local-6989586621689610028"><span class="hs-identifier hs-var">jwkRefreshLog</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">InternalLogTypes -&gt; EngineLogType Hasura
 </span><a href="Hasura.Logging.html#ELTInternal"><span class="hs-identifier hs-var">ELTInternal</span></a></span><span> </span><span class="annot"><span class="annottext">InternalLogTypes
 </span><a href="Hasura.Logging.html#ILTJwkRefreshLog"><span class="hs-identifier hs-var">ILTJwkRefreshLog</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">JwkRefreshLog -&gt; Value
 forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">toJSON</span></span><span> </span><span class="annot"><span class="annottext">JwkRefreshLog
-</span><a href="#local-6989586621689610006"><span class="hs-identifier hs-var">jwkRefreshLog</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689610028"><span class="hs-identifier hs-var">jwkRefreshLog</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-66"></span></pre></body></html>
