@@ -1,6 +1,6 @@
 import React from 'react';
-import { Button } from '@/new-components/Button';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import Button from '../../../Common/Button/Button';
 
 export type BulkSelectProps = {
   bulkSelect: string[];
@@ -38,7 +38,7 @@ const BulkSelect: React.FC<BulkSelectProps> = ({
         {getSelectedRoles()}
       </div>
       <div className="mt-sm mb-sm">
-        <Button onClick={handleBulkRemoveClick} mode="destructive" size="sm">
+        <Button onClick={handleBulkRemoveClick} color="red" size="sm">
           Remove All Permissions
         </Button>
       </div>
