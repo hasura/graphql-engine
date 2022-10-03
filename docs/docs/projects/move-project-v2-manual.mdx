@@ -14,7 +14,7 @@ sidebar_label: Move project to v2
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Manually moving Hasura Cloud v1.3 projects to Hasura v2.0
+# Manually Moving Hasura Cloud v1.3 Projects To Hasura v2.0
 
 <div className='badge badge--primary heading-badge'>Available on: Cloud</div>
 
@@ -34,18 +34,18 @@ been introduced.
 As it is not possible to actually upgrade your `v1.3` project to `v2.0`, you will have to essentially create a new
 Hasura project with `v2.0` and connect it with your database with the same Hasura metadata as in the previous project.
 
-### Step 1: Export metadata from existing project
+### Step 1: export metadata from existing project
 
 See [exporting metadata](/migrations-metadata-seeds/manage-metadata.mdx) to get a copy of the current Hasura metadata on
 your project.
 
 Do ensure no further changes are made to the Hasura metadata post this.
 
-### Step 2: Create a v2.0 Cloud project
+### Step 2: create a v2.0 cloud project
 
 See `Step 1` of [creating projects](/projects/create.mdx) to create a new Hasura Cloud `v2.0` project.
 
-### Step 3: Connect your database with the name **default** to the new project
+### Step 3: connect your database with the name **default** to the new project
 
 See `Step 2` of [creating projects](/projects/create.mdx) to connect your existing database to the new project. Please
 ensure you set the database name as `default`.
@@ -57,7 +57,7 @@ stop your `v1.3` project before doing this.
 
 :::
 
-### Step 4: Apply the exported metadata to the new project
+### Step 4: apply the exported metadata to the new project
 
 See [applying metadata](/migrations-metadata-seeds/manage-metadata.mdx) to apply the earlier exported metadata to the
 new project.

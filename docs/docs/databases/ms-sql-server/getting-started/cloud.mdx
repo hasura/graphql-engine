@@ -13,11 +13,11 @@ keywords:
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Get Started with Hasura Cloud & MS SQL Server
+# Get Started With Hasura Cloud & MS SQL Server
 
 ## Try it out
 
-### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
+### Step 1: create an account on Hasura Cloud and create a new Hasura project
 
 Navigate to
 [cloud.hasura.io](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-cloud-hasura-io&tech=default), and
@@ -27,7 +27,7 @@ Once you create a project on Hasura Cloud, hit the "Launch Console" button to op
 
 <Thumbnail src='/img/getting-started/create-project.png' alt='Connect new or existing database' width='556px' />
 
-### Step 2: Add your SQL Server database as a source to Hasura
+### Step 2: add your SQL Server database as a source to Hasura
 
 Head to the `Data > Manage databases` section on the console to add your MS SQL Server as a source to Hasura. You'll
 need your ODBC connection string. Make sure that your ODBC driver is set to version 17.
@@ -54,7 +54,7 @@ Driver={ODBC Driver 17 for SQL Server};Server=tcp:<b>hasura-test.database.window
 
 Once you add the database, you'll see your database pop up on the sidebar.
 
-### Step 3: Option 1: Track existing tables
+### Step 3: option 1: track existing tables
 
 If you have existing tables, head to the database page by clicking on the database name on the sidebar. You should see a
 list of tables.
@@ -71,7 +71,7 @@ all at once.
 
 <Thumbnail src='/img/databases/ms-sql-server/5-track-rels.png' alt='Track relationships' width='1000px' />
 
-### Step 3: Option 2: Create new tables
+### Step 3: option 2: create new tables
 
 If you don't have existing tables, head to the Run SQL window to run SQL against your SQL Server database and create
 tables or hit the Create Table button to create a table.
@@ -81,7 +81,7 @@ SQL window to make sure Hasura tracks your new database objects in its GraphQL s
 
 <Thumbnail src='/img/databases/ms-sql-server/7-run-sql.png' alt='Run SQL to create table' width='1000px' />
 
-### Step 4: Try out a GraphQL query
+### Step 4: try out a GraphQL query
 
 Head to the `API` tab in the console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
 creating a GraphQL query.

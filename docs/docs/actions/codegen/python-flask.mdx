@@ -15,13 +15,13 @@ keywords:
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# GraphQL API with Python & Flask: JWT authentication
+# GraphQL API With Python & Flask: JWT Authentication
 
 ## Introduction
 
 This page describes how to use Hasura actions and codegen to build a Python & Flask API for JWT authentication.
 
-## Step 1: Create action definition & custom types
+## Step 1: create action definition & custom types
 
 We will assume a `user` table with the fields `email` and `password`.
 
@@ -62,7 +62,7 @@ Example: creating the `Signup` action
   className='no-shadow'
 />
 
-## Step 2: Action handler implementation for signup
+## Step 2: action handler implementation for signup
 
 In the `Codegen` tab, a scaffold gets generated from the GraphQL types you defined. Next, implement the business logic
 for `Signup`. Your action will do the following:
@@ -204,7 +204,7 @@ Date: Sun, 10 May 2020 19:58:23 GMT
 Now your `Signup` action is functional! And finally, create the `Login` handler to perform a password comparison, and
 then return a signed JWT if successful.
 
-## Step 3: Action handler implementation for login
+## Step 3: action handler implementation for login
 
 The first thing you need is a new request method on your `Client` class to find a user by email so that you can look
 them up to compare the password. Under `create_user`, create the following new method:
@@ -301,7 +301,7 @@ update_password = lambda self, id, password: self.run_query(
 )
 ```
 
-## Step 4: Testing out the handler routes
+## Step 4: testing out the handler routes
 
 Call the `/signup` endpoint with `email` and `password`:
 
@@ -345,7 +345,7 @@ $ decode_jwt 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwib
 }
 ```
 
-## Step 5: Calling the finished actions
+## Step 5: calling the finished actions
 
 Try out your defined actions from the GraphQL API.
 

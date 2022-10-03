@@ -24,9 +24,9 @@ This guide reviews security best practices that should be implemented for a prod
 
 Specifics about each security best practice can be found below.
 
-## Hasura GraphQL Engine
+## Hasura GraphQL engine
 
-#### Restrict Access:
+#### Restrict access:
 Restrict knowledge of admin secrets to the minimally required team members as an admin secret provides unrestricted access to the Hasura GraphQL Engine.  SSO collaboration should be used to grant project access without sharing an admin key.  Subsequently, implement a plan to rotate admin secrets to limit the exposure of an admin secret being shared too broadly.
 
 [Multiple admin secrets](https://hasura.io/docs/latest/security/multiple-admin-secrets/) should be used in situations where admin secrets have different rotation timelines or when granting temporary access is needed.

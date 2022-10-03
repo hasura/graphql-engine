@@ -13,7 +13,7 @@ sidebar_label: Using DigitalOcean (one-click)
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Hasura GraphQL engine One-click App on DigitalOcean Marketplace
+# Hasura GraphQL Engine One-click App On DigitalOcean Marketplace
 
 ## Introduction
 
@@ -23,7 +23,7 @@ HTTPS using [Let's Encrypt](https://letsencrypt.org/).
 
 ## Deploying Hasura on Digital Ocean
 
-### Step 1: Create a Hasura One-click Droplet
+### Step 1: create a Hasura One-click Droplet
 
 Click the button below to create a new Hasura GraphQL engine Droplet through the DigitalOcean Marketplace. For first
 time users, the link also contains a referral code with gives you $100 over days. A $5 droplet is good enough to support
@@ -31,7 +31,7 @@ most workloads. (`Ctrl+Click` to open in a new tab)
 
 [<img src="https://graphql-engine-cdn.hasura.io/img/create_hasura_droplet.png" className="no-shadow" width="300" alt="do_create_droplet_button" />](https://marketplace.digitalocean.com/apps/hasura-graphql?action=deploy&refcode=c4d9092d2c48&utm_source=hasura&utm_campaign=docs)
 
-### Step 2: Open console
+### Step 2: open console
 
 Once the Hasura GraphQL engine Droplet is ready, you can visit the Droplet IP to open the Hasura console, where you can
 create tables, explore GraphQL APIs etc. Note that it might take 1 or 2 minutes for everything to start running.
@@ -57,7 +57,7 @@ instance and make your first GraphQL query.
 
 <Thumbnail src='/img/deployment/digital-ocean-hasura-console.png' alt='Hasura console' />
 
-### Step 3: Create a table
+### Step 3: create a table
 
 Navigate to `Data -> Add table` on the console and create a table called `profile` with the following columns:
 
@@ -90,7 +90,7 @@ Choose `id` as the Primary key and click the `Add Table` button.
 
 <Thumbnail src='/img/deployment/digital-ocean-create-table.png' alt='Create a table' />
 
-### Step 4: Insert sample data
+### Step 4: insert sample data
 
 Once the table is created, go to the `Insert Row` tab and insert some sample rows:
 
@@ -104,7 +104,7 @@ Black Widow
 
 <Thumbnail src='/img/deployment/digital-ocean-hasura-insert-data.png' alt='Hasura console - insert data' />
 
-### Step 5: Try out GraphQL
+### Step 5: try out GraphQL
 
 Switch to the `API` tab on top and execute the following GraphQL query:
 
@@ -127,19 +127,19 @@ rules on tables.
 
 To add an admin secret key, follow the steps described below:
 
-### Step 1: Connect to the Droplet via SSH
+### Step 1: connect to the Droplet via SSH
 
 ```bash
 ssh root@<your_droplet_ip>
 ```
 
-### Step 2: Go to the `/etc/hasura` directory
+### Step 2: go to the `/etc/hasura` directory
 
 ```bash
 cd /etc/hasura
 ```
 
-### Step 3: Set an admin secret
+### Step 3: set an admin secret
 
 Edit `docker-compose.yaml` and un-comment the line that mentions admin secret key. Also change it to some unique secret:
 
@@ -154,7 +154,7 @@ HASURA_GRAPHQL_ADMIN_SECRET: <myadminsecretkey>
 # type ESC followed by :wq to save and quit
 ```
 
-### Step 4: Update the container
+### Step 4: update the container
 
 ```bash
 docker-compose up -d
@@ -172,23 +172,23 @@ X-Hasura-Admin-Secret: <myadminsecretkey>
 If you own a domain, you can enable HTTPS on this Droplet by mapping the domain to the Droplet's IP. The Hasura GraphQL
 Droplet is configured with Caddy which is an HTTP/2 web server with automatic HTTPS using Let's Encrypt.
 
-### Step 1: Add a record mapping
+### Step 1: add a record mapping
 
 Go to your domain's DNS dashboard and add an A record mapping the domain to the Droplet IP.
 
-### Step 2: Connect to the Droplet via SSH
+### Step 2: connect to the Droplet via SSH
 
 ```bash
 ssh root@<your_droplet_ip>
 ```
 
-### Step 3: Go to the `/etc/hasura` directory
+### Step 3: go to the `/etc/hasura` directory
 
 ```bash
 cd /etc/hasura
 ```
 
-### Step 4: Edit the `Caddyfile` and change `:80` to your domain
+### Step 4: edit the `Caddyfile` and change `:80` to your domain
 
 ```bash
 vim Caddyfile
@@ -209,7 +209,7 @@ vim Caddyfile
 # type ESC followed by :wq to save and quit
 ```
 
-### Step 5: Restart the container
+### Step 5: restart the container
 
 ```bash
 docker-compose restart caddy
@@ -223,19 +223,19 @@ When a new version of the GraphQL engine is released, you can upgrade to it by j
 `docker-compose.yaml`. You can find the latest releases on the
 [GitHub releases page](https://github.com/hasura/graphql-engine/releases).
 
-### Step 1: Connect to the Droplet via SSH
+### Step 1: connect to the Droplet via SSH
 
 ```bash
 ssh root@<your_droplet_ip>
 ```
 
-### Step 2: Go to the `/etc/hasura` directory
+### Step 2: go to the `/etc/hasura` directory
 
 ```bash
 cd /etc/hasura
 ```
 
-### Step 3: Edit `docker-compose.yaml` and change the image tag to the latest one
+### Step 3: edit `docker-compose.yaml` and change the image tag to the latest one
 
 ```bash
 vim docker-compose.yaml
@@ -248,7 +248,7 @@ graphql-engine:
 # type ESC followed by :wq to save and quit
 ```
 
-### Step 4: Restart the container
+### Step 4: restart the container
 
 ```bash
 docker-compose up -d
@@ -256,28 +256,28 @@ docker-compose up -d
 
 ## Using DigitalOcean Managed Postgres Database {#do-managed-pg-db}
 
-### Step 1: Create a Postgres database
+### Step 1: create a Postgres database
 
 Create a new Postgres database from the DigitalOcean console, preferably in the same region as the Droplet.
 
-### Step 2: Get the database URL
+### Step 2: get the database URL
 
 Once the database is created, under the "Overview" tab, from the "Connection Details" section, choose "Connection
 string" from the dropdown. "Connection string" is the "Database URL". Copy it.
 
-### Step 3: Connect to the Droplet via SSH
+### Step 3: connect to the Droplet via SSH
 
 ```bash
 ssh root@<your_droplet_ip>
 ```
 
-### Step 4: Go to the `/etc/hasura` directory
+### Step 4: go to the `/etc/hasura` directory
 
 ```bash
 cd /etc/hasura
 ```
 
-### Step 5: Edit `docker-compose.yaml` and change the database URL
+### Step 5: edit `docker-compose.yaml` and change the database URL
 
 ```bash
 vim docker-compose.yaml
@@ -338,19 +338,19 @@ to your provider's documentation for generating the proper `psql` command flags.
 
 ## Logs {#do-logs}
 
-### Step 1: Connect to the Droplet via SSH
+### Step 1: connect to the Droplet via SSH
 
 ```bash
 ssh root@<your_droplet_ip>
 ```
 
-### Step 2: Go to the `/etc/hasura` directory
+### Step 2: go to the `/etc/hasura` directory
 
 ```bash
 cd /etc/hasura
 ```
 
-### Step 3: Check logs
+### Step 3: check logs
 
 To checks logs for any container, use the following command:
 

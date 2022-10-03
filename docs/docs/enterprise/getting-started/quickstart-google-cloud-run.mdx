@@ -11,7 +11,7 @@ sidebar_position: 4
 
 import LatestRelease from '@site/src/components/LatestRelease';
 
-# Quickstart with Google Cloud Run
+# Quickstart With Google Cloud Run
 
 <div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
 
@@ -38,7 +38,7 @@ This tutorial assumes that the following prerequisites have been met:
 - You have a Serverless VPC Access Connector to make the Postgres and Redis datastores accessible from Cloud Run, see
   [Creating a Serverless VPC Access connector](https://cloud.google.com/vpc/docs/configure-serverless-vpc-access).
 
-### Step 1: Get the Cloud Run env vars file
+### Step 1: get the Cloud Run env vars file
 
 The [install manifests repo](https://github.com/hasura/graphql-engine/tree/master/install-manifests) contains all
 installation manifests required to deploy Hasura anywhere. Get the Cloud Run env vars file from there:
@@ -47,7 +47,7 @@ installation manifests required to deploy Hasura anywhere. Get the Cloud Run env
 wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/enterprise/google-cloud-run/env.yaml
 ```
 
-### Step 2: Set the license key, metadata database URL, Redis database URL and the admin secret
+### Step 2: set the license key, metadata database URL, Redis database URL and the admin secret
 
 Edit `env.yaml` and set the right values:
 
@@ -86,7 +86,7 @@ Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
 
 :::
 
-### Step 3: Copy the Hasura graphql-engine image to the GCR registry
+### Step 3: copy the Hasura graphql-engine image to the GCR registry
 
 Cloud Run does not allow using images from Dockerhub. Due to this limitation it's necessary to pull the Hasura
 graphql-engine image from Dockerhub and push it to your container registry,
@@ -107,7 +107,7 @@ This can be done using the below steps:
   </code>
 </pre>
 
-### Step 4: Deploy the service
+### Step 4: deploy the service
 
 Update the image and vpc connector values in the below commmand.
 

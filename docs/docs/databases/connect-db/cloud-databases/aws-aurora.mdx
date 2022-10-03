@@ -14,7 +14,7 @@ sidebar_position: 3
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with an AWS RDS Aurora Postgres database
+# Using Hasura Cloud With An AWS RDS Aurora Postgres Database
 
 <div className='badge badge--primary heading-badge'>Available on: Cloud</div>
 
@@ -26,12 +26,12 @@ Heroku - check out their
 [docs](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraPostgreSQL.Migrating.html) before continuing
 below.
 
-## Step 1: Sign up or log in to Hasura Cloud
+## Step 1: sign up or log in to Hasura Cloud
 
 Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
 and sign up or log in.
 
-## Step 2: Create a Hasura Cloud project {#create-hasura-project-aws-rds-aurora}
+## Step 2: create a Hasura Cloud project {#create-hasura-project-aws-rds-aurora}
 
 On the Hasura Cloud dashboard, create a new project:
 
@@ -45,7 +45,7 @@ You will get prompted for a Postgres Database URL. We will create this in the ne
 
 <Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
-## Step 3: Create an Aurora DB on AWS RDS (skip if you have an existing DB) {#create-pg-aws-rds-aurora}
+## Step 3: create an Aurora DB on AWS RDS (skip if you have an existing DB) {#create-pg-aws-rds-aurora}
 
 Log into the [AWS console](https://console.aws.amazon.com//).
 
@@ -92,7 +92,7 @@ If you're using a database user other than the default one, make sure to give it
 
 :::
 
-## Step 4: Allow connections to your DB from Hasura Cloud
+## Step 4: allow connections to your DB from Hasura Cloud
 
 On the database dashboard, click on `Connectivity & security`. On the right, click on the security group that you
 selected or added in [step 3](#create-pg-aws-rds-aurora).
@@ -129,7 +129,7 @@ Add the Hasura IP address that you copied:
 
 Then click `Save rules`.
 
-## Step 5: Construct the database connection URL {#construct-db-url-aurora}
+## Step 5: construct the database connection URL {#construct-db-url-aurora}
 
 The structure of the database connection URL looks as follows:
 
@@ -153,7 +153,7 @@ On the database dashboard, click on `Connectivity & security`:
 - `postgres-port`: On the screenshot above you can find it under `Port`. The default port for Postgres is `5432`.
 - `db`: The DB is `postgres` by default unless otherwise specified.
 
-## Step 6: Finish connecting the database
+## Step 6: finish connecting the database
 
 Back on Hasura Console, enter the database URL that we retrieved in [step 5](#construct-db-url-aurora):
 

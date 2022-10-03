@@ -15,7 +15,7 @@ sidebar_label: Clerk Authentication using JWTs
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Clerk Authentication Using JWTs with Hasura GraphQL Engine
+# Clerk Authentication Using JWTs With Hasura GraphQL Engine
 
 ## Introduction
 
@@ -32,7 +32,7 @@ This guide assumes the following:
 - You have [Hasura Cloud account](https://cloud.hasura.io/) and project already set up.
 - You have created a [Clerk account](https://dashboard.clerk.dev/sign-up).
 
-## Step 1: Create a Clerk application
+## Step 1: create a Clerk application
 
 - Navigate to your [Clerk Dashboard](https://dashboard.clerk.dev) and click on the `+ Add application` button.
 - Give your application a name. Then choose whichever authentication strategy and social login providers you prefer. For
@@ -40,7 +40,7 @@ This guide assumes the following:
 
   <Thumbnail src='/img/guides/clerk-01_authentication-settings.png' alt='Create a Clerk application' width='450' />
 
-## Step 2: Create Hasura JWT template
+## Step 2: create Hasura JWT template
 
 Once your Clerk application has been created, navigate to **JWT Templates**. Click the `+ New template` button and
 choose the Hasura template.
@@ -59,7 +59,7 @@ easy.
 By default, Clerk will sign the JWT with a private key automatically generated for your application, which is what most
 developers use for Hasura. If you choose this, you can customize this key.
 
-## Step 3: Provide JWT key to Hasura
+## Step 3: provide JWT key to Hasura
 
 The next step is to provide Hasura with the public key used to verify the JWT issued by Clerk. Assuming you didn't use a
 custom key, this can be done with the JSON Web Key Set (JWKS), which Clerk automatically creates an endpoint for with
@@ -87,7 +87,7 @@ HS256) and **key** as the value of `HASURA_GRAPHQL_JWT_SECRET`:
 
 :::
 
-## Step 4: Install the Clerk library
+## Step 4: install the Clerk library
 
 Now it's time to add the Clerk library to your application.
 
@@ -150,7 +150,7 @@ export default MyApp;
 
 After signing in, the child routes will now be able to make authenticated GraphQL queries to Hasura.
 
-## Step 5: Configure your GraphQL client
+## Step 5: configure your GraphQL client
 
 GraphQL clients (such as [Apollo Client](https://www.apollographql.com/docs/react/) and [Relay](https://relay.dev/)) can
 help with querying and caching your data. They can also manage UI state, keep data in sync, and boost performance. That

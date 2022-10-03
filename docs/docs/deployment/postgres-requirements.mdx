@@ -10,7 +10,7 @@ keywords:
 sidebar_position: 40
 ---
 
-# Postgres requirements
+# Postgres Requirements
 
 ## Supported Postgres versions {#postgres-version-support}
 
@@ -29,11 +29,11 @@ The Hasura GraphQL engine needs access to your Postgres database(s) with the fol
 dedicated metadata database as described
 [here](/deployment/graphql-engine-flags/config-examples.mdx#add-metadata-database).
 
-### Metadata Database Permissions
+### Metadata database permissions
 
 - (required) Read & write access on the schema `hdb_catalog`.
 
-### User Database Permissions
+### User database permissions
 
 - (required) Read access to the `information_schema` and `pg_catalog` schemas, to query for list of tables. Note that
   these permissions are usually available by default to all postgres users via
@@ -250,7 +250,7 @@ database providers.
 
 If you use another database user, you will need to make sure that this user has the right Postgres permissions.
 
-## Sample Scenario
+## Sample scenario
 
 Here's a sample SQL block that you can run on your database (as a **superuser**) to create the right credentials for a
 sample Hasura user called `hasurauser`:

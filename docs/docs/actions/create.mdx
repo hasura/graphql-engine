@@ -84,7 +84,7 @@ Let's start with a mutation that accepts a username and password, and returns an
 
 <TOCInline toc={toc} filterTOC={'mutation-type-action'} />
 
-### Step 1: Define your mutation and associated types
+### Step 1: define your mutation and associated types
 
 Start with defining the mutation and the required types. These types will reflect in the GraphQL schema.
 
@@ -208,7 +208,7 @@ The above definition means:
 - It returns an output type called `LoginResponse`.
 - `LoginResponse` is a simple object type with a field called `accessToken` of type `String!`.
 
-### Step 2: Create the action handler
+### Step 2: create the action handler
 
 A handler is an HTTP webhook where you can perform the custom logic for the action.
 
@@ -279,7 +279,7 @@ If you are running Hasura using Docker, ensure that the Hasura Docker container 
 
 :::
 
-### Step 3: Finish action creation
+### Step 3: finish action creation
 
 Finally, to save the action:
 
@@ -302,7 +302,7 @@ An action will be created when sending a request to the
   </TabItem>
 </Tabs>
 
-### Step 4: Try it out
+### Step 4: try it out
 
 In the Hasura console, head to the `API` tab and try out the new action.
 
@@ -329,7 +329,7 @@ Let's start with a basic query that accepts a list of numbers and returns their 
 
 <TOCInline toc={toc} filterTOC={'query-type-action'} />
 
-### Step 1: Define your query and associated types
+### Step 1: define your query and associated types
 
 Start with defining the query and the required types. These types will reflect in the GraphQL schema.
 
@@ -448,7 +448,7 @@ The above definition means:
 - It returns an output type called `AddResult`.
 - `AddResult` is a simple object type with a field called `sum` of type integer.
 
-### Step 2: Create the action handler
+### Step 2: create the action handler
 
 A handler is an HTTP webhook where you can perform the custom logic for the action.
 
@@ -515,7 +515,7 @@ e.g. `https://my-handler-endpoint/addNumbers` can be templated to `{{ACTION_BASE
 
 :::
 
-### Step 3: Finish action creation
+### Step 3: finish action creation
 
 Finally, to save the action:
 
@@ -538,7 +538,7 @@ An action will be created when sending a request to the
   </TabItem>
 </Tabs>
 
-### Step 4: Try it out
+### Step 4: try it out
 
 In the Hasura console, head to the `API` tab and try out the new action.
 

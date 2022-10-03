@@ -30,7 +30,7 @@ Check out our [Starter Kit](https://github.com/hasura/github-integration-starter
 
 ## Deployment modes
 
-### Automatic Deployment Mode
+### Automatic deployment mode
 
 With the `Automatic deployment mode`, Hasura Cloud automatically triggers a deployment for every commit pushed to the
 GitHub repository from the given branch and directory.
@@ -40,7 +40,7 @@ GitHub repository from the given branch and directory.
 The Automatic deployment mode also has the `Deploy Now` button which allows the user to retry deploying the latest
 commit.
 
-### Manual Deployment Mode
+### Manual deployment mode
 
 With `Manual deployment mode`, Hasura Cloud does not automatically deploy the commits pushed to the configured branch.
 The deployment of the latest commit in that branch can be triggered manually by clicking the `Deploy Now` button.
@@ -80,20 +80,20 @@ Hasura Cloud project. The details for the integration can be viewed in the `Git 
 
 <Thumbnail src='/img/projects/github-integration-details.png' alt='Setup GitHub Integration' width='900px' />
 
-## Edit GitHub Integration
+## Edit GitHub integration
 
 Click on the `Edit Deployment` button in the GitHub Deployment section to edit the GitHub
 repository/branch/directory/deployment mode for the GitHub integration.
 
 <Thumbnail src='/img/projects/edit-github-integration.png' alt='Setup GitHub Integration' width='900px' />
 
-## Deployment Log
+## Deployment log
 
 User can view the deployed commits and their deployment status in the `Deployment Log` section of Git Deployment.
 
 <Thumbnail src='/img/projects/deployment-log.png' alt='GitHub deployment log' width='900px' />
 
-## Deployment Process
+## Deployment process
 
 Once a commit deployment is triggered, the progress for a commit can be tracked by clicking on the `View Logs` button in
 the Deployment Log section.
@@ -112,19 +112,19 @@ The following is a task wise breakdown of the commit deployment job.
 Each task in the deployment has realtime logs and can be viewed by clicking on the `Logs` option for each
 successful/failed step.
 
-#### Step 1: Fetching Metadata / Migrations
+#### Step 1: fetching metadata / migrations
 
 The metadata and migrations are fetched from the GitHub repository and validated.
 
-#### Step 2: Applying Metadata
+#### Step 2: applying metadata
 
 The metadata in the GitHub repository is applied to the server.
 
-#### Step 3: Applying Migrations
+#### Step 3: applying migrations
 
 The migrations in the GitHub repository are applied to your data sources.
 
-#### Step 4: Finalizing Update
+#### Step 4: finalizing update
 
 The metadata on the server is reloaded and project health is verified before finalizing the update.
 
@@ -137,7 +137,7 @@ You need to ensure the your Cloud project has been appropriately set up to execu
 - Ensure that you have connected the required database(s) with the right name and connection params as you have in the
   metadata to the Cloud project.
 
-## Troubleshooting Failures {#github-integration-troubleshooting}
+## Troubleshooting failures {#github-integration-troubleshooting}
 
 If a deployment fails, depending on the kind of error, you can fix it by retrying the deployment by either updating your
 metadata and migrations with a fix and pushing a commit to deploy again or by just redeploying the failed commit after

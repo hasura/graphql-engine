@@ -11,7 +11,7 @@ sidebar_label: Import data from CSV
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Import data from CSV into Postgres
+# Import Data From CSV Into Postgres
 
 ## Introduction
 
@@ -22,7 +22,7 @@ Let's assume we have the following CSV file, which is named `profile.csv`:
 
 <Thumbnail src='/img/guides/sample-data-csv-file.png' alt='.csv data file' width='500px' />
 
-## Step 1: Add a corresponding table to your PG database
+## Step 1: add a corresponding table to your PG database
 
 Let us create a table to match the data structure in your CSV file.
 
@@ -34,7 +34,7 @@ profile (
 )
 ```
 
-## Step 2: Connect to your Postgres database
+## Step 2: connect to your Postgres database
 
 Connect to your Postgres database by using the `psql` command on the terminal:
 
@@ -45,7 +45,7 @@ psql postgres://<username>:<password>@<host>:<port>/<database>
 psql postgres://postgres:postgres@localhost:5432/postgres
 ```
 
-## Step 3: Import the data from the CSV file
+## Step 3: import the data from the CSV file
 
 Once connected to the database, use the following command from inside `psql` to import the data:
 

@@ -12,7 +12,7 @@ keywords:
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Setting up Hasura migrations (config v2)
+# Setting Up Hasura Migrations (config v2)
 
 ## Introduction
 
@@ -30,7 +30,7 @@ article (id uuid, title text, content text, author_id uuid)
 
 Now we want to set up migrations starting with this schema.
 
-## Step 0: Disable the console on the server
+## Step 0: disable the console on the server
 
 To use migrations effectively, the console on the server (which is served at `/console`) should be disabled and all
 changes must go through the console served by the CLI. Otherwise, changes could be made through the server console and
@@ -49,11 +49,11 @@ If this is set in YAML, make sure you quote the word false, i.e. `HASURA_GRAPHQL
 
 :::
 
-## Step 1: Install the Hasura CLI
+## Step 1: install the Hasura CLI
 
 Follow the instructions in [Installing the Hasura CLI](/hasura-cli/install-hasura-cli.mdx).
 
-## Step 2: Set up a project directory {#migrations-project-init-v2}
+## Step 2: set up a project directory {#migrations-project-init-v2}
 
 For the endpoint referred here, let's say you've deployed the GraphQL engine on Hasura Cloud, then this endpoint is:
 `https://my-graphql.hasura.app`. In case you've deployed Hasura using Docker, the URL might be
@@ -79,7 +79,7 @@ a flag to CLI commands: `--admin-secret '<your-admin-secret>'`.
 
 :::
 
-### Step 2.1: Set up version control for your project directory
+### Step 2.1: set up version control for your project directory
 
 The project directory created above can be committed to version control.
 
@@ -96,12 +96,12 @@ git add .
 git commit -m "hasura project init"
 ```
 
-## Step 3: Initialize the migrations and metadata as per your current state {#migrations-initialize-v2}
+## Step 3: initialize the migrations and metadata as per your current state {#migrations-initialize-v2}
 
 If you have already set up your database and GraphQL API, you need to initialize your database migrations and Hasura
 metadata with the current state of the database.
 
-### Step 3.1: Initialize database migrations
+### Step 3.1: initialize database migrations
 
 Create a migration called `init` by exporting the current Postgres schema from the server:
 
@@ -135,7 +135,7 @@ hasura migrate create "init" --from-server --schema "public" --schema "schema1" 
 
 :::
 
-### Step 3.2: Initialize Hasura metadata
+### Step 3.2: initialize Hasura metadata
 
 Export the Hasura metadata from the server:
 
@@ -149,7 +149,7 @@ This command will export the current Hasura metadata as a bunch of YAML files in
 If you'd like to read more about the format of metadata files, check out the
 [Metadata format reference (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/reference/metadata-format.mdx)
 
-### Step 3.3: Add a checkpoint to version control
+### Step 3.3: add a checkpoint to version control
 
 Commit the current project state to version control:
 
@@ -165,7 +165,7 @@ The version control set up should typically be done right after [Step 2](#migrat
 
 :::
 
-## Step 4: Use the console from the CLI
+## Step 4: use the console from the CLI
 
 From this point onwards, instead of using the console at `http://my-graphql.hasura.app/console` you should use the
 console from the CLI by running:
@@ -175,7 +175,7 @@ console from the CLI by running:
 hasura console
 ```
 
-## Step 5: Add a new table and see how migrations and metadata is updated
+## Step 5: add a new table and see how migrations and metadata is updated
 
 As you use the Hasura console UI served by the CLI to make changes to your schema, database migration files are
 automatically generated in the `migrations/` directory and the metadata is exported in the `metadata/` directory of your
@@ -197,7 +197,7 @@ Migrations are only created when using the console through the CLI.
 
 :::
 
-## Step 6: Squash migrations and add checkpoints to version control
+## Step 6: squash migrations and add checkpoints to version control
 
 As you keep using the console via the CLI to make changes to the schema, new migration files will keep getting generated
 and the metadata files will keep getting updated automatically.
@@ -233,7 +233,7 @@ The version control set up should typically be done right after [Step 2](#migrat
 
 :::
 
-## Step 7: Apply the migrations and metadata on another instance of the GraphQL engine
+## Step 7: apply the migrations and metadata on another instance of the GraphQL engine
 
 Apply all migrations present in the `migrations/` directory and the metadata present in the `metadata/` directory on a
 new instance at `http://another-graphql-instance.hasura.app`:
@@ -252,7 +252,7 @@ If you now open the console of the new instance, you can see that the three tabl
 
 <Thumbnail src='/img/migrations-metadata-seeds/tracked-tables.png' alt='Tracked tables from Hasura migrations' width='30%' />
 
-## Step 8: Check the status of migrations
+## Step 8: check the status of migrations
 
 ```bash
 # in project dir

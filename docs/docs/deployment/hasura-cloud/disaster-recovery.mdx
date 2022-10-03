@@ -10,7 +10,7 @@ sidebar_position: 50
 sidebar_class_name: cloud-icon
 ---
 
-# Disaster Recovery and Passive Standby Config for Hasura Cloud
+# Disaster Recovery And Passive Standby Config for Hasura Cloud
 
 <div className='badge badge--primary heading-badge'>Available on: Cloud</div>
 
@@ -19,7 +19,7 @@ sidebar_class_name: cloud-icon
 If you're designing your system to be fault tolerant enough to account for a full region-wide outage, we recommend
 enabling a backup region on Hasura Cloud too.
 
-## Step 1: Create a secondary Hasura Cloud Project
+## Step 1: create a secondary Hasura Cloud project
 
 In addition to your primary region on Hasura Cloud, create a new project in a convenient secondary region of your choice
 and within a new VPC - we will call this the secondary Hasura Cloud project.
@@ -31,14 +31,14 @@ can switch the DNS for the custom domain to point to the secondary Hasura Projec
 
 :::
 
-## Step 2: Peer the VPC and configure
+## Step 2: peer the VPC and configure
 
 Peer this new VPC with your disaster recovery region on AWS or GCP where your secondary database is present.
 
 Create all the required configurations and environment variables for the secondary Hasura Project. Connect this project
 with your secondary database.
 
-## Step 3: Keep Metadata in-sync
+## Step 3: keep metadata in-sync
 
 Depending on when and how you keep the secondary database schema and data synced with the primary database, you should
 also keep the Hasura Metadata on the secondary project up-to-date and in-sync with the primary project. You can use our
@@ -46,7 +46,7 @@ also keep the Hasura Metadata on the secondary project up-to-date and in-sync wi
 deploying each commit to both projects. Care should be taken in the config of databases and ENV variables in this
 regard.
 
-## Step 4: Redirect traffic on failover
+## Step 4: redirect traffic on failover
 
 When you actually need to failover to the secondary database and the secondary Hasura Project, point your custom domain
 to the secondary project by changing the DNS entry on your side. This will send all traffic through to the secondary

@@ -10,7 +10,7 @@ sidebar_label: MySQL preview
 
 import Paperform from "@site/src/components/Paperform";
 
-# MySQL preview
+# MySQL Preview
 
 ## Introduction
 
@@ -34,7 +34,7 @@ MySQL database as follows:
 -   [Docker Compose](https://docs.docker.com/compose/install/)
 -   An existing MySQL database
 
-### Step 1: Get the docker-compose file
+### Step 1: get the docker-compose file
 
 Get the Hasura MySQL preview docker compose file:
 
@@ -45,7 +45,7 @@ wget https://raw.githubusercontent.com/hasura/graphql-engine/master/install-mani
 curl https://raw.githubusercontent.com/hasura/graphql-engine/master/install-manifests/docker-compose-mysql-preview/docker-compose.yaml -o docker-compose.yaml
 ```
 
-### Step 2: Update MySQL config
+### Step 2: update MySQL config
 
 You need to now update the `docker-compose.yaml` file with credentials
 for your MySQL database *(replace the values surrounded by \<\>)*
@@ -70,7 +70,7 @@ command:
 Our [docker networking guide](/guides/docker-networking.mdx) might be useful to set
 the appropriate value for `mysql-host`. *(See Hasura to API)*
 
-### Step 3: Run Hasura GraphQL engine
+### Step 3: run Hasura GraphQL engine
 
 The following command will run Hasura along with a Postgres database
 required for its functioning.
@@ -89,7 +89,7 @@ CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
 b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
 ```
 
-### Step 4: Try out the GraphQL API
+### Step 4: try out the GraphQL API
 
 The GraphiQL on the Hasura console available at
 `http://localhost:8080/console` can be used to try out the generated

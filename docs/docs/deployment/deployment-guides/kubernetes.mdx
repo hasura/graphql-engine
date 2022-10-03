@@ -11,7 +11,7 @@ sidebar_label: Using Kubernetes
 
 import LatestRelease from '@site/src/components/LatestRelease';
 
-# Run Hasura GraphQL engine on Kubernetes
+# Run Hasura GraphQL Engine on Kubernetes
 
 ## Introduction
 
@@ -20,7 +20,7 @@ and connect it to your Postgres database.
 
 ## Deploying Hasura using Kubernetes
 
-### Step 1: Get the Kubernetes deployment and service files
+### Step 1: get the Kubernetes deployment and service files
 
 The [hasura/graphql-engine/install-manifests](https://github.com/hasura/graphql-engine/tree/stable/install-manifests)
 repo contains all installation manifests required to deploy Hasura anywhere. Get the Kubernetes deployment and service
@@ -31,7 +31,7 @@ $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-ma
 $ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/kubernetes/svc.yaml
 ```
 
-### Step 2: Set the Postgres database url
+### Step 2: set the Postgres database url
 
 Edit `deployment.yaml` and set the right database url:
 
@@ -59,14 +59,14 @@ Examples of `HASURA_GRAPHQL_DATABASE_URL`:
 
 :::
 
-### Step 3: Create the Kubernetes deployment and service
+### Step 3: create the Kubernetes deployment and service
 
 ```bash
 $ kubectl create -f deployment.yaml
 $ kubectl create -f svc.yaml
 ```
 
-### Step 4: Open the Hasura console
+### Step 4: open the Hasura console
 
 The above creates a LoadBalancer type service with port 80. So you should be able to access the console at the external
 IP.
@@ -82,7 +82,7 @@ kubernetes   ClusterIP      10.96.0.1       <none>        443/TCP        8m
 
 Head to: `http://localhost` and the console should load!
 
-### Step 5: Track existing tables and relationships
+### Step 5: track existing tables and relationships
 
 See [Setting up a GraphQL schema using an existing Postgres database](/schema/postgres/using-existing-database.mdx) to
 enable GraphQL over the database.
@@ -122,7 +122,7 @@ information on setting up authentication.
 
 :::
 
-### (optional) Use the admin secret key with the CLI
+### (Optional) use the admin secret key with the CLI
 
 In case you're using the CLI to open the Hasura console, use the `admin-secret` flag when you open the console:
 
@@ -153,7 +153,7 @@ $ kubectl logs -f svc/hasura
 This guide will help you update the Hasura GraphQL engine running on Kubernetes. This guide assumes that you already
 have the Hasura GraphQL engine running on Kubernetes.
 
-### Step 1: Check the latest release version
+### Step 1: check the latest release version
 
 The current latest version is:
 
@@ -165,7 +165,7 @@ The current latest version is:
 All the versions can be found at:
 [https://github.com/hasura/graphql-engine/releases](https://github.com/hasura/graphql-engine/releases).
 
-### Step 2: Update the container image
+### Step 2: update the container image
 
 In the `deployment.yaml` file, update the image tag to this latest version.
 
@@ -187,7 +187,7 @@ you should change it to:
   </code>
 </pre>
 
-### Step 3: Rollout the change
+### Step 3: rollout the change
 
 ```bash
 $ kubectl replace -f deployment.yaml

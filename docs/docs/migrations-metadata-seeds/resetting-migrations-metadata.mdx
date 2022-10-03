@@ -18,7 +18,7 @@ keywords:
 This page explains how to reset the state of Migrations and create new migrations from the state that is on the
 server. This can be useful if the current migration state on your local machine is corrupted.
 
-## Step 1: Delete or backup the local migration files
+## Step 1: delete or backup the local migration files
 
 Move all your migrations to a backup folder, in case you need them later.
 
@@ -30,7 +30,7 @@ You can use the following bash move command to move the folder:
 mv migrations migrations_backup
 ```
 
-## Step 2: Reset the migration history on the server
+## Step 2: reset the migration history on the server
 
 To reset the Migrations history status on the server only, use:
 
@@ -56,7 +56,7 @@ To reset the Migrations status on server and clean up the local project migratio
 hasura migrate delete --all --database-name <database-name>
 ```
 
-## Step 3: Pull the schema and metadata from the server
+## Step 3: pull the schema and metadata from the server
 
 If the migrations were reset, then we will set up fresh migrations by pulling the schema and metadata from the
 server using the following commands:
@@ -87,7 +87,7 @@ the create command. This flag can be used multiple times.
 
 :::
 
-## Step 4: Verify the status of the migrations
+## Step 4: verify the status of the migrations
 
 Run the following command to verify the migration status:
 

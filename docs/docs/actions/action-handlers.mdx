@@ -13,7 +13,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Action handlers
+# Action Handlers
 
 ## Introduction
 
@@ -169,11 +169,11 @@ to your needs.
 
 :::
 
-#### Step 1: Configure your Hasura instance {#configure-your-hasura-instance}
+#### Step 1: configure your Hasura instance {#configure-your-hasura-instance}
 
 In your Hasura server, add the action secret as an environment variable, say `ACTION_SECRET_ENV`.
 
-#### Step 2: Add a header to your action {#add-a-header-to-your-action}
+#### Step 2: add a header to your action {#add-a-header-to-your-action}
 
 For your action, add a header that will act as an action secret.
 
@@ -266,7 +266,7 @@ The name for the action secret is not defined by Hasura and can be chosen freely
 
 :::
 
-#### Step 3: Verify the secret in your action handler {#verify-the-secret-in-your-action-handler}
+#### Step 3: verify the secret in your action handler {#verify-the-secret-in-your-action-handler}
 
 First, load the action secret as an environment variable in your action handler by adding it to your `.env` file (this
 file might be a different one depending on your framework).

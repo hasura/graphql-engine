@@ -15,7 +15,7 @@ sidebar_label: Auth0 JWT Integration
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Auth0 JWT Integration with Hasura GraphQL engine
+# Auth0 JWT Integration With Hasura GraphQL Engine
 
 ## Introduction
 
@@ -33,7 +33,7 @@ This page helps you to set up Auth0 to work with the Hasura GraphQL engine.
 You get the basic information such as the `Domain`, `Client ID`, and `Client Secret` from the `Applications > Settings`
 tab once the application is created.
 
-## Configure Auth0 Rules & Callback URLs
+## Configure Auth0 rules & Callback URLs
 
 In the `Applications > Settings > Application URIs` section, set `Allowed Callback URLs` to `http://jwt.io`. Select
 **Save Changes**.
@@ -203,7 +203,7 @@ lines.
 
 <Thumbnail src='/img/auth/jwt-config-generated.png' alt='Generated JWT config' width='750px' />
 
-## Add Access Control Rules via Hasura Console
+## Add access control rules via Hasura Console
 
 Auth0 is configured and ready to be used in the application. You can now set up access control rules that are
 automatically applied whenever a client makes a GraphQL request with the Auth0 token.
@@ -227,7 +227,7 @@ The configured unauthorized role is used whenever an access token is not present
 This is useful for data that you would like anyone to be able to access and can be configured and restricted just like
 any other role.
 
-## Sync Users from Auth0
+## Sync users from Auth0
 
 Now that you have created an Auth0 application and can sign up/login, you will need a way to sync your users in Postgres
 as well. All you need is the Auth0 `user_id` in something like a `users` table.

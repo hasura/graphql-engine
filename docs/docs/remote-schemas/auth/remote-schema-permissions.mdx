@@ -12,7 +12,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Remote schema permissions
+# Remote Schema Permissions
 
 ## Introduction
 
@@ -276,11 +276,11 @@ mutation {
 
 ## Add remote schema permissions
 
-### Step 0: Add a remote schema
+### Step 0: add a remote schema
 
 Add a remote schema as described [here](/remote-schemas/adding-schema.mdx), if the schema isn't already added.
 
-### Step 1: Set permissions
+### Step 1: set permissions
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
@@ -365,7 +365,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-### Step 2: Test and verify the permissions
+### Step 2: test and verify the permissions
 
 Head to the `API` section. Add the session variable `X-Hasura-Role` with the value as the role for which we set
 permissions in the previous step.

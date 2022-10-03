@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# MS SQL Server: Creating relationships
+# MS SQL Server: Creating Relationships
 
 ## Introduction
 
@@ -33,7 +33,7 @@ Say we created two tables, `authors(id, name)` and `articles(id, title, content,
 
 Let us now connect these tables to enable nested queries using a foreign-key:
 
-### Step 1: Add foreign-key constraint
+### Step 1: add foreign-key constraint
 
 Let's add a foreign-key constraint to the `author_id` column in the `articles` table.
 
@@ -93,7 +93,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-### Step 2: Create an object relationship
+### Step 2: create an object relationship
 
 Each article has one author. This is an `object relationship`.
 
@@ -206,7 +206,7 @@ Fetch a list of articles and each article's author:
 }`}
 />
 
-### Step 3: Create an array relationship
+### Step 3: create an array relationship
 
 An author can write multiple articles. This is an `array relationship`.
 
@@ -362,14 +362,14 @@ using a manual relationship:
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-**Step 1: Open the manual relationship section**
+**Step 1: open the manual relationship section**
 
 - Open the console and navigate to the `Data -> authors -> Relationships` tab.
 - Click on the `Configure` button:
 
 <Thumbnail src='/img/schema/manual-relationship-btn.png' alt='Open the manual relationship section' width='1100px' />
 
-**Step 2: Define the relationship**
+**Step 2: define the relationship**
 
 The above step will open up a section as shown below:
 
@@ -381,7 +381,7 @@ In this case:
 - **Relationship Name** can be: `avg_rating`
 - **Reference** will be: `id -> author_avg_rating . id` _(similar to defining a foreign-key)_
 
-**Step 3: Create the relationship**
+**Step 3: create the relationship**
 
 Now click on the `Save` button to create the relationship.
 

@@ -13,7 +13,7 @@ sidebar_label: Many-to-many relationship
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Modelling many-to-many table relationships
+# Modelling Many-to-Many Table Relationships
 
 ## Introduction
 
@@ -41,7 +41,7 @@ These two tables are related via a `many-to-many` relationship. i.e:
 - an `article` can have many `tags`
 - a `tag` has many `articles`
 
-## Step 1: Set up a table relationship in the database
+## Step 1: set up a table relationship in the database
 
 This `many-to-many` relationship can be established in the database by:
 
@@ -72,7 +72,7 @@ If you can have multiple rows linking the same `article` and `tag` in your model
 The table `article_tag` sits between the two tables involved in the many-to-many relationship and captures possible
 permutations of their association via the foreign keys.
 
-## Step 2: Set up GraphQL relationships
+## Step 2: set up GraphQL relationships
 
 To access the nested objects via the GraphQL API,
 [create the following relationships](/schema/postgres/table-relationships/create.mdx):

@@ -11,7 +11,7 @@ keywords:
 sidebar_position: 3
 ---
 
-# Cleaning up scheduled triggers data
+# Cleaning Up Scheduled Triggers Data
 
 ## Introduction
 
@@ -37,7 +37,7 @@ Similarly, scheduled events also have two tables managed by Hasura:
 1. `hdb_catalog.hdb_scheduled_events`: Table that stores all the scheduled events.
 2. `hdb_catalog.hdb_scheduled_event_invocation_logs`: Table that stores all the HTTP requests and their responses of the scheduled events invocations.
 
-## Option 1: Clear only HTTP logs
+## Option 1: clear only HTTP logs
 
 1. Cron event invocation logs
 
@@ -51,7 +51,7 @@ DELETE FROM hdb_catalog.hdb_cron_event_invocation_logs;
 DELETE FROM hdb_catalog.hdb_scheduled_event_invocation_logs;
 ```
 
-## Option 2: Clear processed events
+## Option 2: clear processed events
 
 1. Cron events
 
@@ -83,14 +83,14 @@ upto a minute.
 
 :::
 
-## Option 3: Clear all data for a particular cron trigger only
+## Option 3: clear all data for a particular cron trigger only
 
 ```sql
 DELETE FROM hdb_catalog.hdb_cron_events
 WHERE trigger_name = '<trigger_name>';
 ```
 
-## Option 4: Clear everything
+## Option 4: clear everything
 
 1. Cron triggers
 

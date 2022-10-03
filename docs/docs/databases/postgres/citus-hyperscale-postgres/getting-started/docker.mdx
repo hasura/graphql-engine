@@ -12,7 +12,7 @@ keywords:
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Get Started with Docker (Hasura & Citus - Hyperscale)
+# Get Started With Docker (Hasura & Citus - Hyperscale)
 
 ## Try it out
 
@@ -22,7 +22,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 - [Docker Compose](https://docs.docker.com/compose/install/)
 - An existing Citus database
 
-### Step 1: Get the docker-compose file
+### Step 1: get the docker-compose file
 
 Get the Hasura docker-compose file:
 
@@ -33,7 +33,7 @@ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml -o docker-compose.yaml
 ```
 
-### Step 2: Run Hasura GraphQL engine
+### Step 2: run Hasura GraphQL engine
 
 The following command will run Hasura along with a Postgres database required for its functioning.
 
@@ -53,11 +53,11 @@ b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
 Please do note that you will see a Postgres database running, which is used by Hasura to store its configuration (Hasura metadata).
 ```
 
-### Step 3: Open the Hasura console
+### Step 3: open the Hasura console
 
 Head to `http://localhost:8080/console` to open the Hasura console.
 
-### Step 4: Add your Citus database as a source to Hasura
+### Step 4: add your Citus database as a source to Hasura
 
 In the `Data > Data Manager > Connect Existing Database` section on the console, select `Citus` from the
 `Data Source Driver` dropdown and add the connection string directly or through an environment variable. As Citus speaks
@@ -72,7 +72,7 @@ container on Linux, Mac or Windows.
 
 Once you add the database, you'll see your database pop up on the sidebar.
 
-### Step 5: Track existing tables or create new tables
+### Step 5: track existing tables or create new tables
 
 If you have existing tables, head to the database page by clicking on the database name on the sidebar. You should see a
 list of tables.
@@ -130,7 +130,7 @@ regular Postgres database.
 
 -->
 
-### Step 6: Try out a GraphQL query
+### Step 6: try out a GraphQL query
 
 Head to the `API` tab in the console and try running a GraphQL query! Use the explorer sidebar on GraphQL to get help in
 creating a GraphQL query.

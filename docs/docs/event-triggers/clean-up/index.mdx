@@ -10,7 +10,7 @@ keywords:
   - clean up
 ---
 
-# Cleaning up event data
+# Cleaning Up Event Data
 
 ## Introduction
 
@@ -35,20 +35,20 @@ Event Triggers have 2 tables managed by Hasura:
 2.  `hdb_catalog.event_invocation_logs`: This is that table that stores
     all HTTP requests and responses.
 
-## Option 1: Clear only HTTP logs
+## Option 1: clear only HTTP logs
 
 ```sql
 DELETE FROM hdb_catalog.event_invocation_logs;
 ```
 
-## Option 2: Clear only processed events
+## Option 2: clear only processed events
 
 ```sql
 DELETE FROM hdb_catalog.event_log
 WHERE delivered = true OR error = true;
 ```
 
-## Option 3: Clear all processed events and HTTP logs
+## Option 3: clear all processed events and HTTP logs
 
 This is the combination of Option 1 and Option 2.
 
@@ -59,7 +59,7 @@ DELETE FROM hdb_catalog.event_log
 WHERE delivered = true OR error = true;
 ```
 
-## Option 4: Clear all event data for a particular event trigger only
+## Option 4: clear all event data for a particular event trigger only
 
 ```sql
 DELETE FROM
@@ -75,7 +75,7 @@ AND (delivered = true OR error = true);
 ```
 
 
-## Option 5: Clear everything
+## Option 5: clear everything
 
 :::caution Warning
 

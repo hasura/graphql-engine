@@ -14,7 +14,7 @@ sidebar_class_name: cloud-and-enterprise-icon
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Query response caching
+# Query Response Caching
 
 <div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
 
@@ -88,7 +88,7 @@ query MyCachedQuery @cached(refresh: true) {
 }
 ```
 
-## Rate Limiting
+## Rate limiting
 
 Cache writes are rate limited, with a rate depending on your plan. The rate limit is based on the total number of bytes
 written to the cache in a sliding window. If you exceed the rate limit, the HTTP response will indicate this with a

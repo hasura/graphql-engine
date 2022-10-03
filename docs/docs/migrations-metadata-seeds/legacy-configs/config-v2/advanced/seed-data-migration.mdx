@@ -9,24 +9,24 @@ keywords:
   - seed data
 ---
 
-# Creating a seed data migration (config v2)
+# Creating A Seed Data Migration (config v2)
 
 ## Use case
 
 It can be convenient to add some seed data into tables as part of the DB
 init process.
 
-## Step 1: Run the console via the Hasura CLI
+## Step 1: run the console via the Hasura CLI
 
 In order to make sure that the migrations get created, the console needs
 to be run via the Hasura CLI.
 
-## Step 2: Navigate to the SQL section
+## Step 2: navigate to the SQL section
 
 On the Hasura console, click on the `Data` tab and then on the `SQL`
 link on the left hand side.
 
-## Step 3: Write an insert statement
+## Step 3: write an insert statement
 
 The next step is to write an insert statement that populates the
 database with seed data like the following:
@@ -46,16 +46,16 @@ INSERT INTO articles (id, title, content, author_id) VALUES
   (3, 'How to be successful on broadway', 'What it takes for you to be a successful performer at broadway', 2);
 ```
 
-## Step 4: Mark the insert as a migration
+## Step 4: mark the insert as a migration
 
 Check the box `This is a migration` and give the migration a name, e.g.
 `insert_seed_data`.
 
-## Step 5: Run the statement
+## Step 5: run the statement
 
 Hit the `Run!` button.
 
-## Step 6: Verify data & migration
+## Step 6: verify data & migration
 
 If the insert statement was successful, the data is now added to the DB.
 

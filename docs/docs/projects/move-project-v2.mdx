@@ -16,7 +16,7 @@ sidebar_position: 16
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Updating Hasura Cloud v1.3 projects to Hasura v2.0
+# Updating Hasura Cloud v1.3 Projects To Hasura v2.0
 
 <div className='badge badge--primary heading-badge'>Available on: Cloud</div>
 
@@ -115,21 +115,21 @@ Each task in the update job has a **rollback strategy** in case any failures occ
 fail, the project might be in an unhealthy state in which case please get in touch with support immediately for
 assistance.
 
-#### Step 1: Initializing
+#### Step 1: initializing
 
-##### Step 1.1: Validating
+##### Step 1.1: validating
 
 ###### Sub-tasks:
 
 - Enable cloud maintenance mode
 - Ensure infrastructure for update is available
 
-###### On Failure:
+###### On failure:
 
 - Disable cloud maintenance mode
 - **Project stays in v1.3**
 
-##### Step 1.2: Enabling maintenance mode
+##### Step 1.2: enabling maintenance mode
 
 ###### Sub-tasks:
 
@@ -144,9 +144,9 @@ assistance.
 - Disable cloud maintenance mode
 - **Project stays in v1.3**
 
-#### Step 2: Updating project
+#### Step 2: updating project
 
-##### Step 2.1: Migrating project metadata
+##### Step 2.1: migrating project metadata
 
 ###### Sub-tasks:
 
@@ -159,7 +159,7 @@ assistance.
 - Disable cloud maintenance mode
 - **Project stays in v1.3**
 
-##### Step 2.2: Creating v2.0 instance
+##### Step 2.2: creating v2.0 instance
 
 ###### Sub-tasks:
 
@@ -173,7 +173,7 @@ assistance.
 - Disable cloud maintenance mode
 - **Project stays in v1.3**
 
-##### Step 2.3: Migrating pending events, async actions data
+##### Step 2.3: migrating pending events, async actions data
 
 ###### Sub-tasks:
 
@@ -181,7 +181,7 @@ assistance.
 - Wait for `v1.3` to gracefully shutdown after completing processing of any in-flight events
 - Migrate pending events, async actions data to cloud metadata database
 
-###### On Failure:
+###### On failure:
 
 - Restart `v1.3` instance
 - Start routing requests back to `v1.3` instance
@@ -189,21 +189,21 @@ assistance.
 - Disable cloud maintenance mode
 - **Project stays in v1.3**
 
-##### Step 2.4: Migrating processed events, async actions data {#v2-update-migrate-invocation-logs}
+##### Step 2.4: migrating processed events, async actions data {#v2-update-migrate-invocation-logs}
 
 ###### Sub-tasks:
 
 - Migrate invocation logs of processed events, async actions to cloud metadata database
 
-###### On Failure:
+###### On failure:
 
 - **No action taken. Job continues to next task**
 - Invocation logs of already processed events, async actions are not migrated. Contact support to assist with a manual
   migration of the logs if needed
 
-#### Step 3: Validating update
+#### Step 3: validating update
 
-##### Step 3.1: Disabling maintenance mode {#v2-update-disable-maintenance-mode}
+##### Step 3.1: disabling maintenance mode {#v2-update-disable-maintenance-mode}
 
 ###### Sub-tasks:
 
@@ -223,7 +223,7 @@ assistance.
 
 - Check if metadata is consistent
 
-###### On Failure:
+###### On failure:
 
 - **No action taken. Job continues to next task**
 - Check your project metadata status on the console _(Settings (⚙) -> Metadata status)_ and attempt reloading metadata

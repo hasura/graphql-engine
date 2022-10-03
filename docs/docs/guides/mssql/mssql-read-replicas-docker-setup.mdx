@@ -19,7 +19,7 @@ MS SQL Server Read Replicas.
 
 This tutorial was highly influenced by [this blog](https://dbtut.com/index.php/2020/06/09/sql-server-2019-alwayson-availability-group-on-docker-containers)
 
-## Step 1: Set up the Docker image with SQL Server
+## Step 1: set up the Docker image with SQL Server
 
 ### Create Docker file
 
@@ -52,7 +52,7 @@ ENTRYPOINT /opt/mssql/bin/sqlservr
 docker build -t sqlag:ha .
 ```
 
-## Step 2: Create the Docker configuration file with 3 SQL nodes
+## Step 2: create the Docker configuration file with 3 SQL nodes
 
 Create three nodes:
 
@@ -124,7 +124,7 @@ internal:
 docker-compose up -d
 ```
 
-## Step 3: Figure the IP address of the gateway to connect
+## Step 3: figure the IP address of the gateway to connect
 
 ```bash
 $> ifconfig
@@ -154,7 +154,7 @@ $> sqlcmd -S 172.16.238.1,1501 -U SA -P "Password1"
 2> GO
 ```
 
-## Step 4: Create certificates
+## Step 4: create certificates
 
 Follow the steps to create certificates on the nodes:
 
@@ -226,7 +226,7 @@ CREATE CERTIFICATE dbm_certificate
 );
 ```
 
-## Step 5: Create the endpoint for Always On and setup health monitoring for the server
+## Step 5: create the endpoint for always on and setup health monitoring for the server
 
 Execute the following SQL first on primary node and then on the
 secondary nodes.
@@ -250,7 +250,7 @@ ALTER EVENT SESSION  AlwaysOn_health ON SERVER WITH (STARTUP_STATE=ON);
 GO
 ```
 
-## Step 6: Create Always on Availability Group
+## Step 6: create always on availability group
 
 Execute the following SQL on primary node.
 
@@ -288,7 +288,7 @@ ALTER AVAILABILITY GROUP [ag1] GRANT CREATE ANY DATABASE;
 GO
 ```
 
-## Step 7: Join the secondary nodes to Availability Group (AG)
+## Step 7: join the secondary nodes to Availability Group (AG)
 
 Execute the following SQL only on secondary nodes.
 
@@ -298,7 +298,7 @@ ALTER AVAILABILITY GROUP [ag1] GRANT CREATE ANY DATABASE;
 GO
 ```
 
-## Step 8: Setting up the primary node with some values and database
+## Step 8: setting up the primary node with some values and database
 
 In this step, we'll create a database on primary and add some data to it
 and verify that the replication happens on secondary nodes successfully.
@@ -334,7 +334,7 @@ the database has been replicated on secondary nodes
 2> GO
 ```
 
-## Step 9: Setup Routing List URL
+## Step 9: setup routing list URL
 
 In this step, we'll do the following:
 
@@ -400,7 +400,7 @@ N'sqlNode3' WITH
 GO
 ```
 
-## Step 10: Create the listener URL
+## Step 10: create the listener URL
 
 This listener URL is used to route the Read only request to one of the
 Read only secondary replicas

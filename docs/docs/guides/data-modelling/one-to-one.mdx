@@ -13,7 +13,7 @@ sidebar_label: One-to-one relationship
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Modelling one-to-one table relationships
+# Modelling One-to-One Table Relationships
 
 ## Introduction
 
@@ -40,7 +40,7 @@ These two tables are related via a `one-to-one` relationship. i.e.:
 - an `author` can have one `passport_info`
 - a `passport_info` has one `owner`
 
-## Step 1: Set up a table relationship in the database
+## Step 1: set up a table relationship in the database
 
 This `one-to-one` relationship can be established in the database by:
 
@@ -51,7 +51,7 @@ This `one-to-one` relationship can be established in the database by:
 This will ensure that the value of the `owner_id` column in `passport_info` table is present in the `id` column of the
 `authors` table and there will be only one row with a particular `owner_id`.
 
-## Step 2: Set up GraphQL relationships
+## Step 2: set up GraphQL relationships
 
 To access the nested objects via the GraphQL API,
 [create the following relationships](/schema/postgres/table-relationships/create.mdx):

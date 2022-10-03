@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# MS SQL Server: Setting default values for fields using MS SQL Server defaults
+# MS SQL Server: Setting Default Values For Fields Using MS SQL Server Defaults
 
 ## Introduction
 
@@ -33,7 +33,7 @@ The MS SQL Server default value is ignored when a value is explicitly set to the
 **Example:** Say we have a field `created_at` in a table `article` which we want to be set to the current timestamp
 whenever a new row is added to the table:
 
-## Step 1: Modify the table
+## Step 1: modify the table
 
 Edit the `created_at` field and set its default value as the SQL function `GETDATE()`.
 
@@ -85,7 +85,7 @@ Now set the default value of the `roll_number` field as `DEFAULT (NEXT VALUE FOR
 
 :::
 
-## Step 2: Run an insert mutation
+## Step 2: run an insert mutation
 
 Now if you do not pass the `created_at` field value while running an insert mutation on the `article` table, its value
 will be set automatically by MS SQL Server.

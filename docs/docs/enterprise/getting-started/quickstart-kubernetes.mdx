@@ -11,7 +11,7 @@ sidebar_position: 3
 
 import LatestRelease from '@site/src/components/LatestRelease';
 
-# Quickstart with Kubernetes
+# Quickstart With Kubernetes
 
 <div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
 
@@ -34,7 +34,7 @@ This tutorial assumes that the following prerequisites have been met:
 - The latest version of [Kubectl](https://kubernetes.io/docs/tasks/tools/#kubectl) compatible with your cluster has been
   installed and configured.
 
-### Step 1: Get the Kubernetes deployment and service files
+### Step 1: get the Kubernetes deployment and service files
 
 The [install manifests repo](https://github.com/hasura/graphql-engine/tree/master/install-manifests) contains all
 installation manifests required to deploy Hasura anywhere. Get the Kubernetes deployment and service files from there:
@@ -43,7 +43,7 @@ installation manifests required to deploy Hasura anywhere. Get the Kubernetes de
 wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/enterprise/kubernetes/deployment.yaml
 ```
 
-### Step 2: Set the license key, metadata database URL, Redis database URL and the admin secret
+### Step 2: set the license key, metadata database URL, Redis database URL and the admin secret
 
 Edit `deployment.yaml` and set the right values:
 
@@ -92,13 +92,13 @@ Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
 
 :::
 
-### Step 3: Create the Kubernetes deployment and service
+### Step 3: create the Kubernetes deployment and service
 
 ```bash
 kubectl create -f deployment.yaml
 ```
 
-### Step 4: Open the Hasura console
+### Step 4: open the Hasura console
 
 The above creates a LoadBalancer type service with port 80. So you should be able to access the console at the external
 IP.
@@ -114,7 +114,7 @@ kubernetes   ClusterIP      10.96.0.1       <none>        443/TCP        8m
 
 Head to: `http://localhost` and the console should load!
 
-### Step 5: Start using Hasura
+### Step 5: start using Hasura
 
 Congratulations! You have successfully set up Hasura EE on Docker.
 [Start using Hasura EE now](/start-using-hasura-ee.mdx).
@@ -142,7 +142,7 @@ kubectl logs -f svc/hasura
 This guide will help you update the Hasura GraphQL engine running on Kubernetes. This guide assumes that you already
 have the Hasura GraphQL engine running on Kubernetes.
 
-### Step 1: Check the latest release version
+### Step 1: check the latest release version
 
 The current latest version is:
 
@@ -153,7 +153,7 @@ The current latest version is:
 
 All the versions can be found [here](https://github.com/hasura/graphql-engine/releases).
 
-### Step 2: Update the container image
+### Step 2: update the container image
 
 In the `deployment.yaml` file, update the image tag to this latest version.
 
@@ -175,7 +175,7 @@ you should change it to:
   </code>
 </pre>
 
-### Step 3: Roll out the change
+### Step 3: roll out the change
 
 ```bash
 kubectl replace -f deployment.yaml

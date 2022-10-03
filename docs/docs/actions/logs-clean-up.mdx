@@ -10,7 +10,7 @@ keywords:
   - async actions
 ---
 
-# Cleaning up async Action logs
+# Cleaning Up Async Action Logs
 
 ## Introduction
 
@@ -35,19 +35,19 @@ There is a specific table for action logs that is managed by Hasura:
 
 - `hdb_catalog.hdb_action_log`: This table stores all captured action logs.
 
-## Option 1: Delete log of a particular action invocation
+## Option 1: delete log of a particular action invocation
 
 ```sql
 DELETE FROM hdb_catalog.hdb_action_log WHERE id = '<async-action-id>';
 ```
 
-## Option 2: Delete all logs of a specific action
+## Option 2: delete all logs of a specific action
 
 ```sql
 DELETE FROM hdb_catalog.hdb_action_log WHERE action_name = '<action-name>';
 ```
 
-## Option 3: Delete all logs
+## Option 3: delete all logs
 
 ```sql
 DELETE FROM hdb_catalog.hdb_action_log;

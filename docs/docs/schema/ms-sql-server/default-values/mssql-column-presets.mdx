@@ -15,7 +15,7 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# MS SQL Server: Setting values for fields using role-based column presets
+# MS SQL Server: Setting Values For Fields Using Role-based Column Presets
 
 ## Introduction
 
@@ -35,7 +35,7 @@ the column for the mutation will be restricted for users with that role.
 **Example:** Say we have a field `user_id` in a table `article` which is to be set to the id of the user, from the value
 of the user's session variable whenever a new row is added to the `article` table.
 
-## Step 1: Configure a column preset
+## Step 1: configure a column preset
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
@@ -108,7 +108,7 @@ To set a column preset for a nested object's column, simply set the correspondin
 
 :::
 
-## Step 2: Run an insert mutation
+## Step 2: run an insert mutation
 
 Head to the GraphiQL interface in the console and try making an insert mutation on the `article` table with the
 following headers (_to run through this example, don't forget to also grant the_ `user` _role sufficient permissions to

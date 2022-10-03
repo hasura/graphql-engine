@@ -14,7 +14,7 @@ sidebar_position: 16
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with a Yugabyte Postgres database
+# Using Hasura Cloud With A Yugabyte Postgres Database
 
 <div className='badge badge--primary heading-badge'>Available on: Cloud</div>
 
@@ -24,12 +24,12 @@ This guide explains how to connect a new or existing Yugabyte Postgres database 
 exploring Yugabyte Postgres and are interested in migrating an existing Postgres database - such as from Heroku - check
 out their [docs](https://docs.yugabyte.com/preview/migrate/migrate-steps/) before continuing below.
 
-## Step 1: Sign up or log in to Hasura Cloud
+## Step 1: sign up or log in to Hasura Cloud
 
 Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
 and sign up or log in.
 
-## Step 2: Create a Hasura Cloud project {#create-hasura-project-yugabyte}
+## Step 2: create a Hasura Cloud project {#create-hasura-project-yugabyte}
 
 On the Hasura Cloud dashboard, create a new project:
 
@@ -43,7 +43,7 @@ On the Hasura console, navigate to `Data -> Manage -> Connect Database -> Connec
 
 <Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
-## Step 3: Create a Postgres DB on Yugabyte (skip if you have an existing DB) {#create-pg-db-yugabyte}
+## Step 3: create a Postgres DB on Yugabyte (skip if you have an existing DB) {#create-pg-db-yugabyte}
 
 Log into the [Yugabyte Cloud dashboard](https://cloud.yugabyte.com/login).
 
@@ -74,7 +74,7 @@ Download your credentials and then click `Create Cluster`.
   width='1000px'
 />
 
-## Step 4: Allow connections to your DB from Hasura Cloud
+## Step 4: allow connections to your DB from Hasura Cloud
 
 From the cluster's dashboard, click `Add IP Allow List`:
 
@@ -102,7 +102,7 @@ Enter the Hasura IP address that you copied:
 
 Then click `Save`.
 
-## Step 5: Construct the database connection URL {#construct-db-url-yugabyte}
+## Step 5: construct the database connection URL {#construct-db-url-yugabyte}
 
 The structure of the database connection URL looks as follows:
 
@@ -126,7 +126,7 @@ Click the `Optimize for Hasura Cloud` checkbox and then copy your connection str
   width='1000px'
 />
 
-## Step 6: Finish connecting the database
+## Step 6: finish connecting the database
 
 Back on the Hasura Console, enter the database URL that we just copied and replace the `<DB USER>` and `<DB PASSWORD>`
 with the information from your credentials downloaded in [step 3](#create-pg-db-yugabyte):

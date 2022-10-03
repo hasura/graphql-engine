@@ -15,7 +15,7 @@ import TabItem from '@theme/TabItem';
 import TOCInline from '@theme/TOCInline';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# REST Connectors for Actions
+# REST Connectors For Actions
 
 ## Introduction
 
@@ -38,7 +38,7 @@ REST Connectors are supported in Hasura GraphQL Engine versions `v2.1.0` and abo
 
 :::
 
-## Configuring REST Connectors
+## Configuring REST connectors
 
 REST Connectors can be configured either when creating a new action or editing an existing one. See the transform
 options [here](#action-transform-types):
@@ -130,7 +130,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-### Context Variables {#action-transform-context-variables}
+### Context variables {#action-transform-context-variables}
 
 You can use context variables in the transforms to achieve dynamic behavior for each request.
 
@@ -184,7 +184,7 @@ You can transform your:
 
 <TOCInline toc={toc} filterTOC={'action-transform-types'} />
 
-### Request Method
+### Request method
 
 You can change the request method to adapt to your API's expected format.
 
@@ -386,7 +386,7 @@ variables in the URL and those may contain non-ASCII values, then you should pro
 
 :::
 
-### Request Body
+### Request body
 
 You can generate a custom request body by configuring a template to transform the default payload to a custom payload.
 Request body could be provided using the `body` field as an [object](/api-reference/syntax-defs.mdx/#bodytransform),
@@ -397,7 +397,7 @@ request body to `x_www_form_urlencoded` formats.
 - [Request Body with application/json format](#request-body-with-applicationjson-format)
 - [Request Body with x_www_form_urlencoded format](#request-body-with-x_www_form_urlencoded-format)
 
-##### Disabling Request Body
+##### Disabling request body
 
 If you are using a `GET` request, you might want to not send any request body, and additionally not send a
 `content-type` header to the webhook. You can do that using the disable body feature.
@@ -501,7 +501,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-##### Request Body with application/json format
+##### Request body with application/json format
 
 You can transform Request Body to `application/json` format using the following steps:
 
@@ -599,7 +599,7 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-##### Request Body with x_www_form_urlencoded format
+##### Request body with x_www_form_urlencoded format
 
 While doing `x_www_form_urlencoded` transformation, please note that as all changes to the request must be made explicit
 when calling the API, so you will need to remove the default `application/json` header and add a

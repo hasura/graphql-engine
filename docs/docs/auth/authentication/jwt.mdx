@@ -13,7 +13,7 @@ toc_max_heading_level: 2
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Authentication using JWT
+# Authentication Using JWT
 
 ## Introduction
 
@@ -50,7 +50,7 @@ In JWT mode, on a secured endpoint:
 3.  You can send `x-hasura-role` as header in the request to indicate a role.
 4.  Send the JWT via `Authorization: Bearer <JWT>` header.
 
-## The Spec
+## The spec
 
 When your auth server generates the JWT, the custom claims in the JWT **must contain** the following:
 
@@ -203,7 +203,7 @@ Following is the behaviour in detail:
 2.  If it is able to parse any of the above successfully, then it will use that parsed time to refresh/refetch the JWKs
     again. If it is unable to parse, then it will sleep for 1 minute and will start another refresh cycle.
 
-#### Example JWK URL
+#### Example JWK url
 
 - Auth0 publishes their JWK url at: `https://<YOUR_AUTH0_DOMAIN>.auth0.com`. But Auth0 has a bug. See known issues:
   [Auth0](/auth/authentication/jwt.mdx#auth0-issues).
@@ -718,7 +718,7 @@ Clerk publishes their JWK under: `https://<YOUR_CLERK_FRONTEND_API>/.well-known/
 Refer to the [Clerk authentication guide](/guides/integrations/clerk-authentication.mdx) to set up authenticated
 requests to Hasura with Clerk.
 
-## Generating JWT Config {#generating-jwt-config}
+## Generating JWT config {#generating-jwt-config}
 
 The JWT Config to be used in env `HASURA_GRAPHQL_JWT_SECRET` or `--jwt-secret` flag can be generated using:
 [https://hasura.io/jwt-config](https://hasura.io/jwt-config).
@@ -730,7 +730,7 @@ escaping new lines.
 
 <Thumbnail src='/img/auth/jwt-config-generated.png' alt='Generating JWT config' width='75%' />
 
-## Auth JWT Examples
+## Auth JWT examples
 
 Here are some sample apps that use JWT authorization. You can follow the instructions in the READMEs of the repositories
 to get started.

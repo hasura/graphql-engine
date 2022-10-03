@@ -11,7 +11,7 @@ sidebar_position: 2
 
 import LatestRelease from '@site/src/components/LatestRelease';
 
-# Quickstart with AWS ECS
+# Quickstart With AWS ECS
 
 <div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
 
@@ -45,7 +45,7 @@ This tutorial assumes that the following prerequisites have been met:
   - For more information, see
     [Create a virtual private cloud](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/get-set-up-for-amazon-ecs.html#create-a-vpc).
 
-### Step 1: Create a Cluster
+### Step 1: create a cluster
 
 If your account already has an ECS cluster you would like to use, skip this step.
 
@@ -55,7 +55,7 @@ Create your own cluster with a unique name with the following command:
 aws ecs create-cluster --cluster-name hasura-fargate-cluster
 ```
 
-### Step 2: Get the ECS task definition
+### Step 2: get the ECS task definition
 
 The [install manifests repo](https://github.com/hasura/graphql-engine/tree/master/install-manifests) contains all
 installation manifests required to deploy Hasura anywhere. Get the ECS task definition files from there:
@@ -64,7 +64,7 @@ installation manifests required to deploy Hasura anywhere. Get the ECS task defi
 wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/enterprise/aws-ecs/hasura-fargate-task.json
 ```
 
-### Step 3: Set the license key, metadata database URL, Redis database URL and the admin secret
+### Step 3: set the license key, metadata database URL, Redis database URL and the admin secret
 
 Edit `hasura-fargate-task.json` and set the right values:
 
@@ -127,13 +127,13 @@ Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
 
 :::
 
-### Step 4: Register the Task Definition
+### Step 4: register the task definition
 
 ```bash
 aws ecs register-task-definition --cli-input-json file://hasura-fargate-task.json
 ```
 
-### Step 5: List Task Definitions
+### Step 5: list task definitions
 
 You can list the task definitions for your account at any time with the list-task-definitions command. The output of
 this command shows the `family` and `revision` values that you can use together when calling **run-task** or
@@ -151,7 +151,7 @@ Output:
 }
 ```
 
-### Step 6: Create a Service
+### Step 6: create a service
 
 After you have registered a task for your account, you can create a service for the registered task in your cluster. For
 this example, you create a service with one instance of the `hasura:1` task definition running in your cluster.
@@ -188,7 +188,7 @@ aws ecs create-service \
 
 The **create-service** command returns a description of the task definition after it completes its registration.
 
-### Step 7: Describe the Running Service
+### Step 7: describe the running service
 
 Describe the service using the service name retrieved earlier to get more information about the task.
 
@@ -203,7 +203,7 @@ You may also find information on the task definition, the network configuration 
 section, you will find information on failures, if any, associated with the call. For troubleshooting, see
 [Service Event Messages](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-event-messages.html).
 
-### Step 8: Open the Hasura console
+### Step 8: open the Hasura console
 
 Copy the task id from the previous step and describe the task in the service so that you can get the Elastic Network
 Interface (ENI) for the task.
@@ -270,7 +270,7 @@ console.
 This guide will help you update the Hasura GraphQL engine running on ECS. This guide assumes that you already have the
 Hasura GraphQL engine running on ECS.
 
-### Step 1: Check the latest release version
+### Step 1: check the latest release version
 
 The current latest version is:
 
@@ -282,7 +282,7 @@ The current latest version is:
 All the versions can be found at:
 [https://github.com/hasura/graphql-engine/releases](https://github.com/hasura/graphql-engine/releases).
 
-### Step 2: Update the container image
+### Step 2: update the container image
 
 In the `hasura-fargate-task.json` file, update the image tag to this latest version.
 
@@ -306,7 +306,7 @@ you should change it to:
   </code>
 </pre>
 
-### Step 3: Roll out the change
+### Step 3: roll out the change
 
 Register the updated task definition and copy the `taskDefinitionArn` revision number:
 

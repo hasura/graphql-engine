@@ -12,7 +12,7 @@ sidebar_label: Setting up soft deletes for data
 import Thumbnail from '@site/src/components/Thumbnail';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Setting up soft deletes for data
+# Setting Up Soft Deletes For Data
 
 ## Overview
 
@@ -31,13 +31,13 @@ value. The todo with the timestamp value in `deleted_at` represents a deleted to
 
 Follow the below steps to set up soft deletes for the `todos` table:
 
-## Step 1: Add a **deleted_at** column
+## Step 1: add a **deleted_at** column
 
 Add a column with the following definition to the `todos` table:
 
 `deleted_at, type: timestamp, nullable, default: null`
 
-## Step 2: Use **update** instead of **delete** mutations
+## Step 2: use **update** instead of **delete** mutations
 
 After the previous step, we have a `deleted_at` column whose value will be `null` by default unless set explicitly.
 
@@ -57,7 +57,7 @@ mutation {
 }
 ```
 
-## Step 3: Set up appropriate insert/update/delete permissions
+## Step 3: set up appropriate insert/update/delete permissions
 
 Now, we need to ensure that appropriate [permissions](/auth/authorization/index.mdx) are set to avoid actual deletes
 from happening and allowing update of the `deleted_at` field.
@@ -76,7 +76,7 @@ Here are some typical rules we should set:
 
 <Thumbnail src='/img/guides/soft-deletes-update-perms.png' alt='Update permissions for role user' />
 
-## Step 4: Restrict access to soft-deleted records
+## Step 4: restrict access to soft-deleted records
 
 Now that we have set up the soft deleting pattern for records, we need to ensure that we restrict the "deleted" records
 from being accessed.

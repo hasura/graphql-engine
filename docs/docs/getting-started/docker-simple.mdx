@@ -11,7 +11,7 @@ keywords:
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Quickstart with Docker
+# Quickstart With Docker
 
 ## Introduction
 
@@ -23,7 +23,7 @@ containers using Docker Compose. This is the easiest way to set up Hasura GraphQ
 - [Docker](https://docs.docker.com/install/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 
-## Step 1: Get the docker-compose file
+## Step 1: get the docker-compose file
 
 The [hasura/graphql-engine/install-manifests](https://github.com/hasura/graphql-engine/tree/stable/install-manifests)
 repo contains all installation manifests required to deploy Hasura anywhere. Get the docker compose file from there:
@@ -35,7 +35,7 @@ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/docker-compose/docker-compose.yaml -o docker-compose.yml
 ```
 
-## Step 2: Run Hasura GraphQL engine
+## Step 2: run Hasura GraphQL engine
 
 The following command will run Hasura GraphQL engine along with a Postgres database to store its metadata.
 
@@ -53,7 +53,7 @@ CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
 b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
 ```
 
-## Step 3: Connect a database
+## Step 3: connect a database
 
 Head to `http://localhost:8080/console` to open the Hasura console.
 
@@ -78,7 +78,7 @@ database as a data source and continue.
 
 :::
 
-## Step 4: Try out Hasura
+## Step 4: try out Hasura
 
 <!-- TODO: add options to track existing vs create new tables -->
 

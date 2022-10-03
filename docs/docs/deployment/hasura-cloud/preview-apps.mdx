@@ -49,7 +49,7 @@ More plans are coming soon.
 
 :::
 
-## Preview Apps GitHub Action {#preview-apps-github-action}
+## Preview apps GitHub action {#preview-apps-github-action}
 
 Hasura Cloud enables automatically creating Preview Apps with Migrations and Metadata from a branch on a GitHub repo by
 triggering a new deployment using the official
@@ -62,7 +62,7 @@ issue on the [Hasura Cloud Preview Apps](https://github.com/hasura/hasura-cloud-
 
 :::
 
-### GitHub Action Workflow steps
+### GitHub action workflow steps
 
 This GitHub Action will do the following:
 
@@ -86,7 +86,7 @@ More plans are coming soon.
 
 :::
 
-### Configure the Hasura Cloud Preview Apps GitHub Action
+### Configure the Hasura Cloud preview apps GitHub action
 
 Follow the steps below to configure the Hasura Cloud Preview Apps GitHub Action in your GitHub repository.
 
@@ -109,7 +109,7 @@ Hasura Cloud dashboard and selecting the `Access Tokens` submenu.
 
 Copy the generated personal access token, this will be needed in further steps.
 
-#### Step 2: Add a Hasura Cloud personal token to GitHub repository secrets {#github-action-step-2}
+#### Step 2: add a Hasura Cloud personal token to GitHub repository secrets {#github-action-step-2}
 
 On GitHub, navigate to the repository with which you want to set up the Hasura Cloud Preview Apps GitHub Action and
 select the `Settings` tab.
@@ -191,7 +191,7 @@ If you use databases other than Postgres, you can create the ephemeral databases
 
 :::
 
-#### Step 4: Add a workflow to your GitHub repo {#github-action-step-4}
+#### Step 4: add a workflow to your GitHub repo {#github-action-step-4}
 
 For creating the action's configuration file, we have created a
 [YAML generator](https://cloud.hasura.io/preview-apps-yaml-generator) to ease the process of creating one.
@@ -259,7 +259,7 @@ jobs:
             GraphQL Endpoint available at ${{steps.hasura_cloud_preview.outputs.graphQLEndpoint}}
 ```
 
-#### Step 5: Set up the deletion of Preview Apps {#github-action-step-5}
+#### Step 5: set up the deletion of preview apps {#github-action-step-5}
 
 You can set up cleanup for the above workflow. Preview apps, along with the ephemeral databases created for it, need to
 be deleted to avoid unnecessary costs.
@@ -299,7 +299,7 @@ workflow so that the created databases get deleted when the pull request gets cl
 
 :::
 
-## Preview Apps API {#preview-apps-api}
+## Preview apps API {#preview-apps-api}
 
 If the [hasura/hasura-cloud-preview-apps](#preview-apps-github-action) GitHub action does not suit your needs, you can
 also directly contact the [createGitHubPreviewApp](/api-reference/cloud-api-reference.mdx#api-ref-create-preview-app)

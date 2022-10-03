@@ -13,7 +13,7 @@ sidebar_position: 6
 import Thumbnail from '@site/src/components/Thumbnail';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Multiple column + row permissions for the same role
+# Multiple Column + Row Permissions For The Same Role
 
 ## Use case
 
@@ -37,7 +37,7 @@ We want the role `user` to be able to access:
 
 We can achieve this via the following steps:
 
-## Step 1: Create a view
+## Step 1: create a view
 
 [Create a view](/schema/postgres/views.mdx#pg-create-views) called `user_private` with columns
 `(user_id, email, phone, address)`:
@@ -48,7 +48,7 @@ CREATE VIEW user_private AS
     FROM user_info;
 ```
 
-## Step 2: Create a relationship
+## Step 2: create a relationship
 
 For the table `user_info`,
 [create a manual object relationship](/schema/postgres/table-relationships/create.mdx#pg-create-manual-relationships)
@@ -56,7 +56,7 @@ called `private_info` using `user_info : id -> user_private : user_id`:
 
 <Thumbnail src='/img/auth/multiple-rules-create-manual-relationship.png' alt='Create a manual object relationship' />
 
-## Step 3: Define permissions
+## Step 3: define permissions
 
 For the role `user`, create the following permissions for `select`:
 
@@ -72,7 +72,7 @@ For the role `user`, create the following permissions for `select`:
   alt='Column access for the role user based on row level permissions'
 />
 
-## Step 4: Query with appropriate access control
+## Step 4: query with appropriate access control
 
 Now we can fetch the required data with the appropriate access control by using the relationship.
 

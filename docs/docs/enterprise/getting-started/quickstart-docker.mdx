@@ -12,7 +12,7 @@ sidebar_position: 1
 import Thumbnail from '@site/src/components/Thumbnail';
 import LatestRelease from '@site/src/components/LatestRelease';
 
-# Quickstart with Docker
+# Quickstart With Docker
 
 <div className='badge badge--primary heading-badge'>Available on: Enterprise Edition</div>
 
@@ -33,7 +33,7 @@ This tutorial assumes that the following prerequisites have been met:
 - You have [Docker](https://docs.docker.com/install/) and [Docker Compose](https://docs.docker.com/compose/install/)
   working on your machine.
 
-### Step 1: Get the docker-compose file
+### Step 1: get the docker-compose file
 
 The [install manifests repo](https://github.com/hasura/graphql-engine/tree/master/install-manifests) contains all
 installation manifests required to deploy Hasura anywhere. Get the docker compose file from there:
@@ -45,7 +45,7 @@ wget https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-manifests/enterprise/docker-compose/docker-compose.yaml -o docker-compose.yml
 ```
 
-### Step 2: Set the Hasura EE license key and the admin secret
+### Step 2: set the Hasura EE license key and the admin secret
 
 Edit the downloaded `docker-compose.yml` and set the license key and admin secret:
 
@@ -71,7 +71,7 @@ information on setting up authentication.
 
 :::
 
-### Step 3: Run Hasura GraphQL engine
+### Step 3: run Hasura GraphQL engine
 
 The following command will run Hasura GraphQL engine along with a Postgres database to store its metadata.
 
@@ -89,7 +89,7 @@ CONTAINER ID IMAGE                 ... CREATED STATUS PORTS          ...
 b0b1aac0508d postgres              ... 1m ago  Up 1m  5432/tcp       ...
 ```
 
-### Step 4 (optional): Use your PostgreSQL and Redis instances
+### Step 4 (optional): use your PostgreSQL and Redis instances
 
 The Hasura EE Docker compose files come with containerized open-source versions of PostgreSQL and Redis. Note that these
 are not managed by Hasura.
@@ -108,7 +108,7 @@ graphql-engine:
   ...
 ```
 
-### Step 5: Start using Hasura
+### Step 5: start using Hasura
 
 Congratulations! You have successfully set up Hasura EE on Docker.
 [Start using Hasura EE now](/start-using-hasura-ee.mdx).
@@ -142,7 +142,7 @@ docker logs 097f58433a2b
 This guide will help you update the Hasura GraphQL engine running with Docker. This guide assumes that you already have
 Hasura GraphQL engine running with Docker.
 
-### Step 1: Check the latest release version
+### Step 1: check the latest release version
 
 The current latest version is:
 
@@ -153,7 +153,7 @@ The current latest version is:
 
 All the versions can be found [here](https://github.com/hasura/graphql-engine/releases).
 
-### Step 2: Update the Docker image
+### Step 2: update the Docker image
 
 In the `docker compose` command that you're running, update the image tag to this latest version.
 

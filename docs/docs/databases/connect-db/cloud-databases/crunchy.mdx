@@ -14,7 +14,7 @@ sidebar_position: 6
 import Thumbnail from '@site/src/components/Thumbnail';
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Using Hasura Cloud with a Crunchy Postgres database
+# Using Hasura Cloud With A Crunchy Postgres Database
 
 <div className='badge badge--primary heading-badge'>Available on: Cloud</div>
 
@@ -24,12 +24,12 @@ This guide explains how to connect a new or existing Crunchy Postgres database t
 exploring Crunchy Postgres and are interested in migrating an existing Postgres database - such as from Heroku - check
 out their [docs](https://www.crunchydata.com/migrate-from-heroku) before continuing below.
 
-## Step 1: Sign up or log in to Hasura Cloud
+## Step 1: sign up or log in to Hasura Cloud
 
 Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
 and sign up or log in.
 
-## Step 2: Create a Hasura Cloud project {#create-hasura-project}
+## Step 2: create a Hasura Cloud project {#create-hasura-project}
 
 On the Hasura Cloud dashboard, create a new project:
 
@@ -43,7 +43,7 @@ You will get prompted for a Postgres Database URL. We will create this in the ne
 
 <Thumbnail src='/img/cloud-dbs/existing-db-setup.png' alt='Hasura Cloud database setup' width='700px' />
 
-## Step 3: Create a Postgres DB on Crunchy ([skip if you have an existing DB](#get-db-url))
+## Step 3: create a Postgres DB on Crunchy ([skip if you have an existing DB](#get-db-url))
 
 Log into [Crunchy](https://crunchybridge.com/dashboard).
 
@@ -70,7 +70,7 @@ for Hasura to be able to connect.
 Congratulations! You've now created a Postgres instance on Crunchy which you can use with Hasura GraphQL Engine. Follow
 the steps below to connect it to Hasura.
 
-## Step 4: Get the database connection URL {#get-db-url}
+## Step 4: get the database connection URL {#get-db-url}
 
 The structure of the database connection URL looks as follows:
 
@@ -102,7 +102,7 @@ Copy the connection string:
   width='700px'
 />
 
-## Step 5: Finish connecting the database
+## Step 5: finish connecting the database
 
 Back on the Hasura Console, enter the database URL that we retrieved in the previous step:
 
