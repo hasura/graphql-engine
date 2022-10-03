@@ -26177,7 +26177,7 @@ instance GHC.Base.Monoid Hasura.Backends.DataConnector.Plan.FieldsAndAggregates
 
 module Hasura.Backends.DataConnector.Adapter.Schema
 experimentalBuildTableRelayQueryFields :: MonadBuildSchema 'DataConnector r m n => MkRootFieldName -> SourceInfo 'DataConnector -> TableName 'DataConnector -> TableInfo 'DataConnector -> GQLNameIdentifier -> NESeq (ColumnInfo 'DataConnector) -> SchemaT r m [FieldParser n a]
-columnParser' :: (MonadParse n, MonadError QErr m) => ColumnType 'DataConnector -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
+columnParser' :: MonadBuildSchema 'DataConnector r m n => ColumnType 'DataConnector -> Nullability -> SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'DataConnector)))
 enumParser' :: MonadError QErr m => TableName 'DataConnector -> NonEmpty (EnumValue, EnumValueInfo) -> Maybe Name -> Nullability -> SchemaT r m (Parser 'Both n (ScalarValue 'DataConnector))
 possiblyNullable' :: MonadParse m => ScalarType 'DataConnector -> Nullability -> Parser 'Both m Value -> Parser 'Both m Value
 orderByOperators' :: SourceInfo 'DataConnector -> NamingCase -> (Name, NonEmpty (Definition EnumValueInfo, (BasicOrderType 'DataConnector, NullsOrderType 'DataConnector)))
