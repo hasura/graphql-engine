@@ -183,6 +183,43 @@ tests opts = do
 
       actual `shouldBe` expected
 
+    it "Accepts strings for numbers in input fields (experimental feature 'bigquery_string_numeric_input')" \testEnvironment -> do
+      let schemaName = Schema.getSchemaName testEnvironment
+
+      let expected :: Value
+          expected =
+            [interpolateYaml|
+              data:
+                #{schemaName}_all_types:
+                - float: "0.5"
+                  numeric: "1234"
+                  bignumeric: "23456789098765432"
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  #{schemaName}_all_types(where: 
+                    {_and: [
+                        { float: { _eq: "0.5" }}
+                        { integer: { _eq: "3" }}
+                        { numeric: { _eq: "1234" }}
+                        { bignumeric: { _eq: "23456789098765432" }}
+                        ]
+                    }
+                ) {
+                    float
+                    numeric
+                    bignumeric
+                  }
+                }
+              |]
+
+      actual `shouldBe` expected
+
     it "Aggregates all comparable types" \testEnvironment -> do
       let schemaName = Schema.getSchemaName testEnvironment
 

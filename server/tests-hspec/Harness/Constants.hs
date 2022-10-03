@@ -60,7 +60,7 @@ import Hasura.Server.Init qualified as Init
 import Hasura.Server.Logging (MetadataQueryLoggingMode (MetadataQueryLoggingDisabled))
 import Hasura.Server.Types
   ( EventingMode (EventingEnabled),
-    ExperimentalFeature (EFStreamingSubscriptions),
+    ExperimentalFeature (..),
     MaintenanceMode (MaintenanceModeDisabled),
     ReadOnlyMode (ReadOnlyModeDisabled),
   )
@@ -270,7 +270,7 @@ serveOptions =
       soEnableMaintenanceMode = MaintenanceModeDisabled,
       -- MUST be disabled to be able to modify schema.
       soSchemaPollInterval = Interval $$(refineTH 10),
-      soExperimentalFeatures = Set.singleton EFStreamingSubscriptions,
+      soExperimentalFeatures = Set.fromList [EFStreamingSubscriptions, EFBigQueryStringNumericInput],
       soEventsFetchBatchSize = $$(refineTH 1),
       soDevMode = True,
       soGracefulShutdownTimeout = $$(refineTH 0), -- Don't wait to shutdown.
