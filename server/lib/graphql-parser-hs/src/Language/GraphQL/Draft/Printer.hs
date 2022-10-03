@@ -1,3 +1,5 @@
+{-# HLINT ignore "Use tshow" #-}
+
 module Language.GraphQL.Draft.Printer where
 
 -------------------------------------------------------------------------------
@@ -105,6 +107,12 @@ instance Printer Text.Builder where
 
   doubleP = Text.string . show
   {-# INLINE doubleP #-}
+
+instance Printer T.Text where
+  textP = id
+  charP = T.singleton
+  intP = T.pack . show
+  doubleP = T.pack . show
 
 type Print :: Type -> Constraint
 class Print a where
