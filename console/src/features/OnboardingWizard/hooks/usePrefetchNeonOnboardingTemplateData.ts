@@ -38,5 +38,7 @@ export const usePrefetchNeonOnboardingTemplateData = (
     queryClient.prefetchQuery(schemaImageUrl, () =>
       fetchTemplateDataQueryFn(schemaImageUrl, {})
     );
+    // empty deps as it should only run once the component mounts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 };
