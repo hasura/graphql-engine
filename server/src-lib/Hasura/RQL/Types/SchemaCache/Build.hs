@@ -39,6 +39,7 @@ import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashMap.Strict.Multi qualified as MultiMap
 import Data.List qualified as L
+import Data.List.Extended qualified as L
 import Data.Sequence qualified as Seq
 import Data.Text.Extended
 import Data.Text.NonEmpty (unNonEmptyText)
@@ -332,7 +333,7 @@ withNewInconsistentObjsCheck action = do
 
   let diffInconsistentObjects = Map.difference `on` groupInconsistentMetadataById
       newInconsistentObjects =
-        hashNub $ concatMap toList $ Map.elems (currentObjects `diffInconsistentObjects` originalObjects)
+        L.uniques $ concatMap toList $ Map.elems (currentObjects `diffInconsistentObjects` originalObjects)
   unless (null newInconsistentObjects) $
     throwError
       (err500 Unexpected "cannot continue due to newly found inconsistent metadata")

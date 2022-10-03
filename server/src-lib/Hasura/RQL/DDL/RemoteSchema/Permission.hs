@@ -530,7 +530,7 @@ validateDirective providedDirective upstreamDirective (parentType, parentTypeNam
     dispute $
       pure $
         UnexpectedNonMatchingNames providedName upstreamName Directive
-  onJust (NE.nonEmpty $ Map.keys argsDiff) $ \argNames ->
+  for_ (NE.nonEmpty $ Map.keys argsDiff) $ \argNames ->
     dispute $
       pure $
         NonExistingDirectiveArgument parentTypeName parentType providedName argNames
@@ -551,7 +551,7 @@ validateDirectives ::
   (GraphQLType, G.Name) ->
   m (Maybe (G.Directive a))
 validateDirectives providedDirectives upstreamDirectives directiveLocation parentType = do
-  onJust (NE.nonEmpty $ S.toList $ duplicates $ map G._dName nonPresetDirectives) $ \dups -> do
+  for_ (NE.nonEmpty $ S.toList $ duplicates $ map G._dName nonPresetDirectives) $ \dups -> do
     refute $ pure $ DuplicateDirectives parentType dups
   for_ nonPresetDirectives $ \dir -> do
     let directiveName = G._dName dir
@@ -599,9 +599,9 @@ validateEnumTypeDefinition providedEnum upstreamEnum = do
       pure $
         UnexpectedNonMatchingNames providedName upstreamName Enum
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLENUM $ (Enum, providedName)
-  onJust (NE.nonEmpty $ S.toList $ duplicates providedEnumValNames) $ \dups -> do
+  for_ (NE.nonEmpty $ S.toList $ duplicates providedEnumValNames) $ \dups -> do
     refute $ pure $ DuplicateEnumValues providedName dups
-  onJust (NE.nonEmpty $ S.toList fieldsDifference) $ \nonExistingEnumVals ->
+  for_ (NE.nonEmpty $ S.toList fieldsDifference) $ \nonExistingEnumVals ->
     dispute $ pure $ NonExistingEnumValues providedName nonExistingEnumVals
   pure providedEnum
   where
@@ -664,10 +664,10 @@ validateArguments ::
   G.Name ->
   m [RemoteSchemaInputValueDefinition]
 validateArguments providedArgs upstreamArgs parentTypeName = do
-  onJust (NE.nonEmpty $ S.toList $ duplicates $ map G._ivdName providedArgs) $ \dups -> do
+  for_ (NE.nonEmpty $ S.toList $ duplicates $ map G._ivdName providedArgs) $ \dups -> do
     refute $ pure $ DuplicateArguments parentTypeName dups
   let argsDiff = getDifference nonNullableUpstreamArgs nonNullableProvidedArgs
-  onJust (NE.nonEmpty $ S.toList argsDiff) $ \nonNullableArgs -> do
+  for_ (NE.nonEmpty $ S.toList argsDiff) $ \nonNullableArgs -> do
     refute $ pure $ MissingNonNullableArguments parentTypeName nonNullableArgs
   for providedArgs $ \providedArg@(G.InputValueDefinition _ name _ _ _) -> do
     upstreamArg <-
@@ -734,7 +734,7 @@ validateFieldDefinitions ::
   (FieldDefinitionType, G.Name) ->
   m [(G.FieldDefinition RemoteSchemaInputValueDefinition)]
 validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType = do
-  onJust (NE.nonEmpty $ S.toList $ duplicates $ map G._fldName providedFldDefnitions) $ \dups -> do
+  for_ (NE.nonEmpty $ S.toList $ duplicates $ map G._fldName providedFldDefnitions) $ \dups -> do
     refute $ pure $ DuplicateFields parentType dups
   for providedFldDefnitions $ \fldDefn@(G.FieldDefinition _ name _ _ _) -> do
     upstreamFldDefn <-
@@ -792,7 +792,7 @@ validateUnionDefinition providedUnion upstreamUnion = do
       pure $
         UnexpectedNonMatchingNames providedName upstreamName Union
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLUNION $ (Union, providedName)
-  onJust (NE.nonEmpty $ S.toList memberTypesDiff) $ \nonExistingMembers ->
+  for_ (NE.nonEmpty $ S.toList memberTypesDiff) $ \nonExistingMembers ->
     refute $ pure $ NonExistingUnionMemberTypes providedName nonExistingMembers
   pure providedUnion
   where
@@ -817,9 +817,9 @@ validateObjectDefinition providedObj upstreamObj interfacesDeclared = do
       pure $
         UnexpectedNonMatchingNames providedName upstreamName Object
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLOBJECT $ (Object, providedName)
-  onJust (NE.nonEmpty $ S.toList customInterfaces) $ \ifaces ->
+  for_ (NE.nonEmpty $ S.toList customInterfaces) $ \ifaces ->
     dispute $ pure $ CustomInterfacesNotAllowed providedName ifaces
-  onJust (NE.nonEmpty nonExistingInterfaces) $ \ifaces ->
+  for_ (NE.nonEmpty nonExistingInterfaces) $ \ifaces ->
     dispute $ pure $ ObjectImplementsNonExistingInterfaces providedName ifaces
   fieldDefinitions <-
     validateFieldDefinitions providedFldDefnitions upstreamFldDefnitions $ (ObjectField, providedName)
@@ -930,7 +930,7 @@ validateRemoteSchema upstreamRemoteSchemaIntrospection = do
   let (providedSchemaDefinitions, providedTypeDefinitions) =
         partitionTypeSystemDefinitions providedTypeSystemDefinitions
       duplicateTypesList = S.toList $ duplicates (getTypeName <$> providedTypeDefinitions)
-  onJust (NE.nonEmpty duplicateTypesList) $ \duplicateTypeNames ->
+  for_ (NE.nonEmpty duplicateTypesList) $ \duplicateTypeNames ->
     refute $ pure $ DuplicateTypeNames duplicateTypeNames
   rootTypeNames <- validateSchemaDefinitions providedSchemaDefinitions
   let providedInterfacesTypes =

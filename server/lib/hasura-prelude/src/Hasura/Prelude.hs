@@ -12,7 +12,6 @@ module Hasura.Prelude
     onNothing,
     onNothingM,
     onJust,
-    withJust,
     mapMaybe,
     maybeToEither,
     eitherToMaybe,
@@ -31,7 +30,6 @@ module Hasura.Prelude
     hoistEither,
     readJson,
     tshow,
-    hashNub,
 
     -- * Trace debugging
     ltrace,
@@ -156,9 +154,13 @@ import Text.Read as M (readEither, readMaybe)
 import Witherable (catMaybes, mapMaybe)
 import Prelude as M hiding (fail, init, lookup)
 
+-- Don't inline, to avoid the risk of unreasonably long code being generated
+{-# NOINLINE alphabet #-}
 alphabet :: String
 alphabet = ['a' .. 'z'] ++ ['A' .. 'Z']
 
+-- Don't inline, to avoid the risk of unreasonably long code being generated
+{-# NOINLINE alphaNumerics #-}
 alphaNumerics :: String
 alphaNumerics = alphabet ++ "0123456789"
 
@@ -169,17 +171,12 @@ onNothingM :: Monad m => m (Maybe a) -> m a -> m a
 onNothingM m act = m >>= (`onNothing` act)
 
 onJust :: Applicative m => Maybe a -> (a -> m ()) -> m ()
-onJust m action = maybe (pure ()) action m
-
-withJust :: Applicative m => Maybe a -> (a -> m (Maybe b)) -> m (Maybe b)
-withJust m action = maybe (pure Nothing) action m
+onJust = for_
 
 -- | Transform a 'Maybe' into an 'Either' given a default value.
---
--- > maybeToEither def Nothing == Left def
--- > maybeToEither _def (Just b) == Right b
 maybeToEither :: a -> Maybe b -> Either a b
-maybeToEither a = maybe (Left a) Right
+maybeToEither def Nothing = Left def
+maybeToEither _def (Just b) = Right b
 
 -- | Convert an 'Either' to a 'Maybe', forgetting the 'Left' values.
 --
@@ -238,8 +235,8 @@ spanMaybeM f = go . toList
 
 findWithIndex :: (a -> Bool) -> [a] -> Maybe (a, Int)
 findWithIndex p l = do
-  v <- find p l
   i <- findIndex p l
+  let v = l !! i
   pure (v, i)
 
 -- TODO (from main): Move to Data.HashMap.Strict.Extended; rename to fromListWith?
@@ -252,13 +249,12 @@ oMapFromL f = OMap.fromList . map (\v -> (f v, v))
 -- | Time an IO action, returning the time with microsecond precision. The
 -- result of the input action will be evaluated to WHNF.
 --
--- The result 'DiffTime' is guarenteed to be >= 0.
+-- The result 'DiffTime' is guaranteed to be >= 0.
 withElapsedTime :: MonadIO m => m a -> m (DiffTime, a)
 withElapsedTime ma = do
-  bef <- liftIO Clock.getMonotonicTimeNSec
+  stopTimer <- startTimer
   !a <- ma
-  aft <- liftIO Clock.getMonotonicTimeNSec
-  let !dur = nanoseconds $ fromIntegral (aft - bef)
+  dur <- stopTimer
   return (dur, a)
 
 -- | Start timing and return an action to return the elapsed time since 'startTimer' was called.
@@ -333,15 +329,6 @@ traceToFileM filepath x =
         show $ unsafePerformIO $ TLIO.writeFile filepath $ PS.pShowNoColor x
       ]
 {-# WARNING traceToFileM "traceToFileM left in code" #-}
-
--- | Remove duplicates from a list. Like 'nub' but runs in @O(n * log_16(n))@
---   time and requires 'Hashable' and `Eq` instances. hashNub is faster than
---   ordNub when there're not so many different values in the list.
---
--- >>> hashNub [1,3,2,9,4,1,5,7,3,3,1,2,5,4,3,2,1,0]
--- [0,1,2,3,4,5,7,9]
-hashNub :: (Hashable a, Eq a) => [a] -> [a]
-hashNub = HSet.toList . HSet.fromList
 
 -- | Convert a non-empty sequence to a non-empty list.
 nonEmptySeqToNonEmptyList :: NESeq a -> NonEmpty a

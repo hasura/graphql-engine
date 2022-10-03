@@ -77,7 +77,7 @@ data ListedQuery = ListedQuery
   { _lqName :: QueryName,
     _lqQuery :: GQLQueryWithText
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance NFData ListedQuery
 

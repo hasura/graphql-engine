@@ -45,7 +45,7 @@ runCreateCollection ::
 runCreateCollection cc = do
   collDetM <- getCollectionDefM collName
   withPathK "name" $
-    onJust collDetM $
+    for_ collDetM $
       const $
         throw400 AlreadyExists $
           "query collection with name " <> collName <<> " already exists"
@@ -66,7 +66,7 @@ runRenameCollection (RenameCollection oldName newName) = do
   _ <- getCollectionDef oldName
   newCollDefM <- getCollectionDefM newName
   withPathK "new_name" $
-    onJust newCollDefM $
+    for_ newCollDefM $
       const $
         throw400 AlreadyExists $
           "query collection with name " <> newName <<> " already exists"

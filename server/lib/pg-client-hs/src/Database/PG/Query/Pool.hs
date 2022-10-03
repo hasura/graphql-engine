@@ -330,7 +330,7 @@ withExpiringPGconn pool f = do
       let microseconds = realToFrac (1000000 * diffUTCTime now old)
       liftIO (EKG.Distribution.add (_poolConnAcquireLatency (_stats pool)) microseconds)
       let connectionStale =
-            maybe False (\lifetime -> now `diffUTCTime` pgCreatedAt > lifetime) pgMbLifetime
+            any (\lifetime -> now `diffUTCTime` pgCreatedAt > lifetime) pgMbLifetime
       when connectionStale $ do
         -- Throwing is the only way to signal to resource pool to discard the
         -- connection at this time, so we need to use it for control flow:

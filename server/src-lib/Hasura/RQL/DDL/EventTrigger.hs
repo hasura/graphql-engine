@@ -223,7 +223,7 @@ resolveEventTriggerQuery (CreateEventTriggerQuery source name qt insert update d
   return (replace, EventTriggerConf name (TriggerOpsDef insert update delete enableManual) webhook webhookFromEnv rconf mheaders reqTransform respTransform cleanupConfig)
   where
     assertCols :: TableCoreInfo b -> Maybe (SubscribeOpSpec b) -> m ()
-    assertCols ti opSpec = onJust opSpec \sos -> case sosColumns sos of
+    assertCols ti opSpec = for_ opSpec \sos -> case sosColumns sos of
       SubCStar -> return ()
       SubCArray columns -> forM_ columns (assertColumnExists @b (_tciFieldInfoMap ti) "")
 
@@ -278,13 +278,13 @@ createEventTriggerQueryMetadata q = do
       oldConfig <- etiCleanupConfig <$> askEventTriggerInfo @b source triggerName
       when (hasCleanupCronScheduleUpdated oldConfig newConfig) do
         deleteAllScheduledCleanups @b sourceConfig triggerName
-        onJust newConfig \cleanupConfig -> do
+        for_ newConfig \cleanupConfig -> do
           (`onLeft` logQErr) =<< generateCleanupSchedules (AB.mkAnyBackend sourceInfo) triggerName cleanupConfig
     else do
       doesTriggerExists <- checkIfTriggerExists @b sourceConfig triggerName (Set.fromList [INSERT, UPDATE, DELETE])
       if doesTriggerExists
         then throw400 AlreadyExists ("Event trigger with name " <> triggerNameToTxt triggerName <<> " already exists")
-        else onJust newConfig \cleanupConfig -> do
+        else for_ newConfig \cleanupConfig -> do
           (`onLeft` logQErr) =<< generateCleanupSchedules (AB.mkAnyBackend sourceInfo) triggerName cleanupConfig
 
   buildSchemaCacheFor metadataObj $
@@ -609,7 +609,7 @@ toggleEventTriggerCleanupAction conf cleanupSwitch = do
       let tableName = (_tciName . _tiCoreInfo) tableInfo
           eventTriggerInfoMap = _tiEventTriggerInfoMap tableInfo
       ifor_ eventTriggerInfoMap $ \triggerName eventTriggerInfo -> do
-        onJust (etiCleanupConfig eventTriggerInfo) $ \cleanupConfig ->
+        for_ (etiCleanupConfig eventTriggerInfo) $ \cleanupConfig ->
           updateCleanupStatusInMetadata @b cleanupConfig switch sourceName tableName triggerName
 
 runEventTriggerResumeCleanup ::

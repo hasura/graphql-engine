@@ -109,6 +109,11 @@
 # To generate a suitable file for HLint do:
 # $ hlint --default > .hlint.yaml
 
+- error: {lhs: maybe False, rhs: any}
+- error: {lhs: maybe True, rhs: all}
+- error: {lhs: either (const False), rhs: any}
+- error: {lhs: either (const True), rhs: all}
+- suggest: {lhs: onJust, rhs: for_}
 
 - group:
     name: hasura-prelude
@@ -120,8 +125,8 @@
     - error: {lhs: "a /= []", rhs: "not (null a)"}
     - error: {lhs: "maybe b return a", rhs: "onNothing a b"}
     - error: {lhs: "maybe b pure a", rhs: "onNothing a b"}
-    - error: {lhs: "maybe (return ()) b a", rhs: "onJust a b"}
-    - error: {lhs: "maybe (pure ()) b a", rhs: "onJust a b"}
+    - error: {lhs: "maybe (return ()) b a", rhs: "for_ a b"}
+    - error: {lhs: "maybe (pure ()) b a", rhs: "for_ a b"}
     - error: {lhs: "either b return a", rhs: "onLeft a b"}
     - error: {lhs: "either b pure a", rhs: "onLeft a b"}
     - error: {lhs: "maybe (f x) f", rhs: "f . fromMaybe x"}

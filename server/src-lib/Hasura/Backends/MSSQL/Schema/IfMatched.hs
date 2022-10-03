@@ -63,7 +63,9 @@ ifMatchedFieldParser ::
   SchemaT r m (InputFieldsParser n (Maybe (IfMatched (UnpreparedValue 'MSSQL))))
 ifMatchedFieldParser sourceInfo tableInfo = do
   maybeObject <- ifMatchedObjectParser sourceInfo tableInfo
-  return $ withJust maybeObject $ P.fieldOptional Name._if_matched (Just "upsert condition")
+  pure case maybeObject of
+    Nothing -> pure Nothing
+    Just object -> P.fieldOptional Name._if_matched (Just "upsert condition") object
 
 -- | Parse a @tablename_if_matched@ object.
 ifMatchedObjectParser ::

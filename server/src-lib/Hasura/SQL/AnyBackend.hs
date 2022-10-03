@@ -463,6 +463,8 @@ deriving instance i `SatisfiesForAllBackends` Show => Show (AnyBackend i)
 
 deriving instance i `SatisfiesForAllBackends` Eq => Eq (AnyBackend i)
 
+deriving instance i `SatisfiesForAllBackends` Ord => Ord (AnyBackend i)
+
 instance i `SatisfiesForAllBackends` Hashable => Hashable (AnyBackend i)
 
 instance i `SatisfiesForAllBackends` Cacheable => Cacheable (AnyBackend i)
