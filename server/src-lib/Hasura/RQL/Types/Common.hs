@@ -260,7 +260,8 @@ isSystemDefined = unSystemDefined
 data SQLGenCtx = SQLGenCtx
   { stringifyNum :: Options.StringifyNumbers,
     dangerousBooleanCollapse :: Options.DangerouslyCollapseBooleans,
-    optimizePermissionFilters :: Options.OptimizePermissionFilters
+    optimizePermissionFilters :: Options.OptimizePermissionFilters,
+    bigqueryStringNumericInput :: Options.BigQueryStringNumericInput
   }
   deriving (Show, Eq)
 

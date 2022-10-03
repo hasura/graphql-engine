@@ -12,6 +12,7 @@ import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Backends.BigQuery.Name
+import Hasura.Backends.BigQuery.Parser.Scalars qualified as BQP
 import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
@@ -70,7 +71,7 @@ instance BackendSchema 'BigQuery where
   -- individual components
   columnParser = bqColumnParser
   enumParser = bqEnumParser
-  possiblyNullable = bqPossiblyNullable
+  possiblyNullable = const bqPossiblyNullable
   scalarSelectionArgumentsParser _ = pure Nothing
   orderByOperators _sourceInfo = bqOrderByOperators
   comparisonExps = const bqComparisonExps
@@ -92,33 +93,54 @@ bqColumnParser ::
   ColumnType 'BigQuery ->
   G.Nullability ->
   SchemaT r m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue 'BigQuery)))
-bqColumnParser columnType nullability =
+bqColumnParser columnType nullability = do
+  Options.SchemaOptions {soBigQueryStringNumericInput} <- asks getter
+  let numericInputParser :: forall a. a -> a -> a
+      numericInputParser builtin custom =
+        case soBigQueryStringNumericInput of
+          Options.EnableBigQueryStringNumericInput -> custom
+          Options.DisableBigQueryStringNumericInput -> builtin
   peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
-    ColumnScalar scalarType -> case scalarType of
-      -- bytestrings
-      -- we only accept string literals
-      BigQuery.BytesScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.StringValue <$> stringBased _Bytes
-      -- text
-      BigQuery.StringScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.StringValue <$> P.string
-      -- floating point values
-      -- TODO: we do not perform size checks here, meaning we would accept an
-      -- out-of-bounds value as long as it can be represented by a GraphQL float; this
-      -- will in all likelihood error on the BigQuery side. Do we want to handle those
-      -- properly here?
-      BigQuery.FloatScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.FloatValue . BigQuery.doubleToFloat64 <$> P.float
-      BigQuery.IntegerScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.IntegerValue . BigQuery.intToInt64 . fromIntegral <$> P.int
-      BigQuery.DecimalScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.DecimalValue . BigQuery.Decimal . BigQuery.scientificToText <$> P.scientific
-      BigQuery.BigDecimalScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.BigDecimalValue . BigQuery.BigDecimal . BigQuery.scientificToText <$> P.scientific
-      -- boolean type
-      BigQuery.BoolScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.BoolValue <$> P.boolean
-      BigQuery.DateScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.DateValue . BigQuery.Date <$> stringBased _Date
-      BigQuery.TimeScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.TimeValue . BigQuery.Time <$> stringBased _Time
-      BigQuery.DatetimeScalarType -> pure $ bqPossiblyNullable scalarType nullability $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased _Datetime
-      BigQuery.GeographyScalarType ->
-        pure $ bqPossiblyNullable scalarType nullability $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON _Geography
-      BigQuery.TimestampScalarType ->
-        pure $ bqPossiblyNullable scalarType nullability $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased _Timestamp
-      ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
+    ColumnScalar scalarType -> do
+      p <- case scalarType of
+        -- bytestrings
+        -- we only accept string literals
+        BigQuery.BytesScalarType -> pure $ BigQuery.StringValue <$> stringBased _Bytes
+        -- text
+        BigQuery.StringScalarType -> pure $ BigQuery.StringValue <$> P.string
+        -- floating point values
+
+        BigQuery.FloatScalarType ->
+          pure $
+            BigQuery.FloatValue
+              <$> numericInputParser (BigQuery.doubleToFloat64 <$> P.float) BQP.bqFloat64
+        BigQuery.IntegerScalarType ->
+          pure $
+            BigQuery.IntegerValue
+              <$> numericInputParser (BigQuery.intToInt64 . fromIntegral <$> P.int) BQP.bqInt64
+        BigQuery.DecimalScalarType ->
+          pure $
+            BigQuery.DecimalValue
+              <$> numericInputParser
+                (BigQuery.Decimal . BigQuery.scientificToText <$> P.scientific)
+                BQP.bqDecimal
+        BigQuery.BigDecimalScalarType ->
+          pure $
+            BigQuery.BigDecimalValue
+              <$> numericInputParser
+                (BigQuery.BigDecimal . BigQuery.scientificToText <$> P.scientific)
+                BQP.bqBigDecimal
+        -- boolean type
+        BigQuery.BoolScalarType -> pure $ BigQuery.BoolValue <$> P.boolean
+        BigQuery.DateScalarType -> pure $ BigQuery.DateValue . BigQuery.Date <$> stringBased _Date
+        BigQuery.TimeScalarType -> pure $ BigQuery.TimeValue . BigQuery.Time <$> stringBased _Time
+        BigQuery.DatetimeScalarType -> pure $ BigQuery.DatetimeValue . BigQuery.Datetime <$> stringBased _Datetime
+        BigQuery.GeographyScalarType ->
+          pure $ BigQuery.GeographyValue . BigQuery.Geography <$> throughJSON _Geography
+        BigQuery.TimestampScalarType ->
+          pure $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased _Timestamp
+        ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
+      return $ bqPossiblyNullable nullability p
     ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
       case nonEmpty (Map.toList enumValues) of
         Just enumValuesList -> bqEnumParser tableName enumValuesList customTableName nullability
@@ -145,7 +167,7 @@ bqEnumParser ::
   SchemaT r m (Parser 'Both n (ScalarValue 'BigQuery))
 bqEnumParser tableName enumValues customTableName nullability = do
   enumName <- mkEnumTypeName @'BigQuery tableName customTableName
-  pure $ bqPossiblyNullable BigQuery.StringScalarType nullability $ P.enum enumName Nothing (mkEnumValue <$> enumValues)
+  pure $ bqPossiblyNullable nullability $ P.enum enumName Nothing (mkEnumValue <$> enumValues)
   where
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'BigQuery)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
@@ -155,11 +177,10 @@ bqEnumParser tableName enumValues customTableName nullability = do
 
 bqPossiblyNullable ::
   MonadParse m =>
-  ScalarType 'BigQuery ->
   G.Nullability ->
   Parser 'Both m (ScalarValue 'BigQuery) ->
   Parser 'Both m (ScalarValue 'BigQuery)
-bqPossiblyNullable _scalarType (G.Nullability isNullable)
+bqPossiblyNullable (G.Nullability isNullable)
   | isNullable = fmap (fromMaybe BigQuery.NullValue) . P.nullable
   | otherwise = id
 

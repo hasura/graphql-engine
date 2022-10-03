@@ -249,10 +249,11 @@ instance FromEnv (HashSet Server.Types.ExperimentalFeature) where
         "optimize_permission_filters" -> Right Server.Types.EFOptimizePermissionFilters
         "naming_convention" -> Right Server.Types.EFNamingConventions
         "apollo_federation" -> Right Server.Types.EFApolloFederation
+        "bigquery_string_numeric_input" -> Right Server.Types.EFBigQueryStringNumericInput
         _ ->
           Left $
             "Only expecting list of comma separated experimental features, options are:"
-              ++ "inherited_roles, streaming_subscriptions, optimize_permission_filters, naming_convention, apollo_federation"
+              ++ "inherited_roles, streaming_subscriptions, optimize_permission_filters, naming_convention, apollo_federation, bigquery_string_numeric_input"
 
 instance FromEnv Subscription.Options.BatchSize where
   fromEnv s = do

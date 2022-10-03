@@ -75,6 +75,7 @@ data ExperimentalFeature
   | EFNamingConventions
   | EFStreamingSubscriptions
   | EFApolloFederation
+  | EFBigQueryStringNumericInput
   deriving (Show, Eq, Generic)
 
 instance Hashable ExperimentalFeature
@@ -86,7 +87,8 @@ instance FromJSON ExperimentalFeature where
     "naming_convention" -> pure EFNamingConventions
     "streaming_subscriptions" -> pure EFStreamingSubscriptions
     "apollo_federation" -> pure EFApolloFederation
-    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters, naming_convention, streaming_subscriptions or apollo_federation"
+    "bigquery_string_numeric_input" -> pure EFBigQueryStringNumericInput
+    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters, hide_update_many_fields, naming_convention, streaming_subscriptions apollo_federation, or bigquery_string_numeric_input"
 
 instance ToJSON ExperimentalFeature where
   toJSON = \case
@@ -95,6 +97,7 @@ instance ToJSON ExperimentalFeature where
     EFNamingConventions -> "naming_convention"
     EFStreamingSubscriptions -> "streaming_subscriptions"
     EFApolloFederation -> "apollo_federation"
+    EFBigQueryStringNumericInput -> "bigquery_string_numeric_input"
 
 data MaintenanceMode a = MaintenanceModeEnabled a | MaintenanceModeDisabled
   deriving (Show, Eq)
