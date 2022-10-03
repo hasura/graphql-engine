@@ -39,7 +39,7 @@
 </span><span id="line-33"></span><span class="hs-keyword">data</span><span> </span><span id="StringifyNumbers"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-var">StringifyNumbers</span></a></span></span><span>
 </span><span id="line-34"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="StringifyNumbers"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-var">StringifyNumbers</span></a></span></span><span>
 </span><span id="line-35"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tStringifyNumbers"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tStringifyNumbers"><span class="hs-identifier hs-var">Don'tStringifyNumbers</span></a></span></span><span>
-</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689605006"><span id="local-6989586621689605008"><span class="annot"><span class="annottext">StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689605014"><span id="local-6989586621689605016"><span class="annot"><span class="annottext">StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
 (StringifyNumbers -&gt; StringifyNumbers -&gt; Bool)
 -&gt; (StringifyNumbers -&gt; StringifyNumbers -&gt; Bool)
 -&gt; Eq StringifyNumbers
@@ -48,7 +48,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
 == :: StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
 $c== :: StringifyNumbers -&gt; StringifyNumbers -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604999"><span id="local-6989586621689605001"><span id="local-6989586621689605003"><span class="annot"><span class="annottext">Int -&gt; StringifyNumbers -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689605007"><span id="local-6989586621689605009"><span id="local-6989586621689605011"><span class="annot"><span class="annottext">Int -&gt; StringifyNumbers -&gt; ShowS
 [StringifyNumbers] -&gt; ShowS
 StringifyNumbers -&gt; String
 (Int -&gt; StringifyNumbers -&gt; ShowS)
@@ -71,7 +71,7 @@ $cshowsPrec :: Int -&gt; StringifyNumbers -&gt; ShowS
 </span><span id="line-41"></span><span class="hs-keyword">data</span><span> </span><span id="IncludeUpdateManyFields"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#IncludeUpdateManyFields"><span class="hs-identifier hs-var">IncludeUpdateManyFields</span></a></span></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="IncludeUpdateManyFields"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#IncludeUpdateManyFields"><span class="hs-identifier hs-var">IncludeUpdateManyFields</span></a></span></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DontIncludeUpdateManyFields"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DontIncludeUpdateManyFields"><span class="hs-identifier hs-var">DontIncludeUpdateManyFields</span></a></span></span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689604992"><span id="local-6989586621689604994"><span class="annot"><span class="annottext">IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool
+</span><span id="line-44"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689605000"><span id="local-6989586621689605002"><span class="annot"><span class="annottext">IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool
 (IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool)
 -&gt; (IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool)
 -&gt; Eq IncludeUpdateManyFields
@@ -80,7 +80,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool
 == :: IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool
 $c== :: IncludeUpdateManyFields -&gt; IncludeUpdateManyFields -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604986"><span id="local-6989586621689604988"><span id="local-6989586621689604990"><span class="annot"><span class="annottext">Int -&gt; IncludeUpdateManyFields -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604994"><span id="local-6989586621689604996"><span id="local-6989586621689604998"><span class="annot"><span class="annottext">Int -&gt; IncludeUpdateManyFields -&gt; ShowS
 [IncludeUpdateManyFields] -&gt; ShowS
 IncludeUpdateManyFields -&gt; String
 (Int -&gt; IncludeUpdateManyFields -&gt; ShowS)
@@ -102,7 +102,7 @@ $cshowsPrec :: Int -&gt; IncludeUpdateManyFields -&gt; ShowS
 </span><span id="line-48"></span><span class="hs-keyword">data</span><span> </span><span id="DangerouslyCollapseBooleans"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-var">DangerouslyCollapseBooleans</span></a></span></span><span>
 </span><span id="line-49"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="DangerouslyCollapseBooleans"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-var">DangerouslyCollapseBooleans</span></a></span></span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tDangerouslyCollapseBooleans"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tDangerouslyCollapseBooleans"><span class="hs-identifier hs-var">Don'tDangerouslyCollapseBooleans</span></a></span></span><span>
-</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689604980"><span id="local-6989586621689604982"><span class="annot"><span class="annottext">DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
+</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689604988"><span id="local-6989586621689604990"><span class="annot"><span class="annottext">DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
 (DangerouslyCollapseBooleans
  -&gt; DangerouslyCollapseBooleans -&gt; Bool)
 -&gt; (DangerouslyCollapseBooleans
@@ -113,7 +113,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
 == :: DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
 $c== :: DangerouslyCollapseBooleans -&gt; DangerouslyCollapseBooleans -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604974"><span id="local-6989586621689604976"><span id="local-6989586621689604978"><span class="annot"><span class="annottext">Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604982"><span id="local-6989586621689604984"><span id="local-6989586621689604986"><span class="annot"><span class="annottext">Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
 [DangerouslyCollapseBooleans] -&gt; ShowS
 DangerouslyCollapseBooleans -&gt; String
 (Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS)
@@ -130,8 +130,8 @@ showsPrec :: Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
 $cshowsPrec :: Int -&gt; DangerouslyCollapseBooleans -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>
-</span><span id="line-53"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604971"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-type">DangerouslyCollapseBooleans</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-54"></span><span>  </span><span id="local-6989586621689604969"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DangerouslyCollapseBooleans
+</span><span id="line-53"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604979"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-type">DangerouslyCollapseBooleans</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621689604977"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DangerouslyCollapseBooleans
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">String
 -&gt; (Bool -&gt; Parser DangerouslyCollapseBooleans)
@@ -161,8 +161,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
 </span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tDangerouslyCollapseBooleans"><span class="hs-identifier hs-var">Don'tDangerouslyCollapseBooleans</span></a></span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604960"><span id="local-6989586621689604962"><span id="local-6989586621689604964"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-type">DangerouslyCollapseBooleans</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-61"></span><span>  </span><span id="local-6989586621689604958"><span class="annot"><span class="annottext">toJSON :: DangerouslyCollapseBooleans -&gt; Value
+</span><span id="line-60"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604968"><span id="local-6989586621689604970"><span id="local-6989586621689604972"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-type">DangerouslyCollapseBooleans</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-61"></span><span>  </span><span id="local-6989586621689604966"><span class="annot"><span class="annottext">toJSON :: DangerouslyCollapseBooleans -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
 </span><a href="Hasura.GraphQL.Schema.Options.html#DangerouslyCollapseBooleans"><span class="hs-identifier hs-var">DangerouslyCollapseBooleans</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
@@ -179,7 +179,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-68"></span><span class="hs-keyword">data</span><span> </span><span id="InferFunctionPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-var">InferFunctionPermissions</span></a></span></span><span>
 </span><span id="line-69"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="InferFunctionPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-var">InferFunctionPermissions</span></a></span></span><span>
 </span><span id="line-70"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tInferFunctionPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tInferFunctionPermissions"><span class="hs-identifier hs-var">Don'tInferFunctionPermissions</span></a></span></span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689604950"><span id="local-6989586621689604952"><span class="annot"><span class="annottext">InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
+</span><span id="line-71"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689604958"><span id="local-6989586621689604960"><span class="annot"><span class="annottext">InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
 (InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool)
 -&gt; (InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool)
 -&gt; Eq InferFunctionPermissions
@@ -188,7 +188,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
 == :: InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
 $c== :: InferFunctionPermissions -&gt; InferFunctionPermissions -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604944"><span id="local-6989586621689604946"><span id="local-6989586621689604948"><span class="annot"><span class="annottext">Int -&gt; InferFunctionPermissions -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604952"><span id="local-6989586621689604954"><span id="local-6989586621689604956"><span class="annot"><span class="annottext">Int -&gt; InferFunctionPermissions -&gt; ShowS
 [InferFunctionPermissions] -&gt; ShowS
 InferFunctionPermissions -&gt; String
 (Int -&gt; InferFunctionPermissions -&gt; ShowS)
@@ -205,9 +205,9 @@ showsPrec :: Int -&gt; InferFunctionPermissions -&gt; ShowS
 $cshowsPrec :: Int -&gt; InferFunctionPermissions -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>
-</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604941"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">InferFunctionPermissions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-74"></span><span>  </span><span id="local-6989586621689604940"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser InferFunctionPermissions
-</span><a href="#local-6989586621689604940"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604949"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">InferFunctionPermissions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-74"></span><span>  </span><span id="local-6989586621689604948"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser InferFunctionPermissions
+</span><a href="#local-6989586621689604948"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-75"></span><span>    </span><span class="annot"><span class="annottext">String
 -&gt; (Bool -&gt; Parser InferFunctionPermissions)
 -&gt; Value
@@ -236,9 +236,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">InferFunctionPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tInferFunctionPermissions"><span class="hs-identifier hs-var">Don'tInferFunctionPermissions</span></a></span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604933"><span id="local-6989586621689604935"><span id="local-6989586621689604937"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">InferFunctionPermissions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-81"></span><span>  </span><span id="local-6989586621689604932"><span class="annot"><span class="annottext">toJSON :: InferFunctionPermissions -&gt; Value
-</span><a href="#local-6989586621689604932"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-80"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604941"><span id="local-6989586621689604943"><span id="local-6989586621689604945"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-type">InferFunctionPermissions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>  </span><span id="local-6989586621689604940"><span class="annot"><span class="annottext">toJSON :: InferFunctionPermissions -&gt; Value
+</span><a href="#local-6989586621689604940"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-82"></span><span>    </span><span class="annot"><span class="annottext">InferFunctionPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#InferFunctionPermissions"><span class="hs-identifier hs-var">InferFunctionPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
@@ -253,7 +253,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-87"></span><span class="hs-keyword">data</span><span> </span><span id="RemoteSchemaPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-var">RemoteSchemaPermissions</span></a></span></span><span>
 </span><span id="line-88"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="EnableRemoteSchemaPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#EnableRemoteSchemaPermissions"><span class="hs-identifier hs-var">EnableRemoteSchemaPermissions</span></a></span></span><span>
 </span><span id="line-89"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DisableRemoteSchemaPermissions"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">DisableRemoteSchemaPermissions</span></a></span></span><span>
-</span><span id="line-90"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689604926"><span id="local-6989586621689604928"><span class="annot"><span class="annottext">RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
+</span><span id="line-90"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689604934"><span id="local-6989586621689604936"><span class="annot"><span class="annottext">RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
 (RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool)
 -&gt; (RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool)
 -&gt; Eq RemoteSchemaPermissions
@@ -262,7 +262,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
 == :: RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
 $c== :: RemoteSchemaPermissions -&gt; RemoteSchemaPermissions -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604920"><span id="local-6989586621689604922"><span id="local-6989586621689604924"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaPermissions -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604928"><span id="local-6989586621689604930"><span id="local-6989586621689604932"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaPermissions -&gt; ShowS
 [RemoteSchemaPermissions] -&gt; ShowS
 RemoteSchemaPermissions -&gt; String
 (Int -&gt; RemoteSchemaPermissions -&gt; ShowS)
@@ -279,9 +279,9 @@ showsPrec :: Int -&gt; RemoteSchemaPermissions -&gt; ShowS
 $cshowsPrec :: Int -&gt; RemoteSchemaPermissions -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-91"></span><span>
-</span><span id="line-92"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604917"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-type">RemoteSchemaPermissions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-93"></span><span>  </span><span id="local-6989586621689604916"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteSchemaPermissions
-</span><a href="#local-6989586621689604916"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-92"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604925"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-type">RemoteSchemaPermissions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-93"></span><span>  </span><span id="local-6989586621689604924"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser RemoteSchemaPermissions
+</span><a href="#local-6989586621689604924"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-94"></span><span>    </span><span class="annot"><span class="annottext">String
 -&gt; (Bool -&gt; Parser RemoteSchemaPermissions)
 -&gt; Value
@@ -310,9 +310,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">False</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">DisableRemoteSchemaPermissions</span></a></span><span>
 </span><span id="line-98"></span><span>
-</span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604909"><span id="local-6989586621689604911"><span id="local-6989586621689604913"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-type">RemoteSchemaPermissions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-100"></span><span>  </span><span id="local-6989586621689604908"><span class="annot"><span class="annottext">toJSON :: RemoteSchemaPermissions -&gt; Value
-</span><a href="#local-6989586621689604908"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689604917"><span id="local-6989586621689604919"><span id="local-6989586621689604921"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#RemoteSchemaPermissions"><span class="hs-identifier hs-type">RemoteSchemaPermissions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621689604916"><span class="annot"><span class="annottext">toJSON :: RemoteSchemaPermissions -&gt; Value
+</span><a href="#local-6989586621689604916"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#EnableRemoteSchemaPermissions"><span class="hs-identifier hs-var">EnableRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Value
 </span><span class="hs-identifier hs-var">Bool</span></span><span> </span><span class="annot"><span class="annottext">Bool
@@ -328,7 +328,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-107"></span><span class="hs-keyword">data</span><span> </span><span id="OptimizePermissionFilters"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#OptimizePermissionFilters"><span class="hs-identifier hs-var">OptimizePermissionFilters</span></a></span></span><span>
 </span><span id="line-108"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="OptimizePermissionFilters"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#OptimizePermissionFilters"><span class="hs-identifier hs-var">OptimizePermissionFilters</span></a></span></span><span>
 </span><span id="line-109"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Don%27tOptimizePermissionFilters"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#Don%27tOptimizePermissionFilters"><span class="hs-identifier hs-var">Don'tOptimizePermissionFilters</span></a></span></span><span>
-</span><span id="line-110"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689604902"><span id="local-6989586621689604904"><span class="annot"><span class="annottext">OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
+</span><span id="line-110"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689604910"><span id="local-6989586621689604912"><span class="annot"><span class="annottext">OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
 (OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool)
 -&gt; (OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool)
 -&gt; Eq OptimizePermissionFilters
@@ -337,7 +337,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
 == :: OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
 $c== :: OptimizePermissionFilters -&gt; OptimizePermissionFilters -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604896"><span id="local-6989586621689604898"><span id="local-6989586621689604900"><span class="annot"><span class="annottext">Int -&gt; OptimizePermissionFilters -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604904"><span id="local-6989586621689604906"><span id="local-6989586621689604908"><span class="annot"><span class="annottext">Int -&gt; OptimizePermissionFilters -&gt; ShowS
 [OptimizePermissionFilters] -&gt; ShowS
 OptimizePermissionFilters -&gt; String
 (Int -&gt; OptimizePermissionFilters -&gt; ShowS)
@@ -358,7 +358,7 @@ $cshowsPrec :: Int -&gt; OptimizePermissionFilters -&gt; ShowS
 </span><span id="line-113"></span><span class="hs-keyword">data</span><span> </span><span id="BigQueryStringNumericInput"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#BigQueryStringNumericInput"><span class="hs-identifier hs-var">BigQueryStringNumericInput</span></a></span></span><span>
 </span><span id="line-114"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="EnableBigQueryStringNumericInput"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#EnableBigQueryStringNumericInput"><span class="hs-identifier hs-var">EnableBigQueryStringNumericInput</span></a></span></span><span>
 </span><span id="line-115"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="DisableBigQueryStringNumericInput"><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#DisableBigQueryStringNumericInput"><span class="hs-identifier hs-var">DisableBigQueryStringNumericInput</span></a></span></span><span>
-</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689604890"><span id="local-6989586621689604892"><span class="annot"><span class="annottext">BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool
+</span><span id="line-116"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689604898"><span id="local-6989586621689604900"><span class="annot"><span class="annottext">BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool
 (BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool)
 -&gt; (BigQueryStringNumericInput
     -&gt; BigQueryStringNumericInput -&gt; Bool)
@@ -368,7 +368,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool
 == :: BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool
 $c== :: BigQueryStringNumericInput -&gt; BigQueryStringNumericInput -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604884"><span id="local-6989586621689604886"><span id="local-6989586621689604888"><span class="annot"><span class="annottext">Int -&gt; BigQueryStringNumericInput -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689604892"><span id="local-6989586621689604894"><span id="local-6989586621689604896"><span class="annot"><span class="annottext">Int -&gt; BigQueryStringNumericInput -&gt; ShowS
 [BigQueryStringNumericInput] -&gt; ShowS
 BigQueryStringNumericInput -&gt; String
 (Int -&gt; BigQueryStringNumericInput -&gt; ShowS)
