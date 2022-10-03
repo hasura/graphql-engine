@@ -17,7 +17,6 @@ where
 import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
-import Data.Text (pack)
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.Base.Error (QErr)
@@ -133,7 +132,7 @@ tableSelectColumnsPredEnum columnPredicate predName sourceInfo tableInfo = do
   let description =
         Just $
           G.Description $
-            pack ("select " ++ show predName ++ "columns of table ") <>> tableInfoName tableInfo
+            "select \"" <> G.unName predName <> "\" columns of table " <>> tableInfoName tableInfo
   pure $
     P.enum enumName description
       <$> nonEmpty
