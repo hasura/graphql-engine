@@ -74,6 +74,9 @@ export function useInstallMigration(
         headers,
       });
     }
+    // not adding mutation to dependencies as its a non-memoised function, will trigger this useCallback
+    // every time we do a mutation. https://github.com/TanStack/query/issues/1858
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dataSourceName, migrationSQL, headers]);
 
   if (isError) {

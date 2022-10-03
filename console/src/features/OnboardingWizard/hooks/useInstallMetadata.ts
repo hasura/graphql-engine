@@ -16,18 +16,32 @@ type MutationFnArgs = {
 
 /**
  * Mutation Function to install the metadata. Calls the `replace_metadata` api with the new
- * metadata to be replaced.
+ * metadata to be replaced. Then calls the `reload_meatadata` api to get graphql engine in sync
+ * with the latest matadata.
  */
-const installMetadataMutationFn = (args: MutationFnArgs) => {
+const installMetadataMutationFn = async (args: MutationFnArgs) => {
   const { newMetadata, headers } = args;
-  const payload = {
+
+  const replaceMetadataPayload = {
     type: 'replace_metadata',
     args: newMetadata,
   };
-  return Api.post<Record<string, string>>({
+  await Api.post<Record<string, string>>({
     url: Endpoints.metadata,
     headers,
-    body: payload,
+    body: replaceMetadataPayload,
+  });
+
+  const reloadMetadataPayload = {
+    type: 'reload_metadata',
+    args: {
+      reload_sources: true,
+    },
+  };
+  await Api.post<Record<string, string>>({
+    url: Endpoints.metadata,
+    headers,
+    body: reloadMetadataPayload,
   });
 };
 
@@ -94,6 +108,9 @@ export function useInstallMetadata(
         });
       }
     }
+    // not adding mutation to dependencies as its a non-memoised function, will trigger this useCallback
+    // every time we do a mutation. https://github.com/TanStack/query/issues/1858
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [oldMetadata, templateMetadata, headers, dataSourceName]);
 
   if (isError) {
