@@ -64,6 +64,8 @@ import GHC.Generics (Generic)
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Names
+import {-# SOURCE #-} Hasura.GraphQL.Parser.Schema.Convert
+import Language.GraphQL.Draft.Printer qualified as G
 import Language.GraphQL.Draft.Syntax
   ( Description (..),
     DirectiveLocation (..),
@@ -796,7 +798,7 @@ data ConflictingDefinitions origin
       (SomeDefinitionTypeInfo origin, NonEmpty TypeOriginStack)
 
 instance ToErrorValue (ConflictingDefinitions origin) where
-  toErrorValue (ConflictingDefinitions (type1, origin1) (_type2, origins)) =
+  toErrorValue (ConflictingDefinitions (type1, origin1) (type2, origins)) =
     "Found conflicting definitions for "
       <> toErrorValue (getName type1)
       <> ".  The definition at "
@@ -804,6 +806,10 @@ instance ToErrorValue (ConflictingDefinitions origin) where
       <> " differs from the the definitions "
       <> toErrorValue origins
       <> "."
+      <> "\nFormer has definition:\n"
+      <> toErrorMessage (G.typeDefinitionP (bimap (const ()) id (convertType type1)))
+      <> "\nLatter has definition:\n"
+      <> toErrorMessage (G.typeDefinitionP (bimap (const ()) id (convertType type2)))
 
 -- | Although the majority of graphql-engine is written in terms of abstract
 -- mtl-style effect monads, we figured out that this particular codepath is
