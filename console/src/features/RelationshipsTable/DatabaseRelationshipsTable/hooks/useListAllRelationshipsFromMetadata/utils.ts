@@ -111,7 +111,7 @@ export const adaptManualRelationship = (
   return {
     name: relationship.name,
     type: 'toLocalTableManual',
-    toLocalTable: relationship.using.manual_configuration.remote_table,
+    toLocalTable: table,
     relationship_type: 'Object',
     mapping: {
       from: {
@@ -147,7 +147,7 @@ export const adaptLocalTableRelationship = (
   return {
     name: relationship.name,
     type: 'toLocalTableFk',
-    toLocalTable: relationship.using.foreign_key_constraint_on.table,
+    toLocalTable: table,
     relationship_type: 'Object',
     mapping: {
       from: {
