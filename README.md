@@ -1,6 +1,7 @@
 # Hasura GraphQL Engine
 
 [![Latest release](https://img.shields.io/github/v/release/hasura/graphql-engine)](https://github.com/hasura/graphql-engine/releases/latest)
+<a href="https://hasura.io/"><img src="assets/brand/hasura_logo_primary_lightbg.svg" align="right" width="200" ></a>
 [![Docs](https://img.shields.io/badge/docs-v2.x-brightgreen.svg?style=flat)](https://hasura.io/docs)
 
 <a href="https://discord.gg/vBPpJkS"><img src="https://img.shields.io/badge/chat-discord-brightgreen.svg?logo=discord&style=flat"></a>
