@@ -94,25 +94,29 @@ experimentalBuildTableRelayQueryFields _mkRootFieldName _sourceName _tableName _
   pure []
 
 columnParser' ::
-  (MonadParse n, MonadError QErr m) =>
+  MonadBuildSchema 'DataConnector r m n =>
   RQL.ColumnType 'DataConnector ->
   GQL.Nullability ->
   GS.C.SchemaT r m (P.Parser 'P.Both n (IR.ValueWithOrigin (RQL.ColumnValue 'DataConnector)))
-columnParser' columnType nullability = do
-  parser <- case columnType of
-    RQL.ColumnScalar scalarType@DC.StringTy -> pure . possiblyNullable' scalarType nullability $ J.String <$> P.string
-    RQL.ColumnScalar scalarType@DC.NumberTy -> pure . possiblyNullable' scalarType nullability $ J.Number <$> P.scientific
-    RQL.ColumnScalar scalarType@DC.BoolTy -> pure . possiblyNullable' scalarType nullability $ J.Bool <$> P.boolean
-    RQL.ColumnScalar scalarType@(DC.CustomTy name) -> do
-      gqlName <-
-        GQL.mkName name
-          `onNothing` throw400 ValidationFailed ("The column type name " <> name <<> " is not a valid GraphQL name")
-      pure . possiblyNullable' scalarType nullability $ P.jsonScalar gqlName (Just "A custom scalar type")
-    RQL.ColumnEnumReference (RQL.EnumReference tableName enumValues customTableName) ->
-      case nonEmpty (Map.toList enumValues) of
-        Just enumValuesList -> enumParser' tableName enumValuesList customTableName nullability
-        Nothing -> throw400 ValidationFailed "empty enum values"
-  pure . GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) $ parser
+columnParser' columnType nullability = case columnType of
+  RQL.ColumnScalar scalarType ->
+    P.memoizeOn 'columnParser' (scalarType, nullability) $
+      GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType) . possiblyNullable' scalarType nullability
+        <$> case scalarType of
+          DC.StringTy -> pure $ J.String <$> P.string
+          DC.NumberTy -> pure $ J.Number <$> P.scientific
+          DC.BoolTy -> pure $ J.Bool <$> P.boolean
+          DC.CustomTy name -> do
+            gqlName <-
+              GQL.mkName name
+                `onNothing` throw400 ValidationFailed ("The column type name " <> name <<> " is not a valid GraphQL name")
+            pure $ P.jsonScalar gqlName (Just "A custom scalar type")
+  RQL.ColumnEnumReference (RQL.EnumReference tableName enumValues customTableName) ->
+    case nonEmpty (Map.toList enumValues) of
+      Just enumValuesList ->
+        GS.C.peelWithOrigin . fmap (RQL.ColumnValue columnType)
+          <$> enumParser' tableName enumValuesList customTableName nullability
+      Nothing -> throw400 ValidationFailed "empty enum values"
 
 enumParser' ::
   MonadError QErr m =>

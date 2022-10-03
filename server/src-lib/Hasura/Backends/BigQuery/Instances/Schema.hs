@@ -93,16 +93,16 @@ bqColumnParser ::
   ColumnType 'BigQuery ->
   G.Nullability ->
   SchemaT r m (Parser 'Both n (IR.ValueWithOrigin (ColumnValue 'BigQuery)))
-bqColumnParser columnType nullability = do
-  Options.SchemaOptions {soBigQueryStringNumericInput} <- asks getter
-  let numericInputParser :: forall a. a -> a -> a
-      numericInputParser builtin custom =
-        case soBigQueryStringNumericInput of
-          Options.EnableBigQueryStringNumericInput -> custom
-          Options.DisableBigQueryStringNumericInput -> builtin
-  peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
-    ColumnScalar scalarType -> do
-      p <- case scalarType of
+bqColumnParser columnType nullability = case columnType of
+  ColumnScalar scalarType -> P.memoizeOn 'bqColumnParser (columnType, nullability) do
+    Options.SchemaOptions {soBigQueryStringNumericInput} <- asks getter
+    let numericInputParser :: forall a. a -> a -> a
+        numericInputParser builtin custom =
+          case soBigQueryStringNumericInput of
+            Options.EnableBigQueryStringNumericInput -> custom
+            Options.DisableBigQueryStringNumericInput -> builtin
+    peelWithOrigin . fmap (ColumnValue columnType) . bqPossiblyNullable nullability
+      <$> case scalarType of
         -- bytestrings
         -- we only accept string literals
         BigQuery.BytesScalarType -> pure $ BigQuery.StringValue <$> stringBased _Bytes
@@ -140,11 +140,12 @@ bqColumnParser columnType nullability = do
         BigQuery.TimestampScalarType ->
           pure $ BigQuery.TimestampValue . BigQuery.Timestamp <$> stringBased _Timestamp
         ty -> throwError $ internalError $ T.pack $ "Type currently unsupported for BigQuery: " ++ show ty
-      return $ bqPossiblyNullable nullability p
-    ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
-      case nonEmpty (Map.toList enumValues) of
-        Just enumValuesList -> bqEnumParser tableName enumValuesList customTableName nullability
-        Nothing -> throw400 ValidationFailed "empty enum values"
+  ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
+    case nonEmpty (Map.toList enumValues) of
+      Just enumValuesList ->
+        peelWithOrigin . fmap (ColumnValue columnType) . bqPossiblyNullable nullability
+          <$> bqEnumParser tableName enumValuesList customTableName nullability
+      Nothing -> throw400 ValidationFailed "empty enum values"
   where
     throughJSON scalarName =
       let schemaType = P.TNamed P.NonNullable $ P.Definition scalarName Nothing Nothing [] P.TIScalar
