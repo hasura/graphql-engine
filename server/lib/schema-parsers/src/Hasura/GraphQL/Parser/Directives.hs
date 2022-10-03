@@ -101,7 +101,7 @@ customDirectives = [cachedDirective @m, multipleRootFieldsDirective @m]
 -- Example use:
 --
 --     dMap <- parseDirectives customDirectives (DLExecutable EDLQUERY) directives
---     withDirective dMap cached $ onJust \_ -> tagAsCached
+--     withDirective dMap cached $ for_ \_ -> tagAsCached
 parseDirectives ::
   forall origin m.
   MonadParse m =>

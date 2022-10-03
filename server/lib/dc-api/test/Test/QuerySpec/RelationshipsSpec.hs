@@ -89,7 +89,7 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
         let filterCustomersBySupportRepCountry (customer :: HashMap FieldName FieldValue) =
               let customerCountry = customer ^? Data.field "Country" . Data._ColumnFieldString
                   supportRepCountry = customer ^.. Data.field "SupportRep" . subqueryRows . Data.field "Country" . Data._ColumnFieldString
-               in maybe False (`elem` supportRepCountry) customerCountry
+               in any (`elem` supportRepCountry) customerCountry
 
         let expectedCustomers = filter filterCustomersBySupportRepCountry $ Data.filterColumnsByQueryFields (query ^. qrQuery) . joinInSupportRep <$> _tdCustomersRows
         Data.responseRows receivedCustomers `rowsShouldBe` expectedCustomers
@@ -119,7 +119,7 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
         let filterEmployeesByCustomerCountry (employee :: HashMap FieldName FieldValue) =
               let employeeCountry = employee ^? Data.field "Country" . Data._ColumnFieldString
                   customerCountries = employee ^.. Data.field "SupportRepForCustomers" . subqueryRows . Data.field "Country" . Data._ColumnFieldString
-               in maybe False (`elem` customerCountries) employeeCountry
+               in any (`elem` customerCountries) employeeCountry
 
         let expectedEmployees = filter filterEmployeesByCustomerCountry $ Data.filterColumnsByQueryFields (query ^. qrQuery) . joinInCustomers <$> _tdEmployeesRows
         Data.responseRows receivedEmployees `rowsShouldBe` expectedEmployees

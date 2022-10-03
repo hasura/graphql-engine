@@ -153,7 +153,7 @@ parseScalarValueColumnType columnType value = case columnType of
     where
       parseEnumValue :: Maybe G.Name -> m (ScalarValue b)
       parseEnumValue enumValueName = do
-        onJust enumValueName \evn -> do
+        for_ enumValueName \evn -> do
           let enums = map getEnumValue $ M.keys enumValues
           unless (evn `elem` enums) $
             throw400 UnexpectedPayload $

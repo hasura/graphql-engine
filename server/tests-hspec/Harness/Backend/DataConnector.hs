@@ -336,5 +336,5 @@ runMockedTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = 
   I.writeIORef maeQueryConfig Nothing
 
   -- Assert that the 'API.QueryRequest' was constructed how we expected.
-  onJust _whenQuery ((query `shouldBe`) . Just)
-  onJust _whenConfig ((queryConfig `shouldBe`) . Just)
+  for_ _whenQuery ((query `shouldBe`) . Just)
+  for_ _whenConfig ((queryConfig `shouldBe`) . Just)

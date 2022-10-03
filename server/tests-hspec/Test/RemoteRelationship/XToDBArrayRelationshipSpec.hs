@@ -473,11 +473,11 @@ lhsRemoteServerMkLocalTestEnvironment _ = do
     -- Returns True iif the given artist matches the given boolean expression.
     matchArtist artistInfo@(artistId, artistName) (HasuraArtistBoolExp {..}) =
       and
-        [ maybe True (all (matchArtist artistInfo)) abe__and,
-          maybe True (any (matchArtist artistInfo)) abe__or,
-          maybe True (not . matchArtist artistInfo) abe__not,
-          maybe True (matchMaybeInt artistId) abe_id,
-          maybe True (matchString artistName) abe_name
+        [ all (all (matchArtist artistInfo)) abe__and,
+          all (any (matchArtist artistInfo)) abe__or,
+          not (any (matchArtist artistInfo) abe__not),
+          all (matchMaybeInt artistId) abe_id,
+          all (matchString artistName) abe_name
         ]
     matchString stringField StringCompExp {..} = Just stringField == _eq
     matchMaybeInt maybeIntField IntCompExp {..} = maybeIntField == _eq

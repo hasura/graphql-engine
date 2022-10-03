@@ -353,7 +353,7 @@ validateVariables sourceConfig sessionVariableValues prepState = do
                     selectFrom = sessionOpenJson occSessionVars
                   }
 
-  onJust
+  for_
     canaryQuery
     ( \q -> do
         _ :: [[ODBC.Value]] <- liftEitherM $ runExceptT $ mssqlRunReadOnly (_mscExecCtx sourceConfig) (Tx.multiRowQueryE defaultMSSQLTxErrorHandler q)

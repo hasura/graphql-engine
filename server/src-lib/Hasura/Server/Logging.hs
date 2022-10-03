@@ -590,7 +590,7 @@ logDeprecatedEnvVars logger env sources = do
   -- When a source named 'default' is present, it means that it is a migrated v2
   -- hasura project. In such cases log those environment variables that are moved
   -- to the metadata
-  onJust (HM.lookup SNDefault sources) $ \_defSource -> do
+  for_ (HM.lookup SNDefault sources) $ \_defSource -> do
     let deprecated = checkDeprecatedEnvVars (unEnvVarsMovedToMetadata envVarsMovedToMetadata)
     unless (null deprecated) $
       unLogger logger $

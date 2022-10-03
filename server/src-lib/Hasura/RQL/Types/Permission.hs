@@ -59,11 +59,13 @@ data PermType
   | PTSelect
   | PTUpdate
   | PTDelete
-  deriving (Eq, Generic)
+  deriving (Eq, Ord, Generic)
 
 instance NFData PermType
 
 instance Cacheable PermType
+
+instance Hashable PermType
 
 instance PG.FromCol PermType where
   fromCol bs = flip PG.fromColHelper bs $
@@ -75,13 +77,7 @@ instance PG.FromCol PermType where
       _ -> Nothing
 
 permTypeToCode :: PermType -> Text
-permTypeToCode PTInsert = "insert"
-permTypeToCode PTSelect = "select"
-permTypeToCode PTUpdate = "update"
-permTypeToCode PTDelete = "delete"
-
-instance Hashable PermType where
-  hashWithSalt salt a = hashWithSalt salt $ permTypeToCode a
+permTypeToCode = tshow
 
 instance Show PermType where
   show PTInsert = "insert"

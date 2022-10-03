@@ -33,6 +33,7 @@ import Data.HashMap.Strict.InsOrd.Extended qualified as OMap
 import Data.HashSet qualified as HS
 import Data.HashSet qualified as Set
 import Data.List qualified as L
+import Data.List.Extended qualified as L
 import Data.SerializableBlob qualified as SB
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
@@ -257,10 +258,10 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
 
   -- Check for duplicate trigger names in the new source metadata
   for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
-    onJust (OMap.lookup source oldSources) $ \_oldBackendSourceMetadata ->
+    for_ (OMap.lookup source oldSources) $ \_oldBackendSourceMetadata ->
       dispatch newBackendSourceMetadata \(newSourceMetadata :: SourceMetadata b) -> do
         let newTriggerNames = concatMap (OMap.keys . _tmEventTriggers) (OMap.elems $ _smTables newSourceMetadata)
-            duplicateTriggerNamesInNewMetadata = newTriggerNames \\ (hashNub newTriggerNames)
+            duplicateTriggerNamesInNewMetadata = newTriggerNames \\ (L.uniques newTriggerNames)
         unless (null duplicateTriggerNamesInNewMetadata) $ do
           throw400 NotSupported ("Event trigger with duplicate names not allowed: " <> dquoteList (map triggerNameToTxt duplicateTriggerNamesInNewMetadata))
 
@@ -360,7 +361,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
       -- In the current implementation, this doesn't throw an error because the trigger is dropped
       -- using `DROP IF EXISTS..` meaning this silently fails without throwing an error.
       for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
-        onJust (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
+        for_ (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
           compose source (unBackendSourceMetadata newBackendSourceMetadata) (unBackendSourceMetadata oldBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
             dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
               let oldTriggersMap = getTriggersMap oldSourceMetadata
@@ -414,7 +415,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
       -- If there are any event trigger cleanup configs with different cron then delete the older schedules
       -- generate cleanup logs for new event trigger cleanup config
       for_ (OMap.toList newSources) $ \(source, newBackendSourceMetadata) -> do
-        onJust (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
+        for_ (OMap.lookup source oldSources) $ \oldBackendSourceMetadata ->
           AB.dispatchAnyBackend @BackendEventTrigger (unBackendSourceMetadata newBackendSourceMetadata) \(newSourceMetadata :: SourceMetadata b) -> do
             dispatch oldBackendSourceMetadata \oldSourceMetadata -> do
               sourceInfo@(SourceInfo _ _ _ sourceConfig _ _) <- askSourceInfo @b source
