@@ -29,8 +29,8 @@ function Chat(props) {
 
   return (
     <div>
-      <ChatWrapper userId={props.userId} username={props.username} />
-      <footer className="App-footer">
+      <ChatWrapper userId={props.userId} username={props.username} {...props} />
+      {/* <footer className="App-footer">
         <div className="hasura-logo">
           <img
             src="https://hasura.io/brand-assets/powered-by-hasura-primary-dark.svg"
@@ -57,7 +57,7 @@ function Chat(props) {
         <div className="footer-small-text">
           <span>(The database resets every 24 hours)</span>
         </div>
-      </footer>
+      </footer> */}
     </div>
   );
 }

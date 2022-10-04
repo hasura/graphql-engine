@@ -1,12 +1,12 @@
-import PropTypes from "prop-types";
-import { gql, useMutation } from "@apollo/client";
-import { useRef } from "react";
-import "../App.css";
+import PropTypes from 'prop-types';
+import { gql, useMutation } from '@apollo/client';
+import { useRef } from 'react';
+import '../App.css';
 
-import reactLogo from "../images/React-logo.png";
-import graphql from "../images/graphql.png";
-import hasuraLogo from "../images/green-logo-white.svg";
-import rightImg from "../images/chat-app.png";
+import reactLogo from '../images/React-logo.png';
+import graphql from '../images/graphql.png';
+import hasuraLogo from '../images/green-logo-white.svg';
+import rightImg from '../images/chat-app.png';
 
 const addUser = gql`
   mutation ($username: String!) {
@@ -29,17 +29,19 @@ const LandingPage = (props) => {
     },
     onError: (err) => {
       console.log(err);
-      alert("Please try again with a different username.");
-      props.setUsername("");
+      alert('Please try again with a different username.');
+      props.setUsername('');
     },
   });
+
   const handleKeyPress = (key, mutate, loading) => {
     if (!loading && key.charCode === 13) {
       mutate();
     }
   };
+
   return (
-    <div className="container-fluid minHeight">
+    <div className="container-fluid">
       <div className="bgImage"></div>
       <div>
         <div className="headerWrapper">
@@ -167,7 +169,7 @@ const LandingPage = (props) => {
                   disabled={loading}
                   minLength={3}
                   maxLength={15}
-                  pattern={"^[a-z0-9_-]{3,15}$"}
+                  pattern={'^[a-z0-9_-]{3,15}$'}
                   ref={usernameInput}
                 />
                 <div className="input-group-append groupAppend">
@@ -180,18 +182,18 @@ const LandingPage = (props) => {
                         addUserHandler();
                       } else {
                         alert(
-                          "Invalid username. Spaces and special characters not allowed. Please try again"
+                          'Invalid username. Spaces and special characters not allowed. Please try again'
                         );
-                        props.setUsername("");
+                        props.setUsername('');
                       }
                     }}
                     disabled={
                       loading ||
-                      props.username === "" ||
+                      props.username === '' ||
                       !usernameInput.current.validity.valid
                     }
                   >
-                    {loading ? "Please wait ..." : "Get Started"}
+                    {loading ? 'Please wait ...' : 'Get Started'}
                   </button>
                 </div>
               </div>

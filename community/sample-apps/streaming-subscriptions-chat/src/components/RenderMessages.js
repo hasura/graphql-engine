@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { gql, useLazyQuery, useQuery, useSubscription } from "@apollo/client";
-import "../App.js";
-import Banner from "./Banner";
-import MessageList from "./MessageList";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { gql, useLazyQuery, useQuery, useSubscription } from '@apollo/client';
+
+import '../App.js';
+import Banner from './Banner';
+import MessageList from './MessageList';
+import { StyledMessagesList } from '../styles/StyledChatApp.js';
 
 const fetchOldMessages = gql`
   query ($last_received_ts: timestamptz) {
@@ -48,13 +50,14 @@ export default function RenderMessages({
   setMutationCallback,
   username,
   userId,
+  setDataStream,
 }) {
   const [messages, setMessages] = useState([]);
   const [newMessages, setNewMessages] = useState([]);
   const [bottom, setBottom] = useState(true);
   const [initialLoad, setInitialLoad] = useState(false);
   const [initialTimestamp, setInitialTimestamp] = useState(
-    "2018-08-21T19:58:46.987552+00:00"
+    '2018-08-21T19:58:46.987552+00:00'
   );
 
   const listInnerRef = useRef();
@@ -71,7 +74,7 @@ export default function RenderMessages({
       addOldMessages(data.message);
       setInitialLoad(true);
       setInitialTimestamp(
-        data.message[0]?.timestamp || "2018-08-21T19:58:46.987552+00:00"
+        data.message[0]?.timestamp || '2018-08-21T19:58:46.987552+00:00'
       );
     },
   });
@@ -93,6 +96,7 @@ export default function RenderMessages({
     onSubscriptionData: ({ subscriptionData }) => {
       if (!loading) {
         if (subscriptionData.data) {
+          setDataStream(subscriptionData.data);
           if (!isViewScrollable()) {
             addOldMessages(subscriptionData.data.message_stream);
           } else {
@@ -110,15 +114,15 @@ export default function RenderMessages({
   // scroll to bottom
   const scrollToBottom = () => {
     document
-      ?.getElementById("lastMessage")
-      ?.scrollIntoView({ behavior: "instant" });
+      ?.getElementById('lastMessage')
+      ?.scrollIntoView({ behavior: 'instant' });
   };
 
   // scroll to the new message
   const scrollToNewMessage = () => {
     document
-      ?.getElementById("newMessage")
-      ?.scrollIntoView({ behavior: "instant" });
+      ?.getElementById('newMessage')
+      ?.scrollIntoView({ behavior: 'instant' });
   };
 
   if (newMessages.length === 0 && bottom) {
@@ -177,26 +181,26 @@ export default function RenderMessages({
           (window.innerWidth || document.documentElement.clientWidth)
       );
     };
-    if (document.getElementById("lastMessage")) {
-      return !isInViewport(document.getElementById("lastMessage"));
+    if (document.getElementById('lastMessage')) {
+      return !isInViewport(document.getElementById('lastMessage'));
     }
     return false;
   };
 
   return (
-    <div id="chatbox" onScroll={handleScroll} ref={listInnerRef}>
+    <StyledMessagesList onScroll={handleScroll} ref={listInnerRef}>
       {/* show "unread messages" banner if not at bottom */}
-      {!bottom && newMessages.length > 0 && isViewScrollable() ? (
+      {!bottom && newMessages.length > 0 && isViewScrollable() && (
         <Banner
           scrollToNewMessage={scrollToNewMessage}
           numOfNewMessages={newMessages.length}
         />
-      ) : null}
+      )}
 
-      <div
+      {/* <div
         style={{
-          margin: "auto",
-          textAlign: "center",
+          margin: 'auto',
+          textAlign: 'center',
         }}
       >
         <button
@@ -207,20 +211,20 @@ export default function RenderMessages({
           }
           disabled={loadingOldMessages}
         >
-          {loadingOldMessages === true ? "Loading..." : "Load More"}{" "}
+          {loadingOldMessages === true ? 'Loading...' : 'Load More'}{' '}
         </button>
-      </div>
+      </div> */}
 
       {/* Render old messages */}
       <MessageList messages={messages} isNew={false} username={username} />
       {/* Show old/new message separation */}
       <div id="newMessage" className="oldNewSeparator">
-        {newMessages.length !== 0 ? "New messages" : null}
+        {newMessages.length !== 0 ? 'New messages' : null}
       </div>
 
       {/* render new messages */}
       <MessageList messages={newMessages} isNew={true} username={username} />
       {/* Bottom div to scroll to */}
-    </div>
+    </StyledMessagesList>
   );
 }

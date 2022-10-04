@@ -57,22 +57,21 @@ export default function Textbox(props) {
     return (
       <form onSubmit={sendMessage}>
         <div className="textboxWrapper">
-          <TypingIndicator userId={props.userId} />
           <input
             id="textbox"
-            className="textbox typoTextbox"
             value={text}
             autoFocus={true}
+            placeholder="Message your friends here.."
             onChange={(e) => {
               handleTyping(e.target.value, client.mutate);
             }}
             autoComplete="off"
           />
-          <button className="sendButton typoButton" onClick={sendMessage}>
-            {' '}
-            Send{' '}
-          </button>
+          <div className="form-btn-div">
+            <button onClick={sendMessage}> Send </button>
+          </div>
         </div>
+        <TypingIndicator userId={props.userId} />
       </form>
     );
   };
@@ -95,5 +94,6 @@ export default function Textbox(props) {
     insertMessageHandler();
     setText('');
   };
+
   return form(sendMessage, client);
 }

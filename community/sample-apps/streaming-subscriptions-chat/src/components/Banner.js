@@ -1,10 +1,13 @@
+import React from 'react';
+
+import { StyledBanner } from '../styles/StyledChatApp';
 import '../App.css';
 
 const Banner = (props) => {
   return (
-    <div className="banner" onClick={props.scrollToNewMessage}>
+    <StyledBanner onClick={props.scrollToNewMessage}>
       You have {props.numOfNewMessages} new message(s)
-    </div>
+    </StyledBanner>
   );
 };
 

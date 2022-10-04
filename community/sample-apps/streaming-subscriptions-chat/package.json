@@ -8,10 +8,13 @@
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^14.4.3",
     "date-fns": "^2.29.2",
+    "graphql": "^16.6.0",
     "graphql-ws": "^5.10.0",
+    "project-name-generator": "^2.1.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
+    "styled-components": "^5.3.5",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
@@ -19,9 +22,6 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
-  },
-  "devDependencies": {
-    "eslint-plugin-graphql": "^4.0.0"
   },
   "eslintConfig": {
     "extends": [

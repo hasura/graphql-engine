@@ -1,21 +1,19 @@
-@import url('https://fonts.googleapis.com/css?family=Raleway:400,600');
-@import url('https://fonts.googleapis.com/css?family=Open+Sans:300,400');
-
 body {
-  font-family: 'Open Sans';
+  font-family: 'IBM Plex Sans';
   font-size: 16px;
   margin: 0;
+  box-sizing: border-box;
+  font-display: swap;
 }
-.noPadd
-{
+
+.noPadd {
   padding-left: 0;
   padding-right: 0;
 }
 .removePaddLeft {
-    padding-left: 0;
+  padding-left: 0;
 }
-.addPaddTop
-{
+.addPaddTop {
   padding-top: 10px;
   clear: both;
 }
@@ -50,8 +48,7 @@ body {
   /* Opera 11.10+ */
   background: -o-linear-gradient(top, #a0b4cc, #c2a899);
 }
-.bgImage
-{
+.bgImage {
   position: fixed;
   left: 0;
   width: 100%;
@@ -62,16 +59,15 @@ body {
   background-position: 0 0;
   background-repeat: no-repeat;
 }
-.bgImage::before
-{
+.bgImage::before {
   content: '';
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
   left: 0;
-  background-image: linear-gradient(to bottom right,#000,#a92101);
-  opacity: .9;
+  background-image: linear-gradient(to bottom right, #000, #a92101);
+  opacity: 0.9;
 }
 .minHeight {
   width: 100%;
@@ -80,12 +76,12 @@ body {
 .headerWrapper {
   padding: 30px 0;
   padding-left: 75px;
-  min-height: 15vh
+  min-height: 15vh;
 }
 .headerDescription {
   font-size: 20px;
   color: #fff;
-  font-family: "Raleway";
+  font-family: 'Raleway';
   font-weight: 700;
   z-index: 100;
   position: relative;
@@ -106,7 +102,7 @@ body {
   padding: 10px 30px;
   border: 0;
   color: #fff;
-  font-family: "raleway";
+  font-family: 'raleway';
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -161,8 +157,7 @@ body {
 .appStack i {
   font-size: 16px;
 }
-.checkBox
-{
+.checkBox {
   color: #00bc00;
   font-size: 22px !important;
 }
@@ -175,29 +170,24 @@ body {
 .appStackIcon img {
   width: 70%;
 }
-.formGroupWrapper
-{
+.formGroupWrapper {
   padding-top: 20px;
   width: 100%;
   float: left;
 }
-.inputGroup
-{
+.inputGroup {
   width: 100%;
 }
-.inputGroup input
-{
+.inputGroup input {
   width: 68% !important;
   display: inline-block;
   height: 40px;
 }
-.inputGroup .groupAppend
-{
+.inputGroup .groupAppend {
   width: 32% !important;
   display: inline-block;
 }
-.groupAppend button
-{
+.groupAppend button {
   width: 100%;
   border-bottom-left-radius: 0;
   border-top-left-radius: 0;
@@ -206,19 +196,17 @@ body {
   text-align: center;
   background-color: #f93c18;
   color: #fff;
-  font-family: "raleway";
+  font-family: 'raleway';
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
-.groupAppend button:hover
-{
+.groupAppend button:hover {
   color: #fff;
   background-color: #e0270e;
 }
-.groupAppend button:focus
-{
+.groupAppend button:focus {
   outline: none;
 }
 .footer {
@@ -258,16 +246,6 @@ body {
   padding-left: 5px;
 }
 
-.message {
-  font-size: 16px;
-  background-color: #fff;
-  padding-left: 5px;
-  margin: 20px;
-  border-radius: 5px;
-  width: 50%;
-  padding: 5px;
-}
-
 .selfMessage {
   font-size: 16px;
   background-color: #eee;
@@ -281,33 +259,18 @@ body {
 
 .newMessageEven {
   font-size: 18px;
-  background-color: #98FB98;
+  background-color: #98fb98;
   padding-left: 5px;
 }
 
 .newMessageOdd {
   font-size: 18px;
-  background-color: #8FBC8F;
+  background-color: #8fbc8f;
   padding-left: 5px;
 }
 
 .messageWrapperNew {
-  padding-bottom: 75px;
-}
-
-.banner {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
-  background-color: #20c40f;
-  font-size: 18px;
-  cursor: pointer;
-  font-weight: 400;
-  padding: 10px 0;
-  text-align: center;
-  font-family: 'raleway';
-  color: #fff;
+  padding-bottom: 35px;
 }
 
 .oldNewSeparator {
@@ -316,26 +279,9 @@ body {
   margin-bottom: 15px;
 }
 
-#chatbox {
-  overflow: auto;
-  height: calc(100vh - 90px);
-  background-color: #f8f9f9;
-}
-
-.textboxWrapper {
-  text-align: center;
-  position: fixed;
-  bottom: 87px;
-  width: 75%;
-  background-color: #fff;
-  padding: 1%;
-}
-
-.textbox {}
-
 .sendButton {
   width: 20%;
-  background-color:'green';
+  background-color: 'green';
 }
 
 .login {
@@ -353,7 +299,6 @@ body {
   padding: 0;
   padding-left: 10px;
   display: inline-block;
-
 }
 
 .typoTextbox {
@@ -370,7 +315,8 @@ body {
   background-color: #f6f6f7;
 }
 
-.loginTextbox:focus, .typoTextbox:focus {
+.loginTextbox:focus,
+.typoTextbox:focus {
   outline: none;
   border-color: #016d95;
 }
@@ -408,7 +354,8 @@ body {
   background-color: #dba203;
 }
 
-.loginButton:focus, .typoButton:focus {
+.loginButton:focus,
+.typoButton:focus {
   outline: none;
 }
 
@@ -452,13 +399,18 @@ body {
   display: inline-block;
 }
 
-.onlineUsers {
-  background-color: #4f5050;
-  height: 100vh;
-  overflow: auto;
+.wd45 {
+  width: 45%;
+  display: inline-block;
 }
 
-.messageName, .messsageTime {
+.onlineUsers {
+  /* background-color: #4f5050; */
+  /* height: 100vh; */
+}
+
+.messageName,
+.messsageTime {
   width: 49%;
   display: inline-block;
 }
@@ -482,32 +434,17 @@ body {
 
 .userList li {
   padding: 10px;
-  border-bottom: 1px solid #444;
   color: #fff;
 }
 
 .chatWrapper {
   display: flex;
+  width: 100%;
+  justify-content: space-between;
   height: 100vh;
 }
 
-.userListHeading {
-  font-weight: 600;
-  padding: 15px 10px;
-  margin-top: 0;
-  margin-bottom: 0;
-  background-color: #222;
-  color: #fff;
-}
-
-.typingIndicator {
-  text-align: left;
-  padding-bottom: 10px;
-  padding-left: 1%;
-}
-
-.displayFlex
-{
+.displayFlex {
   display: flex;
   align-items: center;
 }
@@ -533,7 +470,7 @@ body {
   color: white;
   text-align: left;
 }
-.App-footer{
+.App-footer {
   position: fixed;
   bottom: 0;
   text-align: center;
@@ -544,12 +481,11 @@ body {
   border-top: 1px solid #ccc;
 }
 
-.footer-small-text{
+.footer-small-text {
   font-size: 12px;
 }
 @media (max-width: 767px) {
-  .headerDescription
-  {
+  .headerDescription {
     text-align: center;
   }
   .headerWrapper {
@@ -563,27 +499,17 @@ body {
     display: flex;
     justify-content: center;
   }
-  .wd75
-  {
+  .wd75 {
     width: 100%;
   }
-  .message
-  {
-    width: 90%;
-  }
-  .textboxWrapper
-  {
-    width: 100%;
-  }
-  .mobileview
-  {
+
+  .mobileview {
     position: absolute;
     right: 0px;
     bottom: 152px;
     width: 50%;
   }
-  .mobileuserListHeading
-  {
+  .mobileuserListHeading {
     font-size: 14px;
     background-color: #222;
     color: #fff;
@@ -591,12 +517,10 @@ body {
     margin-bottom: 0;
     padding: 5px;
   }
-  .mobileuserListHeading i
-  {
+  .mobileuserListHeading i {
     margin-left: 10px;
   }
-  .mobileUserList
-  {
+  .mobileUserList {
     background-color: #4f5050;
     padding-inline-start: 0px;
     -webkit-padding-start: 0px;
@@ -604,19 +528,19 @@ body {
     -o-padding-start: 0px;
     margin-bottom: 0;
   }
-  .mobileUserList li
-  {
+  .mobileUserList li {
     list-style-type: none;
     color: #fff;
     padding: 5px;
     font-size: 12px;
-    border-bottom: 1px solid #444;
   }
+
   .hasura-logo a {
     padding: 0 0px;
     font-size: 12px;
   }
 }
+
 @media (max-width: 991px) {
   .headerWrapper {
     display: flex;
@@ -629,8 +553,7 @@ body {
     height: auto;
   }
   .minHeight {
-    height: auto;
-    min-height: 100vh;
+    /* min-height: 100vh; */
   }
   .loginBtn {
     padding-right: 0;
@@ -650,17 +573,24 @@ body {
   .appStackIconWrapper {
     padding-left: 10px;
   }
-  .inputGroup input
-  {
+  .inputGroup input {
     width: 63% !important;
   }
-  .inputGroup .groupAppend
-  {
+  .inputGroup .groupAppend {
     width: 37% !important;
   }
   .groupAppend button {
     font-size: 13px;
     letter-spacing: 0;
   }
+}
 
+@media (max-width: 600px) {
+  .chatWrapper {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: flex-start;
+    height: 100vh;
+  }
 }
