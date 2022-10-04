@@ -159,7 +159,6 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
                       },
                     },
                   ]}
-                  editorProps={editorProps}
                   setOptions={editorOptions}
                   data-test={dataTest}
                   className={clsx(
@@ -169,7 +168,8 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
                       : 'border-gray-300',
                     disabled
                       ? 'bg-gray-200 border-gray-200 hover:border-gray-200'
-                      : 'hover:border-gray-400'
+                      : 'hover:border-gray-400',
+                    editorProps?.className
                   )}
                   data-testid={name}
                 />
@@ -177,8 +177,14 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
             );
           }}
         />
+        {/* This is to let form errors to appear below the tip */}
+        {tipState === 'ANY' && (
+          <div className="bg-legacybg top-full left-1 text-gray-600 text-sm mt-1">
+            {' '}
+          </div>
+        )}
         {tipState === 'ESC' && (
-          <div className="absolute bg-legacybg top-full left-1 text-gray-600 text-sm mt-1">
+          <div className="bg-legacybg top-full left-1 text-gray-600 text-sm mt-1">
             Tip:{' '}
             <strong>
               Press <em>Esc</em> key
@@ -187,7 +193,7 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
           </div>
         )}
         {tipState === 'TAB' && (
-          <div className="absolute bg-legacybg top-full left-1 text-gray-600 text-sm mt-1">
+          <div className="bg-legacybg top-full left-1 text-gray-600 text-sm mt-1">
             Tip: Press <em>Esc</em> key then{' '}
             <strong>
               navigate with <em>Tab</em>
