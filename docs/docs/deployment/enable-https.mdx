@@ -72,3 +72,77 @@ In order to serve at a URL prefix, use the following configuration:
   }
 }
 ```
+
+### [Traefik](https://nginx.org/en/docs/)
+
+Here are sample `traefik.toml` and `traefik-dynamic.toml` to proxy requests to Hasura:
+
+```toml
+#traefik.toml
+
+[providers]
+  [providers.file]
+    filename = "traefik-dynamic.toml"
+
+[api]
+  dashboard = true
+  debug = true
+
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+  [entryPoints.web-secure]
+    address = ":443"
+
+[certificatesResolvers.sample.acme]
+  email = "myemail@example.com"
+  storage = "acme.json"
+
+  [certificatesResolvers.sample.acme.httpChallenge]
+    # used during the challenge
+    entryPoint = "web"
+```
+
+
+```toml
+#traefik-dynamic.toml
+
+[http]
+    # Redirect to https
+    [http.middlewares]
+      [http.middlewares.test-redirectscheme.redirectScheme]
+        scheme = "https"
+
+    [http.routers]
+       [http.routers.my-router]
+          rule = "Host(`hasura.example.com`)"
+          service = "hasura"
+          entryPoints = ["web-secure"]
+       [http.routers.my-router.tls]
+          certResolver = "sample"
+
+    [http.services]
+        [http.services.hasura.loadbalancer]
+            [[http.services.hasura.loadbalancer.servers]]
+                url = "http://127.0.0.1:5000"
+```
+
+Please note that setting up SSL is not covered in this guide. You can
+find more information at [Traefik docs](https://doc.traefik.io/traefik/https/overview).
+
+In order to serve at a URL prefix, use the following configuration:
+
+```toml
+#traefik-dynamic.toml
+...
+
+    [http.routers]
+       [http.routers.my-router]
+          rule = "Host(`example.com`) && Path(`/hasura`))"
+          service = "hasura"
+          entryPoints = ["web-secure"]
+       [http.routers.my-router.tls]
+          certResolver = "sample"
+
+...
+```
