@@ -4,7 +4,7 @@ set -e
 set -u
 
 # Suggested usage:
-# https://github.com/hasura/graphql-engine/blob/master/server/tests-hspec/README.md#required-setup-for-bigquery-tests
+# https://github.com/hasura/graphql-engine/blob/master/server/lib/api-tests/README.md#required-setup-for-bigquery-tests
 # https://cloud.google.com/iam/docs/creating-managing-service-accounts#iam-service-accounts-create-rest
 
 if [[ -z "${HASURA_BIGQUERY_SERVICE_KEY:-}" ]]; then

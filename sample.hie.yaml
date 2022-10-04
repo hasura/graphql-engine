@@ -14,8 +14,8 @@ cradle:
 
     - path: "./server/src-bench-cache"
       component: "graphql-engine:bench:cache"
-    - path: "server/tests-hspec"
-      component: "graphql-engine:test:tests-hspec"
+    - path: "server/lib/api-tests"
+      component: "api-tests:exe:api-tests"
 
     - path: "server/src-emit-metadata-openapi"
       component: "graphql-engine:exe:emit-metadata-openapi"

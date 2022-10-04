@@ -8,7 +8,7 @@ PANE_HEIGHT = $(shell tmux display -p "\#{pane_height}" || echo 30 )
 # once ghcid's window errors are fixed we can remove this explicit width/height
 # nonsense
 # this needs to make it into ghcid: https://github.com/biegunka/terminal-size/pull/16
-define run_ghcid_hspec_tests
+define run_ghcid_api_tests
 	@if [[ $$(uname -p) == 'arm' ]]; then \
 		HSPEC_MATCH="$(2)" ghcid -c "DYLD_LIBRARY_PATH=$$DYLD_LIBRARY_PATH cabal repl $(1) $(GHCID_TESTS_FLAGS)" \
 			--test "main" \
@@ -53,46 +53,46 @@ ghcid-library:
 ghcid-tests:
 	$(call run_ghcid,graphql-engine:test:graphql-engine-tests)
 
-.PHONY: ghcid-hspec
-## ghcid-hspec: build and watch tests-hspec in ghcid
-ghcid-hspec:
-	$(call run_ghcid,graphql-engine:tests-hspec)
+.PHONY: ghcid-api-tests
+## ghcid-api-tests: build and watch api-tests in ghcid
+ghcid-api-tests:
+	$(call run_ghcid,api-tests)
 
 .PHONY: ghcid-test-backends
-## ghcid-test-backends: run all hspec tests in ghcid
+## ghcid-test-backends: run all api tests in ghcid
 ghcid-test-backends: remove-tix-file
-	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec)
+	$(call run_ghcid_api_tests,api-tests)
 
 .PHONY: ghcid-test-bigquery
 ## ghcid-test-bigquery: run tests for BigQuery backend in ghcid
-# will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/tests-hspec#required-setup-for-bigquery-tests
+# will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/lib/api-tests#required-setup-for-bigquery-tests
 ghcid-test-bigquery: start-postgres remove-tix-file
-	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,BigQuery)
+	$(call run_ghcid_api_tests,api-tests,BigQuery)
 
 .PHONY: ghcid-test-sqlserver
 ## ghcid-test-sqlserver: run tests for SQL Server backend in ghcid
 ghcid-test-sqlserver: start-postgres start-sqlserver remove-tix-file
-	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,SQLServer)
+	$(call run_ghcid_api_tests,api-tests,SQLServer)
 
 .PHONY: ghcid-test-mysql
 ## ghcid-test-mysql: run tests for MySQL backend in ghcid
 ghcid-test-mysql: start-postgres start-mysql remove-tix-file
-	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,MySQL)
+	$(call run_ghcid_api_tests,api-tests,MySQL)
 
 .PHONY: ghcid-test-citus
 ## ghcid-test-citus: run tests for Citus backend in ghcid
 ghcid-test-citus: start-postgres start-citus remove-tix-file
-	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,Citus)
+	$(call run_ghcid_api_tests,api-tests,Citus)
 
 .PHONY: ghcid-test-cockroach
 ## ghcid-test-cockroach: run tests for Cockroach backend in ghcid
 ghcid-test-cockroach: start-postgres start-cockroach remove-tix-file
-	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,Cockroach)
+	$(call run_ghcid_api_tests,api-tests,Cockroach)
 
 .PHONY: ghcid-test-data-connectors
 ## ghcid-test-data-connectors: run tests for DataConnectors in ghcid
 ghcid-test-data-connectors: start-postgres start-dc-reference-agent remove-tix-file
-	$(call run_ghcid_hspec_tests,graphql-engine:tests-hspec,DataConnector)
+	$(call run_ghcid_api_tests,api-tests,DataConnector)
 
 .PHONY: ghcid-library-pro
 ## ghcid-library-pro: build and watch pro library in ghcid

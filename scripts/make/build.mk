@@ -21,7 +21,7 @@ build-tests: $(GENERATED_CABAL_FILES)
 .PHONY: build-integration-tests
 ## build-integration-tests: build hspec integration tests
 build-integration-tests: $(GENERATED_CABAL_FILES)
-	cabal build tests-hspec
+	cabal build api-tests
 
 .PHONY: build-pro
 ## build-pro: build pro graphql executable
