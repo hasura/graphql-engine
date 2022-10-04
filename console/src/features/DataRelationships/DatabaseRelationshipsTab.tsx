@@ -17,6 +17,7 @@ import { Form } from './components/Form/Form';
 import { Relationship } from '../RelationshipsTable/DatabaseRelationshipsTable/types';
 
 const useFormState = (currentSource: string) => {
+  const queryClient = useQueryClient();
   const [isOpen, setIsOpen] = React.useState(false);
   const [existingRelationship, setExistingRelationship] =
     React.useState<Relationship>();
@@ -54,6 +55,10 @@ const useFormState = (currentSource: string) => {
     setIsOpen(false);
   };
 
+  const onSuccess = () => {
+    queryClient.invalidateQueries([currentSource, 'list_all_relationships']);
+  };
+
   const deleteRelationship = (row: Relationship) => {
     setExistingRelationship(undefined);
     setIsOpen(false);
@@ -66,46 +71,57 @@ const useFormState = (currentSource: string) => {
     const sourcePrefix = getDataSourcePrefix(currentSource as DataSourceDriver);
 
     if (row.type === 'toRemoteSchema') {
-      mutation.mutate({
-        query: {
-          type: `${sourcePrefix}delete_remote_relationship` as allowedMetadataTypes,
-          args: {
-            name: row.name,
-            source: currentSource,
-            table: row.mapping.from.table,
+      mutation.mutate(
+        {
+          query: {
+            type: `${sourcePrefix}delete_remote_relationship` as allowedMetadataTypes,
+            args: {
+              name: row.name,
+              source: currentSource,
+              table: row.mapping.from.table,
+            },
           },
         },
-      });
+        { onSuccess }
+      );
       return;
     }
 
     if (row.type === 'toSource') {
-      mutation.mutate({
-        query: {
-          type: `${sourcePrefix}delete_remote_relationship` as allowedMetadataTypes,
-          args: {
-            name: row.name,
-            source: currentSource,
-            table: row.mapping.from.table,
+      mutation.mutate(
+        {
+          query: {
+            type: `${sourcePrefix}delete_remote_relationship` as allowedMetadataTypes,
+            args: {
+              name: row.name,
+              source: currentSource,
+              table: row.mapping.from.table,
+            },
           },
         },
-      });
+        { onSuccess }
+      );
       return;
     }
 
     /**
      * It must be a local/self table relationship
      */
-    mutation.mutate({
-      query: {
-        type: `${sourcePrefix}drop_relationship` as allowedMetadataTypes,
-        args: {
-          relationship: row.name,
-          table: row.toLocalTable,
-          source: currentSource,
+    mutation.mutate(
+      {
+        query: {
+          type: `${sourcePrefix}drop_relationship` as allowedMetadataTypes,
+          args: {
+            relationship: row.name,
+            table: row.toLocalTable,
+            source: currentSource,
+          },
         },
       },
-    });
+      {
+        onSuccess,
+      }
+    );
   };
 
   const openForm = () => onOpen();

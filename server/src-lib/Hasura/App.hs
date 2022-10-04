@@ -597,7 +597,7 @@ runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMet
           . Warp.setHost (soHost serveOptions)
           . Warp.setGracefulShutdownTimeout (Just 30) -- 30s graceful shutdown
           . Warp.setInstallShutdownHandler shutdownHandler
-          . Warp.setBeforeMainLoop (onJust startupStatusHook id)
+          . Warp.setBeforeMainLoop (for_ startupStatusHook id)
           . setForkIOWithMetrics
           $ Warp.defaultSettings
 
@@ -862,9 +862,9 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
         AB.dispatchAnyBackend @BackendEventTrigger backendSourceInfo \(SourceInfo sourceName _ _ sourceConfig _ _ :: SourceInfo b) -> do
           let sourceNameText = sourceNameToText sourceName
           logger $ mkGenericLog LevelInfo "event_triggers" $ "unlocking events of source: " <> sourceNameText
-          onJust (HM.lookup sourceName lockedEvents) $ \sourceLockedEvents -> do
+          for_ (HM.lookup sourceName lockedEvents) $ \sourceLockedEvents -> do
             -- No need to execute unlockEventsTx when events are not present
-            onJust (NE.nonEmptySet sourceLockedEvents) $ \nonEmptyLockedEvents -> do
+            for_ (NE.nonEmptySet sourceLockedEvents) $ \nonEmptyLockedEvents -> do
               res <- Retry.retrying Retry.retryPolicyDefault isRetryRequired (return $ unlockEventsInSource @b sourceConfig nonEmptyLockedEvents)
               case res of
                 Left err ->

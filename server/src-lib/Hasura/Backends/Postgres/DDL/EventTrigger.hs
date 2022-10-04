@@ -171,7 +171,7 @@ recordError' ::
 recordError' sourceConfig event invocation processEventError maintenanceModeVersion =
   liftIO $
     runPgSourceWriteTx sourceConfig $ do
-      onJust invocation $ insertInvocation (tmName (eTrigger event))
+      for_ invocation $ insertInvocation (tmName (eTrigger event))
       case processEventError of
         PESetRetry retryTime -> setRetryTx event retryTime maintenanceModeVersion
         PESetError -> setErrorTx event maintenanceModeVersion
@@ -216,9 +216,9 @@ createMissingSQLTriggers sourceConfig table (allCols, _) triggerName opsDefiniti
   serverConfigCtx <- askServerConfigCtx
   liftEitherM $
     runPgSourceWriteTx sourceConfig $ do
-      onJust (tdInsert opsDefinition) (doesSQLTriggerExist serverConfigCtx INSERT)
-      onJust (tdUpdate opsDefinition) (doesSQLTriggerExist serverConfigCtx UPDATE)
-      onJust (tdDelete opsDefinition) (doesSQLTriggerExist serverConfigCtx DELETE)
+      for_ (tdInsert opsDefinition) (doesSQLTriggerExist serverConfigCtx INSERT)
+      for_ (tdUpdate opsDefinition) (doesSQLTriggerExist serverConfigCtx UPDATE)
+      for_ (tdDelete opsDefinition) (doesSQLTriggerExist serverConfigCtx DELETE)
   where
     doesSQLTriggerExist serverConfigCtx op opSpec = do
       let opTriggerName = pgTriggerName op triggerName
@@ -821,9 +821,9 @@ mkAllTriggersQ ::
   TriggerOpsDef ('Postgres pgKind) ->
   m ()
 mkAllTriggersQ triggerName table allCols fullspec = do
-  onJust (tdInsert fullspec) (mkTrigger triggerName table allCols INSERT)
-  onJust (tdUpdate fullspec) (mkTrigger triggerName table allCols UPDATE)
-  onJust (tdDelete fullspec) (mkTrigger triggerName table allCols DELETE)
+  for_ (tdInsert fullspec) (mkTrigger triggerName table allCols INSERT)
+  for_ (tdUpdate fullspec) (mkTrigger triggerName table allCols UPDATE)
+  for_ (tdDelete fullspec) (mkTrigger triggerName table allCols DELETE)
 
 -- | Add cleanup logs for given trigger names and cleanup configs. This will perform the following steps:
 --

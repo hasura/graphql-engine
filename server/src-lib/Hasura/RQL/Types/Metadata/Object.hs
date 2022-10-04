@@ -66,7 +66,7 @@ data TableMetadataObjId
   | MTOPerm RoleName PermType
   | MTOTrigger TriggerName
   | MTORemoteRelationship RelName
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance Hashable TableMetadataObjId
 
@@ -80,6 +80,8 @@ data SourceMetadataObjId b
 deriving instance (Backend b) => Show (SourceMetadataObjId b)
 
 deriving instance (Backend b) => Eq (SourceMetadataObjId b)
+
+deriving instance (Backend b) => Ord (SourceMetadataObjId b)
 
 instance (Backend b) => Hashable (SourceMetadataObjId b)
 
@@ -103,7 +105,7 @@ data MetadataObjId
   | MOHostTlsAllowlist String
   | MOQueryCollectionsQuery CollectionName ListedQuery
   | MODataConnectorAgent DataConnectorName
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 $(makePrisms ''MetadataObjId)
 
@@ -196,7 +198,7 @@ data MetadataObject = MetadataObject
   { _moId :: MetadataObjId,
     _moDefinition :: Value
   }
-  deriving (Show, Eq, Generic)
+  deriving (Show, Eq, Ord, Generic)
 
 instance Hashable MetadataObject
 
@@ -211,7 +213,7 @@ data InconsistentRoleEntity
       -- use it with `AB.AnyBackend`
       PermType
   | InconsistentRemoteSchemaPermission RemoteSchemaName
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 instance Hashable InconsistentRoleEntity
 
@@ -245,7 +247,7 @@ data InconsistentMetadata
   | InvalidRestSegments Text MetadataObject
   | AmbiguousRestEndpoints Text [MetadataObject]
   | ConflictingInheritedPermission RoleName InconsistentRoleEntity
-  deriving stock (Show, Eq, Generic)
+  deriving stock (Show, Eq, Ord, Generic)
 
 instance Hashable InconsistentMetadata
 

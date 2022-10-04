@@ -188,46 +188,49 @@ msColumnParser ::
   ColumnType 'MSSQL ->
   G.Nullability ->
   SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
-msColumnParser columnType nullability =
-  peelWithOrigin . fmap (ColumnValue columnType) <$> case columnType of
-    -- TODO: the mapping here is not consistent with mkMSSQLScalarTypeName. For
-    -- example, exposing all the float types as a GraphQL Float type is
-    -- incorrect, similarly exposing all the integer types as a GraphQL Int
-    ColumnScalar scalarType ->
-      msPossiblyNullable scalarType nullability <$> case scalarType of
-        -- text
-        MSSQL.CharType -> pure $ mkCharValue <$> P.string
-        MSSQL.VarcharType -> pure $ mkCharValue <$> P.string
-        MSSQL.WcharType -> pure $ ODBC.TextValue <$> P.string
-        MSSQL.WvarcharType -> pure $ ODBC.TextValue <$> P.string
-        MSSQL.WtextType -> pure $ ODBC.TextValue <$> P.string
-        MSSQL.TextType -> pure $ ODBC.TextValue <$> P.string
-        -- integer
-        MSSQL.IntegerType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
-        MSSQL.SmallintType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
-        MSSQL.BigintType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
-        MSSQL.TinyintType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
-        -- float
-        MSSQL.NumericType -> pure $ ODBC.DoubleValue <$> P.float
-        MSSQL.DecimalType -> pure $ ODBC.DoubleValue <$> P.float
-        MSSQL.FloatType -> pure $ ODBC.DoubleValue <$> P.float
-        MSSQL.RealType -> pure $ ODBC.DoubleValue <$> P.float
-        -- boolean
-        MSSQL.BitType -> pure $ ODBC.BoolValue <$> P.boolean
-        _ -> do
-          name <- MSSQL.mkMSSQLScalarTypeName scalarType
-          let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
-          pure $
-            P.Parser
-              { pType = schemaType,
-                pParser =
-                  P.valueToJSON (P.toGraphQLType schemaType)
-                    >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MSSQL.parseScalarValue scalarType)
-              }
-    ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
-      case nonEmpty (Map.toList enumValues) of
-        Just enumValuesList -> msEnumParser tableName enumValuesList customTableName nullability
-        Nothing -> throw400 ValidationFailed "empty enum values"
+msColumnParser columnType nullability = case columnType of
+  -- TODO: the mapping here is not consistent with mkMSSQLScalarTypeName. For
+  -- example, exposing all the float types as a GraphQL Float type is
+  -- incorrect, similarly exposing all the integer types as a GraphQL Int
+  ColumnScalar scalarType ->
+    P.memoizeOn 'msColumnParser (scalarType, nullability) $
+      peelWithOrigin . fmap (ColumnValue columnType) . msPossiblyNullable scalarType nullability
+        <$> case scalarType of
+          -- text
+          MSSQL.CharType -> pure $ mkCharValue <$> P.string
+          MSSQL.VarcharType -> pure $ mkCharValue <$> P.string
+          MSSQL.WcharType -> pure $ ODBC.TextValue <$> P.string
+          MSSQL.WvarcharType -> pure $ ODBC.TextValue <$> P.string
+          MSSQL.WtextType -> pure $ ODBC.TextValue <$> P.string
+          MSSQL.TextType -> pure $ ODBC.TextValue <$> P.string
+          -- integer
+          MSSQL.IntegerType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+          MSSQL.SmallintType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+          MSSQL.BigintType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+          MSSQL.TinyintType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+          -- float
+          MSSQL.NumericType -> pure $ ODBC.DoubleValue <$> P.float
+          MSSQL.DecimalType -> pure $ ODBC.DoubleValue <$> P.float
+          MSSQL.FloatType -> pure $ ODBC.DoubleValue <$> P.float
+          MSSQL.RealType -> pure $ ODBC.DoubleValue <$> P.float
+          -- boolean
+          MSSQL.BitType -> pure $ ODBC.BoolValue <$> P.boolean
+          _ -> do
+            name <- MSSQL.mkMSSQLScalarTypeName scalarType
+            let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
+            pure $
+              P.Parser
+                { pType = schemaType,
+                  pParser =
+                    P.valueToJSON (P.toGraphQLType schemaType)
+                      >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MSSQL.parseScalarValue scalarType)
+                }
+  ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
+    case nonEmpty (Map.toList enumValues) of
+      Just enumValuesList ->
+        peelWithOrigin . fmap (ColumnValue columnType)
+          <$> msEnumParser tableName enumValuesList customTableName nullability
+      Nothing -> throw400 ValidationFailed "empty enum values"
   where
     -- CHAR/VARCHAR in MSSQL _can_ represent the full UCS (Universal Coded Character Set),
     -- but might not always if the collation used is not UTF-8 enabled

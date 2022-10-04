@@ -254,7 +254,7 @@ pollStreamingQuery pollerId lqOpts (sourceName, sourceConfig) roleName parameter
       -- associating every batch with their BatchId
       pure $ zip (BatchId <$> [1 ..]) cohortBatches
 
-    onJust testActionMaybe id -- IO action intended to run after the cohorts have been snapshotted
+    for_ testActionMaybe id -- IO action intended to run after the cohorts have been snapshotted
 
     -- concurrently process each batch and also get the processed cohort with the new updated cohort key
     batchesDetailsAndProcessedCohorts <- A.forConcurrently cohortBatches $ \(batchId, cohorts) -> do

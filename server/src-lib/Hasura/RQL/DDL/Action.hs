@@ -75,11 +75,10 @@ runCreateAction ::
 runCreateAction createAction = do
   -- check if action with same name exists already
   actionMap <- scActions <$> askSchemaCache
-  void $
-    onJust (Map.lookup actionName actionMap) $
-      const $
-        throw400 AlreadyExists $
-          "action with name " <> actionName <<> " already exists"
+  for_ (Map.lookup actionName actionMap) $
+    const $
+      throw400 AlreadyExists $
+        "action with name " <> actionName <<> " already exists"
   let metadata =
         ActionMetadata
           actionName

@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState, ReactText } from 'react';
 import merge from 'lodash.merge';
 import { GraphQLInputField } from 'graphql';
-import { Button } from '@/new-components/Button';
 import { getChildArguments } from './utils';
 import RSPInput from './RSPInput';
 import { ArgTreeType } from './types';
@@ -77,9 +76,9 @@ export const ArgSelect: React.FC<ArgSelectProps> = ({
       <>
         {!hideInputArgName ? (
           <>
-            <Button onClick={toggleExpandMode} className="ml-xs">
+            <button onClick={toggleExpandMode} className="-ml-xs">
               {expanded ? '-' : '+'}
-            </Button>
+            </button>
             {!expanded && (
               <label className="cursor-pointer font-normal" htmlFor={k}>
                 {k}:

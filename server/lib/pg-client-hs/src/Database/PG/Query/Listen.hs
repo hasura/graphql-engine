@@ -27,6 +27,7 @@ import Control.Monad.IO.Class (MonadIO (liftIO))
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Monad.Trans.Except (ExceptT, runExceptT)
+import Data.Foldable
 import Data.Kind (Type)
 import Data.String (IsString)
 import Data.Text qualified as T
@@ -95,7 +96,7 @@ listen pool channel handler = catchConnErr $
     processNotifs conn = do
       -- Collect notification
       mNotify <- PQ.notifies conn
-      onJust mNotify $ \n -> do
+      for_ mNotify $ \n -> do
         -- Apply notify handler on arrived notification
         handler $ PNEPQNotify n
         -- Process remaining notifications if any
@@ -112,7 +113,3 @@ waitForReadReadiness conn = do
   where
     ioErrorToPGConnErr :: IOError -> PGConnErr
     ioErrorToPGConnErr = PGConnErr . T.pack . displayException
-
-onJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
-onJust Nothing _ = return ()
-onJust (Just v) act = act v

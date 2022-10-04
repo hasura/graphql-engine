@@ -1152,7 +1152,7 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
       Spock.get Spock.root $ Spock.redirect "console"
 
       -- serve static files if consoleAssetsDir is set
-      onJust consoleAssetsDir $ \dir ->
+      for_ consoleAssetsDir $ \dir ->
         Spock.get ("console/assets" <//> Spock.wildcard) $ \path -> do
           consoleAssetsHandler logger (scLoggingSettings serverCtx) dir (T.unpack path)
 

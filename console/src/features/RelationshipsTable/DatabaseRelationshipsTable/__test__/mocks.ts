@@ -79,7 +79,7 @@ export const expectedManualLocalRelationshipOutput: Relationship & {
   name: 'local_array_rel',
   type: 'toLocalTableManual',
   toLocalTable: {
-    name: 'Album',
+    name: 'Employee',
     schema: 'public',
   },
   relationship_type: 'Object',

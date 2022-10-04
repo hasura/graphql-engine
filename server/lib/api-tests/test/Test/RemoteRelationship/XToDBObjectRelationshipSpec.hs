@@ -471,12 +471,12 @@ lhsRemoteServerMkLocalTestEnvironment _ = do
     -- Returns True iif the given track matches the given boolean expression.
     matchTrack trackInfo@(trackId, trackTitle, maybeAlbumId) (HasuraTrackBoolExp {..}) =
       and
-        [ maybe True (all (matchTrack trackInfo)) tbe__and,
-          maybe True (any (matchTrack trackInfo)) tbe__or,
-          maybe True (not . matchTrack trackInfo) tbe__not,
-          maybe True (matchInt trackId) tbe_id,
-          maybe True (matchString trackTitle) tbe_title,
-          maybe True (matchMaybeInt maybeAlbumId) tbe_album_id
+        [ all (all (matchTrack trackInfo)) tbe__and,
+          all (any (matchTrack trackInfo)) tbe__or,
+          not (any (matchTrack trackInfo) tbe__not),
+          all (matchInt trackId) tbe_id,
+          all (matchString trackTitle) tbe_title,
+          all (matchMaybeInt maybeAlbumId) tbe_album_id
         ]
     matchInt intField IntCompExp {..} = Just intField == _eq
     matchString stringField StringCompExp {..} = Just stringField == _eq

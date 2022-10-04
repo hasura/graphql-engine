@@ -366,6 +366,18 @@ const Modify: React.FC<Props> = props => {
             currentTrigger={currentTrigger}
             save={saveWrapper('retry_conf')}
           />
+          <hr className="my-md" />
+          {isProConsole(window.__env) && (
+            <div className="mb-md">
+              <AutoCleanupForm
+                onChange={setState.cleanupConfig}
+                cleanupConfig={
+                  state?.cleanupConfig || defaultState.cleanupConfig
+                }
+              />
+              <hr className="my-md" />
+            </div>
+          )}
           <HeadersEditor
             headers={state.headers}
             setHeaders={setState.headers}
@@ -388,16 +400,6 @@ const Modify: React.FC<Props> = props => {
             requestUrlTransformOnChange={requestUrlTransformOnChange}
             requestPayloadTransformOnChange={requestPayloadTransformOnChange}
           />
-          {isProConsole(window.__env) && (
-            <div className="mb-md">
-              <AutoCleanupForm
-                onChange={setState.cleanupConfig}
-                cleanupConfig={
-                  state?.cleanupConfig || defaultState.cleanupConfig
-                }
-              />
-            </div>
-          )}
           {!readOnlyMode && (
             <div className="mb-md">
               <span className="mr-md">

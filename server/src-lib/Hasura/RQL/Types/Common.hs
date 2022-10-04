@@ -99,7 +99,7 @@ fromRemoteRelationship = FieldName . relNameToTxt
 data RelType
   = ObjRel
   | ArrRel
-  deriving (Show, Eq, Generic, Data)
+  deriving (Show, Eq, Ord, Generic, Data)
 
 instance NFData RelType
 

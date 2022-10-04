@@ -172,7 +172,7 @@ pruneDanglingDependents cache =
                       "no foreign key constraint named " <> constraintName <<> " is "
                         <> "defined for table " <>> tableName
                 TOPerm roleName permType -> do
-                  unless (maybe False (permissionIsDefined permType) (tableInfo ^? (tiRolePermInfoMap . ix roleName))) $
+                  unless (any (permissionIsDefined permType) (tableInfo ^? (tiRolePermInfoMap . ix roleName))) $
                     Left $
                       "no " <> permTypeToCode permType <> " permission defined on table "
                         <> tableName <<> " for role " <>> roleName
