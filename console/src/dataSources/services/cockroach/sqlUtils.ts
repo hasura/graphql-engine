@@ -1317,10 +1317,11 @@ export const getDataTriggerLogsCountQuery = (
 
     case triggerTypes.invocation:
       logsCountQuery = `SELECT
-        COUNT(*)
-        FROM ${eventInvTable} original_table JOIN ${eventRelTable} data_table
-        ON original_table.event_id = data_table.id
-        WHERE data_table.trigger_name = '${triggerName}' `;
+      COUNT(*)
+      FROM ${eventInvTable} original_table 
+      LEFT JOIN ${eventRelTable} data_table
+      ON original_table.event_id = data_table.id
+      WHERE data_table.trigger_name = '${triggerName}' OR original_table.trigger_name = '${triggerName}'`;
       break;
     default:
       break;
@@ -1359,9 +1360,11 @@ export const getDataTriggerLogsQuery = (
       break;
 
     case triggerTypes.invocation:
-      sql = `SELECT original_table.*, data_table.*
-      FROM ${eventInvTable} original_table JOIN ${eventRelTable} data_table ON original_table.event_id = data_table.id
-      WHERE data_table.trigger_name = '${triggerName}' 
+      sql = `
+      SELECT original_table.*, data_table 
+      FROM ${eventInvTable} original_table 
+      LEFT JOIN ${eventRelTable} data_table ON original_table.event_id = data_table.id    
+      WHERE data_table.trigger_name = '${triggerName}' OR original_table.trigger_name = '${triggerName}'
       ORDER BY original_table.created_at DESC NULLS LAST`;
       break;
     default:
