@@ -38,7 +38,7 @@ export const Tooltip: React.VFC<TooltipProps> = ({
       <RadixTooltip.Portal>
         <RadixTooltip.Content
           side={side}
-          className="bg-gray-800 p-sm text-white rounded max-w-lg"
+          className="bg-gray-800 p-sm text-white rounded max-w-lg z-[102]"
         >
           <RadixTooltip.Arrow
             className="fill-current text-gray-800"

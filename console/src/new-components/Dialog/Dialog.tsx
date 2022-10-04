@@ -1,7 +1,7 @@
 import React from 'react';
+import clsx from 'clsx';
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { FaTimes } from 'react-icons/fa';
-import clsx from 'clsx';
 import { Button } from '../Button/Button';
 
 export type FooterProps = {
@@ -47,12 +47,13 @@ const Backdrop = () => (
   <RadixDialog.Overlay className="fixed top-0 left-0 h-full w-full bg-gray-900/90 backdrop-blur-sm z-[100]" />
 );
 
-type DialogSize = 'sm' | 'md' | 'lg';
+type DialogSize = 'sm' | 'md' | 'lg' | 'xl';
 
 const dialogSizing: Record<DialogSize, string> = {
   sm: 'max-w-xl',
   md: 'max-w-2xl',
   lg: 'max-w-3xl',
+  xl: 'max-w-4xl',
 };
 
 export type DialogProps = {

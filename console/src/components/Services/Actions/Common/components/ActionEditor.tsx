@@ -1,6 +1,8 @@
 import React from 'react';
 import { GraphQLError } from 'graphql';
 import { IconTooltip } from '@/new-components/Tooltip';
+import { Button } from '@/new-components/Button';
+import { FaMagic } from 'react-icons/fa';
 import HandlerEditor from './HandlerEditor';
 import ExecutionEditor from './ExecutionEditor';
 import HeaderConfEditor from './HeaderConfEditor';
@@ -11,6 +13,7 @@ import { Nullable } from '../../../../Common/utils/tsUtils';
 import ActionDefIcon from '../../../../Common/Icons/ActionDef';
 import TypesDefIcon from '../../../../Common/Icons/TypesDef';
 import { inputStyles } from '../../constants';
+import { TypeGeneratorModal } from './TypeGeneratorModal/TypeGeneratorModal';
 
 type ActionEditorProps = {
   handler: string;
@@ -74,6 +77,8 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
     error: actionDefinitionError,
     timer: actionParseTimer,
   } = actionDefinition;
+
+  const [isTypesGeneratorOpen, setIsTypesGeneratorOpen] = React.useState(false);
 
   return (
     <>
@@ -157,6 +162,21 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
 
           <GlobalTypesViewer />
         </div>
+
+        <TypeGeneratorModal
+          isOpen={isTypesGeneratorOpen}
+          onInsertTypes={types =>
+            typeDefinitionOnChange(types, null, null, null)
+          }
+          onClose={() => setIsTypesGeneratorOpen(false)}
+        />
+
+        <Button
+          icon={<FaMagic />}
+          onClick={() => setIsTypesGeneratorOpen(true)}
+        >
+          Type generator
+        </Button>
       </div>
 
       <HandlerEditor
