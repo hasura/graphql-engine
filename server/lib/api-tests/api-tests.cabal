@@ -1,0 +1,148 @@
+cabal-version: 2.2
+name: api-tests
+version: 1.0.0
+
+executable api-tests
+  build-tool-depends: hspec-discover:hspec-discover
+
+  build-depends:
+    , HUnit
+    , aeson
+    , base
+    , bytestring
+    , dc-api
+    , fast-logger
+    , hasura-prelude
+    , hspec
+    , http-conduit
+    , http-types
+    , lens
+    , lens-aeson
+    , morpheus-graphql
+    , pg-client
+    , postgresql-simple
+    , safe-exceptions
+    , split
+    , test-harness
+    , text
+    , unordered-containers
+    , uuid
+    , vector
+
+  default-extensions:
+    BlockArguments
+    DataKinds
+    DeriveGeneric
+    DerivingStrategies
+    ImportQualifiedPost
+    MultiWayIf
+    NamedFieldPuns
+    NoImplicitPrelude
+    OverloadedStrings
+    PatternGuards
+    RecordWildCards
+    ScopedTypeVariables
+    TypeApplications
+    TypeFamilies
+
+  hs-source-dirs: test
+
+  -- Turning off optimizations is intentional; tests aren't
+  -- performance sensitive and waiting for compilation is a problem.
+  ghc-options:
+    -Wall -O0
+    -threaded
+    -rtsopts "-with-rtsopts=-N"
+
+  main-is: Spec.hs
+  other-modules:
+    SpecHook
+    Test.BigQuery.ComputedFieldSpec
+    Test.BigQuery.Metadata.ComputedFieldSpec
+    Test.BigQuery.Queries.SpatialTypesSpec
+    Test.BigQuery.Schema.RunSQLSpec
+    Test.BigQuery.TypeInterpretationSpec
+    Test.DataConnector.AggregateQuerySpec
+    Test.DataConnector.MetadataApiSpec
+    Test.DataConnector.MockAgent.AggregateQuerySpec
+    Test.DataConnector.MockAgent.BasicQuerySpec
+    Test.DataConnector.MockAgent.QueryRelationshipsSpec
+    Test.DataConnector.MockAgent.TransformedConfigurationSpec
+    Test.DataConnector.QuerySpec
+    Test.DataConnector.SelectPermissionsSpec
+    Test.DisableRootFields.Common
+    Test.DisableRootFields.DefaultRootFieldsSpec
+    Test.DisableRootFields.SelectPermission.DisableAllRootFieldsRelationshipSpec
+    Test.DisableRootFields.SelectPermission.DisableAllRootFieldsSpec
+    Test.DisableRootFields.SelectPermission.EnableAggSpec
+    Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
+    Test.DisableRootFields.SelectPermission.EnablePKSpec
+    Test.EventTrigger.PG.EventTriggersRecreationSpec
+    Test.EventTrigger.PG.EventTriggersRunSQLSpec
+    Test.EventTrigger.PG.EventTriggersUntrackTableCleanupSpec
+    Test.EventTrigger.PG.EventTriggersUniqueNameSpec
+    Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec
+    Test.EventTrigger.PG.EventTriggersReplaceMetadataCleanupSpec
+    Test.EventTrigger.MSSQL.EventTriggerDropSourceCleanupSpec
+    Test.EventTrigger.MSSQL.EventTriggersUntrackTableCleanupSpec
+    Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec
+    Test.HelloWorldSpec
+    Test.LongIdentifiersSpec
+    Test.Metadata.InconsistentSpec
+    Test.Mutations.MultiplePerRequest.UpdateManySpec
+    Test.Postgres.DataValidation.PermissionSpec
+    Test.Postgres.BackendOnlyPermissionsSpec
+    Test.Postgres.DefaultValuesSpec
+    Test.Postgres.TimestampSpec
+    Test.Postgres.UniqueConstraintsSpec
+    Test.Postgres.JsonbSpec
+    Test.Queries.Directives.IncludeAndSkipSpec
+    Test.Queries.Directives.IncludeSpec
+    Test.Queries.Directives.SkipSpec
+    Test.Queries.DirectivesSpec
+    Test.Queries.AggregationSpec
+    Test.Queries.AggregationPredicatesSpec
+    Test.Queries.FilterSearchSpec
+    Test.Queries.MultiColumnObjectRelationshipsSpec
+    Test.Queries.NestedObjectSpec
+    Test.Queries.Paginate.LimitSpec
+    Test.Queries.Paginate.OffsetSpec
+    Test.Queries.Simple.NoQueriesAvailableSpec
+    Test.Queries.Simple.ObjectQueriesSpec
+    Test.Queries.Simple.OperationNameSpec
+    Test.Queries.Simple.PrimaryKeySpec
+    Test.Queries.SortSpec
+    Test.Quoter.YamlSpec
+    Test.Regression.ArrayLiteralTextEncodingSpec
+    Test.Regression.DoNotTruncateSessionVariables8158Spec
+    Test.Regression.DropColumnWithPermissions8415Spec
+    Test.Regression.InsertOnConflict8260Spec
+    Test.Regression.NullsOrderParsing8780Spec
+    Test.Regression.ObjectRelationshipsLimit7936Spec
+    Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
+    Test.RemoteRelationship.FromRemoteSchemaSpec
+    Test.RemoteRelationship.MetadataAPI.ClearMetadataSpec
+    Test.RemoteRelationship.MetadataAPI.Common
+    Test.RemoteRelationship.MetadataAPI.DropSource.DBtoDBRelationshipSpec
+    Test.RemoteRelationship.MetadataAPI.DropSource.RSToDBRelationshipSpec
+    Test.RemoteRelationship.XToDBArrayRelationshipSpec
+    Test.RemoteRelationship.XToDBObjectRelationshipSpec
+    Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
+    Test.Schema.DataValidation.Permissions.InsertSpec
+    Test.Schema.DataValidation.Permissions.SelectSpec
+    Test.Schema.CustomFieldNames.MutationSpec
+    Test.Schema.CustomFieldNames.QuerySpec
+    Test.SQLServer.DefaultValuesSpec
+    Test.Schema.DataValidation.Permissions.InsertSpec
+    Test.Schema.DataValidation.Permissions.SelectSpec
+    Test.SQLServer.InsertVarcharColumnSpec
+    Test.SQLServer.VarcharLiteralsSpec
+    Test.Schema.ConflictsSpec
+    Test.Schema.DefaultValuesSpec
+    Test.Schema.EnumSpec
+    Test.Schema.TableRelationships.ArrayRelationshipsSpec
+    Test.Schema.TableRelationships.ObjectRelationshipsSpec
+    Test.Schema.ViewsSpec
+    Test.ServiceLivenessSpec
+    Test.SQLServer.InsertVarcharColumnSpec
+    Test.Subscriptions.CustomFieldsSpec

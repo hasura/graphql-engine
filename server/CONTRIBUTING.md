@@ -135,7 +135,7 @@ This will launch a server on port 8080, and it will serve the console assets if 
 
 1. A small set of unit tests and integration tests written in Haskell, in `server/src-test`.
 
-2. A new integration test suite written in Haskell, in `server/tests-hspec`.
+2. A new integration test suite written in Haskell, in `server/lib/api-tests`.
 
 3. An extensive set of end-to-end tests written in Python, in `server/tests-py`.
 
@@ -198,10 +198,10 @@ docker compose up
 2. Once the containers are up, you can run the test suite via
 
 ```sh
-cabal test tests-hspec --test-show-details=direct
+cabal run api-tests
 ```
 
-For more details please check out the [README](./tests-hspec/README.md).
+For more details please check out the [README](./lib/api-tests/README.md).
 
 ##### Running unit tests and recompiling
 
