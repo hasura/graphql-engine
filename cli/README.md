@@ -40,7 +40,7 @@ cd graphql-engine/cli
 make deps
 make build-cli-ext copy-cli-ext
 make build
-# Binaries Will Be In _output Directory
+# binaries will be in _output directory
 ```
 
 ## Usage
