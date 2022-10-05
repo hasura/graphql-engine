@@ -49,6 +49,25 @@ Errors can come from a remote service, such as
 [actions](/actions/index.mdx). In this case, check the errors of the respective
 remote service. For actions, check out this [debugging page](/actions/debugging.mdx).
 
+## Client-side issues
+SSL certificate error occurs when a web browser can't verify the SSL certificate installed on a site. For these errors that come 
+from the client-side server such as:
+
+```
+ERROR:
+{
+code: EPROTO,
+errno: EPROTO,
+message:
+request to <graphql-api> failed, reason: write EPROTO <....> alert handshake failure:..<...>: SSL alert number 40
+}
+```
+
+Follow the below steps to resolve the issue:
+1. Whitelist the EPROTO error code (in client side code)
+2. Allow the retry logic to be activated
+3. Monitor the system for improvements or changes in the reconciliation process
+
 ## GitHub issues
 
 It's possible that someone with the same problem has created a GitHub
