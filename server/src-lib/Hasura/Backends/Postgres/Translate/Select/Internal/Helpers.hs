@@ -7,7 +7,9 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     endCursorIdentifier,
     hasNextPageIdentifier,
     hasPreviousPageIdentifier,
+    pageInfoSelectAlias,
     pageInfoSelectAliasIdentifier,
+    cursorsSelectAlias,
     cursorsSelectAliasIdentifier,
     encodeBase64,
     fromTableRowArgs,
@@ -19,7 +21,7 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
 where
 
 import Hasura.Backends.Postgres.SQL.DML qualified as S
-import Hasura.Backends.Postgres.SQL.Types (Identifier (..), QualifiedFunction, qualifiedObjectToText, toIdentifier)
+import Hasura.Backends.Postgres.SQL.Types (Identifier (..), QualifiedFunction, TableIdentifier (..), qualifiedObjectToText, toIdentifier)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
 import Hasura.Backends.Postgres.Types.Function
 import Hasura.Prelude
@@ -60,11 +62,17 @@ hasPreviousPageIdentifier = Identifier "__has_previous_page"
 hasNextPageIdentifier :: Identifier
 hasNextPageIdentifier = Identifier "__has_next_page"
 
-pageInfoSelectAliasIdentifier :: Identifier
-pageInfoSelectAliasIdentifier = Identifier "__page_info"
+pageInfoSelectAlias :: S.TableAlias
+pageInfoSelectAlias = S.mkTableAlias "__page_info"
 
-cursorsSelectAliasIdentifier :: Identifier
-cursorsSelectAliasIdentifier = Identifier "__cursors_select"
+pageInfoSelectAliasIdentifier :: TableIdentifier
+pageInfoSelectAliasIdentifier = S.tableAliasToIdentifier pageInfoSelectAlias
+
+cursorsSelectAlias :: S.TableAlias
+cursorsSelectAlias = S.mkTableAlias "__cursors_select"
+
+cursorsSelectAliasIdentifier :: TableIdentifier
+cursorsSelectAliasIdentifier = S.tableAliasToIdentifier cursorsSelectAlias
 
 encodeBase64 :: S.SQLExp -> S.SQLExp
 encodeBase64 =
@@ -90,15 +98,15 @@ fromTableRowArgs prefix = toFunctionArgs . fmap toSQLExp
     alias = toIdentifier $ mkBaseTableAlias prefix
 
 selectFromToFromItem :: Identifier -> SelectFrom ('Postgres pgKind) -> S.FromItem
-selectFromToFromItem pfx = \case
+selectFromToFromItem prefix = \case
   FromTable tn -> S.FISimple tn Nothing
-  FromIdentifier i -> S.FIIdentifier $ toIdentifier i
+  FromIdentifier i -> S.FIIdentifier $ TableIdentifier $ unFIIdentifier i
   FromFunction qf args defListM ->
     S.FIFunc $
-      S.FunctionExp qf (fromTableRowArgs pfx args) $
+      S.FunctionExp qf (fromTableRowArgs prefix args) $
         Just $
           S.mkFunctionAlias
-            (S.toTableAlias $ functionToIdentifier qf)
+            qf
             (fmap (fmap (first S.toColumnAlias)) defListM)
 
 -- | Converts a function name to an 'Identifier'.
