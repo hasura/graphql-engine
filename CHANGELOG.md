@@ -563,7 +563,7 @@ Please submit any feedback you may have for this feature at https://github.com/h
   
 ## v2.9.0
 
-### Event Triggers for MS SQL Server
+### Event triggers for MS SQL Server
 
 (closes https://github.com/hasura/graphql-engine/issues/7228)
 
@@ -637,7 +637,7 @@ Event Triggers support has been added for MS SQL Server. Now, you can invoke ext
 
 ## v2.9.0-beta.1
 
-### Event Triggers for MS SQL Server
+### Event triggers for MS SQL Server
 
 (closes https://github.com/hasura/graphql-engine/issues/7228)
 Event Triggers support has been added for MS SQL Server. Now, you can invoke external webhooks on insert/update/delete events on your MS SQL Server tables. See the [docs](https://hasura.io/docs/latest/graphql/core/event-triggers/index/) for more details.
@@ -1111,12 +1111,12 @@ Response 2:
 
 - server: refactor insert mutations IR use of "default values" (fixes #8443)
 
-## Milestone Release - v2.6.0
+## Milestone release - v2.6.0
 
 ### Known issue
 SQL Server: Mutation: [Default values overwritten on insert under certain conditions](https://github.com/hasura/graphql-engine/issues/8443). Will be addressed in 2.5.2 and 2.6.1.
 
-### Announcing GraphQL Joins
+### Announcing GraphQL joins
 We are delighted to announce Hasura’s data federation capabilities that accelerate the API development process by creating a single GraphQL schema from multiple data sources such as databases and remote GraphQL APIs. This allows you to query and mutate across federated data sources in real-time without writing any custom code. In addition, we can leverage many of Hasura’s powerful features from Hasura CE and Hasura Cloud.
 Hasura’s field level permissions for remote schemas applies for joins as well, allowing for tightly controlled data disclosure when federating sources.
 Leverage Hasura Cloud’s caching directive to instantly put caching in front of multiple remote GraphQL schemas.
@@ -1239,7 +1239,7 @@ the right-hand side for now.
 ### Deprecations
 * The `custom_column_names` property of TableConfig used on `<db>_track_table` and `set_table_customization` metadata APIs has been deprecated in favour of the new `column_config` property. `custom_column_names` will still work for now, however, values used in `column_config` will take precedence over values from `custom_column_names` and any overlapped values in `custom_column_names` will be discarded.
 
-### Behaviour Changes
+### Behaviour changes
 
 - cli: use indentation of 2 spaces in array elements of metadata YAML files
 
@@ -1570,7 +1570,7 @@ The optimization can be enabled using the
 
 ## v2.2.0
 
-### Nested Action Types
+### Nested action types
 Actions now support nested responses as described by associated action types.Example:
 ```graphql
 type Product {
@@ -1586,21 +1586,21 @@ Previously, nested responses could be encapsulated in a generic "jsonb" output t
 
 Currently limits action relationships to top-level fields in the output types.
 
-### GraphQL REST Endpoints OpenAPI Body Specifications
+### GraphQL REST endpoints OpenAPI body specifications
 
 GraphQL REST endpoints are documented via Swagger (OpenAPI) under the `/api/swagger/json` endpoint. We now document the request and response bodies of the endpoints in addition to previous information.
 
-### MS SQL Server Update for Hasura Server
+### MS SQL Server update for Hasura Server
 
-##### Expand Transactions to GraphQL Queries and mssql_run-sql API
+##### Expand transactions to GraphQL queries and mssql_run-sql API
 
 Extend transactions to GraphQL queries and mssql_run_sql API
 
-##### Rollback a Transaction Based in the Transaction State
+##### Rollback a transaction based in the transaction state
 
 We can query the transaction state using XACT_STATE() scalar function. If the transaction is not active, don't rollback the transaction.
 
-##### Upsert - SQL Generation and Execution
+##### Upsert - SQL generation and execution
 
 We are translating the if_matched section from the graphql, which is represented by the if_matched  type, to a MERGE SQL statement. Example:
 
@@ -1618,7 +1618,7 @@ mutation {
 }
 ```
 
-### Breaking Changes
+### Breaking changes
 - For any **MSSQL** backend, count aggregate query on multiple columns is restricted with a GraphQL
   schema change as follows
 
@@ -1972,7 +1972,7 @@ NOTE: This only includes the diff between v2.0.0 and v2.0.0-beta.2
 
 ## v2.0.0-alpha.11
 
-### Breaking Changes
+### Breaking changes
 
 - In this release, the name of the computed field argument has changed from `<function_name>_args` to
   `<computed_field_name>_<table_name>_args` as the function name is internal detail for a computed field.
@@ -2072,7 +2072,7 @@ only when there are enough present in the items inventory.
 
 ## v2.0.0-alpha.8
 
-### Support for 3D PostGIS Operators
+### Support for 3D PostGIS operators
 
 We now support the use of the functions `ST_3DDWithin` and `ST_3DIntersects` in boolean expressions.
 Note that `ST_3DIntersects` requires PostGIS be [built with SFCGAL support](https://www.postgis.net/docs/manual-3.1/reference.html#reference_sfcgal) which may depend on the PostGIS distribution used.
@@ -2276,7 +2276,7 @@ Bunch of bug fixes and refactor for generalized backends: https://github.com/has
 
 ## v1.4.0-alpha.2
 
-### Inconsistent Metadata
+### Inconsistent metadata
 
 Add `allow_inconsistent_metadata` option to `replace_metadata` API.
 This will replace metadata even if there are inconsistency errors,
@@ -2298,7 +2298,7 @@ keys in the response body.
 
 ## v1.4.0-alpha.1
 
-### REST Endpoints
+### REST endpoints
 
 The RESTified GraphQL Endpoints API allows for the use of a REST interface to saved GraphQL queries and mutations.
 
@@ -2356,7 +2356,7 @@ access over it.
 either with the server flag ``--enable-remote-schema-permissions`` or the environment
 variable ``HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS`` set to ``true``.
 
-### Function Permissions
+### Function permissions
 
 Before volatile functions were supported, the permissions for functions were automatically inferred
 from the select permission of the target table. Now, since volatile functions are supported we can't
@@ -2484,7 +2484,7 @@ query {
 
 ## v1.3.3
 
-### Server - Support for mapping session variables to default JWT claims
+### Server - support for mapping session variables to default JWT claims
 
 Some auth providers do not let users add custom claims in JWT. In such cases, the server can take a JWT configuration option called `claims_map` to specify a mapping of Hasura session variables to values in existing claims via JSONPath or literal values.
 
@@ -2519,7 +2519,7 @@ The corresponding JWT config can be:
   }
 ```
 
-### Metadata Types SDK
+### Metadata types SDK
 
 The types and documentation comments for Metadata V2 have been converted into JSON/YAML Schema, and used to autogenerate type definitions for popular languages.
 
@@ -2568,7 +2568,7 @@ This release contains the [PDV refactor (#4111)](https://github.com/hasura/graph
   - if a query selects table `bar` through table `foo` via a relationship, the required permissions headers will be the union of the required headers of table `foo` and table `bar` (we used to only check the headers of the root table);
   - if an insert does not have an `on_conflict` clause, it will not require the update permissions headers.
 
-#### Remote Relationship
+#### Remote relationship
 
 In this release, a breaking change has been introduced:
 
@@ -2735,7 +2735,7 @@ It works similar to table relationships. Head to the `Relationship` tab in your 
 
 [Add docs links][add console screenshot]
 
-### Scheduled Triggers
+### Scheduled triggers
 
 A scheduled trigger can be used to execute custom business logic based on time. There are two types of timing events: cron based or timestamp based.
 
@@ -2856,7 +2856,7 @@ Include the changelog from **v1.2.0-beta.1**, **v1.2.0-beta.2**, **v1.2.0-beta.3
 
 Additional changelog:
 
-### CLI: Support servers with self-signed certificates (close #4564) (#4582)
+### CLI: support servers with self-signed certificates (close #4564) (#4582)
 
 A new flag `--certificate-authority` is added so that the CA certificate can be
 provided to trust the Hasura Endpoint with a self-signed SSL certificate.
@@ -2877,7 +2877,7 @@ using this flag is insecure since verification is not carried out.
 
 ## `v1.2.0-beta.5`
 
-### server: backend only insert permissions
+### Server: backend only insert permissions
 
 Introduces optional `backend_only` (default: `false`) configuration in insert permissions
 (see [api reference](https://deploy-preview-4224--hasura-docs.netlify.com/graphql/manual/api-reference/schema-metadata-api/permission.html#insertpermission)).
@@ -2889,7 +2889,7 @@ This feature is highly useful in disabling `insert_table` mutation for a role fr
 
 (rfc #4120) (#4224)
 
-### server: debugging mode for non-admin roles
+### Server: debugging mode for non-admin roles
 
 For any errors the server sends extra information in `extensions` field under `internal` key. Till now this was only
 available for `admin` role requests. To enable this for other roles, start the server with `--dev-mode` flag or set `HASURA_GRAPHQL_DEV_MODE` env variable to `true`:
@@ -3048,7 +3048,7 @@ For example, see [here](https://hasura.io/docs/latest/graphql/core/api-reference
 
 ## `v1.2.0-beta.4`
 
-### add query support in actions
+### Add query support in actions
 
 (close #4032) (#4309)
 
@@ -3166,7 +3166,7 @@ See [upgrade docs](https://hasura.io/docs/latest/graphql/core/migrations/upgrade
 
 ## `v1.2.0-beta.1`
 
-### Hasura Actions
+### Hasura actions
 
 Actions are a way to extend Hasura’s auto-generated mutations with entirely custom ones which can handle various use cases such as data validation, data enrichment from external sources and any other complex business logic.
 
