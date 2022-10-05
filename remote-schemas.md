@@ -1,4 +1,4 @@
-# Remote schemas
+# Remote Schemas
 
 Hasura gives you CRUD + realtime GraphQL APIs with authorization & access control. However, in many cases, you will need to write APIs (queries, mutations) that contain custom logic. For example, implementing a payment API, or querying data that is not in your database.
 
