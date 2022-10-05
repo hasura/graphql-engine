@@ -29,7 +29,7 @@ Create a lambda function in AWS. This will be our webhook.
 1. Select all insert, update, delete operations for the trigger.
 1. Paste the API endpoint of your AWS lambda as the webhook.
 
-# Test your integration
+# Test Your Integration
 
 1. Create a record.
 1. Update a record.

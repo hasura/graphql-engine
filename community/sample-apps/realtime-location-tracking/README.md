@@ -16,7 +16,7 @@ hosted on GitHub pages and the Postgres+GraphQL Engine is running on Postgres.
 - Explore the backend using [Hasura
   Console](https://cloud.hasura.io/public/graphiql?endpoint=https%3A%2F%2Frealtime-location.hasura.app%2Fv1%2Fgraphql).
   
-# Running the app yourself
+# Running The App Yourself
 
 - Deploy GraphQL Engine on Hasura Cloud and setup PostgreSQL via Heroku:
   

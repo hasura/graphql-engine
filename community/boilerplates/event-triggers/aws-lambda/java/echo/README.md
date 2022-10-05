@@ -24,7 +24,7 @@ Create a lambda function in AWS. This will be our webhook.
 2. Upload `target/java-lambda-1.0-SNAPSHOT.jar` using AWS console.
 
 
-# Add the trigger in Hasura GraphQL
+# Add The Trigger In Hasura GraphQL
 1. In events tab, add a trigger
 2. Select all insert, update, delete operations for the trigger.
 3. Paste the API endpoint of your AWS lambda as the webhook.

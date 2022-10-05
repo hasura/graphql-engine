@@ -64,7 +64,7 @@ We are going to go with a custom templating language which is a subset of `Go` t
 Useful for example for requestURL or headers transform.
 
 ```
-# $url has the original URL
+# $Url Has The Original URL
 $url/{{.event.author_id}}
 ```
 

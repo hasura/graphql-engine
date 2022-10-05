@@ -107,7 +107,7 @@ pages/index.js => .next/serverless/pages/index.js
 pages/about.js => .next/serverless/pages/about.js
 ```
 
-# Deploy to now.sh
+# Deploy To Now.Sh
 
 Deploy it to the cloud with [now](https://zeit.co/now) ([download](https://zeit.co/download)):
 

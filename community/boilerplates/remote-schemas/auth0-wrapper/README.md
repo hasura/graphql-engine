@@ -52,7 +52,7 @@ heroku login
 2. Create GRAPHQL API app
 
 ```bash
-# in current directory (community/boilerplates/remote-schemas/auth0-wrapper)
+# In Current Directory (Community/Boilerplates/Remote-Schemas/Auth0-Wrapper)
 heroku create
 ```
 

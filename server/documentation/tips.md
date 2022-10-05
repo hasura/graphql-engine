@@ -367,7 +367,7 @@ tps = 291.082637 (without initial connection time)
 From looking at the transactions rate, we can see that `6624` manage to complete for the first query, but only `5822` transactions coleted for the second query.
 This makes the first query faster by `6624 / 5822 * 100 - 100 = roughly 13%`. For the usecase and data we measured.
 
-# Automatically run unit tests on change
+# Automatically Run Unit Tests On Change
 
 Use [ghcid](https://hackage.haskell.org/package/ghcid)
 

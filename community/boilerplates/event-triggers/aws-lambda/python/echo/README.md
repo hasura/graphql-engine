@@ -17,7 +17,7 @@ Create a lambda function in AWS. This will be our webhook.
 5. Add an API to API gateway.
 6. Add the code in `echo.py`. The handler function of your lambda will be the `echo.lambda_handler`.
 
-# Add the trigger in Hasura GraphQL
+# Add The Trigger In Hasura GraphQL
 1. In events tab, add a trigger
 2. Select all insert, update, delete operations for the trigger.
 3. Paste the API endpoint of your AWS lambda as the webhook.

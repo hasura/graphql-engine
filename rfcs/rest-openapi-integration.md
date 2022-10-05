@@ -135,7 +135,7 @@ An example of serving Swagger UI using CDN (Option 2)
 Currently we are simply exposing the JSON as per options 1.
 
 
-# How to generate types from query representation?
+# How To Generate Types From Query Representation?
 
 The query parser that is being used resolves the query, a subsequent method statically analyzes the type of each field present in the query by leveraging the introspection schema.
 

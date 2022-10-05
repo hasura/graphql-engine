@@ -476,7 +476,7 @@ Apollo federation needs an `_entities` field as part of the specification,
 which is defined as follows:
 
 ```graphql
-# a union of all types that use the @key directive
+# A Union Of All Types That Use The @Key Directive
 scalar _Any
 
 union _Entity

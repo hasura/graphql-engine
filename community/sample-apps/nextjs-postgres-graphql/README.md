@@ -102,7 +102,7 @@ Boilerplate to get started with Nextjs, Hasura GraphQL engine as CMS and postgre
 
   ![Demo app](../gatsby-postgres-graphql/assets/test_app.jpg)
 
-# How it works
+# How It Works
 
   It uses [next-apollo](https://github.com/adamsoffer/next-apollo#how-does-it-work) underneath which ensures that data requirement is satisfied before it is rendered on the server and next.js takes care of the rest.
 

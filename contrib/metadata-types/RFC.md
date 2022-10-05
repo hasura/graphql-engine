@@ -101,7 +101,7 @@ input_files:
 output_directory: './generated'
 
 # Quicktype config per-language
-# Config is an object of type "rendererOptions"
+# Config Is An Object Of Type "RendererOptions"
 # See: https://github.com/quicktype/quicktype/blob/master/src/quicktype-core/language/TypeScriptFlow.ts#L20
 quicktype_config:
   # c++: ~

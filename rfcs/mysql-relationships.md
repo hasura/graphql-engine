@@ -38,7 +38,7 @@ test_select_query_multiple_columns_obj_fkey
 test_int_as_string_offset
 test_err_neg_offset_error
 
-# depend on relationships: nested queries
+# Depend On Relationships: Nested Queries
 test_nested_select_query_article_author
 test_nested_select_query_deep
 ```

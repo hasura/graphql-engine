@@ -276,13 +276,13 @@ query($w: foo_bool_exp!) {
   }
 }
 
-# json
+# Json
 {
   "w": {
     # graphql boolean expression
     "foo_json_field": {
       "_eq": {
-        # json value that cannot be translated
+        # Json value that cannot be translated
         "1": "2"
       }
     }

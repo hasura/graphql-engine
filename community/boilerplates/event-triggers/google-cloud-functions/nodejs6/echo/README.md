@@ -14,7 +14,7 @@ lat: Numeric, Nullable
 lng: Numeric, Nullable
 ```
 
-# Deploy Google Cloud function
+# Deploy Google Cloud Function
 
 Deploy the function:
 

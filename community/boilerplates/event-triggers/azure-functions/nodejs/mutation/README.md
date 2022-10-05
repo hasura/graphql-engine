@@ -41,7 +41,7 @@ func azure functionapp publish 'myfunctionsapp'
 # Check Logs
 `func azure functionapp logstream 'myfunctionsapp'`
 
-# Add the trigger in Hasura GraphQL
+# Add The Trigger In Hasura GraphQL
 1. In events tab, add a trigger
 2. Select all insert, update, delete operations for the trigger.
 3. Paste your function URL as the webhook.

@@ -88,7 +88,7 @@ git push heroku master
 5. Create GRAPHQL API app
 
 ```bash
-# in current directory (community/boilerplates/remote-schemas/rest-wrapper)
+# In Current Directory (Community/Boilerplates/Remote-Schemas/Rest-Wrapper)
 heroku create
 ```
 

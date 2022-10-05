@@ -114,7 +114,7 @@ mutation ($userId: Int!) {
 Using [streaming subscriptions](https://hasura.io/docs/latest/graphql/core/databases/postgres/subscriptions/streaming/index/) we fetch the last N messages (the example uses 10). Then new messages are streamed using graphql-ws.
 
 ```gql
-# We can pass in how far back we want to fetch messages
+# We Can Pass In How Far Back We Want To Fetch Messages
 subscription ($last_received_ts: timestamptz) {
   message_stream(
     cursor: { initial_value: { timestamp: $last_received_ts } }

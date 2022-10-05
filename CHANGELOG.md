@@ -3188,7 +3188,7 @@ A new command is added to the server executable for downgrading to earlier relea
 # run the following command:
 docker run hasura/graphql-engine:v1.2.0 graphql-engine --database-url <db-url> downgrade --to-v1.0.0
 
-# start hasura v1.0.0
+# Start Hasura V1.0.0
 ```
 
 Read more about this command in the [docs](https://hasura.io/docs/latest/graphql/core/deployment/downgrading.html#downgrading-hasura-graphql-engine).

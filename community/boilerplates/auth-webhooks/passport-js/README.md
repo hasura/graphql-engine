@@ -27,7 +27,7 @@ npm install
 export DATABASE_URL=postgres://<username>:<password>@<host>:<port>/<database_name>
 
 # Apply migrations
-# (Note) this step creates a "users" table in the database
+# (Note) This Step Creates A "Users" Table In The Database
 knex migrate:latest
 
 # Then simply start your app
@@ -51,7 +51,7 @@ npm start
  git subtree push --prefix community/boilerplates/auth-webhooks/passport-js heroku master
 
  # Apply migrations
-# (Note) this step creates a "users" table in the database
+# (Note) This Step Creates A "Users" Table In The Database
  heroku run knex migrate:latest
 ```
 

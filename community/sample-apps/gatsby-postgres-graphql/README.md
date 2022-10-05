@@ -110,7 +110,7 @@ export default AuthorList;
 export { GET_AUTHORS };
 ```
 
-# Make a GraphQL mutation using hooks
+# Make A GraphQL Mutation Using Hooks
 
 Additional packages are needed to be added to support mutations: <br/>
 `npm install @apollo/react-hooks apollo-boost isomorphic-fetch`

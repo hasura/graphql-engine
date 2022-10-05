@@ -54,7 +54,7 @@ ASSETS_PATH=https://graphql-engine-cdn.hasura.io/console/assets
 # to run against staging
 HASURA_OAUTH_URL='https://oauth.pro.arusah.com'
 HASURA_METRICS_URL='https://metrics.pro.arusah.com'
-# to run against local lux
+# To Run Against Local Lux
 # HASURA_OAUTH_URL=http://oauth.lux-dev.hasura.me
 # HASURA_METRICS_URL=http://metrics.lux-dev.hasura.me
 HASURA_OAUTH_SCOPES=openid
