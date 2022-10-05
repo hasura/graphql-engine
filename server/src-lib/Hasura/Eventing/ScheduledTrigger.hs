@@ -855,28 +855,28 @@ mkPaginationSelectExp ::
   S.Select
 mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} shouldIncludeRowsCount =
   S.mkSelect
-    { S.selCTEs = [(S.toTableAlias countCteAlias, allRowsSelect), (S.toTableAlias limitCteAlias, limitCteSelect)],
+    { S.selCTEs = [(countCteAlias, allRowsSelect), (limitCteAlias, limitCteSelect)],
       S.selExtr =
         case shouldIncludeRowsCount of
           IncludeRowsCount -> [countExtractor, rowsExtractor]
           DontIncludeRowsCount -> [rowsExtractor]
     }
   where
-    countCteAlias = Identifier "count_cte"
-    limitCteAlias = Identifier "limit_cte"
+    countCteAlias = S.mkTableAlias "count_cte"
+    limitCteAlias = S.mkTableAlias "limit_cte"
 
     countExtractor =
       let selectExp =
             S.mkSelect
               { S.selExtr = [S.Extractor S.countStar Nothing],
-                S.selFrom = Just $ S.mkIdenFromExp countCteAlias
+                S.selFrom = Just $ S.mkIdenFromExp (S.tableAliasToIdentifier countCteAlias)
               }
        in S.Extractor (S.SESelect selectExp) Nothing
 
     limitCteSelect =
       S.mkSelect
         { S.selExtr = [S.selectStar],
-          S.selFrom = Just $ S.mkIdenFromExp countCteAlias,
+          S.selFrom = Just $ S.mkIdenFromExp (S.tableAliasToIdentifier countCteAlias),
           S.selLimit = (S.LimitExp . S.intToSQLExp) <$> _sepLimit,
           S.selOffset = (S.OffsetExp . S.intToSQLExp) <$> _sepOffset
         }
@@ -886,7 +886,7 @@ mkPaginationSelectExp allRowsSelect ScheduledEventPagination {..} shouldIncludeR
           selectExp =
             S.mkSelect
               { S.selExtr = [S.Extractor jsonAgg Nothing],
-                S.selFrom = Just $ S.mkIdenFromExp limitCteAlias
+                S.selFrom = Just $ S.mkIdenFromExp (S.tableAliasToIdentifier limitCteAlias)
               }
        in S.Extractor (S.handleIfNull (S.SELit "[]") (S.SESelect selectExp)) Nothing
 

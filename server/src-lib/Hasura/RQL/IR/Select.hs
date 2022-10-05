@@ -375,7 +375,7 @@ instance Postgres.IsIdentifier FIIdentifier where
 
 data SelectFromG (b :: BackendType) v
   = FromTable (TableName b)
-  | FromIdentifier FIIdentifier
+  | FromIdentifier FIIdentifier -- TODO: Make this into TableIdentifier?
   | FromFunction
       (FunctionName b)
       (FunctionArgsExp b v)

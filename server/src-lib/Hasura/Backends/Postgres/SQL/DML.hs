@@ -96,7 +96,9 @@ module Hasura.Backends.Postgres.SQL.DML
     simplifyBoolExp,
     textArrTypeAnn,
     textTypeAnn,
+    mkTableAlias,
     toTableAlias,
+    tableAliasToIdentifier,
     toColumnAlias,
   )
 where
@@ -259,9 +261,9 @@ instance ToSQL FromExp where
   toSQL (FromExp items) =
     "FROM" <~> (", " <+> items)
 
-mkIdenFromExp :: (IsIdentifier a) => a -> FromExp
-mkIdenFromExp a =
-  FromExp [FIIdentifier $ toIdentifier a]
+mkIdenFromExp :: TableIdentifier -> FromExp
+mkIdenFromExp ident =
+  FromExp [FIIdentifier ident]
 
 mkSimpleFromExp :: QualifiedTable -> FromExp
 mkSimpleFromExp qt =
@@ -521,9 +523,20 @@ columnAliasToSqlWithoutAs alias = toSQL (toIdentifier alias)
 newtype TableAlias = TableAlias {getTableAlias :: Identifier}
   deriving (Show, Eq, NFData, Data, Generic, Cacheable, Hashable)
 
+-- | Create a table alias.
+mkTableAlias :: Text -> TableAlias
+mkTableAlias = TableAlias . Identifier
+
+-- | Create a table identifier from a table alias.
+tableAliasToIdentifier :: TableAlias -> TableIdentifier
+tableAliasToIdentifier = TableIdentifier . getIdenTxt . getTableAlias
+
 instance IsIdentifier TableAlias where
   toIdentifier (TableAlias identifier) = identifier
 
+-- TODO: Remove when we remove 'Identifier'. We should only be able to create
+-- identifiers from aliases, not aliases from identifiers. Aliases represent
+-- definition sites and identifiers usage sites.
 toTableAlias :: (IsIdentifier a) => a -> TableAlias
 toTableAlias = TableAlias . toIdentifier
 
@@ -703,7 +716,7 @@ instance ToSQL FunctionDefinitionListItem where
 --   Note: a function that returns a table (instead of a record) cannot name the types
 --         as seen in the above example.
 data FunctionAlias = FunctionAlias
-  { _faIdentifier :: TableAlias,
+  { _faIdentifier :: TableAlias, -- TODO: Rename to _faAlias
     _faDefinitionList :: Maybe [FunctionDefinitionListItem]
   }
   deriving (Show, Eq, Data, Generic)
@@ -714,9 +727,14 @@ instance Cacheable FunctionAlias
 
 instance Hashable FunctionAlias
 
-mkFunctionAlias :: TableAlias -> Maybe [(ColumnAlias, PGScalarType)] -> FunctionAlias
+functionNameToTableAlias :: QualifiedFunction -> TableAlias
+functionNameToTableAlias = mkTableAlias . qualifiedObjectToText
+
+-- | Construct a function alias which represents the "relation signature" for the function invocation,
+--   Using the function name as the relation name, and the columns as the relation schema.
+mkFunctionAlias :: QualifiedObject FunctionName -> Maybe [(ColumnAlias, PGScalarType)] -> FunctionAlias
 mkFunctionAlias alias listM =
-  FunctionAlias alias $
+  FunctionAlias (functionNameToTableAlias alias) $
     fmap (map (uncurry FunctionDefinitionListItem)) listM
 
 instance ToSQL FunctionAlias where
@@ -748,7 +766,7 @@ data FromItem
   = -- | A simple table
     FISimple QualifiedTable (Maybe TableAlias)
   | -- | An identifier (from CTEs)
-    FIIdentifier Identifier
+    FIIdentifier TableIdentifier
   | -- | A function call (that should return a relation (@SETOF@) and not a scalar)
     FIFunc FunctionExp
   | -- | @unnest@ converts (an) array(s) to a relation.
