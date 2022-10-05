@@ -1,4 +1,4 @@
-# Contributing to Hasura graphql-engine
+# Contributing to Hasura Graphql-Engine
 
 _First_: if you feel insecure about how to start contributing, feel free to ask us on our [Discord channel](https://discordapp.com/invite/hasura) in the #contrib channel. You can also just go ahead with your contribution and we'll give you feedback. Don't worry - the worst that can happen is that you'll be politely asked to change something. We appreciate any contributions, and we don't want a wall of rules to stand in the way of that.
 
@@ -110,7 +110,7 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 
 ## 5. Ways of contributing
 
-### Reporting an Issue
+### Reporting an issue
 
 - Make sure you test against the latest released version. It is possible that we may have already fixed the bug you're experiencing.
 
