@@ -16,12 +16,12 @@ slug: glossary/index
 Docker is a system which allows the packaging up of code and all its dependencies so the an application runs
 quickly and reliably from one computing environment to another.
 
-## Docker Container
+## Docker container
 A Docker container image is a lightweight, standalone, executable package of software that includes everything
 needed to run an application: code, runtime, system tools, system libraries and settings. Hasura can be run as a
 Docker container.
 
-## Docker Image
+## Docker image
 Docker images become containers at runtime and in the case of Docker containers – images become containers
 when they run on Docker Engine which is available for both Linux and Windows-based applications, containerized
 software will always run the same, regardless of the infrastructure. Containers isolate software from its
@@ -29,7 +29,7 @@ environment and ensure that it works uniformly despite differences for instance 
 Hasura is distributed as a Docker image for the Community Edition at
 [DockerHub](https://hub.docker.com/r/hasura/graphql-engine).
 
-## GraphQL Schema
+## GraphQL schema
 Every GraphQL service defines a set of types which completely describe the set of possible data you can query on
 that service. This is called the GraphQL schema. Hasura automatically generates a GraphQL Schema for you from the
 tables in your connected databases, Hasura Actions you've defined, and other connected GraphQL or REST endpoints.
@@ -50,10 +50,10 @@ configured Hasura endpoint in order to change or "mutate" data on your database,
 
 The container(s) serving the GraphQL API and in the critical path of every request/response.
 
-## Hasura Account
+## Hasura account
 An account on [hasura.io](https://hasura.io) in which multiple cloud instances of Hasura Cloud can be created.
 
-## Hasura GraphQL Engine
+## Hasura GraphQL engine
 
 The Docker container(s) serving the GraphQL API and in the critical path of every request/response.
 
