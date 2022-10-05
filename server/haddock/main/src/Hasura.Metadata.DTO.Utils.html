@@ -19,10 +19,10 @@
 </span><span id="line-19"></span><span class="hs-comment">-- integer value. On serialization the field will have the given value</span><span>
 </span><span id="line-20"></span><span class="hs-comment">-- automatically. On deserialization parsing will fail unless the field has the</span><span>
 </span><span id="line-21"></span><span class="hs-comment">-- exact given value.</span><span>
-</span><span id="line-22"></span><span id="local-6989586621689651975"><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html#versionField"><span class="hs-identifier hs-type">versionField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ObjectCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689651975"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Scientific</span></span></span><span>
+</span><span id="line-22"></span><span id="local-6989586621689654223"><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html#versionField"><span class="hs-identifier hs-type">versionField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ObjectCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689654223"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Scientific</span></span></span><span>
 </span><span id="line-23"></span><span id="versionField"><span class="annot"><span class="annottext">versionField :: Integer -&gt; ObjectCodec a Scientific
-</span><a href="Hasura.Metadata.DTO.Utils.html#versionField"><span class="hs-identifier hs-var hs-var">versionField</span></a></span></span><span> </span><span id="local-6989586621689651974"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689651974"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Hasura.Metadata.DTO.Utils.html#versionField"><span class="hs-identifier hs-var hs-var">versionField</span></a></span></span><span> </span><span id="local-6989586621689654222"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689654222"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 -&gt; ValueCodec Scientific Scientific
 -&gt; ObjectCodec Scientific Scientific
 forall input output.
@@ -35,7 +35,7 @@ forall input.
 (Show input, Eq input) =&gt;
 input -&gt; JSONCodec input -&gt; JSONCodec input
 </span><span class="hs-identifier hs-var">EqCodec</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689651973"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">ValueCodec Scientific Scientific
+</span><a href="#local-6989586621689654221"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">ValueCodec Scientific Scientific
 </span><span class="hs-identifier hs-var">scientificCodec</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ObjectCodec Scientific Scientific
 -&gt; (a -&gt; Scientific) -&gt; ObjectCodec a Scientific
 forall oldInput output newInput.
@@ -44,22 +44,22 @@ ObjectCodec oldInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; a -&gt; Scientific
 forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689651973"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><a href="#local-6989586621689654221"><span class="hs-identifier hs-var">n</span></a></span><span>
 </span><span id="line-24"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-25"></span><span>    </span><span id="local-6989586621689651973"><span class="annot"><span class="annottext">n :: Scientific
-</span><a href="#local-6989586621689651973"><span class="hs-identifier hs-var hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Scientific
+</span><span id="line-25"></span><span>    </span><span id="local-6989586621689654221"><span class="annot"><span class="annottext">n :: Scientific
+</span><a href="#local-6989586621689654221"><span class="hs-identifier hs-var hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Scientific
 forall a. Num a =&gt; Integer -&gt; a
 </span><span class="hs-identifier hs-var">fromInteger</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689651974"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689654222"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-26"></span><span>
 </span><span id="line-27"></span><span class="hs-comment">-- | Defines an optional object field named @version@ that must have the given</span><span>
 </span><span id="line-28"></span><span class="hs-comment">-- integer value if the field is present. On serialization the field will have</span><span>
 </span><span id="line-29"></span><span class="hs-comment">-- the given value automatically. On deserialization parsing will fail unless</span><span>
 </span><span id="line-30"></span><span class="hs-comment">-- the field has the exact given value, or is absent.</span><span>
-</span><span id="line-31"></span><span id="local-6989586621689651971"><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html#optionalVersionField"><span class="hs-identifier hs-type">optionalVersionField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ObjectCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689651971"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Scientific</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-31"></span><span id="local-6989586621689654219"><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html#optionalVersionField"><span class="hs-identifier hs-type">optionalVersionField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ObjectCodec</span></span><span> </span><span class="annot"><a href="#local-6989586621689654219"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Scientific</span></span><span class="hs-special">)</span></span><span>
 </span><span id="line-32"></span><span id="optionalVersionField"><span class="annot"><span class="annottext">optionalVersionField :: Integer -&gt; ObjectCodec a (Maybe Scientific)
-</span><a href="Hasura.Metadata.DTO.Utils.html#optionalVersionField"><span class="hs-identifier hs-var hs-var">optionalVersionField</span></a></span></span><span> </span><span id="local-6989586621689651970"><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689651970"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Metadata.DTO.Utils.html#optionalVersionField"><span class="hs-identifier hs-var hs-var">optionalVersionField</span></a></span></span><span> </span><span id="local-6989586621689654218"><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621689654218"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-33"></span><span>  </span><span class="annot"><span class="annottext">Text
 -&gt; ValueCodec Scientific Scientific
 -&gt; ObjectCodec (Maybe Scientific) (Maybe Scientific)
@@ -75,7 +75,7 @@ forall input.
 (Show input, Eq input) =&gt;
 input -&gt; JSONCodec input -&gt; JSONCodec input
 </span><span class="hs-identifier hs-var">EqCodec</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689651969"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">ValueCodec Scientific Scientific
+</span><a href="#local-6989586621689654217"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">ValueCodec Scientific Scientific
 </span><span class="hs-identifier hs-var">scientificCodec</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ObjectCodec (Maybe Scientific) (Maybe Scientific)
 -&gt; (a -&gt; Maybe Scientific) -&gt; ObjectCodec a (Maybe Scientific)
 forall oldInput output newInput.
@@ -86,17 +86,17 @@ forall a b. a -&gt; b -&gt; a
 </span><span class="hs-identifier hs-var">const</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Scientific -&gt; Maybe Scientific
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">Scientific
-</span><a href="#local-6989586621689651969"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689654217"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-35"></span><span>    </span><span id="local-6989586621689651969"><span class="annot"><span class="annottext">n :: Scientific
-</span><a href="#local-6989586621689651969"><span class="hs-identifier hs-var hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Scientific
+</span><span id="line-35"></span><span>    </span><span id="local-6989586621689654217"><span class="annot"><span class="annottext">n :: Scientific
+</span><a href="#local-6989586621689654217"><span class="hs-identifier hs-var hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Scientific
 forall a. Num a =&gt; Integer -&gt; a
 </span><span class="hs-identifier hs-var">fromInteger</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621689651970"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621689654218"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-36"></span><span>
 </span><span id="line-37"></span><span class="hs-comment">-- | Provides a title-cased name for a database kind, inferring the appropriate</span><span>
 </span><span id="line-38"></span><span class="hs-comment">-- database kind from type context.</span><span>
-</span><span id="line-39"></span><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html#codecNamePrefix"><span class="hs-identifier hs-type">codecNamePrefix</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689651968"><span class="annot"><a href="#local-6989586621689651968"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689651968"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-39"></span><span class="annot"><a href="Hasura.Metadata.DTO.Utils.html#codecNamePrefix"><span class="hs-identifier hs-type">codecNamePrefix</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689654216"><span class="annot"><a href="#local-6989586621689654216"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Tag.html#HasTag"><span class="hs-identifier hs-type">HasTag</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689654216"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-40"></span><span id="codecNamePrefix"><span class="annot"><span class="annottext">codecNamePrefix :: Text
 </span><a href="Hasura.Metadata.DTO.Utils.html#codecNamePrefix"><span class="hs-identifier hs-var hs-var">codecNamePrefix</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.toTitle</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Text) -&gt; Text -&gt; Text
@@ -111,5 +111,5 @@ forall (b :: BackendType). BackendTag b -&gt; BackendType
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HasTag b =&gt; BackendTag b
 forall (b :: BackendType). HasTag b =&gt; BackendTag b
-</span><a href="Hasura.SQL.Tag.html#backendTag"><span class="hs-identifier hs-var">backendTag</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689651968"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><a href="Hasura.SQL.Tag.html#backendTag"><span class="hs-identifier hs-var">backendTag</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621689654216"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-41"></span></pre></body></html>

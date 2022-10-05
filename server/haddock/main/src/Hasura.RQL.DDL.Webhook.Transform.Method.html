@@ -30,7 +30,7 @@
 </span><span id="line-30"></span><span class="hs-comment">--</span><span>
 </span><span id="line-31"></span><span class="hs-comment">-- This newtype is necessary because otherwise we end up with an</span><span>
 </span><span id="line-32"></span><span class="hs-comment">-- orphan instance.</span><span>
-</span><span id="line-33"></span><span id="local-6989586621689644331"><span id="local-6989586621689644332"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Method"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-var">Method</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Method"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-var">Method</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">CI.CI</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span id="local-6989586621689646579"><span id="local-6989586621689646580"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="Method"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-var">Method</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Method"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-var">Method</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">CI.CI</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x. Method -&gt; Rep Method x)
 -&gt; (forall x. Rep Method x -&gt; Method) -&gt; Generic Method
 forall x. Rep Method x -&gt; Method
@@ -40,7 +40,7 @@ forall a.
 $cto :: forall x. Rep Method x -&gt; Method
 $cfrom :: forall x. Method -&gt; Rep Method x
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
-</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689644321"><span id="local-6989586621689644323"><span id="local-6989586621689644325"><span class="annot"><span class="annottext">Int -&gt; Method -&gt; ShowS
+</span><span id="line-35"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689646569"><span id="local-6989586621689646571"><span id="local-6989586621689646573"><span class="annot"><span class="annottext">Int -&gt; Method -&gt; ShowS
 [Method] -&gt; ShowS
 Method -&gt; String
 (Int -&gt; Method -&gt; ShowS)
@@ -53,7 +53,7 @@ show :: Method -&gt; String
 $cshow :: Method -&gt; String
 showsPrec :: Int -&gt; Method -&gt; ShowS
 $cshowsPrec :: Int -&gt; Method -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689644316"><span id="local-6989586621689644318"><span class="annot"><span class="annottext">Method -&gt; Method -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646564"><span id="local-6989586621689646566"><span class="annot"><span class="annottext">Method -&gt; Method -&gt; Bool
 (Method -&gt; Method -&gt; Bool)
 -&gt; (Method -&gt; Method -&gt; Bool) -&gt; Eq Method
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -62,12 +62,12 @@ $c/= :: Method -&gt; Method -&gt; Bool
 == :: Method -&gt; Method -&gt; Bool
 $c== :: Method -&gt; Method -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689644313"><span class="annot"><span class="annottext">Method -&gt; ()
+</span><span id="line-36"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689646561"><span class="annot"><span class="annottext">Method -&gt; ()
 (Method -&gt; ()) -&gt; NFData Method
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: Method -&gt; ()
 $crnf :: Method -&gt; ()
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689644309"><span class="annot"><span class="annottext">Eq Method
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646557"><span class="annot"><span class="annottext">Eq Method
 Eq Method
 -&gt; (Accesses -&gt; Method -&gt; Method -&gt; Bool) -&gt; Cacheable Method
 Accesses -&gt; Method -&gt; Method -&gt; Bool
@@ -77,8 +77,8 @@ $cunchanged :: Accesses -&gt; Method -&gt; Method -&gt; Bool
 $cp1Cacheable :: Eq Method
 </span><a href="Hasura.Incremental.Internal.Dependency.html#C%3ACacheable"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689644301"><span id="local-6989586621689644303"><span id="local-6989586621689644305"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-39"></span><span>  </span><span id="local-6989586621689644299"><span class="annot"><span class="annottext">toJSON :: Method -&gt; Value
+</span><span id="line-38"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689646549"><span id="local-6989586621689646551"><span id="local-6989586621689646553"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-39"></span><span>  </span><span id="local-6989586621689646547"><span class="annot"><span class="annottext">toJSON :: Method -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; Value) -&gt; (Method -&gt; Text) -&gt; Method -&gt; Value
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -89,8 +89,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Method -&gt; CI Text
 </span><span class="hs-identifier hs-var">coerce</span></span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689644292"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-42"></span><span>  </span><span id="local-6989586621689644290"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Method
+</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689646540"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621689646538"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser Method
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; (Text -&gt; Parser Method) -&gt; Value -&gt; Parser Method
 forall a. String -&gt; (Text -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withText</span></span><span> </span><span class="annot"><span class="annottext">String
@@ -111,7 +111,7 @@ forall s. FoldCase s =&gt; s -&gt; CI s
 </span><span id="line-46"></span><span>  </span><span class="hs-comment">-- instances, so 'MethodTransformFn' is defined separately from this</span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-comment">-- wrapper.</span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-keyword">newtype</span><span> </span><span id="TransformFn"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-var">TransformFn</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MethodTransformFn_"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#MethodTransformFn_"><span class="hs-identifier hs-var">MethodTransformFn_</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#MethodTransformFn"><span class="hs-identifier hs-type">MethodTransformFn</span></a></span><span>
-</span><span id="line-49"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689644277"><span id="local-6989586621689644279"><span class="annot"><span class="annottext">TransformFn Method -&gt; TransformFn Method -&gt; Bool
+</span><span id="line-49"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689646525"><span id="local-6989586621689646527"><span class="annot"><span class="annottext">TransformFn Method -&gt; TransformFn Method -&gt; Bool
 (TransformFn Method -&gt; TransformFn Method -&gt; Bool)
 -&gt; (TransformFn Method -&gt; TransformFn Method -&gt; Bool)
 -&gt; Eq (TransformFn Method)
@@ -129,7 +129,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep (TransformFn Method) x -&gt; TransformFn Method
 $cfrom :: forall x. TransformFn Method -&gt; Rep (TransformFn Method) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689644269"><span id="local-6989586621689644271"><span id="local-6989586621689644273"><span class="annot"><span class="annottext">Int -&gt; TransformFn Method -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646517"><span id="local-6989586621689646519"><span id="local-6989586621689646521"><span class="annot"><span class="annottext">Int -&gt; TransformFn Method -&gt; ShowS
 [TransformFn Method] -&gt; ShowS
 TransformFn Method -&gt; String
 (Int -&gt; TransformFn Method -&gt; ShowS)
@@ -145,7 +145,7 @@ $cshow :: TransformFn Method -&gt; String
 showsPrec :: Int -&gt; TransformFn Method -&gt; ShowS
 $cshowsPrec :: Int -&gt; TransformFn Method -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-50"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689644266"><span class="annot"><span class="annottext">Eq (TransformFn Method)
+</span><span id="line-50"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689646514"><span class="annot"><span class="annottext">Eq (TransformFn Method)
 Eq (TransformFn Method)
 -&gt; (Accesses -&gt; TransformFn Method -&gt; TransformFn Method -&gt; Bool)
 -&gt; Cacheable (TransformFn Method)
@@ -154,12 +154,12 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; TransformFn Method -&gt; TransformFn Method -&gt; Bool
 $cunchanged :: Accesses -&gt; TransformFn Method -&gt; TransformFn Method -&gt; Bool
 $cp1Cacheable :: Eq (TransformFn Method)
-</span><a href="#local-6989586621689644266"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689644264"><span class="annot"><span class="annottext">TransformFn Method -&gt; ()
+</span><a href="#local-6989586621689646514"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646512"><span class="annot"><span class="annottext">TransformFn Method -&gt; ()
 (TransformFn Method -&gt; ()) -&gt; NFData (TransformFn Method)
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: TransformFn Method -&gt; ()
 $crnf :: TransformFn Method -&gt; ()
-</span><a href="#local-6989586621689644264"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689644260"><span id="local-6989586621689644262"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformFn Method]
+</span><a href="#local-6989586621689646512"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646508"><span id="local-6989586621689646510"><span class="annot"><span class="annottext">Value -&gt; Parser [TransformFn Method]
 Value -&gt; Parser (TransformFn Method)
 (Value -&gt; Parser (TransformFn Method))
 -&gt; (Value -&gt; Parser [TransformFn Method])
@@ -170,7 +170,7 @@ parseJSONList :: Value -&gt; Parser [TransformFn Method]
 $cparseJSONList :: Value -&gt; Parser [TransformFn Method]
 parseJSON :: Value -&gt; Parser (TransformFn Method)
 $cparseJSON :: Value -&gt; Parser (TransformFn Method)
-</span><a href="#local-6989586621689644260"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689644252"><span id="local-6989586621689644254"><span id="local-6989586621689644256"><span id="local-6989586621689644258"><span class="annot"><span class="annottext">[TransformFn Method] -&gt; Value
+</span><a href="#local-6989586621689646508"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646500"><span id="local-6989586621689646502"><span id="local-6989586621689646504"><span id="local-6989586621689646506"><span class="annot"><span class="annottext">[TransformFn Method] -&gt; Value
 [TransformFn Method] -&gt; Encoding
 TransformFn Method -&gt; Value
 TransformFn Method -&gt; Encoding
@@ -193,36 +193,36 @@ toEncoding :: TransformFn Method -&gt; Encoding
 $ctoEncoding :: TransformFn Method -&gt; Encoding
 toJSON :: TransformFn Method -&gt; Value
 $ctoJSON :: TransformFn Method -&gt; Value
-</span><a href="#local-6989586621689644252"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689646500"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span>  </span><span class="hs-comment">-- NOTE: GHC does not let us attach Haddock documentation to typeclass</span><span>
 </span><span id="line-53"></span><span>  </span><span class="hs-comment">-- method implementations, so 'applyMethodTransformFn' is defined</span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-comment">-- separately.</span><span>
-</span><span id="line-55"></span><span>  </span><span id="local-6989586621689644251"><span class="annot"><span class="annottext">transform :: TransformFn Method -&gt; RequestTransformCtx -&gt; Method -&gt; m Method
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#transform"><span class="hs-identifier hs-var hs-var hs-var hs-var">transform</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#MethodTransformFn_"><span class="hs-identifier hs-type">MethodTransformFn_</span></a></span><span> </span><span id="local-6989586621689644249"><span class="annot"><a href="#local-6989586621689644249"><span class="hs-identifier hs-var">fn</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MethodTransformFn -&gt; RequestTransformCtx -&gt; Method -&gt; m Method
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621689646499"><span class="annot"><span class="annottext">transform :: TransformFn Method -&gt; RequestTransformCtx -&gt; Method -&gt; m Method
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#transform"><span class="hs-identifier hs-var hs-var hs-var hs-var">transform</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#MethodTransformFn_"><span class="hs-identifier hs-type">MethodTransformFn_</span></a></span><span> </span><span id="local-6989586621689646497"><span class="annot"><a href="#local-6989586621689646497"><span class="hs-identifier hs-var">fn</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MethodTransformFn -&gt; RequestTransformCtx -&gt; Method -&gt; m Method
 forall (m :: * -&gt; *).
 MonadError TransformErrorBundle m =&gt;
 MethodTransformFn -&gt; RequestTransformCtx -&gt; Method -&gt; m Method
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#applyMethodTransformFn"><span class="hs-identifier hs-var">applyMethodTransformFn</span></a></span><span> </span><span class="annot"><span class="annottext">MethodTransformFn
-</span><a href="#local-6989586621689644249"><span class="hs-identifier hs-var">fn</span></a></span><span>
+</span><a href="#local-6989586621689646497"><span class="hs-identifier hs-var">fn</span></a></span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span>  </span><span class="hs-comment">-- NOTE: GHC does not let us attach Haddock documentation to typeclass</span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-comment">-- method implementations, so 'validateMethodTransformFn' is defined</span><span>
 </span><span id="line-59"></span><span>  </span><span class="hs-comment">-- separately.</span><span>
-</span><span id="line-60"></span><span>  </span><span id="local-6989586621689644247"><span class="annot"><span class="annottext">validate :: TemplatingEngine
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621689646495"><span class="annot"><span class="annottext">validate :: TemplatingEngine
 -&gt; TransformFn Method -&gt; Validation TransformErrorBundle ()
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#validate"><span class="hs-identifier hs-var hs-var hs-var hs-var">validate</span></a></span></span><span> </span><span id="local-6989586621689644245"><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621689644245"><span class="hs-identifier hs-var">engine</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#MethodTransformFn_"><span class="hs-identifier hs-type">MethodTransformFn_</span></a></span><span> </span><span id="local-6989586621689644244"><span class="annot"><a href="#local-6989586621689644244"><span class="hs-identifier hs-var">fn</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#validate"><span class="hs-identifier hs-var hs-var hs-var hs-var">validate</span></a></span></span><span> </span><span id="local-6989586621689646493"><span class="annot"><span class="annottext">TemplatingEngine
+</span><a href="#local-6989586621689646493"><span class="hs-identifier hs-var">engine</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#MethodTransformFn_"><span class="hs-identifier hs-type">MethodTransformFn_</span></a></span><span> </span><span id="local-6989586621689646492"><span class="annot"><a href="#local-6989586621689646492"><span class="hs-identifier hs-var">fn</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
 -&gt; MethodTransformFn -&gt; Validation TransformErrorBundle ()
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#validateMethodTransformFn"><span class="hs-identifier hs-var">validateMethodTransformFn</span></a></span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621689644245"><span class="hs-identifier hs-var">engine</span></a></span><span> </span><span class="annot"><span class="annottext">MethodTransformFn
-</span><a href="#local-6989586621689644244"><span class="hs-identifier hs-var">fn</span></a></span><span>
+</span><a href="#local-6989586621689646493"><span class="hs-identifier hs-var">engine</span></a></span><span> </span><span class="annot"><span class="annottext">MethodTransformFn
+</span><a href="#local-6989586621689646492"><span class="hs-identifier hs-var">fn</span></a></span><span>
 </span><span id="line-61"></span><span>
 </span><span id="line-62"></span><span class="hs-comment">-- | The defunctionalized transformation on 'Method'.</span><span>
-</span><span id="line-63"></span><span id="local-6989586621689644241"><span id="local-6989586621689644242"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="MethodTransformFn"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#MethodTransformFn"><span class="hs-identifier hs-var">MethodTransformFn</span></a></span></span><span>
+</span><span id="line-63"></span><span id="local-6989586621689646489"><span id="local-6989586621689646490"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="MethodTransformFn"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#MethodTransformFn"><span class="hs-identifier hs-var">MethodTransformFn</span></a></span></span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Replace the HTTP existing 'Method' with a new one.</span><span>
 </span><span id="line-65"></span><span>    </span><span id="Replace"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Replace"><span class="hs-identifier hs-var">Replace</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span><span>
-</span><span id="line-66"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689644236"><span id="local-6989586621689644238"><span class="annot"><span class="annottext">MethodTransformFn -&gt; MethodTransformFn -&gt; Bool
+</span><span id="line-66"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689646484"><span id="local-6989586621689646486"><span class="annot"><span class="annottext">MethodTransformFn -&gt; MethodTransformFn -&gt; Bool
 (MethodTransformFn -&gt; MethodTransformFn -&gt; Bool)
 -&gt; (MethodTransformFn -&gt; MethodTransformFn -&gt; Bool)
 -&gt; Eq MethodTransformFn
@@ -240,7 +240,7 @@ forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep MethodTransformFn x -&gt; MethodTransformFn
 $cfrom :: forall x. MethodTransformFn -&gt; Rep MethodTransformFn x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689644228"><span id="local-6989586621689644230"><span id="local-6989586621689644232"><span class="annot"><span class="annottext">Int -&gt; MethodTransformFn -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646476"><span id="local-6989586621689646478"><span id="local-6989586621689646480"><span class="annot"><span class="annottext">Int -&gt; MethodTransformFn -&gt; ShowS
 [MethodTransformFn] -&gt; ShowS
 MethodTransformFn -&gt; String
 (Int -&gt; MethodTransformFn -&gt; ShowS)
@@ -256,7 +256,7 @@ $cshow :: MethodTransformFn -&gt; String
 showsPrec :: Int -&gt; MethodTransformFn -&gt; ShowS
 $cshowsPrec :: Int -&gt; MethodTransformFn -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-67"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689644225"><span class="annot"><span class="annottext">Eq MethodTransformFn
+</span><span id="line-67"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689646473"><span class="annot"><span class="annottext">Eq MethodTransformFn
 Eq MethodTransformFn
 -&gt; (Accesses -&gt; MethodTransformFn -&gt; MethodTransformFn -&gt; Bool)
 -&gt; Cacheable MethodTransformFn
@@ -265,12 +265,12 @@ forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; MethodTransformFn -&gt; MethodTransformFn -&gt; Bool
 $cunchanged :: Accesses -&gt; MethodTransformFn -&gt; MethodTransformFn -&gt; Bool
 $cp1Cacheable :: Eq MethodTransformFn
-</span><a href="#local-6989586621689644225"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689644223"><span class="annot"><span class="annottext">MethodTransformFn -&gt; ()
+</span><a href="#local-6989586621689646473"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646471"><span class="annot"><span class="annottext">MethodTransformFn -&gt; ()
 (MethodTransformFn -&gt; ()) -&gt; NFData MethodTransformFn
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: MethodTransformFn -&gt; ()
 $crnf :: MethodTransformFn -&gt; ()
-</span><a href="#local-6989586621689644223"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689644219"><span id="local-6989586621689644221"><span class="annot"><span class="annottext">Value -&gt; Parser [MethodTransformFn]
+</span><a href="#local-6989586621689646471"><span class="hs-identifier hs-var hs-var hs-var hs-var">NFData</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646467"><span id="local-6989586621689646469"><span class="annot"><span class="annottext">Value -&gt; Parser [MethodTransformFn]
 Value -&gt; Parser MethodTransformFn
 (Value -&gt; Parser MethodTransformFn)
 -&gt; (Value -&gt; Parser [MethodTransformFn])
@@ -281,7 +281,7 @@ parseJSONList :: Value -&gt; Parser [MethodTransformFn]
 $cparseJSONList :: Value -&gt; Parser [MethodTransformFn]
 parseJSON :: Value -&gt; Parser MethodTransformFn
 $cparseJSON :: Value -&gt; Parser MethodTransformFn
-</span><a href="#local-6989586621689644219"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689644211"><span id="local-6989586621689644213"><span id="local-6989586621689644215"><span id="local-6989586621689644217"><span class="annot"><span class="annottext">[MethodTransformFn] -&gt; Value
+</span><a href="#local-6989586621689646467"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689646459"><span id="local-6989586621689646461"><span id="local-6989586621689646463"><span id="local-6989586621689646465"><span class="annot"><span class="annottext">[MethodTransformFn] -&gt; Value
 [MethodTransformFn] -&gt; Encoding
 MethodTransformFn -&gt; Value
 MethodTransformFn -&gt; Encoding
@@ -304,7 +304,7 @@ toEncoding :: MethodTransformFn -&gt; Encoding
 $ctoEncoding :: MethodTransformFn -&gt; Encoding
 toJSON :: MethodTransformFn -&gt; Value
 $ctoJSON :: MethodTransformFn -&gt; Value
-</span><a href="#local-6989586621689644211"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689646459"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span class="hs-comment">-- | Provide an implementation for the transformations defined by</span><span>
 </span><span id="line-70"></span><span class="hs-comment">-- 'MethodTransformFn'.</span><span>
@@ -312,23 +312,23 @@ $ctoJSON :: MethodTransformFn -&gt; Value
 </span><span id="line-72"></span><span class="hs-comment">-- If one views 'MethodTransformFn' as an interface describing HTTP method</span><span>
 </span><span id="line-73"></span><span class="hs-comment">-- transformations, this can be seen as an implementation of these</span><span>
 </span><span id="line-74"></span><span class="hs-comment">-- transformations as normal Haskell functions.</span><span>
-</span><span id="line-75"></span><span id="local-6989586621689644336"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#applyMethodTransformFn"><span class="hs-identifier hs-type">applyMethodTransformFn</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-76"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689644336"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-75"></span><span id="local-6989586621689646584"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#applyMethodTransformFn"><span class="hs-identifier hs-type">applyMethodTransformFn</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-76"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689646584"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-77"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#MethodTransformFn"><span class="hs-identifier hs-type">MethodTransformFn</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-78"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#RequestTransformCtx"><span class="hs-identifier hs-type">RequestTransformCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-79"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-80"></span><span>  </span><span class="annot"><a href="#local-6989586621689644336"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span></span><span>
+</span><span id="line-80"></span><span>  </span><span class="annot"><a href="#local-6989586621689646584"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Method"><span class="hs-identifier hs-type">Method</span></a></span></span><span>
 </span><span id="line-81"></span><span id="applyMethodTransformFn"><span class="annot"><span class="annottext">applyMethodTransformFn :: MethodTransformFn -&gt; RequestTransformCtx -&gt; Method -&gt; m Method
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#applyMethodTransformFn"><span class="hs-identifier hs-var hs-var">applyMethodTransformFn</span></a></span></span><span> </span><span id="local-6989586621689644210"><span class="annot"><span class="annottext">MethodTransformFn
-</span><a href="#local-6989586621689644210"><span class="hs-identifier hs-var">fn</span></a></span></span><span> </span><span id="local-6989586621689644209"><span class="annot"><span class="annottext">RequestTransformCtx
-</span><a href="#local-6989586621689644209"><span class="hs-identifier hs-var">_context</span></a></span></span><span> </span><span id="local-6989586621689644208"><span class="annot"><span class="annottext">Method
-</span><a href="#local-6989586621689644208"><span class="hs-identifier hs-var">_oldMethod</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MethodTransformFn
-</span><a href="#local-6989586621689644210"><span class="hs-identifier hs-var">fn</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Replace"><span class="hs-identifier hs-type">Replace</span></a></span><span> </span><span id="local-6989586621689644207"><span class="annot"><span class="annottext">Method
-</span><a href="#local-6989586621689644207"><span class="hs-identifier hs-var">newMethod</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Method -&gt; m Method
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#applyMethodTransformFn"><span class="hs-identifier hs-var hs-var">applyMethodTransformFn</span></a></span></span><span> </span><span id="local-6989586621689646458"><span class="annot"><span class="annottext">MethodTransformFn
+</span><a href="#local-6989586621689646458"><span class="hs-identifier hs-var">fn</span></a></span></span><span> </span><span id="local-6989586621689646457"><span class="annot"><span class="annottext">RequestTransformCtx
+</span><a href="#local-6989586621689646457"><span class="hs-identifier hs-var">_context</span></a></span></span><span> </span><span id="local-6989586621689646456"><span class="annot"><span class="annottext">Method
+</span><a href="#local-6989586621689646456"><span class="hs-identifier hs-var">_oldMethod</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MethodTransformFn
+</span><a href="#local-6989586621689646458"><span class="hs-identifier hs-var">fn</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-82"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Replace"><span class="hs-identifier hs-type">Replace</span></a></span><span> </span><span id="local-6989586621689646455"><span class="annot"><span class="annottext">Method
+</span><a href="#local-6989586621689646455"><span class="hs-identifier hs-var">newMethod</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Method -&gt; m Method
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Method
-</span><a href="#local-6989586621689644207"><span class="hs-identifier hs-var">newMethod</span></a></span><span>
+</span><a href="#local-6989586621689646455"><span class="hs-identifier hs-var">newMethod</span></a></span><span>
 </span><span id="line-83"></span><span>
 </span><span id="line-84"></span><span class="hs-comment">-- | Validate that the provided 'MethodTransformFn' is correct in the context</span><span>
 </span><span id="line-85"></span><span class="hs-comment">-- of a particular 'TemplatingEngine'.</span><span>
@@ -344,10 +344,10 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span id="line-95"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Validation</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-96"></span><span id="validateMethodTransformFn"><span class="annot"><span class="annottext">validateMethodTransformFn :: TemplatingEngine
 -&gt; MethodTransformFn -&gt; Validation TransformErrorBundle ()
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#validateMethodTransformFn"><span class="hs-identifier hs-var hs-var">validateMethodTransformFn</span></a></span></span><span> </span><span id="local-6989586621689644206"><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621689644206"><span class="hs-identifier hs-var">_engine</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-97"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Replace"><span class="hs-identifier hs-type">Replace</span></a></span><span> </span><span id="local-6989586621689644205"><span class="annot"><span class="annottext">Method
-</span><a href="#local-6989586621689644205"><span class="hs-identifier hs-var">_method</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; Validation TransformErrorBundle ()
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#validateMethodTransformFn"><span class="hs-identifier hs-var hs-var">validateMethodTransformFn</span></a></span></span><span> </span><span id="local-6989586621689646454"><span class="annot"><span class="annottext">TemplatingEngine
+</span><a href="#local-6989586621689646454"><span class="hs-identifier hs-var">_engine</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-97"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Method.html#Replace"><span class="hs-identifier hs-type">Replace</span></a></span><span> </span><span id="local-6989586621689646453"><span class="annot"><span class="annottext">Method
+</span><a href="#local-6989586621689646453"><span class="hs-identifier hs-var">_method</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">() -&gt; Validation TransformErrorBundle ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-98"></span></pre></body></html>
