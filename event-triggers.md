@@ -1,4 +1,4 @@
-# Event triggers on Postgres
+# Event Triggers on Postgres
 
 Trigger webhooks on database events using Hasura GraphQL Engine's event triggers.
 
@@ -61,7 +61,7 @@ Serverless/cloud-function platforms covered by boilerplates:
 
 ![Event triggers architecture](assets/event-triggers-arch.png)
 
-## Demos & Tutorials: Building reactive & async apps/features
+## Demos & tutorials: building reactive & async apps/features
 
 ### Notifications
 
