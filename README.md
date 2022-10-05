@@ -157,7 +157,7 @@ Check out all the example applications in the [community/sample-apps](community/
 * [GraphQL on GitLab integrated with GitLab auth](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 mins*)
 * [Dashboard for 10million rides with geo-location (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
 
-## Support & Troubleshooting
+## Support & troubleshooting
 
 The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
 
