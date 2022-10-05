@@ -232,7 +232,7 @@ buildForeignKeySet (catMaybes -> foreignKeys) =
       foreignKeys <&> \(API.ForeignKeys constraints) ->
         constraints & HashMap.foldMapWithKey @[RQL.T.T.ForeignKeyMetadata 'DataConnector]
           \constraintName API.Constraint {..} -> maybeToList do
-            let columnMapAssocList = HashMap.foldrWithKey' (\k v acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] _cColumnMapping
+            let columnMapAssocList = HashMap.foldrWithKey' (\(API.ColumnName k) (API.ColumnName v) acc -> (DC.ColumnName k, DC.ColumnName v) : acc) [] _cColumnMapping
             columnMapping <- NEHashMap.fromList columnMapAssocList
             let foreignKey =
                   RQL.T.T.ForeignKey

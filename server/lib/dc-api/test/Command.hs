@@ -3,6 +3,7 @@
 module Command
   ( Command (..),
     TestConfig (..),
+    NameCasing (..),
     TestOptions (..),
     AgentCapabilities (..),
     parseCommandLine,
@@ -32,7 +33,15 @@ data Command
   | ExportOpenAPISpec
 
 data TestConfig = TestConfig
-  {_tcTableNamePrefix :: [Text]}
+  { _tcTableNamePrefix :: [Text],
+    _tcTableNameCasing :: NameCasing,
+    _tcColumnNameCasing :: NameCasing
+  }
+
+data NameCasing
+  = PascalCase
+  | Lowercase
+  deriving (Eq, Show, Read)
 
 data TestOptions = TestOptions
   { _toAgentBaseUrl :: BaseUrl,
@@ -108,6 +117,20 @@ testConfigParser =
           <> metavar "PREFIX"
           <> help "The prefix to use for all table names, as a JSON array of strings"
           <> value []
+      )
+    <*> option
+      auto
+      ( long "table-name-casing"
+          <> metavar "CASING"
+          <> help "The casing style to use for table names (PascalCase or Lowercase). Default: PascalCase"
+          <> value PascalCase
+      )
+    <*> option
+      auto
+      ( long "column-name-casing"
+          <> metavar "CASING"
+          <> help "The casing style to use for column names (PascalCase or Lowercase). Default: PascalCase"
+          <> value PascalCase
       )
 
 testOptionsParser :: Parser TestOptions

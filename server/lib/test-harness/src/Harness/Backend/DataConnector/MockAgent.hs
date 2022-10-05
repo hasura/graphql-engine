@@ -121,7 +121,7 @@ schema =
               API._tiForeignKeys =
                 Just $
                   API.ForeignKeys $
-                    HashMap.singleton (API.ConstraintName "Artist") (API.Constraint (mkTableName "Artist") (HashMap.singleton "ArtistId" "ArtistId"))
+                    HashMap.singleton (API.ConstraintName "Artist") (API.Constraint (mkTableName "Artist") (HashMap.singleton (API.ColumnName "ArtistId") (API.ColumnName "ArtistId")))
             },
           API.TableInfo
             { API._tiName = mkTableName "Customer",
@@ -210,7 +210,7 @@ schema =
               API._tiForeignKeys =
                 Just $
                   API.ForeignKeys $
-                    HashMap.singleton (API.ConstraintName "CustomerSupportRep") (API.Constraint (mkTableName "Employee") (HashMap.singleton "SupportRepId" "EmployeeId"))
+                    HashMap.singleton (API.ConstraintName "CustomerSupportRep") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "SupportRepId") (API.ColumnName "EmployeeId")))
             },
           API.TableInfo
             { API._tiName = mkTableName "Employee",
@@ -311,7 +311,7 @@ schema =
               API._tiForeignKeys =
                 Just $
                   API.ForeignKeys $
-                    HashMap.singleton (API.ConstraintName "EmployeeReportsTo") (API.Constraint (mkTableName "Employee") (HashMap.singleton "ReportsTo" "EmployeeId"))
+                    HashMap.singleton (API.ConstraintName "EmployeeReportsTo") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "ReportsTo") (API.ColumnName "EmployeeId")))
             },
           API.TableInfo
             { API._tiName = mkTableName "Genre",
@@ -397,7 +397,7 @@ schema =
                 Just $
                   API.ForeignKeys $
                     HashMap.singleton (API.ConstraintName "InvoiceCustomer") $
-                      API.Constraint (mkTableName "Customer") (HashMap.singleton "CustomerId" "CustomerId")
+                      API.Constraint (mkTableName "Customer") (HashMap.singleton (API.ColumnName "CustomerId") (API.ColumnName "CustomerId"))
             },
           API.TableInfo
             { API._tiName = mkTableName "InvoiceLine",
@@ -439,8 +439,8 @@ schema =
                 Just $
                   API.ForeignKeys $
                     HashMap.fromList
-                      [ (API.ConstraintName "Invoice", API.Constraint (mkTableName "Invoice") (HashMap.singleton "InvoiceId" "InvoiceId")),
-                        (API.ConstraintName "Track", API.Constraint (mkTableName "Track") (HashMap.singleton "TrackId" "TrackId"))
+                      [ (API.ConstraintName "Invoice", API.Constraint (mkTableName "Invoice") (HashMap.singleton (API.ColumnName "InvoiceId") (API.ColumnName "InvoiceId"))),
+                        (API.ConstraintName "Track", API.Constraint (mkTableName "Track") (HashMap.singleton (API.ColumnName "TrackId") (API.ColumnName "TrackId")))
                       ]
             },
           API.TableInfo
@@ -527,9 +527,9 @@ schema =
                 Just $
                   API.ForeignKeys $
                     HashMap.fromList
-                      [ (API.ConstraintName "Album", API.Constraint (mkTableName "Album") (HashMap.singleton "AlbumId" "AlbumId")),
-                        (API.ConstraintName "Genre", API.Constraint (mkTableName "Genre") (HashMap.singleton "GenreId" "GenreId")),
-                        (API.ConstraintName "MediaType", API.Constraint (mkTableName "MediaType") (HashMap.singleton "MediaTypeId" "MediaTypeId"))
+                      [ (API.ConstraintName "Album", API.Constraint (mkTableName "Album") (HashMap.singleton (API.ColumnName "AlbumId") (API.ColumnName "AlbumId"))),
+                        (API.ConstraintName "Genre", API.Constraint (mkTableName "Genre") (HashMap.singleton (API.ColumnName "GenreId") (API.ColumnName "GenreId"))),
+                        (API.ConstraintName "MediaType", API.Constraint (mkTableName "MediaType") (HashMap.singleton (API.ColumnName "MediaTypeId") (API.ColumnName "MediaTypeId")))
                       ]
             }
         ]

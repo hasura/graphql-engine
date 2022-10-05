@@ -49,7 +49,7 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
     _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
   it "perform an array relationship query by joining albums to artists with pagination of albums" $ do
-    let albumsOrdering = OrderBy mempty $ NonEmpty.fromList [OrderByElement [] (OrderByColumn $ ColumnName "AlbumId") Ascending]
+    let albumsOrdering = OrderBy mempty $ NonEmpty.fromList [_tdOrderByColumn [] "AlbumId" Ascending]
     let query = artistsWithAlbumsQuery (qOffset ?~ 1 >>> qLimit ?~ 2 >>> qOrderBy ?~ albumsOrdering)
     receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
 
@@ -76,8 +76,8 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
               Exists (RelatedTable _tdSupportRepRelationshipName) $
                 ApplyBinaryComparisonOperator
                   Equal
-                  (Data.currentComparisonColumn "Country")
-                  (AnotherColumn (Data.queryComparisonColumn "Country"))
+                  (_tdCurrentComparisonColumn "Country")
+                  (AnotherColumn (_tdQueryComparisonColumn "Country"))
         let query = customersWithSupportRepQuery id & qrQuery . qWhere ?~ where'
         receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> (api // _query) sourceName config query
 
@@ -104,8 +104,8 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
               Exists (RelatedTable _tdSupportRepForCustomersRelationshipName) $
                 ApplyBinaryComparisonOperator
                   Equal
-                  (Data.currentComparisonColumn "Country")
-                  (AnotherColumn (Data.queryComparisonColumn "Country"))
+                  (_tdCurrentComparisonColumn "Country")
+                  (AnotherColumn (_tdQueryComparisonColumn "Country"))
         let query = employeesWithCustomersQuery id & qrQuery . qWhere ?~ where'
         receivedEmployees <- Data.sortResponseRowsBy "EmployeeId" <$> (api // _query) sourceName config query
 
@@ -135,17 +135,17 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
                 And
                   [ ( ApplyBinaryComparisonOperator
                         GreaterThan
-                        (Data.currentComparisonColumn "FirstName")
-                        (AnotherColumn (Data.currentComparisonColumn "LastName"))
+                        (_tdCurrentComparisonColumn "FirstName")
+                        (AnotherColumn (_tdCurrentComparisonColumn "LastName"))
                     ),
-                    (Not (ApplyUnaryComparisonOperator IsNull (Data.currentComparisonColumn "EmployeeId")))
+                    (Not (ApplyUnaryComparisonOperator IsNull (_tdCurrentComparisonColumn "EmployeeId")))
                   ]
 
         let employeesWhere =
               ApplyBinaryComparisonOperator
                 GreaterThan
-                (Data.currentComparisonColumn "FirstName")
-                (AnotherColumn (Data.currentComparisonColumn "LastName"))
+                (_tdCurrentComparisonColumn "FirstName")
+                (AnotherColumn (_tdCurrentComparisonColumn "LastName"))
 
         let query = customersWithSupportRepQuery (\q -> q & qWhere ?~ employeesWhere) & qrQuery . qWhere ?~ customersWhere
         receivedCustomers <- Data.sortResponseRowsBy "CustomerId" <$> (api // _query) sourceName config query
@@ -173,8 +173,8 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
       let artistsSubquery = modifySubquery artistsQuery
           fields =
             Data.mkFieldsMap
-              [ ("AlbumId", Data.columnField "AlbumId"),
-                ("Title", Data.columnField "Title"),
+              [ ("AlbumId", _tdColumnField "AlbumId"),
+                ("Title", _tdColumnField "Title"),
                 ("Artist", RelField $ RelationshipField _tdArtistRelationshipName artistsSubquery)
               ]
           query = albumsQuery & qFields ?~ fields
@@ -182,13 +182,13 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
 
     artistsWithAlbumsQuery :: (Query -> Query) -> QueryRequest
     artistsWithAlbumsQuery modifySubquery =
-      let albumFields = Data.mkFieldsMap [("AlbumId", Data.columnField "AlbumId"), ("Title", Data.columnField "Title")]
-          albumsSort = OrderBy mempty $ Data.orderByColumn [] "AlbumId" Ascending :| []
+      let albumFields = Data.mkFieldsMap [("AlbumId", _tdColumnField "AlbumId"), ("Title", _tdColumnField "Title")]
+          albumsSort = OrderBy mempty $ _tdOrderByColumn [] "AlbumId" Ascending :| []
           albumsSubquery = albumsQuery & qFields ?~ albumFields & qOrderBy ?~ albumsSort & modifySubquery
           fields =
             Data.mkFieldsMap
-              [ ("ArtistId", Data.columnField "ArtistId"),
-                ("Name", Data.columnField "Name"),
+              [ ("ArtistId", _tdColumnField "ArtistId"),
+                ("Name", _tdColumnField "Name"),
                 ("Albums", RelField $ RelationshipField _tdAlbumsRelationshipName albumsSubquery)
               ]
           query = artistsQuery & qFields ?~ fields
@@ -196,7 +196,7 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
 
     employeesWithCustomersQuery :: (Query -> Query) -> QueryRequest
     employeesWithCustomersQuery modifySubquery =
-      let customersSort = OrderBy mempty $ Data.orderByColumn [] "CustomerId" Ascending :| []
+      let customersSort = OrderBy mempty $ _tdOrderByColumn [] "CustomerId" Ascending :| []
           customersSubquery = customersQuery & qOrderBy ?~ customersSort & modifySubquery
           fields =
             Data.queryFields employeesQuery
@@ -219,23 +219,23 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
 
     artistsQuery :: Query
     artistsQuery =
-      let fields = Data.mkFieldsMap [("ArtistId", Data.columnField "ArtistId"), ("Name", Data.columnField "Name")]
+      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId"), ("Name", _tdColumnField "Name")]
        in Data.emptyQuery & qFields ?~ fields
 
     albumsQuery :: Query
     albumsQuery =
-      let fields = Data.mkFieldsMap [("AlbumId", Data.columnField "AlbumId"), ("ArtistId", Data.columnField "ArtistId"), ("Title", Data.columnField "Title")]
+      let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField "AlbumId"), ("ArtistId", _tdColumnField "ArtistId"), ("Title", _tdColumnField "Title")]
        in Data.emptyQuery & qFields ?~ fields
 
     customersQuery :: Query
     customersQuery =
       let fields =
             Data.mkFieldsMap
-              [ ("CustomerId", Data.columnField "CustomerId"),
-                ("FirstName", Data.columnField "FirstName"),
-                ("LastName", Data.columnField "LastName"),
-                ("Country", Data.columnField "Country"),
-                ("SupportRepId", Data.columnField "SupportRepId")
+              [ ("CustomerId", _tdColumnField "CustomerId"),
+                ("FirstName", _tdColumnField "FirstName"),
+                ("LastName", _tdColumnField "LastName"),
+                ("Country", _tdColumnField "Country"),
+                ("SupportRepId", _tdColumnField "SupportRepId")
               ]
        in Data.emptyQuery & qFields ?~ fields
 
@@ -243,10 +243,10 @@ spec TestData {..} api sourceName config subqueryComparisonCapabilities = descri
     employeesQuery =
       let fields =
             Data.mkFieldsMap
-              [ ("EmployeeId", Data.columnField "EmployeeId"),
-                ("FirstName", Data.columnField "FirstName"),
-                ("LastName", Data.columnField "LastName"),
-                ("Country", Data.columnField "Country")
+              [ ("EmployeeId", _tdColumnField "EmployeeId"),
+                ("FirstName", _tdColumnField "FirstName"),
+                ("LastName", _tdColumnField "LastName"),
+                ("Country", _tdColumnField "Country")
               ]
        in Data.emptyQuery & qFields ?~ fields
 

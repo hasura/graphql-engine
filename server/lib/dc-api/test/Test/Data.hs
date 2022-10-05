@@ -23,17 +23,14 @@ module Test.Data
     _ColumnFieldNumber,
     _ColumnFieldString,
     _ColumnFieldBoolean,
-    columnField,
-    queryComparisonColumn,
-    currentComparisonColumn,
     orderByColumn,
   )
 where
 
 import Codec.Compression.GZip qualified as GZip
-import Command (TestConfig (..))
+import Command (NameCasing (..), TestConfig (..))
 import Control.Arrow (first, (>>>))
-import Control.Lens (Index, IxValue, Ixed, Traversal', ix, (%~), (&), (^.), (^..), (^?))
+import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?), _Just)
 import Data.Aeson (eitherDecodeStrict)
 import Data.Aeson qualified as J
 import Data.Aeson.Lens (_Bool, _Number, _String)
@@ -314,61 +311,98 @@ data TestData = TestData
     -- = Genres table
     _tdGenresTableName :: API.TableName,
     _tdGenresRows :: [HashMap API.FieldName API.FieldValue],
-    _tdGenresTableRelationships :: API.TableRelationships
+    _tdGenresTableRelationships :: API.TableRelationships,
+    -- = Utility functions
+    _tdColumnName :: Text -> API.ColumnName,
+    _tdColumnField :: Text -> API.Field,
+    _tdQueryComparisonColumn :: Text -> API.ComparisonColumn,
+    _tdCurrentComparisonColumn :: Text -> API.ComparisonColumn,
+    _tdOrderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
   }
 
 mkTestData :: TestConfig -> TestData
 mkTestData TestConfig {..} =
   TestData
-    { _tdSchemaTables = (API.tiName %~ applyTableNamePrefix _tcTableNamePrefix) <$> schemaTables,
-      _tdArtistsTableName = applyTableNamePrefix _tcTableNamePrefix artistsTableName,
+    { _tdSchemaTables = formatTableInfo <$> schemaTables,
+      _tdArtistsTableName = formatTableName artistsTableName,
       _tdArtistsRows = artistsRows,
       _tdArtistsRowsById = artistsRowsById,
-      _tdArtistsTableRelationships = prefixTableRelationships artistsTableRelationships,
+      _tdArtistsTableRelationships = formatTableRelationships artistsTableRelationships,
       _tdAlbumsRelationshipName = albumsRelationshipName,
-      _tdAlbumsTableName = applyTableNamePrefix _tcTableNamePrefix albumsTableName,
+      _tdAlbumsTableName = formatTableName albumsTableName,
       _tdAlbumsRows = albumsRows,
       _tdAlbumsRowsById = albumsRowsById,
-      _tdAlbumsTableRelationships = prefixTableRelationships albumsTableRelationships,
+      _tdAlbumsTableRelationships = formatTableRelationships albumsTableRelationships,
       _tdArtistRelationshipName = artistRelationshipName,
       _tdTracksRelationshipName = tracksRelationshipName,
-      _tdCustomersTableName = applyTableNamePrefix _tcTableNamePrefix customersTableName,
+      _tdCustomersTableName = formatTableName customersTableName,
       _tdCustomersRows = customersRows,
-      _tdCustomersTableRelationships = prefixTableRelationships customersTableRelationships,
+      _tdCustomersTableRelationships = formatTableRelationships customersTableRelationships,
       _tdSupportRepRelationshipName = supportRepRelationshipName,
-      _tdEmployeesTableName = applyTableNamePrefix _tcTableNamePrefix employeesTableName,
+      _tdEmployeesTableName = formatTableName employeesTableName,
       _tdEmployeesRows = employeesRows,
       _tdEmployeesRowsById = employeesRowsById,
-      _tdEmployeesTableRelationships = prefixTableRelationships employeesTableRelationships,
+      _tdEmployeesTableRelationships = formatTableRelationships employeesTableRelationships,
       _tdSupportRepForCustomersRelationshipName = supportRepForCustomersRelationshipName,
-      _tdInvoicesTableName = applyTableNamePrefix _tcTableNamePrefix invoicesTableName,
+      _tdInvoicesTableName = formatTableName invoicesTableName,
       _tdInvoicesRows = invoicesRows,
-      _tdInvoiceLinesTableName = applyTableNamePrefix _tcTableNamePrefix invoiceLinesTableName,
+      _tdInvoiceLinesTableName = formatTableName invoiceLinesTableName,
       _tdInvoiceLinesRows = invoiceLinesRows,
-      _tdMediaTypesTableName = applyTableNamePrefix _tcTableNamePrefix mediaTypesTableName,
+      _tdMediaTypesTableName = formatTableName mediaTypesTableName,
       _tdMediaTypesRows = mediaTypesRows,
-      _tdTracksTableName = applyTableNamePrefix _tcTableNamePrefix tracksTableName,
+      _tdTracksTableName = formatTableName tracksTableName,
       _tdTracksRows = tracksRows,
-      _tdTracksTableRelationships = prefixTableRelationships tracksTableRelationships,
+      _tdTracksTableRelationships = formatTableRelationships tracksTableRelationships,
       _tdInvoiceLinesRelationshipName = invoiceLinesRelationshipName,
       _tdMediaTypeRelationshipName = mediaTypeRelationshipName,
       _tdAlbumRelationshipName = albumRelationshipName,
       _tdGenreRelationshipName = genreRelationshipName,
-      _tdGenresTableName = applyTableNamePrefix _tcTableNamePrefix genresTableName,
+      _tdGenresTableName = formatTableName genresTableName,
       _tdGenresRows = genresRows,
-      _tdGenresTableRelationships = prefixTableRelationships genresTableRelationships
+      _tdGenresTableRelationships = formatTableRelationships genresTableRelationships,
+      _tdColumnName = API.ColumnName . applyNameCasing _tcColumnNameCasing,
+      _tdColumnField = columnField . applyNameCasing _tcColumnNameCasing,
+      _tdQueryComparisonColumn = queryComparisonColumn . applyNameCasing _tcColumnNameCasing,
+      _tdCurrentComparisonColumn = currentComparisonColumn . applyNameCasing _tcColumnNameCasing,
+      _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (applyNameCasing _tcColumnNameCasing name)
     }
   where
+    formatTableName :: API.TableName -> API.TableName
+    formatTableName = applyTableNamePrefix _tcTableNamePrefix . API.TableName . fmap (applyNameCasing _tcTableNameCasing) . API.unTableName
+
+    formatTableRelationships :: API.TableRelationships -> API.TableRelationships
+    formatTableRelationships =
+      prefixTableRelationships
+        >>> API.trRelationships . traverse . API.rColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
+
+    formatColumnName :: API.ColumnName -> API.ColumnName
+    formatColumnName = API.ColumnName . applyNameCasing _tcColumnNameCasing . API.unColumnName
+
     prefixTableRelationships :: API.TableRelationships -> API.TableRelationships
     prefixTableRelationships =
-      API.trSourceTable %~ applyTableNamePrefix _tcTableNamePrefix
-        >>> API.trRelationships . traverse . API.rTargetTable %~ applyTableNamePrefix _tcTableNamePrefix
+      API.trSourceTable %~ formatTableName
+        >>> API.trRelationships . traverse . API.rTargetTable %~ formatTableName
+
+    formatTableInfo :: API.TableInfo -> API.TableInfo
+    formatTableInfo =
+      API.tiName %~ formatTableName
+        >>> API.tiColumns . traverse . API.ciName %~ formatColumnName
+        >>> API.tiPrimaryKey . _Just . traverse %~ formatColumnName
+        >>> API.tiForeignKeys . _Just . lens API.unConstraints (const API.ForeignKeys) . traverse
+          %~ ( API.cForeignTable %~ formatTableName
+                 >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
+             )
 
 applyTableNamePrefix :: [Text] -> API.TableName -> API.TableName
 applyTableNamePrefix prefix tableName@(API.TableName rawTableName) =
   case NonEmpty.nonEmpty prefix of
     Just prefix' -> API.TableName (prefix' <> rawTableName)
     Nothing -> tableName
+
+applyNameCasing :: NameCasing -> Text -> Text
+applyNameCasing casing text = case casing of
+  PascalCase -> text
+  Lowercase -> Text.toLower text
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
