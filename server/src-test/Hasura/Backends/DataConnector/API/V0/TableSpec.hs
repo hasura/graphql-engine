@@ -51,7 +51,7 @@ spec = do
             (TableName ["my_table_name"])
             [ColumnInfo (ColumnName "id") StringTy False Nothing]
             (Just [ColumnName "id"])
-            (Just $ ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton "ArtistId" "ArtistId")))
+            (Just $ ForeignKeys $ HashMap.singleton (ConstraintName "Artist") (Constraint (TableName ["artist_table"]) (HashMap.singleton (ColumnName "ArtistId") (ColumnName "ArtistId"))))
             (Just "my description")
         )
         [aesonQQ|
@@ -82,7 +82,7 @@ genConstraintName = ConstraintName <$> genArbitraryAlphaNumText defaultRange
 
 genConstraint :: MonadGen m => m Constraint
 genConstraint =
-  let mapping = genHashMap (genArbitraryAlphaNumText defaultRange) (genArbitraryAlphaNumText defaultRange) defaultRange
+  let mapping = genHashMap genColumnName genColumnName defaultRange
    in Constraint <$> genTableName <*> mapping
 
 -- | Note: this generator is intended for serialization tests only and does not ensure valid Foreign Key Constraints.

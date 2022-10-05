@@ -13,6 +13,8 @@ module Hasura.Backends.DataConnector.API.V0.Table
     ForeignKeys (..),
     ConstraintName (..),
     Constraint (..),
+    cForeignTable,
+    cColumnMapping,
   )
 where
 
@@ -90,7 +92,7 @@ newtype ConstraintName = ConstraintName {unConstraintName :: Text}
 
 data Constraint = Constraint
   { _cForeignTable :: TableName,
-    _cColumnMapping :: HashMap Text Text
+    _cColumnMapping :: HashMap API.V0.ColumnName API.V0.ColumnName
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
@@ -104,3 +106,4 @@ instance HasCodec Constraint where
         <*> requiredField "column_mapping" "The columns on which you want want to define the foreign key." .= _cColumnMapping
 
 $(makeLenses ''TableInfo)
+$(makeLenses ''Constraint)
