@@ -77,31 +77,31 @@ executable api-tests
     Test.DisableRootFields.SelectPermission.EnableAggSpec
     Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.DisableRootFields.SelectPermission.EnablePKSpec
-    Test.EventTrigger.PG.EventTriggersRecreationSpec
-    Test.EventTrigger.PG.EventTriggersRunSQLSpec
-    Test.EventTrigger.PG.EventTriggersUntrackTableCleanupSpec
-    Test.EventTrigger.PG.EventTriggersUniqueNameSpec
-    Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec
-    Test.EventTrigger.PG.EventTriggersReplaceMetadataCleanupSpec
+    Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec
     Test.EventTrigger.MSSQL.EventTriggerDropSourceCleanupSpec
     Test.EventTrigger.MSSQL.EventTriggersUntrackTableCleanupSpec
-    Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec
+    Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec
+    Test.EventTrigger.PG.EventTriggersRecreationSpec
+    Test.EventTrigger.PG.EventTriggersReplaceMetadataCleanupSpec
+    Test.EventTrigger.PG.EventTriggersRunSQLSpec
+    Test.EventTrigger.PG.EventTriggersUniqueNameSpec
+    Test.EventTrigger.PG.EventTriggersUntrackTableCleanupSpec
     Test.HelloWorldSpec
     Test.LongIdentifiersSpec
     Test.Metadata.InconsistentSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
-    Test.Postgres.DataValidation.PermissionSpec
     Test.Postgres.BackendOnlyPermissionsSpec
+    Test.Postgres.DataValidation.PermissionSpec
     Test.Postgres.DefaultValuesSpec
+    Test.Postgres.JsonbSpec
     Test.Postgres.TimestampSpec
     Test.Postgres.UniqueConstraintsSpec
-    Test.Postgres.JsonbSpec
+    Test.Queries.AggregationPredicatesSpec
+    Test.Queries.AggregationSpec
     Test.Queries.Directives.IncludeAndSkipSpec
     Test.Queries.Directives.IncludeSpec
     Test.Queries.Directives.SkipSpec
     Test.Queries.DirectivesSpec
-    Test.Queries.AggregationSpec
-    Test.Queries.AggregationPredicatesSpec
     Test.Queries.FilterSearchSpec
     Test.Queries.MultiColumnObjectRelationshipsSpec
     Test.Queries.NestedObjectSpec
@@ -128,21 +128,18 @@ executable api-tests
     Test.RemoteRelationship.XToDBArrayRelationshipSpec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
-    Test.Schema.DataValidation.Permissions.InsertSpec
-    Test.Schema.DataValidation.Permissions.SelectSpec
-    Test.Schema.CustomFieldNames.MutationSpec
-    Test.Schema.CustomFieldNames.QuerySpec
     Test.SQLServer.DefaultValuesSpec
-    Test.Schema.DataValidation.Permissions.InsertSpec
-    Test.Schema.DataValidation.Permissions.SelectSpec
     Test.SQLServer.InsertVarcharColumnSpec
     Test.SQLServer.VarcharLiteralsSpec
     Test.Schema.ConflictsSpec
+    Test.Schema.CustomFieldNames.MutationSpec
+    Test.Schema.CustomFieldNames.QuerySpec
+    Test.Schema.DataValidation.Permissions.InsertSpec
+    Test.Schema.DataValidation.Permissions.SelectSpec
     Test.Schema.DefaultValuesSpec
     Test.Schema.EnumSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.ViewsSpec
     Test.ServiceLivenessSpec
-    Test.SQLServer.InsertVarcharColumnSpec
     Test.Subscriptions.CustomFieldsSpec
