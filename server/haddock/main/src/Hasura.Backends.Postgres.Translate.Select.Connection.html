@@ -29,11 +29,11 @@
 </span><span id="line-29"></span><span class="hs-comment">--</span><span>
 </span><span id="line-30"></span><span class="hs-comment">-- See 'mkConnectionSelect' for the Postgres AST.</span><span>
 </span><span id="line-31"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html#connectionSelectQuerySQL"><span class="hs-identifier hs-type">connectionSelectQuerySQL</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-32"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689748595"><span class="annot"><a href="#local-6989586621689748595"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689748595"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-34"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-type">PostgresAnnotatedFieldJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689748595"><span class="hs-identifier hs-type">pgKind</span></a></span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689755671"><span class="annot"><a href="#local-6989586621689755671"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689755671"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-type">PostgresAnnotatedFieldJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689755671"><span class="hs-identifier hs-type">pgKind</span></a></span><span>
 </span><span id="line-35"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-36"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#ConnectionSelect"><span class="hs-identifier hs-type">ConnectionSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689748595"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-36"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#ConnectionSelect"><span class="hs-identifier hs-type">ConnectionSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689755671"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-37"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">Query</span></a></span><span>
 </span><span id="line-38"></span><span id="connectionSelectQuerySQL"><span class="annot"><span class="annottext">connectionSelectQuerySQL :: ConnectionSelect ('Postgres pgKind) Void SQLExp -&gt; Query
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html#connectionSelectQuerySQL"><span class="hs-identifier hs-var hs-var">connectionSelectQuerySQL</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
@@ -60,21 +60,21 @@ ConnectionSelect ('Postgres pgKind) Void SQLExp
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html#mkConnectionSelect"><span class="hs-identifier hs-var">mkConnectionSelect</span></a></span><span>
 </span><span id="line-40"></span><span>
 </span><span id="line-41"></span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html#mkConnectionSelect"><span class="hs-identifier hs-type">mkConnectionSelect</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-42"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689748656"><span class="annot"><a href="#local-6989586621689748656"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-43"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689748656"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-44"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-type">PostgresAnnotatedFieldJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689748656"><span class="hs-identifier hs-type">pgKind</span></a></span><span>
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689755732"><span class="annot"><a href="#local-6989586621689755732"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689755732"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-44"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON.html#PostgresAnnotatedFieldJSON"><span class="hs-identifier hs-type">PostgresAnnotatedFieldJSON</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689755732"><span class="hs-identifier hs-type">pgKind</span></a></span><span>
 </span><span id="line-45"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-46"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#ConnectionSelect"><span class="hs-identifier hs-type">ConnectionSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689748656"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-46"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#ConnectionSelect"><span class="hs-identifier hs-type">ConnectionSelect</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689755732"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLExp"><span class="hs-identifier hs-type">S.SQLExp</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-47"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SelectWithG"><span class="hs-identifier hs-type">S.SelectWithG</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#Select"><span class="hs-identifier hs-type">S.Select</span></a></span><span>
 </span><span id="line-48"></span><span id="mkConnectionSelect"><span class="annot"><span class="annottext">mkConnectionSelect :: ConnectionSelect ('Postgres pgKind) Void SQLExp
 -&gt; SelectWithG Select
-</span><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html#mkConnectionSelect"><span class="hs-identifier hs-var hs-var">mkConnectionSelect</span></a></span></span><span> </span><span id="local-6989586621689748593"><span class="annot"><span class="annottext">ConnectionSelect ('Postgres pgKind) Void SQLExp
-</span><a href="#local-6989586621689748593"><span class="hs-identifier hs-var">connectionSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621689748592"><span class="annot"><span class="annottext">ArrayConnectionSource
-</span><a href="#local-6989586621689748592"><span class="hs-identifier hs-var">connectionSource</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748591"><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689748591"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748590"><span class="annot"><span class="annottext">HashMap ColumnAlias SQLExp
-</span><a href="#local-6989586621689748590"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621689748589"><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689748589"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.Translate.Select.Connection.html#mkConnectionSelect"><span class="hs-identifier hs-var hs-var">mkConnectionSelect</span></a></span></span><span> </span><span id="local-6989586621689755669"><span class="annot"><span class="annottext">ConnectionSelect ('Postgres pgKind) Void SQLExp
+</span><a href="#local-6989586621689755669"><span class="hs-identifier hs-var">connectionSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621689755668"><span class="annot"><span class="annottext">ArrayConnectionSource
+</span><a href="#local-6989586621689755668"><span class="hs-identifier hs-var">connectionSource</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689755667"><span class="annot"><span class="annottext">Extractor
+</span><a href="#local-6989586621689755667"><span class="hs-identifier hs-var">topExtractor</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689755666"><span class="annot"><span class="annottext">HashMap ColumnAlias SQLExp
+</span><a href="#local-6989586621689755666"><span class="hs-identifier hs-var">nodeExtractors</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621689755665"><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689755665"><span class="hs-identifier hs-var">joinTree</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-50"></span><span>        </span><span class="annot"><span class="annottext">Writer
   JoinTree
   (ArrayConnectionSource, Extractor, HashMap ColumnAlias SQLExp)
@@ -120,7 +120,7 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
      (ArrayConnectionSource, Extractor, HashMap ColumnAlias SQLExp)
 forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
 </span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621689748586"><span class="hs-identifier hs-var">strfyNum</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT
+</span><a href="#local-6989586621689755662"><span class="hs-identifier hs-var">strfyNum</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT
    StringifyNumbers
    (WriterT JoinTree Identity)
    (ArrayConnectionSource, Extractor, HashMap ColumnAlias SQLExp)
@@ -156,30 +156,30 @@ SourcePrefixes
 -&gt; m (ArrayConnectionSource, Extractor, HashMap ColumnAlias SQLExp)
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.Process.html#processConnectionSelect"><span class="hs-identifier hs-var">processConnectionSelect</span></a></span><span>
 </span><span id="line-53"></span><span>              </span><span class="annot"><span class="annottext">SourcePrefixes
-</span><a href="#local-6989586621689748585"><span class="hs-identifier hs-var">sourcePrefixes</span></a></span><span>
+</span><a href="#local-6989586621689755661"><span class="hs-identifier hs-var">sourcePrefixes</span></a></span><span>
 </span><span id="line-54"></span><span>              </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689748584"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span>
+</span><a href="#local-6989586621689755660"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span>
 </span><span id="line-55"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Identifier -&gt; TableAlias
 forall a. IsIdentifier a =&gt; a -&gt; TableAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#toTableAlias"><span class="hs-identifier hs-var">S.toTableAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689748582"><span class="hs-identifier hs-var">rootIdentifier</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621689755658"><span class="hs-identifier hs-var">rootIdentifier</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span>              </span><span class="annot"><span class="annottext">HashMap PGCol PGCol
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
 </span><span id="line-57"></span><span>              </span><span class="annot"><span class="annottext">ConnectionSelect ('Postgres pgKind) Void SQLExp
-</span><a href="#local-6989586621689748593"><span class="hs-identifier hs-var">connectionSelect</span></a></span><span>
-</span><span id="line-58"></span><span>      </span><span id="local-6989586621689748581"><span class="annot"><span class="annottext">selectNode :: MultiRowSelectNode
-</span><a href="#local-6989586621689748581"><span class="hs-identifier hs-var hs-var">selectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621689755669"><span class="hs-identifier hs-var">connectionSelect</span></a></span><span>
+</span><span id="line-58"></span><span>      </span><span id="local-6989586621689755657"><span class="annot"><span class="annottext">selectNode :: MultiRowSelectNode
+</span><a href="#local-6989586621689755657"><span class="hs-identifier hs-var hs-var">selectNode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">[Extractor] -&gt; SelectNode -&gt; MultiRowSelectNode
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#MultiRowSelectNode"><span class="hs-identifier hs-var">MultiRowSelectNode</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Extractor
-</span><a href="#local-6989586621689748591"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(SelectNode -&gt; MultiRowSelectNode)
+</span><a href="#local-6989586621689755667"><span class="hs-identifier hs-var">topExtractor</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(SelectNode -&gt; MultiRowSelectNode)
 -&gt; SelectNode -&gt; MultiRowSelectNode
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
 </span><span id="line-60"></span><span>          </span><span class="annot"><span class="annottext">HashMap ColumnAlias SQLExp -&gt; JoinTree -&gt; SelectNode
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#SelectNode"><span class="hs-identifier hs-var">SelectNode</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap ColumnAlias SQLExp
-</span><a href="#local-6989586621689748590"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
-</span><a href="#local-6989586621689748589"><span class="hs-identifier hs-var">joinTree</span></a></span><span>
+</span><a href="#local-6989586621689755666"><span class="hs-identifier hs-var">nodeExtractors</span></a></span><span> </span><span class="annot"><span class="annottext">JoinTree
+</span><a href="#local-6989586621689755665"><span class="hs-identifier hs-var">joinTree</span></a></span><span>
 </span><span id="line-61"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">SelectWithG Select -&gt; SelectWithG Select
 </span><a href="Hasura.Backends.Postgres.SQL.RenameIdentifiers.html#renameIdentifiersSelectWith"><span class="hs-identifier hs-var">renameIdentifiersSelectWith</span></a></span><span> </span><span class="annot"><span class="annottext">(SelectWithG Select -&gt; SelectWithG Select)
 -&gt; SelectWithG Select -&gt; SelectWithG Select
@@ -192,12 +192,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect.html#connectionToSelectWith"><span class="hs-identifier hs-var">connectionToSelectWith</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Identifier -&gt; TableAlias
 forall a. IsIdentifier a =&gt; a -&gt; TableAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#toTableAlias"><span class="hs-identifier hs-var">S.toTableAlias</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689748582"><span class="hs-identifier hs-var">rootIdentifier</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ArrayConnectionSource
-</span><a href="#local-6989586621689748592"><span class="hs-identifier hs-var">connectionSource</span></a></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode
-</span><a href="#local-6989586621689748581"><span class="hs-identifier hs-var">selectNode</span></a></span><span>
+</span><a href="#local-6989586621689755658"><span class="hs-identifier hs-var">rootIdentifier</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ArrayConnectionSource
+</span><a href="#local-6989586621689755668"><span class="hs-identifier hs-var">connectionSource</span></a></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode
+</span><a href="#local-6989586621689755657"><span class="hs-identifier hs-var">selectNode</span></a></span><span>
 </span><span id="line-63"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-64"></span><span>    </span><span id="local-6989586621689748586"><span class="annot"><span class="annottext">strfyNum :: StringifyNumbers
-</span><a href="#local-6989586621689748586"><span class="hs-identifier hs-var hs-var">strfyNum</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnSelectG
+</span><span id="line-64"></span><span>    </span><span id="local-6989586621689755662"><span class="annot"><span class="annottext">strfyNum :: StringifyNumbers
+</span><a href="#local-6989586621689755662"><span class="hs-identifier hs-var hs-var">strfyNum</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnSelectG
   ('Postgres pgKind) (ConnectionField ('Postgres pgKind) Void) SQLExp
 -&gt; StringifyNumbers
 forall (b :: BackendType) (f :: * -&gt; *) v.
@@ -215,19 +215,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall (b :: BackendType) r v.
 ConnectionSelect b r v -&gt; AnnSelectG b (ConnectionField b r) v
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_csSelect%3AConnectionSelect"><span class="hs-identifier hs-var hs-var">_csSelect</span></a></span><span> </span><span class="annot"><span class="annottext">ConnectionSelect ('Postgres pgKind) Void SQLExp
-</span><a href="#local-6989586621689748593"><span class="hs-identifier hs-var">connectionSelect</span></a></span><span>
-</span><span id="line-65"></span><span>    </span><span id="local-6989586621689748584"><span class="annot"><span class="annottext">rootFieldName :: FieldName
-</span><a href="#local-6989586621689748584"><span class="hs-identifier hs-var hs-var">rootFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; FieldName
+</span><a href="#local-6989586621689755669"><span class="hs-identifier hs-var">connectionSelect</span></a></span><span>
+</span><span id="line-65"></span><span>    </span><span id="local-6989586621689755660"><span class="annot"><span class="annottext">rootFieldName :: FieldName
+</span><a href="#local-6989586621689755660"><span class="hs-identifier hs-var hs-var">rootFieldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-var">FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;root&quot;</span></span><span>
-</span><span id="line-66"></span><span>    </span><span id="local-6989586621689748582"><span class="annot"><span class="annottext">rootIdentifier :: Identifier
-</span><a href="#local-6989586621689748582"><span class="hs-identifier hs-var hs-var">rootIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Identifier
+</span><span id="line-66"></span><span>    </span><span id="local-6989586621689755658"><span class="annot"><span class="annottext">rootIdentifier :: Identifier
+</span><a href="#local-6989586621689755658"><span class="hs-identifier hs-var hs-var">rootIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FieldName -&gt; Identifier
 forall a. IsIdentifier a =&gt; a -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#toIdentifier"><span class="hs-identifier hs-var">toIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
-</span><a href="#local-6989586621689748584"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span>
-</span><span id="line-67"></span><span>    </span><span id="local-6989586621689748585"><span class="annot"><span class="annottext">sourcePrefixes :: SourcePrefixes
-</span><a href="#local-6989586621689748585"><span class="hs-identifier hs-var hs-var">sourcePrefixes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Identifier -&gt; SourcePrefixes
+</span><a href="#local-6989586621689755660"><span class="hs-identifier hs-var">rootFieldName</span></a></span><span>
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621689755661"><span class="annot"><span class="annottext">sourcePrefixes :: SourcePrefixes
+</span><a href="#local-6989586621689755661"><span class="hs-identifier hs-var hs-var">sourcePrefixes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Identifier -&gt; SourcePrefixes
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#SourcePrefixes"><span class="hs-identifier hs-var">SourcePrefixes</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689748582"><span class="hs-identifier hs-var">rootIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
-</span><a href="#local-6989586621689748582"><span class="hs-identifier hs-var">rootIdentifier</span></a></span><span>
+</span><a href="#local-6989586621689755658"><span class="hs-identifier hs-var">rootIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
+</span><a href="#local-6989586621689755658"><span class="hs-identifier hs-var">rootIdentifier</span></a></span><span>
 </span><span id="line-68"></span></pre></body></html>
