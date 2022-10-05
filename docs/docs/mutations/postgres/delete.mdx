@@ -12,7 +12,7 @@ keywords:
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Postgres: Delete mutation
+# Postgres: Delete Mutation
 
 ## Auto-generated delete mutation schema
 
@@ -23,7 +23,7 @@ delete_article (
   where: article_bool_exp!
 ): article_mutation_response
 
-# response of any mutation on the table "article"
+# Response Of Any Mutation On The Table "Article"
 type article_mutation_response {
   # number of affected rows by the mutation
   affected_rows: Int!
@@ -31,7 +31,7 @@ type article_mutation_response {
   returning: [article!]!
 }
 
-# single object delete (supported from v1.2.0)
+# Single Object Delete (Supported From V1.2.0)
 delete_article_by_pk (
   # all primary key columns args
   id: Int

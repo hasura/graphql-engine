@@ -13,7 +13,7 @@ sidebar_label: Using DigitalOcean (one-click)
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Hasura GraphQL engine One-click App on DigitalOcean Marketplace
+# Hasura GraphQL Engine One-Click App On DigitalOcean Marketplace
 
 ## Introduction
 
@@ -147,11 +147,11 @@ Edit `docker-compose.yaml` and un-comment the line that mentions admin secret ke
 vim docker-compose.yaml
 
 ...
-# un-comment next line to add an admin secret key
+# Un-Comment Next Line To Add An Admin Secret Key
 HASURA_GRAPHQL_ADMIN_SECRET: <myadminsecretkey>
 ...
 
-# type ESC followed by :wq to save and quit
+# Type ESC Followed By :Wq To Save And Quit
 ```
 
 ### Step 4: Update the container
@@ -206,7 +206,7 @@ vim Caddyfile
 }
 ...
 
-# type ESC followed by :wq to save and quit
+# Type ESC Followed By :Wq To Save And Quit
 ```
 
 ### Step 5: Restart the container
@@ -245,7 +245,7 @@ graphql-engine:
    image: hasura/graphql-engine:latest_tag_here
 ...
 
-# type ESC followed by :wq to save and quit
+# Type ESC Followed By :Wq To Save And Quit
 ```
 
 ### Step 4: Restart the container
@@ -283,11 +283,11 @@ cd /etc/hasura
 vim docker-compose.yaml
 
 ...
-# change the url to use a different database
+# Change The Url To Use A Different Database
 HASURA_GRAPHQL_DATABASE_URL: <database-url>
 ...
 
-# type ESC followed by :wq to save and quit
+# Type ESC Followed By :Wq To Save And Quit
 ```
 
 Similarly, the database URL can be changed to connect to any other Postgres database.

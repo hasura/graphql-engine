@@ -426,7 +426,7 @@ You can simplify an `_and` expression by passing the sub-expressions separated b
   ]
 }
 
-# can be simplified to:
+# Can Be Simplified To:
 
 {
   rating: { _gte: 4 },
@@ -450,7 +450,7 @@ _and: [
   }
 ]
 
-# can be simplified to:
+# Can Be Simplified To:
 
 rating: {
   _gt: 1,
@@ -503,7 +503,7 @@ _Example:_
   }
 }
 
-# will be coerced to:
+# Will Be Coerced To:
 
 {
   _or: [
@@ -514,7 +514,7 @@ _Example:_
   ]
 }
 
-# which is equivalent to:
+# Which Is Equivalent To:
 
 {
   _or: [

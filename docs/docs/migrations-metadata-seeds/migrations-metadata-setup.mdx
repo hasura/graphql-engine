@@ -182,10 +182,10 @@ The project directory created above can be committed to version control allowing
 Set up Git version control and make the first commit:
 
 ```bash
-# initialize version control
+# Initialize Version Control
 git init
 
-# commit initial project status
+# Commit Initial Project Status
 git add .
 git commit -m "hasura project init"
 ```
@@ -196,7 +196,7 @@ From this point onwards, instead of using the console at `http://docs-demo.hasur
 console served by the CLI in order to track Migration and Metadata changes. Do this by running:
 
 ```bash
-# in project directory
+# In Project Directory
 hasura console
 ```
 
@@ -254,7 +254,7 @@ migration file.
 hasura migrate squash --name "<my-feature-name>" --from <start-migration-version-timestamp-number> --database-name
 <database-name>
 
-# note down the version timestamp number
+# Note Down The Version Timestamp Number
 ```
 
 Because all the Migrations included in the squash have already happened on the Server, we need to tell the Server that
@@ -262,14 +262,14 @@ this new squashed version has already been applied. When we do this using the `h
 tell the Server not to execute the statements in the squash to avoid errors and conflicts. We do that as follows:
 
 ```bash
-# mark the squashed migration as applied on this server
+# Mark The Squashed Migration As Applied On This Server
 hasura migrate apply --version "<squash-migration-version-timestamp-number>" --skip-execution --database-name <database-name>
 ```
 
 Now we can commit the current project status into version control with our new feature.
 
 ```bash
-# in project dir
+# In Project Dir
 git add .
 git commit -m "<feature-name>"
 ```
@@ -282,7 +282,7 @@ directory on a new, "fresh", instance of the Hasura Server at `http://another-se
 We can use the Hasura CLI command `deploy` to do this.
 
 ```bash
-# in project dir
+# In Project Dir
 hasura deploy --endpoint http://another-server-instance.hasura.app
 ```
 
@@ -306,7 +306,7 @@ If you open the Console of the new instance, you can see that our three tables h
 Let's check the status of our Migrations using the CLI.
 
 ```bash
-# in project dir
+# In Project Dir
 hasura migrate status
 ```
 

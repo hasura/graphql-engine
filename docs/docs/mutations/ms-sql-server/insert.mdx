@@ -12,7 +12,7 @@ keywords:
 
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# MS SQL Server: Insert mutation
+# MS SQL Server: Insert Mutation
 
 ## Auto-generated insert mutation schema
 
@@ -24,7 +24,7 @@ insert_article (
   if_matched: article_if_matched
 ): article_mutation_response
 
-# response of any mutation on the table "article"
+# Response Of Any Mutation On The Table "Article"
 type article_mutation_response {
   # number of affected rows by the mutation
   affected_rows: Int!
@@ -32,7 +32,7 @@ type article_mutation_response {
   returning: [article!]!
 }
 
-# single object insert
+# Single Object Insert
 insert_article_one (
   object: article_insert_input!
   if_matched: article_if_matched

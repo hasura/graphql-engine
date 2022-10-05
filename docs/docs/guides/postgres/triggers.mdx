@@ -9,7 +9,7 @@ sidebar_position: 5
 sidebar_label: Triggers
 ---
 
-# Postgres triggers
+# Postgres Triggers
 
 ## Introduction
 
@@ -80,7 +80,7 @@ trigger:
 CREATE TRIGGER update_materialized_view AFTER INSERT ON "authors" FOR EACH ROW EXECUTE PROCEDURE refresh_materialized_view();
 ```
 
-## Postgres triggers & Hasura
+## Postgres Triggers & Hasura
 
 Postgres triggers can be used to perform business logic such as data validation and can be added
 [as described here](/schema/postgres/data-validations.mdx#pg-data-validations-pg-triggers).

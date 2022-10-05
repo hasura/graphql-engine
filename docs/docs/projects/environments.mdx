@@ -16,7 +16,7 @@ sidebar_position: 10
 
 import HeadingIcon from '@site/src/components/HeadingIcon';
 
-# Managing development environments
+# Managing Development Environments
 
 <div className='badge badge--primary heading-badge'>Available on: Cloud</div>
 
@@ -52,9 +52,9 @@ This will get your database schema from the cloud project to your local setup
 ```bash
 hasura migrate create init --from-server --endpoint <hasura-cloud-project-url> --admin-secret <admin-secret> --database-name <database-name>
 
-# note down the version
+# Note Down The Version
 
-# mark the migration as applied on the cloud project
+# Mark The Migration As Applied On The Cloud Project
 
 hasura migrate apply --endpoint <hasura-cloud-project-url> --admin-secret <admin-secret> --version <version-number> --skip-execution
 ```
@@ -128,9 +128,9 @@ This will get your database schema from your local setup into the project folder
 ```bash
 hasura migrate create init --from-server --admin-secret <admin-secret> --database-name <database-name>
 
-# note down the version
+# Note Down The Version
 
-# mark the migration as already applied on the local server
+# Mark The Migration As Already Applied On The Local Server
 
 hasura migrate apply --admin-secret <admin-secret> --version <version-number> --skip-execution
 ```
@@ -146,7 +146,7 @@ This command will export the current Hasura metadata as a bunch of YAML files in
 ### Step 5: Setup version control & Git Deploy
 
 ```bash
-# in the project directory
+# In The Project Directory
 
 git init
 git add .

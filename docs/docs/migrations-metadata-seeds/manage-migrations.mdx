@@ -232,7 +232,7 @@ migration file.
 hasura migrate squash --name "<my-feature-name>" --from <start-migration-version-timestamp-number> --database-name
 <database-name>
 
-# note down the version timestamp number
+# Note Down The Version Timestamp Number
 ```
 
 Because all the Migrations included in the squash have already happened on the Server, we need to tell the Server that
@@ -240,7 +240,7 @@ this new squashed version has already been applied. When we do this using the `h
 tell the Server not to execute the statements in the squash to avoid errors and conflicts. We do that as follows:
 
 ```bash
-# mark the squashed migration as applied on this server
+# Mark The Squashed Migration As Applied On This Server
 hasura migrate apply --version "<squash-migration-version-timestamp-number>" --skip-execution --database-name <database-name>
 ```
 
@@ -252,7 +252,7 @@ database on Hasura server
 To check the status of Migrations use:
 
 ```bash
-# in project dir
+# In Project Dir
 hasura migrate status
 ```
 

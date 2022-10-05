@@ -9,7 +9,7 @@ keywords:
   - hasura metadata diff
 ---
 
-# Hasura CLI: hasura metadata diff
+# Hasura CLI: Hasura Metadata Diff
 
 (PREVIEW) Show a highlighted diff of Hasura metadata.
 
@@ -25,19 +25,19 @@ hasura metadata diff [file1] [file2] [flags]
 ## Examples
 
 ```bash
-# NOTE: This command is in preview, usage and diff format may change.
+# NOTE: This Command Is In Preview, Usage And Diff Format May Change
 
-# Show changes between server metadata and the exported metadata file:
+# Show Changes Between Server Metadata And The Exported Metadata File:
 hasura metadata diff
 
-# Apply admin secret for Hasura GraphQL engine:
+# Apply Admin Secret For Hasura GraphQL Engine:
 hasura metadata diff --admin-secret "<admin-secret>"
 
-# Specify a diff type
+# Specify A Diff Type
 hasura metadata diff --type "unified-json"
 hasura metadata diff --type "json"
 
-# Diff metadata on a different Hasura instance:
+# Diff Metadata On A Different Hasura Instance:
 hasura metadata diff --endpoint "<endpoint>"
 ```
 

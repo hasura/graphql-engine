@@ -9,7 +9,7 @@ keywords:
   - hasura migrate create
 ---
 
-# Hasura CLI: hasura migrate create
+# Hasura CLI: Hasura Migrate Create
 
 Create files required for a migration.
 
@@ -24,19 +24,19 @@ hasura migrate create [migration-name] [flags]
 ## Examples
 
 ```bash
-# Setup migration files for the first time by introspecting a server:
+# Setup Migration Files For The First Time By Introspecting A Server:
 hasura migrate create "init" --from-server
 
-# Use with admin secret:
+# Use With Admin Secret:
 hasura migrate create --admin-secret "<admin-secret>"
 
-# Setup migration files from an instance mentioned by the flag:
+# Setup Migration Files From An Instance Mentioned By The Flag:
 hasura migrate create init --from-server --endpoint "<endpoint>"
 
-# Take pg_dump of schema and hasura metadata from server while specifying the schemas to include
+# Take Pg_dump Of Schema And Hasura Metadata From Server While Specifying The Schemas To Include
 hasura migrate create init --from-server --schema myschema1,myschema2
 
-# Create up and down SQL migrations, providing contents as flags
+# Create Up And Down SQL Migrations, Providing Contents As Flags
 hasura migrate create migration-name --up-sql "CREATE TABLE article(id serial NOT NULL, title text NOT NULL, content text NOT NULL);"  --down-sql "DROP TABLE article;"
 ```
 

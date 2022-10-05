@@ -13,7 +13,7 @@ sidebar_label: Server config examples
 ---
 
 
-# Server config examples
+# Server Config Examples
 
 ## Introduction
 
@@ -60,7 +60,7 @@ For example, let's look at the case of the `console` command:
 In the `my-project/config.yaml` file, set a new key `admin_secret`:
 
 ```yaml
-# config.yaml
+# Config.Yaml
 endpoint: https://my-graphql-endpoint.com
 admin_secret: XXXXXXXXXXXXXXXX
 ```
@@ -82,7 +82,7 @@ command as an environment variable:
 export HASURA_GRAPHQL_ADMIN_SECRET=xxxxx
 hasura console
 
-# OR in a single line
+# OR In A Single Line
 HASURA_GRAPHQL_ADMIN_SECRET=xxxxx hasura console
 ```
 
@@ -113,15 +113,15 @@ mentioned.
 Examples:
 
 ```bash
-# Accepts from https://app.foo.bar.com , https://api.foo.bar.com etc.
+# Accepts from https://app.foo.bar.com , https://api.foo.bar.com etc
 HASURA_GRAPHQL_CORS_DOMAIN="https://*.foo.bar.com"
 
 # Accepts from https://app.foo.bar.com:8080 , http://api.foo.bar.com:8080,
 # http://app.localhost, http://api.localhost, http://localhost:3000,
-# http://example.com etc.
+# http://example.com etc
 HASURA_GRAPHQL_CORS_DOMAIN="https://*.foo.bar.com:8080, http://*.localhost, http://localhost:3000, http://example.com"
 
-# Accepts from all domain
+# Accepts From All Domain
 HASURA_GRAPHQL_CORS_DOMAIN="*"
 
 # Accepts only from http://example.com
@@ -155,10 +155,10 @@ assets from the Docker image itself, instead of the CDN.
 Set the following env var or flag on the server:
 
 ```bash
-# env var
+# Env Var
 HASURA_GRAPHQL_CONSOLE_ASSETS_DIR=/srv/console-assets
 
-# flag
+# Flag
 --console-assets-dir=/srv/console-assets
 ```
 
@@ -188,10 +188,10 @@ By default the `internal` key is not sent in the `extensions` response
 server in debugging mode with the following configuration:
 
 ```bash
-# env var
+# Env Var
 HASURA_GRAPHQL_DEV_MODE=true
 
-# flag
+# Flag
 --dev-mode
 ```
 
@@ -199,10 +199,10 @@ The `internal` key is sent for `admin` role requests by default. To
 disable them, configure as follows:
 
 ```bash
-# env var
+# Env Var
 HASURA_GRAPHQL_ADMIN_INTERNAL_ERRORS=false
 
-# flag
+# Flag
 --admin-internal-errors false
 ```
 
@@ -233,10 +233,10 @@ To add a metadata database, set the following environment variable or
 add the flag to the server executable
 
 ```bash
-# env var
+# Env Var
 HASURA_GRAPHQL_METADATA_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
 
-# flag
+# Flag
 --metadata-database-url=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
 ```
 
@@ -255,11 +255,11 @@ Cloud as its value is controlled by Hasura Cloud itself.
 provided to the server**
 
 ```bash
-# env var
+# Env Var
 HASURA_GRAPHQL_METADATA_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
 HASURA_GRAPHQL_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<db-name>
 
-# flag
+# Flag
 --metadata-database-url=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
 --database-url=postgres://<user>:<password>@<host>:<port>/<db-name>
 ```
@@ -272,10 +272,10 @@ and starts the server with the database provided in the
 **2. Only** `metadata database` **is provided to the server**
 
 ```bash
-# env var
+# Env Var
 HASURA_GRAPHQL_METADATA_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
 
-# flag
+# Flag
 --metadata-database-url=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
 ```
 
@@ -288,10 +288,10 @@ then manually track/manage databases at a later time.
 **3. Only** `primary database` **is provided to the server**
 
 ```bash
-# env var
+# Env Var
 HASURA_GRAPHQL_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<db-name>
 
-# flag
+# Flag
 --database-url=postgres://<user>:<password>@<host>:<port>/<db-name>
 ```
 

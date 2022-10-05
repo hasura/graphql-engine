@@ -10,7 +10,7 @@ sidebar_position: 60
 sidebar_label: Server logs
 ---
 
-# Hasura GraphQL engine logs
+# Hasura GraphQL Engine Logs
 
 ## Accessing logs
 
@@ -241,7 +241,7 @@ It has two important "keys" under the `detail` section - `operation` and `http_i
   queries mentioned in the below snippet will compute the same parametrized query hash.
 
 ```graphql
-# sample query
+# Sample Query
 query {
   authors(where: { id: { _eq: 2 } }) {
     id
@@ -249,7 +249,7 @@ query {
   }
 }
 
-# query with a different leaf value to that of the sample query
+# Query With A Different Leaf Value To That Of The Sample Query
 query {
   authors(where: { id: { _eq: 203943 } }) {
     id
@@ -257,8 +257,8 @@ query {
   }
 }
 
-# query with use of a variable, the value of
-# the variable `id` can be anything
+# Query With Use Of A Variable, The Value Of
+# The Variable `Id` Can Be Anything
 query {
   authors(where: { id: { _eq: $id } }) {
     id
@@ -266,12 +266,12 @@ query {
   }
 }
 
-# query with use of a boolean expression variable,
-# the value when the `whereBoolExp` is in the form of
+# Query With Use Of A Boolean Expression Variable,
+# The Value When The `WhereBoolExp` Is In The Form Of
 #
 #  {
-#     "id": {
-#       "_eq": <id>
+#     "Id": {
+#       "_eq": <Id>
 #     }
 #  }
 

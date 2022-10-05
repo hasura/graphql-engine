@@ -11,7 +11,7 @@ keywords:
   - clear migrations
 ---
 
-# Resetting Hasura Migrations and Metadata
+# Resetting Hasura Migrations And Metadata
 
 ## Introduction
 
@@ -25,7 +25,7 @@ Move all your migrations to a backup folder, in case you need them later.
 You can use the following bash move command to move the folder:
 
 ```bash
-# move the contents of the migrations folder into the migrations_backup folder
+# Move The Contents Of The Migrations Folder Into The Migrations_backup Folder
 
 mv migrations migrations_backup
 ```
@@ -35,7 +35,7 @@ mv migrations migrations_backup
 To reset the Migrations history status on the server only, use:
 
 ```bash
-# reset migrations on server only
+# Reset Migrations On Server Only
 
 hasura migrate delete --all --server --database-name <database-name>
 ```
@@ -51,7 +51,7 @@ Enter `Y` to execute the command.
 To reset the Migrations status on server and clean up the local project migration files
 
 ```bash
-# reset migrations on server and on local project, use:
+# Reset Migrations On Server And On Local Project, Use:
 
 hasura migrate delete --all --database-name <database-name>
 ```

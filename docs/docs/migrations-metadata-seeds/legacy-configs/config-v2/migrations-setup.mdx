@@ -12,7 +12,7 @@ keywords:
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Setting up Hasura migrations (config v2)
+# Setting Up Hasura Migrations (Config V2)
 
 ## Introduction
 
@@ -86,12 +86,12 @@ The project directory created above can be committed to version control.
 Set up version control and commit the project status:
 
 ```bash
-# in project dir
+# In Project Dir
 
-# initialize version control
+# Initialize Version Control
 git init
 
-# commit initial project status
+# Commit Initial Project Status
 git add .
 git commit -m "hasura project init"
 ```
@@ -106,12 +106,12 @@ metadata with the current state of the database.
 Create a migration called `init` by exporting the current Postgres schema from the server:
 
 ```bash
-# create migration files (note that this will only export the public schema from postgres)
+# Create Migration Files (Note That This Will Only Export The Public Schema From Postgres)
 hasura migrate create "init" --from-server
 
-# note down the version
+# Note Down The Version
 
-# mark the migration as applied on this server
+# Mark The Migration As Applied On This Server
 hasura migrate apply --version "<version>" --skip-execution
 ```
 
@@ -140,7 +140,7 @@ hasura migrate create "init" --from-server --schema "public" --schema "schema1" 
 Export the Hasura metadata from the server:
 
 ```bash
-# export the metadata
+# Export The Metadata
 hasura metadata export
 ```
 
@@ -154,7 +154,7 @@ If you'd like to read more about the format of metadata files, check out the
 Commit the current project state to version control:
 
 ```bash
-# in project dir
+# In Project Dir
 git add .
 git commit -m "initialize migrations and metadata"
 ```
@@ -171,7 +171,7 @@ From this point onwards, instead of using the console at `http://my-graphql.hasu
 console from the CLI by running:
 
 ```bash
-# in project dir
+# In Project Dir
 hasura console
 ```
 
@@ -213,16 +213,16 @@ migration file.
 ```bash
 hasura migrate squash --name "<feature-name>" --from <start-migration-version>
 
-# note down the version
+# Note Down The Version
 
-# mark the squashed migration as applied on this server
+# Mark The Squashed Migration As Applied On This Server
 hasura migrate apply --version "<squash-migration-version>" --skip-execution
 ```
 
 Commit the project status into version control.
 
 ```bash
-# in project dir
+# In Project Dir
 git add .
 git commit -m "<feature-name>"
 ```
@@ -239,7 +239,7 @@ Apply all migrations present in the `migrations/` directory and the metadata pre
 new instance at `http://another-graphql-instance.hasura.app`:
 
 ```bash
-# in project dir
+# In Project Dir
 hasura migrate apply --endpoint http://another-graphql-instance.hasura.app
 hasura metadata apply --endpoint http://another-graphql-instance.hasura.app
 ```
@@ -255,7 +255,7 @@ If you now open the console of the new instance, you can see that the three tabl
 ## Step 8: Check the status of migrations
 
 ```bash
-# in project dir
+# In Project Dir
 hasura migrate status
 ```
 

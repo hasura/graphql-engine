@@ -15,7 +15,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Postgres: Tables basics
+# Postgres: Tables Basics
 
 ## Introduction
 
@@ -163,7 +163,7 @@ automatically generated.
 The following object type is generated for the `articles` table we just created and tracked:
 
 ```graphql
-# Object type
+# Object Type
 type Articles {
   id: Int
   title: String
@@ -182,7 +182,7 @@ Let's analyze the above type:
 The following query/mutation fields are generated for the `articles` table we just created and tracked:
 
 ```graphql
-# Query field
+# Query Field
 articles (
   where: articles_bool_exp
   limit: Int
@@ -190,20 +190,20 @@ articles (
   order_by: [articles_order_by!]
 ): [articles!]!
 
-# insert/upsert mutation field
+# Insert/Upsert Mutation Field
 insert_articles (
   objects: [articles_insert_input!]!
   on_conflict: articles_on_conflict
 ): articles_mutation_response
 
-# update mutation field
+# Update Mutation Field
 update_articles (
   where: articles_bool_exp!
   _inc: articles_inc_input
   _set: articles_set_input
 ): articles_mutation_response
 
-# delete mutation field
+# Delete Mutation Field
 delete_articles (
   where: articles_bool_exp!
 ): articles_mutation_response

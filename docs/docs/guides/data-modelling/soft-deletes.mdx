@@ -12,7 +12,7 @@ sidebar_label: Setting up soft deletes for data
 import Thumbnail from '@site/src/components/Thumbnail';
 import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
-# Setting up soft deletes for data
+# Setting Up Soft Deletes For Data
 
 ## Overview
 
@@ -45,7 +45,7 @@ Now in our application logic, instead of `delete_todos` mutations, use `update_t
 field to the current timestamp:
 
 ```graphql {7}
-# Replace the delete mutations with this update mutation
+# Replace The Delete Mutations With This Update Mutation
 mutation {
   update_todos(where: { name: { _eq: "Stuff already done!" } }, _set: { deleted_at: "now()" }) {
     returning {

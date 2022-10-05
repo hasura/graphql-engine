@@ -15,7 +15,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# BigQuery: Tables basics
+# BigQuery: Tables Basics
 
 ## Introduction
 
@@ -182,7 +182,7 @@ automatically generated.
 The following object type is generated for the `articles` table we just created and tracked:
 
 ```graphql
-# Object type
+# Object Type
 type Articles {
   id: Int
   title: String
@@ -203,7 +203,7 @@ Let's analyze the above type:
 The following query/mutation fields are generated for the `articles` table we just created and tracked:
 
 ```graphql
-# Query field: fetch data from the table: "bigquery.articles"
+# Query Field: Fetch Data From The Table: "Bigquery.Articles"
 bigquery_articles(
     distinct_on: [bigquery_articles_select_column!]
     limit: Int
@@ -212,7 +212,7 @@ bigquery_articles(
     where: bigquery_articles_bool_exp
 ): [bigquery_articles!]!
 
-# Query field: fetch aggregated fields from the table: "bigquery.articles"
+# Query Field: Fetch Aggregated Fields From The Table: "Bigquery.Articles"
 bigquery_articles_aggregate(
     distinct_on: [bigquery_articles_select_column!]
     limit: Int

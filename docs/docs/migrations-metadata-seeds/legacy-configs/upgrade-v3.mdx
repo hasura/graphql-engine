@@ -9,7 +9,7 @@ keywords:
   - metadata
 ---
 
-# Upgrading to Hasura migrations config v3
+# Upgrading To Hasura Migrations Config V3
 
 ## What has changed?
 
@@ -161,11 +161,11 @@ The steps to apply migrations and metadata to a new Hasura instance will
 be:
 
 ```bash
-# first apply metadata, this will connect Hasura to the configured databases.
+# First Apply Metadata, This Will Connect Hasura To The Configured Databases
 hasura metadata apply
-# now we can apply migrations to the connected databases.
+# Now We Can Apply Migrations To The Connected Databases
 hasura migrate apply --all-databases
-# follow it with a metadata reload to make sure Hasura is aware of any newly created database objects.
+# Follow It With A Metadata Reload To Make Sure Hasura Is Aware Of Any Newly Created Database Objects
 hasura metadata reload
 ```
 

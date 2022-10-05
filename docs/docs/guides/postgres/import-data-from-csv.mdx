@@ -11,7 +11,7 @@ sidebar_label: Import data from CSV
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Import data from CSV into Postgres
+# Import Data From CSV Into Postgres
 
 ## Introduction
 
@@ -41,7 +41,7 @@ Connect to your Postgres database by using the `psql` command on the terminal:
 ```bash
 psql postgres://<username>:<password>@<host>:<port>/<database>
 
-# for example
+# For Example
 psql postgres://postgres:postgres@localhost:5432/postgres
 ```
 
@@ -52,7 +52,7 @@ Once connected to the database, use the following command from inside `psql` to 
 ```bash
 \copy <table_name> from '</path/to/file/filename.csv>' delimiter ',' CSV HEADER;
 
-# for example
+# For Example
 \copy profile from '/Users/sarahlewis/documents/profile.csv' delimiter ',' CSV HEADER;
 ```
 

@@ -33,37 +33,37 @@ hasura migrate apply --admin-secret "<admin-secret>"
 # Apply migrations on another Hasura instance:
 hasura migrate apply --endpoint "<endpoint>"
 
-# Mark migration as applied on the server and skip execution:
+# Mark Migration As Applied On The Server And Skip Execution:
 hasura migrate apply --skip-execution --version "<version>"
 
-# Mark migrations as applied on the server and skip execution:
+# Mark Migrations As Applied On The Server And Skip Execution:
 hasura migrate apply --skip-execution --up all
 
-# Mark migrations as rollbacked on the server and skip execution:
+# Mark Migrations As Rollbacked On The Server And Skip Execution:
 hasura migrate apply --skip-execution --down all
 
-# Apply a particular migration version only:
+# Apply A Particular Migration Version Only:
 hasura migrate apply --version "<version>"
 
-# Apply last 2 down migrations:
+# Apply Last 2 Down Migrations:
 hasura migrate apply --down 2
 
-# Apply only 2 up migrations:
+# Apply Only 2 Up Migrations:
 hasura migrate apply --up 2
 
-# Apply only a particular version
+# Apply Only A Particular Version
 hasura migrate apply --type up --version "<version>"
 
-# Apply all up migrations upto version 125, last applied is 100
+# Apply All Up Migrations Upto Version 125, Last Applied Is 100
 hasura migrate apply --goto 125
 
-# Apply all down migrations upto version 125, last applied is 150
+# Apply All Down Migrations Upto Version 125, Last Applied Is 150
 hasura migrate apply --goto 125
 
-# Rollback a particular version:
+# Rollback A Particular Version:
 hasura migrate apply --type down --version "<version>"
 
-# Rollback all migrations:
+# Rollback All Migrations:
 hasura migrate apply --down all
 ```
 

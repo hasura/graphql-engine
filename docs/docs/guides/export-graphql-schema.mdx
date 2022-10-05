@@ -9,7 +9,7 @@ keywords:
 sidebar_position: 8
 ---
 
-# Exporting the Hasura GraphQL schema
+# Exporting The Hasura GraphQL Schema
 
 ## Introduction
 
@@ -29,10 +29,10 @@ the following commands to download the GraphQL schema:
 
 ```bash
 # If the GraphQL engine is running at https://my-graphql-engine.com/v1/graphql,
-# without an admin secret
+# Without An Admin Secret
 gq https://my-graphql-engine.com/v1/graphql --introspect > schema.graphql
 
-# If Hasura GraphQL engine is running with an admin secret
+# If Hasura GraphQL Engine Is Running With An Admin Secret
 gq https://my-graphql-engine.com/v1/graphql -H "X-Hasura-Admin-Secret: adminsecretkey" --introspect > schema.graphql
 ```
 
@@ -40,7 +40,7 @@ By default, it downloads the schema in `.graphql` format. If you want it
 in JSON format, you can use an additional flag `--format json`:
 
 ```bash
-# Getting the schema in .json format
+# Getting The Schema In .Json Format
 gq https://my-graphql-engine.com/v1/graphql --introspect --format json > schema.json
 ```
 
@@ -53,10 +53,10 @@ the following command to download the GraphQL schema:
 
 ```bash
 # If the GraphQL engine is running at https://my-graphql-engine.com/v1/graphql,
-# without an admin secret
+# Without An Admin Secret
 apollo schema:download --endpoint https://my-graphql-engine.com/v1/graphql
 
-# If Hasura GraphQL engine is running with an admin secret
+# If Hasura GraphQL Engine Is Running With An Admin Secret
 apollo schema:download --endpoint https://my-graphql-engine.com/v1/graphql --header "X-Hasura-Admin-Secret: adminsecretkey"
 ```
 
