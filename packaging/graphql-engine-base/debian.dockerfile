@@ -2,6 +2,8 @@
 # Modify the above date version (YYYY-MM-DD) if you want to rebuild the image for security updates
 FROM debian:bullseye-20220912-slim
 
+### NOTE! Shared libraries here need to be kept in sync with `server-builder.dockerfile`!
+
 # TARGETPLATFORM is automatically set up by docker buildx based on the platform we are targetting for
 ARG TARGETPLATFORM
 
@@ -15,7 +17,7 @@ RUN set -ex; \
     apt-get update; \
     apt-get install -y apt-transport-https curl gnupg2; \
     apt-get update; \
-    apt-get install -y ca-certificates libkrb5-3 libpq5 libnuma1 unixodbc-dev libmariadb-dev-compat mariadb-client
+    apt-get install -y ca-certificates libkrb5-3 libpq5 libssl1.1 libnuma1 unixodbc-dev libmariadb-dev-compat mariadb-client
 
 RUN if [ "$TARGETPLATFORM" = "linux/amd64" ] ; then \
       curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -; \
