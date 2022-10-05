@@ -350,9 +350,9 @@ computed fields are defined via an SQL function, which allows users to define an
 Generated columns will go together with computed fields where Hasura treats generated columns as normal Postgres
 columns.
 
-## Computed fields in Remote relationships
+## Computed fields in remote relationships
 
-Using computed fields in [Remote relationships](/schema/postgres/remote-relationships/index.mdx) allows transformation
+Using computed fields in [remote relationships](/schema/postgres/remote-relationships/index.mdx) allows transformation
 of data from table columns before joining with data from remote sources. For instance, suppose we want to extract
 certain field from a `json` column and join it with a field in a remote schema by argument value. We would define a
 computed field which returns a scalar type of the field value in the `json` column and use it to join the graphql field
