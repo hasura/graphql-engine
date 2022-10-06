@@ -933,6 +933,11 @@ export type RequestTransformBody = {
   form_template?: Record<string, string>;
 };
 
+export type ResponseTransformBody = {
+  action: RequestTransformBodyActions;
+  template?: string;
+};
+
 export type RequestTransformHeaders = {
   add_headers?: Record<string, string>;
   remove_headers?: string[];
@@ -964,6 +969,12 @@ interface RequestTransformV2 extends RequestTransformFields {
 
 export type RequestTransform = RequestTransformV1 | RequestTransformV2;
 
+export type ResponseTranform = {
+  version: 2;
+  body?: ResponseTransformBody;
+  template_engine?: Nullable<RequestTransformTemplateEngine>;
+};
+
 /**
  * https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/actions.html#actiondefinition
  */
@@ -976,6 +987,7 @@ export interface ActionDefinition {
   handler: WebhookURL;
   type?: 'mutation' | 'query';
   transform?: RequestTransform;
+  responseTransform?: ResponseTranform;
 }
 
 /**
