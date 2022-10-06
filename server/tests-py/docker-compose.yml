@@ -4,7 +4,7 @@ version: "3.6"
 
 services:
   cabal-update:
-    image: hasura/graphql-engine-server-builder:${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
+    image: hasura/graphql-engine-server-builder:${PLATFORM:-}-${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
     command:
       - cabal
       - update
@@ -15,7 +15,7 @@ services:
     working_dir: /src
 
   hge-build:
-    image: hasura/graphql-engine-server-builder:${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
+    image: hasura/graphql-engine-server-builder:${PLATFORM:-}-${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
     command:
       - cabal
       - build
@@ -40,7 +40,7 @@ services:
       - CIRCLE_NODE_INDEX=1
       - CIRCLE_NODE_TOTAL=1
       - OUTPUT_FOLDER=/output
-      - GRAPHQL_ENGINE=/src/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-engine-1.0.0/x/graphql-engine/noopt/build/graphql-engine/graphql-engine
+      - GRAPHQL_ENGINE=/src/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-engine-1.0.0/x/graphql-engine/noopt/build/graphql-engine/graphql-engine
       - HASURA_GRAPHQL_DATABASE_URL=postgresql://postgres:hasura@tests-py-postgres-1/postgres
       - HASURA_GRAPHQL_DATABASE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
       - HASURA_GRAPHQL_CITUS_SOURCE_URL=postgresql://postgres:hasura@citus/postgres
