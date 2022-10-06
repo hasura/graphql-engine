@@ -2,7 +2,7 @@
 refs:
   constants:
     - &server_builder_image hasura/graphql-engine-server-builder:bb9d1eea5ba8c194eb940b4a9923a2fd247c16f91699b58c76f5b0fe92d23e0d
-    - &mssql_image hasura/mssql-server-2019-cu10-ubuntu-20.04:187352320456c39572656ce46cc292369cffa01ac0e90fcdf179c01d36fb3952
+    - &mssql_image mcr.microsoft.com/mssql/server:2019-CU18-ubuntu-20.04@sha256:f57d743a99a4003a085d0fd67dbb5ecf98812c08a616697a065082cad68d77ce
   skip_job_on_ciignore: &skip_job_on_ciignore
     run:
       name: checking if job should be terminated or not
@@ -337,6 +337,9 @@ jobs:
     docker:
       - image: *server_builder_image
       - image: *mssql_image
+        environment:
+          ACCEPT_EULA: "Y"
+          SA_PASSWORD: "hasuraMSSQL1"
       - image: hasura/postgres-13.0-alpine-postgis3:latest
         <<: *test_pg_env
     environment:
@@ -927,7 +930,7 @@ workflows:
           context:
             - pytest-bigquery
           requires:
-          - build_server
+            - build_server
       - test_server_pg_13:
           <<: *filter_only_vtags
           requires:
