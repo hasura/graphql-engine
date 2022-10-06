@@ -212,6 +212,11 @@ const insertItem = (tableName, colValues, isMigration = false) => {
             currentTable: tableName,
           }
         );
+        if (data.errors) {
+          return dispatch(
+            showErrorNotification('Insert failed!', data.errors?.[0]?.message)
+          );
+        }
         if (isMigration) {
           dispatch(
             insertItemAsMigration(
