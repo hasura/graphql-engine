@@ -10,37 +10,20 @@ import {
 import { QueryDialog } from './QueryDialog';
 import {
   fetchTemplateDataQueryFn,
-  getQueryFromSampleQueries,
   runQueryInGraphiQL,
   fillSampleQueryInGraphiQL,
   emitOnboardingEvent,
 } from '../../utils';
-
-const defaultQuery = `
-# Lookup artist info, albums, tracks based on relations
-# Filter for only 'ArtistId' with the ID of '22'
-
-query lookupArtist {
-    sample_Artist(where: {ArtistId: {_eq: 22}}) {
-            ArtistId
-            Name
-            Albums {
-            AlbumId
-            Title
-            Tracks {
-                TrackId
-                Name
-            }
-        }
-    }
-}
-`;
 
 type Props = {
   templateUrl: string;
   dismiss: VoidFunction;
   dispatch: Dispatch;
 };
+
+const defaultQuery = `
+# Make a GraphQL query
+`;
 
 export function TemplateSummary(props: Props) {
   const { templateUrl, dismiss, dispatch } = props;
@@ -53,23 +36,6 @@ export function TemplateSummary(props: Props) {
     queryKey: sampleQueriesPath,
     queryFn: () => fetchTemplateDataQueryFn(sampleQueriesPath, {}),
     staleTime,
-    onSuccess: (allQueries: string) => {
-      try {
-        const gqlQuery = getQueryFromSampleQueries(allQueries, 'lookupArtist');
-        setSampleQuery(gqlQuery || defaultQuery);
-      } catch (e: any) {
-        // this is unexpected; so get alerted
-        tracingTools.sentry.captureException(
-          new Error('failed to get a sample query in template summary'),
-          {
-            debug: {
-              error: 'message' in e ? e.message : e,
-              trace: 'OnboardingWizard/TemplateSummary',
-            },
-          }
-        );
-      }
-    },
     onError: (e: any) => {
       // this is unexpected; so get alerted
       tracingTools.sentry.captureException(
@@ -86,15 +52,18 @@ export function TemplateSummary(props: Props) {
 
   // this effect makes sure that the query is filled in GraphiQL as soon as possible
   React.useEffect(() => {
-    if (sampleQueriesData) {
-      fillSampleQueryInGraphiQL(sampleQuery, dispatch);
+    if (typeof sampleQueriesData === 'string') {
+      setSampleQuery(sampleQueriesData);
+      fillSampleQueryInGraphiQL(sampleQueriesData, dispatch);
     }
-  }, [sampleQueriesData, sampleQuery]);
+  }, [sampleQueriesData]);
 
   // this runs the query that is prefilled in graphiql
   const onRunHandler = () => {
     emitOnboardingEvent(templateSummaryRunQueryClickVariables);
-    runQueryInGraphiQL();
+    if (sampleQueriesData) {
+      runQueryInGraphiQL();
+    }
     dismiss();
   };
   const onSkipHandler = () => {
