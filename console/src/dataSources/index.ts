@@ -34,6 +34,8 @@ import { supportedFeatures as BigQuerySupportedFeatures } from './services/bigqu
 import { supportedFeatures as CitusQuerySupportedFeatures } from './services/citus';
 import { supportedFeatures as CockroachQuerySupportedFeatures } from './services/cockroach';
 
+export { Table, TableColumn } from './types';
+
 export const drivers = [
   'postgres',
   'mysql',

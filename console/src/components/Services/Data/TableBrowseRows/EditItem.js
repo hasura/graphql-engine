@@ -105,10 +105,10 @@ class EditItem extends Component {
           column={col}
           setRef={(key, node) => (refs[colName][key] = node)}
           enumOptions={enumOptions}
-          index={i}
           prevValue={prevValue}
           onFocus={onFocus}
           onChange={onChange}
+          index={i}
         />
       );
     });
