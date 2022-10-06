@@ -196,3 +196,33 @@ const deleteRemoteSchema = (remoteSchemaName: string) => {
     }
   );
 };
+
+type DriverSpec = {
+  name: 'postgres';
+  helpers: {
+    createDB: (dbName: string) => void;
+    removeDB: (dbName: string) => void;
+    createTable: (tableName: string) => void;
+    createRemoteSchema: (remoteSchemaName: string) => void;
+    deleteRemoteSchema: (remoteSchemaName: string) => void;
+    deleteTable: (tableName: string) => void;
+    trackTable: (tableName: string) => void;
+    untrackTable: (tableName: string) => void;
+  };
+};
+
+const postgres: DriverSpec = {
+  name: 'postgres',
+  helpers: {
+    createDB,
+    removeDB,
+    createTable,
+    createRemoteSchema,
+    deleteRemoteSchema,
+    deleteTable,
+    trackTable,
+    untrackTable,
+  },
+};
+
+export { postgres };
