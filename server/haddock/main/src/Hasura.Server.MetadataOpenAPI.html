@@ -9,9 +9,9 @@
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict.InsOrd</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">HM</span></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.OpenApi</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Components</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">NamedSchema</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">OpenApi</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.OpenApi.Declare</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadDeclare</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">declare</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">runDeclare</span></span><span class="hs-special">)</span><span>
-</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Proxy</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Proxy</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">Data.Proxy</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">Proxy</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html"><span class="hs-identifier">Hasura.Metadata.DTO.Metadata</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#MetadataDTO"><span class="hs-identifier">MetadataDTO</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-15"></span><span>
 </span><span id="line-16"></span><span class="hs-comment">-- | An OpenApi document includes \&quot;schemas\&quot; that describe the data that may be</span><span>
 </span><span id="line-17"></span><span class="hs-comment">-- produced or consumed by an API. It can also include \&quot;paths\&quot; which describe</span><span>
@@ -23,63 +23,38 @@
 </span><span id="line-23"></span><span class="annot"><a href="Hasura.Server.MetadataOpenAPI.html#metadataOpenAPI"><span class="hs-identifier hs-type">metadataOpenAPI</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">OpenApi</span></span><span>
 </span><span id="line-24"></span><span id="metadataOpenAPI"><span class="annot"><span class="annottext">metadataOpenAPI :: OpenApi
 </span><a href="Hasura.Server.MetadataOpenAPI.html#metadataOpenAPI"><span class="hs-identifier hs-var hs-var">metadataOpenAPI</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-25"></span><span>  </span><span class="annot"><span class="annottext">OpenApi
-forall a. Monoid a =&gt; a
-</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_openApiComponents :: Components
-</span><span class="hs-identifier hs-var">_openApiComponents</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Components
-forall a. Monoid a =&gt; a
-</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_componentsSchemas :: Definitions Schema
+</span><span id="line-25"></span><span>  </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_openApiComponents :: Components
+</span><span class="hs-identifier hs-var">_openApiComponents</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_componentsSchemas :: Definitions Schema
 </span><span class="hs-identifier hs-var">_componentsSchemas</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Definitions Schema
-</span><a href="#local-6989586621689712547"><span class="hs-identifier hs-var">definitions</span></a></span><span class="hs-special">}</span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621690389297"><span class="hs-identifier hs-var">definitions</span></a></span><span class="hs-special">}</span><span class="hs-special">}</span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-27"></span><span>    </span><span id="local-6989586621689712547"><span class="annot"><span class="annottext">definitions :: Definitions Schema
-</span><a href="#local-6989586621689712547"><span class="hs-identifier hs-var hs-var">definitions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Definitions Schema, Schema) -&gt; Definitions Schema
-forall a b. (a, b) -&gt; a
-</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">((Definitions Schema, Schema) -&gt; Definitions Schema)
--&gt; (Definitions Schema, Schema) -&gt; Definitions Schema
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-28"></span><span>      </span><span class="annot"><span class="annottext">(Declare (Definitions Schema) Schema
- -&gt; Definitions Schema -&gt; (Definitions Schema, Schema))
--&gt; Definitions Schema
--&gt; Declare (Definitions Schema) Schema
--&gt; (Definitions Schema, Schema)
-forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
-</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">Declare (Definitions Schema) Schema
--&gt; Definitions Schema -&gt; (Definitions Schema, Schema)
-forall d a. Declare d a -&gt; d -&gt; (d, a)
-</span><span class="hs-identifier hs-var">runDeclare</span></span><span> </span><span class="annot"><span class="annottext">Definitions Schema
-forall a. Monoid a =&gt; a
-</span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">(Declare (Definitions Schema) Schema
- -&gt; (Definitions Schema, Schema))
--&gt; Declare (Definitions Schema) Schema
--&gt; (Definitions Schema, Schema)
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-29"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">NamedSchema</span></span><span> </span><span id="local-6989586621689712544"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689712544"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621689712543"><span class="annot"><span class="annottext">Schema
-</span><a href="#local-6989586621689712543"><span class="hs-identifier hs-var">codecSchema</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Proxy MetadataDTO -&gt; Declare (Definitions Schema) NamedSchema
-forall value.
+</span><span id="line-27"></span><span>    </span><span id="local-6989586621690389297"><span class="annot"><span class="annottext">definitions :: Definitions Schema
+</span><a href="#local-6989586621690389297"><span class="hs-identifier hs-var hs-var">definitions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-28"></span><span>      </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall d a. Declare d a -&gt; d -&gt; (d, a)
+</span><span class="hs-identifier hs-var">runDeclare</span></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-29"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">NamedSchema</span></span><span> </span><span id="local-6989586621690389271"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621690389271"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621690389270"><span class="annot"><span class="annottext">Schema
+</span><a href="#local-6989586621690389270"><span class="hs-identifier hs-var">codecSchema</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall value.
 HasCodec value =&gt;
 Proxy value -&gt; Declare (Definitions Schema) NamedSchema
-</span><span class="hs-identifier hs-var">declareNamedSchemaViaCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy MetadataDTO
-forall k (t :: k). Proxy t
-</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#MetadataDTO"><span class="hs-identifier hs-type">MetadataDTO</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-30"></span><span>        </span><span class="annot"><span class="annottext">Definitions Schema -&gt; DeclareT (Definitions Schema) Identity ()
-forall d (m :: * -&gt; *). MonadDeclare d m =&gt; d -&gt; m ()
-</span><span class="hs-identifier hs-var">declare</span></span><span> </span><span class="annot"><span class="annottext">(Definitions Schema -&gt; DeclareT (Definitions Schema) Identity ())
--&gt; Definitions Schema -&gt; DeclareT (Definitions Schema) Identity ()
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[(Text, Schema)] -&gt; Definitions Schema
-forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
-</span><span class="hs-identifier hs-var">HM.fromList</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Maybe Text -&gt; Text
-forall a. a -&gt; Maybe a -&gt; a
-</span><span class="hs-identifier hs-var">fromMaybe</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-identifier hs-var">declareNamedSchemaViaCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} (t :: k). Proxy t
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Proxy</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.Metadata.DTO.Metadata.html#MetadataDTO"><span class="hs-identifier hs-type">MetadataDTO</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span>        </span><span class="annot"><span class="annottext">forall d (m :: * -&gt; *). MonadDeclare d m =&gt; d -&gt; m ()
+</span><span class="hs-identifier hs-var">declare</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; InsOrdHashMap k v
+</span><span class="hs-identifier hs-var">HM.fromList</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MetadataDTO&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621689712544"><span class="hs-identifier hs-var">mName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Schema
-</span><a href="#local-6989586621689712543"><span class="hs-identifier hs-var">codecSchema</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-31"></span><span>        </span><span class="annot"><span class="annottext">Schema -&gt; Declare (Definitions Schema) Schema
-forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">Schema
-</span><a href="#local-6989586621689712543"><span class="hs-identifier hs-var">codecSchema</span></a></span><span>
+</span><a href="#local-6989586621690389271"><span class="hs-identifier hs-var">mName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Schema
+</span><a href="#local-6989586621690389270"><span class="hs-identifier hs-var">codecSchema</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-31"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">Schema
+</span><a href="#local-6989586621690389270"><span class="hs-identifier hs-var">codecSchema</span></a></span><span>
 </span><span id="line-32"></span></pre></body></html>

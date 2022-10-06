@@ -10,7 +10,7 @@
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Monad.Trans.Control</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">MonadBaseControl</span></span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html"><span class="hs-identifier">Hasura.Metadata.Class</span></a></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.EventTrigger.html"><span class="hs-identifier">Hasura.RQL.DDL.EventTrigger</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.EventTrigger.html#MonadEventLogCleanup"><span class="hs-identifier">MonadEventLogCleanup</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html"><span class="hs-identifier">Hasura.RQL.Types.Source</span></a></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html"><span class="hs-identifier">Hasura.Server.Types</span></a></span><span>
@@ -27,14 +27,11 @@
 </span><a href="Hasura.RQL.Types.Run.html#_rcServerConfigCtx"><span class="hs-identifier hs-var hs-var">_rcServerConfigCtx</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#ServerConfigCtx"><span class="hs-identifier hs-type">ServerConfigCtx</span></a></span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-special">}</span><span>
 </span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span id="local-6989586621689733582"><span id="local-6989586621689733583"><span class="hs-keyword">newtype</span><span> </span><span id="RunT"><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span></span><span> </span><span id="local-6989586621689733615"><span class="annot"><a href="#local-6989586621689733615"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621689733614"><span class="annot"><a href="#local-6989586621689733614"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RunT"><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unRunT"><span class="annot"><span class="annottext">RunT m a -&gt; ReaderT RunCtx (ExceptT QErr m) a
-</span><a href="Hasura.RQL.Types.Run.html#unRunT"><span class="hs-identifier hs-var hs-var">unRunT</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ReaderT</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunCtx"><span class="hs-identifier hs-type">RunCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733615"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689733614"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">newtype</span><span> </span><span id="RunT"><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span></span><span> </span><span id="local-6989586621690429719"><span class="annot"><a href="#local-6989586621690429719"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621690429718"><span class="annot"><a href="#local-6989586621690429718"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RunT"><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unRunT"><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
+RunT m a -&gt; ReaderT RunCtx (ExceptT QErr m) a
+</span><a href="Hasura.RQL.Types.Run.html#unRunT"><span class="hs-identifier hs-var hs-var">unRunT</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ReaderT</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunCtx"><span class="hs-identifier hs-type">RunCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429719"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621690429718"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span>
-</span><span id="line-29"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621689733576"><span id="local-6989586621689733578"><span class="annot"><span class="annottext">a -&gt; RunT m b -&gt; RunT m a
-(a -&gt; b) -&gt; RunT m a -&gt; RunT m b
-(forall a b. (a -&gt; b) -&gt; RunT m a -&gt; RunT m b)
--&gt; (forall a b. a -&gt; RunT m b -&gt; RunT m a) -&gt; Functor (RunT m)
-forall a b. a -&gt; RunT m b -&gt; RunT m a
+</span><span id="line-29"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621690429454"><span id="local-6989586621690429460"><span class="annot"><span class="annottext">forall a b. a -&gt; RunT m b -&gt; RunT m a
 forall a b. (a -&gt; b) -&gt; RunT m a -&gt; RunT m b
 forall (m :: * -&gt; *) a b. Functor m =&gt; a -&gt; RunT m b -&gt; RunT m a
 forall (m :: * -&gt; *) a b.
@@ -43,33 +40,19 @@ Functor m =&gt;
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: a -&gt; RunT m b -&gt; RunT m a
+&lt;$ :: forall a b. a -&gt; RunT m b -&gt; RunT m a
 $c&lt;$ :: forall (m :: * -&gt; *) a b. Functor m =&gt; a -&gt; RunT m b -&gt; RunT m a
-fmap :: (a -&gt; b) -&gt; RunT m a -&gt; RunT m b
+fmap :: forall a b. (a -&gt; b) -&gt; RunT m a -&gt; RunT m b
 $cfmap :: forall (m :: * -&gt; *) a b.
 Functor m =&gt;
 (a -&gt; b) -&gt; RunT m a -&gt; RunT m b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-30"></span><span>      </span><span id="local-6989586621689733564"><span id="local-6989586621689733566"><span id="local-6989586621689733568"><span id="local-6989586621689733570"><span id="local-6989586621689733572"><span class="annot"><span class="annottext">Functor (RunT m)
-a -&gt; RunT m a
-Functor (RunT m)
--&gt; (forall a. a -&gt; RunT m a)
--&gt; (forall a b. RunT m (a -&gt; b) -&gt; RunT m a -&gt; RunT m b)
--&gt; (forall a b c.
-    (a -&gt; b -&gt; c) -&gt; RunT m a -&gt; RunT m b -&gt; RunT m c)
--&gt; (forall a b. RunT m a -&gt; RunT m b -&gt; RunT m b)
--&gt; (forall a b. RunT m a -&gt; RunT m b -&gt; RunT m a)
--&gt; Applicative (RunT m)
-RunT m a -&gt; RunT m b -&gt; RunT m b
-RunT m a -&gt; RunT m b -&gt; RunT m a
-RunT m (a -&gt; b) -&gt; RunT m a -&gt; RunT m b
-(a -&gt; b -&gt; c) -&gt; RunT m a -&gt; RunT m b -&gt; RunT m c
-forall a. a -&gt; RunT m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>      </span><span id="local-6989586621690429421"><span id="local-6989586621690429426"><span id="local-6989586621690429431"><span id="local-6989586621690429436"><span id="local-6989586621690429442"><span class="annot"><span class="annottext">forall a. a -&gt; RunT m a
 forall a b. RunT m a -&gt; RunT m b -&gt; RunT m a
 forall a b. RunT m a -&gt; RunT m b -&gt; RunT m b
 forall a b. RunT m (a -&gt; b) -&gt; RunT m a -&gt; RunT m b
 forall a b c. (a -&gt; b -&gt; c) -&gt; RunT m a -&gt; RunT m b -&gt; RunT m c
-forall (m :: * -&gt; *). Monad m =&gt; Functor (RunT m)
+forall {m :: * -&gt; *}. Monad m =&gt; Functor (RunT m)
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; RunT m a
 forall (m :: * -&gt; *) a b.
 Monad m =&gt;
@@ -91,36 +74,26 @@ Functor f
 -&gt; (forall a b. f a -&gt; f b -&gt; f b)
 -&gt; (forall a b. f a -&gt; f b -&gt; f a)
 -&gt; Applicative f
-&lt;* :: RunT m a -&gt; RunT m b -&gt; RunT m a
+&lt;* :: forall a b. RunT m a -&gt; RunT m b -&gt; RunT m a
 $c&lt;* :: forall (m :: * -&gt; *) a b.
 Monad m =&gt;
 RunT m a -&gt; RunT m b -&gt; RunT m a
-*&gt; :: RunT m a -&gt; RunT m b -&gt; RunT m b
+*&gt; :: forall a b. RunT m a -&gt; RunT m b -&gt; RunT m b
 $c*&gt; :: forall (m :: * -&gt; *) a b.
 Monad m =&gt;
 RunT m a -&gt; RunT m b -&gt; RunT m b
-liftA2 :: (a -&gt; b -&gt; c) -&gt; RunT m a -&gt; RunT m b -&gt; RunT m c
+liftA2 :: forall a b c. (a -&gt; b -&gt; c) -&gt; RunT m a -&gt; RunT m b -&gt; RunT m c
 $cliftA2 :: forall (m :: * -&gt; *) a b c.
 Monad m =&gt;
 (a -&gt; b -&gt; c) -&gt; RunT m a -&gt; RunT m b -&gt; RunT m c
-&lt;*&gt; :: RunT m (a -&gt; b) -&gt; RunT m a -&gt; RunT m b
+&lt;*&gt; :: forall a b. RunT m (a -&gt; b) -&gt; RunT m a -&gt; RunT m b
 $c&lt;*&gt; :: forall (m :: * -&gt; *) a b.
 Monad m =&gt;
 RunT m (a -&gt; b) -&gt; RunT m a -&gt; RunT m b
-pure :: a -&gt; RunT m a
+pure :: forall a. a -&gt; RunT m a
 $cpure :: forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; RunT m a
-$cp1Applicative :: forall (m :: * -&gt; *). Monad m =&gt; Functor (RunT m)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-31"></span><span>      </span><span id="local-6989586621689733556"><span id="local-6989586621689733558"><span id="local-6989586621689733560"><span class="annot"><span class="annottext">Applicative (RunT m)
-a -&gt; RunT m a
-Applicative (RunT m)
--&gt; (forall a b. RunT m a -&gt; (a -&gt; RunT m b) -&gt; RunT m b)
--&gt; (forall a b. RunT m a -&gt; RunT m b -&gt; RunT m b)
--&gt; (forall a. a -&gt; RunT m a)
--&gt; Monad (RunT m)
-RunT m a -&gt; (a -&gt; RunT m b) -&gt; RunT m b
-RunT m a -&gt; RunT m b -&gt; RunT m b
-forall a. a -&gt; RunT m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Applicative</span></a></span></span></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>      </span><span id="local-6989586621690429396"><span id="local-6989586621690429401"><span id="local-6989586621690429407"><span class="annot"><span class="annottext">forall a. a -&gt; RunT m a
 forall a b. RunT m a -&gt; RunT m b -&gt; RunT m b
 forall a b. RunT m a -&gt; (a -&gt; RunT m b) -&gt; RunT m b
 forall (m :: * -&gt; *). Monad m =&gt; Applicative (RunT m)
@@ -137,34 +110,28 @@ Applicative m
 -&gt; (forall a b. m a -&gt; m b -&gt; m b)
 -&gt; (forall a. a -&gt; m a)
 -&gt; Monad m
-return :: a -&gt; RunT m a
+return :: forall a. a -&gt; RunT m a
 $creturn :: forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; RunT m a
-&gt;&gt; :: RunT m a -&gt; RunT m b -&gt; RunT m b
+&gt;&gt; :: forall a b. RunT m a -&gt; RunT m b -&gt; RunT m b
 $c&gt;&gt; :: forall (m :: * -&gt; *) a b.
 Monad m =&gt;
 RunT m a -&gt; RunT m b -&gt; RunT m b
-&gt;&gt;= :: RunT m a -&gt; (a -&gt; RunT m b) -&gt; RunT m b
+&gt;&gt;= :: forall a b. RunT m a -&gt; (a -&gt; RunT m b) -&gt; RunT m b
 $c&gt;&gt;= :: forall (m :: * -&gt; *) a b.
 Monad m =&gt;
 RunT m a -&gt; (a -&gt; RunT m b) -&gt; RunT m b
-$cp1Monad :: forall (m :: * -&gt; *). Monad m =&gt; Applicative (RunT m)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-32"></span><span>      </span><span id="local-6989586621689733550"><span id="local-6989586621689733552"><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-33"></span><span>      </span><span id="local-6989586621689733542"><span id="local-6989586621689733544"><span id="local-6989586621689733546"><span class="annot"><span class="hs-identifier hs-type">MonadReader</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunCtx"><span class="hs-identifier hs-type">RunCtx</span></a></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-34"></span><span>      </span><span id="local-6989586621689733538"><span class="annot"><span class="annottext">Monad (RunT m)
-Monad (RunT m) -&gt; (forall a. IO a -&gt; RunT m a) -&gt; MonadIO (RunT m)
-IO a -&gt; RunT m a
-forall a. IO a -&gt; RunT m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Monad</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>      </span><span id="local-6989586621690429379"><span id="local-6989586621690429385"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>      </span><span id="local-6989586621690429357"><span id="local-6989586621690429362"><span id="local-6989586621690429368"><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadReader</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunCtx"><span class="hs-identifier hs-type">RunCtx</span></a></span></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-34"></span><span>      </span><span id="local-6989586621690429346"><span class="annot"><span class="annottext">forall a. IO a -&gt; RunT m a
 forall (m :: * -&gt; *).
 Monad m -&gt; (forall a. IO a -&gt; m a) -&gt; MonadIO m
-forall (m :: * -&gt; *). MonadIO m =&gt; Monad (RunT m)
+forall {m :: * -&gt; *}. MonadIO m =&gt; Monad (RunT m)
 forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; RunT m a
-liftIO :: IO a -&gt; RunT m a
+liftIO :: forall a. IO a -&gt; RunT m a
 $cliftIO :: forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; RunT m a
-$cp1MonadIO :: forall (m :: * -&gt; *). MonadIO m =&gt; Monad (RunT m)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-35"></span><span>      </span><span id="local-6989586621689733480"><span id="local-6989586621689733482"><span id="local-6989586621689733484"><span id="local-6989586621689733486"><span id="local-6989586621689733488"><span id="local-6989586621689733490"><span id="local-6989586621689733492"><span id="local-6989586621689733494"><span id="local-6989586621689733496"><span id="local-6989586621689733498"><span id="local-6989586621689733500"><span id="local-6989586621689733502"><span id="local-6989586621689733504"><span id="local-6989586621689733506"><span id="local-6989586621689733508"><span id="local-6989586621689733510"><span id="local-6989586621689733512"><span id="local-6989586621689733514"><span id="local-6989586621689733516"><span id="local-6989586621689733518"><span id="local-6989586621689733520"><span id="local-6989586621689733522"><span id="local-6989586621689733524"><span id="local-6989586621689733526"><span id="local-6989586621689733528"><span id="local-6989586621689733530"><span id="local-6989586621689733532"><span id="local-6989586621689733534"><span class="annot"><span class="annottext">MonadError QErr (RunT m)
-RunT m [ActionLogItem]
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">MonadIO</span></a></span></span><span class="hs-special">,</span><span>
+</span><span id="line-35"></span><span>      </span><span id="local-6989586621690429196"><span id="local-6989586621690429201"><span id="local-6989586621690429206"><span id="local-6989586621690429211"><span id="local-6989586621690429216"><span id="local-6989586621690429221"><span id="local-6989586621690429226"><span id="local-6989586621690429231"><span id="local-6989586621690429236"><span id="local-6989586621690429241"><span id="local-6989586621690429246"><span id="local-6989586621690429251"><span id="local-6989586621690429256"><span id="local-6989586621690429261"><span id="local-6989586621690429266"><span id="local-6989586621690429271"><span id="local-6989586621690429276"><span id="local-6989586621690429281"><span id="local-6989586621690429286"><span id="local-6989586621690429291"><span id="local-6989586621690429296"><span id="local-6989586621690429301"><span id="local-6989586621690429306"><span id="local-6989586621690429311"><span id="local-6989586621690429316"><span id="local-6989586621690429321"><span id="local-6989586621690429326"><span id="local-6989586621690429332"><span class="annot"><span class="annottext">RunT m [ActionLogItem]
 RunT m ()
 RunT m ([CronEvent], [OneOffScheduledEvent])
 RunT m (Metadata, MetadataResourceVersion)
@@ -173,59 +140,17 @@ RunT m CatalogState
 RunT m MetadataResourceVersion
 [TriggerName] -&gt; RunT m [CronTriggerStats]
 [CronEventSeed] -&gt; RunT m ()
-MonadError QErr (RunT m)
--&gt; RunT m MetadataResourceVersion
--&gt; RunT m (Metadata, MetadataResourceVersion)
--&gt; (MetadataResourceVersion
-    -&gt; InstanceId
-    -&gt; RunT m [(MetadataResourceVersion, CacheInvalidations)])
--&gt; (MetadataResourceVersion
-    -&gt; Metadata -&gt; RunT m MetadataResourceVersion)
--&gt; (MetadataResourceVersion
-    -&gt; InstanceId -&gt; CacheInvalidations -&gt; RunT m ())
--&gt; RunT m CatalogState
--&gt; (CatalogStateType -&gt; Value -&gt; RunT m ())
--&gt; RunT m MetadataDbId
--&gt; RunT m ()
--&gt; ([TriggerName] -&gt; RunT m [CronTriggerStats])
--&gt; RunT m ([CronEvent], [OneOffScheduledEvent])
--&gt; ([CronEventSeed] -&gt; RunT m ())
--&gt; (OneOffEvent -&gt; RunT m EventId)
--&gt; (Invocation 'ScheduledType -&gt; ScheduledEventType -&gt; RunT m ())
--&gt; (EventId -&gt; ScheduledEventOp -&gt; ScheduledEventType -&gt; RunT m ())
--&gt; (ScheduledEventType -&gt; [EventId] -&gt; RunT m Int)
--&gt; RunT m ()
--&gt; (ClearCronEvents -&gt; RunT m ())
--&gt; (ScheduledEventPagination
-    -&gt; [ScheduledEventStatus]
-    -&gt; RowsCountOption
-    -&gt; RunT m (WithOptionalTotalCount [OneOffScheduledEvent]))
--&gt; (TriggerName
-    -&gt; ScheduledEventPagination
-    -&gt; [ScheduledEventStatus]
-    -&gt; RowsCountOption
-    -&gt; RunT m (WithOptionalTotalCount [CronEvent]))
--&gt; (GetEventInvocations
-    -&gt; RunT m (WithOptionalTotalCount [ScheduledEventInvocation]))
--&gt; (EventId -&gt; ScheduledEventType -&gt; RunT m ())
--&gt; (ActionName
-    -&gt; SessionVariables -&gt; [Header] -&gt; Value -&gt; RunT m ActionId)
--&gt; RunT m [ActionLogItem]
--&gt; (ActionId -&gt; AsyncActionStatus -&gt; RunT m ())
--&gt; (ActionId -&gt; RunT m ActionLogResponse)
--&gt; (ActionName -&gt; RunT m ())
--&gt; (LockedActionIdArray -&gt; RunT m ())
--&gt; MonadMetadataStorage (RunT m)
-EventId -&gt; ScheduledEventType -&gt; RunT m ()
-EventId -&gt; ScheduledEventOp -&gt; ScheduledEventType -&gt; RunT m ()
+ScheduledEventId -&gt; ScheduledEventType -&gt; RunT m ()
+ScheduledEventId
+-&gt; ScheduledEventOp -&gt; ScheduledEventType -&gt; RunT m ()
 Invocation 'ScheduledType -&gt; ScheduledEventType -&gt; RunT m ()
 TriggerName
 -&gt; ScheduledEventPagination
 -&gt; [ScheduledEventStatus]
 -&gt; RowsCountOption
 -&gt; RunT m (WithOptionalTotalCount [CronEvent])
-OneOffEvent -&gt; RunT m EventId
-ScheduledEventType -&gt; [EventId] -&gt; RunT m Int
+OneOffEvent -&gt; RunT m ScheduledEventId
+ScheduledEventType -&gt; [ScheduledEventId] -&gt; RunT m Int
 ScheduledEventPagination
 -&gt; [ScheduledEventStatus]
 -&gt; RowsCountOption
@@ -264,10 +189,11 @@ MonadError QErr m
 -&gt; ([TriggerName] -&gt; m [CronTriggerStats])
 -&gt; m ([CronEvent], [OneOffScheduledEvent])
 -&gt; ([CronEventSeed] -&gt; m ())
--&gt; (OneOffEvent -&gt; m EventId)
+-&gt; (OneOffEvent -&gt; m ScheduledEventId)
 -&gt; (Invocation 'ScheduledType -&gt; ScheduledEventType -&gt; m ())
--&gt; (EventId -&gt; ScheduledEventOp -&gt; ScheduledEventType -&gt; m ())
--&gt; (ScheduledEventType -&gt; [EventId] -&gt; m Int)
+-&gt; (ScheduledEventId
+    -&gt; ScheduledEventOp -&gt; ScheduledEventType -&gt; m ())
+-&gt; (ScheduledEventType -&gt; [ScheduledEventId] -&gt; m Int)
 -&gt; m ()
 -&gt; (ClearCronEvents -&gt; m ())
 -&gt; (ScheduledEventPagination
@@ -281,7 +207,7 @@ MonadError QErr m
     -&gt; m (WithOptionalTotalCount [CronEvent]))
 -&gt; (GetEventInvocations
     -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation]))
--&gt; (EventId -&gt; ScheduledEventType -&gt; m ())
+-&gt; (ScheduledEventId -&gt; ScheduledEventType -&gt; m ())
 -&gt; (ActionName
     -&gt; SessionVariables -&gt; [Header] -&gt; Value -&gt; m ActionId)
 -&gt; m [ActionLogItem]
@@ -290,7 +216,7 @@ MonadError QErr m
 -&gt; (ActionName -&gt; m ())
 -&gt; (LockedActionIdArray -&gt; m ())
 -&gt; MonadMetadataStorage m
-forall (m :: * -&gt; *).
+forall {m :: * -&gt; *}.
 MonadMetadataStorage m =&gt;
 MonadError QErr (RunT m)
 forall (m :: * -&gt; *).
@@ -316,10 +242,11 @@ MonadMetadataStorage m =&gt;
 [CronEventSeed] -&gt; RunT m ()
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-EventId -&gt; ScheduledEventType -&gt; RunT m ()
+ScheduledEventId -&gt; ScheduledEventType -&gt; RunT m ()
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-EventId -&gt; ScheduledEventOp -&gt; ScheduledEventType -&gt; RunT m ()
+ScheduledEventId
+-&gt; ScheduledEventOp -&gt; ScheduledEventType -&gt; RunT m ()
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
 Invocation 'ScheduledType -&gt; ScheduledEventType -&gt; RunT m ()
@@ -332,10 +259,10 @@ TriggerName
 -&gt; RunT m (WithOptionalTotalCount [CronEvent])
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-OneOffEvent -&gt; RunT m EventId
+OneOffEvent -&gt; RunT m ScheduledEventId
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-ScheduledEventType -&gt; [EventId] -&gt; RunT m Int
+ScheduledEventType -&gt; [ScheduledEventId] -&gt; RunT m Int
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
 ScheduledEventPagination
@@ -407,10 +334,10 @@ $cinsertAction :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
 ActionName
 -&gt; SessionVariables -&gt; [Header] -&gt; Value -&gt; RunT m ActionId
-deleteScheduledEvent :: EventId -&gt; ScheduledEventType -&gt; RunT m ()
+deleteScheduledEvent :: ScheduledEventId -&gt; ScheduledEventType -&gt; RunT m ()
 $cdeleteScheduledEvent :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-EventId -&gt; ScheduledEventType -&gt; RunT m ()
+ScheduledEventId -&gt; ScheduledEventType -&gt; RunT m ()
 getInvocations :: GetEventInvocations
 -&gt; RunT m (WithOptionalTotalCount [ScheduledEventInvocation])
 $cgetInvocations :: forall (m :: * -&gt; *).
@@ -445,22 +372,24 @@ MonadMetadataStorage m =&gt;
 ClearCronEvents -&gt; RunT m ()
 unlockAllLockedScheduledEvents :: RunT m ()
 $cunlockAllLockedScheduledEvents :: forall (m :: * -&gt; *). MonadMetadataStorage m =&gt; RunT m ()
-unlockScheduledEvents :: ScheduledEventType -&gt; [EventId] -&gt; RunT m Int
+unlockScheduledEvents :: ScheduledEventType -&gt; [ScheduledEventId] -&gt; RunT m Int
 $cunlockScheduledEvents :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-ScheduledEventType -&gt; [EventId] -&gt; RunT m Int
-setScheduledEventOp :: EventId -&gt; ScheduledEventOp -&gt; ScheduledEventType -&gt; RunT m ()
+ScheduledEventType -&gt; [ScheduledEventId] -&gt; RunT m Int
+setScheduledEventOp :: ScheduledEventId
+-&gt; ScheduledEventOp -&gt; ScheduledEventType -&gt; RunT m ()
 $csetScheduledEventOp :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-EventId -&gt; ScheduledEventOp -&gt; ScheduledEventType -&gt; RunT m ()
+ScheduledEventId
+-&gt; ScheduledEventOp -&gt; ScheduledEventType -&gt; RunT m ()
 insertScheduledEventInvocation :: Invocation 'ScheduledType -&gt; ScheduledEventType -&gt; RunT m ()
 $cinsertScheduledEventInvocation :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
 Invocation 'ScheduledType -&gt; ScheduledEventType -&gt; RunT m ()
-insertOneOffScheduledEvent :: OneOffEvent -&gt; RunT m EventId
+insertOneOffScheduledEvent :: OneOffEvent -&gt; RunT m ScheduledEventId
 $cinsertOneOffScheduledEvent :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-OneOffEvent -&gt; RunT m EventId
+OneOffEvent -&gt; RunT m ScheduledEventId
 insertCronEvents :: [CronEventSeed] -&gt; RunT m ()
 $cinsertCronEvents :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
@@ -511,21 +440,10 @@ fetchMetadataResourceVersion :: RunT m MetadataResourceVersion
 $cfetchMetadataResourceVersion :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
 RunT m MetadataResourceVersion
-$cp1MonadMetadataStorage :: forall (m :: * -&gt; *).
-MonadMetadataStorage m =&gt;
-MonadError QErr (RunT m)
 </span><a href="Hasura.Metadata.Class.html#C%3AMonadMetadataStorage"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">MonadMetadataStorage</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-36"></span><span>      </span><span id="local-6989586621689733470"><span id="local-6989586621689733472"><span id="local-6989586621689733474"><span id="local-6989586621689733476"><span class="annot"><span class="annottext">Monad (RunT m)
-RunT m TraceContext
+</span><span id="line-36"></span><span>      </span><span id="local-6989586621690429165"><span id="local-6989586621690429170"><span id="local-6989586621690429175"><span id="local-6989586621690429181"><span class="annot"><span class="annottext">RunT m TraceContext
 RunT m Reporter
-Monad (RunT m)
--&gt; (forall a. Text -&gt; RunT m a -&gt; RunT m a)
--&gt; RunT m TraceContext
--&gt; RunT m Reporter
--&gt; (TracingMetadata -&gt; RunT m ())
--&gt; MonadTrace (RunT m)
 TracingMetadata -&gt; RunT m ()
-Text -&gt; RunT m a -&gt; RunT m a
 forall a. Text -&gt; RunT m a -&gt; RunT m a
 forall (m :: * -&gt; *).
 Monad m
@@ -534,7 +452,7 @@ Monad m
 -&gt; m Reporter
 -&gt; (TracingMetadata -&gt; m ())
 -&gt; MonadTrace m
-forall (m :: * -&gt; *). MonadTrace m =&gt; Monad (RunT m)
+forall {m :: * -&gt; *}. MonadTrace m =&gt; Monad (RunT m)
 forall (m :: * -&gt; *). MonadTrace m =&gt; RunT m TraceContext
 forall (m :: * -&gt; *). MonadTrace m =&gt; RunT m Reporter
 forall (m :: * -&gt; *). MonadTrace m =&gt; TracingMetadata -&gt; RunT m ()
@@ -547,341 +465,124 @@ currentReporter :: RunT m Reporter
 $ccurrentReporter :: forall (m :: * -&gt; *). MonadTrace m =&gt; RunT m Reporter
 currentContext :: RunT m TraceContext
 $ccurrentContext :: forall (m :: * -&gt; *). MonadTrace m =&gt; RunT m TraceContext
-trace :: Text -&gt; RunT m a -&gt; RunT m a
+trace :: forall a. Text -&gt; RunT m a -&gt; RunT m a
 $ctrace :: forall (m :: * -&gt; *) a.
 MonadTrace m =&gt;
 Text -&gt; RunT m a -&gt; RunT m a
-$cp1MonadTrace :: forall (m :: * -&gt; *). MonadTrace m =&gt; Monad (RunT m)
 </span><a href="Hasura.Tracing.html#C%3AMonadTrace"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Tracing.MonadTrace</span></a></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-37"></span><span>      </span><span id="local-6989586621689733463"><span class="annot"><span class="hs-identifier hs-type">MonadBase</span></span><span> </span><span class="annot"><a href="#local-6989586621689733583"><span class="hs-identifier hs-type">b</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-38"></span><span>      </span><span id="local-6989586621689733457"><span id="local-6989586621689733459"><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><a href="#local-6989586621689733582"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
-</span><span id="line-39"></span><span>    </span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-37"></span><span>      </span><span id="local-6989586621690429144"><span id="local-6989586621690429559"><span class="annot"><span class="hs-identifier hs-type">MonadBase</span></span><span> </span><span class="annot"><a href="#local-6989586621690429559"><span class="hs-identifier hs-type">b</span></a></span></span></span><span class="hs-special">,</span><span>
+</span><span id="line-38"></span><span>      </span><span id="local-6989586621690429121"><span id="local-6989586621690429128"><span id="local-6989586621690429540"><span class="annot"><span class="hs-identifier hs-type">MonadBaseControl</span></span><span> </span><span class="annot"><a href="#local-6989586621690429540"><span class="hs-identifier hs-type">b</span></a></span></span></span></span><span>
+</span><span id="line-39"></span><span>    </span><span class="hs-special">)</span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span id="local-6989586621689733455"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689733436"><span id="local-6989586621689733438"><span id="local-6989586621689733440"><span id="local-6989586621689733442"><span id="local-6989586621689733444"><span id="local-6989586621689733446"><span id="local-6989586621689733448"><span id="local-6989586621689733450"><span id="local-6989586621689733452"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733455"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733455"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690429093"><span id="local-6989586621690429095"><span id="local-6989586621690429097"><span id="local-6989586621690429099"><span id="local-6989586621690429101"><span id="local-6989586621690429103"><span id="local-6989586621690429105"><span id="local-6989586621690429107"><span id="local-6989586621690429109"><span id="local-6989586621690429537"><span class="hs-special">(</span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorage"><span class="hs-identifier hs-type">MonadMetadataStorage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429537"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429537"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span id="local-6989586621689733434"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689733434"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733434"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621689733430"><span class="annot"><span class="annottext">askUserInfo :: RunT m UserInfo
-</span><a href="Hasura.Session.html#askUserInfo"><span class="hs-identifier hs-var hs-var hs-var hs-var">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RunCtx -&gt; UserInfo) -&gt; RunT m UserInfo
-forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
-</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">RunCtx -&gt; UserInfo
-</span><a href="Hasura.RQL.Types.Run.html#_rcUserInfo"><span class="hs-identifier hs-var hs-var">_rcUserInfo</span></a></span></span><span>
+</span><span id="line-43"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690429533"><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Monad</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429533"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#UserInfoM"><span class="hs-identifier hs-type">UserInfoM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429533"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621690429084"><span class="annot"><span class="annottext">askUserInfo :: RunT m UserInfo
+</span><a href="Hasura.Session.html#askUserInfo"><span class="hs-identifier hs-var hs-var hs-var hs-var">askUserInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">asks</span></a></span><span> </span><span class="annot"><span class="annottext">RunCtx -&gt; UserInfo
+</span><a href="Hasura.RQL.Types.Run.html#_rcUserInfo"><span class="hs-identifier hs-var">_rcUserInfo</span></a></span><span>
 </span><span id="line-45"></span><span>
-</span><span id="line-46"></span><span id="local-6989586621689733427"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689733427"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Manager.html#HasHttpManagerM"><span class="hs-identifier hs-type">HTTP.HasHttpManagerM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733427"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-47"></span><span>  </span><span id="local-6989586621689733423"><span class="annot"><span class="annottext">askHttpManager :: RunT m Manager
-</span><a href="Network.HTTP.Client.Manager.html#askHttpManager"><span class="hs-identifier hs-var hs-var hs-var hs-var">askHttpManager</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RunCtx -&gt; Manager) -&gt; RunT m Manager
-forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
-</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">RunCtx -&gt; Manager
-</span><a href="Hasura.RQL.Types.Run.html#_rcHttpMgr"><span class="hs-identifier hs-var hs-var">_rcHttpMgr</span></a></span></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690429526"><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Monad</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429526"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Manager.html#HasHttpManagerM"><span class="hs-identifier hs-type">HTTP.HasHttpManagerM</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429526"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621690429074"><span class="annot"><span class="annottext">askHttpManager :: RunT m Manager
+</span><a href="Network.HTTP.Client.Manager.html#askHttpManager"><span class="hs-identifier hs-var hs-var hs-var hs-var">askHttpManager</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">asks</span></a></span><span> </span><span class="annot"><span class="annottext">RunCtx -&gt; Manager
+</span><a href="Hasura.RQL.Types.Run.html#_rcHttpMgr"><span class="hs-identifier hs-var">_rcHttpMgr</span></a></span><span>
 </span><span id="line-48"></span><span>
-</span><span id="line-49"></span><span id="local-6989586621689733421"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Monad</span></span><span> </span><span class="annot"><a href="#local-6989586621689733421"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#HasServerConfigCtx"><span class="hs-identifier hs-type">HasServerConfigCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733421"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-50"></span><span>  </span><span id="local-6989586621689733417"><span class="annot"><span class="annottext">askServerConfigCtx :: RunT m ServerConfigCtx
-</span><a href="Hasura.Server.Types.html#askServerConfigCtx"><span class="hs-identifier hs-var hs-var hs-var hs-var">askServerConfigCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RunCtx -&gt; ServerConfigCtx) -&gt; RunT m ServerConfigCtx
-forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
-</span><span class="hs-identifier hs-var">asks</span></span><span> </span><span class="annot"><span class="annottext">RunCtx -&gt; ServerConfigCtx
-</span><a href="Hasura.RQL.Types.Run.html#_rcServerConfigCtx"><span class="hs-identifier hs-var hs-var">_rcServerConfigCtx</span></a></span></span><span>
+</span><span id="line-49"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690429522"><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Monad</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429522"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Types.html#HasServerConfigCtx"><span class="hs-identifier hs-type">HasServerConfigCtx</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429522"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621690429065"><span class="annot"><span class="annottext">askServerConfigCtx :: RunT m ServerConfigCtx
+</span><a href="Hasura.Server.Types.html#askServerConfigCtx"><span class="hs-identifier hs-var hs-var hs-var hs-var">askServerConfigCtx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. MonadReader r m =&gt; (r -&gt; a) -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">asks</span></a></span><span> </span><span class="annot"><span class="annottext">RunCtx -&gt; ServerConfigCtx
+</span><a href="Hasura.RQL.Types.Run.html#_rcServerConfigCtx"><span class="hs-identifier hs-var">_rcServerConfigCtx</span></a></span><span>
 </span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span id="local-6989586621689733415"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733415"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733415"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621689733410"><span class="annot"><span class="annottext">getPGSourceResolver :: RunT m (SourceResolver ('Postgres 'Vanilla))
-</span><a href="Hasura.RQL.Types.Source.html#getPGSourceResolver"><span class="hs-identifier hs-var hs-var hs-var hs-var">getPGSourceResolver</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT
-  RunCtx
-  (ExceptT QErr m)
-  (SourceName
-   -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
--&gt; RunT
-     m
-     (SourceName
-      -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
-forall (m :: * -&gt; *) a.
+</span><span id="line-52"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690429514"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429514"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#MonadResolveSource"><span class="hs-identifier hs-type">MonadResolveSource</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429514"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621690429047"><span class="annot"><span class="annottext">getPGSourceResolver :: RunT m (SourceResolver ('Postgres 'Vanilla))
+</span><a href="Hasura.RQL.Types.Source.html#getPGSourceResolver"><span class="hs-identifier hs-var hs-var hs-var hs-var">getPGSourceResolver</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 ReaderT RunCtx (ExceptT QErr m) a -&gt; RunT m a
-</span><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT
-   RunCtx
-   (ExceptT QErr m)
-   (SourceName
-    -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
- -&gt; RunT
-      m
-      (SourceName
-       -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig)))
--&gt; (m (SourceName
-       -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
-    -&gt; ReaderT
-         RunCtx
-         (ExceptT QErr m)
-         (SourceName
-          -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig)))
--&gt; m (SourceName
-      -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
--&gt; RunT
-     m
-     (SourceName
-      -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ExceptT
-  QErr
-  m
-  (SourceName
-   -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
--&gt; ReaderT
-     RunCtx
-     (ExceptT QErr m)
-     (SourceName
-      -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
-forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+</span><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
-</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT
-   QErr
-   m
-   (SourceName
-    -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
- -&gt; ReaderT
-      RunCtx
-      (ExceptT QErr m)
-      (SourceName
-       -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig)))
--&gt; (m (SourceName
-       -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
-    -&gt; ExceptT
-         QErr
-         m
-         (SourceName
-          -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig)))
--&gt; m (SourceName
-      -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
--&gt; ReaderT
-     RunCtx
-     (ExceptT QErr m)
-     (SourceName
-      -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">m (SourceName
-   -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
--&gt; ExceptT
-     QErr
-     m
-     (SourceName
-      -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
-forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
-</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (SourceName
-    -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
- -&gt; RunT
-      m
-      (SourceName
-       -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig)))
--&gt; m (SourceName
-      -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
--&gt; RunT
-     m
-     (SourceName
-      -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">m (SourceName
-   -&gt; PostgresConnConfiguration -&gt; IO (Either QErr PGSourceConfig))
-forall (m :: * -&gt; *).
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadResolveSource m =&gt;
 m (SourceResolver ('Postgres 'Vanilla))
 </span><a href="Hasura.RQL.Types.Source.html#getPGSourceResolver"><span class="hs-identifier hs-var">getPGSourceResolver</span></a></span><span>
-</span><span id="line-54"></span><span>  </span><span id="local-6989586621689733406"><span class="annot"><span class="annottext">getMSSQLSourceResolver :: RunT m (SourceResolver 'MSSQL)
-</span><a href="Hasura.RQL.Types.Source.html#getMSSQLSourceResolver"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMSSQLSourceResolver</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT
-  RunCtx
-  (ExceptT QErr m)
-  (SourceName
-   -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
--&gt; RunT
-     m
-     (SourceName
-      -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
-forall (m :: * -&gt; *) a.
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621690429038"><span class="annot"><span class="annottext">getMSSQLSourceResolver :: RunT m (SourceResolver 'MSSQL)
+</span><a href="Hasura.RQL.Types.Source.html#getMSSQLSourceResolver"><span class="hs-identifier hs-var hs-var hs-var hs-var">getMSSQLSourceResolver</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 ReaderT RunCtx (ExceptT QErr m) a -&gt; RunT m a
-</span><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT
-   RunCtx
-   (ExceptT QErr m)
-   (SourceName
-    -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
- -&gt; RunT
-      m
-      (SourceName
-       -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig)))
--&gt; (m (SourceName
-       -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
-    -&gt; ReaderT
-         RunCtx
-         (ExceptT QErr m)
-         (SourceName
-          -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig)))
--&gt; m (SourceName
-      -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
--&gt; RunT
-     m
-     (SourceName
-      -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ExceptT
-  QErr
-  m
-  (SourceName
-   -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
--&gt; ReaderT
-     RunCtx
-     (ExceptT QErr m)
-     (SourceName
-      -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
-forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+</span><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
-</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT
-   QErr
-   m
-   (SourceName
-    -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
- -&gt; ReaderT
-      RunCtx
-      (ExceptT QErr m)
-      (SourceName
-       -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig)))
--&gt; (m (SourceName
-       -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
-    -&gt; ExceptT
-         QErr
-         m
-         (SourceName
-          -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig)))
--&gt; m (SourceName
-      -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
--&gt; ReaderT
-     RunCtx
-     (ExceptT QErr m)
-     (SourceName
-      -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">m (SourceName
-   -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
--&gt; ExceptT
-     QErr
-     m
-     (SourceName
-      -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
-forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
-</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (SourceName
-    -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
- -&gt; RunT
-      m
-      (SourceName
-       -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig)))
--&gt; m (SourceName
-      -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
--&gt; RunT
-     m
-     (SourceName
-      -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">m (SourceName
-   -&gt; MSSQLConnConfiguration -&gt; IO (Either QErr MSSQLSourceConfig))
-forall (m :: * -&gt; *).
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadResolveSource m =&gt;
 m (SourceResolver 'MSSQL)
-</span><a href="Hasura.RQL.Types.Source.html#getMSSQLSourceResolver"><span class="hs-identifier hs-var">getMSSQLSourceResolver</span></a></span></span><span>
+</span><a href="Hasura.RQL.Types.Source.html#getMSSQLSourceResolver"><span class="hs-identifier hs-var">getMSSQLSourceResolver</span></a></span><span>
 </span><span id="line-55"></span><span>
-</span><span id="line-56"></span><span id="local-6989586621689733404"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.EventTrigger.html#MonadEventLogCleanup"><span class="hs-identifier hs-type">MonadEventLogCleanup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733404"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.EventTrigger.html#MonadEventLogCleanup"><span class="hs-identifier hs-type">MonadEventLogCleanup</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733404"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-57"></span><span>  </span><span id="local-6989586621689733399"><span class="annot"><span class="annottext">runLogCleaner :: TriggerLogCleanupConfig -&gt; RunT m (Either QErr EncJSON)
-</span><a href="Hasura.RQL.DDL.EventTrigger.html#runLogCleaner"><span class="hs-identifier hs-var hs-var hs-var hs-var">runLogCleaner</span></a></span></span><span> </span><span id="local-6989586621689733397"><span class="annot"><span class="annottext">TriggerLogCleanupConfig
-</span><a href="#local-6989586621689733397"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT RunCtx (ExceptT QErr m) (Either QErr EncJSON)
--&gt; RunT m (Either QErr EncJSON)
-forall (m :: * -&gt; *) a.
+</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690429488"><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.EventTrigger.html#MonadEventLogCleanup"><span class="hs-identifier hs-type">MonadEventLogCleanup</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429488"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.EventTrigger.html#MonadEventLogCleanup"><span class="hs-identifier hs-type">MonadEventLogCleanup</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429488"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621690429022"><span class="annot"><span class="annottext">runLogCleaner :: TriggerLogCleanupConfig -&gt; RunT m (Either QErr EncJSON)
+</span><a href="Hasura.RQL.DDL.EventTrigger.html#runLogCleaner"><span class="hs-identifier hs-var hs-var hs-var hs-var">runLogCleaner</span></a></span></span><span> </span><span id="local-6989586621690429020"><span class="annot"><span class="annottext">TriggerLogCleanupConfig
+</span><a href="#local-6989586621690429020"><span class="hs-identifier hs-var">conf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 ReaderT RunCtx (ExceptT QErr m) a -&gt; RunT m a
-</span><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT RunCtx (ExceptT QErr m) (Either QErr EncJSON)
- -&gt; RunT m (Either QErr EncJSON))
--&gt; (m (Either QErr EncJSON)
-    -&gt; ReaderT RunCtx (ExceptT QErr m) (Either QErr EncJSON))
--&gt; m (Either QErr EncJSON)
--&gt; RunT m (Either QErr EncJSON)
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m (Either QErr EncJSON)
--&gt; ReaderT RunCtx (ExceptT QErr m) (Either QErr EncJSON)
-forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+</span><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
-</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr m (Either QErr EncJSON)
- -&gt; ReaderT RunCtx (ExceptT QErr m) (Either QErr EncJSON))
--&gt; (m (Either QErr EncJSON)
-    -&gt; ExceptT QErr m (Either QErr EncJSON))
--&gt; m (Either QErr EncJSON)
--&gt; ReaderT RunCtx (ExceptT QErr m) (Either QErr EncJSON)
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">m (Either QErr EncJSON) -&gt; ExceptT QErr m (Either QErr EncJSON)
-forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
-</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (Either QErr EncJSON) -&gt; RunT m (Either QErr EncJSON))
--&gt; m (Either QErr EncJSON) -&gt; RunT m (Either QErr EncJSON)
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig -&gt; m (Either QErr EncJSON)
-forall (m :: * -&gt; *).
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadEventLogCleanup m =&gt;
 TriggerLogCleanupConfig -&gt; m (Either QErr EncJSON)
 </span><a href="Hasura.RQL.DDL.EventTrigger.html#runLogCleaner"><span class="hs-identifier hs-var">runLogCleaner</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerLogCleanupConfig
-</span><a href="#local-6989586621689733397"><span class="hs-identifier hs-var">conf</span></a></span><span>
-</span><span id="line-58"></span><span>  </span><span id="local-6989586621689733396"><span class="annot"><span class="annottext">generateCleanupSchedules :: AnyBackend SourceInfo
+</span><a href="#local-6989586621690429020"><span class="hs-identifier hs-var">conf</span></a></span><span>
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621690429014"><span class="annot"><span class="annottext">generateCleanupSchedules :: AnyBackend SourceInfo
 -&gt; TriggerName
 -&gt; AutoTriggerLogCleanupConfig
 -&gt; RunT m (Either QErr ())
-</span><a href="Hasura.RQL.DDL.EventTrigger.html#generateCleanupSchedules"><span class="hs-identifier hs-var hs-var hs-var hs-var">generateCleanupSchedules</span></a></span></span><span> </span><span id="local-6989586621689733394"><span class="annot"><span class="annottext">AnyBackend SourceInfo
-</span><a href="#local-6989586621689733394"><span class="hs-identifier hs-var">sInfo</span></a></span></span><span> </span><span id="local-6989586621689733393"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689733393"><span class="hs-identifier hs-var">tName</span></a></span></span><span> </span><span id="local-6989586621689733392"><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig
-</span><a href="#local-6989586621689733392"><span class="hs-identifier hs-var">cConf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT RunCtx (ExceptT QErr m) (Either QErr ())
--&gt; RunT m (Either QErr ())
-forall (m :: * -&gt; *) a.
+</span><a href="Hasura.RQL.DDL.EventTrigger.html#generateCleanupSchedules"><span class="hs-identifier hs-var hs-var hs-var hs-var">generateCleanupSchedules</span></a></span></span><span> </span><span id="local-6989586621690429012"><span class="annot"><span class="annottext">AnyBackend SourceInfo
+</span><a href="#local-6989586621690429012"><span class="hs-identifier hs-var">sInfo</span></a></span></span><span> </span><span id="local-6989586621690429011"><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621690429011"><span class="hs-identifier hs-var">tName</span></a></span></span><span> </span><span id="local-6989586621690429010"><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig
+</span><a href="#local-6989586621690429010"><span class="hs-identifier hs-var">cConf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 ReaderT RunCtx (ExceptT QErr m) a -&gt; RunT m a
-</span><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span><span> </span><span class="annot"><span class="annottext">(ReaderT RunCtx (ExceptT QErr m) (Either QErr ())
- -&gt; RunT m (Either QErr ()))
--&gt; (m (Either QErr ())
-    -&gt; ReaderT RunCtx (ExceptT QErr m) (Either QErr ()))
--&gt; m (Either QErr ())
--&gt; RunT m (Either QErr ())
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ExceptT QErr m (Either QErr ())
--&gt; ReaderT RunCtx (ExceptT QErr m) (Either QErr ())
-forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+</span><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-var">RunT</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
-</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(ExceptT QErr m (Either QErr ())
- -&gt; ReaderT RunCtx (ExceptT QErr m) (Either QErr ()))
--&gt; (m (Either QErr ()) -&gt; ExceptT QErr m (Either QErr ()))
--&gt; m (Either QErr ())
--&gt; ReaderT RunCtx (ExceptT QErr m) (Either QErr ())
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">m (Either QErr ()) -&gt; ExceptT QErr m (Either QErr ())
-forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
-</span><span class="hs-identifier hs-var">lift</span></span><span> </span><span class="annot"><span class="annottext">(m (Either QErr ()) -&gt; RunT m (Either QErr ()))
--&gt; m (Either QErr ()) -&gt; RunT m (Either QErr ())
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceInfo
--&gt; TriggerName -&gt; AutoTriggerLogCleanupConfig -&gt; m (Either QErr ())
-forall (m :: * -&gt; *).
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadEventLogCleanup m =&gt;
 AnyBackend SourceInfo
 -&gt; TriggerName -&gt; AutoTriggerLogCleanupConfig -&gt; m (Either QErr ())
 </span><a href="Hasura.RQL.DDL.EventTrigger.html#generateCleanupSchedules"><span class="hs-identifier hs-var">generateCleanupSchedules</span></a></span><span> </span><span class="annot"><span class="annottext">AnyBackend SourceInfo
-</span><a href="#local-6989586621689733394"><span class="hs-identifier hs-var">sInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689733393"><span class="hs-identifier hs-var">tName</span></a></span><span> </span><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig
-</span><a href="#local-6989586621689733392"><span class="hs-identifier hs-var">cConf</span></a></span></span><span>
+</span><a href="#local-6989586621690429012"><span class="hs-identifier hs-var">sInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621690429011"><span class="hs-identifier hs-var">tName</span></a></span><span> </span><span class="annot"><span class="annottext">AutoTriggerLogCleanupConfig
+</span><a href="#local-6989586621690429010"><span class="hs-identifier hs-var">cConf</span></a></span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span id="local-6989586621689733390"><span id="local-6989586621689733391"><span class="annot"><a href="Hasura.RQL.Types.Run.html#peelRun"><span class="hs-identifier hs-type">peelRun</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-60"></span><span id="local-6989586621690429486"><span id="local-6989586621690429487"><span class="annot"><a href="Hasura.RQL.Types.Run.html#peelRun"><span class="hs-identifier hs-type">peelRun</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-61"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunCtx"><span class="hs-identifier hs-type">RunCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-62"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733391"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733390"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-63"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">ExceptT</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733391"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689733390"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
-</span><span id="line-64"></span><span id="peelRun"><span class="annot"><span class="annottext">peelRun :: RunCtx -&gt; RunT m a -&gt; ExceptT QErr m a
-</span><a href="Hasura.RQL.Types.Run.html#peelRun"><span class="hs-identifier hs-var hs-var">peelRun</span></a></span></span><span> </span><span id="local-6989586621689733389"><span class="annot"><span class="annottext">RunCtx
-</span><a href="#local-6989586621689733389"><span class="hs-identifier hs-var">runCtx</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span id="local-6989586621689733388"><span class="annot"><span class="annottext">ReaderT RunCtx (ExceptT QErr m) a
-</span><a href="#local-6989586621689733388"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReaderT RunCtx (ExceptT QErr m) a -&gt; RunCtx -&gt; ExceptT QErr m a
-forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
-</span><span class="hs-identifier hs-var hs-var">runReaderT</span></span><span> </span><span class="annot"><span class="annottext">ReaderT RunCtx (ExceptT QErr m) a
-</span><a href="#local-6989586621689733388"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">RunCtx
-</span><a href="#local-6989586621689733389"><span class="hs-identifier hs-var">runCtx</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429487"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429486"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429487"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690429486"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-64"></span><span id="peelRun"><span class="annot"><span class="annottext">peelRun :: forall (m :: * -&gt; *) a. RunCtx -&gt; RunT m a -&gt; ExceptT QErr m a
+</span><a href="Hasura.RQL.Types.Run.html#peelRun"><span class="hs-identifier hs-var hs-var">peelRun</span></a></span></span><span> </span><span id="local-6989586621690429009"><span class="annot"><span class="annottext">RunCtx
+</span><a href="#local-6989586621690429009"><span class="hs-identifier hs-var">runCtx</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Run.html#RunT"><span class="hs-identifier hs-type">RunT</span></a></span><span> </span><span id="local-6989586621690429008"><span class="annot"><span class="annottext">ReaderT RunCtx (ExceptT QErr m) a
+</span><a href="#local-6989586621690429008"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a. ReaderT r m a -&gt; r -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runReaderT</span></a></span><span> </span><span class="annot"><span class="annottext">ReaderT RunCtx (ExceptT QErr m) a
+</span><a href="#local-6989586621690429008"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">RunCtx
+</span><a href="#local-6989586621690429009"><span class="hs-identifier hs-var">runCtx</span></a></span><span>
 </span><span id="line-65"></span></pre></body></html>

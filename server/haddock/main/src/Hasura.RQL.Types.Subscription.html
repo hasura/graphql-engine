@@ -4,16 +4,12 @@
 </span><span id="line-4"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-5"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-6"></span><span>
-</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-8"></span><span>
 </span><span id="line-9"></span><span class="hs-comment">-- | CursorOrdering is used in the streaming subscriptions to specify how to order the cursor.</span><span>
-</span><span id="line-10"></span><span id="local-6989586621689630784"><span id="local-6989586621689630785"></span></span><span class="hs-keyword">data</span><span> </span><span id="CursorOrdering"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CursorOrdering"><span class="hs-identifier hs-var">CursorOrdering</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="COAscending"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#COAscending"><span class="hs-identifier hs-var">COAscending</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="CODescending"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CODescending"><span class="hs-identifier hs-var">CODescending</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689630776"><span id="local-6989586621689630778"><span id="local-6989586621689630780"><span class="annot"><span class="annottext">Int -&gt; CursorOrdering -&gt; ShowS
+</span><span id="line-10"></span><span id="local-6989586621690184512"><span id="local-6989586621690184513"></span></span><span class="hs-keyword">data</span><span> </span><span id="CursorOrdering"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CursorOrdering"><span class="hs-identifier hs-var">CursorOrdering</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="COAscending"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#COAscending"><span class="hs-identifier hs-var">COAscending</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="CODescending"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CODescending"><span class="hs-identifier hs-var">CODescending</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690184504"><span id="local-6989586621690184506"><span id="local-6989586621690184508"><span class="annot"><span class="annottext">Int -&gt; CursorOrdering -&gt; ShowS
 [CursorOrdering] -&gt; ShowS
 CursorOrdering -&gt; String
-(Int -&gt; CursorOrdering -&gt; ShowS)
--&gt; (CursorOrdering -&gt; String)
--&gt; ([CursorOrdering] -&gt; ShowS)
--&gt; Show CursorOrdering
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
 showList :: [CursorOrdering] -&gt; ShowS
@@ -22,34 +18,25 @@ show :: CursorOrdering -&gt; String
 $cshow :: CursorOrdering -&gt; String
 showsPrec :: Int -&gt; CursorOrdering -&gt; ShowS
 $cshowsPrec :: Int -&gt; CursorOrdering -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689630771"><span id="local-6989586621689630773"><span class="annot"><span class="annottext">CursorOrdering -&gt; CursorOrdering -&gt; Bool
-(CursorOrdering -&gt; CursorOrdering -&gt; Bool)
--&gt; (CursorOrdering -&gt; CursorOrdering -&gt; Bool) -&gt; Eq CursorOrdering
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690184499"><span id="local-6989586621690184501"><span class="annot"><span class="annottext">CursorOrdering -&gt; CursorOrdering -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: CursorOrdering -&gt; CursorOrdering -&gt; Bool
 $c/= :: CursorOrdering -&gt; CursorOrdering -&gt; Bool
 == :: CursorOrdering -&gt; CursorOrdering -&gt; Bool
 $c== :: CursorOrdering -&gt; CursorOrdering -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. CursorOrdering -&gt; Rep CursorOrdering x)
--&gt; (forall x. Rep CursorOrdering x -&gt; CursorOrdering)
--&gt; Generic CursorOrdering
-forall x. Rep CursorOrdering x -&gt; CursorOrdering
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep CursorOrdering x -&gt; CursorOrdering
 forall x. CursorOrdering -&gt; Rep CursorOrdering x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep CursorOrdering x -&gt; CursorOrdering
 $cfrom :: forall x. CursorOrdering -&gt; Rep CursorOrdering x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-11"></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689630763"><span id="local-6989586621689630765"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CursorOrdering"><span class="hs-identifier hs-type">CursorOrdering</span></a></span></span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690184491"><span id="local-6989586621690184493"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#CursorOrdering"><span class="hs-identifier hs-type">CursorOrdering</span></a></span></span></span><span>
 </span><span id="line-13"></span><span>
-</span><span id="line-14"></span><span id="local-6989586621689630760"><span id="local-6989586621689630761"></span></span><span class="hs-keyword">data</span><span> </span><span id="SubscriptionType"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#SubscriptionType"><span class="hs-identifier hs-var">SubscriptionType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Streaming"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#Streaming"><span class="hs-identifier hs-var">Streaming</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="LiveQuery"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#LiveQuery"><span class="hs-identifier hs-var">LiveQuery</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689630752"><span id="local-6989586621689630754"><span id="local-6989586621689630756"><span class="annot"><span class="annottext">Int -&gt; SubscriptionType -&gt; ShowS
+</span><span id="line-14"></span><span id="local-6989586621690184488"><span id="local-6989586621690184489"></span></span><span class="hs-keyword">data</span><span> </span><span id="SubscriptionType"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#SubscriptionType"><span class="hs-identifier hs-var">SubscriptionType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Streaming"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#Streaming"><span class="hs-identifier hs-var">Streaming</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="LiveQuery"><span class="annot"><a href="Hasura.RQL.Types.Subscription.html#LiveQuery"><span class="hs-identifier hs-var">LiveQuery</span></a></span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690184480"><span id="local-6989586621690184482"><span id="local-6989586621690184484"><span class="annot"><span class="annottext">Int -&gt; SubscriptionType -&gt; ShowS
 [SubscriptionType] -&gt; ShowS
 SubscriptionType -&gt; String
-(Int -&gt; SubscriptionType -&gt; ShowS)
--&gt; (SubscriptionType -&gt; String)
--&gt; ([SubscriptionType] -&gt; ShowS)
--&gt; Show SubscriptionType
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
 showList :: [SubscriptionType] -&gt; ShowS
@@ -58,23 +45,17 @@ show :: SubscriptionType -&gt; String
 $cshow :: SubscriptionType -&gt; String
 showsPrec :: Int -&gt; SubscriptionType -&gt; ShowS
 $cshowsPrec :: Int -&gt; SubscriptionType -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689630748"><span id="local-6989586621689630750"><span class="annot"><span class="annottext">SubscriptionType -&gt; SubscriptionType -&gt; Bool
-(SubscriptionType -&gt; SubscriptionType -&gt; Bool)
--&gt; (SubscriptionType -&gt; SubscriptionType -&gt; Bool)
--&gt; Eq SubscriptionType
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690184476"><span id="local-6989586621690184478"><span class="annot"><span class="annottext">SubscriptionType -&gt; SubscriptionType -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: SubscriptionType -&gt; SubscriptionType -&gt; Bool
 $c/= :: SubscriptionType -&gt; SubscriptionType -&gt; Bool
 == :: SubscriptionType -&gt; SubscriptionType -&gt; Bool
 $c== :: SubscriptionType -&gt; SubscriptionType -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. SubscriptionType -&gt; Rep SubscriptionType x)
--&gt; (forall x. Rep SubscriptionType x -&gt; SubscriptionType)
--&gt; Generic SubscriptionType
-forall x. Rep SubscriptionType x -&gt; SubscriptionType
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep SubscriptionType x -&gt; SubscriptionType
 forall x. SubscriptionType -&gt; Rep SubscriptionType x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep SubscriptionType x -&gt; SubscriptionType
 $cfrom :: forall x. SubscriptionType -&gt; Rep SubscriptionType x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span></pre></body></html>

@@ -9,11 +9,11 @@
 </span><span id="line-9"></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Time.Clock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">UTCTime</span></span><span class="hs-special">)</span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/time-1.11.1.1/src"><span class="hs-identifier">Data.Time.Clock</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/time-1.11.1.1/src"><span class="hs-identifier">UTCTime</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier">Database.PG.Query</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">PG</span></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.html"><span class="hs-identifier">Hasura.Backends.Postgres.Connection</span></a></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier">Backend</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#InputWebhook"><span class="hs-identifier">InputWebhook</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html"><span class="hs-identifier">Hasura.RQL.Types.EventTrigger</span></a></span><span>
@@ -22,160 +22,101 @@
 </span><span id="line-22"></span><span>
 </span><span id="line-23"></span><span class="hs-comment">-- | The old 0.8 catalog version is non-integral, so the version has always been</span><span>
 </span><span id="line-24"></span><span class="hs-comment">-- stored as a string.</span><span>
-</span><span id="line-25"></span><span class="annot"><a href="Hasura.Server.Migrate.Internal.html#getCatalogVersion"><span class="hs-identifier hs-type">getCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxE</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span><span>
+</span><span id="line-25"></span><span class="annot"><a href="Hasura.Server.Migrate.Internal.html#getCatalogVersion"><span class="hs-identifier hs-type">getCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.TxE</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Migrate.Version.html#MetadataCatalogVersion"><span class="hs-identifier hs-type">MetadataCatalogVersion</span></a></span><span>
 </span><span id="line-26"></span><span id="getCatalogVersion"><span class="annot"><span class="annottext">getCatalogVersion :: TxE QErr MetadataCatalogVersion
 </span><a href="Hasura.Server.Migrate.Internal.html#getCatalogVersion"><span class="hs-identifier hs-var hs-var">getCatalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-27"></span><span>  </span><span id="local-6989586621689666831"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689666831"><span class="hs-identifier hs-var">versionText</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-28"></span><span>    </span><span class="annot"><span class="annottext">Identity Text -&gt; Text
-forall a. Identity a -&gt; a
-</span><span class="hs-identifier hs-var hs-var">runIdentity</span></span><span> </span><span class="annot"><span class="annottext">(Identity Text -&gt; Text)
--&gt; (SingleRow (Identity Text) -&gt; Identity Text)
--&gt; SingleRow (Identity Text)
--&gt; Text
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SingleRow (Identity Text) -&gt; Identity Text
-forall a. SingleRow a -&gt; a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var">PG.getRow</span></a></span><span>
-</span><span id="line-29"></span><span>      </span><span class="annot"><span class="annottext">(SingleRow (Identity Text) -&gt; Text)
--&gt; TxET QErr IO (SingleRow (Identity Text)) -&gt; TxET QErr IO Text
-forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
--&gt; Query -&gt; () -&gt; Bool -&gt; TxET QErr IO (SingleRow (Identity Text))
-forall (m :: * -&gt; *) a r e.
+</span><span id="line-27"></span><span>  </span><span id="local-6989586621690268544"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690268544"><span class="hs-identifier hs-var">versionText</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-28"></span><span>    </span><span class="annot"><span class="annottext">forall a. Identity a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">runIdentity</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. SingleRow a -&gt; a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.getRow</span></a></span><span>
+</span><span id="line-29"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a r e.
 (MonadIO m, FromRes a, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.withQE</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.withQE</span></a></span><span>
 </span><span id="line-30"></span><span>        </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
 </span><span id="line-31"></span><span>        </span><span class="annot"><span class="">[PG.sql| SELECT version FROM hdb_catalog.hdb_version |]</span></span><span>
 </span><span id="line-32"></span><span>        </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span>        </span><span class="annot"><span class="annottext">Bool
-</span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-34"></span><span>  </span><span class="annot"><span class="annottext">Either String MetadataCatalogVersion
--&gt; (String -&gt; TxE QErr MetadataCatalogVersion)
--&gt; TxE QErr MetadataCatalogVersion
-forall (m :: * -&gt; *) e a.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-34"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Either String MetadataCatalogVersion
-forall a. Read a =&gt; String -&gt; Either String a
-</span><span class="hs-identifier hs-var">readEither</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Either String MetadataCatalogVersion)
--&gt; String -&gt; Either String MetadataCatalogVersion
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Read a =&gt; String -&gt; Either String a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">readEither</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689666831"><span class="hs-identifier hs-var">versionText</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">((String -&gt; TxE QErr MetadataCatalogVersion)
- -&gt; TxE QErr MetadataCatalogVersion)
--&gt; (String -&gt; TxE QErr MetadataCatalogVersion)
--&gt; TxE QErr MetadataCatalogVersion
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-35"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621689666821"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689666821"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxE QErr MetadataCatalogVersion
-forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
-</span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; TxE QErr MetadataCatalogVersion)
--&gt; Text -&gt; TxE QErr MetadataCatalogVersion
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Unexpected: couldn't convert read catalog version &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689666831"><span class="hs-identifier hs-var">versionText</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;, err:&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
-forall a. Show a =&gt; a -&gt; Text
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689666821"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621690268544"><span class="hs-identifier hs-var">versionText</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-35"></span><span>    </span><span class="hs-glyph">\</span><span id="local-6989586621690268534"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690268534"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
+</span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;Unexpected: couldn't convert read catalog version &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690268544"><span class="hs-identifier hs-var">versionText</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;, err:&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690268534"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="annot"><a href="Hasura.Server.Migrate.Internal.html#from3To4"><span class="hs-identifier hs-type">from3To4</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689666818"><span class="annot"><a href="#local-6989586621689666818"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689666818"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689666818"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-38"></span><span id="from3To4"><span class="annot"><span class="annottext">from3To4 :: m ()
-</span><a href="Hasura.Server.Migrate.Internal.html#from3To4"><span class="hs-identifier hs-var hs-var">from3To4</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TxE QErr () -&gt; m ()
-forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
-</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr () -&gt; m ()) -&gt; TxE QErr () -&gt; m ()
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-39"></span><span>  </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr) -&gt; TxET PGTxErr IO () -&gt; TxE QErr ()
-forall (m :: * -&gt; *) e e' a.
+</span><span id="line-37"></span><span class="annot"><a href="Hasura.Server.Migrate.Internal.html#from3To4"><span class="hs-identifier hs-type">from3To4</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690268646"><span class="annot"><a href="#local-6989586621690268646"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690268646"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690268646"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span id="from3To4"><span class="annot"><span class="annottext">from3To4 :: forall (m :: * -&gt; *).
+(Backend ('Postgres 'Vanilla), MonadTx m) =&gt;
+m ()
+</span><a href="Hasura.Server.Migrate.Internal.html#from3To4"><span class="hs-identifier hs-var hs-var">from3To4</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
+</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-39"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e e' a.
 Functor m =&gt;
 (e -&gt; e') -&gt; TxET e m a -&gt; TxET e' m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.catchE</span></a></span><span> </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
-</span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">(TxET PGTxErr IO () -&gt; TxE QErr ())
--&gt; TxET PGTxErr IO () -&gt; TxE QErr ()
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">Query -&gt; () -&gt; Bool -&gt; TxET PGTxErr IO ()
-forall (m :: * -&gt; *) r.
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.catchE</span></a></span><span> </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
+</span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-40"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) r.
 (MonadIO m, ToPrepArgs r) =&gt;
 Query -&gt; r -&gt; Bool -&gt; TxT m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.unitQ</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.unitQ</span></a></span><span>
 </span><span id="line-41"></span><span>      </span><span class="annot"><span class="">[PG.sql|
       ALTER TABLE hdb_catalog.event_triggers
       ADD COLUMN configuration JSON |]</span></span><span>
 </span><span id="line-44"></span><span>      </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span>      </span><span class="annot"><span class="annottext">Bool
-</span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-46"></span><span>    </span><span id="local-6989586621689666814"><span class="annot"><span class="annottext">[EventTriggerConf ('Postgres 'Vanilla)]
-</span><a href="#local-6989586621689666814"><span class="hs-identifier hs-var">eventTriggers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">((TriggerName, ViaJSON (TriggerOpsDef ('Postgres 'Vanilla)),
-  InputWebhook, Int, Int, ViaJSON (Maybe [HeaderConf]))
- -&gt; EventTriggerConf ('Postgres 'Vanilla))
--&gt; [(TriggerName, ViaJSON (TriggerOpsDef ('Postgres 'Vanilla)),
-     InputWebhook, Int, Int, ViaJSON (Maybe [HeaderConf]))]
--&gt; [EventTriggerConf ('Postgres 'Vanilla)]
-forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">(TriggerName, ViaJSON (TriggerOpsDef ('Postgres 'Vanilla)),
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-46"></span><span>    </span><span id="local-6989586621690268486"><span class="annot"><span class="annottext">[EventTriggerConf ('Postgres 'Vanilla)]
+</span><a href="#local-6989586621690268486"><span class="hs-identifier hs-var">eventTriggers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">(TriggerName, ViaJSON (TriggerOpsDef ('Postgres 'Vanilla)),
  InputWebhook, Int, Int, ViaJSON (Maybe [HeaderConf]))
 -&gt; EventTriggerConf ('Postgres 'Vanilla)
-</span><a href="#local-6989586621689666813"><span class="hs-identifier hs-var">uncurryEventTrigger</span></a></span><span>
-</span><span id="line-48"></span><span>        </span><span class="annot"><span class="annottext">([(TriggerName, ViaJSON (TriggerOpsDef ('Postgres 'Vanilla)),
-   InputWebhook, Int, Int, ViaJSON (Maybe [HeaderConf]))]
- -&gt; [EventTriggerConf ('Postgres 'Vanilla)])
--&gt; TxET
-     PGTxErr
-     IO
-     [(TriggerName, ViaJSON (TriggerOpsDef ('Postgres 'Vanilla)),
-       InputWebhook, Int, Int, ViaJSON (Maybe [HeaderConf]))]
--&gt; TxET PGTxErr IO [EventTriggerConf ('Postgres 'Vanilla)]
-forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Query
--&gt; ()
--&gt; Bool
--&gt; TxET
-     PGTxErr
-     IO
-     [(TriggerName, ViaJSON (TriggerOpsDef ('Postgres 'Vanilla)),
-       InputWebhook, Int, Int, ViaJSON (Maybe [HeaderConf]))]
-forall (m :: * -&gt; *) a r.
+</span><a href="#local-6989586621690268485"><span class="hs-identifier hs-var">uncurryEventTrigger</span></a></span><span>
+</span><span id="line-48"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a r.
 (MonadIO m, FromRow a, ToPrepArgs r) =&gt;
 Query -&gt; r -&gt; Bool -&gt; TxT m [a]
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.listQ</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.listQ</span></a></span><span>
 </span><span id="line-49"></span><span>          </span><span class="annot"><span class="">[PG.sql|
       SELECT e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
       FROM hdb_catalog.event_triggers e |]</span></span><span>
 </span><span id="line-52"></span><span>          </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-53"></span><span>          </span><span class="annot"><span class="annottext">Bool
-</span><span class="hs-identifier hs-var">False</span></span><span>
-</span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">[EventTriggerConf ('Postgres 'Vanilla)]
--&gt; (EventTriggerConf ('Postgres 'Vanilla) -&gt; TxET PGTxErr IO ())
--&gt; TxET PGTxErr IO ()
-forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
+</span><span id="line-54"></span><span>    </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Foldable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m ()
-</span><span class="hs-identifier hs-var">forM_</span></span><span> </span><span class="annot"><span class="annottext">[EventTriggerConf ('Postgres 'Vanilla)]
-</span><a href="#local-6989586621689666814"><span class="hs-identifier hs-var">eventTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">EventTriggerConf ('Postgres 'Vanilla) -&gt; TxET PGTxErr IO ()
-forall (m :: * -&gt; *) (b :: BackendType).
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">forM_</span></a></span><span> </span><span class="annot"><span class="annottext">[EventTriggerConf ('Postgres 'Vanilla)]
+</span><a href="#local-6989586621690268486"><span class="hs-identifier hs-var">eventTriggers</span></a></span><span> </span><span class="annot"><span class="annottext">forall {m :: * -&gt; *} {b :: BackendType}.
 (MonadIO m, Backend b) =&gt;
 EventTriggerConf b -&gt; TxT m ()
-</span><a href="#local-6989586621689666810"><span class="hs-identifier hs-var">updateEventTrigger3To4</span></a></span><span>
-</span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">Query -&gt; () -&gt; Bool -&gt; TxET PGTxErr IO ()
-forall (m :: * -&gt; *) r.
+</span><a href="#local-6989586621690268482"><span class="hs-identifier hs-var">updateEventTrigger3To4</span></a></span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) r.
 (MonadIO m, ToPrepArgs r) =&gt;
 Query -&gt; r -&gt; Bool -&gt; TxT m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.unitQ</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.unitQ</span></a></span><span>
 </span><span id="line-56"></span><span>      </span><span class="annot"><span class="">[PG.sql|
       ALTER TABLE hdb_catalog.event_triggers
       DROP COLUMN definition,
@@ -187,38 +128,28 @@ Query -&gt; r -&gt; Bool -&gt; TxT m ()
       DROP COLUMN metadataTransform|]</span></span><span>
 </span><span id="line-65"></span><span>      </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-66"></span><span>      </span><span class="annot"><span class="annottext">Bool
-</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
 </span><span id="line-67"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-68"></span><span>    </span><span class="annot"><a href="#local-6989586621689666813"><span class="hs-identifier hs-type">uncurryEventTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-68"></span><span>    </span><span class="annot"><a href="#local-6989586621690268485"><span class="hs-identifier hs-type">uncurryEventTrigger</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-69"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-70"></span><span>        </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-type">TriggerOpsDef</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-70"></span><span>        </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerOpsDef"><span class="hs-identifier hs-type">TriggerOpsDef</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-71"></span><span>        </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#InputWebhook"><span class="hs-identifier hs-type">InputWebhook</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-72"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
-</span><span id="line-73"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">,</span><span>
-</span><span id="line-74"></span><span>        </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-73"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-74"></span><span>        </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-75"></span><span>      </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-76"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-type">EventTriggerConf</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-77"></span><span>    </span><span id="local-6989586621689666813"><span class="annot"><span class="annottext">uncurryEventTrigger :: (TriggerName, ViaJSON (TriggerOpsDef ('Postgres 'Vanilla)),
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621690268485"><span class="annot"><span class="annottext">uncurryEventTrigger :: (TriggerName, ViaJSON (TriggerOpsDef ('Postgres 'Vanilla)),
  InputWebhook, Int, Int, ViaJSON (Maybe [HeaderConf]))
 -&gt; EventTriggerConf ('Postgres 'Vanilla)
-</span><a href="#local-6989586621689666813"><span class="hs-identifier hs-var hs-var">uncurryEventTrigger</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689666809"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689666809"><span class="hs-identifier hs-var">trn</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689666807"><span class="annot"><span class="annottext">TriggerOpsDef ('Postgres 'Vanilla)
-</span><a href="#local-6989586621689666807"><span class="hs-identifier hs-var">tDef</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689666806"><span class="annot"><span class="annottext">InputWebhook
-</span><a href="#local-6989586621689666806"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689666805"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666805"><span class="hs-identifier hs-var">nr</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689666804"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666804"><span class="hs-identifier hs-var">rint</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621689666803"><span class="annot"><span class="annottext">Maybe [HeaderConf]
-</span><a href="#local-6989586621689666803"><span class="hs-identifier hs-var">headers</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">TriggerName
--&gt; TriggerOpsDef ('Postgres 'Vanilla)
--&gt; Maybe InputWebhook
--&gt; Maybe Text
--&gt; RetryConf
--&gt; Maybe [HeaderConf]
--&gt; Maybe RequestTransform
--&gt; Maybe MetadataResponseTransform
--&gt; Maybe AutoTriggerLogCleanupConfig
--&gt; EventTriggerConf ('Postgres 'Vanilla)
-forall (b :: BackendType).
+</span><a href="#local-6989586621690268485"><span class="hs-identifier hs-var hs-var">uncurryEventTrigger</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690268481"><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621690268481"><span class="hs-identifier hs-var">trn</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621690268479"><span class="annot"><span class="annottext">TriggerOpsDef ('Postgres 'Vanilla)
+</span><a href="#local-6989586621690268479"><span class="hs-identifier hs-var">tDef</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690268478"><span class="annot"><span class="annottext">InputWebhook
+</span><a href="#local-6989586621690268478"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690268477"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690268477"><span class="hs-identifier hs-var">nr</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690268476"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690268476"><span class="hs-identifier hs-var">rint</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ViaJSON</span></a></span><span> </span><span id="local-6989586621690268475"><span class="annot"><span class="annottext">Maybe [HeaderConf]
+</span><a href="#local-6989586621690268475"><span class="hs-identifier hs-var">headers</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-78"></span><span>      </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 TriggerName
 -&gt; TriggerOpsDef b
 -&gt; Maybe InputWebhook
@@ -230,29 +161,23 @@ TriggerName
 -&gt; Maybe AutoTriggerLogCleanupConfig
 -&gt; EventTriggerConf b
 </span><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-var">EventTriggerConf</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689666809"><span class="hs-identifier hs-var">trn</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerOpsDef ('Postgres 'Vanilla)
-</span><a href="#local-6989586621689666807"><span class="hs-identifier hs-var">tDef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">InputWebhook -&gt; Maybe InputWebhook
-forall a. a -&gt; Maybe a
-</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">InputWebhook
-</span><a href="#local-6989586621689666806"><span class="hs-identifier hs-var">w</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe Text
-forall a. Maybe a
-</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Maybe Int -&gt; RetryConf
+</span><a href="#local-6989586621690268481"><span class="hs-identifier hs-var">trn</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerOpsDef ('Postgres 'Vanilla)
+</span><a href="#local-6989586621690268479"><span class="hs-identifier hs-var">tDef</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">InputWebhook
+</span><a href="#local-6989586621690268478"><span class="hs-identifier hs-var">w</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Maybe Int -&gt; RetryConf
 </span><a href="Hasura.RQL.Types.EventTrigger.html#RetryConf"><span class="hs-identifier hs-var">RetryConf</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666805"><span class="hs-identifier hs-var">nr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621689666804"><span class="hs-identifier hs-var">rint</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
-forall a. Maybe a
-</span><span class="hs-identifier hs-var">Nothing</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe [HeaderConf]
-</span><a href="#local-6989586621689666803"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RequestTransform
-forall a. Maybe a
-</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
-forall a. Maybe a
-</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe AutoTriggerLogCleanupConfig
-forall a. Maybe a
-</span><span class="hs-identifier hs-var">Nothing</span></span><span>
-</span><span id="line-79"></span><span>    </span><span id="local-6989586621689666810"><span class="annot"><span class="annottext">updateEventTrigger3To4 :: EventTriggerConf b -&gt; TxT m ()
-</span><a href="#local-6989586621689666810"><span class="hs-identifier hs-var hs-var">updateEventTrigger3To4</span></a></span></span><span> </span><span id="local-6989586621689666800"><span class="annot"><span class="annottext">etc :: EventTriggerConf b
-</span><a href="#local-6989586621689666800"><span class="hs-identifier hs-var">etc</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-type">EventTriggerConf</span></a></span><span> </span><span id="local-6989586621689666799"><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689666799"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="annot"><span class="annottext">TriggerOpsDef b
+</span><a href="#local-6989586621690268477"><span class="hs-identifier hs-var">nr</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690268476"><span class="hs-identifier hs-var">rint</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe [HeaderConf]
+</span><a href="#local-6989586621690268475"><span class="hs-identifier hs-var">headers</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621690268482"><span class="annot"><span class="annottext">updateEventTrigger3To4 :: EventTriggerConf b -&gt; TxT m ()
+</span><a href="#local-6989586621690268482"><span class="hs-identifier hs-var hs-var">updateEventTrigger3To4</span></a></span></span><span> </span><span id="local-6989586621690268457"><span class="annot"><span class="annottext">etc :: EventTriggerConf b
+</span><a href="#local-6989586621690268457"><span class="hs-identifier hs-var">etc</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#EventTriggerConf"><span class="hs-identifier hs-type">EventTriggerConf</span></a></span><span> </span><span id="local-6989586621690268456"><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621690268456"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="annot"><span class="annottext">TriggerOpsDef b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe InputWebhook
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">RetryConf
@@ -261,45 +186,37 @@ forall a. Maybe a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe MetadataResponseTransform
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe AutoTriggerLogCleanupConfig
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-80"></span><span>      </span><span class="annot"><span class="annottext">Query -&gt; (ViaJSON Value, TriggerName) -&gt; Bool -&gt; TxT m ()
-forall (m :: * -&gt; *) r.
+</span><span id="line-80"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) r.
 (MonadIO m, ToPrepArgs r) =&gt;
 Query -&gt; r -&gt; Bool -&gt; TxT m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.unitQ</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.unitQ</span></a></span><span>
 </span><span id="line-81"></span><span>        </span><span class="annot"><span class="">[PG.sql|
                                             UPDATE hdb_catalog.event_triggers
                                             SET
                                             configuration = $1
                                             WHERE name = $2
                                             |]</span></span><span>
-</span><span id="line-87"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; ViaJSON Value
-forall a. a -&gt; ViaJSON a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; ViaJSON Value) -&gt; Value -&gt; ViaJSON Value
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">EventTriggerConf b -&gt; Value
-forall a. ToJSON a =&gt; a -&gt; Value
+</span><span id="line-87"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; ViaJSON a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ViaJSON</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">A.toJSON</span></span><span> </span><span class="annot"><span class="annottext">EventTriggerConf b
-</span><a href="#local-6989586621689666800"><span class="hs-identifier hs-var">etc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TriggerName
-</span><a href="#local-6989586621689666799"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690268457"><span class="hs-identifier hs-var">etc</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TriggerName
+</span><a href="#local-6989586621690268456"><span class="hs-identifier hs-var">name</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">Bool
-</span><span class="hs-identifier hs-var">True</span></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
 </span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span id="local-6989586621689666797"><span class="annot"><a href="Hasura.Server.Migrate.Internal.html#setCatalogVersion"><span class="hs-identifier hs-type">setCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689666797"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">UTCTime</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689666797"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
-</span><span id="line-91"></span><span id="setCatalogVersion"><span class="annot"><span class="annottext">setCatalogVersion :: Text -&gt; UTCTime -&gt; m ()
-</span><a href="Hasura.Server.Migrate.Internal.html#setCatalogVersion"><span class="hs-identifier hs-var hs-var">setCatalogVersion</span></a></span></span><span> </span><span id="local-6989586621689666796"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689666796"><span class="hs-identifier hs-var">ver</span></a></span></span><span> </span><span id="local-6989586621689666795"><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621689666795"><span class="hs-identifier hs-var">time</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-92"></span><span>  </span><span class="annot"><span class="annottext">TxE QErr () -&gt; m ()
-forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
-</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">(TxE QErr () -&gt; m ()) -&gt; TxE QErr () -&gt; m ()
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-93"></span><span>    </span><span class="annot"><span class="annottext">(PGTxErr -&gt; QErr)
--&gt; Query -&gt; (Text, UTCTime) -&gt; Bool -&gt; TxE QErr ()
-forall (m :: * -&gt; *) r e.
+</span><span id="line-90"></span><span id="local-6989586621690268590"><span class="annot"><a href="Hasura.Server.Migrate.Internal.html#setCatalogVersion"><span class="hs-identifier hs-type">setCatalogVersion</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#MonadTx"><span class="hs-identifier hs-type">MonadTx</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690268590"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">UTCTime</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690268590"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-91"></span><span id="setCatalogVersion"><span class="annot"><span class="annottext">setCatalogVersion :: forall (m :: * -&gt; *). MonadTx m =&gt; Text -&gt; UTCTime -&gt; m ()
+</span><a href="Hasura.Server.Migrate.Internal.html#setCatalogVersion"><span class="hs-identifier hs-var hs-var">setCatalogVersion</span></a></span></span><span> </span><span id="local-6989586621690268445"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690268445"><span class="hs-identifier hs-var">ver</span></a></span></span><span> </span><span id="local-6989586621690268444"><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621690268444"><span class="hs-identifier hs-var">time</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-92"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadTx m =&gt; TxE QErr a -&gt; m a
+</span><a href="Hasura.Backends.Postgres.Connection.MonadTx.html#liftTx"><span class="hs-identifier hs-var">liftTx</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-93"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) r e.
 (MonadIO m, ToPrepArgs r) =&gt;
 (PGTxErr -&gt; e) -&gt; Query -&gt; r -&gt; Bool -&gt; TxET e m ()
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.unitQE</span></a></span><span>
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.unitQE</span></a></span><span>
 </span><span id="line-94"></span><span>      </span><span class="annot"><span class="annottext">PGTxErr -&gt; QErr
 </span><a href="Hasura.Backends.Postgres.Execute.Types.html#defaultTxErrorHandler"><span class="hs-identifier hs-var">defaultTxErrorHandler</span></a></span><span>
 </span><span id="line-95"></span><span>      </span><span class="annot"><span class="">[PG.sql|
@@ -308,8 +225,8 @@ forall (m :: * -&gt; *) r e.
     DO UPDATE SET version = $1, upgraded_on = $2
   |]</span></span><span>
 </span><span id="line-100"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689666796"><span class="hs-identifier hs-var">ver</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">UTCTime
-</span><a href="#local-6989586621689666795"><span class="hs-identifier hs-var">time</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690268445"><span class="hs-identifier hs-var">ver</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">UTCTime
+</span><a href="#local-6989586621690268444"><span class="hs-identifier hs-var">time</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>      </span><span class="annot"><span class="annottext">Bool
-</span><span class="hs-identifier hs-var">False</span></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
 </span><span id="line-102"></span></pre></body></html>

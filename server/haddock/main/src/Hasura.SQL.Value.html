@@ -6,18 +6,14 @@
 </span><span id="line-6"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">A</span></span><span>
 </span><span id="line-7"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson.Types</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">AT</span></span><span>
 </span><span id="line-8"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Text</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">T</span></span><span>
-</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-10"></span><span>
-</span><span id="line-11"></span><span id="local-6989586621689631399"><span id="local-6989586621689631400"></span></span><span class="hs-keyword">data</span><span> </span><span id="TxtEncodedVal"><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-var">TxtEncodedVal</span></a></span></span><span>
+</span><span id="line-11"></span><span id="local-6989586621690185827"><span id="local-6989586621690185828"></span></span><span class="hs-keyword">data</span><span> </span><span id="TxtEncodedVal"><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-var">TxtEncodedVal</span></a></span></span><span>
 </span><span id="line-12"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="TENull"><span class="annot"><a href="Hasura.SQL.Value.html#TENull"><span class="hs-identifier hs-var">TENull</span></a></span></span><span>
 </span><span id="line-13"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="TELit"><span class="annot"><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-var">TELit</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">T.Text</span></span><span>
-</span><span id="line-14"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689631391"><span id="local-6989586621689631393"><span id="local-6989586621689631395"><span class="annot"><span class="annottext">Int -&gt; TxtEncodedVal -&gt; ShowS
+</span><span id="line-14"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690185815"><span id="local-6989586621690185817"><span id="local-6989586621690185823"><span class="annot"><span class="annottext">Int -&gt; TxtEncodedVal -&gt; ShowS
 [TxtEncodedVal] -&gt; ShowS
 TxtEncodedVal -&gt; String
-(Int -&gt; TxtEncodedVal -&gt; ShowS)
--&gt; (TxtEncodedVal -&gt; String)
--&gt; ([TxtEncodedVal] -&gt; ShowS)
--&gt; Show TxtEncodedVal
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
 showList :: [TxtEncodedVal] -&gt; ShowS
@@ -26,58 +22,48 @@ show :: TxtEncodedVal -&gt; String
 $cshow :: TxtEncodedVal -&gt; String
 showsPrec :: Int -&gt; TxtEncodedVal -&gt; ShowS
 $cshowsPrec :: Int -&gt; TxtEncodedVal -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689631386"><span id="local-6989586621689631388"><span class="annot"><span class="annottext">TxtEncodedVal -&gt; TxtEncodedVal -&gt; Bool
-(TxtEncodedVal -&gt; TxtEncodedVal -&gt; Bool)
--&gt; (TxtEncodedVal -&gt; TxtEncodedVal -&gt; Bool) -&gt; Eq TxtEncodedVal
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690185808"><span id="local-6989586621690185812"><span class="annot"><span class="annottext">TxtEncodedVal -&gt; TxtEncodedVal -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: TxtEncodedVal -&gt; TxtEncodedVal -&gt; Bool
 $c/= :: TxtEncodedVal -&gt; TxtEncodedVal -&gt; Bool
 == :: TxtEncodedVal -&gt; TxtEncodedVal -&gt; Bool
 $c== :: TxtEncodedVal -&gt; TxtEncodedVal -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. TxtEncodedVal -&gt; Rep TxtEncodedVal x)
--&gt; (forall x. Rep TxtEncodedVal x -&gt; TxtEncodedVal)
--&gt; Generic TxtEncodedVal
-forall x. Rep TxtEncodedVal x -&gt; TxtEncodedVal
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall x. Rep TxtEncodedVal x -&gt; TxtEncodedVal
 forall x. TxtEncodedVal -&gt; Rep TxtEncodedVal x
 forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 $cto :: forall x. Rep TxtEncodedVal x -&gt; TxtEncodedVal
 $cfrom :: forall x. TxtEncodedVal -&gt; Rep TxtEncodedVal x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-15"></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689631378"><span id="local-6989586621689631380"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span></span></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690185800"><span id="local-6989586621690185802"><span class="annot"><span class="hs-identifier hs-type">Hashable</span></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span></span></span><span>
 </span><span id="line-17"></span><span>
-</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689631370"><span id="local-6989586621689631372"><span id="local-6989586621689631374"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-19"></span><span>  </span><span id="local-6989586621689631368"><span class="annot"><span class="annottext">toJSON :: TxtEncodedVal -&gt; Value
+</span><span id="line-18"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690185792"><span id="local-6989586621690185794"><span id="local-6989586621690185796"><span class="annot"><span class="hs-identifier hs-type">A.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621690185790"><span class="annot"><span class="annottext">toJSON :: TxtEncodedVal -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-20"></span><span>    </span><span class="annot"><span class="annottext">TxtEncodedVal
 </span><a href="Hasura.SQL.Value.html#TENull"><span class="hs-identifier hs-var">TENull</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">AT.Null</span></span><span>
-</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-type">TELit</span></a></span><span> </span><span id="local-6989586621689631365"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689631365"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
+</span><span id="line-21"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-type">TELit</span></a></span><span> </span><span id="local-6989586621690185787"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690185787"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">AT.String</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689631365"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621690185787"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621689631361"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-24"></span><span>  </span><span id="local-6989586621689631359"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TxtEncodedVal
+</span><span id="line-23"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690185783"><span class="annot"><span class="hs-identifier hs-type">A.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.SQL.Value.html#TxtEncodedVal"><span class="hs-identifier hs-type">TxtEncodedVal</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-24"></span><span>  </span><span id="local-6989586621690185778"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser TxtEncodedVal
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><span class="hs-identifier hs-var">A.Null</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TxtEncodedVal -&gt; Parser TxtEncodedVal
-forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">TxtEncodedVal
+</span><span class="hs-identifier hs-var">A.Null</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">TxtEncodedVal
 </span><a href="Hasura.SQL.Value.html#TENull"><span class="hs-identifier hs-var">TENull</span></a></span><span>
-</span><span id="line-25"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">A.String</span></span><span> </span><span id="local-6989586621689631357"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689631357"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TxtEncodedVal -&gt; Parser TxtEncodedVal
-forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(TxtEncodedVal -&gt; Parser TxtEncodedVal)
--&gt; TxtEncodedVal -&gt; Parser TxtEncodedVal
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxtEncodedVal
+</span><span id="line-25"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">A.String</span></span><span> </span><span id="local-6989586621690185776"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690185776"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; TxtEncodedVal
 </span><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-var">TELit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689631357"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span id="local-6989586621689631356"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689631356"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Value -&gt; Parser TxtEncodedVal
-forall a. String -&gt; Value -&gt; Parser a
+</span><a href="#local-6989586621690185776"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span id="local-6989586621690185775"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621690185775"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">AT.typeMismatch</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;String&quot;</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689631356"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621690185775"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-27"></span></pre></body></html>

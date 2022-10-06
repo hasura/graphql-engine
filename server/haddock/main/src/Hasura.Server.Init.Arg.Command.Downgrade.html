@@ -9,21 +9,21 @@
 </span><span id="line-9"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-10"></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.FileEmbed</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Embed</span></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">String</span></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">Data.String</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">String</span></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html"><span class="hs-identifier">Hasura.Server.Init.Config</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Config</span></span><span>
-</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TH</span></span><span>
+</span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/template-haskell-2.18.0.0/src"><span class="hs-identifier">Language.Haskell.TH.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">TH</span></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Options.Applicative</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Opt</span></span><span>
 </span><span id="line-17"></span><span>
 </span><span id="line-18"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-19"></span><span>
 </span><span id="line-20"></span><span class="hs-comment">-- | This implements the mapping between application versions</span><span>
 </span><span id="line-21"></span><span class="hs-comment">-- and catalog schema versions.</span><span>
-</span><span id="line-22"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeShortcuts"><span class="hs-identifier hs-type">downgradeShortcuts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-22"></span><span class="annot"><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeShortcuts"><span class="hs-identifier hs-type">downgradeShortcuts</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-23"></span><span id="downgradeShortcuts"><span class="annot"><span class="annottext">downgradeShortcuts :: [(String, String)]
 </span><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeShortcuts"><span class="hs-identifier hs-var hs-var">downgradeShortcuts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-special">$(</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-25"></span><span>       </span><span class="hs-keyword">let</span><span> </span><span class="hs-identifier">s</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$(</span><span class="hs-identifier">Embed.makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/catalog_versions.txt&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Embed.embedStringFile</span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">$</span><span class="hs-special">(</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-25"></span><span>       </span><span class="hs-keyword">let</span><span> </span><span class="hs-identifier">s</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">$</span><span class="hs-special">(</span><span class="hs-identifier">Embed.makeRelativeToProject</span><span> </span><span class="hs-string">&quot;src-rsr/catalog_versions.txt&quot;</span><span> </span><span class="hs-operator">&gt;&gt;=</span><span> </span><span class="hs-identifier">Embed.embedStringFile</span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span>
 </span><span id="line-27"></span><span>           </span><span class="hs-identifier">parseVersions</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">map</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">parseVersion</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">words</span><span class="hs-special">)</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">lines</span><span>
 </span><span id="line-28"></span><span>
@@ -39,99 +39,67 @@
 </span><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeCommandParser"><span class="hs-identifier hs-var hs-var">downgradeCommandParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-38"></span><span>  </span><span class="annot"><span class="annottext">Text -&gt; Bool -&gt; DowngradeOptions
 </span><a href="Hasura.Server.Init.Config.html#DowngradeOptions"><span class="hs-identifier hs-var">Config.DowngradeOptions</span></a></span><span>
-</span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">(Text -&gt; Bool -&gt; DowngradeOptions)
--&gt; Parser Text -&gt; Parser (Bool -&gt; DowngradeOptions)
-forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Parser Text] -&gt; Parser Text
-forall (f :: * -&gt; *) a. Alternative f =&gt; [f a] -&gt; f a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">choice</span></a></span><span>
-</span><span id="line-40"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Mod OptionFields Text -&gt; Parser Text
-forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
+</span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; [f a] -&gt; f a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">choice</span></a></span><span>
+</span><span id="line-40"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall s. IsString s =&gt; Mod OptionFields s -&gt; Parser s
 </span><span class="hs-identifier hs-var">Opt.strOption</span></span><span>
-</span><span id="line-41"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Text
-forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span id="line-41"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;to-catalog-version&quot;</span></span><span>
-</span><span id="line-42"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Text
--&gt; Mod OptionFields Text -&gt; Mod OptionFields Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Text
-forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
+</span><span id="line-42"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasMetavar f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.metavar</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&lt;VERSION&gt;&quot;</span></span><span>
-</span><span id="line-43"></span><span>              </span><span class="annot"><span class="annottext">Mod OptionFields Text
--&gt; Mod OptionFields Text -&gt; Mod OptionFields Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod OptionFields Text
-forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span id="line-43"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;The target catalog schema version (e.g. 31)&quot;</span></span><span>
-</span><span id="line-44"></span><span>          </span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser Text -&gt; [Parser Text] -&gt; [Parser Text]
-forall a. a -&gt; [a] -&gt; [a]
-</span><span class="hs-glyph hs-var">:</span></span><span>
-</span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">((String, String) -&gt; Parser Text)
--&gt; [(String, String)] -&gt; [Parser Text]
-forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(String -&gt; String -&gt; Parser Text)
--&gt; (String, String) -&gt; Parser Text
-forall a b c. (a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
-</span><span class="hs-identifier hs-var">uncurry</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Parser Text
-forall a. IsString a =&gt; String -&gt; String -&gt; Parser a
-</span><a href="#local-6989586621689794271"><span class="hs-identifier hs-var">shortcut</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(String, String)]
+</span><span id="line-44"></span><span>          </span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span>
+</span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">uncurry</span></a></span><span> </span><span class="annot"><span class="annottext">forall {a}. IsString a =&gt; String -&gt; String -&gt; Parser a
+</span><a href="#local-6989586621690541289"><span class="hs-identifier hs-var">shortcut</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(String, String)]
 </span><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeShortcuts"><span class="hs-identifier hs-var">downgradeShortcuts</span></a></span><span>
 </span><span id="line-46"></span><span>      </span><span class="hs-special">)</span><span>
-</span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">Parser (Bool -&gt; DowngradeOptions)
--&gt; Parser Bool -&gt; Parser DowngradeOptions
-forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Parser Bool
 </span><span class="hs-identifier hs-var">Opt.switch</span></span><span>
-</span><span id="line-48"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields Bool
-forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span id="line-48"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;dryRun&quot;</span></span><span>
-</span><span id="line-49"></span><span>          </span><span class="annot"><span class="annottext">Mod FlagFields Bool -&gt; Mod FlagFields Bool -&gt; Mod FlagFields Bool
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields Bool
-forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span id="line-49"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Don't run any migrations, just print out the SQL.&quot;</span></span><span>
 </span><span id="line-50"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-52"></span><span>    </span><span id="local-6989586621689794271"><span class="annot"><span class="annottext">shortcut :: String -&gt; String -&gt; Parser a
-</span><a href="#local-6989586621689794271"><span class="hs-identifier hs-var hs-var">shortcut</span></a></span></span><span> </span><span id="local-6989586621689794269"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689794269"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621689794268"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689794268"><span class="hs-identifier hs-var">catalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">a -&gt; Mod FlagFields a -&gt; Parser a
-forall a. a -&gt; Mod FlagFields a -&gt; Parser a
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621690541289"><span class="annot"><span class="annottext">shortcut :: String -&gt; String -&gt; Parser a
+</span><a href="#local-6989586621690541289"><span class="hs-identifier hs-var hs-var">shortcut</span></a></span></span><span> </span><span id="local-6989586621690541271"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690541271"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621690541270"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690541270"><span class="hs-identifier hs-var">catalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">forall a. a -&gt; Mod FlagFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.flag'</span></span><span>
-</span><span id="line-54"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; a
-forall a. IsString a =&gt; String -&gt; a
-</span><span class="hs-identifier hs-var">String.fromString</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689794268"><span class="hs-identifier hs-var">catalogVersion</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-55"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields a
-forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
+</span><span id="line-54"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">String.fromString</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690541270"><span class="hs-identifier hs-var">catalogVersion</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;to-&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689794269"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-56"></span><span>            </span><span class="annot"><span class="annottext">Mod FlagFields a -&gt; Mod FlagFields a -&gt; Mod FlagFields a
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Mod FlagFields a
-forall (f :: * -&gt; *) a. String -&gt; Mod f a
+</span><span class="hs-string">&quot;to-&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690541271"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;Downgrade to graphql-engine version &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689794269"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot; (equivalent to --to-catalog-version &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621689794268"><span class="hs-identifier hs-var">catalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot;Downgrade to graphql-engine version &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690541271"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><span class="hs-string">&quot; (equivalent to --to-catalog-version &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690541270"><span class="hs-identifier hs-var">catalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;)&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-57"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-58"></span></pre></body></html>

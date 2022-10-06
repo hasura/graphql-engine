@@ -20,7 +20,7 @@
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Column.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.Column</span></a></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Column.html"><span class="hs-identifier">Hasura.Backends.Postgres.Types.Column</span></a></span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
-</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html"><span class="hs-identifier">Hasura.RQL.Types.Column</span></a></span><span>
@@ -30,184 +30,119 @@
 </span><span id="line-30"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Session.html"><span class="hs-identifier">Hasura.Session</span></a></span><span>
 </span><span id="line-31"></span><span>
 </span><span id="line-32"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.html#parseCollectableType"><span class="hs-identifier hs-type">parseCollectableType</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621689740278"><span class="annot"><a href="#local-6989586621689740278"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689740277"><span class="annot"><a href="#local-6989586621689740277"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689740278"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689740277"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-35"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-type">CollectableType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689740278"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690441990"><span class="annot"><a href="#local-6989586621690441990"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621690441986"><span class="annot"><a href="#local-6989586621690441986"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-34"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690441990"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690441986"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-type">CollectableType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690441990"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-36"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-37"></span><span>  </span><span class="annot"><a href="#local-6989586621689740277"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PartialSQLExp"><span class="hs-identifier hs-type">PartialSQLExp</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689740278"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-38"></span><span id="parseCollectableType"><span class="annot"><span class="annottext">parseCollectableType :: CollectableType (ColumnType ('Postgres pgKind))
+</span><span id="line-37"></span><span>  </span><span class="annot"><a href="#local-6989586621690441986"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PartialSQLExp"><span class="hs-identifier hs-type">PartialSQLExp</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690441990"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-38"></span><span id="parseCollectableType"><span class="annot"><span class="annottext">parseCollectableType :: forall (pgKind :: PostgresKind) (m :: * -&gt; *).
+(Backend ('Postgres pgKind), MonadError QErr m) =&gt;
+CollectableType (ColumnType ('Postgres pgKind))
 -&gt; Value -&gt; m (PartialSQLExp ('Postgres pgKind))
-</span><a href="Hasura.Backends.Postgres.DDL.html#parseCollectableType"><span class="hs-identifier hs-var hs-var">parseCollectableType</span></a></span></span><span> </span><span id="local-6989586621689740276"><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
-</span><a href="#local-6989586621689740276"><span class="hs-identifier hs-var">pgType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.html#parseCollectableType"><span class="hs-identifier hs-var hs-var">parseCollectableType</span></a></span></span><span> </span><span id="local-6989586621690441905"><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
+</span><a href="#local-6989586621690441905"><span class="hs-identifier hs-var">pgType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-39"></span><span>  </span><span class="hs-comment">-- When it is a special variable</span><span>
-</span><span id="line-40"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621689740274"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689740274"><span class="hs-identifier hs-var">t</span></a></span></span><span>
+</span><span id="line-40"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621690441903"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690441903"><span class="hs-identifier hs-var">t</span></a></span></span><span>
 </span><span id="line-41"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
 </span><a href="Hasura.Server.Utils.html#isSessionVariable"><span class="hs-identifier hs-var">isSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689740274"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PartialSQLExp ('Postgres pgKind)
--&gt; m (PartialSQLExp ('Postgres pgKind))
-forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(PartialSQLExp ('Postgres pgKind)
- -&gt; m (PartialSQLExp ('Postgres pgKind)))
--&gt; PartialSQLExp ('Postgres pgKind)
--&gt; m (PartialSQLExp ('Postgres pgKind))
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
--&gt; SessionVariable -&gt; PartialSQLExp ('Postgres pgKind)
-forall (pgKind :: PostgresKind).
+</span><a href="#local-6989586621690441903"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).
 CollectableType (ColumnType ('Postgres pgKind))
 -&gt; SessionVariable -&gt; PartialSQLExp ('Postgres pgKind)
 </span><a href="Hasura.Backends.Postgres.DDL.html#mkTypedSessionVar"><span class="hs-identifier hs-var">mkTypedSessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
-</span><a href="#local-6989586621689740276"><span class="hs-identifier hs-var">pgType</span></a></span><span> </span><span class="annot"><span class="annottext">(SessionVariable -&gt; PartialSQLExp ('Postgres pgKind))
--&gt; SessionVariable -&gt; PartialSQLExp ('Postgres pgKind)
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; SessionVariable
+</span><a href="#local-6989586621690441905"><span class="hs-identifier hs-var">pgType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; SessionVariable
 </span><a href="Hasura.Session.html#mkSessionVariable"><span class="hs-identifier hs-var">mkSessionVariable</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689740274"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621690441903"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-42"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Bool
 </span><a href="Hasura.Server.Utils.html#isReqUserId"><span class="hs-identifier hs-var">isReqUserId</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621689740274"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PartialSQLExp ('Postgres pgKind)
--&gt; m (PartialSQLExp ('Postgres pgKind))
-forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(PartialSQLExp ('Postgres pgKind)
- -&gt; m (PartialSQLExp ('Postgres pgKind)))
--&gt; PartialSQLExp ('Postgres pgKind)
--&gt; m (PartialSQLExp ('Postgres pgKind))
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
--&gt; SessionVariable -&gt; PartialSQLExp ('Postgres pgKind)
-forall (pgKind :: PostgresKind).
+</span><a href="#local-6989586621690441903"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).
 CollectableType (ColumnType ('Postgres pgKind))
 -&gt; SessionVariable -&gt; PartialSQLExp ('Postgres pgKind)
 </span><a href="Hasura.Backends.Postgres.DDL.html#mkTypedSessionVar"><span class="hs-identifier hs-var">mkTypedSessionVar</span></a></span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
-</span><a href="#local-6989586621689740276"><span class="hs-identifier hs-var">pgType</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
-forall a. IsString a =&gt; a
+</span><a href="#local-6989586621690441905"><span class="hs-identifier hs-var">pgType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; a
 </span><a href="Hasura.Server.Utils.html#userIdHeader"><span class="hs-identifier hs-var">userIdHeader</span></a></span><span>
 </span><span id="line-43"></span><span>  </span><span class="hs-comment">-- Typical value as Aeson's value</span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621689740268"><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689740268"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
-</span><a href="#local-6989586621689740276"><span class="hs-identifier hs-var">pgType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-type">CollectableTypeScalar</span></a></span><span> </span><span id="local-6989586621689740266"><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689740266"><span class="hs-identifier hs-var">cvType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">SQLExp -&gt; PartialSQLExp ('Postgres pgKind)
-forall (backend :: BackendType).
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621690441897"><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621690441897"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
+</span><a href="#local-6989586621690441905"><span class="hs-identifier hs-var">pgType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-45"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableTypeScalar"><span class="hs-identifier hs-type">CollectableTypeScalar</span></a></span><span> </span><span id="local-6989586621690441895"><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
+</span><a href="#local-6989586621690441895"><span class="hs-identifier hs-var">cvType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-46"></span><span>      </span><span class="annot"><span class="annottext">forall (backend :: BackendType).
 SQLExpression backend -&gt; PartialSQLExp backend
-</span><a href="Hasura.RQL.IR.BoolExp.html#PSESQLExp"><span class="hs-identifier hs-var">PSESQLExp</span></a></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; PartialSQLExp ('Postgres pgKind))
--&gt; (PGScalarValue -&gt; SQLExp)
--&gt; PGScalarValue
--&gt; PartialSQLExp ('Postgres pgKind)
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ColumnValue ('Postgres pgKind) -&gt; SQLExp
-forall (pgKind :: PostgresKind).
+</span><a href="Hasura.RQL.IR.BoolExp.html#PSESQLExp"><span class="hs-identifier hs-var">PSESQLExp</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).
 ColumnValue ('Postgres pgKind) -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.Translate.Column.html#toTxtValue"><span class="hs-identifier hs-var">toTxtValue</span></a></span><span> </span><span class="annot"><span class="annottext">(ColumnValue ('Postgres pgKind) -&gt; SQLExp)
--&gt; (PGScalarValue -&gt; ColumnValue ('Postgres pgKind))
--&gt; PGScalarValue
--&gt; SQLExp
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
--&gt; ScalarValue ('Postgres pgKind) -&gt; ColumnValue ('Postgres pgKind)
-forall (b :: BackendType).
+</span><a href="Hasura.Backends.Postgres.Translate.Column.html#toTxtValue"><span class="hs-identifier hs-var">toTxtValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 ColumnType b -&gt; ScalarValue b -&gt; ColumnValue b
 </span><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-var">ColumnValue</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689740266"><span class="hs-identifier hs-var">cvType</span></a></span><span> </span><span class="annot"><span class="annottext">(PGScalarValue -&gt; PartialSQLExp ('Postgres pgKind))
--&gt; m PGScalarValue -&gt; m (PartialSQLExp ('Postgres pgKind))
-forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
--&gt; Value -&gt; m (ScalarValue ('Postgres pgKind))
-forall (m :: * -&gt; *) (b :: BackendType).
+</span><a href="#local-6989586621690441895"><span class="hs-identifier hs-var">cvType</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (b :: BackendType).
 (MonadError QErr m, Backend b) =&gt;
 ColumnType b -&gt; Value -&gt; m (ScalarValue b)
 </span><a href="Hasura.RQL.Types.Column.html#parseScalarValueColumnType"><span class="hs-identifier hs-var">parseScalarValueColumnType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689740266"><span class="hs-identifier hs-var">cvType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689740268"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-47"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableTypeArray"><span class="hs-identifier hs-type">CollectableTypeArray</span></a></span><span> </span><span id="local-6989586621689740258"><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689740258"><span class="hs-identifier hs-var">ofType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-48"></span><span>      </span><span id="local-6989586621689740257"><span class="annot"><span class="annottext">[Value]
-</span><a href="#local-6989586621689740257"><span class="hs-identifier hs-var">vals</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">(Value -&gt; Parser [Value]) -&gt; Value -&gt; m [Value]
-forall (m :: * -&gt; *) v a. QErrM m =&gt; (v -&gt; Parser a) -&gt; v -&gt; m a
-</span><a href="Hasura.Base.Error.html#runAesonParser"><span class="hs-identifier hs-var">runAesonParser</span></a></span><span> </span><span class="annot"><span class="annottext">Value -&gt; Parser [Value]
-forall a. FromJSON a =&gt; Value -&gt; Parser a
+</span><a href="#local-6989586621690441895"><span class="hs-identifier hs-var">cvType</span></a></span><span> </span><span class="annot"><span class="annottext">Value
+</span><a href="#local-6989586621690441897"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableTypeArray"><span class="hs-identifier hs-type">CollectableTypeArray</span></a></span><span> </span><span id="local-6989586621690441887"><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
+</span><a href="#local-6989586621690441887"><span class="hs-identifier hs-var">ofType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-48"></span><span>      </span><span id="local-6989586621690441886"><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621690441886"><span class="hs-identifier hs-var">vals</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) v a. QErrM m =&gt; (v -&gt; Parser a) -&gt; v -&gt; m a
+</span><a href="Hasura.Base.Error.html#runAesonParser"><span class="hs-identifier hs-var">runAesonParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621689740268"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-49"></span><span>      </span><span id="local-6989586621689740254"><span class="annot"><span class="annottext">[PGScalarValue]
-</span><a href="#local-6989586621689740254"><span class="hs-identifier hs-var">scalarValues</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
--&gt; [Value] -&gt; m [ScalarValue ('Postgres pgKind)]
-forall (m :: * -&gt; *) (b :: BackendType).
+</span><a href="#local-6989586621690441897"><span class="hs-identifier hs-var">val</span></a></span><span>
+</span><span id="line-49"></span><span>      </span><span id="local-6989586621690441883"><span class="annot"><span class="annottext">[PGScalarValue]
+</span><a href="#local-6989586621690441883"><span class="hs-identifier hs-var">scalarValues</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (b :: BackendType).
 (MonadError QErr m, Backend b) =&gt;
 ColumnType b -&gt; [Value] -&gt; m [ScalarValue b]
 </span><a href="Hasura.RQL.Types.Column.html#parseScalarValuesColumnType"><span class="hs-identifier hs-var">parseScalarValuesColumnType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689740258"><span class="hs-identifier hs-var">ofType</span></a></span><span> </span><span class="annot"><span class="annottext">[Value]
-</span><a href="#local-6989586621689740257"><span class="hs-identifier hs-var">vals</span></a></span><span>
-</span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">PartialSQLExp ('Postgres pgKind)
--&gt; m (PartialSQLExp ('Postgres pgKind))
-forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(PartialSQLExp ('Postgres pgKind)
- -&gt; m (PartialSQLExp ('Postgres pgKind)))
--&gt; (SQLExp -&gt; PartialSQLExp ('Postgres pgKind))
--&gt; SQLExp
--&gt; m (PartialSQLExp ('Postgres pgKind))
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; PartialSQLExp ('Postgres pgKind)
-forall (backend :: BackendType).
+</span><a href="#local-6989586621690441887"><span class="hs-identifier hs-var">ofType</span></a></span><span> </span><span class="annot"><span class="annottext">[Value]
+</span><a href="#local-6989586621690441886"><span class="hs-identifier hs-var">vals</span></a></span><span>
+</span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (backend :: BackendType).
 SQLExpression backend -&gt; PartialSQLExp backend
-</span><a href="Hasura.RQL.IR.BoolExp.html#PSESQLExp"><span class="hs-identifier hs-var">PSESQLExp</span></a></span><span> </span><span class="annot"><span class="annottext">(SQLExp -&gt; m (PartialSQLExp ('Postgres pgKind)))
--&gt; SQLExp -&gt; m (PartialSQLExp ('Postgres pgKind))
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
+</span><a href="Hasura.RQL.IR.BoolExp.html#PSESQLExp"><span class="hs-identifier hs-var">PSESQLExp</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-51"></span><span>        </span><span class="annot"><span class="annottext">SQLExp -&gt; TypeAnn -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SETyAnn"><span class="hs-identifier hs-var">SETyAnn</span></a></span><span>
 </span><span id="line-52"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[SQLExp] -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEArray"><span class="hs-identifier hs-var">SEArray</span></a></span><span> </span><span class="annot"><span class="annottext">([SQLExp] -&gt; SQLExp) -&gt; [SQLExp] -&gt; SQLExp
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(PGScalarValue -&gt; SQLExp) -&gt; [PGScalarValue] -&gt; [SQLExp]
-forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnValue ('Postgres pgKind) -&gt; SQLExp
-forall (pgKind :: PostgresKind).
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEArray"><span class="hs-identifier hs-var">SEArray</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).
 ColumnValue ('Postgres pgKind) -&gt; SQLExp
-</span><a href="Hasura.Backends.Postgres.Translate.Column.html#toTxtValue"><span class="hs-identifier hs-var">toTxtValue</span></a></span><span> </span><span class="annot"><span class="annottext">(ColumnValue ('Postgres pgKind) -&gt; SQLExp)
--&gt; (PGScalarValue -&gt; ColumnValue ('Postgres pgKind))
--&gt; PGScalarValue
--&gt; SQLExp
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
--&gt; ScalarValue ('Postgres pgKind) -&gt; ColumnValue ('Postgres pgKind)
-forall (b :: BackendType).
+</span><a href="Hasura.Backends.Postgres.Translate.Column.html#toTxtValue"><span class="hs-identifier hs-var">toTxtValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 ColumnType b -&gt; ScalarValue b -&gt; ColumnValue b
 </span><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-var">ColumnValue</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689740258"><span class="hs-identifier hs-var">ofType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[PGScalarValue]
-</span><a href="#local-6989586621689740254"><span class="hs-identifier hs-var">scalarValues</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690441887"><span class="hs-identifier hs-var">ofType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[PGScalarValue]
+</span><a href="#local-6989586621690441883"><span class="hs-identifier hs-var">scalarValues</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-53"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CollectableType PGScalarType -&gt; TypeAnn
-</span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkTypeAnn"><span class="hs-identifier hs-var">mkTypeAnn</span></a></span><span> </span><span class="annot"><span class="annottext">(CollectableType PGScalarType -&gt; TypeAnn)
--&gt; CollectableType PGScalarType -&gt; TypeAnn
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">PGScalarType -&gt; CollectableType PGScalarType
-forall a. a -&gt; CollectableType a
-</span><a href="Hasura.SQL.Types.html#CollectableTypeArray"><span class="hs-identifier hs-var">CollectableTypeArray</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind) -&gt; PGScalarType
-forall (pgKind :: PostgresKind).
+</span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkTypeAnn"><span class="hs-identifier hs-var">mkTypeAnn</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; CollectableType a
+</span><a href="Hasura.SQL.Types.html#CollectableTypeArray"><span class="hs-identifier hs-var">CollectableTypeArray</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).
 ColumnType ('Postgres pgKind) -&gt; PGScalarType
 </span><a href="Hasura.Backends.Postgres.Types.Column.html#unsafePGColumnToBackend"><span class="hs-identifier hs-var">unsafePGColumnToBackend</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
-</span><a href="#local-6989586621689740258"><span class="hs-identifier hs-var">ofType</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690441887"><span class="hs-identifier hs-var">ofType</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span>
-</span><span id="line-55"></span><span id="local-6989586621689740318"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.html#mkTypedSessionVar"><span class="hs-identifier hs-type">mkTypedSessionVar</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-56"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-type">CollectableType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689740318"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-55"></span><span id="local-6989586621690441966"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.html#mkTypedSessionVar"><span class="hs-identifier hs-type">mkTypedSessionVar</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><a href="Hasura.SQL.Types.html#CollectableType"><span class="hs-identifier hs-type">CollectableType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690441966"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-57"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-58"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PartialSQLExp"><span class="hs-identifier hs-type">PartialSQLExp</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689740318"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span><span>
-</span><span id="line-59"></span><span id="mkTypedSessionVar"><span class="annot"><span class="annottext">mkTypedSessionVar :: CollectableType (ColumnType ('Postgres pgKind))
+</span><span id="line-58"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#PartialSQLExp"><span class="hs-identifier hs-type">PartialSQLExp</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690441966"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-59"></span><span id="mkTypedSessionVar"><span class="annot"><span class="annottext">mkTypedSessionVar :: forall (pgKind :: PostgresKind).
+CollectableType (ColumnType ('Postgres pgKind))
 -&gt; SessionVariable -&gt; PartialSQLExp ('Postgres pgKind)
-</span><a href="Hasura.Backends.Postgres.DDL.html#mkTypedSessionVar"><span class="hs-identifier hs-var hs-var">mkTypedSessionVar</span></a></span></span><span> </span><span id="local-6989586621689740248"><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
-</span><a href="#local-6989586621689740248"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-60"></span><span>  </span><span class="annot"><span class="annottext">SessionVarType ('Postgres pgKind)
--&gt; SessionVariable -&gt; PartialSQLExp ('Postgres pgKind)
-forall (backend :: BackendType).
+</span><a href="Hasura.Backends.Postgres.DDL.html#mkTypedSessionVar"><span class="hs-identifier hs-var hs-var">mkTypedSessionVar</span></a></span></span><span> </span><span id="local-6989586621690441875"><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
+</span><a href="#local-6989586621690441875"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-60"></span><span>  </span><span class="annot"><span class="annottext">forall (backend :: BackendType).
 SessionVarType backend -&gt; SessionVariable -&gt; PartialSQLExp backend
-</span><a href="Hasura.RQL.IR.BoolExp.html#PSESessVar"><span class="hs-identifier hs-var">PSESessVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind) -&gt; PGScalarType
-forall (pgKind :: PostgresKind).
+</span><a href="Hasura.RQL.IR.BoolExp.html#PSESessVar"><span class="hs-identifier hs-var">PSESessVar</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).
 ColumnType ('Postgres pgKind) -&gt; PGScalarType
-</span><a href="Hasura.Backends.Postgres.Types.Column.html#unsafePGColumnToBackend"><span class="hs-identifier hs-var">unsafePGColumnToBackend</span></a></span><span> </span><span class="annot"><span class="annottext">(ColumnType ('Postgres pgKind) -&gt; PGScalarType)
--&gt; CollectableType (ColumnType ('Postgres pgKind))
--&gt; CollectableType PGScalarType
-forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
-</span><a href="#local-6989586621689740248"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Backends.Postgres.Types.Column.html#unsafePGColumnToBackend"><span class="hs-identifier hs-var">unsafePGColumnToBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">CollectableType (ColumnType ('Postgres pgKind))
+</span><a href="#local-6989586621690441875"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-61"></span></pre></body></html>

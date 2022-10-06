@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE StandaloneKindSignatures #-}</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="local-6989586621690281821"><span id="local-6989586621690281822"><span id="local-6989586621690281823"><span id="local-6989586621690281824"><span id="local-6989586621690281825"><span id="local-6989586621690281826"><span id="local-6989586621690281827"><span id="local-6989586621690281828"><span id="local-6989586621690281829"><span id="local-6989586621690281830"><span id="local-6989586621690281831"><span id="local-6989586621690281832"><span id="local-6989586621690281833"></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-pragma">{-# LANGUAGE StandaloneKindSignatures #-}</span><span>
 </span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
 </span><span id="line-3"></span><span>
 </span><span id="line-4"></span><span class="hs-comment">-- | Postgres Types Update</span><span>
@@ -13,39 +13,32 @@
 </span><span id="line-13"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-14"></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
-</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Monoid</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">All</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Typeable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Typeable</span></span><span class="hs-special">)</span><span>
+</span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">Data.Kind</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier">Type</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">Data.Monoid</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">All</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">Data.Typeable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">Typeable</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier">PGCol</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier">AnnBoolExp</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpFld"><span class="hs-identifier">AnnBoolExpFld</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier">Backend</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier">BackendType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier">Postgres</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier">PostgresKind</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-24"></span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- | Represents an entry in an /update_table_many/ update.</span><span>
-</span><span id="line-26"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier hs-type">PostgresKind</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
-</span><span id="line-27"></span><span id="local-6989586621689672537"><span id="local-6989586621689672538"></span></span><span class="hs-keyword">data</span><span> </span><span id="MultiRowUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-var">MultiRowUpdate</span></a></span></span><span> </span><span id="local-6989586621689672600"><span class="annot"><a href="#local-6989586621689672600"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689672599"><span class="annot"><a href="#local-6989586621689672599"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MultiRowUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-var">MultiRowUpdate</span></a></span></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier hs-type">PostgresKind</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span>
+</span><span id="line-27"></span><span id="local-6989586621690281818"><span id="local-6989586621690281819"></span></span><span class="hs-keyword">data</span><span> </span><span id="MultiRowUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-var">MultiRowUpdate</span></a></span></span><span> </span><span id="local-6989586621690282276"><span class="annot"><a href="#local-6989586621690282276"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621690282275"><span class="annot"><a href="#local-6989586621690282275"><span class="hs-identifier hs-type">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MultiRowUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-var">MultiRowUpdate</span></a></span></span><span>
 </span><span id="line-28"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The /where/ clause for each individual update.</span><span>
 </span><span id="line-29"></span><span>    </span><span class="hs-comment">--</span><span>
 </span><span id="line-30"></span><span>    </span><span class="hs-comment">-- Note that the /single/ updates do not have a where clause, because it</span><span>
 </span><span id="line-31"></span><span>    </span><span class="hs-comment">-- uses the one found in 'Hasura.RQL.IR.Update.AnnotatedUpdateG'. However,</span><span>
 </span><span id="line-32"></span><span>    </span><span class="hs-comment">-- we have one for each update for /update_many/.</span><span>
-</span><span id="line-33"></span><span>    </span><span id="mruWhere"><span class="annot"><span class="annottext">MultiRowUpdate pgKind v -&gt; AnnBoolExp ('Postgres pgKind) v
-</span><a href="Hasura.Backends.Postgres.Types.Update.html#mruWhere"><span class="hs-identifier hs-var hs-var">mruWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672600"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689672599"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>    </span><span id="mruWhere"><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind) v.
+MultiRowUpdate pgKind v -&gt; AnnBoolExp ('Postgres pgKind) v
+</span><a href="Hasura.Backends.Postgres.Types.Update.html#mruWhere"><span class="hs-identifier hs-var hs-var">mruWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExp"><span class="hs-identifier hs-type">AnnBoolExp</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282276"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621690282275"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-34"></span><span>    </span><span class="hs-comment">-- | The /update/ expression, e.g, &quot;set&quot;, &quot;inc&quot;, etc., for each column.</span><span>
-</span><span id="line-35"></span><span>    </span><span id="mruExpression"><span class="annot"><span class="annottext">MultiRowUpdate pgKind v -&gt; HashMap PGCol (UpdateOpExpression v)
-</span><a href="Hasura.Backends.Postgres.Types.Update.html#mruExpression"><span class="hs-identifier hs-var hs-var">mruExpression</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672599"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span>    </span><span id="mruExpression"><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind) v.
+MultiRowUpdate pgKind v -&gt; HashMap PGCol (UpdateOpExpression v)
+</span><a href="Hasura.Backends.Postgres.Types.Update.html#mruExpression"><span class="hs-identifier hs-var hs-var">mruExpression</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282275"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x.
- MultiRowUpdate pgKind v -&gt; Rep (MultiRowUpdate pgKind v) x)
--&gt; (forall x.
-    Rep (MultiRowUpdate pgKind v) x -&gt; MultiRowUpdate pgKind v)
--&gt; Generic (MultiRowUpdate pgKind v)
-forall x.
-Rep (MultiRowUpdate pgKind v) x -&gt; MultiRowUpdate pgKind v
-forall x.
-MultiRowUpdate pgKind v -&gt; Rep (MultiRowUpdate pgKind v) x
-forall a.
+</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 forall (pgKind :: PostgresKind) v x.
 Rep (MultiRowUpdate pgKind v) x -&gt; MultiRowUpdate pgKind v
@@ -55,56 +48,49 @@ $cto :: forall (pgKind :: PostgresKind) v x.
 Rep (MultiRowUpdate pgKind v) x -&gt; MultiRowUpdate pgKind v
 $cfrom :: forall (pgKind :: PostgresKind) v x.
 MultiRowUpdate pgKind v -&gt; Rep (MultiRowUpdate pgKind v) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-38"></span><span>
-</span><span id="line-39"></span><span id="local-6989586621689672526"><span id="local-6989586621689672528"><span id="local-6989586621689672530"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672530"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Functor</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672530"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-39"></span><span id="local-6989586621690281798"><span id="local-6989586621690281808"><span id="local-6989586621690282255"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282255"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Functor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282255"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span id="local-6989586621689672490"><span id="local-6989586621689672492"><span id="local-6989586621689672494"><span id="local-6989586621689672496"><span id="local-6989586621689672498"><span id="local-6989586621689672500"><span id="local-6989586621689672502"><span id="local-6989586621689672504"><span id="local-6989586621689672506"><span id="local-6989586621689672508"><span id="local-6989586621689672510"><span id="local-6989586621689672512"><span id="local-6989586621689672514"><span id="local-6989586621689672516"><span id="local-6989586621689672518"><span id="local-6989586621689672520"><span id="local-6989586621689672522"><span id="local-6989586621689672524"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672524"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672524"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-41"></span><span id="local-6989586621690281737"><span id="local-6989586621690281739"><span id="local-6989586621690281741"><span id="local-6989586621690281743"><span id="local-6989586621690281745"><span id="local-6989586621690281747"><span id="local-6989586621690281753"><span id="local-6989586621690281755"><span id="local-6989586621690281757"><span id="local-6989586621690281759"><span id="local-6989586621690281761"><span id="local-6989586621690281763"><span id="local-6989586621690281765"><span id="local-6989586621690281771"><span id="local-6989586621690281773"><span id="local-6989586621690281788"><span id="local-6989586621690281790"><span id="local-6989586621690282230"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282230"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Foldable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282230"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span id="local-6989586621689672478"><span id="local-6989586621689672480"><span id="local-6989586621689672482"><span id="local-6989586621689672484"><span id="local-6989586621689672488"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672488"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Traversable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672488"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-43"></span><span id="local-6989586621690281711"><span id="local-6989586621690281713"><span id="local-6989586621690281715"><span id="local-6989586621690281730"><span id="local-6989586621690282214"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282214"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Traversable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282214"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span id="%24cMultiRowUpdate"><span id="%24tMultiRowUpdate"><span id="local-6989586621689672446"><span id="local-6989586621689672448"><span id="local-6989586621689672450"><span id="local-6989586621689672452"><span id="local-6989586621689672454"><span id="local-6989586621689672456"><span id="local-6989586621689672458"><span id="local-6989586621689672460"><span id="local-6989586621689672462"><span id="local-6989586621689672464"><span id="local-6989586621689672466"><span id="local-6989586621689672468"><span id="local-6989586621689672470"><span id="local-6989586621689672472"><span id="local-6989586621689672475"><span id="local-6989586621689672476"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data</span></span><span> </span><span class="annot"><a href="#local-6989586621689672476"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-47"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span> </span><span class="annot"><a href="#local-6989586621689672475"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-48"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Data</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpFld"><span class="hs-identifier hs-type">AnnBoolExpFld</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672475"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689672476"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-49"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672475"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span id="local-6989586621690281665"><span id="local-6989586621690281667"><span id="local-6989586621690281669"><span id="local-6989586621690281671"><span id="local-6989586621690281673"><span id="local-6989586621690281675"><span id="local-6989586621690281677"><span id="local-6989586621690281679"><span id="local-6989586621690281681"><span id="local-6989586621690281683"><span id="local-6989586621690281685"><span id="local-6989586621690281687"><span id="local-6989586621690281695"><span id="local-6989586621690281705"><span id="local-6989586621690282173"><span id="local-6989586621690282174"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-46"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Data</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282174"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-47"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Typeable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282173"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Data</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpFld"><span class="hs-identifier hs-type">AnnBoolExpFld</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282173"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621690282174"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282173"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-51"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Data</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672475"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672476"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-51"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Data</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282173"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282174"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-52"></span><span>
-</span><span id="line-53"></span><span id="local-6989586621689672435"><span id="local-6989586621689672437"><span id="local-6989586621689672439"><span id="local-6989586621689672441"><span id="local-6989586621689672442"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-54"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpFld"><span class="hs-identifier hs-type">AnnBoolExpFld</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672442"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689672441"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-55"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672441"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-56"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672442"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span id="local-6989586621690281647"><span id="local-6989586621690281649"><span id="local-6989586621690281658"><span id="local-6989586621690282165"><span id="local-6989586621690282166"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-54"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpFld"><span class="hs-identifier hs-type">AnnBoolExpFld</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282166"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621690282165"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-55"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282165"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-56"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282166"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-57"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-58"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672442"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672441"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-58"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282166"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282165"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span id="local-6989586621689672428"><span id="local-6989586621689672430"><span id="local-6989586621689672432"><span id="local-6989586621689672433"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-61"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpFld"><span class="hs-identifier hs-type">AnnBoolExpFld</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672433"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689672432"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-62"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672432"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-63"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672433"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span id="local-6989586621690281636"><span id="local-6989586621690281643"><span id="local-6989586621690282158"><span id="local-6989586621690282159"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-61"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpFld"><span class="hs-identifier hs-type">AnnBoolExpFld</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282159"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621690282158"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282158"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-63"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282159"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-65"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672433"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672432"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-65"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282159"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282158"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-66"></span><span>
 </span><span id="line-67"></span><span class="hs-comment">-- | The PostgreSQL-specific data of an Update expression.</span><span>
 </span><span id="line-68"></span><span class="hs-comment">--</span><span>
 </span><span id="line-69"></span><span class="hs-comment">-- This is parameterised over @v@ which enables different phases of IR</span><span>
 </span><span id="line-70"></span><span class="hs-comment">-- transformation to maintain the overall structure while enriching/transforming</span><span>
 </span><span id="line-71"></span><span class="hs-comment">-- the data at the leaves.</span><span>
-</span><span id="line-72"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier hs-type">PostgresKind</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
-</span><span id="line-73"></span><span id="local-6989586621689672425"><span id="local-6989586621689672426"></span></span><span class="hs-keyword">data</span><span> </span><span id="BackendUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-var">BackendUpdate</span></a></span></span><span> </span><span id="local-6989586621689672424"><span class="annot"><a href="#local-6989586621689672424"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621689672423"><span class="annot"><a href="#local-6989586621689672423"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-72"></span><span class="hs-keyword">type</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#PostgresKind"><span class="hs-identifier hs-type">PostgresKind</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span>
+</span><span id="line-73"></span><span id="local-6989586621690281633"><span id="local-6989586621690281634"></span></span><span class="hs-keyword">data</span><span> </span><span id="BackendUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-var">BackendUpdate</span></a></span></span><span> </span><span id="local-6989586621690282155"><span class="annot"><a href="#local-6989586621690282155"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621690282154"><span class="annot"><a href="#local-6989586621690282154"><span class="hs-identifier hs-type">v</span></a></span></span><span>
 </span><span id="line-74"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | The update operations to perform on each colum.</span><span>
-</span><span id="line-75"></span><span>    </span><span id="BackendUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-var">BackendUpdate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672423"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>    </span><span id="BackendUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-var">BackendUpdate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282154"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-76"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | The update operations to perform, in sequence, for an</span><span>
 </span><span id="line-77"></span><span>    </span><span class="hs-comment">-- /update_table_many/ operation.</span><span>
-</span><span id="line-78"></span><span>    </span><span id="BackendMultiRowUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendMultiRowUpdate"><span class="hs-identifier hs-var">BackendMultiRowUpdate</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672424"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672423"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall x.
- BackendUpdate pgKind v -&gt; Rep (BackendUpdate pgKind v) x)
--&gt; (forall x.
-    Rep (BackendUpdate pgKind v) x -&gt; BackendUpdate pgKind v)
--&gt; Generic (BackendUpdate pgKind v)
-forall x. Rep (BackendUpdate pgKind v) x -&gt; BackendUpdate pgKind v
-forall x. BackendUpdate pgKind v -&gt; Rep (BackendUpdate pgKind v) x
-forall a.
+</span><span id="line-78"></span><span>    </span><span id="BackendMultiRowUpdate"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendMultiRowUpdate"><span class="hs-identifier hs-var">BackendMultiRowUpdate</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282155"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282154"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 forall (pgKind :: PostgresKind) v x.
 Rep (BackendUpdate pgKind v) x -&gt; BackendUpdate pgKind v
@@ -114,128 +100,87 @@ $cto :: forall (pgKind :: PostgresKind) v x.
 Rep (BackendUpdate pgKind v) x -&gt; BackendUpdate pgKind v
 $cfrom :: forall (pgKind :: PostgresKind) v x.
 BackendUpdate pgKind v -&gt; Rep (BackendUpdate pgKind v) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-80"></span><span>
-</span><span id="line-81"></span><span id="local-6989586621689672414"><span id="local-6989586621689672416"><span id="local-6989586621689672418"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672418"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Functor</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672418"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-81"></span><span id="local-6989586621690281618"><span id="local-6989586621690281625"><span id="local-6989586621690282152"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282152"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Functor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282152"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span id="local-6989586621689672379"><span id="local-6989586621689672381"><span id="local-6989586621689672383"><span id="local-6989586621689672385"><span id="local-6989586621689672387"><span id="local-6989586621689672389"><span id="local-6989586621689672391"><span id="local-6989586621689672393"><span id="local-6989586621689672395"><span id="local-6989586621689672397"><span id="local-6989586621689672399"><span id="local-6989586621689672401"><span id="local-6989586621689672403"><span id="local-6989586621689672405"><span id="local-6989586621689672407"><span id="local-6989586621689672409"><span id="local-6989586621689672411"><span id="local-6989586621689672413"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672413"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Foldable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672413"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-83"></span><span id="local-6989586621690281561"><span id="local-6989586621690281563"><span id="local-6989586621690281565"><span id="local-6989586621690281567"><span id="local-6989586621690281569"><span id="local-6989586621690281571"><span id="local-6989586621690281577"><span id="local-6989586621690281579"><span id="local-6989586621690281581"><span id="local-6989586621690281583"><span id="local-6989586621690281585"><span id="local-6989586621690281587"><span id="local-6989586621690281589"><span id="local-6989586621690281595"><span id="local-6989586621690281597"><span id="local-6989586621690281609"><span id="local-6989586621690281611"><span id="local-6989586621690282150"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282150"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Foldable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282150"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-84"></span><span>
-</span><span id="line-85"></span><span id="local-6989586621689672368"><span id="local-6989586621689672370"><span id="local-6989586621689672372"><span id="local-6989586621689672374"><span id="local-6989586621689672378"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672378"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Traversable</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672378"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-85"></span><span id="local-6989586621690281536"><span id="local-6989586621690281538"><span id="local-6989586621690281540"><span id="local-6989586621690281555"><span id="local-6989586621690282147"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282147"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Traversable</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282147"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
 </span><span id="line-86"></span><span>
-</span><span id="line-87"></span><span id="%24cBackendMultiRowUpdate"><span id="%24cBackendUpdate"><span id="%24tBackendUpdate"><span id="local-6989586621689672337"><span id="local-6989586621689672339"><span id="local-6989586621689672341"><span id="local-6989586621689672343"><span id="local-6989586621689672345"><span id="local-6989586621689672347"><span id="local-6989586621689672349"><span id="local-6989586621689672351"><span id="local-6989586621689672353"><span id="local-6989586621689672355"><span id="local-6989586621689672357"><span id="local-6989586621689672359"><span id="local-6989586621689672361"><span id="local-6989586621689672363"><span id="local-6989586621689672366"><span id="local-6989586621689672367"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-88"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Data</span></span><span> </span><span class="annot"><a href="#local-6989586621689672367"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-89"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Typeable</span></span><span> </span><span class="annot"><a href="#local-6989586621689672366"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-90"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Data</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpFld"><span class="hs-identifier hs-type">AnnBoolExpFld</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672366"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689672367"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-91"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672366"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-87"></span><span id="local-6989586621690281489"><span id="local-6989586621690281491"><span id="local-6989586621690281493"><span id="local-6989586621690281495"><span id="local-6989586621690281497"><span id="local-6989586621690281499"><span id="local-6989586621690281501"><span id="local-6989586621690281503"><span id="local-6989586621690281505"><span id="local-6989586621690281507"><span id="local-6989586621690281509"><span id="local-6989586621690281511"><span id="local-6989586621690281520"><span id="local-6989586621690281530"><span id="local-6989586621690282144"><span id="local-6989586621690282145"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-88"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Data</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282145"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-89"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Typeable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282144"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-90"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Data</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#AnnBoolExpFld"><span class="hs-identifier hs-type">AnnBoolExpFld</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282144"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621690282145"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-91"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282144"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-93"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Data</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672366"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672367"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-93"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Data</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282144"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282145"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span id="local-6989586621689672326"><span id="local-6989586621689672328"><span id="local-6989586621689672330"><span id="local-6989586621689672332"><span id="local-6989586621689672333"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-96"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672333"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-97"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672333"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672332"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-98"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672332"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-95"></span><span id="local-6989586621690281476"><span id="local-6989586621690281478"><span id="local-6989586621690281486"><span id="local-6989586621690282141"><span id="local-6989586621690282142"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-96"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282142"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-97"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282142"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282141"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-98"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282141"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-99"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-100"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672333"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672332"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-100"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Show</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282142"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282141"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
 </span><span id="line-101"></span><span>
-</span><span id="line-102"></span><span id="local-6989586621689672320"><span id="local-6989586621689672322"><span id="local-6989586621689672324"><span id="local-6989586621689672325"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
-</span><span id="line-103"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672325"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-104"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672325"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672324"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-105"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672324"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-102"></span><span id="local-6989586621690281468"><span id="local-6989586621690281474"><span id="local-6989586621690282138"><span id="local-6989586621690282139"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span>
+</span><span id="line-103"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282139"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-104"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#MultiRowUpdate"><span class="hs-identifier hs-type">MultiRowUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282139"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282138"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-105"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-type">UpdateOpExpression</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282138"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-106"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-107"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672325"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672324"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Eq</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282139"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282138"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
 </span><span id="line-108"></span><span>
 </span><span id="line-109"></span><span class="hs-comment">-- | Are we updating anything?</span><span>
-</span><span id="line-110"></span><span id="local-6989586621689672318"><span id="local-6989586621689672319"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#isEmpty"><span class="hs-identifier hs-type">isEmpty</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672319"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689672318"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span></span></span><span>
-</span><span id="line-111"></span><span id="isEmpty"><span class="annot"><span class="annottext">isEmpty :: BackendUpdate pgKind v -&gt; Bool
+</span><span id="line-110"></span><span id="local-6989586621690282136"><span id="local-6989586621690282137"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#isEmpty"><span class="hs-identifier hs-type">isEmpty</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282137"><span class="hs-identifier hs-type">pgKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690282136"><span class="hs-identifier hs-type">v</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span></span></span><span>
+</span><span id="line-111"></span><span id="isEmpty"><span class="annot"><span class="annottext">isEmpty :: forall (pgKind :: PostgresKind) v. BackendUpdate pgKind v -&gt; Bool
 </span><a href="Hasura.Backends.Postgres.Types.Update.html#isEmpty"><span class="hs-identifier hs-var hs-var">isEmpty</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-112"></span><span>  </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-113"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span id="local-6989586621689672317"><span class="annot"><span class="annottext">HashMap PGCol (UpdateOpExpression v)
-</span><a href="#local-6989586621689672317"><span class="hs-identifier hs-var">hm</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-114"></span><span>      </span><span class="annot"><span class="annottext">HashMap PGCol (UpdateOpExpression v) -&gt; Bool
-forall k v. HashMap k v -&gt; Bool
+</span><span id="line-113"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendUpdate"><span class="hs-identifier hs-type">BackendUpdate</span></a></span><span> </span><span id="local-6989586621690281464"><span class="annot"><span class="annottext">HashMap PGCol (UpdateOpExpression v)
+</span><a href="#local-6989586621690281464"><span class="hs-identifier hs-var">hm</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-114"></span><span>      </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; Bool
 </span><span class="hs-identifier hs-var">Map.null</span></span><span> </span><span class="annot"><span class="annottext">HashMap PGCol (UpdateOpExpression v)
-</span><a href="#local-6989586621689672317"><span class="hs-identifier hs-var">hm</span></a></span><span>
-</span><span id="line-115"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendMultiRowUpdate"><span class="hs-identifier hs-type">BackendMultiRowUpdate</span></a></span><span> </span><span id="local-6989586621689672315"><span class="annot"><span class="annottext">[MultiRowUpdate pgKind v]
-</span><a href="#local-6989586621689672315"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621690281464"><span class="hs-identifier hs-var">hm</span></a></span><span>
+</span><span id="line-115"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#BackendMultiRowUpdate"><span class="hs-identifier hs-type">BackendMultiRowUpdate</span></a></span><span> </span><span id="local-6989586621690281462"><span class="annot"><span class="annottext">[MultiRowUpdate pgKind v]
+</span><a href="#local-6989586621690281462"><span class="hs-identifier hs-var">xs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-116"></span><span>      </span><span class="annot"><span class="annottext">All -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var">getAll</span></span><span> </span><span class="annot"><span class="annottext">(All -&gt; Bool) -&gt; All -&gt; Bool
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(MultiRowUpdate pgKind v -&gt; All)
--&gt; [MultiRowUpdate pgKind v] -&gt; All
-forall (t :: * -&gt; *) m a.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">getAll</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
-</span><span class="hs-identifier hs-var">foldMap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; All
-</span><span class="hs-identifier hs-var">All</span></span><span> </span><span class="annot"><span class="annottext">(Bool -&gt; All)
--&gt; (MultiRowUpdate pgKind v -&gt; Bool)
--&gt; MultiRowUpdate pgKind v
--&gt; All
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">HashMap PGCol (UpdateOpExpression v) -&gt; Bool
-forall k v. HashMap k v -&gt; Bool
-</span><span class="hs-identifier hs-var">Map.null</span></span><span> </span><span class="annot"><span class="annottext">(HashMap PGCol (UpdateOpExpression v) -&gt; Bool)
--&gt; (MultiRowUpdate pgKind v
-    -&gt; HashMap PGCol (UpdateOpExpression v))
--&gt; MultiRowUpdate pgKind v
--&gt; Bool
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">MultiRowUpdate pgKind v -&gt; HashMap PGCol (UpdateOpExpression v)
-forall (pgKind :: PostgresKind) v.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; All
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">All</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; Bool
+</span><span class="hs-identifier hs-var">Map.null</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind) v.
 MultiRowUpdate pgKind v -&gt; HashMap PGCol (UpdateOpExpression v)
-</span><a href="Hasura.Backends.Postgres.Types.Update.html#mruExpression"><span class="hs-identifier hs-var hs-var">mruExpression</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[MultiRowUpdate pgKind v]
-</span><a href="#local-6989586621689672315"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><a href="Hasura.Backends.Postgres.Types.Update.html#mruExpression"><span class="hs-identifier hs-var">mruExpression</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[MultiRowUpdate pgKind v]
+</span><a href="#local-6989586621690281462"><span class="hs-identifier hs-var">xs</span></a></span><span>
 </span><span id="line-117"></span><span>
 </span><span id="line-118"></span><span class="hs-comment">-- | The various @update operators@ supported by PostgreSQL,</span><span>
 </span><span id="line-119"></span><span class="hs-comment">-- i.e. the @_set@, @_inc@ operators that appear in the schema.</span><span>
 </span><span id="line-120"></span><span class="hs-comment">--</span><span>
 </span><span id="line-121"></span><span class="hs-comment">-- See &lt;https://hasura.io/docs/latest/graphql/core/databases/postgres/mutations/update.html#postgres-update-mutation Update Mutations User docs&gt;</span><span>
-</span><span id="line-122"></span><span id="local-6989586621689672309"><span id="local-6989586621689672310"></span></span><span class="hs-keyword">data</span><span> </span><span id="UpdateOpExpression"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-var">UpdateOpExpression</span></a></span></span><span> </span><span id="local-6989586621689672308"><span class="annot"><a href="#local-6989586621689672308"><span class="hs-identifier hs-type">v</span></a></span></span><span>
-</span><span id="line-123"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="UpdateSet"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateSet"><span class="hs-identifier hs-var">UpdateSet</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689672308"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-124"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateInc"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateInc"><span class="hs-identifier hs-var">UpdateInc</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689672308"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-125"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateAppend"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateAppend"><span class="hs-identifier hs-var">UpdateAppend</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689672308"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-126"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdatePrepend"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdatePrepend"><span class="hs-identifier hs-var">UpdatePrepend</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689672308"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-127"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteKey"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteKey"><span class="hs-identifier hs-var">UpdateDeleteKey</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689672308"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-128"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteElem"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteElem"><span class="hs-identifier hs-var">UpdateDeleteElem</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621689672308"><span class="hs-identifier hs-type">v</span></a></span><span>
-</span><span id="line-129"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteAtPath"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteAtPath"><span class="hs-identifier hs-var">UpdateDeleteAtPath</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621689672308"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-130"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689672297"><span id="local-6989586621689672299"><span class="annot"><span class="annottext">a -&gt; UpdateOpExpression b -&gt; UpdateOpExpression a
-(a -&gt; b) -&gt; UpdateOpExpression a -&gt; UpdateOpExpression b
-(forall a b.
- (a -&gt; b) -&gt; UpdateOpExpression a -&gt; UpdateOpExpression b)
--&gt; (forall a b. a -&gt; UpdateOpExpression b -&gt; UpdateOpExpression a)
--&gt; Functor UpdateOpExpression
-forall a b. a -&gt; UpdateOpExpression b -&gt; UpdateOpExpression a
+</span><span id="line-122"></span><span id="local-6989586621690281456"><span id="local-6989586621690281457"></span></span><span class="hs-keyword">data</span><span> </span><span id="UpdateOpExpression"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateOpExpression"><span class="hs-identifier hs-var">UpdateOpExpression</span></a></span></span><span> </span><span id="local-6989586621690282175"><span class="annot"><a href="#local-6989586621690282175"><span class="hs-identifier hs-type">v</span></a></span></span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="UpdateSet"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateSet"><span class="hs-identifier hs-var">UpdateSet</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621690282175"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-124"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateInc"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateInc"><span class="hs-identifier hs-var">UpdateInc</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621690282175"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-125"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateAppend"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateAppend"><span class="hs-identifier hs-var">UpdateAppend</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621690282175"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdatePrepend"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdatePrepend"><span class="hs-identifier hs-var">UpdatePrepend</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621690282175"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteKey"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteKey"><span class="hs-identifier hs-var">UpdateDeleteKey</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621690282175"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteElem"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteElem"><span class="hs-identifier hs-var">UpdateDeleteElem</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621690282175"><span class="hs-identifier hs-type">v</span></a></span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="UpdateDeleteAtPath"><span class="annot"><a href="Hasura.Backends.Postgres.Types.Update.html#UpdateDeleteAtPath"><span class="hs-identifier hs-var">UpdateDeleteAtPath</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621690282175"><span class="hs-identifier hs-type">v</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690281444"><span id="local-6989586621690281447"><span class="annot"><span class="annottext">forall a b. a -&gt; UpdateOpExpression b -&gt; UpdateOpExpression a
 forall a b.
 (a -&gt; b) -&gt; UpdateOpExpression a -&gt; UpdateOpExpression b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: a -&gt; UpdateOpExpression b -&gt; UpdateOpExpression a
+&lt;$ :: forall a b. a -&gt; UpdateOpExpression b -&gt; UpdateOpExpression a
 $c&lt;$ :: forall a b. a -&gt; UpdateOpExpression b -&gt; UpdateOpExpression a
-fmap :: (a -&gt; b) -&gt; UpdateOpExpression a -&gt; UpdateOpExpression b
+fmap :: forall a b.
+(a -&gt; b) -&gt; UpdateOpExpression a -&gt; UpdateOpExpression b
 $cfmap :: forall a b.
 (a -&gt; b) -&gt; UpdateOpExpression a -&gt; UpdateOpExpression b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672263"><span id="local-6989586621689672265"><span id="local-6989586621689672267"><span id="local-6989586621689672269"><span id="local-6989586621689672271"><span id="local-6989586621689672273"><span id="local-6989586621689672275"><span id="local-6989586621689672277"><span id="local-6989586621689672279"><span id="local-6989586621689672281"><span id="local-6989586621689672283"><span id="local-6989586621689672285"><span id="local-6989586621689672287"><span id="local-6989586621689672289"><span id="local-6989586621689672291"><span id="local-6989586621689672293"><span id="local-6989586621689672295"><span class="annot"><span class="annottext">UpdateOpExpression a -&gt; Bool
-(a -&gt; m) -&gt; UpdateOpExpression a -&gt; m
-(a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
-(forall m. Monoid m =&gt; UpdateOpExpression m -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOpExpression a -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOpExpression a -&gt; m)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; UpdateOpExpression a -&gt; a)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; UpdateOpExpression a -&gt; a)
--&gt; (forall a. UpdateOpExpression a -&gt; [a])
--&gt; (forall a. UpdateOpExpression a -&gt; Bool)
--&gt; (forall a. UpdateOpExpression a -&gt; Int)
--&gt; (forall a. Eq a =&gt; a -&gt; UpdateOpExpression a -&gt; Bool)
--&gt; (forall a. Ord a =&gt; UpdateOpExpression a -&gt; a)
--&gt; (forall a. Ord a =&gt; UpdateOpExpression a -&gt; a)
--&gt; (forall a. Num a =&gt; UpdateOpExpression a -&gt; a)
--&gt; (forall a. Num a =&gt; UpdateOpExpression a -&gt; a)
--&gt; Foldable UpdateOpExpression
-forall a. Eq a =&gt; a -&gt; UpdateOpExpression a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690281404"><span id="local-6989586621690281406"><span id="local-6989586621690281408"><span id="local-6989586621690281410"><span id="local-6989586621690281412"><span id="local-6989586621690281414"><span id="local-6989586621690281417"><span id="local-6989586621690281419"><span id="local-6989586621690281421"><span id="local-6989586621690281423"><span id="local-6989586621690281425"><span id="local-6989586621690281427"><span id="local-6989586621690281429"><span id="local-6989586621690281432"><span id="local-6989586621690281434"><span id="local-6989586621690281439"><span id="local-6989586621690281441"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; UpdateOpExpression a -&gt; Bool
 forall a. Num a =&gt; UpdateOpExpression a -&gt; a
 forall a. Ord a =&gt; UpdateOpExpression a -&gt; a
 forall m. Monoid m =&gt; UpdateOpExpression m -&gt; m
@@ -265,58 +210,42 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: UpdateOpExpression a -&gt; a
+product :: forall a. Num a =&gt; UpdateOpExpression a -&gt; a
 $cproduct :: forall a. Num a =&gt; UpdateOpExpression a -&gt; a
-sum :: UpdateOpExpression a -&gt; a
+sum :: forall a. Num a =&gt; UpdateOpExpression a -&gt; a
 $csum :: forall a. Num a =&gt; UpdateOpExpression a -&gt; a
-minimum :: UpdateOpExpression a -&gt; a
+minimum :: forall a. Ord a =&gt; UpdateOpExpression a -&gt; a
 $cminimum :: forall a. Ord a =&gt; UpdateOpExpression a -&gt; a
-maximum :: UpdateOpExpression a -&gt; a
+maximum :: forall a. Ord a =&gt; UpdateOpExpression a -&gt; a
 $cmaximum :: forall a. Ord a =&gt; UpdateOpExpression a -&gt; a
-elem :: a -&gt; UpdateOpExpression a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; UpdateOpExpression a -&gt; Bool
 $celem :: forall a. Eq a =&gt; a -&gt; UpdateOpExpression a -&gt; Bool
-length :: UpdateOpExpression a -&gt; Int
+length :: forall a. UpdateOpExpression a -&gt; Int
 $clength :: forall a. UpdateOpExpression a -&gt; Int
-null :: UpdateOpExpression a -&gt; Bool
+null :: forall a. UpdateOpExpression a -&gt; Bool
 $cnull :: forall a. UpdateOpExpression a -&gt; Bool
-toList :: UpdateOpExpression a -&gt; [a]
+toList :: forall a. UpdateOpExpression a -&gt; [a]
 $ctoList :: forall a. UpdateOpExpression a -&gt; [a]
-foldl1 :: (a -&gt; a -&gt; a) -&gt; UpdateOpExpression a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOpExpression a -&gt; a
 $cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOpExpression a -&gt; a
-foldr1 :: (a -&gt; a -&gt; a) -&gt; UpdateOpExpression a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOpExpression a -&gt; a
 $cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; UpdateOpExpression a -&gt; a
-foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
 $cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
-foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
 $cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
-foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
 $cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
-foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
 $cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; UpdateOpExpression a -&gt; b
-foldMap' :: (a -&gt; m) -&gt; UpdateOpExpression a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOpExpression a -&gt; m
 $cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOpExpression a -&gt; m
-foldMap :: (a -&gt; m) -&gt; UpdateOpExpression a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOpExpression a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; UpdateOpExpression a -&gt; m
-fold :: UpdateOpExpression m -&gt; m
+fold :: forall m. Monoid m =&gt; UpdateOpExpression m -&gt; m
 $cfold :: forall m. Monoid m =&gt; UpdateOpExpression m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672253"><span id="local-6989586621689672255"><span id="local-6989586621689672257"><span id="local-6989586621689672259"><span class="annot"><span class="annottext">Functor UpdateOpExpression
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690281381"><span id="local-6989586621690281383"><span id="local-6989586621690281385"><span id="local-6989586621690281398"><span class="annot"><span class="annottext">Functor UpdateOpExpression
 Foldable UpdateOpExpression
-Functor UpdateOpExpression
--&gt; Foldable UpdateOpExpression
--&gt; (forall (f :: * -&gt; *) a b.
-    Applicative f =&gt;
-    (a -&gt; f b) -&gt; UpdateOpExpression a -&gt; f (UpdateOpExpression b))
--&gt; (forall (f :: * -&gt; *) a.
-    Applicative f =&gt;
-    UpdateOpExpression (f a) -&gt; f (UpdateOpExpression a))
--&gt; (forall (m :: * -&gt; *) a b.
-    Monad m =&gt;
-    (a -&gt; m b) -&gt; UpdateOpExpression a -&gt; m (UpdateOpExpression b))
--&gt; (forall (m :: * -&gt; *) a.
-    Monad m =&gt;
-    UpdateOpExpression (m a) -&gt; m (UpdateOpExpression a))
--&gt; Traversable UpdateOpExpression
-(a -&gt; f b) -&gt; UpdateOpExpression a -&gt; f (UpdateOpExpression b)
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -341,93 +270,39 @@ Monad m =&gt;
 forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; UpdateOpExpression a -&gt; f (UpdateOpExpression b)
-sequence :: UpdateOpExpression (m a) -&gt; m (UpdateOpExpression a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+UpdateOpExpression (m a) -&gt; m (UpdateOpExpression a)
 $csequence :: forall (m :: * -&gt; *) a.
 Monad m =&gt;
 UpdateOpExpression (m a) -&gt; m (UpdateOpExpression a)
-mapM :: (a -&gt; m b) -&gt; UpdateOpExpression a -&gt; m (UpdateOpExpression b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; UpdateOpExpression a -&gt; m (UpdateOpExpression b)
 $cmapM :: forall (m :: * -&gt; *) a b.
 Monad m =&gt;
 (a -&gt; m b) -&gt; UpdateOpExpression a -&gt; m (UpdateOpExpression b)
-sequenceA :: UpdateOpExpression (f a) -&gt; f (UpdateOpExpression a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+UpdateOpExpression (f a) -&gt; f (UpdateOpExpression a)
 $csequenceA :: forall (f :: * -&gt; *) a.
 Applicative f =&gt;
 UpdateOpExpression (f a) -&gt; f (UpdateOpExpression a)
-traverse :: (a -&gt; f b) -&gt; UpdateOpExpression a -&gt; f (UpdateOpExpression b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; UpdateOpExpression a -&gt; f (UpdateOpExpression b)
 $ctraverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; UpdateOpExpression a -&gt; f (UpdateOpExpression b)
-$cp2Traversable :: Foldable UpdateOpExpression
-$cp1Traversable :: Functor UpdateOpExpression
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(forall x. UpdateOpExpression v -&gt; Rep (UpdateOpExpression v) x)
--&gt; (forall x. Rep (UpdateOpExpression v) x -&gt; UpdateOpExpression v)
--&gt; Generic (UpdateOpExpression v)
-forall x. Rep (UpdateOpExpression v) x -&gt; UpdateOpExpression v
-forall x. UpdateOpExpression v -&gt; Rep (UpdateOpExpression v) x
-forall a.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a.
 (forall x. a -&gt; Rep a x) -&gt; (forall x. Rep a x -&gt; a) -&gt; Generic a
 forall v x. Rep (UpdateOpExpression v) x -&gt; UpdateOpExpression v
 forall v x. UpdateOpExpression v -&gt; Rep (UpdateOpExpression v) x
 $cto :: forall v x. Rep (UpdateOpExpression v) x -&gt; UpdateOpExpression v
 $cfrom :: forall v x. UpdateOpExpression v -&gt; Rep (UpdateOpExpression v) x
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></span><span class="hs-special">,</span><span> </span><span id="%24cUpdateDeleteAtPath"><span id="%24cUpdateDeleteElem"><span id="%24cUpdateDeleteKey"><span id="%24cUpdatePrepend"><span id="%24cUpdateAppend"><span id="%24cUpdateInc"><span id="%24cUpdateSet"><span id="%24tUpdateOpExpression"><span id="local-6989586621689672222"><span id="local-6989586621689672224"><span id="local-6989586621689672226"><span id="local-6989586621689672228"><span id="local-6989586621689672230"><span id="local-6989586621689672232"><span id="local-6989586621689672234"><span id="local-6989586621689672236"><span id="local-6989586621689672238"><span id="local-6989586621689672240"><span id="local-6989586621689672242"><span id="local-6989586621689672244"><span id="local-6989586621689672246"><span id="local-6989586621689672248"><span class="annot"><span class="annottext">Typeable (UpdateOpExpression v)
-DataType
-Constr
-Typeable (UpdateOpExpression v)
--&gt; (forall (c :: * -&gt; *).
-    (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
-    -&gt; (forall g. g -&gt; c g)
-    -&gt; UpdateOpExpression v
-    -&gt; c (UpdateOpExpression v))
--&gt; (forall (c :: * -&gt; *).
-    (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
-    -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (UpdateOpExpression v))
--&gt; (UpdateOpExpression v -&gt; Constr)
--&gt; (UpdateOpExpression v -&gt; DataType)
--&gt; (forall (t :: * -&gt; *) (c :: * -&gt; *).
-    Typeable t =&gt;
-    (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOpExpression v)))
--&gt; (forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
-    Typeable t =&gt;
-    (forall d e. (Data d, Data e) =&gt; c (t d e))
-    -&gt; Maybe (c (UpdateOpExpression v)))
--&gt; ((forall b. Data b =&gt; b -&gt; b)
-    -&gt; UpdateOpExpression v -&gt; UpdateOpExpression v)
--&gt; (forall r r'.
-    (r -&gt; r' -&gt; r)
-    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOpExpression v -&gt; r)
--&gt; (forall r r'.
-    (r' -&gt; r -&gt; r)
-    -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOpExpression v -&gt; r)
--&gt; (forall u.
-    (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOpExpression v -&gt; [u])
--&gt; (forall u.
-    Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOpExpression v -&gt; u)
--&gt; (forall (m :: * -&gt; *).
-    Monad m =&gt;
-    (forall d. Data d =&gt; d -&gt; m d)
-    -&gt; UpdateOpExpression v -&gt; m (UpdateOpExpression v))
--&gt; (forall (m :: * -&gt; *).
-    MonadPlus m =&gt;
-    (forall d. Data d =&gt; d -&gt; m d)
-    -&gt; UpdateOpExpression v -&gt; m (UpdateOpExpression v))
--&gt; (forall (m :: * -&gt; *).
-    MonadPlus m =&gt;
-    (forall d. Data d =&gt; d -&gt; m d)
-    -&gt; UpdateOpExpression v -&gt; m (UpdateOpExpression v))
--&gt; Data (UpdateOpExpression v)
-UpdateOpExpression v -&gt; DataType
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690281329"><span id="local-6989586621690281331"><span id="local-6989586621690281333"><span id="local-6989586621690281335"><span id="local-6989586621690281337"><span id="local-6989586621690281339"><span id="local-6989586621690281341"><span id="local-6989586621690281343"><span id="local-6989586621690281345"><span id="local-6989586621690281351"><span id="local-6989586621690281353"><span id="local-6989586621690281355"><span id="local-6989586621690281364"><span id="local-6989586621690281373"><span class="annot"><span class="annottext">UpdateOpExpression v -&gt; DataType
 UpdateOpExpression v -&gt; Constr
-(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOpExpression v))
-(forall b. Data b =&gt; b -&gt; b)
--&gt; UpdateOpExpression v -&gt; UpdateOpExpression v
-(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
--&gt; (forall g. g -&gt; c g)
--&gt; UpdateOpExpression v
--&gt; c (UpdateOpExpression v)
-(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
--&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (UpdateOpExpression v)
-forall v. Data v =&gt; Typeable (UpdateOpExpression v)
+forall {v}. Data v =&gt; Typeable (UpdateOpExpression v)
 forall v. Data v =&gt; UpdateOpExpression v -&gt; DataType
 forall v. Data v =&gt; UpdateOpExpression v -&gt; Constr
 forall v.
@@ -506,24 +381,6 @@ Typeable a
     MonadPlus m =&gt;
     (forall d. Data d =&gt; d -&gt; m d) -&gt; a -&gt; m a)
 -&gt; Data a
-forall u.
-Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOpExpression v -&gt; u
-forall u.
-(forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOpExpression v -&gt; [u]
-forall r r'.
-(r -&gt; r' -&gt; r)
--&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOpExpression v -&gt; r
-forall r r'.
-(r' -&gt; r -&gt; r)
--&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOpExpression v -&gt; r
-forall (m :: * -&gt; *).
-Monad m =&gt;
-(forall d. Data d =&gt; d -&gt; m d)
--&gt; UpdateOpExpression v -&gt; m (UpdateOpExpression v)
-forall (m :: * -&gt; *).
-MonadPlus m =&gt;
-(forall d. Data d =&gt; d -&gt; m d)
--&gt; UpdateOpExpression v -&gt; m (UpdateOpExpression v)
 forall (c :: * -&gt; *).
 (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
 -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (UpdateOpExpression v)
@@ -535,51 +392,49 @@ forall (c :: * -&gt; *).
 forall (t :: * -&gt; *) (c :: * -&gt; *).
 Typeable t =&gt;
 (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOpExpression v))
-forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
-Typeable t =&gt;
-(forall d e. (Data d, Data e) =&gt; c (t d e))
--&gt; Maybe (c (UpdateOpExpression v))
-$cUpdateDeleteAtPath :: Constr
-$cUpdateDeleteElem :: Constr
-$cUpdateDeleteKey :: Constr
-$cUpdatePrepend :: Constr
-$cUpdateAppend :: Constr
-$cUpdateInc :: Constr
-$cUpdateSet :: Constr
-$tUpdateOpExpression :: DataType
-gmapMo :: (forall d. Data d =&gt; d -&gt; m d)
+gmapMo :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
 -&gt; UpdateOpExpression v -&gt; m (UpdateOpExpression v)
 $cgmapMo :: forall v (m :: * -&gt; *).
 (Data v, MonadPlus m) =&gt;
 (forall d. Data d =&gt; d -&gt; m d)
 -&gt; UpdateOpExpression v -&gt; m (UpdateOpExpression v)
-gmapMp :: (forall d. Data d =&gt; d -&gt; m d)
+gmapMp :: forall (m :: * -&gt; *).
+MonadPlus m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
 -&gt; UpdateOpExpression v -&gt; m (UpdateOpExpression v)
 $cgmapMp :: forall v (m :: * -&gt; *).
 (Data v, MonadPlus m) =&gt;
 (forall d. Data d =&gt; d -&gt; m d)
 -&gt; UpdateOpExpression v -&gt; m (UpdateOpExpression v)
-gmapM :: (forall d. Data d =&gt; d -&gt; m d)
+gmapM :: forall (m :: * -&gt; *).
+Monad m =&gt;
+(forall d. Data d =&gt; d -&gt; m d)
 -&gt; UpdateOpExpression v -&gt; m (UpdateOpExpression v)
 $cgmapM :: forall v (m :: * -&gt; *).
 (Data v, Monad m) =&gt;
 (forall d. Data d =&gt; d -&gt; m d)
 -&gt; UpdateOpExpression v -&gt; m (UpdateOpExpression v)
-gmapQi :: Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOpExpression v -&gt; u
+gmapQi :: forall u.
+Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOpExpression v -&gt; u
 $cgmapQi :: forall v u.
 Data v =&gt;
 Int -&gt; (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOpExpression v -&gt; u
-gmapQ :: (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOpExpression v -&gt; [u]
+gmapQ :: forall u.
+(forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOpExpression v -&gt; [u]
 $cgmapQ :: forall v u.
 Data v =&gt;
 (forall d. Data d =&gt; d -&gt; u) -&gt; UpdateOpExpression v -&gt; [u]
-gmapQr :: (r' -&gt; r -&gt; r)
+gmapQr :: forall r r'.
+(r' -&gt; r -&gt; r)
 -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOpExpression v -&gt; r
 $cgmapQr :: forall v r r'.
 Data v =&gt;
 (r' -&gt; r -&gt; r)
 -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOpExpression v -&gt; r
-gmapQl :: (r -&gt; r' -&gt; r)
+gmapQl :: forall r r'.
+(r -&gt; r' -&gt; r)
 -&gt; r -&gt; (forall d. Data d =&gt; d -&gt; r') -&gt; UpdateOpExpression v -&gt; r
 $cgmapQl :: forall v r r'.
 Data v =&gt;
@@ -591,13 +446,17 @@ $cgmapT :: forall v.
 Data v =&gt;
 (forall b. Data b =&gt; b -&gt; b)
 -&gt; UpdateOpExpression v -&gt; UpdateOpExpression v
-dataCast2 :: (forall d e. (Data d, Data e) =&gt; c (t d e))
+dataCast2 :: forall (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d e. (Data d, Data e) =&gt; c (t d e))
 -&gt; Maybe (c (UpdateOpExpression v))
 $cdataCast2 :: forall v (t :: * -&gt; * -&gt; *) (c :: * -&gt; *).
 (Data v, Typeable t) =&gt;
 (forall d e. (Data d, Data e) =&gt; c (t d e))
 -&gt; Maybe (c (UpdateOpExpression v))
-dataCast1 :: (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOpExpression v))
+dataCast1 :: forall (t :: * -&gt; *) (c :: * -&gt; *).
+Typeable t =&gt;
+(forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOpExpression v))
 $cdataCast1 :: forall v (t :: * -&gt; *) (c :: * -&gt; *).
 (Data v, Typeable t) =&gt;
 (forall d. Data d =&gt; c (t d)) -&gt; Maybe (c (UpdateOpExpression v))
@@ -605,13 +464,15 @@ dataTypeOf :: UpdateOpExpression v -&gt; DataType
 $cdataTypeOf :: forall v. Data v =&gt; UpdateOpExpression v -&gt; DataType
 toConstr :: UpdateOpExpression v -&gt; Constr
 $ctoConstr :: forall v. Data v =&gt; UpdateOpExpression v -&gt; Constr
-gunfold :: (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
+gunfold :: forall (c :: * -&gt; *).
+(forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
 -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (UpdateOpExpression v)
 $cgunfold :: forall v (c :: * -&gt; *).
 Data v =&gt;
 (forall b r. Data b =&gt; c (b -&gt; r) -&gt; c r)
 -&gt; (forall r. r -&gt; c r) -&gt; Constr -&gt; c (UpdateOpExpression v)
-gfoldl :: (forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
+gfoldl :: forall (c :: * -&gt; *).
+(forall d b. Data d =&gt; c (d -&gt; b) -&gt; d -&gt; c b)
 -&gt; (forall g. g -&gt; c g)
 -&gt; UpdateOpExpression v
 -&gt; c (UpdateOpExpression v)
@@ -621,14 +482,7 @@ Data v =&gt;
 -&gt; (forall g. g -&gt; c g)
 -&gt; UpdateOpExpression v
 -&gt; c (UpdateOpExpression v)
-$cp1Data :: forall v. Data v =&gt; Typeable (UpdateOpExpression v)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672208"><span id="local-6989586621689672210"><span id="local-6989586621689672212"><span class="annot"><span class="annottext">Int -&gt; UpdateOpExpression v -&gt; ShowS
-[UpdateOpExpression v] -&gt; ShowS
-UpdateOpExpression v -&gt; String
-(Int -&gt; UpdateOpExpression v -&gt; ShowS)
--&gt; (UpdateOpExpression v -&gt; String)
--&gt; ([UpdateOpExpression v] -&gt; ShowS)
--&gt; Show (UpdateOpExpression v)
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Data</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690281309"><span id="local-6989586621690281311"><span id="local-6989586621690281327"><span class="annot"><span class="annottext">Int -&gt; UpdateOpExpression v -&gt; ShowS
 forall v. Show v =&gt; Int -&gt; UpdateOpExpression v -&gt; ShowS
 forall v. Show v =&gt; [UpdateOpExpression v] -&gt; ShowS
 forall v. Show v =&gt; UpdateOpExpression v -&gt; String
@@ -640,10 +494,7 @@ show :: UpdateOpExpression v -&gt; String
 $cshow :: forall v. Show v =&gt; UpdateOpExpression v -&gt; String
 showsPrec :: Int -&gt; UpdateOpExpression v -&gt; ShowS
 $cshowsPrec :: forall v. Show v =&gt; Int -&gt; UpdateOpExpression v -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689672204"><span id="local-6989586621689672206"><span class="annot"><span class="annottext">UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool
-(UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool)
--&gt; (UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool)
--&gt; Eq (UpdateOpExpression v)
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690281298"><span id="local-6989586621690281307"><span class="annot"><span class="annottext">UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool
 forall v.
 Eq v =&gt;
 UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool
@@ -656,5 +507,5 @@ UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool
 $c== :: forall v.
 Eq v =&gt;
 UpdateOpExpression v -&gt; UpdateOpExpression v -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-131"></span></pre></body></html>

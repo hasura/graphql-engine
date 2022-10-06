@@ -10,21 +10,23 @@
 </span><span id="line-10"></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html"><span class="hs-identifier">Hasura.Backends.Postgres.SQL.DML</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.Translate.BoolExp.html"><span class="hs-identifier">Hasura.Backends.Postgres.Translate.BoolExp</span></a></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html"><span class="hs-identifier">Hasura.RQL.IR.BoolExp</span></a></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html"><span class="hs-identifier">Hasura.RQL.IR.Delete</span></a></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Backend</span></a></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
 </span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span id="local-6989586621689739153"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Delete.html#mkDelete"><span class="hs-identifier hs-type">mkDelete</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-20"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689739153"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-21"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDel"><span class="hs-identifier hs-type">AnnDel</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689739153"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-19"></span><span id="local-6989586621690439862"><span class="annot"><a href="Hasura.Backends.Postgres.Translate.Delete.html#mkDelete"><span class="hs-identifier hs-type">mkDelete</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-20"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690439862"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-21"></span><span>  </span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDel"><span class="hs-identifier hs-type">AnnDel</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690439862"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-22"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLDelete"><span class="hs-identifier hs-type">S.SQLDelete</span></a></span></span><span>
-</span><span id="line-23"></span><span id="mkDelete"><span class="annot"><span class="annottext">mkDelete :: AnnDel ('Postgres pgKind) -&gt; SQLDelete
-</span><a href="Hasura.Backends.Postgres.Translate.Delete.html#mkDelete"><span class="hs-identifier hs-var hs-var">mkDelete</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDel"><span class="hs-identifier hs-type">AnnDel</span></a></span><span> </span><span id="local-6989586621689739151"><span class="annot"><span class="annottext">TableName ('Postgres pgKind)
-</span><a href="#local-6989586621689739151"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689739150"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (SQLExpression ('Postgres pgKind))
-</span><a href="#local-6989586621689739150"><span class="hs-identifier hs-var">fltr</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689739149"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (SQLExpression ('Postgres pgKind))
-</span><a href="#local-6989586621689739149"><span class="hs-identifier hs-var">wc</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MutationOutputG
+</span><span id="line-23"></span><span id="mkDelete"><span class="annot"><span class="annottext">mkDelete :: forall (pgKind :: PostgresKind).
+Backend ('Postgres pgKind) =&gt;
+AnnDel ('Postgres pgKind) -&gt; SQLDelete
+</span><a href="Hasura.Backends.Postgres.Translate.Delete.html#mkDelete"><span class="hs-identifier hs-var hs-var">mkDelete</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Delete.html#AnnDel"><span class="hs-identifier hs-type">AnnDel</span></a></span><span> </span><span id="local-6989586621690439825"><span class="annot"><span class="annottext">TableName ('Postgres pgKind)
+</span><a href="#local-6989586621690439825"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690439824"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (SQLExpression ('Postgres pgKind))
+</span><a href="#local-6989586621690439824"><span class="hs-identifier hs-var">fltr</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690439823"><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (SQLExpression ('Postgres pgKind))
+</span><a href="#local-6989586621690439823"><span class="hs-identifier hs-var">wc</span></a></span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">MutationOutputG
   ('Postgres pgKind) Void (SQLExpression ('Postgres pgKind))
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">[ColumnInfo ('Postgres pgKind)]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
@@ -32,63 +34,35 @@
 </span><span id="line-24"></span><span>  </span><span class="annot"><span class="annottext">QualifiedTable
 -&gt; Maybe UsingExp -&gt; Maybe WhereFrag -&gt; Maybe RetExp -&gt; SQLDelete
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SQLDelete"><span class="hs-identifier hs-var">S.SQLDelete</span></a></span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres pgKind)
-QualifiedTable
-</span><a href="#local-6989586621689739151"><span class="hs-identifier hs-var">tn</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe UsingExp
-forall a. Maybe a
-</span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="annot"><span class="annottext">Maybe WhereFrag
-</span><a href="#local-6989586621689739147"><span class="hs-identifier hs-var">tableFltr</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe RetExp -&gt; SQLDelete) -&gt; Maybe RetExp -&gt; SQLDelete
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">RetExp -&gt; Maybe RetExp
-forall a. a -&gt; Maybe a
-</span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">RetExp
+</span><a href="#local-6989586621690439825"><span class="hs-identifier hs-var">tn</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe WhereFrag
+</span><a href="#local-6989586621690439821"><span class="hs-identifier hs-var">tableFltr</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">RetExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#returningStar"><span class="hs-identifier hs-var">S.returningStar</span></a></span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-26"></span><span>    </span><span id="local-6989586621689739147"><span class="annot"><span class="annottext">tableFltr :: Maybe WhereFrag
-</span><a href="#local-6989586621689739147"><span class="hs-identifier hs-var hs-var">tableFltr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-27"></span><span>      </span><span class="annot"><span class="annottext">WhereFrag -&gt; Maybe WhereFrag
-forall a. a -&gt; Maybe a
-</span><span class="hs-identifier hs-var">Just</span></span><span>
-</span><span id="line-28"></span><span>        </span><span class="annot"><span class="annottext">(WhereFrag -&gt; Maybe WhereFrag)
--&gt; (AnnBoolExp ('Postgres pgKind) SQLExp -&gt; WhereFrag)
--&gt; AnnBoolExp ('Postgres pgKind) SQLExp
--&gt; Maybe WhereFrag
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">BoolExp -&gt; WhereFrag
+</span><span id="line-26"></span><span>    </span><span id="local-6989586621690439821"><span class="annot"><span class="annottext">tableFltr :: Maybe WhereFrag
+</span><a href="#local-6989586621690439821"><span class="hs-identifier hs-var hs-var">tableFltr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-27"></span><span>      </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span>
+</span><span id="line-28"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">BoolExp -&gt; WhereFrag
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#WhereFrag"><span class="hs-identifier hs-var">S.WhereFrag</span></a></span><span>
-</span><span id="line-29"></span><span>        </span><span class="annot"><span class="annottext">(BoolExp -&gt; WhereFrag)
--&gt; (AnnBoolExp ('Postgres pgKind) SQLExp -&gt; BoolExp)
--&gt; AnnBoolExp ('Postgres pgKind) SQLExp
--&gt; WhereFrag
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">BoolExp -&gt; BoolExp
+</span><span id="line-29"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">BoolExp -&gt; BoolExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#simplifyBoolExp"><span class="hs-identifier hs-var">S.simplifyBoolExp</span></a></span><span>
-</span><span id="line-30"></span><span>        </span><span class="annot"><span class="annottext">(BoolExp -&gt; BoolExp)
--&gt; (AnnBoolExp ('Postgres pgKind) SQLExp -&gt; BoolExp)
--&gt; AnnBoolExp ('Postgres pgKind) SQLExp
--&gt; BoolExp
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Qual
--&gt; AnnBoolExp ('Postgres pgKind) (SQLExpression ('Postgres pgKind))
--&gt; BoolExp
-forall (pgKind :: PostgresKind).
+</span><span id="line-30"></span><span>        </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).
 Backend ('Postgres pgKind) =&gt;
 Qual -&gt; AnnBoolExpSQL ('Postgres pgKind) -&gt; BoolExp
 </span><a href="Hasura.Backends.Postgres.Translate.BoolExp.html#toSQLBoolExp"><span class="hs-identifier hs-var">toSQLBoolExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QualifiedTable -&gt; Qual
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#QualTable"><span class="hs-identifier hs-var">S.QualTable</span></a></span><span> </span><span class="annot"><span class="annottext">TableName ('Postgres pgKind)
-QualifiedTable
-</span><a href="#local-6989586621689739151"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-31"></span><span>        </span><span class="annot"><span class="annottext">(AnnBoolExp ('Postgres pgKind) SQLExp -&gt; Maybe WhereFrag)
--&gt; AnnBoolExp ('Postgres pgKind) SQLExp -&gt; Maybe WhereFrag
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) SQLExp
--&gt; AnnBoolExp ('Postgres pgKind) SQLExp
--&gt; AnnBoolExp ('Postgres pgKind) SQLExp
-forall (backend :: BackendType) scalar.
+</span><a href="#local-6989586621690439825"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (backend :: BackendType) scalar.
 AnnBoolExp backend scalar
 -&gt; AnnBoolExp backend scalar -&gt; AnnBoolExp backend scalar
 </span><a href="Hasura.RQL.IR.BoolExp.html#andAnnBoolExps"><span class="hs-identifier hs-var">andAnnBoolExps</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (SQLExpression ('Postgres pgKind))
-AnnBoolExp ('Postgres pgKind) SQLExp
-</span><a href="#local-6989586621689739150"><span class="hs-identifier hs-var">fltr</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (SQLExpression ('Postgres pgKind))
-AnnBoolExp ('Postgres pgKind) SQLExp
-</span><a href="#local-6989586621689739149"><span class="hs-identifier hs-var">wc</span></a></span><span>
+</span><a href="#local-6989586621690439824"><span class="hs-identifier hs-var">fltr</span></a></span><span> </span><span class="annot"><span class="annottext">AnnBoolExp ('Postgres pgKind) (SQLExpression ('Postgres pgKind))
+</span><a href="#local-6989586621690439823"><span class="hs-identifier hs-var">wc</span></a></span><span>
 </span><span id="line-32"></span></pre></body></html>

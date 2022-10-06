@@ -46,9 +46,9 @@
 </span><span id="line-46"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">makeLenses</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">makePrisms</span></span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-48"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.HashMap.Strict</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">Map</span></span><span>
-</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">Data.Kind</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier">Type</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html"><span class="hs-identifier">Hasura.GraphQL.Schema.Options</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier">StringifyNumbers</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-52"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html"><span class="hs-identifier">Hasura.RQL.DDL.Headers</span></a></span><span>
 </span><span id="line-53"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html"><span class="hs-identifier">Hasura.RQL.DDL.Webhook.Transform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier">MetadataResponseTransform</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier">RequestTransform</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-54"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html"><span class="hs-identifier">Hasura.RQL.Types.Action</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">RQL</span></span><span>
@@ -62,39 +62,30 @@
 </span><span id="line-62"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#ObjectFieldName"><span class="hs-identifier">ObjectFieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-63"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-64"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
-</span><span id="line-65"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">G</span></span><span>
 </span><span id="line-66"></span><span>
 </span><span id="line-67"></span><span class="hs-comment">-- | Internal representation for a selection of fields on the result of an action.</span><span>
 </span><span id="line-68"></span><span class="hs-comment">-- Type parameter r will be either</span><span>
 </span><span id="line-69"></span><span class="hs-comment">-- r ~ (RemoteRelationshipField UnpreparedValue) when the AST is emitted by the parser.</span><span>
 </span><span id="line-70"></span><span class="hs-comment">-- r ~ Void when an execution tree is constructed so that a backend is</span><span>
 </span><span id="line-71"></span><span class="hs-comment">-- absolved of dealing with remote relationships.</span><span>
-</span><span id="line-72"></span><span class="hs-keyword">data</span><span> </span><span id="ActionFieldG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldG"><span class="hs-identifier hs-var">ActionFieldG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689703582"><span class="annot"><a href="#local-6989586621689703582"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-72"></span><span class="hs-keyword">data</span><span> </span><span id="ActionFieldG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldG"><span class="hs-identifier hs-var">ActionFieldG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690369504"><span class="annot"><a href="#local-6989586621690369504"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-73"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | Scalar value. G.Name is the original field name from the object type.</span><span>
-</span><span id="line-74"></span><span>    </span><span id="ACFScalar"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFScalar"><span class="hs-identifier hs-var">ACFScalar</span></a></span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span>
+</span><span id="line-74"></span><span>    </span><span id="ACFScalar"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFScalar"><span class="hs-identifier hs-var">ACFScalar</span></a></span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span>
 </span><span id="line-75"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Remote relationship</span><span>
-</span><span id="line-76"></span><span>    </span><span id="ACFRemote"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFRemote"><span class="hs-identifier hs-var">ACFRemote</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-type">ActionRemoteRelationshipSelect</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689703582"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-76"></span><span>    </span><span id="ACFRemote"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFRemote"><span class="hs-identifier hs-var">ACFRemote</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-type">ActionRemoteRelationshipSelect</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690369504"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Constant text value (used for __typename fields)</span><span>
 </span><span id="line-78"></span><span>    </span><span id="ACFExpression"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFExpression"><span class="hs-identifier hs-var">ACFExpression</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-79"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | Nested object. G.Name is the original field name from the object type.</span><span>
-</span><span id="line-80"></span><span>    </span><span id="ACFNestedObject"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFNestedObject"><span class="hs-identifier hs-var">ACFNestedObject</span></a></span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689703582"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689703574"><span id="local-6989586621689703576"><span class="annot"><span class="annottext">ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
-(ActionFieldG r -&gt; ActionFieldG r -&gt; Bool)
--&gt; (ActionFieldG r -&gt; ActionFieldG r -&gt; Bool)
--&gt; Eq (ActionFieldG r)
+</span><span id="line-80"></span><span>    </span><span id="ACFNestedObject"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ACFNestedObject"><span class="hs-identifier hs-var">ACFNestedObject</span></a></span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690369504"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690369009"><span id="local-6989586621690369019"><span class="annot"><span class="annottext">ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
 forall r. Eq r =&gt; ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
 $c/= :: forall r. Eq r =&gt; ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
 == :: ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
 $c== :: forall r. Eq r =&gt; ActionFieldG r -&gt; ActionFieldG r -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703567"><span id="local-6989586621689703569"><span id="local-6989586621689703571"><span class="annot"><span class="annottext">Int -&gt; ActionFieldG r -&gt; ShowS
-[ActionFieldG r] -&gt; ShowS
-ActionFieldG r -&gt; String
-(Int -&gt; ActionFieldG r -&gt; ShowS)
--&gt; (ActionFieldG r -&gt; String)
--&gt; ([ActionFieldG r] -&gt; ShowS)
--&gt; Show (ActionFieldG r)
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368984"><span id="local-6989586621690368986"><span id="local-6989586621690369002"><span class="annot"><span class="annottext">Int -&gt; ActionFieldG r -&gt; ShowS
 forall r. Show r =&gt; Int -&gt; ActionFieldG r -&gt; ShowS
 forall r. Show r =&gt; [ActionFieldG r] -&gt; ShowS
 forall r. Show r =&gt; ActionFieldG r -&gt; String
@@ -106,42 +97,16 @@ show :: ActionFieldG r -&gt; String
 $cshow :: forall r. Show r =&gt; ActionFieldG r -&gt; String
 showsPrec :: Int -&gt; ActionFieldG r -&gt; ShowS
 $cshowsPrec :: forall r. Show r =&gt; Int -&gt; ActionFieldG r -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703562"><span id="local-6989586621689703564"><span class="annot"><span class="annottext">a -&gt; ActionFieldG b -&gt; ActionFieldG a
-(a -&gt; b) -&gt; ActionFieldG a -&gt; ActionFieldG b
-(forall a b. (a -&gt; b) -&gt; ActionFieldG a -&gt; ActionFieldG b)
--&gt; (forall a b. a -&gt; ActionFieldG b -&gt; ActionFieldG a)
--&gt; Functor ActionFieldG
-forall a b. a -&gt; ActionFieldG b -&gt; ActionFieldG a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368969"><span id="local-6989586621690368977"><span class="annot"><span class="annottext">forall a b. a -&gt; ActionFieldG b -&gt; ActionFieldG a
 forall a b. (a -&gt; b) -&gt; ActionFieldG a -&gt; ActionFieldG b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: a -&gt; ActionFieldG b -&gt; ActionFieldG a
+&lt;$ :: forall a b. a -&gt; ActionFieldG b -&gt; ActionFieldG a
 $c&lt;$ :: forall a b. a -&gt; ActionFieldG b -&gt; ActionFieldG a
-fmap :: (a -&gt; b) -&gt; ActionFieldG a -&gt; ActionFieldG b
+fmap :: forall a b. (a -&gt; b) -&gt; ActionFieldG a -&gt; ActionFieldG b
 $cfmap :: forall a b. (a -&gt; b) -&gt; ActionFieldG a -&gt; ActionFieldG b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703527"><span id="local-6989586621689703529"><span id="local-6989586621689703531"><span id="local-6989586621689703533"><span id="local-6989586621689703535"><span id="local-6989586621689703537"><span id="local-6989586621689703539"><span id="local-6989586621689703541"><span id="local-6989586621689703543"><span id="local-6989586621689703545"><span id="local-6989586621689703547"><span id="local-6989586621689703549"><span id="local-6989586621689703551"><span id="local-6989586621689703553"><span id="local-6989586621689703555"><span id="local-6989586621689703557"><span id="local-6989586621689703559"><span class="annot"><span class="annottext">ActionFieldG a -&gt; Bool
-(a -&gt; m) -&gt; ActionFieldG a -&gt; m
-(a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
-(forall m. Monoid m =&gt; ActionFieldG m -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionFieldG a -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionFieldG a -&gt; m)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a)
--&gt; (forall a. ActionFieldG a -&gt; [a])
--&gt; (forall a. ActionFieldG a -&gt; Bool)
--&gt; (forall a. ActionFieldG a -&gt; Int)
--&gt; (forall a. Eq a =&gt; a -&gt; ActionFieldG a -&gt; Bool)
--&gt; (forall a. Ord a =&gt; ActionFieldG a -&gt; a)
--&gt; (forall a. Ord a =&gt; ActionFieldG a -&gt; a)
--&gt; (forall a. Num a =&gt; ActionFieldG a -&gt; a)
--&gt; (forall a. Num a =&gt; ActionFieldG a -&gt; a)
--&gt; Foldable ActionFieldG
-forall a. Eq a =&gt; a -&gt; ActionFieldG a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368915"><span id="local-6989586621690368917"><span id="local-6989586621690368919"><span id="local-6989586621690368921"><span id="local-6989586621690368923"><span id="local-6989586621690368925"><span id="local-6989586621690368930"><span id="local-6989586621690368932"><span id="local-6989586621690368934"><span id="local-6989586621690368936"><span id="local-6989586621690368938"><span id="local-6989586621690368940"><span id="local-6989586621690368942"><span id="local-6989586621690368947"><span id="local-6989586621690368949"><span id="local-6989586621690368961"><span id="local-6989586621690368963"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; ActionFieldG a -&gt; Bool
 forall a. Num a =&gt; ActionFieldG a -&gt; a
 forall a. Ord a =&gt; ActionFieldG a -&gt; a
 forall m. Monoid m =&gt; ActionFieldG m -&gt; m
@@ -171,58 +136,42 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: ActionFieldG a -&gt; a
+product :: forall a. Num a =&gt; ActionFieldG a -&gt; a
 $cproduct :: forall a. Num a =&gt; ActionFieldG a -&gt; a
-sum :: ActionFieldG a -&gt; a
+sum :: forall a. Num a =&gt; ActionFieldG a -&gt; a
 $csum :: forall a. Num a =&gt; ActionFieldG a -&gt; a
-minimum :: ActionFieldG a -&gt; a
+minimum :: forall a. Ord a =&gt; ActionFieldG a -&gt; a
 $cminimum :: forall a. Ord a =&gt; ActionFieldG a -&gt; a
-maximum :: ActionFieldG a -&gt; a
+maximum :: forall a. Ord a =&gt; ActionFieldG a -&gt; a
 $cmaximum :: forall a. Ord a =&gt; ActionFieldG a -&gt; a
-elem :: a -&gt; ActionFieldG a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; ActionFieldG a -&gt; Bool
 $celem :: forall a. Eq a =&gt; a -&gt; ActionFieldG a -&gt; Bool
-length :: ActionFieldG a -&gt; Int
+length :: forall a. ActionFieldG a -&gt; Int
 $clength :: forall a. ActionFieldG a -&gt; Int
-null :: ActionFieldG a -&gt; Bool
+null :: forall a. ActionFieldG a -&gt; Bool
 $cnull :: forall a. ActionFieldG a -&gt; Bool
-toList :: ActionFieldG a -&gt; [a]
+toList :: forall a. ActionFieldG a -&gt; [a]
 $ctoList :: forall a. ActionFieldG a -&gt; [a]
-foldl1 :: (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a
 $cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a
-foldr1 :: (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a
 $cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionFieldG a -&gt; a
-foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
 $cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
-foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
 $cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
-foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
 $cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
-foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
 $cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; ActionFieldG a -&gt; b
-foldMap' :: (a -&gt; m) -&gt; ActionFieldG a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionFieldG a -&gt; m
 $cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionFieldG a -&gt; m
-foldMap :: (a -&gt; m) -&gt; ActionFieldG a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionFieldG a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; ActionFieldG a -&gt; m
-fold :: ActionFieldG m -&gt; m
+fold :: forall m. Monoid m =&gt; ActionFieldG m -&gt; m
 $cfold :: forall m. Monoid m =&gt; ActionFieldG m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703516"><span id="local-6989586621689703518"><span id="local-6989586621689703520"><span id="local-6989586621689703522"><span class="annot"><span class="annottext">Functor ActionFieldG
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368888"><span id="local-6989586621690368890"><span id="local-6989586621690368892"><span id="local-6989586621690368908"><span class="annot"><span class="annottext">Functor ActionFieldG
 Foldable ActionFieldG
-Functor ActionFieldG
--&gt; Foldable ActionFieldG
--&gt; (forall (f :: * -&gt; *) a b.
-    Applicative f =&gt;
-    (a -&gt; f b) -&gt; ActionFieldG a -&gt; f (ActionFieldG b))
--&gt; (forall (f :: * -&gt; *) a.
-    Applicative f =&gt;
-    ActionFieldG (f a) -&gt; f (ActionFieldG a))
--&gt; (forall (m :: * -&gt; *) a b.
-    Monad m =&gt;
-    (a -&gt; m b) -&gt; ActionFieldG a -&gt; m (ActionFieldG b))
--&gt; (forall (m :: * -&gt; *) a.
-    Monad m =&gt;
-    ActionFieldG (m a) -&gt; m (ActionFieldG a))
--&gt; Traversable ActionFieldG
-(a -&gt; f b) -&gt; ActionFieldG a -&gt; f (ActionFieldG b)
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -247,49 +196,51 @@ Monad m =&gt;
 forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; ActionFieldG a -&gt; f (ActionFieldG b)
-sequence :: ActionFieldG (m a) -&gt; m (ActionFieldG a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+ActionFieldG (m a) -&gt; m (ActionFieldG a)
 $csequence :: forall (m :: * -&gt; *) a.
 Monad m =&gt;
 ActionFieldG (m a) -&gt; m (ActionFieldG a)
-mapM :: (a -&gt; m b) -&gt; ActionFieldG a -&gt; m (ActionFieldG b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; ActionFieldG a -&gt; m (ActionFieldG b)
 $cmapM :: forall (m :: * -&gt; *) a b.
 Monad m =&gt;
 (a -&gt; m b) -&gt; ActionFieldG a -&gt; m (ActionFieldG b)
-sequenceA :: ActionFieldG (f a) -&gt; f (ActionFieldG a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+ActionFieldG (f a) -&gt; f (ActionFieldG a)
 $csequenceA :: forall (f :: * -&gt; *) a.
 Applicative f =&gt;
 ActionFieldG (f a) -&gt; f (ActionFieldG a)
-traverse :: (a -&gt; f b) -&gt; ActionFieldG a -&gt; f (ActionFieldG b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; ActionFieldG a -&gt; f (ActionFieldG b)
 $ctraverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; ActionFieldG a -&gt; f (ActionFieldG b)
-$cp2Traversable :: Foldable ActionFieldG
-$cp1Traversable :: Functor ActionFieldG
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span class="hs-keyword">type</span><span> </span><span id="ActionFieldsG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-var">ActionFieldsG</span></a></span></span><span> </span><span id="local-6989586621689703514"><span class="annot"><a href="#local-6989586621689703514"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldG"><span class="hs-identifier hs-type">ActionFieldG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689703514"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-83"></span><span class="hs-keyword">type</span><span> </span><span id="ActionFieldsG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-var">ActionFieldsG</span></a></span></span><span> </span><span id="local-6989586621690368885"><span class="annot"><a href="#local-6989586621690368885"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldG"><span class="hs-identifier hs-type">ActionFieldG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690368885"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-84"></span><span>
-</span><span id="line-85"></span><span class="hs-keyword">type</span><span> </span><span id="ActionFields"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFields"><span class="hs-identifier hs-var">ActionFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Void</span></span><span>
+</span><span id="line-85"></span><span class="hs-keyword">type</span><span> </span><span id="ActionFields"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFields"><span class="hs-identifier hs-var">ActionFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Void</span></a></span><span>
 </span><span id="line-86"></span><span>
-</span><span id="line-87"></span><span class="hs-keyword">data</span><span> </span><span id="ActionRemoteRelationshipSelect"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-var">ActionRemoteRelationshipSelect</span></a></span></span><span> </span><span id="local-6989586621689703512"><span class="annot"><a href="#local-6989586621689703512"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionRemoteRelationshipSelect"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-var">ActionRemoteRelationshipSelect</span></a></span></span><span>
+</span><span id="line-87"></span><span class="hs-keyword">data</span><span> </span><span id="ActionRemoteRelationshipSelect"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-var">ActionRemoteRelationshipSelect</span></a></span></span><span> </span><span id="local-6989586621690369503"><span class="annot"><a href="#local-6989586621690369503"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ActionRemoteRelationshipSelect"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionRemoteRelationshipSelect"><span class="hs-identifier hs-var">ActionRemoteRelationshipSelect</span></a></span></span><span>
 </span><span id="line-88"></span><span>  </span><span class="hs-special">{</span><span> </span><span class="hs-comment">-- | The fields on the table that are required for the join condition</span><span>
 </span><span id="line-89"></span><span>    </span><span class="hs-comment">-- of the remote relationship</span><span>
-</span><span id="line-90"></span><span>    </span><span id="_arrsLHSJoinFields"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect r -&gt; HashMap FieldName Name
-</span><a href="Hasura.RQL.IR.Action.html#_arrsLHSJoinFields"><span class="hs-identifier hs-var hs-var">_arrsLHSJoinFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-90"></span><span>    </span><span id="_arrsLHSJoinFields"><span class="annot"><span class="annottext">forall r.
+ActionRemoteRelationshipSelect r -&gt; HashMap FieldName Name
+</span><a href="Hasura.RQL.IR.Action.html#_arrsLHSJoinFields"><span class="hs-identifier hs-var hs-var">_arrsLHSJoinFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">FieldName</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-91"></span><span>    </span><span class="hs-comment">-- | The field that captures the relationship</span><span>
 </span><span id="line-92"></span><span>    </span><span class="hs-comment">-- r ~ (RemoteRelationshipField UnpreparedValue) when the AST is emitted by the parser.</span><span>
 </span><span id="line-93"></span><span>    </span><span class="hs-comment">-- r ~ Void when an execution tree is constructed so that a backend is</span><span>
 </span><span id="line-94"></span><span>    </span><span class="hs-comment">-- absolved of dealing with remote relationships.</span><span>
-</span><span id="line-95"></span><span>    </span><span id="_arrsRelationship"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect r -&gt; r
-</span><a href="Hasura.RQL.IR.Action.html#_arrsRelationship"><span class="hs-identifier hs-var hs-var">_arrsRelationship</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689703512"><span class="hs-identifier hs-type">r</span></a></span><span>
+</span><span id="line-95"></span><span>    </span><span id="_arrsRelationship"><span class="annot"><span class="annottext">forall r. ActionRemoteRelationshipSelect r -&gt; r
+</span><a href="Hasura.RQL.IR.Action.html#_arrsRelationship"><span class="hs-identifier hs-var hs-var">_arrsRelationship</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690369503"><span class="hs-identifier hs-type">r</span></a></span><span>
 </span><span id="line-96"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-97"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689703505"><span id="local-6989586621689703507"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect r
+</span><span id="line-97"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690368872"><span id="local-6989586621690368879"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect r
 -&gt; ActionRemoteRelationshipSelect r -&gt; Bool
-(ActionRemoteRelationshipSelect r
- -&gt; ActionRemoteRelationshipSelect r -&gt; Bool)
--&gt; (ActionRemoteRelationshipSelect r
-    -&gt; ActionRemoteRelationshipSelect r -&gt; Bool)
--&gt; Eq (ActionRemoteRelationshipSelect r)
 forall r.
 Eq r =&gt;
 ActionRemoteRelationshipSelect r
@@ -307,13 +258,7 @@ $c== :: forall r.
 Eq r =&gt;
 ActionRemoteRelationshipSelect r
 -&gt; ActionRemoteRelationshipSelect r -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703499"><span id="local-6989586621689703501"><span id="local-6989586621689703503"><span class="annot"><span class="annottext">Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
-[ActionRemoteRelationshipSelect r] -&gt; ShowS
-ActionRemoteRelationshipSelect r -&gt; String
-(Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS)
--&gt; (ActionRemoteRelationshipSelect r -&gt; String)
--&gt; ([ActionRemoteRelationshipSelect r] -&gt; ShowS)
--&gt; Show (ActionRemoteRelationshipSelect r)
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368860"><span id="local-6989586621690368862"><span id="local-6989586621690368870"><span class="annot"><span class="annottext">Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
 forall r.
 Show r =&gt;
 Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
@@ -329,22 +274,7 @@ showsPrec :: Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
 $cshowsPrec :: forall r.
 Show r =&gt;
 Int -&gt; ActionRemoteRelationshipSelect r -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703495"><span id="local-6989586621689703497"><span class="annot"><span class="annottext">a
--&gt; ActionRemoteRelationshipSelect b
--&gt; ActionRemoteRelationshipSelect a
-(a -&gt; b)
--&gt; ActionRemoteRelationshipSelect a
--&gt; ActionRemoteRelationshipSelect b
-(forall a b.
- (a -&gt; b)
- -&gt; ActionRemoteRelationshipSelect a
- -&gt; ActionRemoteRelationshipSelect b)
--&gt; (forall a b.
-    a
-    -&gt; ActionRemoteRelationshipSelect b
-    -&gt; ActionRemoteRelationshipSelect a)
--&gt; Functor ActionRemoteRelationshipSelect
-forall a b.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368856"><span id="local-6989586621690368858"><span class="annot"><span class="annottext">forall a b.
 a
 -&gt; ActionRemoteRelationshipSelect b
 -&gt; ActionRemoteRelationshipSelect a
@@ -355,54 +285,23 @@ forall a b.
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: a
+&lt;$ :: forall a b.
+a
 -&gt; ActionRemoteRelationshipSelect b
 -&gt; ActionRemoteRelationshipSelect a
 $c&lt;$ :: forall a b.
 a
 -&gt; ActionRemoteRelationshipSelect b
 -&gt; ActionRemoteRelationshipSelect a
-fmap :: (a -&gt; b)
+fmap :: forall a b.
+(a -&gt; b)
 -&gt; ActionRemoteRelationshipSelect a
 -&gt; ActionRemoteRelationshipSelect b
 $cfmap :: forall a b.
 (a -&gt; b)
 -&gt; ActionRemoteRelationshipSelect a
 -&gt; ActionRemoteRelationshipSelect b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703461"><span id="local-6989586621689703463"><span id="local-6989586621689703465"><span id="local-6989586621689703467"><span id="local-6989586621689703469"><span id="local-6989586621689703471"><span id="local-6989586621689703473"><span id="local-6989586621689703475"><span id="local-6989586621689703477"><span id="local-6989586621689703479"><span id="local-6989586621689703481"><span id="local-6989586621689703483"><span id="local-6989586621689703485"><span id="local-6989586621689703487"><span id="local-6989586621689703489"><span id="local-6989586621689703491"><span id="local-6989586621689703493"><span class="annot"><span class="annottext">ActionRemoteRelationshipSelect a -&gt; Bool
-(a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
-(a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
-(forall m. Monoid m =&gt; ActionRemoteRelationshipSelect m -&gt; m)
--&gt; (forall m a.
-    Monoid m =&gt;
-    (a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m)
--&gt; (forall m a.
-    Monoid m =&gt;
-    (a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m)
--&gt; (forall a b.
-    (a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b)
--&gt; (forall a b.
-    (a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b)
--&gt; (forall b a.
-    (b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b)
--&gt; (forall b a.
-    (b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b)
--&gt; (forall a.
-    (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a)
--&gt; (forall a.
-    (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a)
--&gt; (forall a. ActionRemoteRelationshipSelect a -&gt; [a])
--&gt; (forall a. ActionRemoteRelationshipSelect a -&gt; Bool)
--&gt; (forall a. ActionRemoteRelationshipSelect a -&gt; Int)
--&gt; (forall a.
-    Eq a =&gt;
-    a -&gt; ActionRemoteRelationshipSelect a -&gt; Bool)
--&gt; (forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a)
--&gt; (forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a)
--&gt; (forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a)
--&gt; (forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a)
--&gt; Foldable ActionRemoteRelationshipSelect
-forall a. Eq a =&gt; a -&gt; ActionRemoteRelationshipSelect a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368821"><span id="local-6989586621690368823"><span id="local-6989586621690368825"><span id="local-6989586621690368827"><span id="local-6989586621690368829"><span id="local-6989586621690368831"><span id="local-6989586621690368833"><span id="local-6989586621690368835"><span id="local-6989586621690368837"><span id="local-6989586621690368839"><span id="local-6989586621690368841"><span id="local-6989586621690368843"><span id="local-6989586621690368845"><span id="local-6989586621690368847"><span id="local-6989586621690368849"><span id="local-6989586621690368852"><span id="local-6989586621690368854"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; ActionRemoteRelationshipSelect a -&gt; Bool
 forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a
 forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a
 forall m. Monoid m =&gt; ActionRemoteRelationshipSelect m -&gt; m
@@ -436,74 +335,58 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: ActionRemoteRelationshipSelect a -&gt; a
+product :: forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a
 $cproduct :: forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a
-sum :: ActionRemoteRelationshipSelect a -&gt; a
+sum :: forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a
 $csum :: forall a. Num a =&gt; ActionRemoteRelationshipSelect a -&gt; a
-minimum :: ActionRemoteRelationshipSelect a -&gt; a
+minimum :: forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a
 $cminimum :: forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a
-maximum :: ActionRemoteRelationshipSelect a -&gt; a
+maximum :: forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a
 $cmaximum :: forall a. Ord a =&gt; ActionRemoteRelationshipSelect a -&gt; a
-elem :: a -&gt; ActionRemoteRelationshipSelect a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; ActionRemoteRelationshipSelect a -&gt; Bool
 $celem :: forall a. Eq a =&gt; a -&gt; ActionRemoteRelationshipSelect a -&gt; Bool
-length :: ActionRemoteRelationshipSelect a -&gt; Int
+length :: forall a. ActionRemoteRelationshipSelect a -&gt; Int
 $clength :: forall a. ActionRemoteRelationshipSelect a -&gt; Int
-null :: ActionRemoteRelationshipSelect a -&gt; Bool
+null :: forall a. ActionRemoteRelationshipSelect a -&gt; Bool
 $cnull :: forall a. ActionRemoteRelationshipSelect a -&gt; Bool
-toList :: ActionRemoteRelationshipSelect a -&gt; [a]
+toList :: forall a. ActionRemoteRelationshipSelect a -&gt; [a]
 $ctoList :: forall a. ActionRemoteRelationshipSelect a -&gt; [a]
-foldl1 :: (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a
 $cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a
-foldr1 :: (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a
 $cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; ActionRemoteRelationshipSelect a -&gt; a
-foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+foldl' :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
 $cfoldl' :: forall b a.
 (b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
-foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+foldl :: forall b a.
+(b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
 $cfoldl :: forall b a.
 (b -&gt; a -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
-foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+foldr' :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
 $cfoldr' :: forall a b.
 (a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
-foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
+foldr :: forall a b.
+(a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
 $cfoldr :: forall a b.
 (a -&gt; b -&gt; b) -&gt; b -&gt; ActionRemoteRelationshipSelect a -&gt; b
-foldMap' :: (a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
+foldMap' :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
 $cfoldMap' :: forall m a.
 Monoid m =&gt;
 (a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
-foldMap :: (a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
+foldMap :: forall m a.
+Monoid m =&gt;
+(a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
 $cfoldMap :: forall m a.
 Monoid m =&gt;
 (a -&gt; m) -&gt; ActionRemoteRelationshipSelect a -&gt; m
-fold :: ActionRemoteRelationshipSelect m -&gt; m
+fold :: forall m. Monoid m =&gt; ActionRemoteRelationshipSelect m -&gt; m
 $cfold :: forall m. Monoid m =&gt; ActionRemoteRelationshipSelect m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703451"><span id="local-6989586621689703453"><span id="local-6989586621689703455"><span id="local-6989586621689703457"><span class="annot"><span class="annottext">Functor ActionRemoteRelationshipSelect
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368806"><span id="local-6989586621690368808"><span id="local-6989586621690368810"><span id="local-6989586621690368815"><span class="annot"><span class="annottext">Functor ActionRemoteRelationshipSelect
 Foldable ActionRemoteRelationshipSelect
-Functor ActionRemoteRelationshipSelect
--&gt; Foldable ActionRemoteRelationshipSelect
--&gt; (forall (f :: * -&gt; *) a b.
-    Applicative f =&gt;
-    (a -&gt; f b)
-    -&gt; ActionRemoteRelationshipSelect a
-    -&gt; f (ActionRemoteRelationshipSelect b))
--&gt; (forall (f :: * -&gt; *) a.
-    Applicative f =&gt;
-    ActionRemoteRelationshipSelect (f a)
-    -&gt; f (ActionRemoteRelationshipSelect a))
--&gt; (forall (m :: * -&gt; *) a b.
-    Monad m =&gt;
-    (a -&gt; m b)
-    -&gt; ActionRemoteRelationshipSelect a
-    -&gt; m (ActionRemoteRelationshipSelect b))
--&gt; (forall (m :: * -&gt; *) a.
-    Monad m =&gt;
-    ActionRemoteRelationshipSelect (m a)
-    -&gt; m (ActionRemoteRelationshipSelect a))
--&gt; Traversable ActionRemoteRelationshipSelect
-(a -&gt; f b)
--&gt; ActionRemoteRelationshipSelect a
--&gt; f (ActionRemoteRelationshipSelect b)
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -534,13 +417,17 @@ Applicative f =&gt;
 (a -&gt; f b)
 -&gt; ActionRemoteRelationshipSelect a
 -&gt; f (ActionRemoteRelationshipSelect b)
-sequence :: ActionRemoteRelationshipSelect (m a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+ActionRemoteRelationshipSelect (m a)
 -&gt; m (ActionRemoteRelationshipSelect a)
 $csequence :: forall (m :: * -&gt; *) a.
 Monad m =&gt;
 ActionRemoteRelationshipSelect (m a)
 -&gt; m (ActionRemoteRelationshipSelect a)
-mapM :: (a -&gt; m b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
 -&gt; ActionRemoteRelationshipSelect a
 -&gt; m (ActionRemoteRelationshipSelect b)
 $cmapM :: forall (m :: * -&gt; *) a b.
@@ -548,13 +435,17 @@ Monad m =&gt;
 (a -&gt; m b)
 -&gt; ActionRemoteRelationshipSelect a
 -&gt; m (ActionRemoteRelationshipSelect b)
-sequenceA :: ActionRemoteRelationshipSelect (f a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+ActionRemoteRelationshipSelect (f a)
 -&gt; f (ActionRemoteRelationshipSelect a)
 $csequenceA :: forall (f :: * -&gt; *) a.
 Applicative f =&gt;
 ActionRemoteRelationshipSelect (f a)
 -&gt; f (ActionRemoteRelationshipSelect a)
-traverse :: (a -&gt; f b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
 -&gt; ActionRemoteRelationshipSelect a
 -&gt; f (ActionRemoteRelationshipSelect b)
 $ctraverse :: forall (f :: * -&gt; *) a b.
@@ -562,83 +453,55 @@ Applicative f =&gt;
 (a -&gt; f b)
 -&gt; ActionRemoteRelationshipSelect a
 -&gt; f (ActionRemoteRelationshipSelect b)
-$cp2Traversable :: Foldable ActionRemoteRelationshipSelect
-$cp1Traversable :: Functor ActionRemoteRelationshipSelect
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-98"></span><span>
-</span><span id="line-99"></span><span class="hs-special">$(</span><span id="local-6989586621689703582"><span id="_ACFScalar"><span id="_ACFRemote"><span id="_ACFNestedObject"><span id="_ACFExpression"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionFieldG</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span class="hs-special">$</span><span id="_ACFScalar"><span id="_ACFRemote"><span id="_ACFNestedObject"><span id="_ACFExpression"><span id="local-6989586621690369504"><span class="hs-special">(</span><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">ActionFieldG</span><span class="hs-special">)</span></span></span></span></span></span><span>
 </span><span id="line-100"></span><span>
-</span><span id="line-101"></span><span class="hs-keyword">data</span><span> </span><span id="AnnActionExecution"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionExecution"><span class="hs-identifier hs-var">AnnActionExecution</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689703450"><span class="annot"><a href="#local-6989586621689703450"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnActionExecution"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionExecution"><span class="hs-identifier hs-var">AnnActionExecution</span></a></span></span><span>
-</span><span id="line-102"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aaeName"><span class="annot"><span class="annottext">AnnActionExecution r -&gt; ActionName
+</span><span id="line-101"></span><span class="hs-keyword">data</span><span> </span><span id="AnnActionExecution"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionExecution"><span class="hs-identifier hs-var">AnnActionExecution</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690369428"><span class="annot"><a href="#local-6989586621690369428"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnActionExecution"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionExecution"><span class="hs-identifier hs-var">AnnActionExecution</span></a></span></span><span>
+</span><span id="line-102"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aaeName"><span class="annot"><span class="annottext">forall r. AnnActionExecution r -&gt; ActionName
 </span><a href="Hasura.RQL.IR.Action.html#_aaeName"><span class="hs-identifier hs-var hs-var">_aaeName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-type">RQL.ActionName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-103"></span><span>    </span><span class="hs-comment">-- | output type</span><span>
-</span><span id="line-104"></span><span>    </span><span id="_aaeOutputType"><span class="annot"><span class="annottext">AnnActionExecution r -&gt; GraphQLType
+</span><span id="line-104"></span><span>    </span><span id="_aaeOutputType"><span class="annot"><span class="annottext">forall r. AnnActionExecution r -&gt; GraphQLType
 </span><a href="Hasura.RQL.IR.Action.html#_aaeOutputType"><span class="hs-identifier hs-var hs-var">_aaeOutputType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#GraphQLType"><span class="hs-identifier hs-type">GraphQLType</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-105"></span><span>    </span><span class="hs-comment">-- | output selection</span><span>
-</span><span id="line-106"></span><span>    </span><span id="_aaeFields"><span class="annot"><span class="annottext">AnnActionExecution r -&gt; ActionFieldsG r
-</span><a href="Hasura.RQL.IR.Action.html#_aaeFields"><span class="hs-identifier hs-var hs-var">_aaeFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689703450"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-106"></span><span>    </span><span id="_aaeFields"><span class="annot"><span class="annottext">forall r. AnnActionExecution r -&gt; ActionFieldsG r
+</span><a href="Hasura.RQL.IR.Action.html#_aaeFields"><span class="hs-identifier hs-var hs-var">_aaeFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690369428"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-107"></span><span>    </span><span class="hs-comment">-- | jsonified input arguments</span><span>
-</span><span id="line-108"></span><span>    </span><span id="_aaePayload"><span class="annot"><span class="annottext">AnnActionExecution r -&gt; Value
+</span><span id="line-108"></span><span>    </span><span id="_aaePayload"><span class="annot"><span class="annottext">forall r. AnnActionExecution r -&gt; Value
 </span><a href="Hasura.RQL.IR.Action.html#_aaePayload"><span class="hs-identifier hs-var hs-var">_aaePayload</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span class="hs-special">,</span><span>
 </span><span id="line-109"></span><span>    </span><span class="hs-comment">-- | to validate the response fields from webhook</span><span>
-</span><span id="line-110"></span><span>    </span><span id="_aaeOutputFields"><span class="annot"><span class="annottext">AnnActionExecution r -&gt; ActionOutputFields
+</span><span id="line-110"></span><span>    </span><span id="_aaeOutputFields"><span class="annot"><span class="annottext">forall r. AnnActionExecution r -&gt; ActionOutputFields
 </span><a href="Hasura.RQL.IR.Action.html#_aaeOutputFields"><span class="hs-identifier hs-var hs-var">_aaeOutputFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionOutputFields"><span class="hs-identifier hs-type">ActionOutputFields</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-111"></span><span>    </span><span id="_aaeWebhook"><span class="annot"><span class="annottext">AnnActionExecution r -&gt; EnvRecord ResolvedWebhook
+</span><span id="line-111"></span><span>    </span><span id="_aaeWebhook"><span class="annot"><span class="annottext">forall r. AnnActionExecution r -&gt; EnvRecord ResolvedWebhook
 </span><a href="Hasura.RQL.IR.Action.html#_aaeWebhook"><span class="hs-identifier hs-var hs-var">_aaeWebhook</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#EnvRecord"><span class="hs-identifier hs-type">EnvRecord</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#ResolvedWebhook"><span class="hs-identifier hs-type">ResolvedWebhook</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-112"></span><span>    </span><span id="_aaeHeaders"><span class="annot"><span class="annottext">AnnActionExecution r -&gt; [HeaderConf]
+</span><span id="line-112"></span><span>    </span><span id="_aaeHeaders"><span class="annot"><span class="annottext">forall r. AnnActionExecution r -&gt; [HeaderConf]
 </span><a href="Hasura.RQL.IR.Action.html#_aaeHeaders"><span class="hs-identifier hs-var hs-var">_aaeHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DDL.Headers.html#HeaderConf"><span class="hs-identifier hs-type">HeaderConf</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
-</span><span id="line-113"></span><span>    </span><span id="_aaeForwardClientHeaders"><span class="annot"><span class="annottext">AnnActionExecution r -&gt; Bool
-</span><a href="Hasura.RQL.IR.Action.html#_aaeForwardClientHeaders"><span class="hs-identifier hs-var hs-var">_aaeForwardClientHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
-</span><span id="line-114"></span><span>    </span><span id="_aaeTimeOut"><span class="annot"><span class="annottext">AnnActionExecution r -&gt; Timeout
+</span><span id="line-113"></span><span>    </span><span id="_aaeForwardClientHeaders"><span class="annot"><span class="annottext">forall r. AnnActionExecution r -&gt; Bool
+</span><a href="Hasura.RQL.IR.Action.html#_aaeForwardClientHeaders"><span class="hs-identifier hs-var hs-var">_aaeForwardClientHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-114"></span><span>    </span><span id="_aaeTimeOut"><span class="annot"><span class="annottext">forall r. AnnActionExecution r -&gt; Timeout
 </span><a href="Hasura.RQL.IR.Action.html#_aaeTimeOut"><span class="hs-identifier hs-var hs-var">_aaeTimeOut</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Timeout"><span class="hs-identifier hs-type">Timeout</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-115"></span><span>    </span><span id="_aaeRequestTransform"><span class="annot"><span class="annottext">AnnActionExecution r -&gt; Maybe RequestTransform
-</span><a href="Hasura.RQL.IR.Action.html#_aaeRequestTransform"><span class="hs-identifier hs-var hs-var">_aaeRequestTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-116"></span><span>    </span><span id="_aaeResponseTransform"><span class="annot"><span class="annottext">AnnActionExecution r -&gt; Maybe MetadataResponseTransform
-</span><a href="Hasura.RQL.IR.Action.html#_aaeResponseTransform"><span class="hs-identifier hs-var hs-var">_aaeResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span><span>
+</span><span id="line-115"></span><span>    </span><span id="_aaeRequestTransform"><span class="annot"><span class="annottext">forall r. AnnActionExecution r -&gt; Maybe RequestTransform
+</span><a href="Hasura.RQL.IR.Action.html#_aaeRequestTransform"><span class="hs-identifier hs-var hs-var">_aaeRequestTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-116"></span><span>    </span><span id="_aaeResponseTransform"><span class="annot"><span class="annottext">forall r. AnnActionExecution r -&gt; Maybe MetadataResponseTransform
+</span><a href="Hasura.RQL.IR.Action.html#_aaeResponseTransform"><span class="hs-identifier hs-var hs-var">_aaeResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span><span>
 </span><span id="line-117"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-118"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689703434"><span id="local-6989586621689703436"><span class="annot"><span class="annottext">a -&gt; AnnActionExecution b -&gt; AnnActionExecution a
-(a -&gt; b) -&gt; AnnActionExecution a -&gt; AnnActionExecution b
-(forall a b.
- (a -&gt; b) -&gt; AnnActionExecution a -&gt; AnnActionExecution b)
--&gt; (forall a b. a -&gt; AnnActionExecution b -&gt; AnnActionExecution a)
--&gt; Functor AnnActionExecution
-forall a b. a -&gt; AnnActionExecution b -&gt; AnnActionExecution a
+</span><span id="line-118"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690368757"><span id="local-6989586621690368761"><span class="annot"><span class="annottext">forall a b. a -&gt; AnnActionExecution b -&gt; AnnActionExecution a
 forall a b.
 (a -&gt; b) -&gt; AnnActionExecution a -&gt; AnnActionExecution b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: a -&gt; AnnActionExecution b -&gt; AnnActionExecution a
+&lt;$ :: forall a b. a -&gt; AnnActionExecution b -&gt; AnnActionExecution a
 $c&lt;$ :: forall a b. a -&gt; AnnActionExecution b -&gt; AnnActionExecution a
-fmap :: (a -&gt; b) -&gt; AnnActionExecution a -&gt; AnnActionExecution b
+fmap :: forall a b.
+(a -&gt; b) -&gt; AnnActionExecution a -&gt; AnnActionExecution b
 $cfmap :: forall a b.
 (a -&gt; b) -&gt; AnnActionExecution a -&gt; AnnActionExecution b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703400"><span id="local-6989586621689703402"><span id="local-6989586621689703404"><span id="local-6989586621689703406"><span id="local-6989586621689703408"><span id="local-6989586621689703410"><span id="local-6989586621689703412"><span id="local-6989586621689703414"><span id="local-6989586621689703416"><span id="local-6989586621689703418"><span id="local-6989586621689703420"><span id="local-6989586621689703422"><span id="local-6989586621689703424"><span id="local-6989586621689703426"><span id="local-6989586621689703428"><span id="local-6989586621689703430"><span id="local-6989586621689703432"><span class="annot"><span class="annottext">AnnActionExecution a -&gt; Bool
-(a -&gt; m) -&gt; AnnActionExecution a -&gt; m
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
-(forall m. Monoid m =&gt; AnnActionExecution m -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnActionExecution a -&gt; m)
--&gt; (forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnActionExecution a -&gt; m)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnActionExecution a -&gt; a)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnActionExecution a -&gt; a)
--&gt; (forall a. AnnActionExecution a -&gt; [a])
--&gt; (forall a. AnnActionExecution a -&gt; Bool)
--&gt; (forall a. AnnActionExecution a -&gt; Int)
--&gt; (forall a. Eq a =&gt; a -&gt; AnnActionExecution a -&gt; Bool)
--&gt; (forall a. Ord a =&gt; AnnActionExecution a -&gt; a)
--&gt; (forall a. Ord a =&gt; AnnActionExecution a -&gt; a)
--&gt; (forall a. Num a =&gt; AnnActionExecution a -&gt; a)
--&gt; (forall a. Num a =&gt; AnnActionExecution a -&gt; a)
--&gt; Foldable AnnActionExecution
-forall a. Eq a =&gt; a -&gt; AnnActionExecution a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368711"><span id="local-6989586621690368713"><span id="local-6989586621690368715"><span id="local-6989586621690368717"><span id="local-6989586621690368719"><span id="local-6989586621690368721"><span id="local-6989586621690368725"><span id="local-6989586621690368727"><span id="local-6989586621690368729"><span id="local-6989586621690368731"><span id="local-6989586621690368733"><span id="local-6989586621690368735"><span id="local-6989586621690368737"><span id="local-6989586621690368741"><span id="local-6989586621690368743"><span id="local-6989586621690368750"><span id="local-6989586621690368752"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; AnnActionExecution a -&gt; Bool
 forall a. Num a =&gt; AnnActionExecution a -&gt; a
 forall a. Ord a =&gt; AnnActionExecution a -&gt; a
 forall m. Monoid m =&gt; AnnActionExecution m -&gt; m
-forall a. AnnActionExecution a -&gt; Bool
+forall r. AnnActionExecution r -&gt; Bool
 forall a. AnnActionExecution a -&gt; Int
 forall a. AnnActionExecution a -&gt; [a]
 forall a. (a -&gt; a -&gt; a) -&gt; AnnActionExecution a -&gt; a
@@ -664,58 +527,42 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: AnnActionExecution a -&gt; a
+product :: forall a. Num a =&gt; AnnActionExecution a -&gt; a
 $cproduct :: forall a. Num a =&gt; AnnActionExecution a -&gt; a
-sum :: AnnActionExecution a -&gt; a
+sum :: forall a. Num a =&gt; AnnActionExecution a -&gt; a
 $csum :: forall a. Num a =&gt; AnnActionExecution a -&gt; a
-minimum :: AnnActionExecution a -&gt; a
+minimum :: forall a. Ord a =&gt; AnnActionExecution a -&gt; a
 $cminimum :: forall a. Ord a =&gt; AnnActionExecution a -&gt; a
-maximum :: AnnActionExecution a -&gt; a
+maximum :: forall a. Ord a =&gt; AnnActionExecution a -&gt; a
 $cmaximum :: forall a. Ord a =&gt; AnnActionExecution a -&gt; a
-elem :: a -&gt; AnnActionExecution a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; AnnActionExecution a -&gt; Bool
 $celem :: forall a. Eq a =&gt; a -&gt; AnnActionExecution a -&gt; Bool
-length :: AnnActionExecution a -&gt; Int
+length :: forall a. AnnActionExecution a -&gt; Int
 $clength :: forall a. AnnActionExecution a -&gt; Int
-null :: AnnActionExecution a -&gt; Bool
-$cnull :: forall a. AnnActionExecution a -&gt; Bool
-toList :: AnnActionExecution a -&gt; [a]
+null :: forall r. AnnActionExecution r -&gt; Bool
+$cnull :: forall r. AnnActionExecution r -&gt; Bool
+toList :: forall a. AnnActionExecution a -&gt; [a]
 $ctoList :: forall a. AnnActionExecution a -&gt; [a]
-foldl1 :: (a -&gt; a -&gt; a) -&gt; AnnActionExecution a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnActionExecution a -&gt; a
 $cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnActionExecution a -&gt; a
-foldr1 :: (a -&gt; a -&gt; a) -&gt; AnnActionExecution a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnActionExecution a -&gt; a
 $cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnActionExecution a -&gt; a
-foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
 $cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
-foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
 $cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
-foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
 $cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
-foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
 $cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionExecution a -&gt; b
-foldMap' :: (a -&gt; m) -&gt; AnnActionExecution a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnActionExecution a -&gt; m
 $cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnActionExecution a -&gt; m
-foldMap :: (a -&gt; m) -&gt; AnnActionExecution a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnActionExecution a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnActionExecution a -&gt; m
-fold :: AnnActionExecution m -&gt; m
+fold :: forall m. Monoid m =&gt; AnnActionExecution m -&gt; m
 $cfold :: forall m. Monoid m =&gt; AnnActionExecution m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703390"><span id="local-6989586621689703392"><span id="local-6989586621689703394"><span id="local-6989586621689703396"><span class="annot"><span class="annottext">Functor AnnActionExecution
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368691"><span id="local-6989586621690368693"><span id="local-6989586621690368695"><span id="local-6989586621690368705"><span class="annot"><span class="annottext">Functor AnnActionExecution
 Foldable AnnActionExecution
-Functor AnnActionExecution
--&gt; Foldable AnnActionExecution
--&gt; (forall (f :: * -&gt; *) a b.
-    Applicative f =&gt;
-    (a -&gt; f b) -&gt; AnnActionExecution a -&gt; f (AnnActionExecution b))
--&gt; (forall (f :: * -&gt; *) a.
-    Applicative f =&gt;
-    AnnActionExecution (f a) -&gt; f (AnnActionExecution a))
--&gt; (forall (m :: * -&gt; *) a b.
-    Monad m =&gt;
-    (a -&gt; m b) -&gt; AnnActionExecution a -&gt; m (AnnActionExecution b))
--&gt; (forall (m :: * -&gt; *) a.
-    Monad m =&gt;
-    AnnActionExecution (m a) -&gt; m (AnnActionExecution a))
--&gt; Traversable AnnActionExecution
-(a -&gt; f b) -&gt; AnnActionExecution a -&gt; f (AnnActionExecution b)
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -740,38 +587,43 @@ Monad m =&gt;
 forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; AnnActionExecution a -&gt; f (AnnActionExecution b)
-sequence :: AnnActionExecution (m a) -&gt; m (AnnActionExecution a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnActionExecution (m a) -&gt; m (AnnActionExecution a)
 $csequence :: forall (m :: * -&gt; *) a.
 Monad m =&gt;
 AnnActionExecution (m a) -&gt; m (AnnActionExecution a)
-mapM :: (a -&gt; m b) -&gt; AnnActionExecution a -&gt; m (AnnActionExecution b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b) -&gt; AnnActionExecution a -&gt; m (AnnActionExecution b)
 $cmapM :: forall (m :: * -&gt; *) a b.
 Monad m =&gt;
 (a -&gt; m b) -&gt; AnnActionExecution a -&gt; m (AnnActionExecution b)
-sequenceA :: AnnActionExecution (f a) -&gt; f (AnnActionExecution a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnActionExecution (f a) -&gt; f (AnnActionExecution a)
 $csequenceA :: forall (f :: * -&gt; *) a.
 Applicative f =&gt;
 AnnActionExecution (f a) -&gt; f (AnnActionExecution a)
-traverse :: (a -&gt; f b) -&gt; AnnActionExecution a -&gt; f (AnnActionExecution b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b) -&gt; AnnActionExecution a -&gt; f (AnnActionExecution b)
 $ctraverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b) -&gt; AnnActionExecution a -&gt; f (AnnActionExecution b)
-$cp2Traversable :: Foldable AnnActionExecution
-$cp1Traversable :: Functor AnnActionExecution
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-119"></span><span>
-</span><span id="line-120"></span><span class="hs-keyword">type</span><span> </span><span id="ActionOutputFields"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionOutputFields"><span class="hs-identifier hs-var">ActionOutputFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.GType</span></a></span><span>
+</span><span id="line-120"></span><span class="hs-keyword">type</span><span> </span><span id="ActionOutputFields"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionOutputFields"><span class="hs-identifier hs-var">ActionOutputFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Map.HashMap</span></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.GType</span></a></span><span>
 </span><span id="line-121"></span><span>
 </span><span id="line-122"></span><span class="annot"><a href="Hasura.RQL.IR.Action.html#getActionOutputFields"><span class="hs-identifier hs-type">getActionOutputFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AnnotatedOutputType"><span class="hs-identifier hs-type">AnnotatedOutputType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionOutputFields"><span class="hs-identifier hs-type">ActionOutputFields</span></a></span><span>
 </span><span id="line-123"></span><span id="getActionOutputFields"><span class="annot"><span class="annottext">getActionOutputFields :: AnnotatedOutputType -&gt; ActionOutputFields
-</span><a href="Hasura.RQL.IR.Action.html#getActionOutputFields"><span class="hs-identifier hs-var hs-var">getActionOutputFields</span></a></span></span><span> </span><span id="local-6989586621689703389"><span class="annot"><span class="annottext">AnnotatedOutputType
-</span><a href="#local-6989586621689703389"><span class="hs-identifier hs-var">inp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">AnnotatedOutputType
-</span><a href="#local-6989586621689703389"><span class="hs-identifier hs-var">inp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-124"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AOTObject"><span class="hs-identifier hs-type">AOTObject</span></a></span><span> </span><span id="local-6989586621689703387"><span class="annot"><span class="annottext">AnnotatedObjectType
-</span><a href="#local-6989586621689703387"><span class="hs-identifier hs-var">aot</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[(Name, GType)] -&gt; ActionOutputFields
-forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
+</span><a href="Hasura.RQL.IR.Action.html#getActionOutputFields"><span class="hs-identifier hs-var hs-var">getActionOutputFields</span></a></span></span><span> </span><span id="local-6989586621690368690"><span class="annot"><span class="annottext">AnnotatedOutputType
+</span><a href="#local-6989586621690368690"><span class="hs-identifier hs-var">inp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">AnnotatedOutputType
+</span><a href="#local-6989586621690368690"><span class="hs-identifier hs-var">inp</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-124"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AOTObject"><span class="hs-identifier hs-type">AOTObject</span></a></span><span> </span><span id="local-6989586621690368688"><span class="annot"><span class="annottext">AnnotatedObjectType
+</span><a href="#local-6989586621690368688"><span class="hs-identifier hs-var">aot</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">Map.fromList</span></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-125"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#ObjectFieldDefinition"><span class="hs-identifier hs-type">ObjectFieldDefinition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689703381"><span id="local-6989586621689703382"><span id="local-6989586621689703383"><span id="local-6989586621689703384"><span class="annot"><span class="annottext">Maybe Value
+</span><span id="line-125"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#ObjectFieldDefinition"><span class="hs-identifier hs-type">ObjectFieldDefinition</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690368682"><span id="local-6989586621690368683"><span id="local-6989586621690368684"><span id="local-6989586621690368685"><span class="annot"><span class="annottext">Maybe Value
 Maybe Description
 (GType, AnnotatedObjectFieldType)
 ObjectFieldName
@@ -783,49 +635,35 @@ _ofdType :: (GType, AnnotatedObjectFieldType)
 _ofdDescription :: Maybe Description
 _ofdArguments :: Maybe Value
 _ofdName :: ObjectFieldName
-</span><a href="Hasura.RQL.Types.CustomTypes.html#_ofdType"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">NonEmpty (ObjectFieldDefinition (GType, AnnotatedObjectFieldType))
--&gt; [ObjectFieldDefinition (GType, AnnotatedObjectFieldType)]
-forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
-</span><span class="hs-identifier hs-var">toList</span></span><span> </span><span class="annot"><span class="annottext">(NonEmpty (ObjectFieldDefinition (GType, AnnotatedObjectFieldType))
- -&gt; [ObjectFieldDefinition (GType, AnnotatedObjectFieldType)])
+</span><a href="Hasura.RQL.Types.CustomTypes.html#_ofdType"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">toList</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedObjectType
 -&gt; NonEmpty
      (ObjectFieldDefinition (GType, AnnotatedObjectFieldType))
--&gt; [ObjectFieldDefinition (GType, AnnotatedObjectFieldType)]
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">AnnotatedObjectType
--&gt; NonEmpty
-     (ObjectFieldDefinition (GType, AnnotatedObjectFieldType))
-</span><a href="Hasura.RQL.Types.CustomTypes.html#_aotFields"><span class="hs-identifier hs-var hs-var">_aotFields</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedObjectType
-</span><a href="#local-6989586621689703387"><span class="hs-identifier hs-var">aot</span></a></span><span>
-</span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">(Name, GType) -&gt; [(Name, GType)]
-forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ObjectFieldName -&gt; Name
-</span><a href="Hasura.RQL.Types.CustomTypes.html#unObjectFieldName"><span class="hs-identifier hs-var hs-var">unObjectFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">ObjectFieldName
-</span><a href="#local-6989586621689703384"><span class="hs-identifier hs-var">_ofdName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">(GType, AnnotatedObjectFieldType) -&gt; GType
-forall a b. (a, b) -&gt; a
-</span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">(GType, AnnotatedObjectFieldType)
-</span><a href="#local-6989586621689703381"><span class="hs-identifier hs-var">_ofdType</span></a></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.RQL.Types.CustomTypes.html#_aotFields"><span class="hs-identifier hs-var">_aotFields</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedObjectType
+</span><a href="#local-6989586621690368688"><span class="hs-identifier hs-var">aot</span></a></span><span>
+</span><span id="line-126"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ObjectFieldName -&gt; Name
+</span><a href="Hasura.RQL.Types.CustomTypes.html#unObjectFieldName"><span class="hs-identifier hs-var">unObjectFieldName</span></a></span><span> </span><span class="annot"><span class="annottext">ObjectFieldName
+</span><a href="#local-6989586621690368685"><span class="hs-identifier hs-var">_ofdName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span> </span><span class="annot"><span class="annottext">(GType, AnnotatedObjectFieldType)
+</span><a href="#local-6989586621690368682"><span class="hs-identifier hs-var">_ofdType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-127"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#AOTScalar"><span class="hs-identifier hs-type">AOTScalar</span></a></span><span> </span><span class="annot"><span class="annottext">AnnotatedScalarType
-</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ActionOutputFields
-forall k v. HashMap k v
+</span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v
 </span><span class="hs-identifier hs-var">Map.empty</span></span><span>
 </span><span id="line-128"></span><span>
 </span><span id="line-129"></span><span class="hs-keyword">data</span><span> </span><span id="AnnActionMutationAsync"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionMutationAsync"><span class="hs-identifier hs-var">AnnActionMutationAsync</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnActionMutationAsync"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionMutationAsync"><span class="hs-identifier hs-var">AnnActionMutationAsync</span></a></span></span><span>
 </span><span id="line-130"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aamaName"><span class="annot"><span class="annottext">AnnActionMutationAsync -&gt; ActionName
 </span><a href="Hasura.RQL.IR.Action.html#_aamaName"><span class="hs-identifier hs-var hs-var">_aamaName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-type">RQL.ActionName</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-131"></span><span>    </span><span id="_aamaForwardClientHeaders"><span class="annot"><span class="annottext">AnnActionMutationAsync -&gt; Bool
-</span><a href="Hasura.RQL.IR.Action.html#_aamaForwardClientHeaders"><span class="hs-identifier hs-var hs-var">_aamaForwardClientHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
+</span><a href="Hasura.RQL.IR.Action.html#_aamaForwardClientHeaders"><span class="hs-identifier hs-var hs-var">_aamaForwardClientHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-132"></span><span>    </span><span class="hs-comment">-- | jsonified input arguments</span><span>
 </span><span id="line-133"></span><span>    </span><span id="_aamaPayload"><span class="annot"><span class="annottext">AnnActionMutationAsync -&gt; Value
 </span><a href="Hasura.RQL.IR.Action.html#_aamaPayload"><span class="hs-identifier hs-var hs-var">_aamaPayload</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span>
 </span><span id="line-134"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-135"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689703362"><span id="local-6989586621689703364"><span id="local-6989586621689703366"><span class="annot"><span class="annottext">Int -&gt; AnnActionMutationAsync -&gt; ShowS
+</span><span id="line-135"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690368656"><span id="local-6989586621690368658"><span id="local-6989586621690368667"><span class="annot"><span class="annottext">Int -&gt; AnnActionMutationAsync -&gt; ShowS
 [AnnActionMutationAsync] -&gt; ShowS
 AnnActionMutationAsync -&gt; String
-(Int -&gt; AnnActionMutationAsync -&gt; ShowS)
--&gt; (AnnActionMutationAsync -&gt; String)
--&gt; ([AnnActionMutationAsync] -&gt; ShowS)
--&gt; Show AnnActionMutationAsync
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
 showList :: [AnnActionMutationAsync] -&gt; ShowS
@@ -834,73 +672,36 @@ show :: AnnActionMutationAsync -&gt; String
 $cshow :: AnnActionMutationAsync -&gt; String
 showsPrec :: Int -&gt; AnnActionMutationAsync -&gt; ShowS
 $cshowsPrec :: Int -&gt; AnnActionMutationAsync -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703358"><span id="local-6989586621689703360"><span class="annot"><span class="annottext">AnnActionMutationAsync -&gt; AnnActionMutationAsync -&gt; Bool
-(AnnActionMutationAsync -&gt; AnnActionMutationAsync -&gt; Bool)
--&gt; (AnnActionMutationAsync -&gt; AnnActionMutationAsync -&gt; Bool)
--&gt; Eq AnnActionMutationAsync
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368646"><span id="local-6989586621690368654"><span class="annot"><span class="annottext">AnnActionMutationAsync -&gt; AnnActionMutationAsync -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: AnnActionMutationAsync -&gt; AnnActionMutationAsync -&gt; Bool
 $c/= :: AnnActionMutationAsync -&gt; AnnActionMutationAsync -&gt; Bool
 == :: AnnActionMutationAsync -&gt; AnnActionMutationAsync -&gt; Bool
 $c== :: AnnActionMutationAsync -&gt; AnnActionMutationAsync -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-136"></span><span>
-</span><span id="line-137"></span><span class="hs-keyword">data</span><span> </span><span id="AsyncActionQueryFieldG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncActionQueryFieldG"><span class="hs-identifier hs-var">AsyncActionQueryFieldG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689703357"><span class="annot"><a href="#local-6989586621689703357"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-137"></span><span class="hs-keyword">data</span><span> </span><span id="AsyncActionQueryFieldG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncActionQueryFieldG"><span class="hs-identifier hs-var">AsyncActionQueryFieldG</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690369299"><span class="annot"><a href="#local-6989586621690369299"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-138"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="AsyncTypename"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncTypename"><span class="hs-identifier hs-var">AsyncTypename</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-139"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AsyncOutput"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncOutput"><span class="hs-identifier hs-var">AsyncOutput</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689703357"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-139"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AsyncOutput"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncOutput"><span class="hs-identifier hs-var">AsyncOutput</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionFieldsG"><span class="hs-identifier hs-type">ActionFieldsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690369299"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-140"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AsyncId"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncId"><span class="hs-identifier hs-var">AsyncId</span></a></span></span><span>
 </span><span id="line-141"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AsyncCreatedAt"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncCreatedAt"><span class="hs-identifier hs-var">AsyncCreatedAt</span></a></span></span><span>
 </span><span id="line-142"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="AsyncErrors"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncErrors"><span class="hs-identifier hs-var">AsyncErrors</span></a></span></span><span>
-</span><span id="line-143"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689703348"><span id="local-6989586621689703350"><span class="annot"><span class="annottext">a -&gt; AsyncActionQueryFieldG b -&gt; AsyncActionQueryFieldG a
-(a -&gt; b) -&gt; AsyncActionQueryFieldG a -&gt; AsyncActionQueryFieldG b
-(forall a b.
- (a -&gt; b) -&gt; AsyncActionQueryFieldG a -&gt; AsyncActionQueryFieldG b)
--&gt; (forall a b.
-    a -&gt; AsyncActionQueryFieldG b -&gt; AsyncActionQueryFieldG a)
--&gt; Functor AsyncActionQueryFieldG
-forall a b.
+</span><span id="line-143"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690368635"><span id="local-6989586621690368639"><span class="annot"><span class="annottext">forall a b.
 a -&gt; AsyncActionQueryFieldG b -&gt; AsyncActionQueryFieldG a
 forall a b.
 (a -&gt; b) -&gt; AsyncActionQueryFieldG a -&gt; AsyncActionQueryFieldG b
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: a -&gt; AsyncActionQueryFieldG b -&gt; AsyncActionQueryFieldG a
+&lt;$ :: forall a b.
+a -&gt; AsyncActionQueryFieldG b -&gt; AsyncActionQueryFieldG a
 $c&lt;$ :: forall a b.
 a -&gt; AsyncActionQueryFieldG b -&gt; AsyncActionQueryFieldG a
-fmap :: (a -&gt; b) -&gt; AsyncActionQueryFieldG a -&gt; AsyncActionQueryFieldG b
+fmap :: forall a b.
+(a -&gt; b) -&gt; AsyncActionQueryFieldG a -&gt; AsyncActionQueryFieldG b
 $cfmap :: forall a b.
 (a -&gt; b) -&gt; AsyncActionQueryFieldG a -&gt; AsyncActionQueryFieldG b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703314"><span id="local-6989586621689703316"><span id="local-6989586621689703318"><span id="local-6989586621689703320"><span id="local-6989586621689703322"><span id="local-6989586621689703324"><span id="local-6989586621689703326"><span id="local-6989586621689703328"><span id="local-6989586621689703330"><span id="local-6989586621689703332"><span id="local-6989586621689703334"><span id="local-6989586621689703336"><span id="local-6989586621689703338"><span id="local-6989586621689703340"><span id="local-6989586621689703342"><span id="local-6989586621689703344"><span id="local-6989586621689703346"><span class="annot"><span class="annottext">AsyncActionQueryFieldG a -&gt; Bool
-(a -&gt; m) -&gt; AsyncActionQueryFieldG a -&gt; m
-(a -&gt; b -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
-(forall m. Monoid m =&gt; AsyncActionQueryFieldG m -&gt; m)
--&gt; (forall m a.
-    Monoid m =&gt;
-    (a -&gt; m) -&gt; AsyncActionQueryFieldG a -&gt; m)
--&gt; (forall m a.
-    Monoid m =&gt;
-    (a -&gt; m) -&gt; AsyncActionQueryFieldG a -&gt; m)
--&gt; (forall a b.
-    (a -&gt; b -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b)
--&gt; (forall a b.
-    (a -&gt; b -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b)
--&gt; (forall b a.
-    (b -&gt; a -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b)
--&gt; (forall b a.
-    (b -&gt; a -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AsyncActionQueryFieldG a -&gt; a)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AsyncActionQueryFieldG a -&gt; a)
--&gt; (forall a. AsyncActionQueryFieldG a -&gt; [a])
--&gt; (forall a. AsyncActionQueryFieldG a -&gt; Bool)
--&gt; (forall a. AsyncActionQueryFieldG a -&gt; Int)
--&gt; (forall a. Eq a =&gt; a -&gt; AsyncActionQueryFieldG a -&gt; Bool)
--&gt; (forall a. Ord a =&gt; AsyncActionQueryFieldG a -&gt; a)
--&gt; (forall a. Ord a =&gt; AsyncActionQueryFieldG a -&gt; a)
--&gt; (forall a. Num a =&gt; AsyncActionQueryFieldG a -&gt; a)
--&gt; (forall a. Num a =&gt; AsyncActionQueryFieldG a -&gt; a)
--&gt; Foldable AsyncActionQueryFieldG
-forall a. Eq a =&gt; a -&gt; AsyncActionQueryFieldG a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368585"><span id="local-6989586621690368587"><span id="local-6989586621690368589"><span id="local-6989586621690368591"><span id="local-6989586621690368593"><span id="local-6989586621690368595"><span id="local-6989586621690368599"><span id="local-6989586621690368601"><span id="local-6989586621690368603"><span id="local-6989586621690368605"><span id="local-6989586621690368607"><span id="local-6989586621690368609"><span id="local-6989586621690368611"><span id="local-6989586621690368615"><span id="local-6989586621690368617"><span id="local-6989586621690368628"><span id="local-6989586621690368630"><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; AsyncActionQueryFieldG a -&gt; Bool
 forall a. Num a =&gt; AsyncActionQueryFieldG a -&gt; a
 forall a. Ord a =&gt; AsyncActionQueryFieldG a -&gt; a
 forall m. Monoid m =&gt; AsyncActionQueryFieldG m -&gt; m
@@ -930,61 +731,42 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: AsyncActionQueryFieldG a -&gt; a
+product :: forall a. Num a =&gt; AsyncActionQueryFieldG a -&gt; a
 $cproduct :: forall a. Num a =&gt; AsyncActionQueryFieldG a -&gt; a
-sum :: AsyncActionQueryFieldG a -&gt; a
+sum :: forall a. Num a =&gt; AsyncActionQueryFieldG a -&gt; a
 $csum :: forall a. Num a =&gt; AsyncActionQueryFieldG a -&gt; a
-minimum :: AsyncActionQueryFieldG a -&gt; a
+minimum :: forall a. Ord a =&gt; AsyncActionQueryFieldG a -&gt; a
 $cminimum :: forall a. Ord a =&gt; AsyncActionQueryFieldG a -&gt; a
-maximum :: AsyncActionQueryFieldG a -&gt; a
+maximum :: forall a. Ord a =&gt; AsyncActionQueryFieldG a -&gt; a
 $cmaximum :: forall a. Ord a =&gt; AsyncActionQueryFieldG a -&gt; a
-elem :: a -&gt; AsyncActionQueryFieldG a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; AsyncActionQueryFieldG a -&gt; Bool
 $celem :: forall a. Eq a =&gt; a -&gt; AsyncActionQueryFieldG a -&gt; Bool
-length :: AsyncActionQueryFieldG a -&gt; Int
+length :: forall a. AsyncActionQueryFieldG a -&gt; Int
 $clength :: forall a. AsyncActionQueryFieldG a -&gt; Int
-null :: AsyncActionQueryFieldG a -&gt; Bool
+null :: forall a. AsyncActionQueryFieldG a -&gt; Bool
 $cnull :: forall a. AsyncActionQueryFieldG a -&gt; Bool
-toList :: AsyncActionQueryFieldG a -&gt; [a]
+toList :: forall a. AsyncActionQueryFieldG a -&gt; [a]
 $ctoList :: forall a. AsyncActionQueryFieldG a -&gt; [a]
-foldl1 :: (a -&gt; a -&gt; a) -&gt; AsyncActionQueryFieldG a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AsyncActionQueryFieldG a -&gt; a
 $cfoldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AsyncActionQueryFieldG a -&gt; a
-foldr1 :: (a -&gt; a -&gt; a) -&gt; AsyncActionQueryFieldG a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AsyncActionQueryFieldG a -&gt; a
 $cfoldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AsyncActionQueryFieldG a -&gt; a
-foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
 $cfoldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
-foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
 $cfoldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
-foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
 $cfoldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
-foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
 $cfoldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AsyncActionQueryFieldG a -&gt; b
-foldMap' :: (a -&gt; m) -&gt; AsyncActionQueryFieldG a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AsyncActionQueryFieldG a -&gt; m
 $cfoldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AsyncActionQueryFieldG a -&gt; m
-foldMap :: (a -&gt; m) -&gt; AsyncActionQueryFieldG a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AsyncActionQueryFieldG a -&gt; m
 $cfoldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AsyncActionQueryFieldG a -&gt; m
-fold :: AsyncActionQueryFieldG m -&gt; m
+fold :: forall m. Monoid m =&gt; AsyncActionQueryFieldG m -&gt; m
 $cfold :: forall m. Monoid m =&gt; AsyncActionQueryFieldG m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703304"><span id="local-6989586621689703306"><span id="local-6989586621689703308"><span id="local-6989586621689703310"><span class="annot"><span class="annottext">Functor AsyncActionQueryFieldG
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368561"><span id="local-6989586621690368563"><span id="local-6989586621690368565"><span id="local-6989586621690368579"><span class="annot"><span class="annottext">Functor AsyncActionQueryFieldG
 Foldable AsyncActionQueryFieldG
-Functor AsyncActionQueryFieldG
--&gt; Foldable AsyncActionQueryFieldG
--&gt; (forall (f :: * -&gt; *) a b.
-    Applicative f =&gt;
-    (a -&gt; f b)
-    -&gt; AsyncActionQueryFieldG a -&gt; f (AsyncActionQueryFieldG b))
--&gt; (forall (f :: * -&gt; *) a.
-    Applicative f =&gt;
-    AsyncActionQueryFieldG (f a) -&gt; f (AsyncActionQueryFieldG a))
--&gt; (forall (m :: * -&gt; *) a b.
-    Monad m =&gt;
-    (a -&gt; m b)
-    -&gt; AsyncActionQueryFieldG a -&gt; m (AsyncActionQueryFieldG b))
--&gt; (forall (m :: * -&gt; *) a.
-    Monad m =&gt;
-    AsyncActionQueryFieldG (m a) -&gt; m (AsyncActionQueryFieldG a))
--&gt; Traversable AsyncActionQueryFieldG
-(a -&gt; f b)
--&gt; AsyncActionQueryFieldG a -&gt; f (AsyncActionQueryFieldG b)
 forall (t :: * -&gt; *).
 Functor t
 -&gt; Foldable t
@@ -1011,58 +793,61 @@ forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b)
 -&gt; AsyncActionQueryFieldG a -&gt; f (AsyncActionQueryFieldG b)
-sequence :: AsyncActionQueryFieldG (m a) -&gt; m (AsyncActionQueryFieldG a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AsyncActionQueryFieldG (m a) -&gt; m (AsyncActionQueryFieldG a)
 $csequence :: forall (m :: * -&gt; *) a.
 Monad m =&gt;
 AsyncActionQueryFieldG (m a) -&gt; m (AsyncActionQueryFieldG a)
-mapM :: (a -&gt; m b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
 -&gt; AsyncActionQueryFieldG a -&gt; m (AsyncActionQueryFieldG b)
 $cmapM :: forall (m :: * -&gt; *) a b.
 Monad m =&gt;
 (a -&gt; m b)
 -&gt; AsyncActionQueryFieldG a -&gt; m (AsyncActionQueryFieldG b)
-sequenceA :: AsyncActionQueryFieldG (f a) -&gt; f (AsyncActionQueryFieldG a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AsyncActionQueryFieldG (f a) -&gt; f (AsyncActionQueryFieldG a)
 $csequenceA :: forall (f :: * -&gt; *) a.
 Applicative f =&gt;
 AsyncActionQueryFieldG (f a) -&gt; f (AsyncActionQueryFieldG a)
-traverse :: (a -&gt; f b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
 -&gt; AsyncActionQueryFieldG a -&gt; f (AsyncActionQueryFieldG b)
 $ctraverse :: forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b)
 -&gt; AsyncActionQueryFieldG a -&gt; f (AsyncActionQueryFieldG b)
-$cp2Traversable :: Foldable AsyncActionQueryFieldG
-$cp1Traversable :: Functor AsyncActionQueryFieldG
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-144"></span><span>
-</span><span id="line-145"></span><span class="hs-keyword">type</span><span> </span><span id="AsyncActionQueryFieldsG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncActionQueryFieldsG"><span class="hs-identifier hs-var">AsyncActionQueryFieldsG</span></a></span></span><span> </span><span id="local-6989586621689703303"><span class="annot"><a href="#local-6989586621689703303"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncActionQueryFieldG"><span class="hs-identifier hs-type">AsyncActionQueryFieldG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689703303"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-145"></span><span class="hs-keyword">type</span><span> </span><span id="AsyncActionQueryFieldsG"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncActionQueryFieldsG"><span class="hs-identifier hs-var">AsyncActionQueryFieldsG</span></a></span></span><span> </span><span id="local-6989586621690368560"><span class="annot"><a href="#local-6989586621690368560"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#Fields"><span class="hs-identifier hs-type">Fields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncActionQueryFieldG"><span class="hs-identifier hs-type">AsyncActionQueryFieldG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690368560"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-146"></span><span>
-</span><span id="line-147"></span><span class="hs-keyword">data</span><span> </span><span id="AnnActionAsyncQuery"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionAsyncQuery"><span class="hs-identifier hs-var">AnnActionAsyncQuery</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689703302"><span class="annot"><a href="#local-6989586621689703302"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689703301"><span class="annot"><a href="#local-6989586621689703301"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnActionAsyncQuery"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionAsyncQuery"><span class="hs-identifier hs-var">AnnActionAsyncQuery</span></a></span></span><span>
-</span><span id="line-148"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aaaqName"><span class="annot"><span class="annottext">AnnActionAsyncQuery b r -&gt; ActionName
+</span><span id="line-147"></span><span class="hs-keyword">data</span><span> </span><span id="AnnActionAsyncQuery"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionAsyncQuery"><span class="hs-identifier hs-var">AnnActionAsyncQuery</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690369379"><span class="annot"><a href="#local-6989586621690369379"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html#BackendType"><span class="hs-identifier hs-type">BackendType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690369378"><span class="annot"><a href="#local-6989586621690369378"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="AnnActionAsyncQuery"><span class="annot"><a href="Hasura.RQL.IR.Action.html#AnnActionAsyncQuery"><span class="hs-identifier hs-var">AnnActionAsyncQuery</span></a></span></span><span>
+</span><span id="line-148"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_aaaqName"><span class="annot"><span class="annottext">forall (b :: BackendType) r. AnnActionAsyncQuery b r -&gt; ActionName
 </span><a href="Hasura.RQL.IR.Action.html#_aaaqName"><span class="hs-identifier hs-var hs-var">_aaaqName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionName"><span class="hs-identifier hs-type">RQL.ActionName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-149"></span><span>    </span><span id="_aaaqActionId"><span class="annot"><span class="annottext">AnnActionAsyncQuery b r -&gt; ActionId
+</span><span id="line-149"></span><span>    </span><span id="_aaaqActionId"><span class="annot"><span class="annottext">forall (b :: BackendType) r. AnnActionAsyncQuery b r -&gt; ActionId
 </span><a href="Hasura.RQL.IR.Action.html#_aaaqActionId"><span class="hs-identifier hs-var hs-var">_aaaqActionId</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Action.html#ActionId"><span class="hs-identifier hs-type">RQL.ActionId</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-150"></span><span>    </span><span id="_aaaqOutputType"><span class="annot"><span class="annottext">AnnActionAsyncQuery b r -&gt; GraphQLType
+</span><span id="line-150"></span><span>    </span><span id="_aaaqOutputType"><span class="annot"><span class="annottext">forall (b :: BackendType) r. AnnActionAsyncQuery b r -&gt; GraphQLType
 </span><a href="Hasura.RQL.IR.Action.html#_aaaqOutputType"><span class="hs-identifier hs-var hs-var">_aaaqOutputType</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.CustomTypes.html#GraphQLType"><span class="hs-identifier hs-type">GraphQLType</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-151"></span><span>    </span><span id="_aaaqFields"><span class="annot"><span class="annottext">AnnActionAsyncQuery b r -&gt; AsyncActionQueryFieldsG r
-</span><a href="Hasura.RQL.IR.Action.html#_aaaqFields"><span class="hs-identifier hs-var hs-var">_aaaqFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncActionQueryFieldsG"><span class="hs-identifier hs-type">AsyncActionQueryFieldsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689703301"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-152"></span><span>    </span><span id="_aaaqDefinitionList"><span class="annot"><span class="annottext">AnnActionAsyncQuery b r -&gt; [(Column b, ScalarType b)]
-</span><a href="Hasura.RQL.IR.Action.html#_aaaqDefinitionList"><span class="hs-identifier hs-var hs-var">_aaaqDefinitionList</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689703302"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689703302"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
-</span><span id="line-153"></span><span>    </span><span id="_aaaqStringifyNum"><span class="annot"><span class="annottext">AnnActionAsyncQuery b r -&gt; StringifyNumbers
+</span><span id="line-151"></span><span>    </span><span id="_aaaqFields"><span class="annot"><span class="annottext">forall (b :: BackendType) r.
+AnnActionAsyncQuery b r -&gt; AsyncActionQueryFieldsG r
+</span><a href="Hasura.RQL.IR.Action.html#_aaaqFields"><span class="hs-identifier hs-var hs-var">_aaaqFields</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#AsyncActionQueryFieldsG"><span class="hs-identifier hs-type">AsyncActionQueryFieldsG</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690369378"><span class="hs-identifier hs-type">r</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-152"></span><span>    </span><span id="_aaaqDefinitionList"><span class="annot"><span class="annottext">forall (b :: BackendType) r.
+AnnActionAsyncQuery b r -&gt; [(Column b, ScalarType b)]
+</span><a href="Hasura.RQL.IR.Action.html#_aaaqDefinitionList"><span class="hs-identifier hs-var hs-var">_aaaqDefinitionList</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690369379"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690369379"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">,</span><span>
+</span><span id="line-153"></span><span>    </span><span id="_aaaqStringifyNum"><span class="annot"><span class="annottext">forall (b :: BackendType) r.
+AnnActionAsyncQuery b r -&gt; StringifyNumbers
 </span><a href="Hasura.RQL.IR.Action.html#_aaaqStringifyNum"><span class="hs-identifier hs-var hs-var">_aaaqStringifyNum</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Options.html#StringifyNumbers"><span class="hs-identifier hs-type">StringifyNumbers</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-154"></span><span>    </span><span id="_aaaqForwardClientHeaders"><span class="annot"><span class="annottext">AnnActionAsyncQuery b r -&gt; Bool
-</span><a href="Hasura.RQL.IR.Action.html#_aaaqForwardClientHeaders"><span class="hs-identifier hs-var hs-var">_aaaqForwardClientHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span class="hs-special">,</span><span>
-</span><span id="line-155"></span><span>    </span><span id="_aaaqSource"><span class="annot"><span class="annottext">AnnActionAsyncQuery b r -&gt; ActionSourceInfo b
-</span><a href="Hasura.RQL.IR.Action.html#_aaaqSource"><span class="hs-identifier hs-var hs-var">_aaaqSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionSourceInfo"><span class="hs-identifier hs-type">ActionSourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689703302"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-154"></span><span>    </span><span id="_aaaqForwardClientHeaders"><span class="annot"><span class="annottext">forall (b :: BackendType) r. AnnActionAsyncQuery b r -&gt; Bool
+</span><a href="Hasura.RQL.IR.Action.html#_aaaqForwardClientHeaders"><span class="hs-identifier hs-var hs-var">_aaaqForwardClientHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-155"></span><span>    </span><span id="_aaaqSource"><span class="annot"><span class="annottext">forall (b :: BackendType) r.
+AnnActionAsyncQuery b r -&gt; ActionSourceInfo b
+</span><a href="Hasura.RQL.IR.Action.html#_aaaqSource"><span class="hs-identifier hs-var hs-var">_aaaqSource</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionSourceInfo"><span class="hs-identifier hs-type">ActionSourceInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690369379"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-156"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-157"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689703288"><span id="local-6989586621689703290"><span class="annot"><span class="annottext">a -&gt; AnnActionAsyncQuery b b -&gt; AnnActionAsyncQuery b a
-(a -&gt; b) -&gt; AnnActionAsyncQuery b a -&gt; AnnActionAsyncQuery b b
-(forall a b.
- (a -&gt; b) -&gt; AnnActionAsyncQuery b a -&gt; AnnActionAsyncQuery b b)
--&gt; (forall a b.
-    a -&gt; AnnActionAsyncQuery b b -&gt; AnnActionAsyncQuery b a)
--&gt; Functor (AnnActionAsyncQuery b)
-forall a b. a -&gt; AnnActionAsyncQuery b b -&gt; AnnActionAsyncQuery b a
+</span><span id="line-157"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690368545"><span id="local-6989586621690368549"><span class="annot"><span class="annottext">forall a b. a -&gt; AnnActionAsyncQuery b b -&gt; AnnActionAsyncQuery b a
 forall a b.
 (a -&gt; b) -&gt; AnnActionAsyncQuery b a -&gt; AnnActionAsyncQuery b b
 forall (b :: BackendType) a b.
@@ -1072,47 +857,15 @@ forall (b :: BackendType) a b.
 forall (f :: * -&gt; *).
 (forall a b. (a -&gt; b) -&gt; f a -&gt; f b)
 -&gt; (forall a b. a -&gt; f b -&gt; f a) -&gt; Functor f
-&lt;$ :: a -&gt; AnnActionAsyncQuery b b -&gt; AnnActionAsyncQuery b a
+&lt;$ :: forall a b. a -&gt; AnnActionAsyncQuery b b -&gt; AnnActionAsyncQuery b a
 $c&lt;$ :: forall (b :: BackendType) a b.
 a -&gt; AnnActionAsyncQuery b b -&gt; AnnActionAsyncQuery b a
-fmap :: (a -&gt; b) -&gt; AnnActionAsyncQuery b a -&gt; AnnActionAsyncQuery b b
+fmap :: forall a b.
+(a -&gt; b) -&gt; AnnActionAsyncQuery b a -&gt; AnnActionAsyncQuery b b
 $cfmap :: forall (b :: BackendType) a b.
 (a -&gt; b) -&gt; AnnActionAsyncQuery b a -&gt; AnnActionAsyncQuery b b
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703254"><span id="local-6989586621689703256"><span id="local-6989586621689703258"><span id="local-6989586621689703260"><span id="local-6989586621689703262"><span id="local-6989586621689703264"><span id="local-6989586621689703266"><span id="local-6989586621689703268"><span id="local-6989586621689703270"><span id="local-6989586621689703272"><span id="local-6989586621689703274"><span id="local-6989586621689703276"><span id="local-6989586621689703278"><span id="local-6989586621689703280"><span id="local-6989586621689703282"><span id="local-6989586621689703284"><span id="local-6989586621689703286"><span class="annot"><span class="annottext">AnnActionAsyncQuery b a -&gt; Bool
-(a -&gt; m) -&gt; AnnActionAsyncQuery b a -&gt; m
-(a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
-(forall m. Monoid m =&gt; AnnActionAsyncQuery b m -&gt; m)
--&gt; (forall m a.
-    Monoid m =&gt;
-    (a -&gt; m) -&gt; AnnActionAsyncQuery b a -&gt; m)
--&gt; (forall m a.
-    Monoid m =&gt;
-    (a -&gt; m) -&gt; AnnActionAsyncQuery b a -&gt; m)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b)
--&gt; (forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b)
--&gt; (forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnActionAsyncQuery b a -&gt; a)
--&gt; (forall a. (a -&gt; a -&gt; a) -&gt; AnnActionAsyncQuery b a -&gt; a)
--&gt; (forall a. AnnActionAsyncQuery b a -&gt; [a])
--&gt; (forall a. AnnActionAsyncQuery b a -&gt; Bool)
--&gt; (forall a. AnnActionAsyncQuery b a -&gt; Int)
--&gt; (forall a. Eq a =&gt; a -&gt; AnnActionAsyncQuery b a -&gt; Bool)
--&gt; (forall a. Ord a =&gt; AnnActionAsyncQuery b a -&gt; a)
--&gt; (forall a. Ord a =&gt; AnnActionAsyncQuery b a -&gt; a)
--&gt; (forall a. Num a =&gt; AnnActionAsyncQuery b a -&gt; a)
--&gt; (forall a. Num a =&gt; AnnActionAsyncQuery b a -&gt; a)
--&gt; Foldable (AnnActionAsyncQuery b)
-forall a. Eq a =&gt; a -&gt; AnnActionAsyncQuery b a -&gt; Bool
-forall a. Num a =&gt; AnnActionAsyncQuery b a -&gt; a
-forall a. Ord a =&gt; AnnActionAsyncQuery b a -&gt; a
-forall m. Monoid m =&gt; AnnActionAsyncQuery b m -&gt; m
-forall a. AnnActionAsyncQuery b a -&gt; Bool
-forall a. AnnActionAsyncQuery b a -&gt; Int
-forall a. AnnActionAsyncQuery b a -&gt; [a]
-forall a. (a -&gt; a -&gt; a) -&gt; AnnActionAsyncQuery b a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Functor</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368499"><span id="local-6989586621690368501"><span id="local-6989586621690368503"><span id="local-6989586621690368505"><span id="local-6989586621690368507"><span id="local-6989586621690368509"><span id="local-6989586621690368513"><span id="local-6989586621690368515"><span id="local-6989586621690368517"><span id="local-6989586621690368519"><span id="local-6989586621690368521"><span id="local-6989586621690368523"><span id="local-6989586621690368525"><span id="local-6989586621690368529"><span id="local-6989586621690368531"><span id="local-6989586621690368538"><span id="local-6989586621690368540"><span class="annot"><span class="annottext">forall a. AnnActionAsyncQuery b a -&gt; Bool
 forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnActionAsyncQuery b a -&gt; m
-forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
 forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
 forall (b :: BackendType) a.
 Eq a =&gt;
@@ -1122,7 +875,7 @@ forall (b :: BackendType) a. Ord a =&gt; AnnActionAsyncQuery b a -&gt; a
 forall (b :: BackendType) m.
 Monoid m =&gt;
 AnnActionAsyncQuery b m -&gt; m
-forall (b :: BackendType) a. AnnActionAsyncQuery b a -&gt; Bool
+forall (b :: BackendType) r. AnnActionAsyncQuery b r -&gt; Bool
 forall (b :: BackendType) a. AnnActionAsyncQuery b a -&gt; Int
 forall (b :: BackendType) a. AnnActionAsyncQuery b a -&gt; [a]
 forall (b :: BackendType) a.
@@ -1153,76 +906,55 @@ forall (t :: * -&gt; *).
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; (forall a. Num a =&gt; t a -&gt; a)
 -&gt; Foldable t
-product :: AnnActionAsyncQuery b a -&gt; a
+product :: forall a. Num a =&gt; AnnActionAsyncQuery b a -&gt; a
 $cproduct :: forall (b :: BackendType) a. Num a =&gt; AnnActionAsyncQuery b a -&gt; a
-sum :: AnnActionAsyncQuery b a -&gt; a
+sum :: forall a. Num a =&gt; AnnActionAsyncQuery b a -&gt; a
 $csum :: forall (b :: BackendType) a. Num a =&gt; AnnActionAsyncQuery b a -&gt; a
-minimum :: AnnActionAsyncQuery b a -&gt; a
+minimum :: forall a. Ord a =&gt; AnnActionAsyncQuery b a -&gt; a
 $cminimum :: forall (b :: BackendType) a. Ord a =&gt; AnnActionAsyncQuery b a -&gt; a
-maximum :: AnnActionAsyncQuery b a -&gt; a
+maximum :: forall a. Ord a =&gt; AnnActionAsyncQuery b a -&gt; a
 $cmaximum :: forall (b :: BackendType) a. Ord a =&gt; AnnActionAsyncQuery b a -&gt; a
-elem :: a -&gt; AnnActionAsyncQuery b a -&gt; Bool
+elem :: forall a. Eq a =&gt; a -&gt; AnnActionAsyncQuery b a -&gt; Bool
 $celem :: forall (b :: BackendType) a.
 Eq a =&gt;
 a -&gt; AnnActionAsyncQuery b a -&gt; Bool
-length :: AnnActionAsyncQuery b a -&gt; Int
+length :: forall a. AnnActionAsyncQuery b a -&gt; Int
 $clength :: forall (b :: BackendType) a. AnnActionAsyncQuery b a -&gt; Int
-null :: AnnActionAsyncQuery b a -&gt; Bool
-$cnull :: forall (b :: BackendType) a. AnnActionAsyncQuery b a -&gt; Bool
-toList :: AnnActionAsyncQuery b a -&gt; [a]
+null :: forall a. AnnActionAsyncQuery b a -&gt; Bool
+$cnull :: forall (b :: BackendType) r. AnnActionAsyncQuery b r -&gt; Bool
+toList :: forall a. AnnActionAsyncQuery b a -&gt; [a]
 $ctoList :: forall (b :: BackendType) a. AnnActionAsyncQuery b a -&gt; [a]
-foldl1 :: (a -&gt; a -&gt; a) -&gt; AnnActionAsyncQuery b a -&gt; a
+foldl1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnActionAsyncQuery b a -&gt; a
 $cfoldl1 :: forall (b :: BackendType) a.
 (a -&gt; a -&gt; a) -&gt; AnnActionAsyncQuery b a -&gt; a
-foldr1 :: (a -&gt; a -&gt; a) -&gt; AnnActionAsyncQuery b a -&gt; a
+foldr1 :: forall a. (a -&gt; a -&gt; a) -&gt; AnnActionAsyncQuery b a -&gt; a
 $cfoldr1 :: forall (b :: BackendType) a.
 (a -&gt; a -&gt; a) -&gt; AnnActionAsyncQuery b a -&gt; a
-foldl' :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
+foldl' :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
 $cfoldl' :: forall (b :: BackendType) b a.
 (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
-foldl :: (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
+foldl :: forall b a. (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
 $cfoldl :: forall (b :: BackendType) b a.
 (b -&gt; a -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
-foldr' :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
+foldr' :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
 $cfoldr' :: forall (b :: BackendType) a b.
 (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
-foldr :: (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
+foldr :: forall a b. (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
 $cfoldr :: forall (b :: BackendType) a b.
 (a -&gt; b -&gt; b) -&gt; b -&gt; AnnActionAsyncQuery b a -&gt; b
-foldMap' :: (a -&gt; m) -&gt; AnnActionAsyncQuery b a -&gt; m
+foldMap' :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnActionAsyncQuery b a -&gt; m
 $cfoldMap' :: forall (b :: BackendType) m a.
 Monoid m =&gt;
 (a -&gt; m) -&gt; AnnActionAsyncQuery b a -&gt; m
-foldMap :: (a -&gt; m) -&gt; AnnActionAsyncQuery b a -&gt; m
+foldMap :: forall m a. Monoid m =&gt; (a -&gt; m) -&gt; AnnActionAsyncQuery b a -&gt; m
 $cfoldMap :: forall (b :: BackendType) m a.
 Monoid m =&gt;
 (a -&gt; m) -&gt; AnnActionAsyncQuery b a -&gt; m
-fold :: AnnActionAsyncQuery b m -&gt; m
+fold :: forall m. Monoid m =&gt; AnnActionAsyncQuery b m -&gt; m
 $cfold :: forall (b :: BackendType) m.
 Monoid m =&gt;
 AnnActionAsyncQuery b m -&gt; m
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689703244"><span id="local-6989586621689703246"><span id="local-6989586621689703248"><span id="local-6989586621689703250"><span class="annot"><span class="annottext">Functor (AnnActionAsyncQuery b)
-Foldable (AnnActionAsyncQuery b)
-Functor (AnnActionAsyncQuery b)
--&gt; Foldable (AnnActionAsyncQuery b)
--&gt; (forall (f :: * -&gt; *) a b.
-    Applicative f =&gt;
-    (a -&gt; f b)
-    -&gt; AnnActionAsyncQuery b a -&gt; f (AnnActionAsyncQuery b b))
--&gt; (forall (f :: * -&gt; *) a.
-    Applicative f =&gt;
-    AnnActionAsyncQuery b (f a) -&gt; f (AnnActionAsyncQuery b a))
--&gt; (forall (m :: * -&gt; *) a b.
-    Monad m =&gt;
-    (a -&gt; m b)
-    -&gt; AnnActionAsyncQuery b a -&gt; m (AnnActionAsyncQuery b b))
--&gt; (forall (m :: * -&gt; *) a.
-    Monad m =&gt;
-    AnnActionAsyncQuery b (m a) -&gt; m (AnnActionAsyncQuery b a))
--&gt; Traversable (AnnActionAsyncQuery b)
-(a -&gt; f b)
--&gt; AnnActionAsyncQuery b a -&gt; f (AnnActionAsyncQuery b b)
-forall (b :: BackendType). Functor (AnnActionAsyncQuery b)
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Foldable</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690368479"><span id="local-6989586621690368481"><span id="local-6989586621690368483"><span id="local-6989586621690368493"><span class="annot"><span class="annottext">forall (b :: BackendType). Functor (AnnActionAsyncQuery b)
 forall (b :: BackendType). Foldable (AnnActionAsyncQuery b)
 forall (b :: BackendType) (m :: * -&gt; *) a.
 Monad m =&gt;
@@ -1250,51 +982,47 @@ Functor t
     (a -&gt; m b) -&gt; t a -&gt; m (t b))
 -&gt; (forall (m :: * -&gt; *) a. Monad m =&gt; t (m a) -&gt; m (t a))
 -&gt; Traversable t
-forall (m :: * -&gt; *) a.
-Monad m =&gt;
-AnnActionAsyncQuery b (m a) -&gt; m (AnnActionAsyncQuery b a)
-forall (f :: * -&gt; *) a.
-Applicative f =&gt;
-AnnActionAsyncQuery b (f a) -&gt; f (AnnActionAsyncQuery b a)
-forall (m :: * -&gt; *) a b.
-Monad m =&gt;
-(a -&gt; m b)
--&gt; AnnActionAsyncQuery b a -&gt; m (AnnActionAsyncQuery b b)
 forall (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b)
 -&gt; AnnActionAsyncQuery b a -&gt; f (AnnActionAsyncQuery b b)
-sequence :: AnnActionAsyncQuery b (m a) -&gt; m (AnnActionAsyncQuery b a)
+sequence :: forall (m :: * -&gt; *) a.
+Monad m =&gt;
+AnnActionAsyncQuery b (m a) -&gt; m (AnnActionAsyncQuery b a)
 $csequence :: forall (b :: BackendType) (m :: * -&gt; *) a.
 Monad m =&gt;
 AnnActionAsyncQuery b (m a) -&gt; m (AnnActionAsyncQuery b a)
-mapM :: (a -&gt; m b)
+mapM :: forall (m :: * -&gt; *) a b.
+Monad m =&gt;
+(a -&gt; m b)
 -&gt; AnnActionAsyncQuery b a -&gt; m (AnnActionAsyncQuery b b)
 $cmapM :: forall (b :: BackendType) (m :: * -&gt; *) a b.
 Monad m =&gt;
 (a -&gt; m b)
 -&gt; AnnActionAsyncQuery b a -&gt; m (AnnActionAsyncQuery b b)
-sequenceA :: AnnActionAsyncQuery b (f a) -&gt; f (AnnActionAsyncQuery b a)
+sequenceA :: forall (f :: * -&gt; *) a.
+Applicative f =&gt;
+AnnActionAsyncQuery b (f a) -&gt; f (AnnActionAsyncQuery b a)
 $csequenceA :: forall (b :: BackendType) (f :: * -&gt; *) a.
 Applicative f =&gt;
 AnnActionAsyncQuery b (f a) -&gt; f (AnnActionAsyncQuery b a)
-traverse :: (a -&gt; f b)
+traverse :: forall (f :: * -&gt; *) a b.
+Applicative f =&gt;
+(a -&gt; f b)
 -&gt; AnnActionAsyncQuery b a -&gt; f (AnnActionAsyncQuery b b)
 $ctraverse :: forall (b :: BackendType) (f :: * -&gt; *) a b.
 Applicative f =&gt;
 (a -&gt; f b)
 -&gt; AnnActionAsyncQuery b a -&gt; f (AnnActionAsyncQuery b b)
-$cp2Traversable :: forall (b :: BackendType). Foldable (AnnActionAsyncQuery b)
-$cp1Traversable :: forall (b :: BackendType). Functor (AnnActionAsyncQuery b)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Traversable</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-158"></span><span>
-</span><span id="line-159"></span><span class="hs-keyword">data</span><span> </span><span id="ActionSourceInfo"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionSourceInfo"><span class="hs-identifier hs-var">ActionSourceInfo</span></a></span></span><span> </span><span id="local-6989586621689703243"><span class="annot"><a href="#local-6989586621689703243"><span class="hs-identifier hs-type">b</span></a></span></span><span>
+</span><span id="line-159"></span><span class="hs-keyword">data</span><span> </span><span id="ActionSourceInfo"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ActionSourceInfo"><span class="hs-identifier hs-var">ActionSourceInfo</span></a></span></span><span> </span><span id="local-6989586621690368478"><span class="annot"><a href="#local-6989586621690368478"><span class="hs-identifier hs-type">b</span></a></span></span><span>
 </span><span id="line-160"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- | No relationships defined on the action output object</span><span>
 </span><span id="line-161"></span><span>    </span><span id="ASINoSource"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ASINoSource"><span class="hs-identifier hs-var">ASINoSource</span></a></span></span><span>
 </span><span id="line-162"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="hs-comment">-- | All relationships refer to tables in one source</span><span>
-</span><span id="line-163"></span><span>    </span><span id="ASISource"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ASISource"><span class="hs-identifier hs-var">ASISource</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689703243"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-163"></span><span>    </span><span id="ASISource"><span class="annot"><a href="Hasura.RQL.IR.Action.html#ASISource"><span class="hs-identifier hs-var">ASISource</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690368478"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-164"></span><span>
-</span><span id="line-165"></span><span class="hs-special">$(</span><span id="local-6989586621689703239"><span id="local-6989586621689703301"><span id="local-6989586621689703302"><span id="aaaqSource"><span id="aaaqForwardClientHeaders"><span id="aaaqStringifyNum"><span id="aaaqDefinitionList"><span id="aaaqFields"><span id="aaaqOutputType"><span id="aaaqActionId"><span id="aaaqName"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AnnActionAsyncQuery</span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-166"></span><span class="hs-special">$(</span><span id="local-6989586621689703238"><span id="local-6989586621689703450"><span id="aaeResponseTransform"><span id="aaeRequestTransform"><span id="aaeTimeOut"><span id="aaeForwardClientHeaders"><span id="aaeHeaders"><span id="aaeWebhook"><span id="aaeOutputFields"><span id="aaePayload"><span id="aaeFields"><span id="aaeOutputType"><span id="aaeName"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AnnActionExecution</span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-167"></span><span class="hs-special">$(</span><span id="local-6989586621689703237"><span id="local-6989586621689703357"><span id="_AsyncErrors"><span id="_AsyncCreatedAt"><span id="_AsyncId"><span id="_AsyncOutput"><span id="_AsyncTypename"><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AsyncActionQueryFieldG</span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-165"></span><span class="hs-special">$</span><span id="aaaqSource"><span id="aaaqForwardClientHeaders"><span id="aaaqStringifyNum"><span id="aaaqDefinitionList"><span id="aaaqFields"><span id="aaaqOutputType"><span id="aaaqActionId"><span id="aaaqName"><span id="local-6989586621690369352"><span id="local-6989586621690369378"><span id="local-6989586621690369379"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AnnActionAsyncQuery</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-166"></span><span class="hs-special">$</span><span id="aaeResponseTransform"><span id="aaeRequestTransform"><span id="aaeTimeOut"><span id="aaeForwardClientHeaders"><span id="aaeHeaders"><span id="aaeWebhook"><span id="aaeOutputFields"><span id="aaePayload"><span id="aaeFields"><span id="aaeOutputType"><span id="aaeName"><span id="local-6989586621690369324"><span id="local-6989586621690369428"><span class="hs-special">(</span><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AnnActionExecution</span><span class="hs-special">)</span></span></span></span></span></span></span></span></span></span></span></span></span></span><span>
+</span><span id="line-167"></span><span class="hs-special">$</span><span id="_AsyncErrors"><span id="_AsyncCreatedAt"><span id="_AsyncId"><span id="_AsyncOutput"><span id="_AsyncTypename"><span id="local-6989586621690369299"><span id="local-6989586621690369300"><span class="hs-special">(</span><span class="hs-identifier">makePrisms</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">AsyncActionQueryFieldG</span><span class="hs-special">)</span></span></span></span></span></span></span></span><span>
 </span><span id="line-168"></span></pre></body></html>

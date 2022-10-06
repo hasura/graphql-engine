@@ -19,20 +19,20 @@
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FromJSON</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">ToJSON</span></span><span class="hs-special">)</span><span>
 </span><span id="line-20"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Aeson</span></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">J</span></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Functor.Barbie</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">FunctorB</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">bmap</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">btraverseC</span></span><span class="hs-special">)</span><span>
-</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Functor.Compose</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Compose</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span>
+</span><span id="line-22"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">Data.Functor.Compose</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">Compose</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier">Data.Kind</span></a></span><span>
 </span><span id="line-24"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><span class="hs-identifier">Data.Validation</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Validation</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">toEither</span></span><span class="hs-special">)</span><span>
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier">QErr</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier">EncJSON</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier">encJFromJValue</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-28"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html"><span class="hs-identifier">Hasura.RQL.DDL.Webhook.Transform</span></a></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html"><span class="hs-identifier">Hasura.RQL.DDL.Webhook.Transform.Class</span></a></span><span>
 </span><span id="line-30"></span><span>
 </span><span id="line-31"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
 </span><span id="line-32"></span><span>
-</span><span id="line-33"></span><span class="hs-keyword">type</span><span> </span><span id="Tuple1"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Tuple1"><span class="hs-identifier hs-var">Tuple1</span></a></span></span><span> </span><span id="local-6989586621689647941"><span class="annot"><a href="#local-6989586621689647941"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621689647940"><span class="annot"><a href="#local-6989586621689647940"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Compose</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689647941"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689647940"><span class="hs-identifier hs-type">b</span></a></span><span>
+</span><span id="line-33"></span><span class="hs-keyword">type</span><span> </span><span id="Tuple1"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Tuple1"><span class="hs-identifier hs-var">Tuple1</span></a></span></span><span> </span><span id="local-6989586621690219219"><span class="annot"><a href="#local-6989586621690219219"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621690219218"><span class="annot"><a href="#local-6989586621690219218"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Compose</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621690219219"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621690219218"><span class="hs-identifier hs-type">b</span></a></span><span>
 </span><span id="line-34"></span><span>
-</span><span id="line-35"></span><span class="hs-keyword">type</span><span> </span><span id="OptionalTuple1"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#OptionalTuple1"><span class="hs-identifier hs-var">OptionalTuple1</span></a></span></span><span> </span><span id="local-6989586621689647939"><span class="annot"><a href="#local-6989586621689647939"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621689647938"><span class="annot"><a href="#local-6989586621689647938"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#WithOptional"><span class="hs-identifier hs-type">WithOptional</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Tuple1"><span class="hs-identifier hs-type">Tuple1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647939"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647938"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">type</span><span> </span><span id="OptionalTuple1"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#OptionalTuple1"><span class="hs-identifier hs-var">OptionalTuple1</span></a></span></span><span> </span><span id="local-6989586621690219217"><span class="annot"><a href="#local-6989586621690219217"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621690219216"><span class="annot"><a href="#local-6989586621690219216"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#WithOptional"><span class="hs-identifier hs-type">WithOptional</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Tuple1"><span class="hs-identifier hs-type">Tuple1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219217"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219216"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span>
 </span><span id="line-37"></span><span class="hs-comment">-- | A variation on 'RequestTransformFn' where 'TransformFn' is tupled</span><span>
 </span><span id="line-38"></span><span class="hs-comment">-- with 'TemplatingEngine'. This is necessary to validate the 'TransformFn'.</span><span>
@@ -48,20 +48,15 @@
 </span><span id="line-48"></span><span class="hs-comment">-- | A lens for zipping our defunctionalized transform with the</span><span>
 </span><span id="line-49"></span><span class="hs-comment">-- 'TemplatingEngine' for validation.</span><span>
 </span><span id="line-50"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#transformFns"><span class="hs-identifier hs-type">transformFns</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#ValidationFields"><span class="hs-identifier hs-type">ValidationFields</span></a></span><span>
-</span><span id="line-51"></span><span id="transformFns"><span class="annot"><span class="annottext">transformFns :: (ValidationFields -&gt; f ValidationFields)
--&gt; RequestTransform -&gt; f RequestTransform
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#transformFns"><span class="hs-identifier hs-var hs-var">transformFns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(RequestTransform -&gt; ValidationFields)
--&gt; (RequestTransform -&gt; ValidationFields -&gt; RequestTransform)
--&gt; Lens
-     RequestTransform RequestTransform ValidationFields ValidationFields
-forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span id="line-51"></span><span id="transformFns"><span class="annot"><span class="annottext">transformFns :: Lens' RequestTransform ValidationFields
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#transformFns"><span class="hs-identifier hs-var hs-var">transformFns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
 </span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">RequestTransform -&gt; ValidationFields
-</span><a href="#local-6989586621689647936"><span class="hs-identifier hs-var">getter</span></a></span><span> </span><span class="annot"><span class="annottext">RequestTransform -&gt; ValidationFields -&gt; RequestTransform
-</span><a href="#local-6989586621689647935"><span class="hs-identifier hs-var">setter</span></a></span><span>
+</span><a href="#local-6989586621690219209"><span class="hs-identifier hs-var">getter</span></a></span><span> </span><span class="annot"><span class="annottext">RequestTransform -&gt; ValidationFields -&gt; RequestTransform
+</span><a href="#local-6989586621690219208"><span class="hs-identifier hs-var">setter</span></a></span><span>
 </span><span id="line-52"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-53"></span><span>    </span><span class="annot"><a href="#local-6989586621689647936"><span class="hs-identifier hs-type">getter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#ValidationFields"><span class="hs-identifier hs-type">ValidationFields</span></a></span><span>
-</span><span id="line-54"></span><span>    </span><span id="local-6989586621689647936"><span class="annot"><span class="annottext">getter :: RequestTransform -&gt; ValidationFields
-</span><a href="#local-6989586621689647936"><span class="hs-identifier hs-var hs-var">getter</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689647931"><span id="local-6989586621689647932"><span id="local-6989586621689647933"><span class="annot"><span class="annottext">Version
+</span><span id="line-53"></span><span>    </span><span class="annot"><a href="#local-6989586621690219209"><span class="hs-identifier hs-type">getter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#ValidationFields"><span class="hs-identifier hs-type">ValidationFields</span></a></span><span>
+</span><span id="line-54"></span><span>    </span><span id="local-6989586621690219209"><span class="annot"><span class="annottext">getter :: RequestTransform -&gt; ValidationFields
+</span><a href="#local-6989586621690219209"><span class="hs-identifier hs-var hs-var">getter</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690219204"><span id="local-6989586621690219205"><span id="local-6989586621690219206"><span class="annot"><span class="annottext">Version
 TemplatingEngine
 RequestFields (WithOptional TransformFn)
 templateEngine :: RequestTransform -&gt; TemplatingEngine
@@ -71,143 +66,64 @@ templateEngine :: TemplatingEngine
 requestFields :: RequestFields (WithOptional TransformFn)
 version :: Version
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#templateEngine"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-55"></span><span>      </span><span class="annot"><span class="annottext">(forall a.
- WithOptional TransformFn a
- -&gt; OptionalTuple1 TemplatingEngine TransformFn a)
--&gt; RequestFields (WithOptional TransformFn) -&gt; ValidationFields
-forall k (b :: (k -&gt; *) -&gt; *) (f :: k -&gt; *) (g :: k -&gt; *).
+</span><span id="line-55"></span><span>      </span><span class="annot"><span class="annottext">forall k (b :: (k -&gt; *) -&gt; *) (f :: k -&gt; *) (g :: k -&gt; *).
 FunctorB b =&gt;
 (forall (a :: k). f a -&gt; g a) -&gt; b f -&gt; b g
-</span><span class="hs-identifier hs-var">bmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe (Compose ((,) TemplatingEngine) TransformFn a)
--&gt; WithOptional (Compose ((,) TemplatingEngine) TransformFn) a
-forall (f :: * -&gt; *) result.
+</span><span class="hs-identifier hs-var">bmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) result.
 Maybe (f result) -&gt; WithOptional f result
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.html#WithOptional"><span class="hs-identifier hs-var">WithOptional</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe (Compose ((,) TemplatingEngine) TransformFn a)
- -&gt; WithOptional (Compose ((,) TemplatingEngine) TransformFn) a)
--&gt; (WithOptional TransformFn a
-    -&gt; Maybe (Compose ((,) TemplatingEngine) TransformFn a))
--&gt; WithOptional TransformFn a
--&gt; WithOptional (Compose ((,) TemplatingEngine) TransformFn) a
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(TransformFn a -&gt; Compose ((,) TemplatingEngine) TransformFn a)
--&gt; Maybe (TransformFn a)
--&gt; Maybe (Compose ((,) TemplatingEngine) TransformFn a)
-forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(TemplatingEngine, TransformFn a)
--&gt; Compose ((,) TemplatingEngine) TransformFn a
-forall k k1 (f :: k -&gt; *) (g :: k1 -&gt; k) (a :: k1).
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.html#WithOptional"><span class="hs-identifier hs-var">WithOptional</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} {k1} (f :: k -&gt; *) (g :: k1 -&gt; k) (a :: k1).
 f (g a) -&gt; Compose f g a
-</span><span class="hs-identifier hs-var">Compose</span></span><span> </span><span class="annot"><span class="annottext">((TemplatingEngine, TransformFn a)
- -&gt; Compose ((,) TemplatingEngine) TransformFn a)
--&gt; (TransformFn a -&gt; (TemplatingEngine, TransformFn a))
--&gt; TransformFn a
--&gt; Compose ((,) TemplatingEngine) TransformFn a
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621689647931"><span class="hs-identifier hs-var">templateEngine</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe (TransformFn a)
- -&gt; Maybe (Compose ((,) TemplatingEngine) TransformFn a))
--&gt; (WithOptional TransformFn a -&gt; Maybe (TransformFn a))
--&gt; WithOptional TransformFn a
--&gt; Maybe (Compose ((,) TemplatingEngine) TransformFn a)
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">WithOptional TransformFn a -&gt; Maybe (TransformFn a)
-forall (f :: * -&gt; *) result.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Compose</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TemplatingEngine
+</span><a href="#local-6989586621690219204"><span class="hs-identifier hs-var">templateEngine</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) result.
 WithOptional f result -&gt; Maybe (f result)
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.html#getOptional"><span class="hs-identifier hs-var hs-var">getOptional</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestFields (WithOptional TransformFn)
-</span><a href="#local-6989586621689647932"><span class="hs-identifier hs-var">requestFields</span></a></span><span>
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.html#getOptional"><span class="hs-identifier hs-var">getOptional</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestFields (WithOptional TransformFn)
+</span><a href="#local-6989586621690219205"><span class="hs-identifier hs-var">requestFields</span></a></span><span>
 </span><span id="line-56"></span><span>
-</span><span id="line-57"></span><span>    </span><span class="annot"><a href="#local-6989586621689647935"><span class="hs-identifier hs-type">setter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#ValidationFields"><span class="hs-identifier hs-type">ValidationFields</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span>
-</span><span id="line-58"></span><span>    </span><span id="local-6989586621689647935"><span class="annot"><span class="annottext">setter :: RequestTransform -&gt; ValidationFields -&gt; RequestTransform
-</span><a href="#local-6989586621689647935"><span class="hs-identifier hs-var hs-var">setter</span></a></span></span><span> </span><span id="local-6989586621689647923"><span class="annot"><span class="annottext">RequestTransform
-</span><a href="#local-6989586621689647923"><span class="hs-identifier hs-var">rt</span></a></span></span><span> </span><span id="local-6989586621689647922"><span class="annot"><span class="annottext">ValidationFields
-</span><a href="#local-6989586621689647922"><span class="hs-identifier hs-var">requestFields'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-57"></span><span>    </span><span class="annot"><a href="#local-6989586621690219208"><span class="hs-identifier hs-type">setter</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#ValidationFields"><span class="hs-identifier hs-type">ValidationFields</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621690219208"><span class="annot"><span class="annottext">setter :: RequestTransform -&gt; ValidationFields -&gt; RequestTransform
+</span><a href="#local-6989586621690219208"><span class="hs-identifier hs-var hs-var">setter</span></a></span></span><span> </span><span id="local-6989586621690219194"><span class="annot"><span class="annottext">RequestTransform
+</span><a href="#local-6989586621690219194"><span class="hs-identifier hs-var">rt</span></a></span></span><span> </span><span id="local-6989586621690219193"><span class="annot"><span class="annottext">ValidationFields
+</span><a href="#local-6989586621690219193"><span class="hs-identifier hs-var">requestFields'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-59"></span><span>      </span><span class="annot"><span class="annottext">RequestTransform
-</span><a href="#local-6989586621689647923"><span class="hs-identifier hs-var">rt</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">requestFields :: RequestFields (WithOptional TransformFn)
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.html#requestFields"><span class="hs-identifier hs-var">requestFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(forall a.
- OptionalTuple1 TemplatingEngine TransformFn a
- -&gt; WithOptional TransformFn a)
--&gt; ValidationFields -&gt; RequestFields (WithOptional TransformFn)
-forall k (b :: (k -&gt; *) -&gt; *) (f :: k -&gt; *) (g :: k -&gt; *).
+</span><a href="#local-6989586621690219194"><span class="hs-identifier hs-var">rt</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">requestFields :: RequestFields (WithOptional TransformFn)
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.html#requestFields"><span class="hs-identifier hs-var">requestFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k (b :: (k -&gt; *) -&gt; *) (f :: k -&gt; *) (g :: k -&gt; *).
 FunctorB b =&gt;
 (forall (a :: k). f a -&gt; g a) -&gt; b f -&gt; b g
-</span><span class="hs-identifier hs-var">bmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe (TransformFn a) -&gt; WithOptional TransformFn a
-forall (f :: * -&gt; *) result.
+</span><span class="hs-identifier hs-var">bmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) result.
 Maybe (f result) -&gt; WithOptional f result
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.html#WithOptional"><span class="hs-identifier hs-var">WithOptional</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe (TransformFn a) -&gt; WithOptional TransformFn a)
--&gt; (WithOptional (Compose ((,) TemplatingEngine) TransformFn) a
-    -&gt; Maybe (TransformFn a))
--&gt; WithOptional (Compose ((,) TemplatingEngine) TransformFn) a
--&gt; WithOptional TransformFn a
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(Compose ((,) TemplatingEngine) TransformFn a -&gt; TransformFn a)
--&gt; Maybe (Compose ((,) TemplatingEngine) TransformFn a)
--&gt; Maybe (TransformFn a)
-forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(TemplatingEngine, TransformFn a) -&gt; TransformFn a
-forall a b. (a, b) -&gt; b
-</span><span class="hs-identifier hs-var">snd</span></span><span> </span><span class="annot"><span class="annottext">((TemplatingEngine, TransformFn a) -&gt; TransformFn a)
--&gt; (Compose ((,) TemplatingEngine) TransformFn a
-    -&gt; (TemplatingEngine, TransformFn a))
--&gt; Compose ((,) TemplatingEngine) TransformFn a
--&gt; TransformFn a
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Compose ((,) TemplatingEngine) TransformFn a
--&gt; (TemplatingEngine, TransformFn a)
-forall k1 (f :: k1 -&gt; *) k2 (g :: k2 -&gt; k1) (a :: k2).
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.html#WithOptional"><span class="hs-identifier hs-var">WithOptional</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">snd</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall {k1} {k2} (f :: k1 -&gt; *) (g :: k2 -&gt; k1) (a :: k2).
 Compose f g a -&gt; f (g a)
-</span><span class="hs-identifier hs-var hs-var">getCompose</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Maybe (Compose ((,) TemplatingEngine) TransformFn a)
- -&gt; Maybe (TransformFn a))
--&gt; (WithOptional (Compose ((,) TemplatingEngine) TransformFn) a
-    -&gt; Maybe (Compose ((,) TemplatingEngine) TransformFn a))
--&gt; WithOptional (Compose ((,) TemplatingEngine) TransformFn) a
--&gt; Maybe (TransformFn a)
-forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">WithOptional (Compose ((,) TemplatingEngine) TransformFn) a
--&gt; Maybe (Compose ((,) TemplatingEngine) TransformFn a)
-forall (f :: * -&gt; *) result.
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">getCompose</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) result.
 WithOptional f result -&gt; Maybe (f result)
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.html#getOptional"><span class="hs-identifier hs-var hs-var">getOptional</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ValidationFields
-</span><a href="#local-6989586621689647922"><span class="hs-identifier hs-var">requestFields'</span></a></span><span class="hs-special">}</span><span>
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.html#getOptional"><span class="hs-identifier hs-var">getOptional</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ValidationFields
+</span><a href="#local-6989586621690219193"><span class="hs-identifier hs-var">requestFields'</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-60"></span><span>
 </span><span id="line-61"></span><span class="hs-comment">-- | Validate all 'TransformFn a' fields in the 'RequestTransform'.</span><span>
-</span><span id="line-62"></span><span id="local-6989586621689647955"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#validateRequestTransform"><span class="hs-identifier hs-type">validateRequestTransform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-63"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647955"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-62"></span><span id="local-6989586621690219319"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#validateRequestTransform"><span class="hs-identifier hs-type">validateRequestTransform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-63"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219319"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-64"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-65"></span><span>  </span><span class="annot"><a href="#local-6989586621689647955"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span></span><span>
-</span><span id="line-66"></span><span id="validateRequestTransform"><span class="annot"><span class="annottext">validateRequestTransform :: RequestTransform -&gt; m RequestTransform
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#validateRequestTransform"><span class="hs-identifier hs-var hs-var">validateRequestTransform</span></a></span></span><span> </span><span id="local-6989586621689647920"><span class="annot"><span class="annottext">RequestTransform
-</span><a href="#local-6989586621689647920"><span class="hs-identifier hs-var">reqTransform</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-67"></span><span>  </span><span class="annot"><span class="annottext">Either TransformErrorBundle RequestTransform -&gt; m RequestTransform
-forall e (m :: * -&gt; *) a. MonadError e m =&gt; Either e a -&gt; m a
-</span><span class="hs-identifier hs-var">liftEither</span></span><span> </span><span class="annot"><span class="annottext">(Either TransformErrorBundle RequestTransform
- -&gt; m RequestTransform)
--&gt; Either TransformErrorBundle RequestTransform
--&gt; m RequestTransform
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Validation TransformErrorBundle RequestTransform
--&gt; Either TransformErrorBundle RequestTransform
-forall e a. Validation e a -&gt; Either e a
-</span><span class="hs-identifier hs-var">toEither</span></span><span> </span><span class="annot"><span class="annottext">(Validation TransformErrorBundle RequestTransform
- -&gt; Either TransformErrorBundle RequestTransform)
--&gt; Validation TransformErrorBundle RequestTransform
--&gt; Either TransformErrorBundle RequestTransform
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(ValidationFields
- -&gt; Validation TransformErrorBundle ValidationFields)
--&gt; RequestTransform
--&gt; Validation TransformErrorBundle RequestTransform
-Lens
-  RequestTransform RequestTransform ValidationFields ValidationFields
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#transformFns"><span class="hs-identifier hs-var">transformFns</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(forall a.
- Transform a =&gt;
- OptionalTuple1 TemplatingEngine TransformFn a
- -&gt; Validation
-      TransformErrorBundle
-      (OptionalTuple1 TemplatingEngine TransformFn a))
--&gt; ValidationFields
--&gt; Validation TransformErrorBundle ValidationFields
-forall k (c :: k -&gt; Constraint) (b :: (k -&gt; *) -&gt; *) (f :: k -&gt; *)
-       (g :: k -&gt; *) (e :: * -&gt; *).
+</span><span id="line-65"></span><span>  </span><span class="annot"><a href="#local-6989586621690219319"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span></span><span>
+</span><span id="line-66"></span><span id="validateRequestTransform"><span class="annot"><span class="annottext">validateRequestTransform :: forall (m :: * -&gt; *).
+MonadError TransformErrorBundle m =&gt;
+RequestTransform -&gt; m RequestTransform
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#validateRequestTransform"><span class="hs-identifier hs-var hs-var">validateRequestTransform</span></a></span></span><span> </span><span id="local-6989586621690219163"><span class="annot"><span class="annottext">RequestTransform
+</span><a href="#local-6989586621690219163"><span class="hs-identifier hs-var">reqTransform</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-67"></span><span>  </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; Either e a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">liftEither</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall e a. Validation e a -&gt; Either e a
+</span><span class="hs-identifier hs-var">toEither</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Lens' RequestTransform ValidationFields
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#transformFns"><span class="hs-identifier hs-var">transformFns</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} (c :: k -&gt; Constraint) (b :: (k -&gt; *) -&gt; *)
+       (f :: k -&gt; *) (g :: k -&gt; *) (e :: * -&gt; *).
 (TraversableB b, ConstraintsB b, AllB c b, Applicative e) =&gt;
 (forall (a :: k). c a =&gt; f a -&gt; e (g a)) -&gt; b f -&gt; e (b g)
 </span><span class="hs-identifier hs-var">btraverseC</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#Transform"><span class="hs-identifier hs-type">Transform</span></a></span><span> </span><span class="annot"><span class="annottext">forall a.
@@ -216,57 +132,46 @@ OptionalTuple1 TemplatingEngine TransformFn a
 -&gt; Validation
      TransformErrorBundle
      (OptionalTuple1 TemplatingEngine TransformFn a)
-</span><a href="#local-6989586621689647918"><span class="hs-identifier hs-var">validate'</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestTransform
-</span><a href="#local-6989586621689647920"><span class="hs-identifier hs-var">reqTransform</span></a></span><span>
+</span><a href="#local-6989586621690219161"><span class="hs-identifier hs-var">validate'</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">RequestTransform
+</span><a href="#local-6989586621690219163"><span class="hs-identifier hs-var">reqTransform</span></a></span><span>
 </span><span id="line-68"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-69"></span><span>    </span><span id="local-6989586621689647917"><span class="annot"><a href="#local-6989586621689647918"><span class="hs-identifier hs-type">validate'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-70"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#Transform"><span class="hs-identifier hs-type">Transform</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647917"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-71"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#OptionalTuple1"><span class="hs-identifier hs-type">OptionalTuple1</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-type">TransformFn</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647917"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-72"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Validation</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#OptionalTuple1"><span class="hs-identifier hs-type">OptionalTuple1</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-type">TransformFn</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647917"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
-</span><span id="line-73"></span><span>    </span><span id="local-6989586621689647918"><span class="annot"><span class="annottext">validate' :: OptionalTuple1 TemplatingEngine TransformFn a
+</span><span id="line-69"></span><span>    </span><span id="local-6989586621690219289"><span class="annot"><a href="#local-6989586621690219161"><span class="hs-identifier hs-type">validate'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-70"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#Transform"><span class="hs-identifier hs-type">Transform</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219289"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-71"></span><span>      </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#OptionalTuple1"><span class="hs-identifier hs-type">OptionalTuple1</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-type">TransformFn</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219289"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-72"></span><span>      </span><span class="annot"><span class="hs-identifier hs-type">Validation</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#OptionalTuple1"><span class="hs-identifier hs-type">OptionalTuple1</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformFn"><span class="hs-identifier hs-type">TransformFn</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219289"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-73"></span><span>    </span><span id="local-6989586621690219161"><span class="annot"><span class="annottext">validate' :: forall a.
+Transform a =&gt;
+OptionalTuple1 TemplatingEngine TransformFn a
 -&gt; Validation
      TransformErrorBundle
      (OptionalTuple1 TemplatingEngine TransformFn a)
-</span><a href="#local-6989586621689647918"><span class="hs-identifier hs-var hs-var">validate'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-74"></span><span>      </span><span id="local-6989586621689647916"><span class="annot"><span class="annottext">fn :: OptionalTuple1 TemplatingEngine TransformFn a
-</span><a href="#local-6989586621689647916"><span class="hs-identifier hs-var">fn</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#WithOptional"><span class="hs-identifier hs-type">WithOptional</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Compose</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689647915"><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621689647915"><span class="hs-identifier hs-var">engine</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689647914"><span class="annot"><span class="annottext">TransformFn a
-</span><a href="#local-6989586621689647914"><span class="hs-identifier hs-var">transformFn</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621690219161"><span class="hs-identifier hs-var hs-var">validate'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-74"></span><span>      </span><span id="local-6989586621690219154"><span class="annot"><span class="annottext">fn :: OptionalTuple1 TemplatingEngine TransformFn a
+</span><a href="#local-6989586621690219154"><span class="hs-identifier hs-var">fn</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#WithOptional"><span class="hs-identifier hs-type">WithOptional</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Compose</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690219153"><span class="annot"><span class="annottext">TemplatingEngine
+</span><a href="#local-6989586621690219153"><span class="hs-identifier hs-var">engine</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690219152"><span class="annot"><span class="annottext">TransformFn a
+</span><a href="#local-6989586621690219152"><span class="hs-identifier hs-var">transformFn</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-75"></span><span>        </span><span class="annot"><span class="annottext">OptionalTuple1 TemplatingEngine TransformFn a
-</span><a href="#local-6989586621689647916"><span class="hs-identifier hs-var">fn</span></a></span><span> </span><span class="annot"><span class="annottext">OptionalTuple1 TemplatingEngine TransformFn a
--&gt; Validation TransformErrorBundle ()
--&gt; Validation
-     TransformErrorBundle
-     (OptionalTuple1 TemplatingEngine TransformFn a)
-forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
-</span><span class="hs-operator hs-var">&lt;$</span></span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
--&gt; TransformFn a -&gt; Validation TransformErrorBundle ()
-forall a.
+</span><a href="#local-6989586621690219154"><span class="hs-identifier hs-var">fn</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a.
 Transform a =&gt;
 TemplatingEngine
 -&gt; TransformFn a -&gt; Validation TransformErrorBundle ()
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#validate"><span class="hs-identifier hs-var">validate</span></a></span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
-</span><a href="#local-6989586621689647915"><span class="hs-identifier hs-var">engine</span></a></span><span> </span><span class="annot"><span class="annottext">TransformFn a
-</span><a href="#local-6989586621689647914"><span class="hs-identifier hs-var">transformFn</span></a></span><span>
-</span><span id="line-76"></span><span>      </span><span id="local-6989586621689647911"><span class="annot"><span class="annottext">OptionalTuple1 TemplatingEngine TransformFn a
-</span><a href="#local-6989586621689647911"><span class="hs-identifier hs-var">fn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">OptionalTuple1 TemplatingEngine TransformFn a
--&gt; Validation
-     TransformErrorBundle
-     (OptionalTuple1 TemplatingEngine TransformFn a)
-forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">OptionalTuple1 TemplatingEngine TransformFn a
-</span><a href="#local-6989586621689647911"><span class="hs-identifier hs-var">fn</span></a></span><span>
+</span><a href="#local-6989586621690219153"><span class="hs-identifier hs-var">engine</span></a></span><span> </span><span class="annot"><span class="annottext">TransformFn a
+</span><a href="#local-6989586621690219152"><span class="hs-identifier hs-var">transformFn</span></a></span><span>
+</span><span id="line-76"></span><span>      </span><span id="local-6989586621690219149"><span class="annot"><span class="annottext">OptionalTuple1 TemplatingEngine TransformFn a
+</span><a href="#local-6989586621690219149"><span class="hs-identifier hs-var">fn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">OptionalTuple1 TemplatingEngine TransformFn a
+</span><a href="#local-6989586621690219149"><span class="hs-identifier hs-var">fn</span></a></span><span>
 </span><span id="line-77"></span><span>
 </span><span id="line-78"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
 </span><span id="line-79"></span><span>
 </span><span id="line-80"></span><span class="hs-comment">-- | Used to annotate that a 'RequestTransform', or some record</span><span>
 </span><span id="line-81"></span><span class="hs-comment">-- containing a 'RequestTransform' has not yet been validated.</span><span>
-</span><span id="line-82"></span><span class="hs-keyword">newtype</span><span> </span><span id="Unvalidated"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated"><span class="hs-identifier hs-var">Unvalidated</span></a></span></span><span> </span><span id="local-6989586621689647982"><span class="annot"><a href="#local-6989586621689647982"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Unvalidated"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated"><span class="hs-identifier hs-var">Unvalidated</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unUnvalidate"><span class="annot"><span class="annottext">Unvalidated a -&gt; a
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#_unUnvalidate"><span class="hs-identifier hs-var hs-var">_unUnvalidate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689647982"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-83"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689647905"><span id="local-6989586621689647907"><span class="annot"><span class="annottext">Value -&gt; Parser [Unvalidated a]
+</span><span id="line-82"></span><span class="hs-keyword">newtype</span><span> </span><span id="Unvalidated"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated"><span class="hs-identifier hs-var">Unvalidated</span></a></span></span><span> </span><span id="local-6989586621690219281"><span class="annot"><a href="#local-6989586621690219281"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Unvalidated"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated"><span class="hs-identifier hs-var">Unvalidated</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unUnvalidate"><span class="annot"><span class="annottext">forall a. Unvalidated a -&gt; a
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#_unUnvalidate"><span class="hs-identifier hs-var hs-var">_unUnvalidate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690219281"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690219140"><span id="local-6989586621690219144"><span class="annot"><span class="annottext">Value -&gt; Parser [Unvalidated a]
 Value -&gt; Parser (Unvalidated a)
-(Value -&gt; Parser (Unvalidated a))
--&gt; (Value -&gt; Parser [Unvalidated a]) -&gt; FromJSON (Unvalidated a)
 forall a. FromJSON a =&gt; Value -&gt; Parser [Unvalidated a]
 forall a. FromJSON a =&gt; Value -&gt; Parser (Unvalidated a)
 forall a.
@@ -275,15 +180,10 @@ parseJSONList :: Value -&gt; Parser [Unvalidated a]
 $cparseJSONList :: forall a. FromJSON a =&gt; Value -&gt; Parser [Unvalidated a]
 parseJSON :: Value -&gt; Parser (Unvalidated a)
 $cparseJSON :: forall a. FromJSON a =&gt; Value -&gt; Parser (Unvalidated a)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689647896"><span id="local-6989586621689647898"><span id="local-6989586621689647900"><span id="local-6989586621689647902"><span class="annot"><span class="annottext">[Unvalidated a] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690219121"><span id="local-6989586621690219125"><span id="local-6989586621690219129"><span id="local-6989586621690219133"><span class="annot"><span class="annottext">[Unvalidated a] -&gt; Value
 [Unvalidated a] -&gt; Encoding
 Unvalidated a -&gt; Value
 Unvalidated a -&gt; Encoding
-(Unvalidated a -&gt; Value)
--&gt; (Unvalidated a -&gt; Encoding)
--&gt; ([Unvalidated a] -&gt; Value)
--&gt; ([Unvalidated a] -&gt; Encoding)
--&gt; ToJSON (Unvalidated a)
 forall a. ToJSON a =&gt; [Unvalidated a] -&gt; Value
 forall a. ToJSON a =&gt; [Unvalidated a] -&gt; Encoding
 forall a. ToJSON a =&gt; Unvalidated a -&gt; Value
@@ -305,33 +205,25 @@ $ctoJSON :: forall a. ToJSON a =&gt; Unvalidated a -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-84"></span><span>
 </span><span id="line-85"></span><span class="hs-comment">-- | A lens for focusing through 'Unvalidated' in 'validateTransforms'.</span><span>
-</span><span id="line-86"></span><span id="local-6989586621689647894"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#unUnvalidate"><span class="hs-identifier hs-type">unUnvalidate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated"><span class="hs-identifier hs-type">Unvalidated</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647894"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689647894"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-87"></span><span id="unUnvalidate"><span class="annot"><span class="annottext">unUnvalidate :: (a -&gt; f a) -&gt; Unvalidated a -&gt; f (Unvalidated a)
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#unUnvalidate"><span class="hs-identifier hs-var hs-var">unUnvalidate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Unvalidated a -&gt; a)
--&gt; (Unvalidated a -&gt; a -&gt; Unvalidated a)
--&gt; Lens (Unvalidated a) (Unvalidated a) a a
-forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
-</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">Unvalidated a -&gt; a
-forall a. Unvalidated a -&gt; a
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#_unUnvalidate"><span class="hs-identifier hs-var hs-var">_unUnvalidate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">Unvalidated a
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689647893"><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689647893"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">a -&gt; Unvalidated a
-forall a. a -&gt; Unvalidated a
+</span><span id="line-86"></span><span id="local-6989586621690219269"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#unUnvalidate"><span class="hs-identifier hs-type">unUnvalidate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated"><span class="hs-identifier hs-type">Unvalidated</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219269"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621690219269"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-87"></span><span id="unUnvalidate"><span class="annot"><span class="annottext">unUnvalidate :: forall a. Lens' (Unvalidated a) a
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#unUnvalidate"><span class="hs-identifier hs-var hs-var">unUnvalidate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">forall a. Unvalidated a -&gt; a
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#_unUnvalidate"><span class="hs-identifier hs-var">_unUnvalidate</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">Unvalidated a
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690219114"><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621690219114"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Unvalidated a
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated"><span class="hs-identifier hs-var">Unvalidated</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621689647893"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690219114"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-88"></span><span>
 </span><span id="line-89"></span><span class="hs-comment">-- | Used to annotate that a higher kinded type containing a</span><span>
 </span><span id="line-90"></span><span class="hs-comment">-- 'RequestTransform' has not yet been validated.</span><span>
 </span><span id="line-91"></span><span class="hs-comment">--</span><span>
 </span><span id="line-92"></span><span class="hs-comment">-- This is needed specifically for 'CreateEventTriggerQuery' and any</span><span>
 </span><span id="line-93"></span><span class="hs-comment">-- other type that is paramterized by a 'BackendType'.</span><span>
-</span><span id="line-94"></span><span class="hs-keyword">newtype</span><span> </span><span id="Unvalidated1"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated1"><span class="hs-identifier hs-var">Unvalidated1</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689647966"><span class="annot"><a href="#local-6989586621689647966"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span id="local-6989586621689647967"><span class="annot"><a href="#local-6989586621689647967"><span class="hs-identifier hs-type hs-type">k</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621689647965"><span class="annot"><a href="#local-6989586621689647965"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689647967"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Unvalidated1"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated1"><span class="hs-identifier hs-var">Unvalidated1</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unUnvalidate1"><span class="annot"><span class="annottext">Unvalidated1 f a -&gt; f a
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#_unUnvalidate1"><span class="hs-identifier hs-var hs-var">_unUnvalidate1</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621689647966"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647965"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-95"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621689647887"><span id="local-6989586621689647889"><span class="annot"><span class="annottext">Value -&gt; Parser [Unvalidated1 f a]
+</span><span id="line-94"></span><span class="hs-keyword">newtype</span><span> </span><span id="Unvalidated1"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated1"><span class="hs-identifier hs-var">Unvalidated1</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690219265"><span class="annot"><a href="#local-6989586621690219265"><span class="hs-identifier hs-type">f</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690219266"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Type</span></a></span><span class="hs-special">)</span><span id="local-6989586621690219266"><span> </span><span class="hs-special">(</span><span class="hs-identifier">a</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier">k</span></span><span id="local-6989586621690219266"></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Unvalidated1"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated1"><span class="hs-identifier hs-var">Unvalidated1</span></a></span></span><span> </span><span class="hs-special">{</span><span id="_unUnvalidate1"><span class="annot"><span class="annottext">forall k (f :: k -&gt; *) (a :: k). Unvalidated1 f a -&gt; f a
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#_unUnvalidate1"><span class="hs-identifier hs-var hs-var">_unUnvalidate1</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621690219265"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219264"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">newtype</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690219105"><span id="local-6989586621690219109"><span class="annot"><span class="annottext">Value -&gt; Parser [Unvalidated1 f a]
 Value -&gt; Parser (Unvalidated1 f a)
-(Value -&gt; Parser (Unvalidated1 f a))
--&gt; (Value -&gt; Parser [Unvalidated1 f a])
--&gt; FromJSON (Unvalidated1 f a)
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
 forall k (f :: k -&gt; *) (a :: k).
@@ -348,15 +240,10 @@ parseJSON :: Value -&gt; Parser (Unvalidated1 f a)
 $cparseJSON :: forall k (f :: k -&gt; *) (a :: k).
 FromJSON (f a) =&gt;
 Value -&gt; Parser (Unvalidated1 f a)
-</span><a href="#local-6989586621689647887"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621689647879"><span id="local-6989586621689647881"><span id="local-6989586621689647883"><span id="local-6989586621689647885"><span class="annot"><span class="annottext">[Unvalidated1 f a] -&gt; Value
+</span><a href="#local-6989586621690219105"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690219087"><span id="local-6989586621690219091"><span id="local-6989586621690219095"><span id="local-6989586621690219099"><span class="annot"><span class="annottext">[Unvalidated1 f a] -&gt; Value
 [Unvalidated1 f a] -&gt; Encoding
 Unvalidated1 f a -&gt; Value
 Unvalidated1 f a -&gt; Encoding
-(Unvalidated1 f a -&gt; Value)
--&gt; (Unvalidated1 f a -&gt; Encoding)
--&gt; ([Unvalidated1 f a] -&gt; Value)
--&gt; ([Unvalidated1 f a] -&gt; Encoding)
--&gt; ToJSON (Unvalidated1 f a)
 forall a.
 (a -&gt; Value)
 -&gt; (a -&gt; Encoding)
@@ -391,61 +278,46 @@ toJSON :: Unvalidated1 f a -&gt; Value
 $ctoJSON :: forall k (f :: k -&gt; *) (a :: k).
 ToJSON (f a) =&gt;
 Unvalidated1 f a -&gt; Value
-</span><a href="#local-6989586621689647879"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690219087"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></a></span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-96"></span><span>
 </span><span id="line-97"></span><span class="hs-comment">-- | A lens for focusing through 'Unvalidated1' in 'validateTransforms'.</span><span>
-</span><span id="line-98"></span><span id="local-6989586621689647877"><span id="local-6989586621689647878"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#unUnvalidate1"><span class="hs-identifier hs-type">unUnvalidate1</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated1"><span class="hs-identifier hs-type">Unvalidated1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647878"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647877"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689647878"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647877"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
-</span><span id="line-99"></span><span id="unUnvalidate1"><span class="annot"><span class="annottext">unUnvalidate1 :: (f a -&gt; f (f a)) -&gt; Unvalidated1 f a -&gt; f (Unvalidated1 f a)
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#unUnvalidate1"><span class="hs-identifier hs-var hs-var">unUnvalidate1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Unvalidated1 f a -&gt; f a)
--&gt; (Unvalidated1 f a -&gt; f a -&gt; Unvalidated1 f a)
--&gt; Lens (Unvalidated1 f a) (Unvalidated1 f a) (f a) (f a)
-forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
-</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">Unvalidated1 f a -&gt; f a
-forall k (f :: k -&gt; *) (a :: k). Unvalidated1 f a -&gt; f a
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#_unUnvalidate1"><span class="hs-identifier hs-var hs-var">_unUnvalidate1</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">Unvalidated1 f a
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621689647876"><span class="annot"><span class="annottext">f a
-</span><a href="#local-6989586621689647876"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">f a -&gt; Unvalidated1 f a
-forall k (f :: k -&gt; *) (a :: k). f a -&gt; Unvalidated1 f a
+</span><span id="line-98"></span><span id="local-6989586621690219251"><span id="local-6989586621690219252"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#unUnvalidate1"><span class="hs-identifier hs-type">unUnvalidate1</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Lens'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated1"><span class="hs-identifier hs-type">Unvalidated1</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219252"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219251"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621690219252"><span class="hs-identifier hs-type">f</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219251"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-99"></span><span id="unUnvalidate1"><span class="annot"><span class="annottext">unUnvalidate1 :: forall {k} (f :: k -&gt; *) (a :: k). Lens' (Unvalidated1 f a) (f a)
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#unUnvalidate1"><span class="hs-identifier hs-var hs-var">unUnvalidate1</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall s a b t. (s -&gt; a) -&gt; (s -&gt; b -&gt; t) -&gt; Lens s t a b
+</span><span class="hs-identifier hs-var">lens</span></span><span> </span><span class="annot"><span class="annottext">forall k (f :: k -&gt; *) (a :: k). Unvalidated1 f a -&gt; f a
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#_unUnvalidate1"><span class="hs-identifier hs-var">_unUnvalidate1</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">Unvalidated1 f a
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690219081"><span class="annot"><span class="annottext">f a
+</span><a href="#local-6989586621690219081"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall k (f :: k -&gt; *) (a :: k). f a -&gt; Unvalidated1 f a
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#Unvalidated1"><span class="hs-identifier hs-var">Unvalidated1</span></a></span><span> </span><span class="annot"><span class="annottext">f a
-</span><a href="#local-6989586621689647876"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690219081"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-100"></span><span>
 </span><span id="line-101"></span><span class="hs-comment">-- | Used to focus into a records in 'RQLMetadataV1' and validate any</span><span>
 </span><span id="line-102"></span><span class="hs-comment">-- 'RequestTransform' terms present.</span><span>
-</span><span id="line-103"></span><span id="local-6989586621689647874"><span id="local-6989586621689647875"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#validateTransforms"><span class="hs-identifier hs-type">validateTransforms</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-104"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647875"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-105"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">LensLike</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621689647874"><span class="hs-identifier hs-type">api</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689647874"><span class="hs-identifier hs-type">api</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-106"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621689647874"><span class="hs-identifier hs-type">api</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689647875"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-107"></span><span>  </span><span class="annot"><a href="#local-6989586621689647874"><span class="hs-identifier hs-type">api</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-108"></span><span>  </span><span class="annot"><a href="#local-6989586621689647875"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span></span><span>
-</span><span id="line-109"></span><span id="validateTransforms"><span class="annot"><span class="annottext">validateTransforms :: LensLike
+</span><span id="line-103"></span><span id="local-6989586621690219244"><span id="local-6989586621690219245"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#validateTransforms"><span class="hs-identifier hs-type">validateTransforms</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-104"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219245"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-105"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">LensLike</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621690219244"><span class="hs-identifier hs-type">api</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690219244"><span class="hs-identifier hs-type">api</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransform"><span class="hs-identifier hs-type">RequestTransform</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621690219244"><span class="hs-identifier hs-type">api</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690219245"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-107"></span><span>  </span><span class="annot"><a href="#local-6989586621690219244"><span class="hs-identifier hs-type">api</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-108"></span><span>  </span><span class="annot"><a href="#local-6989586621690219245"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span></span><span>
+</span><span id="line-109"></span><span id="validateTransforms"><span class="annot"><span class="annottext">validateTransforms :: forall (m :: * -&gt; *) api.
+MonadError QErr m =&gt;
+LensLike
   (Either TransformErrorBundle)
   api
   api
   RequestTransform
   RequestTransform
 -&gt; (api -&gt; m EncJSON) -&gt; api -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#validateTransforms"><span class="hs-identifier hs-var hs-var">validateTransforms</span></a></span></span><span> </span><span id="local-6989586621689647873"><span class="annot"><span class="annottext">LensLike
+</span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#validateTransforms"><span class="hs-identifier hs-var hs-var">validateTransforms</span></a></span></span><span> </span><span id="local-6989586621690219068"><span class="annot"><span class="annottext">LensLike
   (Either TransformErrorBundle)
   api
   api
   RequestTransform
   RequestTransform
-</span><a href="#local-6989586621689647873"><span class="hs-identifier hs-var">focus</span></a></span></span><span> </span><span id="local-6989586621689647872"><span class="annot"><span class="annottext">api -&gt; m EncJSON
-</span><a href="#local-6989586621689647872"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621689647871"><span class="annot"><span class="annottext">api
-</span><a href="#local-6989586621689647871"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-110"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">LensLike
-  (Either TransformErrorBundle)
-  api
-  api
-  RequestTransform
-  RequestTransform
--&gt; LensLike
-     (Either TransformErrorBundle)
-     api
-     api
-     RequestTransform
-     RequestTransform
-forall (f :: * -&gt; *) s t a b.
+</span><a href="#local-6989586621690219068"><span class="hs-identifier hs-var">focus</span></a></span></span><span> </span><span id="local-6989586621690219067"><span class="annot"><span class="annottext">api -&gt; m EncJSON
+</span><a href="#local-6989586621690219067"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span id="local-6989586621690219066"><span class="annot"><span class="annottext">api
+</span><a href="#local-6989586621690219066"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-110"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) s t a b.
 LensLike f s t a b -&gt; LensLike f s t a b
 </span><span class="hs-identifier hs-var">traverseOf</span></span><span> </span><span class="annot"><span class="annottext">LensLike
   (Either TransformErrorBundle)
@@ -453,27 +325,21 @@ LensLike f s t a b -&gt; LensLike f s t a b
   api
   RequestTransform
   RequestTransform
-</span><a href="#local-6989586621689647873"><span class="hs-identifier hs-var">focus</span></a></span><span> </span><span class="annot"><span class="annottext">RequestTransform -&gt; Either TransformErrorBundle RequestTransform
-forall (m :: * -&gt; *).
+</span><a href="#local-6989586621690219068"><span class="hs-identifier hs-var">focus</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError TransformErrorBundle m =&gt;
 RequestTransform -&gt; m RequestTransform
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Validation.html#validateRequestTransform"><span class="hs-identifier hs-var">validateRequestTransform</span></a></span><span> </span><span class="annot"><span class="annottext">api
-</span><a href="#local-6989586621689647871"><span class="hs-identifier hs-var">q</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-111"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621689647870"><span class="annot"><span class="annottext">TransformErrorBundle
-</span><a href="#local-6989586621689647870"><span class="hs-identifier hs-var">error'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
-forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(EncJSON -&gt; m EncJSON) -&gt; EncJSON -&gt; m EncJSON
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; EncJSON
-forall a. ToJSON a =&gt; a -&gt; EncJSON
-</span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">(Value -&gt; EncJSON) -&gt; Value -&gt; EncJSON
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">TransformErrorBundle -&gt; Value
-forall a. ToJSON a =&gt; a -&gt; Value
+</span><a href="#local-6989586621690219066"><span class="hs-identifier hs-var">q</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-111"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span id="local-6989586621690219065"><span class="annot"><span class="annottext">TransformErrorBundle
+</span><a href="#local-6989586621690219065"><span class="hs-identifier hs-var">error'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; EncJSON
+</span><a href="Hasura.EncJSON.html#encJFromJValue"><span class="hs-identifier hs-var">encJFromJValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">J.toJSON</span></span><span> </span><span class="annot"><span class="annottext">TransformErrorBundle
-</span><a href="#local-6989586621689647870"><span class="hs-identifier hs-var">error'</span></a></span><span>
-</span><span id="line-112"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621689647868"><span class="annot"><span class="annottext">api
-</span><a href="#local-6989586621689647868"><span class="hs-identifier hs-var">q'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">api -&gt; m EncJSON
-</span><a href="#local-6989586621689647872"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">api
-</span><a href="#local-6989586621689647868"><span class="hs-identifier hs-var">q'</span></a></span><span>
+</span><a href="#local-6989586621690219065"><span class="hs-identifier hs-var">error'</span></a></span><span>
+</span><span id="line-112"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621690219063"><span class="annot"><span class="annottext">api
+</span><a href="#local-6989586621690219063"><span class="hs-identifier hs-var">q'</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">api -&gt; m EncJSON
+</span><a href="#local-6989586621690219067"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">api
+</span><a href="#local-6989586621690219063"><span class="hs-identifier hs-var">q'</span></a></span><span>
 </span><span id="line-113"></span></pre></body></html>

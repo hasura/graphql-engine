@@ -10,23 +10,25 @@
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html"><span class="hs-identifier">Hasura.Base.Error</span></a></span><span>
 </span><span id="line-11"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.EncJSON.html"><span class="hs-identifier">Hasura.EncJSON</span></a></span><span>
 </span><span id="line-12"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.Metadata.Class.html"><span class="hs-identifier">Hasura.Metadata.Class</span></a></span><span>
-</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
+</span><span id="line-13"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier">Hasura.Prelude</span></a></span><span>
 </span><span id="line-14"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html"><span class="hs-identifier">Hasura.RQL.Types.Common</span></a></span><span>
 </span><span id="line-15"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html"><span class="hs-identifier">Hasura.RQL.Types.Endpoint</span></a></span><span>
 </span><span id="line-16"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata</span></a></span><span>
 </span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Object.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Object</span></a></span><span>
 </span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html"><span class="hs-identifier">Hasura.RQL.Types.SchemaCache.Build</span></a></span><span>
 </span><span id="line-19"></span><span>
-</span><span id="line-20"></span><span id="local-6989586621689728430"><span class="annot"><a href="Hasura.RQL.DDL.Endpoint.html#runCreateEndpoint"><span class="hs-identifier hs-type">runCreateEndpoint</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-21"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689728430"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689728430"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689728430"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-20"></span><span id="local-6989586621690419201"><span class="annot"><a href="Hasura.RQL.DDL.Endpoint.html#runCreateEndpoint"><span class="hs-identifier hs-type">runCreateEndpoint</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-21"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690419201"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-22"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690419201"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-23"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690419201"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-24"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-25"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#CreateEndpoint"><span class="hs-identifier hs-type">CreateEndpoint</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-26"></span><span>  </span><span class="annot"><a href="#local-6989586621689728430"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
-</span><span id="line-27"></span><span id="runCreateEndpoint"><span class="annot"><span class="annottext">runCreateEndpoint :: CreateEndpoint -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.Endpoint.html#runCreateEndpoint"><span class="hs-identifier hs-var hs-var">runCreateEndpoint</span></a></span></span><span> </span><span id="local-6989586621689728428"><span class="annot"><span class="annottext">endpoint :: CreateEndpoint
-</span><a href="#local-6989586621689728428"><span class="hs-identifier hs-var">endpoint</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689728422"><span id="local-6989586621689728423"><span id="local-6989586621689728424"><span id="local-6989586621689728425"><span id="local-6989586621689728426"><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-26"></span><span>  </span><span class="annot"><a href="#local-6989586621690419201"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-27"></span><span id="runCreateEndpoint"><span class="annot"><span class="annottext">runCreateEndpoint :: forall (m :: * -&gt; *).
+(CacheRWM m, MetadataM m, MonadMetadataStorageQueryAPI m) =&gt;
+CreateEndpoint -&gt; m EncJSON
+</span><a href="Hasura.RQL.DDL.Endpoint.html#runCreateEndpoint"><span class="hs-identifier hs-var hs-var">runCreateEndpoint</span></a></span></span><span> </span><span id="local-6989586621690419073"><span class="annot"><span class="annottext">endpoint :: CreateEndpoint
+</span><a href="#local-6989586621690419073"><span class="hs-identifier hs-var">endpoint</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointMetadata"><span class="hs-identifier hs-type">EndpointMetadata</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690419067"><span id="local-6989586621690419068"><span id="local-6989586621690419069"><span id="local-6989586621690419070"><span id="local-6989586621690419071"><span class="annot"><span class="annottext">Maybe Text
 NonEmpty EndpointMethod
 EndpointUrl
 EndpointName
@@ -42,177 +44,134 @@ _ceMethods :: NonEmpty EndpointMethod
 _ceUrl :: EndpointUrl
 _ceName :: EndpointName
 </span><a href="Hasura.RQL.Types.Endpoint.html#_ceComment"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-28"></span><span>  </span><span id="local-6989586621689728416"><span class="annot"><span class="annottext">Endpoints
-</span><a href="#local-6989586621689728416"><span class="hs-identifier hs-var">endpointsMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; Endpoints
-</span><a href="Hasura.RQL.Types.Metadata.html#_metaRestEndpoints"><span class="hs-identifier hs-var hs-var">_metaRestEndpoints</span></a></span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Endpoints) -&gt; m Metadata -&gt; m Endpoints
-forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m Metadata
-forall (m :: * -&gt; *). MetadataM m =&gt; m Metadata
+</span><span id="line-28"></span><span>  </span><span id="local-6989586621690419061"><span class="annot"><span class="annottext">Endpoints
+</span><a href="#local-6989586621690419061"><span class="hs-identifier hs-var">endpointsMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; Endpoints
+</span><a href="Hasura.RQL.Types.Metadata.html#_metaRestEndpoints"><span class="hs-identifier hs-var">_metaRestEndpoints</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MetadataM m =&gt; m Metadata
 </span><a href="Hasura.RQL.Types.Metadata.html#getMetadata"><span class="hs-identifier hs-var">getMetadata</span></a></span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span>  </span><span class="annot"><span class="annottext">EndpointName -&gt; Endpoints -&gt; Maybe CreateEndpoint
-forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
+</span><span id="line-30"></span><span>  </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">EndpointName
-</span><a href="#local-6989586621689728426"><span class="hs-identifier hs-var">_ceName</span></a></span><span> </span><span class="annot"><span class="annottext">Endpoints
-</span><a href="#local-6989586621689728416"><span class="hs-identifier hs-var">endpointsMap</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CreateEndpoint -&gt; (CreateEndpoint -&gt; m Any) -&gt; m ()
-forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+</span><a href="#local-6989586621690419071"><span class="hs-identifier hs-var">_ceName</span></a></span><span> </span><span class="annot"><span class="annottext">Endpoints
+</span><a href="#local-6989586621690419061"><span class="hs-identifier hs-var">endpointsMap</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
-</span><span class="hs-operator hs-var">`for_`</span></span><span> </span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">CreateEndpoint
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">`for_`</span></a></span><span> </span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">CreateEndpoint
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-31"></span><span>    </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m Any
-forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><span id="line-31"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
-</span><a href="Hasura.Base.Error.html#AlreadyExists"><span class="hs-identifier hs-var">AlreadyExists</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m Any) -&gt; Text -&gt; m Any
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
+</span><a href="Hasura.Base.Error.html#AlreadyExists"><span class="hs-identifier hs-var">AlreadyExists</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-32"></span><span>      </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;Endpoint with name: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">EndpointName -&gt; Text
-forall a. ToTxt a =&gt; a -&gt; Text
+</span><span class="hs-string">&quot;Endpoint with name: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointName
-</span><a href="#local-6989586621689728426"><span class="hs-identifier hs-var">_ceName</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690419071"><span class="hs-identifier hs-var">_ceName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; already exists&quot;</span></span><span>
 </span><span id="line-33"></span><span>
-</span><span id="line-34"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m ()
-forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
-</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-35"></span><span>    </span><span class="annot"><span class="annottext">MetadataObjId -&gt; MetadataModifier -&gt; m ()
-forall (m :: * -&gt; *).
+</span><span id="line-34"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (QErrM m, CacheRWM m, MetadataM m) =&gt;
 MetadataObjId -&gt; MetadataModifier -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCacheFor"><span class="hs-identifier hs-var">buildSchemaCacheFor</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">EndpointName -&gt; MetadataObjId
 </span><a href="Hasura.RQL.Types.Metadata.Object.html#MOEndpoint"><span class="hs-identifier hs-var">MOEndpoint</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointName
-</span><a href="#local-6989586621689728426"><span class="hs-identifier hs-var">_ceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(MetadataModifier -&gt; m ()) -&gt; MetadataModifier -&gt; m ()
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
+</span><a href="#local-6989586621690419071"><span class="hs-identifier hs-var">_ceName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-36"></span><span>      </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
-</span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; MetadataModifier)
--&gt; (Metadata -&gt; Metadata) -&gt; MetadataModifier
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-37"></span><span>        </span><span class="annot"><span class="annottext">(Endpoints -&gt; Identity Endpoints) -&gt; Metadata -&gt; Identity Metadata
-Lens' Metadata Endpoints
-</span><a href="Hasura.RQL.Types.Metadata.html#metaRestEndpoints"><span class="hs-identifier hs-var">metaRestEndpoints</span></a></span><span> </span><span class="annot"><span class="annottext">((Endpoints -&gt; Identity Endpoints)
- -&gt; Metadata -&gt; Identity Metadata)
--&gt; (Endpoints -&gt; Endpoints) -&gt; Metadata -&gt; Metadata
-forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
-</span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">EndpointName -&gt; CreateEndpoint -&gt; Endpoints -&gt; Endpoints
-forall k v.
+</span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-37"></span><span>        </span><span class="annot"><span class="annottext">Lens' Metadata Endpoints
+</span><a href="Hasura.RQL.Types.Metadata.html#metaRestEndpoints"><span class="hs-identifier hs-var">metaRestEndpoints</span></a></span><span> </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; v -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.insert</span></span><span> </span><span class="annot"><span class="annottext">EndpointName
-</span><a href="#local-6989586621689728426"><span class="hs-identifier hs-var">_ceName</span></a></span><span> </span><span class="annot"><span class="annottext">CreateEndpoint
-</span><a href="#local-6989586621689728428"><span class="hs-identifier hs-var">endpoint</span></a></span><span>
-</span><span id="line-38"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
-forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621690419071"><span class="hs-identifier hs-var">_ceName</span></a></span><span> </span><span class="annot"><span class="annottext">CreateEndpoint
+</span><a href="#local-6989586621690419073"><span class="hs-identifier hs-var">endpoint</span></a></span><span>
+</span><span id="line-38"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-39"></span><span>
-</span><span id="line-40"></span><span id="local-6989586621689728399"><span class="annot"><a href="Hasura.RQL.DDL.Endpoint.html#runDropEndpoint"><span class="hs-identifier hs-type">runDropEndpoint</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689728399"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-42"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689728399"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-43"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689728399"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-40"></span><span id="local-6989586621690419137"><span class="annot"><a href="Hasura.RQL.DDL.Endpoint.html#runDropEndpoint"><span class="hs-identifier hs-type">runDropEndpoint</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-41"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCache.Build.html#CacheRWM"><span class="hs-identifier hs-type">CacheRWM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690419137"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690419137"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-43"></span><span>    </span><span class="annot"><a href="Hasura.Metadata.Class.html#MonadMetadataStorageQueryAPI"><span class="hs-identifier hs-type">MonadMetadataStorageQueryAPI</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690419137"><span class="hs-identifier hs-type">m</span></a></span><span>
 </span><span id="line-44"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-45"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DropEndpoint"><span class="hs-identifier hs-type">DropEndpoint</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-46"></span><span>  </span><span class="annot"><a href="#local-6989586621689728399"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
-</span><span id="line-47"></span><span id="runDropEndpoint"><span class="annot"><span class="annottext">runDropEndpoint :: DropEndpoint -&gt; m EncJSON
-</span><a href="Hasura.RQL.DDL.Endpoint.html#runDropEndpoint"><span class="hs-identifier hs-var hs-var">runDropEndpoint</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DropEndpoint"><span class="hs-identifier hs-type">DropEndpoint</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621689728397"><span class="annot"><span class="annottext">EndpointName
+</span><span id="line-46"></span><span>  </span><span class="annot"><a href="#local-6989586621690419137"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span></span><span>
+</span><span id="line-47"></span><span id="runDropEndpoint"><span class="annot"><span class="annottext">runDropEndpoint :: forall (m :: * -&gt; *).
+(CacheRWM m, MetadataM m, MonadMetadataStorageQueryAPI m) =&gt;
+DropEndpoint -&gt; m EncJSON
+</span><a href="Hasura.RQL.DDL.Endpoint.html#runDropEndpoint"><span class="hs-identifier hs-var hs-var">runDropEndpoint</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#DropEndpoint"><span class="hs-identifier hs-type">DropEndpoint</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690419027"><span class="annot"><span class="annottext">EndpointName
 _deName :: DropEndpoint -&gt; EndpointName
 _deName :: EndpointName
 </span><a href="Hasura.RQL.Types.Endpoint.html#_deName"><span class="hs-glyph hs-var hs-var">..</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-48"></span><span>  </span><span class="annot"><span class="annottext">EndpointName -&gt; m ()
-forall (m :: * -&gt; *).
+</span><span id="line-48"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (MetadataM m, MonadError QErr m) =&gt;
 EndpointName -&gt; m ()
 </span><a href="Hasura.RQL.DDL.Endpoint.html#checkExists"><span class="hs-identifier hs-var">checkExists</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointName
-</span><a href="#local-6989586621689728397"><span class="hs-identifier hs-var">_deName</span></a></span><span>
-</span><span id="line-49"></span><span>  </span><span class="annot"><span class="annottext">m () -&gt; m ()
-forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
-</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span> </span><span class="annot"><span class="annottext">(m () -&gt; m ()) -&gt; m () -&gt; m ()
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">MetadataModifier -&gt; m ()
-forall (m :: * -&gt; *).
+</span><a href="#local-6989586621690419027"><span class="hs-identifier hs-var">_deName</span></a></span><span>
+</span><span id="line-49"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. (QErrM m, CacheRM m) =&gt; m a -&gt; m a
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#withNewInconsistentObjsCheck"><span class="hs-identifier hs-var">withNewInconsistentObjsCheck</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-50"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 (MetadataM m, CacheRWM m) =&gt;
 MetadataModifier -&gt; m ()
-</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCache"><span class="hs-identifier hs-var">buildSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">(MetadataModifier -&gt; m ()) -&gt; MetadataModifier -&gt; m ()
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
+</span><a href="Hasura.RQL.Types.SchemaCache.Build.html#buildSchemaCache"><span class="hs-identifier hs-var">buildSchemaCache</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-51"></span><span>      </span><span class="annot"><span class="annottext">EndpointName -&gt; MetadataModifier
 </span><a href="Hasura.RQL.DDL.Endpoint.html#dropEndpointInMetadata"><span class="hs-identifier hs-var">dropEndpointInMetadata</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointName
-</span><a href="#local-6989586621689728397"><span class="hs-identifier hs-var">_deName</span></a></span><span>
-</span><span id="line-52"></span><span>  </span><span class="annot"><span class="annottext">EncJSON -&gt; m EncJSON
-forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">EncJSON
+</span><a href="#local-6989586621690419027"><span class="hs-identifier hs-var">_deName</span></a></span><span>
+</span><span id="line-52"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">EncJSON
 </span><a href="Hasura.RQL.Types.Common.html#successMsg"><span class="hs-identifier hs-var">successMsg</span></a></span><span>
 </span><span id="line-53"></span><span>
 </span><span id="line-54"></span><span class="annot"><a href="Hasura.RQL.DDL.Endpoint.html#dropEndpointInMetadata"><span class="hs-identifier hs-type">dropEndpointInMetadata</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-type">EndpointName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-type">MetadataModifier</span></a></span><span>
 </span><span id="line-55"></span><span id="dropEndpointInMetadata"><span class="annot"><span class="annottext">dropEndpointInMetadata :: EndpointName -&gt; MetadataModifier
-</span><a href="Hasura.RQL.DDL.Endpoint.html#dropEndpointInMetadata"><span class="hs-identifier hs-var hs-var">dropEndpointInMetadata</span></a></span></span><span> </span><span id="local-6989586621689728393"><span class="annot"><span class="annottext">EndpointName
-</span><a href="#local-6989586621689728393"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RQL.DDL.Endpoint.html#dropEndpointInMetadata"><span class="hs-identifier hs-var hs-var">dropEndpointInMetadata</span></a></span></span><span> </span><span id="local-6989586621690419023"><span class="annot"><span class="annottext">EndpointName
+</span><a href="#local-6989586621690419023"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-56"></span><span>  </span><span class="annot"><span class="annottext">(Metadata -&gt; Metadata) -&gt; MetadataModifier
-</span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">((Metadata -&gt; Metadata) -&gt; MetadataModifier)
--&gt; (Metadata -&gt; Metadata) -&gt; MetadataModifier
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Endpoints -&gt; Identity Endpoints) -&gt; Metadata -&gt; Identity Metadata
-Lens' Metadata Endpoints
-</span><a href="Hasura.RQL.Types.Metadata.html#metaRestEndpoints"><span class="hs-identifier hs-var">metaRestEndpoints</span></a></span><span> </span><span class="annot"><span class="annottext">((Endpoints -&gt; Identity Endpoints)
- -&gt; Metadata -&gt; Identity Metadata)
--&gt; (Endpoints -&gt; Endpoints) -&gt; Metadata -&gt; Metadata
-forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
-</span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">EndpointName -&gt; Endpoints -&gt; Endpoints
-forall k v.
+</span><a href="Hasura.RQL.Types.Metadata.html#MetadataModifier"><span class="hs-identifier hs-var">MetadataModifier</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Lens' Metadata Endpoints
+</span><a href="Hasura.RQL.Types.Metadata.html#metaRestEndpoints"><span class="hs-identifier hs-var">metaRestEndpoints</span></a></span><span> </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; (a -&gt; b) -&gt; s -&gt; t
+</span><span class="hs-operator hs-var">%~</span></span><span> </span><span class="annot"><span class="annottext">forall k v.
 (Eq k, Hashable k) =&gt;
 k -&gt; InsOrdHashMap k v -&gt; InsOrdHashMap k v
 </span><span class="hs-identifier hs-var">OMap.delete</span></span><span> </span><span class="annot"><span class="annottext">EndpointName
-</span><a href="#local-6989586621689728393"><span class="hs-identifier hs-var">name</span></a></span><span>
+</span><a href="#local-6989586621690419023"><span class="hs-identifier hs-var">name</span></a></span><span>
 </span><span id="line-57"></span><span>
-</span><span id="line-58"></span><span id="local-6989586621689728444"><span class="annot"><a href="Hasura.RQL.DDL.Endpoint.html#checkExists"><span class="hs-identifier hs-type">checkExists</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689728444"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadError</span></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621689728444"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-type">EndpointName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621689728444"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
-</span><span id="line-59"></span><span id="checkExists"><span class="annot"><span class="annottext">checkExists :: EndpointName -&gt; m ()
-</span><a href="Hasura.RQL.DDL.Endpoint.html#checkExists"><span class="hs-identifier hs-var hs-var">checkExists</span></a></span></span><span> </span><span id="local-6989586621689728391"><span class="annot"><span class="annottext">EndpointName
-</span><a href="#local-6989586621689728391"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-60"></span><span>  </span><span id="local-6989586621689728390"><span class="annot"><span class="annottext">Endpoints
-</span><a href="#local-6989586621689728390"><span class="hs-identifier hs-var">endpointsMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; Endpoints
-</span><a href="Hasura.RQL.Types.Metadata.html#_metaRestEndpoints"><span class="hs-identifier hs-var hs-var">_metaRestEndpoints</span></a></span><span> </span><span class="annot"><span class="annottext">(Metadata -&gt; Endpoints) -&gt; m Metadata -&gt; m Endpoints
-forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">m Metadata
-forall (m :: * -&gt; *). MetadataM m =&gt; m Metadata
+</span><span id="line-58"></span><span id="local-6989586621690419134"><span class="annot"><a href="Hasura.RQL.DDL.Endpoint.html#checkExists"><span class="hs-identifier hs-type">checkExists</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Metadata.html#MetadataM"><span class="hs-identifier hs-type">MetadataM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690419134"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690419134"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Endpoint.html#EndpointName"><span class="hs-identifier hs-type">EndpointName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690419134"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span></span><span>
+</span><span id="line-59"></span><span id="checkExists"><span class="annot"><span class="annottext">checkExists :: forall (m :: * -&gt; *).
+(MetadataM m, MonadError QErr m) =&gt;
+EndpointName -&gt; m ()
+</span><a href="Hasura.RQL.DDL.Endpoint.html#checkExists"><span class="hs-identifier hs-var hs-var">checkExists</span></a></span></span><span> </span><span id="local-6989586621690419003"><span class="annot"><span class="annottext">EndpointName
+</span><a href="#local-6989586621690419003"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621690419002"><span class="annot"><span class="annottext">Endpoints
+</span><a href="#local-6989586621690419002"><span class="hs-identifier hs-var">endpointsMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Metadata -&gt; Endpoints
+</span><a href="Hasura.RQL.Types.Metadata.html#_metaRestEndpoints"><span class="hs-identifier hs-var">_metaRestEndpoints</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MetadataM m =&gt; m Metadata
 </span><a href="Hasura.RQL.Types.Metadata.html#getMetadata"><span class="hs-identifier hs-var">getMetadata</span></a></span><span>
-</span><span id="line-61"></span><span>  </span><span class="annot"><span class="annottext">m CreateEndpoint -&gt; m ()
-forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
-</span><span class="hs-identifier hs-var">void</span></span><span> </span><span class="annot"><span class="annottext">(m CreateEndpoint -&gt; m ()) -&gt; m CreateEndpoint -&gt; m ()
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">Maybe CreateEndpoint -&gt; m CreateEndpoint -&gt; m CreateEndpoint
-forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-8.10.7/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">EndpointName -&gt; Endpoints -&gt; Maybe CreateEndpoint
-forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
+</span><span id="line-61"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-62"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; InsOrdHashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">OMap.lookup</span></span><span> </span><span class="annot"><span class="annottext">EndpointName
-</span><a href="#local-6989586621689728391"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Endpoints
-</span><a href="#local-6989586621689728390"><span class="hs-identifier hs-var">endpointsMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m CreateEndpoint -&gt; m CreateEndpoint)
--&gt; m CreateEndpoint -&gt; m CreateEndpoint
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-63"></span><span>      </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; m CreateEndpoint
-forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><a href="#local-6989586621690419003"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Endpoints
+</span><a href="#local-6989586621690419002"><span class="hs-identifier hs-var">endpointsMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-63"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
-</span><a href="Hasura.Base.Error.html#NotExists"><span class="hs-identifier hs-var">NotExists</span></a></span><span> </span><span class="annot"><span class="annottext">(Text -&gt; m CreateEndpoint) -&gt; Text -&gt; m CreateEndpoint
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span>
+</span><a href="Hasura.Base.Error.html#NotExists"><span class="hs-identifier hs-var">NotExists</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-64"></span><span>        </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;endpoint with name: &quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">EndpointName -&gt; Text
-forall a. ToTxt a =&gt; a -&gt; Text
+</span><span class="hs-string">&quot;endpoint with name: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#toTxt"><span class="hs-identifier hs-var">toTxt</span></a></span><span> </span><span class="annot"><span class="annottext">EndpointName
-</span><a href="#local-6989586621689728391"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Text
-forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690419003"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; does not exist&quot;</span></span><span>
 </span><span id="line-65"></span></pre></body></html>
