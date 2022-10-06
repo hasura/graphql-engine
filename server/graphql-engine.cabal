@@ -447,7 +447,6 @@ library
                      , Hasura.Backends.MSSQL.Types.Instances
                      , Hasura.Backends.MSSQL.Types.Internal
                      , Hasura.Backends.MSSQL.Types.Update
-
                      , Hasura.Backends.Postgres.Connection
                      , Hasura.Backends.Postgres.Connection.MonadTx
                      , Hasura.Backends.Postgres.Connection.Settings

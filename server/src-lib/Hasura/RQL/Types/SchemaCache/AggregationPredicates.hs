@@ -11,7 +11,6 @@ import Hasura.RQL.IR.BoolExp.AggregationPredicates
   ( AggregationPredicate (..),
     AggregationPredicatesImplementation (AggregationPredicatesImplementation),
   )
-import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Relationships.Local
   ( RelInfo (..),
   )
@@ -21,7 +20,7 @@ import Hasura.SQL.AnyBackend qualified as AB
 
 defaultGetAggregationPredicateDeps ::
   forall b.
-  (Backend b, GetAggregationPredicatesDeps b) =>
+  (GetAggregationPredicatesDeps b) =>
   AggregationPredicatesImplementation b (PartialSQLExp b) ->
   BoolExpM b [SchemaDependency]
 defaultGetAggregationPredicateDeps (AggregationPredicatesImplementation relInfo _rowPermissions functions) = do

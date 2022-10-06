@@ -9,7 +9,7 @@ import Control.Monad.Fix
 import Data.Aeson qualified as J
 import Data.Fixed (Fixed (..))
 import Data.Functor.Product (Product (Pair))
-import "some" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
+import "dependent-sum" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
 import Data.OpenApi.Declare as D
 import Data.Text qualified as T
 import Data.Time (NominalDiffTime)

@@ -24,7 +24,6 @@ import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
 import Hasura.RQL.Types.Metadata qualified as Metadata
-import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build qualified as SC.Build
 import Hasura.SQL.Backend qualified as Backend
 import Hasura.SQL.BackendMap qualified as BackendMap
@@ -83,8 +82,7 @@ instance ToJSON DCDeleteAgent where
 
 -- | Delete a Data Connector Agent from the Metadata.
 runDeleteDataConnectorAgent ::
-  ( SchemaCache.CacheRM m,
-    SC.Build.CacheRWM m,
+  ( SC.Build.CacheRWM m,
     Metadata.MetadataM m,
     MonadError Error.QErr m
   ) =>

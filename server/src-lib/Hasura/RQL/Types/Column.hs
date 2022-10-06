@@ -125,9 +125,9 @@ data ColumnValue (b :: BackendType) = ColumnValue
     cvValue :: ScalarValue b
   }
 
-deriving instance (Backend b, Eq (ScalarValue b)) => Eq (ColumnValue b)
+deriving instance (Backend b) => Eq (ColumnValue b)
 
-deriving instance (Backend b, Show (ScalarValue b)) => Show (ColumnValue b)
+deriving instance (Backend b) => Show (ColumnValue b)
 
 isScalarColumnWhere :: (ScalarType b -> Bool) -> ColumnType b -> Bool
 isScalarColumnWhere f = \case

@@ -745,7 +745,7 @@ getBoolExpDeps source tableName =
 
 getBoolExpDeps' ::
   forall b.
-  (Backend b, GetAggregationPredicatesDeps b) =>
+  (GetAggregationPredicatesDeps b) =>
   AnnBoolExpPartialSQL b ->
   BoolExpM b [SchemaDependency]
 getBoolExpDeps' = \case
@@ -769,7 +769,7 @@ getBoolExpDeps' = \case
 
 getColExpDeps ::
   forall b.
-  (Backend b, GetAggregationPredicatesDeps b) =>
+  (GetAggregationPredicatesDeps b) =>
   AnnBoolExpFld b (PartialSQLExp b) ->
   BoolExpM b [SchemaDependency]
 getColExpDeps bexp = do

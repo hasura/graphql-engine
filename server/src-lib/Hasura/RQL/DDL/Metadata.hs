@@ -86,8 +86,7 @@ import Network.HTTP.Client.Transformable qualified as HTTP
 
 runClearMetadata ::
   forall m r.
-  ( QErrM m,
-    MonadIO m,
+  ( MonadIO m,
     CacheRWM m,
     MetadataM m,
     MonadMetadataStorageQueryAPI m,
@@ -169,8 +168,7 @@ runReplaceMetadata = \case
   RMReplaceMetadataV2 v2args -> runReplaceMetadataV2 v2args
 
 runReplaceMetadataV1 ::
-  ( QErrM m,
-    CacheRWM m,
+  ( CacheRWM m,
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,
@@ -186,8 +184,7 @@ runReplaceMetadataV1 =
 
 runReplaceMetadataV2 ::
   forall m r.
-  ( QErrM m,
-    CacheRWM m,
+  ( CacheRWM m,
     MetadataM m,
     MonadIO m,
     MonadBaseControl IO m,

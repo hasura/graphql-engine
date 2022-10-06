@@ -18,7 +18,7 @@ import Data.Text.Extended
 import Database.PG.Query qualified as PG
 import Hasura.Prelude hiding (lift)
 import Language.Haskell.TH.Quote (QuasiQuoter (..))
-import Language.Haskell.TH.Syntax (Lift, Q, TExp, lift)
+import Language.Haskell.TH.Syntax (Code, Lift, Q, bindCode, lift)
 import Test.QuickCheck qualified as QC
 
 newtype NonEmptyText = NonEmptyText {unNonEmptyText :: Text}
@@ -37,8 +37,8 @@ mkNonEmptyTextUnsafe = NonEmptyText
 parseNonEmptyText :: MonadFail m => Text -> m NonEmptyText
 parseNonEmptyText text = mkNonEmptyText text `onNothing` fail "empty string not allowed"
 
-nonEmptyText :: Text -> Q (TExp NonEmptyText)
-nonEmptyText = parseNonEmptyText >=> \text -> [||text||]
+nonEmptyText :: Text -> Code Q NonEmptyText
+nonEmptyText textDirty = parseNonEmptyText textDirty `bindCode` \text -> [||text||]
 
 nonEmptyTextCodec :: JSONCodec NonEmptyText
 nonEmptyTextCodec = bimapCodec dec enc textCodec

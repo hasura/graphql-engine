@@ -21,7 +21,7 @@ import Data.ByteString (ByteString)
 import Data.CaseInsensitive (CI)
 import Data.Dependent.Map qualified as DM
 import Data.Functor.Classes (Eq1 (..), Eq2 (..))
-import "some" Data.GADT.Compare
+import "dependent-sum" Data.GADT.Compare
 import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.InsOrd qualified as OHM
 import Data.HashMap.Strict.NonEmpty (NEHashMap)

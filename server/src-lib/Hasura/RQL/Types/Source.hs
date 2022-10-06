@@ -72,7 +72,6 @@ instance
   ( Backend b,
     ToJSON (TableCache b),
     ToJSON (FunctionCache b),
-    ToJSON (SourceConfig b),
     ToJSON (QueryTagsConfig),
     ToJSON (SourceCustomization)
   ) =>
