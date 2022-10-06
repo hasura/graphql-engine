@@ -7,7 +7,6 @@ import { SERVER_CONSOLE_MODE } from '../../../constants';
 import {
   schemaConnector,
   viewTableConnector,
-  insertItemConnector,
   rawSQLConnector,
   editItemConnector,
   addExistingTableViewConnector,
@@ -35,6 +34,7 @@ import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 import { getSourcesFromMetadata } from '../../../metadata/selector';
 import { ManageContainer } from '@/features/Data';
 import { Connect } from '@/features/ConnectDB';
+import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemContainer';
 
 const makeDataRouter = (
   connect,
@@ -91,7 +91,7 @@ const makeDataRouter = (
           />
           <Route
             path=":schema/tables/:table/insert"
-            component={insertItemConnector(connect)}
+            component={TableInsertItemContainer}
           />
           <Route
             path=":schema/tables/:table/modify"

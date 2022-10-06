@@ -34,9 +34,12 @@ export const TypedInput = ({
   };
 
   const onClick = e => {
-    e.target
-      .closest('.radio-inline')
-      .querySelector('input[type="radio"]').checked = true;
+    const closestRadio = e.target.closest('.radio-inline');
+
+    if (closestRadio) {
+      closestRadio.querySelector('input[type="radio"]').checked = true;
+    }
+
     e.target.focus();
   };
 
