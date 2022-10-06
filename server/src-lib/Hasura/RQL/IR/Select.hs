@@ -831,15 +831,13 @@ data AnnColumnField (b :: BackendType) v = AnnColumnField
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnColumnCaseBoolExp b v),
-    Eq (ScalarSelectionArguments b)
+    Eq (AnnColumnCaseBoolExp b v)
   ) =>
   Eq (AnnColumnField b v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnColumnCaseBoolExp b v),
-    Show (ScalarSelectionArguments b)
+    Show (AnnColumnCaseBoolExp b v)
   ) =>
   Show (AnnColumnField b v)
 

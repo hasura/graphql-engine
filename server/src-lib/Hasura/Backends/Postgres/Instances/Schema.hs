@@ -82,7 +82,6 @@ import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table (CustomRootField (..), RolePermInfo (..), TableConfig (..), TableCoreInfoG (..), TableCustomRootFields (..), TableInfo (..), UpdPermInfo (..), ViewInfo (..), getRolePermInfo, isMutable, tableInfoName)
 import Hasura.SQL.Backend (BackendType (Postgres), PostgresKind (Citus, Cockroach, Vanilla))
-import Hasura.SQL.Tag (HasTag)
 import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
@@ -240,8 +239,7 @@ aggregationFunctions =
 
 instance
   ( PostgresSchema pgKind,
-    Backend ('Postgres pgKind),
-    HasTag ('Postgres pgKind)
+    Backend ('Postgres pgKind)
   ) =>
   BS.BackendTableSelectSchema ('Postgres pgKind)
   where
