@@ -13,7 +13,7 @@ import {
 } from '../OneGraphExplorer/utils';
 
 import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
-import { generateRandomString } from '../../../Services/Data/DataSources/CreateDataSource/Heroku/utils';
+import { generateRandomString } from '../../../Services/Data/DataSources/CreateDataSource/utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
 import { parse as sdlParse, print } from 'graphql';
 import deriveAction from '../../../../shared/utils/deriveAction';
@@ -76,8 +76,16 @@ class GraphiQLWrapper extends Component {
   };
 
   render() {
-    const { numberOfTables, urlParams, headerFocus, dispatch, mode, loading } =
-      this.props;
+    const {
+      numberOfTables,
+      urlParams,
+      headerFocus,
+      dispatch,
+      mode,
+      loading,
+      query: queryFromProps,
+      forceIntrospectAt,
+    } = this.props;
     const { codeExporterOpen, requestTrackingId } = this.state;
     const graphqlNetworkData = this.props.data;
     const { responseTime, responseSize, isResponseCached, responseTrackingId } =
@@ -315,6 +323,8 @@ class GraphiQLWrapper extends Component {
             numberOfTables={numberOfTables}
             dispatch={dispatch}
             mode={mode}
+            forceIntrospectAt={forceIntrospectAt}
+            query={queryFromProps}
           />
         </div>
       </GraphiQLErrorBoundary>
@@ -329,11 +339,14 @@ GraphiQLWrapper.propTypes = {
   headerFocus: PropTypes.bool.isRequired,
   urlParams: PropTypes.object.isRequired,
   response: PropTypes.object,
+  query: PropTypes.string,
 };
 
 const mapStateToProps = state => ({
   mode: state.apiexplorer.mode,
   loading: state.apiexplorer.loading,
+  query: state.apiexplorer.graphiql.query,
+  forceIntrospectAt: state.apiexplorer.graphiql.forceIntrospectAt,
 });
 
 const GraphiQLWrapperConnected = connect(mapStateToProps)(GraphiQLWrapper);

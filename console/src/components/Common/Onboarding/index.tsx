@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router';
 import { FaExternalLinkAlt, FaDatabase } from 'react-icons/fa';
 import { Button } from '@/new-components/Button';
+import { isCloudConsole, hasLuxFeatureAccess } from '@/utils/cloudConsole';
 
 import YouTube from 'react-youtube';
 
@@ -145,7 +146,13 @@ const Onboarding: React.FC<OnboardingProps> = ({
 
   React.useEffect(() => {
     const show = getLSItem(LS_KEYS.showConsoleOnboarding) || 'true';
-    setVisible(show === 'true');
+    const hasNeonAccess =
+      isCloudConsole(globals) &&
+      hasLuxFeatureAccess(globals, 'NeonDatabaseIntegration') &&
+      globals.neonOAuthClientId &&
+      globals.neonRootDomain;
+
+    setVisible(show === 'true' && hasNeonAccess === 'false');
   }, []);
 
   const togglePopup = () => {

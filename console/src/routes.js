@@ -30,7 +30,8 @@ import HelpPage from './components/Services/Support/HelpPage';
 import FormRestView from './components/Services/ApiExplorer/Rest/Form';
 import RestListView from './components/Services/ApiExplorer/Rest/List';
 import DetailsView from './components/Services/ApiExplorer/Rest/Details';
-import TempHerokuCallback from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
+import { HerokuCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Heroku/TempCallback';
+import { NeonCallbackHandler } from './components/Services/Data/DataSources/CreateDataSource/Neon/TempCallback';
 import InsecureDomains from './components/Services/Settings/InsercureDomains/AllowInsecureDomains';
 import {
   checkFeatureSupport,
@@ -101,7 +102,8 @@ const routes = store => {
     >
       {/*Temp route, it'll be in dashboard*/}
       <Route path="login" component={generatedLoginConnector(connect)} />
-      <Route path="heroku-callback" component={TempHerokuCallback} />
+      <Route path="heroku-callback" component={HerokuCallbackHandler} />
+      <Route path="neon-integration/callback" component={NeonCallbackHandler} />
       <Route path="" component={AuthContainer}>
         <Route
           path=""
