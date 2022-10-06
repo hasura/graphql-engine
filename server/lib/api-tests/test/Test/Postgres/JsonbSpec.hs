@@ -89,7 +89,7 @@ schema =
           ],
         Schema.tablePrimaryKey = ["id"],
         Schema.tableData =
-          [ [Schema.VInt 1, mkJsonValue "[1,2,3]", mkJsonValue "[1,2,3]"],
+          [ [Schema.VInt 1, mkJsonValue "{\"dog\": false, \"numbers\": [1,2,3]}", mkJsonValue "{\"dog\": false, \"numbers\": [1,2,3] }"],
             [Schema.VInt 2, mkJsonValue "{\"dog\": true}", mkJsonValue "{\"dog\":true}"]
           ]
       }
@@ -111,8 +111,8 @@ tests opts = do
               data:
                 hasura_test:
                   - id: 1
-                    json: [1,2,3]
-                    jsonb: [1,2,3]
+                    json: {"dog": false, "numbers": [1,2,3] }
+                    jsonb: {"dog": false, "numbers": [1,2,3] }
                   - id: 2
                     json: {"dog": true}
                     jsonb: {"dog": true}
@@ -128,6 +128,37 @@ tests opts = do
                     id
                     json
                     jsonb
+                  }
+                }
+              |]
+
+      actual `shouldBe` expected
+
+  describe "Fetches values from JSON and JSONB values with a path" do
+    it "Everything decodes as expected" \testEnvironment -> do
+      let expected :: Value
+          expected =
+            [yaml|
+              data:
+                hasura_test:
+                  - id: 1
+                    dog: false
+                    dogb: false
+                  - id: 2
+                    dog: true
+                    dogb: true
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                query {
+                  hasura_test {
+                    id
+                    dog: json(path: "$.dog")
+                    dogb: jsonb(path: "$.dog")
                   }
                 }
               |]
