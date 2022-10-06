@@ -62,7 +62,7 @@ refs:
       name: ensure postgres databases are present
       environment:
         # sqlalchemy throws warnings with postgres://
-        DATABASE_URL: "postgresql://gql_test:@localhost:5432/gql_test"
+        DATABASE_URL: "postgresql://gql_test:gql_test@localhost:5432/gql_test"
       command: |
         psql "$DATABASE_URL" -c \
           "SELECT 1 FROM pg_database WHERE datname = 'gql_test2'" | grep -q -F '(1 row)' || \
@@ -179,6 +179,7 @@ refs:
   test_pg_env: &test_pg_env
     environment:
       POSTGRES_USER: gql_test
+      POSTGRES_PASSWORD: gql_test
       POSTGRES_DB: gql_test
       PGPORT: 5432
 
@@ -210,10 +211,10 @@ refs:
             GHCRTS: -N2
             # Until we can use a real webserver for TestEventFlood, limit concurrency:
             HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
-            HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
-            HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
-            HASURA_GRAPHQL_PG_SOURCE_URL_1: postgresql://gql_test@localhost:5432/pg_source_1
-            HASURA_GRAPHQL_PG_SOURCE_URL_2: postgresql://gql_test@localhost:5432/pg_source_2
+            HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:gql_test@localhost:5432/gql_test
+            HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:gql_test@localhost:5432/gql_test2
+            HASURA_GRAPHQL_PG_SOURCE_URL_1: postgresql://gql_test:gql_test@localhost:5432/pg_source_1
+            HASURA_GRAPHQL_PG_SOURCE_URL_2: postgresql://gql_test:gql_test@localhost:5432/pg_source_2
             GRAPHQL_ENGINE: /build/_server_output/graphql-engine
             GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
             MIX_FILES_FOLDER: /build/_server_output/mix
@@ -344,8 +345,8 @@ jobs:
       GHCRTS: -N2
       # Until we can use a real webserver for TestEventFlood, limit concurrency:
       HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
-      HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
-      HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
+      HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:gql_test@localhost:5432/gql_test
+      HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:gql_test@localhost:5432/gql_test2
       HASURA_GRAPHQL_MSSQL_SOURCE_URL: DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost,1433;Uid=sa;Pwd=hasuraMSSQL1;
       GRAPHQL_ENGINE: /build/_server_output/graphql-engine
       GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
@@ -384,8 +385,8 @@ jobs:
       GHCRTS: -N2
       # NOTE: pytests depend on this being set to 8
       HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
-      HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
-      HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
+      HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:gql_test@localhost:5432/gql_test
+      HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:gql_test@localhost:5432/gql_test2
       HASURA_GRAPHQL_CITUS_SOURCE_URL: postgres://postgres:hasuraCITUS2@127.0.0.1:5430/postgres
       GRAPHQL_ENGINE: /build/_server_output/graphql-engine
       GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
@@ -423,8 +424,8 @@ jobs:
       GHCRTS: -N2
       # NOTE: pytests depend on this being set to 8
       HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
-      HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
-      HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:@localhost:5432/gql_test2
+      HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:gql_test@localhost:5432/gql_test
+      HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:gql_test@localhost:5432/gql_test2
       GRAPHQL_ENGINE: /build/_server_output/graphql-engine
       GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
       MIX_FILES_FOLDER: /build/_server_output/mix
@@ -795,7 +796,7 @@ jobs:
     docker:
       - image: hasura/graphql-engine-console-builder:80c71f5dd8f1e33b92d3ec2da7abc1ff8d7936a88d3ee0004fd7ad37aacf3b3a
         environment:
-          HASURA_GRAPHQL_DATABASE_URL: "postgres://gql_test:@localhost:5432/gql_test"
+          HASURA_GRAPHQL_DATABASE_URL: "postgres://gql_test:gqltest@localhost:5432/gql_test"
           CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
           GHCRTS: -N1
           TEST_MSSQL_DATABASE_URL: "DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=master;Uid=SA;Pwd=hasuraMSSQL1"
@@ -803,6 +804,7 @@ jobs:
         environment:
           POSTGRES_USER: gql_test
           POSTGRES_DB: gql_test
+          POSTGRES_PASSWORD: gql_test
       - image: mcr.microsoft.com/mssql/server:2019-CU10-ubuntu-20.04
         environment:
           ACCEPT_EULA: Y
@@ -840,7 +842,7 @@ jobs:
       # Using the image for pytests, since server upgrade tests are now a bunch of pytests
       - image: *server_builder_image
         environment:
-          HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
+          HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:gql_test@localhost:5432/gql_test
       - image: circleci/postgres:11-alpine-postgis
         environment:
           POSTGRES_USER: gql_test
@@ -856,7 +858,7 @@ jobs:
           name: upgrade_test
           command: .circleci/server-upgrade-downgrade/run.sh
           environment:
-            HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:@localhost:5432/gql_test
+            HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:gql_test@localhost:5432/gql_test
             # NOTE: pytests depend on this being set to 8
             HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
       - store_artifacts:
