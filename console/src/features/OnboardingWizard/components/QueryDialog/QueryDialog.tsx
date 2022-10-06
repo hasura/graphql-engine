@@ -27,9 +27,9 @@ export function QueryDialog(props: Props) {
         <div className="mx-4 my-2">
           <div className="text-md text-gray-700 mb-2">
             We&apos;ve created a <b>`sample`</b> schema to help you get started
-            using Hasura. It contains the sample structure of a music directory,
-            as well as a view and function to give you an idea about how Hasura
-            works.
+            using Hasura. It contains the sample structure of a music directory
+            with two tables ‘Albums’ and ‘Artists’ based on a foreign key
+            relationship.
           </div>
           <img
             className="mb-2"
