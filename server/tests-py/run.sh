@@ -16,6 +16,16 @@ set -o pipefail
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
+# This `PLATFORM` value is used to pick the correct server builder image.
+PLATFORM="$(uname -m)"
+if [[ "$PLATFORM" == 'x86_64' ]]; then
+  PLATFORM='amd64'
+fi
+if [[ "$PLATFORM" == 'aarch64' ]]; then
+  PLATFORM='arm64'
+fi
+export PLATFORM
+
 # copied from images.go
 HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA="$(
   sha256sum ../../.buildkite/dockerfiles/ci-builders/server-builder.dockerfile \
@@ -48,7 +58,11 @@ else
   SERVER_TESTS_TO_RUN=('no-auth')
 fi
 
-echo "*** Building HGE ***"
+echo '*** Pulling images ***'
+docker compose pull
+
+echo
+echo '*** Building HGE ***'
 docker compose run --rm hge-build
 
 for SERVER_TEST_TO_RUN in "${SERVER_TESTS_TO_RUN[@]}"; do
