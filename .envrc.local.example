@@ -3,11 +3,12 @@
 ### This is an example .envrc.local file you can start with. Uncomment the parts
 ### you'd like to use, and copy this to `.envrc.local`.
 
-### Enable providing tooling with the Nix package manager:
+### Enable providing tooling with the Nix package manager
+### (read the commentary in flake.nix first)
 # use flake
 
-### Enable providing NodeJS versions with `nvm`:
+### Enable providing NodeJS versions with `nvm`
 # use nvm
 
-### Enable providing GHC versions with `ghcup`:
+### Enable providing GHC versions with `ghcup`
 # use ghcup
