@@ -13,6 +13,7 @@
             connection_parameters:
               host: localhost
               username: gql_test
+              password: gql_test
               port: 5432
               database: pg_source_1
           pool_settings:

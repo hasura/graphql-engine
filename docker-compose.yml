@@ -44,7 +44,7 @@ services:
       - mariadb-data:/var/lib/mysql
 
   postgres:
-    image: postgres:15beta4
+    image: postgis/postgis:15beta4-3.3-alpine
     command:
       - -F # turn fsync off for speed
       - -N 1000 # increase max connections from 100 so we can run more HGEs
