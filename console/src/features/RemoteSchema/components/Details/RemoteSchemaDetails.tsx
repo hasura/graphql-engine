@@ -95,6 +95,7 @@ export const RemoteSchemaDetails = (props: RemoteSchemaDetailsProps) => {
                   type="text"
                   className="block w-full mr-2 h-input cursor-not-allowed rounded border bg-gray-200 border-gray-200"
                   placeholder={manualUrl || `<${envName}>`}
+                  disabled
                 />
                 {readOnlyMode && (
                   <Button onClick={reload} isLoading={isReloadLoading}>
