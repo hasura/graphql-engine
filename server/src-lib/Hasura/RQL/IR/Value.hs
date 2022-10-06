@@ -30,15 +30,13 @@ data UnpreparedValue (b :: BackendType)
 
 deriving instance
   ( Backend b,
-    Eq (ColumnValue b),
-    Eq (ScalarValue b)
+    Eq (ColumnValue b)
   ) =>
   Eq (UnpreparedValue b)
 
 deriving instance
   ( Backend b,
-    Show (ColumnValue b),
-    Show (ScalarValue b)
+    Show (ColumnValue b)
   ) =>
   Show (UnpreparedValue b)
 

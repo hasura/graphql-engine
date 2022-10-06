@@ -217,8 +217,7 @@ setOp = UpdateOperator {..}
 
 incOp ::
   forall b m n r.
-  ( Backend b,
-    MonadReader r m,
+  ( MonadReader r m,
     MonadError QErr m,
     P.MonadParse n,
     BackendSchema b,

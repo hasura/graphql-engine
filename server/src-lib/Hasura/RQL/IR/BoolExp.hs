@@ -221,20 +221,17 @@ deriving instance (Backend b) => Eq (PartialSQLExp b)
 deriving instance (Backend b) => Show (PartialSQLExp b)
 
 instance
-  ( Backend b,
-    NFData (BooleanOperators b (PartialSQLExp b))
+  ( Backend b
   ) =>
   NFData (PartialSQLExp b)
 
 instance
-  ( Backend b,
-    Hashable (BooleanOperators b (PartialSQLExp b))
+  ( Backend b
   ) =>
   Hashable (PartialSQLExp b)
 
 instance
-  ( Backend b,
-    Cacheable (BooleanOperators b (PartialSQLExp b))
+  ( Backend b
   ) =>
   Cacheable (PartialSQLExp b)
 

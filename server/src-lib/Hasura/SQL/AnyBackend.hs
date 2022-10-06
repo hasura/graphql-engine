@@ -157,7 +157,7 @@ $( do
        -- the name of the type
        (mkName "AnyBackend")
        -- the type variable
-       [KindedTV typeVarName varKind]
+       [KindedTV typeVarName () varKind]
        -- the constructor for each backend
        ( \b ->
            pure $
@@ -255,7 +255,7 @@ liftTag t =
        -- the expression on which we do the case switch
        [|t|]
        -- the pattern for a given backend: the backend type itself
-       (\(con :| args) -> pure $ ConP con [ConP a [] | a <- args])
+       (\(con :| args) -> pure $ ConP con [] [ConP a [] [] | a <- args])
        -- the body for a given backend: creating and wrapping the tag
        (\b -> [|$(pure $ ConE $ getBackendValueName b) $(pure $ ConE $ getBackendTagName b)|])
        -- no default case: every constructor should be handled
@@ -281,7 +281,7 @@ mapBackend e f =
          -- the name of the constructor
          let consName = getBackendValueName b
          -- the patterrn we match: @FooValue x@
-         let matchPattern = ConP consName [VarP $ mkName "x"]
+         let matchPattern = ConP consName [] [VarP $ mkName "x"]
          -- the body of the match: @FooValue (f x)@
          matchBody <- [|$(pure $ ConE consName) (f x)|]
          pure $ Match matchPattern (NormalB matchBody) []
@@ -314,7 +314,7 @@ traverseBackend e f =
          -- the name of the constructor
          let consName = getBackendValueName b
          -- the patterrn we match: @FooValue x@
-         let matchPattern = ConP consName [VarP $ mkName "x"]
+         let matchPattern = ConP consName [] [VarP $ mkName "x"]
          -- the body of the match: @FooValue <$> f x@
          matchBody <- [|$(pure $ ConE consName) <$> f x|]
          pure $ Match matchPattern (NormalB matchBody) []
@@ -341,7 +341,7 @@ mkAnyBackend =
   $( backendCase
        [|backendTag @b|]
        -- the pattern for a backend
-       (\b -> pure $ ConP (getBackendTagName b) [])
+       (\b -> pure $ ConP (getBackendTagName b) [] [])
        -- the body for a backend
        (pure . ConE . getBackendValueName)
        -- no default case
@@ -440,7 +440,7 @@ composeAnyBackend f e1 e2 owise =
        [|(e1, e2)|]
        -- the pattern for a given backend: @(FooValue a, FooValue b)@
        ( \b -> do
-           let valueCon n = pure $ ConP (getBackendValueName b) [VarP $ mkName n]
+           let valueCon n = pure $ ConP (getBackendValueName b) [] [VarP $ mkName n]
            [p|($(valueCon "a"), $(valueCon "b"))|]
        )
        -- the body for each backend: @f a b@
@@ -468,8 +468,8 @@ unpackAnyBackend exists =
        [|(backendTag @b, exists)|]
        -- the pattern for a given backend
        ( \b -> do
-           let tagConstructor = pure $ ConP (getBackendTagName b) []
-               valConstructor = pure $ ConP (getBackendValueName b) [VarP $ mkName "a"]
+           let tagConstructor = pure $ ConP (getBackendTagName b) [] []
+               valConstructor = pure $ ConP (getBackendValueName b) [] [VarP $ mkName "a"]
            [p|($tagConstructor, $valConstructor)|]
        )
        -- the body for each backend
@@ -568,7 +568,7 @@ spreadChoice = arr $ \e ->
          -- name of the constructor: FooValue
          let consName = getBackendValueName b
          -- pattern of the match: @FooValue x@
-         let matchPattern = ConP consName [VarP $ mkName "x"]
+         let matchPattern = ConP consName [] [VarP $ mkName "x"]
          -- expression of the match: applying the 'BackendChoice' constructor to x
          matchBody <- [|$(pure c) x|]
          pure $ Match matchPattern (NormalB matchBody) []
@@ -703,7 +703,7 @@ parseAnyBackendFromJSON backendKind value = do
   $( backendCase
        [|backendKind|]
        -- the pattern for a given backend
-       (\(con :| args) -> pure $ ConP con [ConP arg [] | arg <- args])
+       (\(con :| args) -> pure $ ConP con [] [ConP arg [] [] | arg <- args])
        -- the body for each backend
        ( \b -> do
            let valueCon = pure $ ConE $ getBackendValueName b

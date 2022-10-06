@@ -8,7 +8,7 @@ module Hasura.Base.Instances () where
 import Control.Monad.Fix
 import Data.Aeson qualified as J
 import Data.Functor.Product (Product (Pair))
-import "some" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
+import "dependent-sum" Data.GADT.Compare (GCompare (gcompare), GOrdering (GEQ, GGT, GLT))
 import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
 import Data.OpenApi.Declare as D
@@ -63,13 +63,15 @@ instance NFData C.CronSchedule
 --------------------------------------------------------------------------------
 -- Template Haskell
 
-instance (TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
+instance (Hashable k, Eq k, TH.Lift k, TH.Lift v) => TH.Lift (M.HashMap k v) where
   lift m = [|M.fromList $(TH.lift $ M.toList m)|]
-  liftTyped = TH.unsafeTExpCoerce . TH.lift
+  -- liftTyped = TH.unsafeTExpCoerce . TH.lift
+  liftTyped m = [|| M.fromList $$(TH.liftTyped $ M.toList m) ||]
 
-instance TH.Lift a => TH.Lift (S.HashSet a) where
+instance (Hashable a, Eq a, TH.Lift a) => TH.Lift (S.HashSet a) where
   lift s = [|S.fromList $(TH.lift $ S.toList s)|]
-  liftTyped = TH.unsafeTExpCoerce . TH.lift
+  -- liftTyped = TH.unsafeTExpCoerce . TH.lift
+  liftTyped m = [|| S.fromList $$(TH.liftTyped $ S.toList m) ||]
 
 deriving instance TH.Lift TDFA.CompOption
 

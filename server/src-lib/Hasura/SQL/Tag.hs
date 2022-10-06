@@ -26,7 +26,7 @@ $( let name = mkName "BackendTag"
          -- the name of the type
          name
          -- the type variable
-         [KindedTV (mkName "b") $ ConT ''BackendType]
+         [KindedTV (mkName "b") () $ ConT ''BackendType]
          -- the constructor for each backend
          ( \b ->
              pure $
@@ -72,7 +72,7 @@ reify t =
        -- the expression on which we do the case switch
        [|t|]
        -- the pattern for a given backend: just its tag, no argument
-       (\b -> pure $ ConP (getBackendTagName b) [])
+       (\b -> pure $ ConP (getBackendTagName b) [] [])
        -- the body for a given backend: the backend constructor itself
        (\b -> pure $ getBackendValue b)
        -- no default case: every constructor should be handled

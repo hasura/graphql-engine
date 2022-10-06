@@ -323,7 +323,7 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields col
 
 runSetTableCustomization ::
   forall b m.
-  (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b) =>
+  (QErrM m, CacheRWM m, MetadataM m, Backend b) =>
   SetTableCustomization b ->
   m EncJSON
 runSetTableCustomization (SetTableCustomization source table config) = do
@@ -663,7 +663,7 @@ instance (Backend b) => FromJSON (SetApolloFederationConfig b) where
 
 runSetApolloFederationConfig ::
   forall b m.
-  (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b) =>
+  (QErrM m, CacheRWM m, MetadataM m, Backend b) =>
   SetApolloFederationConfig b ->
   m EncJSON
 runSetApolloFederationConfig (SetApolloFederationConfig source table apolloFedConfig) = do

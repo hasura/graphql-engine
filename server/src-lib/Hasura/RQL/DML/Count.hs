@@ -130,7 +130,7 @@ validateCountQ query = do
       validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 
 countQToTx ::
-  (QErrM m, MonadTx m) =>
+  (MonadTx m) => -- QErrM m ?
   (CountQueryP1, DS.Seq Q.PrepArg) ->
   m EncJSON
 countQToTx (u, p) = do
