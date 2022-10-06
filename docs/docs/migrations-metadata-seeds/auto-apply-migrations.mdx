@@ -65,3 +65,16 @@ docker run -p 8080:8080 \
 If you're managing migrations with a different tool and want to use this image to apply only the metadata, mount the
 `metadata` directory of your Hasura project at the `/hasura-metadata` path of this Docker container the container’s
 entry point script will apply the metadata before starting the server.
+
+## CLI as a Pipeline
+
+If you are using hasura.cli-migrations with docker container image as a CI/CD Pipeline, you might need to completely kill any hasura objects in your database in order to rebuild them.
+
+Dependency issues may arise such as, *INSTEAD OF* triggers getting created while granting some partial *INSERT* permissions.
+
+To resove such errors run the following commands:
+
+```sql
+drop schema hdb_views cascade;
+drop schema hdb_catalog cascade;
+```
