@@ -102,7 +102,7 @@ backendData ::
   -- | the name of the type
   Name ->
   -- | type variables of the type if any
-  [TyVarBndr] ->
+  [TyVarBndr ()] ->
   -- | the constructor for a given backend
   (BackendConstructor -> Q Con) ->
   -- | classes to derive using the stock strategy
@@ -133,7 +133,7 @@ mkDispatch func value = do
   backendCase
     [|$vE|]
     -- the pattern for a backend
-    (\b -> pure $ ConP (getBackendValueName b) [VarP $ mkName "x"])
+    (\b -> pure $ ConP (getBackendValueName b) [] [VarP $ mkName "x"])
     -- the body for a backend
     (const [|$fE x|])
     -- no default case

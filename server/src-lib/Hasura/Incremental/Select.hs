@@ -49,7 +49,7 @@ class (GCompare (Selector a)) => Select a where
   default select :: Selector a ~ FieldS a => Selector a b -> a -> b
   select (FieldS (_ :: Proxy s)) = getField @s
 
-instance (Eq k, Ord k, Hashable k) => Select (HashMap k v) where
+instance (Ord k, Hashable k) => Select (HashMap k v) where
   type Selector (HashMap k v) = ConstS k (Maybe v)
   select (ConstS k) = M.lookup k
 
