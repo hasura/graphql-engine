@@ -1,4 +1,3 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
 {-# LANGUAGE DeriveAnyClass #-}
 
 -- | A replacement for "Control.Exception" with a few extra helpers.
