@@ -20,8 +20,8 @@ containers using Docker Compose. This is the easiest way to set up Hasura GraphQ
 
 ## Prerequisites
 
-- [Docker](https://docs.docker.com/install/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
+You'll need to have Docker installed in order to run the container. Check out
+[the Docker documentation](https://docs.docker.com/install/) for instructions.
 
 ## Step 1: Get the docker-compose file
 
@@ -40,7 +40,7 @@ curl https://raw.githubusercontent.com/hasura/graphql-engine/stable/install-mani
 The following command will run Hasura GraphQL engine along with a Postgres database to store its metadata.
 
 ```bash
-$ docker-compose up -d
+$ docker compose up -d
 ```
 
 Check if the containers are running:
