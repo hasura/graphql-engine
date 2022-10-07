@@ -1,6 +1,9 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
-module Database.PG.Query.PTI where
+module Database.PG.Query.PTI
+  ( module Database.PG.Query.PTI,
+  )
+where
 
 -------------------------------------------------------------------------------
 

@@ -45,7 +45,7 @@ from3To4 = liftTx $
       False
     eventTriggers <-
       map uncurryEventTrigger
-        <$> PG.listQ
+        <$> PG.withQ
           [PG.sql|
       SELECT e.name, e.definition::json, e.webhook, e.num_retries, e.retry_interval, e.headers::json
       FROM hdb_catalog.event_triggers e |]
