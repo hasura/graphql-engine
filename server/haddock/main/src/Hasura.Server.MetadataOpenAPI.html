@@ -28,10 +28,10 @@
 </span><span class="hs-identifier hs-var">_openApiComponents</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_componentsSchemas :: Definitions Schema
 </span><span class="hs-identifier hs-var">_componentsSchemas</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Definitions Schema
-</span><a href="#local-6989586621690389213"><span class="hs-identifier hs-var">definitions</span></a></span><span class="hs-special">}</span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621690390052"><span class="hs-identifier hs-var">definitions</span></a></span><span class="hs-special">}</span><span class="hs-special">}</span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-27"></span><span>    </span><span id="local-6989586621690389213"><span class="annot"><span class="annottext">definitions :: Definitions Schema
-</span><a href="#local-6989586621690389213"><span class="hs-identifier hs-var hs-var">definitions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
+</span><span id="line-27"></span><span>    </span><span id="local-6989586621690390052"><span class="annot"><span class="annottext">definitions :: Definitions Schema
+</span><a href="#local-6989586621690390052"><span class="hs-identifier hs-var hs-var">definitions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-28"></span><span>      </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
@@ -39,9 +39,9 @@
 </span><span class="hs-identifier hs-var">runDeclare</span></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-29"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">NamedSchema</span></span><span> </span><span id="local-6989586621690389187"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690389187"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621690389186"><span class="annot"><span class="annottext">Schema
-</span><a href="#local-6989586621690389186"><span class="hs-identifier hs-var">codecSchema</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall value.
+</span><span id="line-29"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">NamedSchema</span></span><span> </span><span id="local-6989586621690390026"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621690390026"><span class="hs-identifier hs-var">mName</span></a></span></span><span> </span><span id="local-6989586621690390025"><span class="annot"><span class="annottext">Schema
+</span><a href="#local-6989586621690390025"><span class="hs-identifier hs-var">codecSchema</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall value.
 HasCodec value =&gt;
 Proxy value -&gt; Declare (Definitions Schema) NamedSchema
 </span><span class="hs-identifier hs-var">declareNamedSchemaViaCodec</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {k} (t :: k). Proxy t
@@ -52,9 +52,9 @@ Proxy value -&gt; Declare (Definitions Schema) NamedSchema
 </span><span class="hs-identifier hs-var">HM.fromList</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MetadataDTO&quot;</span></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690389187"><span class="hs-identifier hs-var">mName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Schema
-</span><a href="#local-6989586621690389186"><span class="hs-identifier hs-var">codecSchema</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621690390026"><span class="hs-identifier hs-var">mName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Schema
+</span><a href="#local-6989586621690390025"><span class="hs-identifier hs-var">codecSchema</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-31"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">Schema
-</span><a href="#local-6989586621690389186"><span class="hs-identifier hs-var">codecSchema</span></a></span><span>
+</span><a href="#local-6989586621690390025"><span class="hs-identifier hs-var">codecSchema</span></a></span><span>
 </span><span id="line-32"></span></pre></body></html>

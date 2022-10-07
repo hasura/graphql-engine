@@ -9,15 +9,15 @@
 </span><span id="line-9"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html"><span class="hs-identifier">Hasura.RQL.Types.Metadata.Backend</span></a></span><span>
 </span><span id="line-10"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
 </span><span id="line-11"></span><span>
-</span><span id="line-12"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690501255"><span id="local-6989586621690501264"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-13"></span><span>  </span><span id="local-6989586621690501218"><span class="annot"><span class="annottext">prepareCatalog :: forall (m :: * -&gt; *).
+</span><span id="line-12"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690502104"><span id="local-6989586621690502113"><span class="annot"><a href="Hasura.RQL.Types.Metadata.Backend.html#BackendMetadata"><span class="hs-identifier hs-type">BackendMetadata</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-13"></span><span>  </span><span id="local-6989586621690502067"><span class="annot"><span class="annottext">prepareCatalog :: forall (m :: * -&gt; *).
 (MonadIO m, MonadBaseControl IO m) =&gt;
 SourceConfig 'BigQuery -&gt; ExceptT QErr m RecreateEventTriggers
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#prepareCatalog"><span class="hs-identifier hs-var hs-var hs-var hs-var">prepareCatalog</span></a></span></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'BigQuery
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">RecreateEventTriggers
 </span><a href="Hasura.RQL.Types.EventTrigger.html#RETDoNothing"><span class="hs-identifier hs-var">RETDoNothing</span></a></span><span>
-</span><span id="line-14"></span><span>  </span><span id="local-6989586621690501214"><span class="annot"><span class="annottext">buildComputedFieldInfo :: forall (m :: * -&gt; *).
+</span><span id="line-14"></span><span>  </span><span id="local-6989586621690502063"><span class="annot"><span class="annottext">buildComputedFieldInfo :: forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 HashSet (TableName 'BigQuery)
 -&gt; TableName 'BigQuery
@@ -38,7 +38,7 @@ HashSet TableName
 -&gt; Comment
 -&gt; m (ComputedFieldInfo 'BigQuery)
 </span><a href="Hasura.Backends.BigQuery.DDL.ComputedField.html#buildComputedFieldInfo"><span class="hs-identifier hs-var">BigQuery.buildComputedFieldInfo</span></a></span><span>
-</span><span id="line-15"></span><span>  </span><span id="local-6989586621690501207"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: forall (m :: * -&gt; *).
+</span><span id="line-15"></span><span>  </span><span id="local-6989586621690502056"><span class="annot"><span class="annottext">fetchAndValidateEnumValues :: forall (m :: * -&gt; *).
 (MonadIO m, MonadBaseControl IO m) =&gt;
 SourceConfig 'BigQuery
 -&gt; TableName 'BigQuery
@@ -53,7 +53,7 @@ SourceConfig 'BigQuery
 -&gt; [RawColumnInfo 'BigQuery]
 -&gt; m (Either QErr EnumValues)
 </span><a href="Hasura.Backends.BigQuery.DDL.html#fetchAndValidateEnumValues"><span class="hs-identifier hs-var">BigQuery.fetchAndValidateEnumValues</span></a></span><span>
-</span><span id="line-16"></span><span>  </span><span id="local-6989586621690501201"><span class="annot"><span class="annottext">resolveSourceConfig :: forall (m :: * -&gt; *).
+</span><span id="line-16"></span><span>  </span><span id="local-6989586621690502050"><span class="annot"><span class="annottext">resolveSourceConfig :: forall (m :: * -&gt; *).
 (MonadIO m, MonadResolveSource m) =&gt;
 Logger Hasura
 -&gt; SourceName
@@ -74,7 +74,7 @@ Logger Hasura
 -&gt; manager
 -&gt; m (Either QErr BigQuerySourceConfig)
 </span><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSourceConfig"><span class="hs-identifier hs-var">BigQuery.resolveSourceConfig</span></a></span><span>
-</span><span id="line-17"></span><span>  </span><span id="local-6989586621690501194"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: forall (m :: * -&gt; *).
+</span><span id="line-17"></span><span>  </span><span id="local-6989586621690502043"><span class="annot"><span class="annottext">resolveDatabaseMetadata :: forall (m :: * -&gt; *).
 (MonadIO m, MonadBaseControl IO m, MonadResolveSource m) =&gt;
 SourceMetadata 'BigQuery
 -&gt; SourceConfig 'BigQuery
@@ -87,7 +87,7 @@ BigQuerySourceConfig
 -&gt; SourceTypeCustomization
 -&gt; m (Either QErr (ResolvedSource 'BigQuery))
 </span><a href="Hasura.Backends.BigQuery.DDL.Source.html#resolveSource"><span class="hs-identifier hs-var">BigQuery.resolveSource</span></a></span><span>
-</span><span id="line-18"></span><span>  </span><span id="local-6989586621690501188"><span class="annot"><span class="annottext">parseBoolExpOperations :: forall (m :: * -&gt; *) v.
+</span><span id="line-18"></span><span>  </span><span id="local-6989586621690502037"><span class="annot"><span class="annottext">parseBoolExpOperations :: forall (m :: * -&gt; *) v.
 (MonadError QErr m, TableCoreInfoRM 'BigQuery m) =&gt;
 ValueParser 'BigQuery m v
 -&gt; TableName 'BigQuery
@@ -104,7 +104,7 @@ ValueParser 'BigQuery m v
 -&gt; Value
 -&gt; m [OpExpG 'BigQuery v]
 </span><a href="Hasura.Backends.BigQuery.DDL.BoolExp.html#parseBoolExpOperations"><span class="hs-identifier hs-var">BigQuery.parseBoolExpOperations</span></a></span><span>
-</span><span id="line-19"></span><span>  </span><span id="local-6989586621690501183"><span class="annot"><span class="annottext">buildFunctionInfo :: forall (m :: * -&gt; *).
+</span><span id="line-19"></span><span>  </span><span id="local-6989586621690502032"><span class="annot"><span class="annottext">buildFunctionInfo :: forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 SourceName
 -&gt; FunctionName 'BigQuery
@@ -127,7 +127,7 @@ SourceName
 -&gt; NamingCase
 -&gt; m (FunctionInfo 'BigQuery, SchemaDependency)
 </span><a href="Hasura.Backends.BigQuery.DDL.html#buildFunctionInfo"><span class="hs-identifier hs-var">BigQuery.buildFunctionInfo</span></a></span><span>
-</span><span id="line-20"></span><span>  </span><span id="local-6989586621690501180"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'BigQuery
+</span><span id="line-20"></span><span>  </span><span id="local-6989586621690502029"><span class="annot"><span class="annottext">updateColumnInEventTrigger :: TableName 'BigQuery
 -&gt; Column 'BigQuery
 -&gt; Column 'BigQuery
 -&gt; TableName 'BigQuery
@@ -140,7 +140,7 @@ SourceName
 -&gt; EventTriggerConf 'BigQuery
 -&gt; EventTriggerConf 'BigQuery
 </span><a href="Hasura.Backends.BigQuery.DDL.html#updateColumnInEventTrigger"><span class="hs-identifier hs-var">BigQuery.updateColumnInEventTrigger</span></a></span><span>
-</span><span id="line-21"></span><span>  </span><span id="local-6989586621690501175"><span class="annot"><span class="annottext">parseCollectableType :: forall (m :: * -&gt; *).
+</span><span id="line-21"></span><span>  </span><span id="local-6989586621690502024"><span class="annot"><span class="annottext">parseCollectableType :: forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 CollectableType (ColumnType 'BigQuery)
 -&gt; Value -&gt; m (PartialSQLExp 'BigQuery)
@@ -149,14 +149,14 @@ MonadError QErr m =&gt;
 CollectableType (ColumnType 'BigQuery)
 -&gt; Value -&gt; m (PartialSQLExp 'BigQuery)
 </span><a href="Hasura.Backends.BigQuery.DDL.html#parseCollectableType"><span class="hs-identifier hs-var">BigQuery.parseCollectableType</span></a></span><span>
-</span><span id="line-22"></span><span>  </span><span id="local-6989586621690501168"><span class="annot"><span class="annottext">postDropSourceHook :: forall (m :: * -&gt; *).
+</span><span id="line-22"></span><span>  </span><span id="local-6989586621690502017"><span class="annot"><span class="annottext">postDropSourceHook :: forall (m :: * -&gt; *).
 (MonadError QErr m, MonadIO m, MonadBaseControl IO m) =&gt;
 SourceConfig 'BigQuery -&gt; TableEventTriggers 'BigQuery -&gt; m ()
 </span><a href="Hasura.RQL.Types.Metadata.Backend.html#postDropSourceHook"><span class="hs-identifier hs-var hs-var hs-var hs-var">postDropSourceHook</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadIO m =&gt;
 BigQuerySourceConfig -&gt; TableEventTriggers 'BigQuery -&gt; m ()
 </span><a href="Hasura.Backends.BigQuery.DDL.Source.html#postDropSourceHook"><span class="hs-identifier hs-var">BigQuery.postDropSourceHook</span></a></span><span>
-</span><span id="line-23"></span><span>  </span><span id="local-6989586621690501160"><span class="annot"><span class="annottext">buildComputedFieldBooleanExp :: forall (m :: * -&gt; *) v.
+</span><span id="line-23"></span><span>  </span><span id="local-6989586621690502009"><span class="annot"><span class="annottext">buildComputedFieldBooleanExp :: forall (m :: * -&gt; *) v.
 (MonadError QErr m, TableCoreInfoRM 'BigQuery m) =&gt;
 BoolExpResolver 'BigQuery m v
 -&gt; BoolExpRHSParser 'BigQuery m v

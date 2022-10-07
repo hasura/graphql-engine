@@ -36,8 +36,8 @@
 </span><span id="line-36"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="Hasura.SQL.Backend.html"><span class="hs-identifier">Hasura.SQL.Backend</span></a></span><span>
 </span><span id="line-37"></span><span class="hs-keyword">import</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier">Language.GraphQL.Draft.Syntax</span></a></span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">GQL</span></span><span>
 </span><span id="line-38"></span><span>
-</span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690485107"><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-40"></span><span>  </span><span id="local-6989586621690485084"><span class="annot"><span class="annottext">buildTableQueryAndSubscriptionFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690485956"><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendSchema"><span class="hs-identifier hs-type">BackendSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-40"></span><span>  </span><span id="local-6989586621690485933"><span class="annot"><span class="annottext">buildTableQueryAndSubscriptionFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 MkRootFieldName
 -&gt; SourceInfo 'MySQL
@@ -81,7 +81,7 @@ MkRootFieldName
             b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))],
       Maybe (Name, Parser 'Output n (ApolloFederationParserFunction n)))
 </span><a href="Hasura.GraphQL.Schema.Build.html#buildTableQueryAndSubscriptionFields"><span class="hs-identifier hs-var">GSB.buildTableQueryAndSubscriptionFields</span></a></span><span>
-</span><span id="line-41"></span><span>  </span><span id="local-6989586621690485071"><span class="annot"><span class="annottext">buildTableRelayQueryFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621690485920"><span class="annot"><span class="annottext">buildTableRelayQueryFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 MkRootFieldName
 -&gt; SourceInfo 'MySQL
@@ -106,7 +106,7 @@ MkRootFieldName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">NESeq (ColumnInfo 'MySQL)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-42"></span><span>  </span><span id="local-6989586621690485063"><span class="annot"><span class="annottext">buildTableStreamingSubscriptionFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-42"></span><span>  </span><span id="local-6989586621690485912"><span class="annot"><span class="annottext">buildTableStreamingSubscriptionFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 MkRootFieldName
 -&gt; SourceInfo 'MySQL
@@ -138,7 +138,7 @@ MkRootFieldName
         (QueryDB
            b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 </span><a href="Hasura.GraphQL.Schema.Build.html#buildTableStreamingSubscriptionFields"><span class="hs-identifier hs-var">GSB.buildTableStreamingSubscriptionFields</span></a></span><span>
-</span><span id="line-43"></span><span>  </span><span id="local-6989586621690485053"><span class="annot"><span class="annottext">buildTableInsertMutationFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621690485902"><span class="annot"><span class="annottext">buildTableInsertMutationFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 MkRootFieldName
 -&gt; Scenario
@@ -163,7 +163,7 @@ MkRootFieldName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621690485044"><span class="annot"><span class="annottext">buildTableUpdateMutationFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621690485893"><span class="annot"><span class="annottext">buildTableUpdateMutationFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 MkRootFieldName
 -&gt; Scenario
@@ -188,7 +188,7 @@ MkRootFieldName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621690485035"><span class="annot"><span class="annottext">buildTableDeleteMutationFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621690485884"><span class="annot"><span class="annottext">buildTableDeleteMutationFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 MkRootFieldName
 -&gt; Scenario
@@ -213,7 +213,7 @@ MkRootFieldName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">GQLNameIdentifier
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-46"></span><span>  </span><span id="local-6989586621690485026"><span class="annot"><span class="annottext">buildFunctionQueryFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621690485875"><span class="annot"><span class="annottext">buildFunctionQueryFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 MkRootFieldName
 -&gt; SourceInfo 'MySQL
@@ -236,7 +236,7 @@ MkRootFieldName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-47"></span><span>  </span><span id="local-6989586621690485017"><span class="annot"><span class="annottext">buildFunctionRelayQueryFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-47"></span><span>  </span><span id="local-6989586621690485866"><span class="annot"><span class="annottext">buildFunctionRelayQueryFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 MkRootFieldName
 -&gt; SourceInfo 'MySQL
@@ -261,7 +261,7 @@ MkRootFieldName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">NESeq (ColumnInfo 'MySQL)
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-48"></span><span>  </span><span id="local-6989586621690485008"><span class="annot"><span class="annottext">buildFunctionMutationFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-48"></span><span>  </span><span id="local-6989586621690485857"><span class="annot"><span class="annottext">buildFunctionMutationFields :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 MkRootFieldName
 -&gt; SourceInfo 'MySQL
@@ -284,16 +284,16 @@ MkRootFieldName
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">TableName 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-49"></span><span>  </span><span id="local-6989586621690485006"><span class="annot"><span class="annottext">relayExtension :: Maybe (XRelay 'MySQL)
+</span><span id="line-49"></span><span>  </span><span id="local-6989586621690485855"><span class="annot"><span class="annottext">relayExtension :: Maybe (XRelay 'MySQL)
 </span><a href="Hasura.GraphQL.Schema.Backend.html#relayExtension"><span class="hs-identifier hs-var hs-var hs-var hs-var">relayExtension</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-50"></span><span>  </span><span id="local-6989586621690485004"><span class="annot"><span class="annottext">nodesAggExtension :: Maybe (XNodesAgg 'MySQL)
+</span><span id="line-50"></span><span>  </span><span id="local-6989586621690485853"><span class="annot"><span class="annottext">nodesAggExtension :: Maybe (XNodesAgg 'MySQL)
 </span><a href="Hasura.GraphQL.Schema.Backend.html#nodesAggExtension"><span class="hs-identifier hs-var hs-var hs-var hs-var">nodesAggExtension</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-51"></span><span>  </span><span id="local-6989586621690485002"><span class="annot"><span class="annottext">streamSubscriptionExtension :: Maybe (XStreamingSubscription 'MySQL)
+</span><span id="line-51"></span><span>  </span><span id="local-6989586621690485851"><span class="annot"><span class="annottext">streamSubscriptionExtension :: Maybe (XStreamingSubscription 'MySQL)
 </span><a href="Hasura.GraphQL.Schema.Backend.html#streamSubscriptionExtension"><span class="hs-identifier hs-var hs-var hs-var hs-var">streamSubscriptionExtension</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-52"></span><span>  </span><span id="local-6989586621690484998"><span class="annot"><span class="annottext">columnParser :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-52"></span><span>  </span><span id="local-6989586621690485847"><span class="annot"><span class="annottext">columnParser :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 ColumnType 'MySQL
 -&gt; Nullability
@@ -306,7 +306,7 @@ ColumnType 'MySQL
 -&gt; SchemaT
      r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#columnParser%27"><span class="hs-identifier hs-var">columnParser'</span></a></span><span>
-</span><span id="line-53"></span><span>  </span><span id="local-6989586621690484993"><span class="annot"><span class="annottext">enumParser :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621690485842"><span class="annot"><span class="annottext">enumParser :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 TableName 'MySQL
 -&gt; NonEmpty (EnumValue, EnumValueInfo)
@@ -321,7 +321,7 @@ TableName 'MySQL
 -&gt; Nullability
 -&gt; SchemaT r m (Parser 'Both n (ScalarValue 'MySQL))
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#enumParser%27"><span class="hs-identifier hs-var">enumParser'</span></a></span><span>
-</span><span id="line-54"></span><span>  </span><span id="local-6989586621690484988"><span class="annot"><span class="annottext">possiblyNullable :: forall (m :: * -&gt; *).
+</span><span id="line-54"></span><span>  </span><span id="local-6989586621690485837"><span class="annot"><span class="annottext">possiblyNullable :: forall (m :: * -&gt; *).
 MonadParse m =&gt;
 ScalarType 'MySQL
 -&gt; Nullability
@@ -334,7 +334,7 @@ ScalarType 'MySQL
 -&gt; Parser 'Both m (ScalarValue 'MySQL)
 -&gt; Parser 'Both m (ScalarValue 'MySQL)
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#possiblyNullable%27"><span class="hs-identifier hs-var">possiblyNullable'</span></a></span><span>
-</span><span id="line-55"></span><span>  </span><span id="local-6989586621690484979"><span class="annot"><span class="annottext">scalarSelectionArgumentsParser :: forall (n :: * -&gt; *).
+</span><span id="line-55"></span><span>  </span><span id="local-6989586621690485828"><span class="annot"><span class="annottext">scalarSelectionArgumentsParser :: forall (n :: * -&gt; *).
 MonadParse n =&gt;
 ColumnType 'MySQL
 -&gt; InputFieldsParser n (Maybe (ScalarSelectionArguments 'MySQL))
@@ -342,20 +342,20 @@ ColumnType 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-56"></span><span>  </span><span id="local-6989586621690484977"><span class="annot"><span class="annottext">orderByOperators :: SourceInfo 'MySQL
+</span><span id="line-56"></span><span>  </span><span id="local-6989586621690485826"><span class="annot"><span class="annottext">orderByOperators :: SourceInfo 'MySQL
 -&gt; NamingCase
 -&gt; (Name,
     NonEmpty
       (Definition EnumValueInfo,
        (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
-</span><a href="Hasura.GraphQL.Schema.Backend.html#orderByOperators"><span class="hs-identifier hs-var hs-var hs-var hs-var">orderByOperators</span></a></span></span><span> </span><span id="local-6989586621690484975"><span class="annot"><span class="annottext">SourceInfo 'MySQL
-</span><a href="#local-6989586621690484975"><span class="hs-identifier hs-var">_sourceInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamingCase
+</span><a href="Hasura.GraphQL.Schema.Backend.html#orderByOperators"><span class="hs-identifier hs-var hs-var hs-var hs-var">orderByOperators</span></a></span></span><span> </span><span id="local-6989586621690485824"><span class="annot"><span class="annottext">SourceInfo 'MySQL
+</span><a href="#local-6989586621690485824"><span class="hs-identifier hs-var">_sourceInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamingCase
 -&gt; (Name,
     NonEmpty
       (Definition EnumValueInfo,
        (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#orderByOperators%27"><span class="hs-identifier hs-var">orderByOperators'</span></a></span><span>
-</span><span id="line-57"></span><span>  </span><span id="local-6989586621690484971"><span class="annot"><span class="annottext">comparisonExps :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-57"></span><span>  </span><span id="local-6989586621690485820"><span class="annot"><span class="annottext">comparisonExps :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 SourceInfo 'MySQL
 -&gt; ColumnType 'MySQL
@@ -366,7 +366,7 @@ MonadBuildSchema 'MySQL r m n =&gt;
 ColumnType 'MySQL
 -&gt; SchemaT r m (Parser 'Input n [ComparisonExp 'MySQL])
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#comparisonExps%27"><span class="hs-identifier hs-var">comparisonExps'</span></a></span><span>
-</span><span id="line-58"></span><span>  </span><span id="local-6989586621690484965"><span class="annot"><span class="annottext">countTypeInput :: forall (n :: * -&gt; *).
+</span><span id="line-58"></span><span>  </span><span id="local-6989586621690485814"><span class="annot"><span class="annottext">countTypeInput :: forall (n :: * -&gt; *).
 MonadParse n =&gt;
 Maybe (Parser 'Both n (Column 'MySQL))
 -&gt; InputFieldsParser n (CountDistinct -&gt; CountType 'MySQL)
@@ -375,11 +375,11 @@ MonadParse n =&gt;
 Maybe (Parser 'Both n (Column 'MySQL))
 -&gt; InputFieldsParser n (CountDistinct -&gt; CountType 'MySQL)
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#mysqlCountTypeInput"><span class="hs-identifier hs-var">mysqlCountTypeInput</span></a></span><span>
-</span><span id="line-59"></span><span>  </span><span id="local-6989586621690484960"><span class="annot"><span class="annottext">aggregateOrderByCountType :: ScalarType 'MySQL
+</span><span id="line-59"></span><span>  </span><span id="local-6989586621690485809"><span class="annot"><span class="annottext">aggregateOrderByCountType :: ScalarType 'MySQL
 </span><a href="Hasura.GraphQL.Schema.Backend.html#aggregateOrderByCountType"><span class="hs-identifier hs-var hs-var hs-var hs-var">aggregateOrderByCountType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;aggregateOrderByCountType: MySQL backend does not support this operation yet.&quot;</span></span><span>
-</span><span id="line-60"></span><span>  </span><span id="local-6989586621690484954"><span class="annot"><span class="annottext">computedField :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-60"></span><span>  </span><span id="local-6989586621690485803"><span class="annot"><span class="annottext">computedField :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 SourceInfo 'MySQL
 -&gt; ComputedFieldInfo 'MySQL
@@ -391,7 +391,7 @@ SourceInfo 'MySQL
 </span><span class="hs-string">&quot;computedField: MySQL backend does not support this operation yet.&quot;</span></span><span>
 </span><span id="line-61"></span><span>
 </span><span id="line-62"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#BackendTableSelectSchema"><span class="hs-identifier hs-type">BackendTableSelectSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-63"></span><span>  </span><span id="local-6989586621690484942"><span class="annot"><span class="annottext">tableArguments :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-63"></span><span>  </span><span id="local-6989586621690485791"><span class="annot"><span class="annottext">tableArguments :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSourceSchema r m n =&gt;
 SourceInfo 'MySQL
 -&gt; TableInfo 'MySQL
@@ -408,7 +408,7 @@ SourceInfo 'MySQL
      m
      (InputFieldsParser n (SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#mysqlTableArgs"><span class="hs-identifier hs-var">mysqlTableArgs</span></a></span><span>
-</span><span id="line-64"></span><span>  </span><span id="local-6989586621690484935"><span class="annot"><span class="annottext">selectTable :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-64"></span><span>  </span><span id="local-6989586621690485784"><span class="annot"><span class="annottext">selectTable :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSourceSchema r m n =&gt;
 SourceInfo 'MySQL
 -&gt; TableInfo 'MySQL
@@ -423,7 +423,7 @@ SourceInfo b
 -&gt; Maybe Description
 -&gt; SchemaT r m (Maybe (FieldParser n (SelectExp b)))
 </span><a href="Hasura.GraphQL.Schema.Select.html#defaultSelectTable"><span class="hs-identifier hs-var">defaultSelectTable</span></a></span><span>
-</span><span id="line-65"></span><span>  </span><span id="local-6989586621690484928"><span class="annot"><span class="annottext">selectTableAggregate :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-65"></span><span>  </span><span id="local-6989586621690485777"><span class="annot"><span class="annottext">selectTableAggregate :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSourceSchema r m n =&gt;
 SourceInfo 'MySQL
 -&gt; TableInfo 'MySQL
@@ -438,7 +438,7 @@ SourceInfo b
 -&gt; Maybe Description
 -&gt; SchemaT r m (Maybe (FieldParser n (AggSelectExp b)))
 </span><a href="Hasura.GraphQL.Schema.Select.html#defaultSelectTableAggregate"><span class="hs-identifier hs-var">defaultSelectTableAggregate</span></a></span><span>
-</span><span id="line-66"></span><span>  </span><span id="local-6989586621690484893"><span class="annot"><span class="annottext">tableSelectionSet :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-66"></span><span>  </span><span id="local-6989586621690485742"><span class="annot"><span class="annottext">tableSelectionSet :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSourceSchema r m n =&gt;
 SourceInfo 'MySQL
 -&gt; TableInfo 'MySQL
@@ -452,11 +452,11 @@ SourceInfo b
 </span><a href="Hasura.GraphQL.Schema.Select.html#defaultTableSelectionSet"><span class="hs-identifier hs-var">defaultTableSelectionSet</span></a></span><span>
 </span><span id="line-67"></span><span>
 </span><span id="line-68"></span><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#mysqlTableArgs"><span class="hs-identifier hs-type">mysqlTableArgs</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-69"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690485369"><span class="annot"><a href="#local-6989586621690485369"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621690485368"><span class="annot"><a href="#local-6989586621690485368"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621690485367"><span class="annot"><a href="#local-6989586621690485367"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-70"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485369"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485368"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485367"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-69"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690486218"><span class="annot"><a href="#local-6989586621690486218"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621690486217"><span class="annot"><a href="#local-6989586621690486217"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621690486216"><span class="annot"><a href="#local-6989586621690486216"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486218"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486217"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486216"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-71"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">RQL.SourceInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-73"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485369"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485368"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485367"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SelectArgsG"><span class="hs-identifier hs-type">IR.SelectArgsG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486218"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486217"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486216"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SelectArgsG"><span class="hs-identifier hs-type">IR.SelectArgsG</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span id="mysqlTableArgs"><span class="annot"><span class="annottext">mysqlTableArgs :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 SourceInfo 'MySQL
@@ -465,12 +465,12 @@ SourceInfo 'MySQL
      r
      m
      (InputFieldsParser n (SelectArgsG 'MySQL (UnpreparedValue 'MySQL)))
-</span><a href="Hasura.Backends.MySQL.Instances.Schema.html#mysqlTableArgs"><span class="hs-identifier hs-var hs-var">mysqlTableArgs</span></a></span></span><span> </span><span id="local-6989586621690484863"><span class="annot"><span class="annottext">SourceInfo 'MySQL
-</span><a href="#local-6989586621690484863"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621690484862"><span class="annot"><span class="annottext">TableInfo 'MySQL
-</span><a href="#local-6989586621690484862"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-75"></span><span>  </span><span id="local-6989586621690484861"><span class="annot"><span class="annottext">InputFieldsParser
+</span><a href="Hasura.Backends.MySQL.Instances.Schema.html#mysqlTableArgs"><span class="hs-identifier hs-var hs-var">mysqlTableArgs</span></a></span></span><span> </span><span id="local-6989586621690485712"><span class="annot"><span class="annottext">SourceInfo 'MySQL
+</span><a href="#local-6989586621690485712"><span class="hs-identifier hs-var">sourceInfo</span></a></span></span><span> </span><span id="local-6989586621690485711"><span class="annot"><span class="annottext">TableInfo 'MySQL
+</span><a href="#local-6989586621690485711"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-75"></span><span>  </span><span id="local-6989586621690485710"><span class="annot"><span class="annottext">InputFieldsParser
   n (Maybe (AnnBoolExp 'MySQL (UnpreparedValue 'MySQL)))
-</span><a href="#local-6989586621690484861"><span class="hs-identifier hs-var">whereParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="#local-6989586621690485710"><span class="hs-identifier hs-var">whereParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (AggregationPredicatesSchema b, MonadBuildSchema b r m n) =&gt;
 SourceInfo b
 -&gt; TableInfo b
@@ -479,13 +479,13 @@ SourceInfo b
      m
      (InputFieldsParser n (Maybe (AnnBoolExp b (UnpreparedValue b))))
 </span><a href="Hasura.GraphQL.Schema.Select.html#tableWhereArg"><span class="hs-identifier hs-var">tableWhereArg</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MySQL
-</span><a href="#local-6989586621690484863"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MySQL
-</span><a href="#local-6989586621690484862"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-76"></span><span>  </span><span id="local-6989586621690484859"><span class="annot"><span class="annottext">InputFieldsParser
+</span><a href="#local-6989586621690485712"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MySQL
+</span><a href="#local-6989586621690485711"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><span id="line-76"></span><span>  </span><span id="local-6989586621690485708"><span class="annot"><span class="annottext">InputFieldsParser
   n
   (Maybe
      (NonEmpty (AnnotatedOrderByItemG 'MySQL (UnpreparedValue 'MySQL))))
-</span><a href="#local-6989586621690484859"><span class="hs-identifier hs-var">orderByParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><a href="#local-6989586621690485708"><span class="hs-identifier hs-var">orderByParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema b r m n =&gt;
 SourceInfo b
 -&gt; TableInfo b
@@ -495,27 +495,27 @@ SourceInfo b
      (InputFieldsParser
         n (Maybe (NonEmpty (AnnotatedOrderByItemG b (UnpreparedValue b)))))
 </span><a href="Hasura.GraphQL.Schema.Select.html#tableOrderByArg"><span class="hs-identifier hs-var">tableOrderByArg</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo 'MySQL
-</span><a href="#local-6989586621690484863"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MySQL
-</span><a href="#local-6989586621690484862"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
+</span><a href="#local-6989586621690485712"><span class="hs-identifier hs-var">sourceInfo</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'MySQL
+</span><a href="#local-6989586621690485711"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-78"></span><span>    </span><span id="local-6989586621690484857"><span class="annot"><span class="annottext">Maybe (AnnBoolExp 'MySQL (UnpreparedValue 'MySQL))
-</span><a href="#local-6989586621690484857"><span class="hs-identifier hs-var">whereArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
+</span><span id="line-78"></span><span>    </span><span id="local-6989586621690485706"><span class="annot"><span class="annottext">Maybe (AnnBoolExp 'MySQL (UnpreparedValue 'MySQL))
+</span><a href="#local-6989586621690485706"><span class="hs-identifier hs-var">whereArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
   n (Maybe (AnnBoolExp 'MySQL (UnpreparedValue 'MySQL)))
-</span><a href="#local-6989586621690484861"><span class="hs-identifier hs-var">whereParser</span></a></span><span>
-</span><span id="line-79"></span><span>    </span><span id="local-6989586621690484856"><span class="annot"><span class="annottext">Maybe
+</span><a href="#local-6989586621690485710"><span class="hs-identifier hs-var">whereParser</span></a></span><span>
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621690485705"><span class="annot"><span class="annottext">Maybe
   (NonEmpty (AnnotatedOrderByItemG 'MySQL (UnpreparedValue 'MySQL)))
-</span><a href="#local-6989586621690484856"><span class="hs-identifier hs-var">orderByArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
+</span><a href="#local-6989586621690485705"><span class="hs-identifier hs-var">orderByArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
   n
   (Maybe
      (NonEmpty (AnnotatedOrderByItemG 'MySQL (UnpreparedValue 'MySQL))))
-</span><a href="#local-6989586621690484859"><span class="hs-identifier hs-var">orderByParser</span></a></span><span>
-</span><span id="line-80"></span><span>    </span><span id="local-6989586621690484855"><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621690484855"><span class="hs-identifier hs-var">limitArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *).
+</span><a href="#local-6989586621690485708"><span class="hs-identifier hs-var">orderByParser</span></a></span><span>
+</span><span id="line-80"></span><span>    </span><span id="local-6989586621690485704"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621690485704"><span class="hs-identifier hs-var">limitArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *).
 MonadParse n =&gt;
 InputFieldsParser n (Maybe Int)
 </span><a href="Hasura.GraphQL.Schema.Select.html#tableLimitArg"><span class="hs-identifier hs-var">tableLimitArg</span></a></span><span>
-</span><span id="line-81"></span><span>    </span><span id="local-6989586621690484853"><span class="annot"><span class="annottext">Maybe Int64
-</span><a href="#local-6989586621690484853"><span class="hs-identifier hs-var">offsetArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *).
+</span><span id="line-81"></span><span>    </span><span id="local-6989586621690485702"><span class="annot"><span class="annottext">Maybe Int64
+</span><a href="#local-6989586621690485702"><span class="hs-identifier hs-var">offsetArg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (n :: * -&gt; *).
 MonadParse n =&gt;
 InputFieldsParser n (Maybe Int64)
 </span><a href="Hasura.GraphQL.Schema.Select.html#tableOffsetArg"><span class="hs-identifier hs-var">tableOffsetArg</span></a></span><span>
@@ -523,24 +523,24 @@ InputFieldsParser n (Maybe Int64)
 </span><span id="line-83"></span><span>      </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SelectArgs"><span class="hs-identifier hs-type">IR.SelectArgs</span></a></span><span>
 </span><span id="line-84"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:_saWhere:SelectArgs :: Maybe (AnnBoolExp 'MySQL (UnpreparedValue 'MySQL))
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_saWhere%3ASelectArgs"><span class="hs-identifier hs-var">IR._saWhere</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (AnnBoolExp 'MySQL (UnpreparedValue 'MySQL))
-</span><a href="#local-6989586621690484857"><span class="hs-identifier hs-var">whereArg</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690485706"><span class="hs-identifier hs-var">whereArg</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-85"></span><span>          </span><span class="annot"><span class="annottext">$sel:_saOrderBy:SelectArgs :: Maybe
   (NonEmpty (AnnotatedOrderByItemG 'MySQL (UnpreparedValue 'MySQL)))
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_saOrderBy%3ASelectArgs"><span class="hs-identifier hs-var">IR._saOrderBy</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe
   (NonEmpty (AnnotatedOrderByItemG 'MySQL (UnpreparedValue 'MySQL)))
-</span><a href="#local-6989586621690484856"><span class="hs-identifier hs-var">orderByArg</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690485705"><span class="hs-identifier hs-var">orderByArg</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-86"></span><span>          </span><span class="annot"><span class="annottext">$sel:_saLimit:SelectArgs :: Maybe Int
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_saLimit%3ASelectArgs"><span class="hs-identifier hs-var">IR._saLimit</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621690484855"><span class="hs-identifier hs-var">limitArg</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690485704"><span class="hs-identifier hs-var">limitArg</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-87"></span><span>          </span><span class="annot"><span class="annottext">$sel:_saOffset:SelectArgs :: Maybe Int64
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_saOffset%3ASelectArgs"><span class="hs-identifier hs-var">IR._saOffset</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Int64
-</span><a href="#local-6989586621690484853"><span class="hs-identifier hs-var">offsetArg</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690485702"><span class="hs-identifier hs-var">offsetArg</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-88"></span><span>          </span><span class="annot"><span class="annottext">$sel:_saDistinct:SelectArgs :: Maybe (NonEmpty (Column 'MySQL))
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_saDistinct%3ASelectArgs"><span class="hs-identifier hs-var">IR._saDistinct</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
 </span><span id="line-89"></span><span>        </span><span class="hs-special">}</span><span>
 </span><span id="line-90"></span><span>
-</span><span id="line-91"></span><span id="local-6989586621690485302"><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#bsParser"><span class="hs-identifier hs-type">bsParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485302"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485302"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">ByteString</span></a></span></span><span>
+</span><span id="line-91"></span><span id="local-6989586621690486151"><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#bsParser"><span class="hs-identifier hs-type">bsParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486151"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486151"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">ByteString</span></a></span></span><span>
 </span><span id="line-92"></span><span id="bsParser"><span class="annot"><span class="annottext">bsParser :: forall (m :: * -&gt; *). MonadParse m =&gt; Parser 'Both m ByteString
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#bsParser"><span class="hs-identifier hs-var hs-var">bsParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ByteString
 </span><span class="hs-identifier hs-var">encodeUtf8</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -549,30 +549,30 @@ MonadParse m =&gt;
 Parser origin 'Both m Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.string</span></a></span><span>
 </span><span id="line-93"></span><span>
-</span><span id="line-94"></span><span id="local-6989586621690484833"><span id="local-6989586621690484834"><span id="local-6989586621690484835"><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#columnParser%27"><span class="hs-identifier hs-type">columnParser'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-95"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484835"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484834"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484833"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-94"></span><span id="local-6989586621690485682"><span id="local-6989586621690485683"><span id="local-6989586621690485684"><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#columnParser%27"><span class="hs-identifier hs-type">columnParser'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-95"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485684"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485683"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485682"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-96"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-97"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">GQL.Nullability</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-98"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484835"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484834"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484833"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#ValueWithOrigin"><span class="hs-identifier hs-type">ValueWithOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-98"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485684"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485683"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485682"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#ValueWithOrigin"><span class="hs-identifier hs-type">ValueWithOrigin</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-type">ColumnValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-99"></span><span id="columnParser%27"><span class="annot"><span class="annottext">columnParser' :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 ColumnType 'MySQL
 -&gt; Nullability
 -&gt; SchemaT
      r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL)))
-</span><a href="Hasura.Backends.MySQL.Instances.Schema.html#columnParser%27"><span class="hs-identifier hs-var hs-var">columnParser'</span></a></span></span><span> </span><span id="local-6989586621690484720"><span class="annot"><span class="annottext">ColumnType 'MySQL
-</span><a href="#local-6989586621690484720"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span id="local-6989586621690484719"><span class="annot"><span class="annottext">Nullability
-</span><a href="#local-6989586621690484719"><span class="hs-identifier hs-var">nullability</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ColumnType 'MySQL
-</span><a href="#local-6989586621690484720"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-100"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">ColumnScalar</span></a></span><span> </span><span id="local-6989586621690484717"><span class="annot"><span class="annottext">ScalarType 'MySQL
-</span><a href="#local-6989586621690484717"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="Hasura.Backends.MySQL.Instances.Schema.html#columnParser%27"><span class="hs-identifier hs-var hs-var">columnParser'</span></a></span></span><span> </span><span id="local-6989586621690485569"><span class="annot"><span class="annottext">ColumnType 'MySQL
+</span><a href="#local-6989586621690485569"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span id="local-6989586621690485568"><span class="annot"><span class="annottext">Nullability
+</span><a href="#local-6989586621690485568"><span class="hs-identifier hs-var">nullability</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ColumnType 'MySQL
+</span><a href="#local-6989586621690485569"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-100"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnScalar"><span class="hs-identifier hs-type">ColumnScalar</span></a></span><span> </span><span id="local-6989586621690485566"><span class="annot"><span class="annottext">ScalarType 'MySQL
+</span><a href="#local-6989586621690485566"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-101"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a (p :: (* -&gt; *) -&gt; * -&gt; *) (n :: * -&gt; *) b.
 (MonadMemoize m, Ord a, Typeable a, Typeable p, MonadParse n,
  Typeable b) =&gt;
 Name -&gt; a -&gt; m (p n b) -&gt; m (p n b)
 </span><a href="Hasura.GraphQL.Schema.Parser.html#memoizeOn"><span class="hs-identifier hs-var">P.memoizeOn</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">columnParser'</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarType 'MySQL
-</span><a href="#local-6989586621690484717"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Nullability
-</span><a href="#local-6989586621690484719"><span class="hs-identifier hs-var">nullability</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690485566"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Nullability
+</span><a href="#local-6989586621690485568"><span class="hs-identifier hs-var">nullability</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-102"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 MonadParse m =&gt;
@@ -582,7 +582,7 @@ Parser 'Both m a -&gt; Parser 'Both m (ValueWithOrigin a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 ColumnType b -&gt; ScalarValue b -&gt; ColumnValue b
 </span><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-var">ColumnValue</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MySQL
-</span><a href="#local-6989586621690484720"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="#local-6989586621690485569"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadParse m =&gt;
 ScalarType 'MySQL
@@ -590,11 +590,11 @@ ScalarType 'MySQL
 -&gt; Parser 'Both m (ScalarValue 'MySQL)
 -&gt; Parser 'Both m (ScalarValue 'MySQL)
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#possiblyNullable%27"><span class="hs-identifier hs-var">possiblyNullable'</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType 'MySQL
-</span><a href="#local-6989586621690484717"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="annot"><span class="annottext">Nullability
-</span><a href="#local-6989586621690484719"><span class="hs-identifier hs-var">nullability</span></a></span><span>
+</span><a href="#local-6989586621690485566"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="annot"><span class="annottext">Nullability
+</span><a href="#local-6989586621690485568"><span class="hs-identifier hs-var">nullability</span></a></span><span>
 </span><span id="line-103"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ScalarType 'MySQL
-</span><a href="#local-6989586621690484717"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690485566"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-104"></span><span>          </span><span class="annot"><span class="annottext">ScalarType 'MySQL
 ScalarType
 </span><span class="hs-identifier hs-var">MySQL.Decimal</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -765,12 +765,12 @@ Parser origin 'Both m Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.string</span></a></span><span>
 </span><span id="line-121"></span><span>          </span><span class="annot"><span class="annottext">ScalarType 'MySQL
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-122"></span><span>            </span><span id="local-6989586621690484675"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690484675"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadError QErr m =&gt; ScalarType -&gt; m Name
+</span><span id="line-122"></span><span>            </span><span id="local-6989586621690485524"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690485524"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadError QErr m =&gt; ScalarType -&gt; m Name
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#mkMySQLScalarTypeName"><span class="hs-identifier hs-var">MySQL.mkMySQLScalarTypeName</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType 'MySQL
-</span><a href="#local-6989586621690484717"><span class="hs-identifier hs-var">scalarType</span></a></span><span>
-</span><span id="line-123"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690484673"><span class="annot"><span class="annottext">schemaType :: Type MetadataObjId 'Both
-</span><a href="#local-6989586621690484673"><span class="hs-identifier hs-var hs-var">schemaType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall origin (k :: Kind).
+</span><a href="#local-6989586621690485566"><span class="hs-identifier hs-var">scalarType</span></a></span><span>
+</span><span id="line-123"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690485522"><span class="annot"><span class="annottext">schemaType :: Type MetadataObjId 'Both
+</span><a href="#local-6989586621690485522"><span class="hs-identifier hs-var hs-var">schemaType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall origin (k :: Kind).
 Nullability
 -&gt; Definition origin (TypeInfo origin k) -&gt; Type origin k
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.TNamed</span></a></span><span> </span><span class="annot"><span class="annottext">Nullability
@@ -783,7 +783,7 @@ Name
 -&gt; a
 -&gt; Definition origin a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690484675"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="#local-6989586621690485524"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">forall origin. TypeInfo origin 'Both
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.TIScalar</span></a></span><span>
@@ -793,7 +793,7 @@ Name
 </span><span id="line-125"></span><span>              </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">P.Parser</span></a></span><span>
 </span><span id="line-126"></span><span>                </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">pType :: Type MetadataObjId 'Both
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">pType</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type MetadataObjId 'Both
-</span><a href="#local-6989586621690484673"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690485522"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-127"></span><span>                  </span><span class="annot"><span class="annottext">pParser :: ParserInput 'Both -&gt; n ScalarValue
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">pParser</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-128"></span><span>                    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
@@ -801,7 +801,7 @@ MonadParse m =&gt;
 GType -&gt; InputValue Variable -&gt; m Value
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.valueToJSON</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall origin (k :: Kind). Type origin k -&gt; GType
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.toGraphQLType</span></a></span><span> </span><span class="annot"><span class="annottext">Type MetadataObjId 'Both
-</span><a href="#local-6989586621690484673"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690485522"><span class="hs-identifier hs-var">schemaType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-129"></span><span>                      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b c.
 Monad m =&gt;
 (a -&gt; m b) -&gt; (b -&gt; m c) -&gt; a -&gt; m c
@@ -818,18 +818,18 @@ ParseErrorCode -&gt; ErrorMessage -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ScalarType -&gt; Value -&gt; Either QErr ScalarValue
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#parseScalarValue"><span class="hs-identifier hs-var">MySQL.parseScalarValue</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType 'MySQL
-</span><a href="#local-6989586621690484717"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690485566"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-130"></span><span>                </span><span class="hs-special">}</span><span>
-</span><span id="line-131"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">ColumnEnumReference</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span id="local-6989586621690484655"><span class="annot"><span class="annottext">TableName 'MySQL
-</span><a href="#local-6989586621690484655"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621690484654"><span class="annot"><span class="annottext">EnumValues
-</span><a href="#local-6989586621690484654"><span class="hs-identifier hs-var">enumValues</span></a></span></span><span> </span><span id="local-6989586621690484653"><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621690484653"><span class="hs-identifier hs-var">customTableName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-131"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnEnumReference"><span class="hs-identifier hs-type">ColumnEnumReference</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumReference"><span class="hs-identifier hs-type">EnumReference</span></a></span><span> </span><span id="local-6989586621690485504"><span class="annot"><span class="annottext">TableName 'MySQL
+</span><a href="#local-6989586621690485504"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621690485503"><span class="annot"><span class="annottext">EnumValues
+</span><a href="#local-6989586621690485503"><span class="hs-identifier hs-var">enumValues</span></a></span></span><span> </span><span id="local-6989586621690485502"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621690485502"><span class="hs-identifier hs-var">customTableName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-132"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">nonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
 </span><span class="hs-identifier hs-var">HM.toList</span></span><span> </span><span class="annot"><span class="annottext">EnumValues
-</span><a href="#local-6989586621690484654"><span class="hs-identifier hs-var">enumValues</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-133"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690484650"><span class="annot"><span class="annottext">NonEmpty (EnumValue, EnumValueInfo)
-</span><a href="#local-6989586621690484650"><span class="hs-identifier hs-var">enumValuesList</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621690485503"><span class="hs-identifier hs-var">enumValues</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-133"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690485499"><span class="annot"><span class="annottext">NonEmpty (EnumValue, EnumValueInfo)
+</span><a href="#local-6989586621690485499"><span class="hs-identifier hs-var">enumValuesList</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-134"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 MonadParse m =&gt;
 Parser 'Both m a -&gt; Parser 'Both m (ValueWithOrigin a)
@@ -838,7 +838,7 @@ Parser 'Both m a -&gt; Parser 'Both m (ValueWithOrigin a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 ColumnType b -&gt; ScalarValue b -&gt; ColumnValue b
 </span><a href="Hasura.RQL.Types.Column.html#ColumnValue"><span class="hs-identifier hs-var">ColumnValue</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MySQL
-</span><a href="#local-6989586621690484720"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690485569"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-135"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
@@ -848,23 +848,23 @@ TableName 'MySQL
 -&gt; Nullability
 -&gt; SchemaT r m (Parser 'Both n (ScalarValue 'MySQL))
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#enumParser%27"><span class="hs-identifier hs-var">enumParser'</span></a></span><span> </span><span class="annot"><span class="annottext">TableName 'MySQL
-</span><a href="#local-6989586621690484655"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty (EnumValue, EnumValueInfo)
-</span><a href="#local-6989586621690484650"><span class="hs-identifier hs-var">enumValuesList</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621690484653"><span class="hs-identifier hs-var">customTableName</span></a></span><span> </span><span class="annot"><span class="annottext">Nullability
-</span><a href="#local-6989586621690484719"><span class="hs-identifier hs-var">nullability</span></a></span><span>
+</span><a href="#local-6989586621690485504"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty (EnumValue, EnumValueInfo)
+</span><a href="#local-6989586621690485499"><span class="hs-identifier hs-var">enumValuesList</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621690485502"><span class="hs-identifier hs-var">customTableName</span></a></span><span> </span><span class="annot"><span class="annottext">Nullability
+</span><a href="#local-6989586621690485568"><span class="hs-identifier hs-var">nullability</span></a></span><span>
 </span><span id="line-136"></span><span>      </span><span class="annot"><span class="annottext">Maybe (NonEmpty (EnumValue, EnumValueInfo))
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#ValidationFailed"><span class="hs-identifier hs-var">ValidationFailed</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;empty enum values&quot;</span></span><span>
 </span><span id="line-137"></span><span>
-</span><span id="line-138"></span><span id="local-6989586621690484645"><span id="local-6989586621690484646"><span id="local-6989586621690484647"><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#enumParser%27"><span class="hs-identifier hs-type">enumParser'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-139"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484647"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484646"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484645"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-138"></span><span id="local-6989586621690485494"><span id="local-6989586621690485495"><span id="local-6989586621690485496"><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#enumParser%27"><span class="hs-identifier hs-type">enumParser'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-139"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485496"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485495"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485494"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-140"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-141"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValue"><span class="hs-identifier hs-type">EnumValue</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValueInfo"><span class="hs-identifier hs-type">EnumValueInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-142"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">GQL.Name</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-143"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">GQL.Nullability</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-144"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484647"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484646"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484645"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-144"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485496"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485495"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485494"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-145"></span><span id="enumParser%27"><span class="annot"><span class="annottext">enumParser' :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'MySQL r m n =&gt;
 TableName 'MySQL
@@ -872,19 +872,19 @@ TableName 'MySQL
 -&gt; Maybe Name
 -&gt; Nullability
 -&gt; SchemaT r m (Parser 'Both n (ScalarValue 'MySQL))
-</span><a href="Hasura.Backends.MySQL.Instances.Schema.html#enumParser%27"><span class="hs-identifier hs-var hs-var">enumParser'</span></a></span></span><span> </span><span id="local-6989586621690484619"><span class="annot"><span class="annottext">TableName 'MySQL
-</span><a href="#local-6989586621690484619"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621690484618"><span class="annot"><span class="annottext">NonEmpty (EnumValue, EnumValueInfo)
-</span><a href="#local-6989586621690484618"><span class="hs-identifier hs-var">enumValues</span></a></span></span><span> </span><span id="local-6989586621690484617"><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621690484617"><span class="hs-identifier hs-var">customTableName</span></a></span></span><span> </span><span id="local-6989586621690484616"><span class="annot"><span class="annottext">Nullability
-</span><a href="#local-6989586621690484616"><span class="hs-identifier hs-var">nullability</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-146"></span><span>  </span><span id="local-6989586621690484615"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690484615"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *) r.
+</span><a href="Hasura.Backends.MySQL.Instances.Schema.html#enumParser%27"><span class="hs-identifier hs-var hs-var">enumParser'</span></a></span></span><span> </span><span id="local-6989586621690485468"><span class="annot"><span class="annottext">TableName 'MySQL
+</span><a href="#local-6989586621690485468"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621690485467"><span class="annot"><span class="annottext">NonEmpty (EnumValue, EnumValueInfo)
+</span><a href="#local-6989586621690485467"><span class="hs-identifier hs-var">enumValues</span></a></span></span><span> </span><span id="local-6989586621690485466"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621690485466"><span class="hs-identifier hs-var">customTableName</span></a></span></span><span> </span><span id="local-6989586621690485465"><span class="annot"><span class="annottext">Nullability
+</span><a href="#local-6989586621690485465"><span class="hs-identifier hs-var">nullability</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-146"></span><span>  </span><span id="local-6989586621690485464"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690485464"><span class="hs-identifier hs-var">enumName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *) r.
 (Backend b, MonadReader r m, Has MkTypename r, MonadError QErr m,
  Has NamingCase r) =&gt;
 TableName b -&gt; Maybe Name -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Common.html#mkEnumTypeName"><span class="hs-identifier hs-var">mkEnumTypeName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><span class="annottext">TableName 'MySQL
-</span><a href="#local-6989586621690484619"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
-</span><a href="#local-6989586621690484617"><span class="hs-identifier hs-var">customTableName</span></a></span><span>
+</span><a href="#local-6989586621690485468"><span class="hs-identifier hs-var">tableName</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Name
+</span><a href="#local-6989586621690485466"><span class="hs-identifier hs-var">customTableName</span></a></span><span>
 </span><span id="line-147"></span><span>  </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadParse m =&gt;
 ScalarType 'MySQL
@@ -893,7 +893,7 @@ ScalarType 'MySQL
 -&gt; Parser 'Both m (ScalarValue 'MySQL)
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#possiblyNullable%27"><span class="hs-identifier hs-var">possiblyNullable'</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQL.VarChar</span></span><span> </span><span class="annot"><span class="annottext">Nullability
-</span><a href="#local-6989586621690484616"><span class="hs-identifier hs-var">nullability</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690485465"><span class="hs-identifier hs-var">nullability</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 MonadParse m =&gt;
 Name
@@ -901,19 +901,19 @@ Name
 -&gt; NonEmpty (Definition origin EnumValueInfo, a)
 -&gt; Parser origin 'Both m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.enum</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690484615"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="#local-6989586621690485464"><span class="hs-identifier hs-var">enumName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(EnumValue, EnumValueInfo)
 -&gt; (Definition EnumValueInfo, ScalarValue 'MySQL)
-</span><a href="#local-6989586621690484612"><span class="hs-identifier hs-var">mkEnumValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="#local-6989586621690485461"><span class="hs-identifier hs-var">mkEnumValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty (EnumValue, EnumValueInfo)
-</span><a href="#local-6989586621690484618"><span class="hs-identifier hs-var">enumValues</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690485467"><span class="hs-identifier hs-var">enumValues</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-148"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-149"></span><span>    </span><span class="annot"><a href="#local-6989586621690484612"><span class="hs-identifier hs-type">mkEnumValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValue"><span class="hs-identifier hs-type">EnumValue</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValueInfo"><span class="hs-identifier hs-type">EnumValueInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Definition"><span class="hs-identifier hs-type">P.Definition</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">P.EnumValueInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">RQL.ScalarValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-150"></span><span>    </span><span id="local-6989586621690484612"><span class="annot"><span class="annottext">mkEnumValue :: (EnumValue, EnumValueInfo)
+</span><span id="line-149"></span><span>    </span><span class="annot"><a href="#local-6989586621690485461"><span class="hs-identifier hs-type">mkEnumValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValue"><span class="hs-identifier hs-type">EnumValue</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValueInfo"><span class="hs-identifier hs-type">EnumValueInfo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Definition"><span class="hs-identifier hs-type">P.Definition</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">P.EnumValueInfo</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">RQL.ScalarValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-150"></span><span>    </span><span id="local-6989586621690485461"><span class="annot"><span class="annottext">mkEnumValue :: (EnumValue, EnumValueInfo)
 -&gt; (Definition EnumValueInfo, ScalarValue 'MySQL)
-</span><a href="#local-6989586621690484612"><span class="hs-identifier hs-var hs-var">mkEnumValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValue"><span class="hs-identifier hs-type">RQL.EnumValue</span></a></span><span> </span><span id="local-6989586621690484610"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690484610"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValueInfo"><span class="hs-identifier hs-type">EnumValueInfo</span></a></span><span> </span><span id="local-6989586621690484608"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690484608"><span class="hs-identifier hs-var">description</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621690485461"><span class="hs-identifier hs-var hs-var">mkEnumValue</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValue"><span class="hs-identifier hs-type">RQL.EnumValue</span></a></span><span> </span><span id="local-6989586621690485459"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690485459"><span class="hs-identifier hs-var">value</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#EnumValueInfo"><span class="hs-identifier hs-type">EnumValueInfo</span></a></span><span> </span><span id="local-6989586621690485457"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621690485457"><span class="hs-identifier hs-var">description</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-151"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall origin a.
 Name
 -&gt; Maybe Description
@@ -922,36 +922,36 @@ Name
 -&gt; a
 -&gt; Definition origin a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690484610"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><a href="#local-6989586621690485459"><span class="hs-identifier hs-var">value</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Description
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">GQL.Description</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690484608"><span class="hs-identifier hs-var">description</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="#local-6989586621690485457"><span class="hs-identifier hs-var">description</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">EnumValueInfo
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.EnumValueInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-152"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; ScalarValue
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#VarcharValue"><span class="hs-identifier hs-var">MySQL.VarcharValue</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">GQL.unName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690484610"><span class="hs-identifier hs-var">value</span></a></span><span>
+</span><a href="#local-6989586621690485459"><span class="hs-identifier hs-var">value</span></a></span><span>
 </span><span id="line-153"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-154"></span><span>
-</span><span id="line-155"></span><span id="local-6989586621690484604"><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#possiblyNullable%27"><span class="hs-identifier hs-type">possiblyNullable'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-156"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484604"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-155"></span><span id="local-6989586621690485453"><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#possiblyNullable%27"><span class="hs-identifier hs-type">possiblyNullable'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-156"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485453"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-157"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-158"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">GQL.Nullability</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-159"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484604"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-160"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484604"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-159"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485453"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-160"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485453"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-161"></span><span id="possiblyNullable%27"><span class="annot"><span class="annottext">possiblyNullable' :: forall (m :: * -&gt; *).
 MonadParse m =&gt;
 ScalarType 'MySQL
 -&gt; Nullability
 -&gt; Parser 'Both m (ScalarValue 'MySQL)
 -&gt; Parser 'Both m (ScalarValue 'MySQL)
-</span><a href="Hasura.Backends.MySQL.Instances.Schema.html#possiblyNullable%27"><span class="hs-identifier hs-var hs-var">possiblyNullable'</span></a></span></span><span> </span><span id="local-6989586621690484595"><span class="annot"><span class="annottext">ScalarType 'MySQL
-</span><a href="#local-6989586621690484595"><span class="hs-identifier hs-var">_scalarType</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">GQL.Nullability</span></a></span><span> </span><span id="local-6989586621690484593"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690484593"><span class="hs-identifier hs-var">isNullable</span></a></span></span><span class="hs-special">)</span><span>
+</span><a href="Hasura.Backends.MySQL.Instances.Schema.html#possiblyNullable%27"><span class="hs-identifier hs-var hs-var">possiblyNullable'</span></a></span></span><span> </span><span id="local-6989586621690485444"><span class="annot"><span class="annottext">ScalarType 'MySQL
+</span><a href="#local-6989586621690485444"><span class="hs-identifier hs-var">_scalarType</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">GQL.Nullability</span></a></span><span> </span><span id="local-6989586621690485442"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690485442"><span class="hs-identifier hs-var">isNullable</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-162"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690484593"><span class="hs-identifier hs-var">isNullable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="#local-6989586621690485442"><span class="hs-identifier hs-var">isNullable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarValue
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#NullValue"><span class="hs-identifier hs-var">MySQL.NullValue</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -969,8 +969,8 @@ Parser origin k m a -&gt; Parser origin k m (Maybe a)
     NonEmpty
       (Definition EnumValueInfo,
        (BasicOrderType 'MySQL, NullsOrderType 'MySQL)))
-</span><a href="Hasura.Backends.MySQL.Instances.Schema.html#orderByOperators%27"><span class="hs-identifier hs-var hs-var">orderByOperators'</span></a></span></span><span> </span><span id="local-6989586621690484589"><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621690484589"><span class="hs-identifier hs-var">_tCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.MySQL.Instances.Schema.html#orderByOperators%27"><span class="hs-identifier hs-var hs-var">orderByOperators'</span></a></span></span><span> </span><span id="local-6989586621690485438"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621690485438"><span class="hs-identifier hs-var">_tCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-167"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_order_by"><span class="hs-identifier hs-var">Name._order_by</span></a></span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
@@ -979,7 +979,7 @@ Parser origin k m a -&gt; Parser origin k m (Maybe a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">NE.fromList</span></a></span><span>
 </span><span id="line-170"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall {origin}.
 Name -&gt; Description -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621690484586"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690485435"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_asc"><span class="hs-identifier hs-var">Name._asc</span></a></span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in ascending order, nulls first&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-171"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Order
@@ -988,7 +988,7 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><span id="line-172"></span><span>        </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-173"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall {origin}.
 Name -&gt; Description -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621690484586"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690485435"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_asc_nulls_first"><span class="hs-identifier hs-var">Name._asc_nulls_first</span></a></span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in ascending order, nulls first&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-174"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Order
@@ -997,7 +997,7 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><span id="line-175"></span><span>        </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-176"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall {origin}.
 Name -&gt; Description -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621690484586"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690485435"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_asc_nulls_last"><span class="hs-identifier hs-var">Name._asc_nulls_last</span></a></span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in ascending order, nulls last&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-177"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Order
@@ -1006,7 +1006,7 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><span id="line-178"></span><span>        </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-179"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall {origin}.
 Name -&gt; Description -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621690484586"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690485435"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_desc"><span class="hs-identifier hs-var">Name._desc</span></a></span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in descending order, nulls last&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-180"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Order
@@ -1015,7 +1015,7 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><span id="line-181"></span><span>        </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-182"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall {origin}.
 Name -&gt; Description -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621690484586"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690485435"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_desc_nulls_first"><span class="hs-identifier hs-var">Name._desc_nulls_first</span></a></span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in descending order, nulls first&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-183"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Order
@@ -1024,7 +1024,7 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><span id="line-184"></span><span>        </span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-185"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall {origin}.
 Name -&gt; Description -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621690484586"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690485435"><span class="hs-identifier hs-var">define</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#_desc_nulls_last"><span class="hs-identifier hs-var">Name._desc_nulls_last</span></a></span><span> </span><span class="annot"><span class="annottext">Description
 </span><span class="hs-string">&quot;in descending order, nulls last&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-186"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Order
@@ -1033,10 +1033,10 @@ Name -&gt; Description -&gt; Definition origin EnumValueInfo
 </span><span id="line-187"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-188"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-189"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-190"></span><span>    </span><span id="local-6989586621690484586"><span class="annot"><span class="annottext">define :: Name -&gt; Description -&gt; Definition origin EnumValueInfo
-</span><a href="#local-6989586621690484586"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span id="local-6989586621690484575"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690484575"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621690484574"><span class="annot"><span class="annottext">Description
-</span><a href="#local-6989586621690484574"><span class="hs-identifier hs-var">desc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall origin a.
+</span><span id="line-190"></span><span>    </span><span id="local-6989586621690485435"><span class="annot"><span class="annottext">define :: Name -&gt; Description -&gt; Definition origin EnumValueInfo
+</span><a href="#local-6989586621690485435"><span class="hs-identifier hs-var hs-var">define</span></a></span></span><span> </span><span id="local-6989586621690485424"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690485424"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621690485423"><span class="annot"><span class="annottext">Description
+</span><a href="#local-6989586621690485423"><span class="hs-identifier hs-var">desc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall origin a.
 Name
 -&gt; Maybe Description
 -&gt; Maybe origin
@@ -1044,18 +1044,18 @@ Name
 -&gt; a
 -&gt; Definition origin a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.Definition</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690484575"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="#local-6989586621690485424"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Description
-</span><a href="#local-6989586621690484574"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="#local-6989586621690485423"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">EnumValueInfo
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.EnumValueInfo</span></a></span><span>
 </span><span id="line-191"></span><span>
 </span><span id="line-192"></span><span class="hs-comment">-- | TODO: Make this as thorough as the one for MSSQL/PostgreSQL</span><span>
 </span><span id="line-193"></span><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#comparisonExps%27"><span class="hs-identifier hs-type">comparisonExps'</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-194"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690485398"><span class="annot"><a href="#local-6989586621690485398"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621690485397"><span class="annot"><a href="#local-6989586621690485397"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621690485399"><span class="annot"><a href="#local-6989586621690485399"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-195"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485399"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485398"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485397"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-194"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690486247"><span class="annot"><a href="#local-6989586621690486247"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621690486246"><span class="annot"><a href="#local-6989586621690486246"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621690486248"><span class="annot"><a href="#local-6989586621690486248"><span class="hs-identifier hs-type">r</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-195"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486248"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486247"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486246"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-196"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-197"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485399"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485398"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485397"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#ComparisonExp"><span class="hs-identifier hs-type">ComparisonExp</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-197"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486248"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486247"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Input</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690486246"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#ComparisonExp"><span class="hs-identifier hs-type">ComparisonExp</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-198"></span><span id="comparisonExps%27"><span class="annot"><span class="annottext">comparisonExps' :: forall (m :: * -&gt; *) (n :: * -&gt; *) r.
 MonadBuildSchema 'MySQL r m n =&gt;
 ColumnType 'MySQL
@@ -1065,27 +1065,27 @@ ColumnType 'MySQL
  Typeable b) =&gt;
 Name -&gt; (a -&gt; m (p n b)) -&gt; a -&gt; m (p n b)
 </span><a href="Hasura.GraphQL.Schema.Parser.html#memoize"><span class="hs-identifier hs-var">P.memoize</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">comparisonExps</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690484496"><span class="annot"><span class="annottext">ColumnType 'MySQL
-</span><a href="#local-6989586621690484496"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690485345"><span class="annot"><span class="annottext">ColumnType 'MySQL
+</span><a href="#local-6989586621690485345"><span class="hs-identifier hs-var">columnType</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-199"></span><span>  </span><span class="hs-comment">-- see Note [Columns in comparison expression are never nullable]</span><span>
-</span><span id="line-200"></span><span>  </span><span id="local-6989586621690484495"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL))
-</span><a href="#local-6989586621690484495"><span class="hs-identifier hs-var">typedParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-200"></span><span>  </span><span id="local-6989586621690485344"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL))
+</span><a href="#local-6989586621690485344"><span class="hs-identifier hs-var">typedParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (BackendSchema b, MonadBuildSchema b r m n) =&gt;
 ColumnType b
 -&gt; Nullability
 -&gt; SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue b)))
 </span><a href="Hasura.GraphQL.Schema.Backend.html#columnParser"><span class="hs-identifier hs-var">columnParser</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MySQL
-</span><a href="#local-6989586621690484496"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Nullability
+</span><a href="#local-6989586621690485345"><span class="hs-identifier hs-var">columnType</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Nullability
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">GQL.Nullability</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-201"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690484494"><span class="annot"><span class="annottext">name :: Name
-</span><a href="#local-6989586621690484494"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. HasName a =&gt; a -&gt; Name
+</span><span id="line-201"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690485343"><span class="annot"><span class="annottext">name :: Name
+</span><a href="#local-6989586621690485343"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. HasName a =&gt; a -&gt; Name
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.getName</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL))
-</span><a href="#local-6989586621690484495"><span class="hs-identifier hs-var">typedParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690485344"><span class="hs-identifier hs-var">typedParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__MySQL_comparison_exp"><span class="hs-identifier hs-var">Name.__MySQL_comparison_exp</span></a></span><span>
-</span><span id="line-202"></span><span>      </span><span id="local-6989586621690484491"><span class="annot"><span class="annottext">desc :: Description
-</span><a href="#local-6989586621690484491"><span class="hs-identifier hs-var hs-var">desc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-202"></span><span>      </span><span id="local-6989586621690485340"><span class="annot"><span class="annottext">desc :: Description
+</span><a href="#local-6989586621690485340"><span class="hs-identifier hs-var hs-var">desc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-203"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; Description
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">GQL.Description</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
@@ -1094,7 +1094,7 @@ ColumnType b
 </span><span id="line-205"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. HasName a =&gt; a -&gt; Name
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.getName</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL))
-</span><a href="#local-6989586621690484495"><span class="hs-identifier hs-var">typedParser</span></a></span><span>
+</span><a href="#local-6989586621690485344"><span class="hs-identifier hs-var">typedParser</span></a></span><span>
 </span><span id="line-206"></span><span>            </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;. All fields are combined with logical 'AND'.&quot;</span></span><span>
@@ -1108,9 +1108,9 @@ Name
 -&gt; InputFieldsParser origin m a
 -&gt; Parser origin 'Input m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.object</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690484494"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="#local-6989586621690485343"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Description
-</span><a href="#local-6989586621690484491"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690485340"><span class="hs-identifier hs-var">desc</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-209"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
 </span><span class="hs-identifier hs-var">catMaybes</span></span><span>
@@ -1151,7 +1151,7 @@ Bool -&gt; field -&gt; OpExpG backend field
 ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><a href="Hasura.RQL.IR.Value.html#mkParameter"><span class="hs-identifier hs-var">mkParameter</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL))
-</span><a href="#local-6989586621690484495"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690485344"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-213"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Name
@@ -1168,7 +1168,7 @@ Bool -&gt; field -&gt; OpExpG backend field
 ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><a href="Hasura.RQL.IR.Value.html#mkParameter"><span class="hs-identifier hs-var">mkParameter</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL))
-</span><a href="#local-6989586621690484495"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690485344"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-214"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Name
@@ -1184,7 +1184,7 @@ field -&gt; OpExpG backend field
 ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><a href="Hasura.RQL.IR.Value.html#mkParameter"><span class="hs-identifier hs-var">mkParameter</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL))
-</span><a href="#local-6989586621690484495"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690485344"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-215"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Name
@@ -1200,7 +1200,7 @@ field -&gt; OpExpG backend field
 ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><a href="Hasura.RQL.IR.Value.html#mkParameter"><span class="hs-identifier hs-var">mkParameter</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL))
-</span><a href="#local-6989586621690484495"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690485344"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-216"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Name
@@ -1216,7 +1216,7 @@ field -&gt; OpExpG backend field
 ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><a href="Hasura.RQL.IR.Value.html#mkParameter"><span class="hs-identifier hs-var">mkParameter</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL))
-</span><a href="#local-6989586621690484495"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690485344"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-217"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Name
@@ -1232,22 +1232,22 @@ field -&gt; OpExpG backend field
 ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><a href="Hasura.RQL.IR.Value.html#mkParameter"><span class="hs-identifier hs-var">mkParameter</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'MySQL))
-</span><a href="#local-6989586621690484495"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690485344"><span class="hs-identifier hs-var">typedParser</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-218"></span><span>          </span><span class="hs-special">]</span><span>
 </span><span id="line-219"></span><span>
-</span><span id="line-220"></span><span id="local-6989586621690484468"><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#mysqlCountTypeInput"><span class="hs-identifier hs-type">mysqlCountTypeInput</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-221"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484468"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-222"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484468"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-223"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690484468"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#CountDistinct"><span class="hs-identifier hs-type">IR.CountDistinct</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#CountType"><span class="hs-identifier hs-type">CountType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span></span><span>
+</span><span id="line-220"></span><span id="local-6989586621690485317"><span class="annot"><a href="Hasura.Backends.MySQL.Instances.Schema.html#mysqlCountTypeInput"><span class="hs-identifier hs-type">mysqlCountTypeInput</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-221"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">MonadParse</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485317"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-222"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#Parser"><span class="hs-identifier hs-type">Parser</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Both</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485317"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-223"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690485317"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Select.html#CountDistinct"><span class="hs-identifier hs-type">IR.CountDistinct</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#CountType"><span class="hs-identifier hs-type">CountType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">)</span></span><span>
 </span><span id="line-224"></span><span id="mysqlCountTypeInput"><span class="annot"><span class="annottext">mysqlCountTypeInput :: forall (n :: * -&gt; *).
 MonadParse n =&gt;
 Maybe (Parser 'Both n (Column 'MySQL))
 -&gt; InputFieldsParser n (CountDistinct -&gt; CountType 'MySQL)
 </span><a href="Hasura.Backends.MySQL.Instances.Schema.html#mysqlCountTypeInput"><span class="hs-identifier hs-var hs-var">mysqlCountTypeInput</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-225"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690484457"><span class="annot"><span class="annottext">Parser 'Both n (Column 'MySQL)
-</span><a href="#local-6989586621690484457"><span class="hs-identifier hs-var">columnEnum</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-226"></span><span>    </span><span id="local-6989586621690484456"><span class="annot"><span class="annottext">Maybe [Column]
-</span><a href="#local-6989586621690484456"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
+</span><span id="line-225"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690485306"><span class="annot"><span class="annottext">Parser 'Both n (Column 'MySQL)
+</span><a href="#local-6989586621690485306"><span class="hs-identifier hs-var">columnEnum</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-226"></span><span>    </span><span id="local-6989586621690485305"><span class="annot"><span class="annottext">Maybe [Column]
+</span><a href="#local-6989586621690485305"><span class="hs-identifier hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Name
 -&gt; Maybe Description
@@ -1260,43 +1260,43 @@ Name
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m [a]
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.list</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (Column 'MySQL)
-</span><a href="#local-6989586621690484457"><span class="hs-identifier hs-var">columnEnum</span></a></span><span>
+</span><a href="#local-6989586621690485306"><span class="hs-identifier hs-var">columnEnum</span></a></span><span>
 </span><span id="line-227"></span><span>    </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">CountDistinct -&gt; Maybe [Column 'MySQL] -&gt; CountType 'MySQL
-</span><a href="#local-6989586621690484452"><span class="hs-identifier hs-var">mkCountType</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe [Column]
-</span><a href="#local-6989586621690484456"><span class="hs-identifier hs-var">columns</span></a></span><span>
+</span><a href="#local-6989586621690485301"><span class="hs-identifier hs-var">mkCountType</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe [Column]
+</span><a href="#local-6989586621690485305"><span class="hs-identifier hs-var">columns</span></a></span><span>
 </span><span id="line-228"></span><span>  </span><span class="annot"><span class="annottext">Maybe (Parser 'Both n (Column 'MySQL))
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">CountDistinct -&gt; Maybe [Column 'MySQL] -&gt; CountType 'MySQL
-</span><a href="#local-6989586621690484452"><span class="hs-identifier hs-var">mkCountType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="#local-6989586621690485301"><span class="hs-identifier hs-var">mkCountType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
 </span><span id="line-229"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-230"></span><span>    </span><span class="annot"><a href="#local-6989586621690484452"><span class="hs-identifier hs-type">mkCountType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#CountDistinct"><span class="hs-identifier hs-type">IR.CountDistinct</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#CountType"><span class="hs-identifier hs-type">CountType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span>
-</span><span id="line-231"></span><span>    </span><span id="local-6989586621690484452"><span class="annot"><span class="annottext">mkCountType :: CountDistinct -&gt; Maybe [Column 'MySQL] -&gt; CountType 'MySQL
-</span><a href="#local-6989586621690484452"><span class="hs-identifier hs-var hs-var">mkCountType</span></a></span></span><span> </span><span class="annot"><span class="annottext">CountDistinct
+</span><span id="line-230"></span><span>    </span><span class="annot"><a href="#local-6989586621690485301"><span class="hs-identifier hs-type">mkCountType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#CountDistinct"><span class="hs-identifier hs-type">IR.CountDistinct</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#CountType"><span class="hs-identifier hs-type">CountType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MySQL"><span class="hs-identifier hs-type">MySQL</span></a></span><span>
+</span><span id="line-231"></span><span>    </span><span id="local-6989586621690485301"><span class="annot"><span class="annottext">mkCountType :: CountDistinct -&gt; Maybe [Column 'MySQL] -&gt; CountType 'MySQL
+</span><a href="#local-6989586621690485301"><span class="hs-identifier hs-var hs-var">mkCountType</span></a></span></span><span> </span><span class="annot"><span class="annottext">CountDistinct
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">Maybe [Column 'MySQL]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall name. Countable name
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#StarCountable"><span class="hs-identifier hs-var">MySQL.StarCountable</span></a></span><span>
-</span><span id="line-232"></span><span>    </span><span class="annot"><a href="#local-6989586621690484452"><span class="hs-identifier hs-var">mkCountType</span></a></span><span> </span><span class="annot"><span class="annottext">CountDistinct
-</span><a href="Hasura.RQL.IR.Select.html#SelectCountDistinct"><span class="hs-identifier hs-var">IR.SelectCountDistinct</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690484449"><span class="annot"><span class="annottext">[Column 'MySQL]
-</span><a href="#local-6989586621690484449"><span class="hs-identifier hs-var">cols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-232"></span><span>    </span><span class="annot"><a href="#local-6989586621690485301"><span class="hs-identifier hs-var">mkCountType</span></a></span><span> </span><span class="annot"><span class="annottext">CountDistinct
+</span><a href="Hasura.RQL.IR.Select.html#SelectCountDistinct"><span class="hs-identifier hs-var">IR.SelectCountDistinct</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690485298"><span class="annot"><span class="annottext">[Column 'MySQL]
+</span><a href="#local-6989586621690485298"><span class="hs-identifier hs-var">cols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-233"></span><span>      </span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="annot"><span class="annottext">forall name. Countable name
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#StarCountable"><span class="hs-identifier hs-var">MySQL.StarCountable</span></a></span><span> </span><span class="annot"><span class="annottext">forall name. NonEmpty name -&gt; Countable name
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#DistinctCountable"><span class="hs-identifier hs-var">MySQL.DistinctCountable</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">nonEmpty</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MySQL]
-</span><a href="#local-6989586621690484449"><span class="hs-identifier hs-var">cols</span></a></span><span>
-</span><span id="line-234"></span><span>    </span><span class="annot"><a href="#local-6989586621690484452"><span class="hs-identifier hs-var">mkCountType</span></a></span><span> </span><span class="annot"><span class="annottext">CountDistinct
-</span><a href="Hasura.RQL.IR.Select.html#SelectCountNonDistinct"><span class="hs-identifier hs-var">IR.SelectCountNonDistinct</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690484445"><span class="annot"><span class="annottext">[Column 'MySQL]
-</span><a href="#local-6989586621690484445"><span class="hs-identifier hs-var">cols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621690485298"><span class="hs-identifier hs-var">cols</span></a></span><span>
+</span><span id="line-234"></span><span>    </span><span class="annot"><a href="#local-6989586621690485301"><span class="hs-identifier hs-var">mkCountType</span></a></span><span> </span><span class="annot"><span class="annottext">CountDistinct
+</span><a href="Hasura.RQL.IR.Select.html#SelectCountNonDistinct"><span class="hs-identifier hs-var">IR.SelectCountNonDistinct</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690485294"><span class="annot"><span class="annottext">[Column 'MySQL]
+</span><a href="#local-6989586621690485294"><span class="hs-identifier hs-var">cols</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-235"></span><span>      </span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="annot"><span class="annottext">forall name. Countable name
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#StarCountable"><span class="hs-identifier hs-var">MySQL.StarCountable</span></a></span><span> </span><span class="annot"><span class="annottext">forall name. NonEmpty name -&gt; Countable name
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#NonNullFieldCountable"><span class="hs-identifier hs-var">MySQL.NonNullFieldCountable</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">nonEmpty</span></a></span><span> </span><span class="annot"><span class="annottext">[Column 'MySQL]
-</span><a href="#local-6989586621690484445"><span class="hs-identifier hs-var">cols</span></a></span><span>
+</span><a href="#local-6989586621690485294"><span class="hs-identifier hs-var">cols</span></a></span><span>
 </span><span id="line-236"></span></pre></body></html>

@@ -36,7 +36,7 @@
 </span><span id="line-36"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="TraceId"><span class="annot"><a href="Hasura.Tracing.TraceId.html#TraceId"><span class="hs-identifier hs-var">TraceId</span></a></span></span><span>
 </span><span id="line-37"></span><span>      </span><span class="hs-pragma">{-# UNPACK</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Word64</span></a></span><span>
 </span><span id="line-38"></span><span>      </span><span class="hs-pragma">{-# UNPACK</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Word64</span></a></span><span>
-</span><span id="line-39"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690193710"><span id="local-6989586621690193714"><span class="annot"><span class="annottext">TraceId -&gt; TraceId -&gt; Bool
+</span><span id="line-39"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690194544"><span id="local-6989586621690194548"><span class="annot"><span class="annottext">TraceId -&gt; TraceId -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: TraceId -&gt; TraceId -&gt; Bool
 $c/= :: TraceId -&gt; TraceId -&gt; Bool
@@ -53,35 +53,35 @@ $c== :: TraceId -&gt; TraceId -&gt; Bool
 </span><span id="line-45"></span><span class="annot"><a href="Hasura.Tracing.TraceId.html#randomTraceId"><span class="hs-identifier hs-type">randomTraceId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html#TraceId"><span class="hs-identifier hs-type">TraceId</span></a></span><span>
 </span><span id="line-46"></span><span id="randomTraceId"><span class="annot"><span class="annottext">randomTraceId :: IO TraceId
 </span><a href="Hasura.Tracing.TraceId.html#randomTraceId"><span class="hs-identifier hs-var hs-var">randomTraceId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-47"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621690193707"><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193707"><span class="hs-identifier hs-var">w1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690193706"><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193706"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-47"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621690194541"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194541"><span class="hs-identifier hs-var">w1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690194540"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194540"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-48"></span><span>    </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) g a.
 MonadIO m =&gt;
 (g -&gt; (a, g)) -&gt; AtomicGenM g -&gt; m a
 </span><span class="hs-identifier hs-var">Random.applyAtomicGen</span></span><span> </span><span class="annot"><span class="annottext">AtomicGenM StdGen
 </span><span class="hs-identifier hs-var">Random.globalStdGen</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690193702"><span class="annot"><span class="annottext">StdGen
-</span><a href="#local-6989586621690193702"><span class="hs-identifier hs-var">gen0</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-49"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621690193701"><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193701"><span class="hs-identifier hs-var">w1</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621690193700"><span class="annot"><span class="annottext">StdGen
-</span><a href="#local-6989586621690193700"><span class="hs-identifier hs-var">gen1</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a g. (Random a, RandomGen g) =&gt; g -&gt; (a, g)
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690194536"><span class="annot"><span class="annottext">StdGen
+</span><a href="#local-6989586621690194536"><span class="hs-identifier hs-var">gen0</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-49"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621690194535"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194535"><span class="hs-identifier hs-var">w1</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621690194534"><span class="annot"><span class="annottext">StdGen
+</span><a href="#local-6989586621690194534"><span class="hs-identifier hs-var">gen1</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a g. (Random a, RandomGen g) =&gt; g -&gt; (a, g)
 </span><span class="hs-identifier hs-var">Random.random</span></span><span> </span><span class="annot"><span class="annottext">StdGen
-</span><a href="#local-6989586621690193702"><span class="hs-identifier hs-var">gen0</span></a></span><span>
-</span><span id="line-50"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621690193698"><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193698"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621690193697"><span class="annot"><span class="annottext">StdGen
-</span><a href="#local-6989586621690193697"><span class="hs-identifier hs-var">gen2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a g. (Random a, RandomGen g) =&gt; g -&gt; (a, g)
+</span><a href="#local-6989586621690194536"><span class="hs-identifier hs-var">gen0</span></a></span><span>
+</span><span id="line-50"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">!</span><span id="local-6989586621690194532"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194532"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-glyph">!</span><span id="local-6989586621690194531"><span class="annot"><span class="annottext">StdGen
+</span><a href="#local-6989586621690194531"><span class="hs-identifier hs-var">gen2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a g. (Random a, RandomGen g) =&gt; g -&gt; (a, g)
 </span><span class="hs-identifier hs-var">Random.random</span></span><span> </span><span class="annot"><span class="annottext">StdGen
-</span><a href="#local-6989586621690193700"><span class="hs-identifier hs-var">gen1</span></a></span><span>
+</span><a href="#local-6989586621690194534"><span class="hs-identifier hs-var">gen1</span></a></span><span>
 </span><span id="line-51"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193701"><span class="hs-identifier hs-var">w1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193698"><span class="hs-identifier hs-var">w2</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">StdGen
-</span><a href="#local-6989586621690193697"><span class="hs-identifier hs-var">gen2</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690194535"><span class="hs-identifier hs-var">w1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194532"><span class="hs-identifier hs-var">w2</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">StdGen
+</span><a href="#local-6989586621690194531"><span class="hs-identifier hs-var">gen2</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-52"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193707"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690194541"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193706"><span class="hs-identifier hs-var">w2</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690194540"><span class="hs-identifier hs-var">w2</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-53"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">IO TraceId
@@ -90,8 +90,8 @@ MonadIO m =&gt;
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Word64 -&gt; TraceId
 </span><a href="Hasura.Tracing.TraceId.html#TraceId"><span class="hs-identifier hs-var">TraceId</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193707"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193706"><span class="hs-identifier hs-var">w2</span></a></span><span>
+</span><a href="#local-6989586621690194541"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194540"><span class="hs-identifier hs-var">w2</span></a></span><span>
 </span><span id="line-55"></span><span>
 </span><span id="line-56"></span><span class="hs-comment">-- | Create a 'TraceId' from a 'ByteString'.</span><span>
 </span><span id="line-57"></span><span class="hs-comment">--</span><span>
@@ -99,25 +99,25 @@ MonadIO m =&gt;
 </span><span id="line-59"></span><span class="hs-comment">-- only zero bytes.</span><span>
 </span><span id="line-60"></span><span class="annot"><a href="Hasura.Tracing.TraceId.html#traceIdFromBytes"><span class="hs-identifier hs-type">traceIdFromBytes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html#TraceId"><span class="hs-identifier hs-type">TraceId</span></a></span><span>
 </span><span id="line-61"></span><span id="traceIdFromBytes"><span class="annot"><span class="annottext">traceIdFromBytes :: ByteString -&gt; Maybe TraceId
-</span><a href="Hasura.Tracing.TraceId.html#traceIdFromBytes"><span class="hs-identifier hs-var hs-var">traceIdFromBytes</span></a></span></span><span> </span><span id="local-6989586621690193696"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690193696"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.Tracing.TraceId.html#traceIdFromBytes"><span class="hs-identifier hs-var hs-var">traceIdFromBytes</span></a></span></span><span> </span><span id="local-6989586621690194530"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621690194530"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-62"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">guard</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Int
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-var">ByteString.length</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690193696"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690194530"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="Hasura.Tracing.TraceId.html#traceIdBytes"><span class="hs-identifier hs-var">traceIdBytes</span></a></span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621690193694"><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193694"><span class="hs-identifier hs-var">w1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690193693"><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193693"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-special">(</span><span id="local-6989586621690194528"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194528"><span class="hs-identifier hs-var">w1</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690194527"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194527"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-64"></span><span>    </span><span class="annot"><span class="annottext">forall a b. Either a b -&gt; Maybe b
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">eitherToMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-65"></span><span>      </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Get a -&gt; ByteString -&gt; Either String a
 </span><span class="hs-identifier hs-var">Serialize.runGet</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690193696"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690194530"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-66"></span><span>        </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Get Word64
@@ -127,32 +127,32 @@ MonadIO m =&gt;
 </span><span id="line-67"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">guard</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193694"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690194528"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Bits a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.|.</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193693"><span class="hs-identifier hs-var">w2</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690194527"><span class="hs-identifier hs-var">w2</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">/=</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-68"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; Word64 -&gt; TraceId
 </span><a href="Hasura.Tracing.TraceId.html#TraceId"><span class="hs-identifier hs-var">TraceId</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193694"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193693"><span class="hs-identifier hs-var">w2</span></a></span><span>
+</span><a href="#local-6989586621690194528"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194527"><span class="hs-identifier hs-var">w2</span></a></span><span>
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span class="hs-comment">-- | Convert a 'TraceId' to a 'ByteString' of 16 bytes.</span><span>
 </span><span id="line-71"></span><span class="annot"><a href="Hasura.Tracing.TraceId.html#traceIdToBytes"><span class="hs-identifier hs-type">traceIdToBytes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html#TraceId"><span class="hs-identifier hs-type">TraceId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">ByteString</span></a></span><span>
 </span><span id="line-72"></span><span id="traceIdToBytes"><span class="annot"><span class="annottext">traceIdToBytes :: TraceId -&gt; ByteString
-</span><a href="Hasura.Tracing.TraceId.html#traceIdToBytes"><span class="hs-identifier hs-var hs-var">traceIdToBytes</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceId.html#TraceId"><span class="hs-identifier hs-type">TraceId</span></a></span><span> </span><span id="local-6989586621690193687"><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193687"><span class="hs-identifier hs-var">w1</span></a></span></span><span> </span><span id="local-6989586621690193686"><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193686"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Tracing.TraceId.html#traceIdToBytes"><span class="hs-identifier hs-var hs-var">traceIdToBytes</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceId.html#TraceId"><span class="hs-identifier hs-type">TraceId</span></a></span><span> </span><span id="local-6989586621690194521"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194521"><span class="hs-identifier hs-var">w1</span></a></span></span><span> </span><span id="local-6989586621690194520"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194520"><span class="hs-identifier hs-var">w2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-73"></span><span>  </span><span class="annot"><span class="annottext">Put -&gt; ByteString
 </span><span class="hs-identifier hs-var">Serialize.runPut</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Putter Word64
 </span><span class="hs-identifier hs-var">Serialize.putWord64be</span></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193687"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
+</span><a href="#local-6989586621690194521"><span class="hs-identifier hs-var">w1</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; m b -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Putter Word64
 </span><span class="hs-identifier hs-var">Serialize.putWord64be</span></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193686"><span class="hs-identifier hs-var">w2</span></a></span><span>
+</span><a href="#local-6989586621690194520"><span class="hs-identifier hs-var">w2</span></a></span><span>
 </span><span id="line-74"></span><span>
 </span><span id="line-75"></span><span class="hs-comment">-- | Create a 'TraceId' from a 'ByteString' of hex characters.</span><span>
 </span><span id="line-76"></span><span class="hs-comment">--</span><span>
@@ -185,7 +185,7 @@ Monad m =&gt;
 </span><span id="line-91"></span><span class="hs-comment">--</span><span>
 </span><span id="line-92"></span><span class="hs-comment">-- 'SpanId's are guaranteed to have at least one non-zero bit.</span><span>
 </span><span id="line-93"></span><span class="hs-keyword">newtype</span><span> </span><span id="SpanId"><span class="annot"><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-var">SpanId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SpanId"><span class="annot"><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-var">SpanId</span></a></span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Word64</span></a></span><span>
-</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690193673"><span id="local-6989586621690193677"><span class="annot"><span class="annottext">SpanId -&gt; SpanId -&gt; Bool
+</span><span id="line-94"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690194507"><span id="local-6989586621690194511"><span class="annot"><span class="annottext">SpanId -&gt; SpanId -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: SpanId -&gt; SpanId -&gt; Bool
 $c/= :: SpanId -&gt; SpanId -&gt; Bool
@@ -202,12 +202,12 @@ $c== :: SpanId -&gt; SpanId -&gt; Bool
 </span><span id="line-100"></span><span class="annot"><a href="Hasura.Tracing.TraceId.html#randomSpanId"><span class="hs-identifier hs-type">randomSpanId</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-type">SpanId</span></a></span><span>
 </span><span id="line-101"></span><span id="randomSpanId"><span class="annot"><span class="annottext">randomSpanId :: IO SpanId
 </span><a href="Hasura.Tracing.TraceId.html#randomSpanId"><span class="hs-identifier hs-var hs-var">randomSpanId</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-102"></span><span>  </span><span id="local-6989586621690193668"><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193668"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a g (m :: * -&gt; *). (Uniform a, StatefulGen g m) =&gt; g -&gt; m a
+</span><span id="line-102"></span><span>  </span><span id="local-6989586621690194502"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194502"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a g (m :: * -&gt; *). (Uniform a, StatefulGen g m) =&gt; g -&gt; m a
 </span><span class="hs-identifier hs-var">Random.uniformM</span></span><span> </span><span class="annot"><span class="annottext">AtomicGenM StdGen
 </span><span class="hs-identifier hs-var">Random.globalStdGen</span></span><span>
 </span><span id="line-103"></span><span>  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193668"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690194502"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-104"></span><span>    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">IO SpanId
@@ -216,7 +216,7 @@ $c== :: SpanId -&gt; SpanId -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; SpanId
 </span><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-var">SpanId</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193668"><span class="hs-identifier hs-var">w</span></a></span><span>
+</span><a href="#local-6989586621690194502"><span class="hs-identifier hs-var">w</span></a></span><span>
 </span><span id="line-106"></span><span>
 </span><span id="line-107"></span><span class="hs-comment">-- | Create a 'SpanId' from a 'ByteString'.</span><span>
 </span><span id="line-108"></span><span class="hs-comment">--</span><span>
@@ -224,43 +224,43 @@ $c== :: SpanId -&gt; SpanId -&gt; Bool
 </span><span id="line-110"></span><span class="hs-comment">-- only zero bytes.</span><span>
 </span><span id="line-111"></span><span class="annot"><a href="Hasura.Tracing.TraceId.html#spanIdFromBytes"><span class="hs-identifier hs-type">spanIdFromBytes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-type">SpanId</span></a></span><span>
 </span><span id="line-112"></span><span id="spanIdFromBytes"><span class="annot"><span class="annottext">spanIdFromBytes :: ByteString -&gt; Maybe SpanId
-</span><a href="Hasura.Tracing.TraceId.html#spanIdFromBytes"><span class="hs-identifier hs-var hs-var">spanIdFromBytes</span></a></span></span><span> </span><span id="local-6989586621690193666"><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690193666"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="Hasura.Tracing.TraceId.html#spanIdFromBytes"><span class="hs-identifier hs-var hs-var">spanIdFromBytes</span></a></span></span><span> </span><span id="local-6989586621690194500"><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621690194500"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-113"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">guard</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Int
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-var">ByteString.length</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690193666"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690194500"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="Hasura.Tracing.TraceId.html#spanIdBytes"><span class="hs-identifier hs-var">spanIdBytes</span></a></span><span>
-</span><span id="line-114"></span><span>  </span><span id="local-6989586621690193665"><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193665"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a b. Either a b -&gt; Maybe b
+</span><span id="line-114"></span><span>  </span><span id="local-6989586621690194499"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194499"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a b. Either a b -&gt; Maybe b
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">eitherToMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Get a -&gt; ByteString -&gt; Either String a
 </span><span class="hs-identifier hs-var">Serialize.runGet</span></span><span> </span><span class="annot"><span class="annottext">Get Word64
 </span><span class="hs-identifier hs-var">Serialize.getWord64be</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621690193666"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><a href="#local-6989586621690194500"><span class="hs-identifier hs-var">bs</span></a></span><span>
 </span><span id="line-115"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">guard</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193665"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690194499"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">/=</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-116"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Word64 -&gt; SpanId
 </span><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-var">SpanId</span></a></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193665"><span class="hs-identifier hs-var">w</span></a></span><span>
+</span><a href="#local-6989586621690194499"><span class="hs-identifier hs-var">w</span></a></span><span>
 </span><span id="line-117"></span><span>
 </span><span id="line-118"></span><span class="hs-comment">-- | Convert a 'SpanId' to a 'ByteString' of 8 bytes.</span><span>
 </span><span id="line-119"></span><span class="annot"><a href="Hasura.Tracing.TraceId.html#spanIdToBytes"><span class="hs-identifier hs-type">spanIdToBytes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-type">SpanId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">ByteString</span></a></span><span>
 </span><span id="line-120"></span><span id="spanIdToBytes"><span class="annot"><span class="annottext">spanIdToBytes :: SpanId -&gt; ByteString
-</span><a href="Hasura.Tracing.TraceId.html#spanIdToBytes"><span class="hs-identifier hs-var hs-var">spanIdToBytes</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-type">SpanId</span></a></span><span> </span><span id="local-6989586621690193664"><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193664"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Put -&gt; ByteString
+</span><a href="Hasura.Tracing.TraceId.html#spanIdToBytes"><span class="hs-identifier hs-var hs-var">spanIdToBytes</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Tracing.TraceId.html#SpanId"><span class="hs-identifier hs-type">SpanId</span></a></span><span> </span><span id="local-6989586621690194498"><span class="annot"><span class="annottext">Word64
+</span><a href="#local-6989586621690194498"><span class="hs-identifier hs-var">w</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Put -&gt; ByteString
 </span><span class="hs-identifier hs-var">Serialize.runPut</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Putter Word64
 </span><span class="hs-identifier hs-var">Serialize.putWord64be</span></span><span> </span><span class="annot"><span class="annottext">Word64
-</span><a href="#local-6989586621690193664"><span class="hs-identifier hs-var">w</span></a></span><span>
+</span><a href="#local-6989586621690194498"><span class="hs-identifier hs-var">w</span></a></span><span>
 </span><span id="line-121"></span><span>
 </span><span id="line-122"></span><span class="hs-comment">-- | Create a 'SpanId' from a 'ByteString' of hex characters.</span><span>
 </span><span id="line-123"></span><span class="hs-comment">--</span><span>

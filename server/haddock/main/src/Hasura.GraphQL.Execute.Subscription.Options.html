@@ -23,7 +23,7 @@
 </span><span id="line-22"></span><span>    </span><span id="_lqoRefetchInterval"><span class="annot"><span class="annottext">SubscriptionsOptions -&gt; RefetchInterval
 </span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#_lqoRefetchInterval"><span class="hs-identifier hs-var hs-var">_lqoRefetchInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#RefetchInterval"><span class="hs-identifier hs-type">RefetchInterval</span></a></span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690179071"><span id="local-6989586621690179073"><span id="local-6989586621690179078"><span class="annot"><span class="annottext">Int -&gt; SubscriptionsOptions -&gt; ShowS
+</span><span id="line-24"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690179905"><span id="local-6989586621690179907"><span id="local-6989586621690179912"><span class="annot"><span class="annottext">Int -&gt; SubscriptionsOptions -&gt; ShowS
 [SubscriptionsOptions] -&gt; ShowS
 SubscriptionsOptions -&gt; String
 forall a.
@@ -34,7 +34,7 @@ show :: SubscriptionsOptions -&gt; String
 $cshow :: SubscriptionsOptions -&gt; String
 showsPrec :: Int -&gt; SubscriptionsOptions -&gt; ShowS
 $cshowsPrec :: Int -&gt; SubscriptionsOptions -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690179062"><span id="local-6989586621690179068"><span class="annot"><span class="annottext">SubscriptionsOptions -&gt; SubscriptionsOptions -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690179896"><span id="local-6989586621690179902"><span class="annot"><span class="annottext">SubscriptionsOptions -&gt; SubscriptionsOptions -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: SubscriptionsOptions -&gt; SubscriptionsOptions -&gt; Bool
 $c/= :: SubscriptionsOptions -&gt; SubscriptionsOptions -&gt; Bool
@@ -48,60 +48,60 @@ $c== :: SubscriptionsOptions -&gt; SubscriptionsOptions -&gt; Bool
 </span><span id="line-29"></span><span>
 </span><span id="line-30"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#mkSubscriptionsOptions"><span class="hs-identifier hs-type">mkSubscriptionsOptions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#BatchSize"><span class="hs-identifier hs-type">BatchSize</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#RefetchInterval"><span class="hs-identifier hs-type">RefetchInterval</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#SubscriptionsOptions"><span class="hs-identifier hs-type">SubscriptionsOptions</span></a></span><span>
 </span><span id="line-31"></span><span id="mkSubscriptionsOptions"><span class="annot"><span class="annottext">mkSubscriptionsOptions :: Maybe BatchSize -&gt; Maybe RefetchInterval -&gt; SubscriptionsOptions
-</span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#mkSubscriptionsOptions"><span class="hs-identifier hs-var hs-var">mkSubscriptionsOptions</span></a></span></span><span> </span><span id="local-6989586621690179060"><span class="annot"><span class="annottext">Maybe BatchSize
-</span><a href="#local-6989586621690179060"><span class="hs-identifier hs-var">batchSize</span></a></span></span><span> </span><span id="local-6989586621690179059"><span class="annot"><span class="annottext">Maybe RefetchInterval
-</span><a href="#local-6989586621690179059"><span class="hs-identifier hs-var">refetchInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#mkSubscriptionsOptions"><span class="hs-identifier hs-var hs-var">mkSubscriptionsOptions</span></a></span></span><span> </span><span id="local-6989586621690179894"><span class="annot"><span class="annottext">Maybe BatchSize
+</span><a href="#local-6989586621690179894"><span class="hs-identifier hs-var">batchSize</span></a></span></span><span> </span><span id="local-6989586621690179893"><span class="annot"><span class="annottext">Maybe RefetchInterval
+</span><a href="#local-6989586621690179893"><span class="hs-identifier hs-var">refetchInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-32"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#SubscriptionsOptions"><span class="hs-identifier hs-type">SubscriptionsOptions</span></a></span><span>
 </span><span id="line-33"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_lqoBatchSize :: BatchSize
 </span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#_lqoBatchSize"><span class="hs-identifier hs-var">_lqoBatchSize</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Refined NonNegative Int -&gt; BatchSize
 </span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#BatchSize"><span class="hs-identifier hs-var">BatchSize</span></a></span><span> </span><span class="hs-special">$$</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">refineTH</span></span><span> </span><span class="annot"><span class="hs-number">100</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe BatchSize
-</span><a href="#local-6989586621690179060"><span class="hs-identifier hs-var">batchSize</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690179894"><span class="hs-identifier hs-var">batchSize</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-34"></span><span>      </span><span class="annot"><span class="annottext">_lqoRefetchInterval :: RefetchInterval
 </span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#_lqoRefetchInterval"><span class="hs-identifier hs-var">_lqoRefetchInterval</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Refined NonNegative DiffTime -&gt; RefetchInterval
 </span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#RefetchInterval"><span class="hs-identifier hs-var">RefetchInterval</span></a></span><span> </span><span class="hs-special">$$</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">refineTH</span></span><span> </span><span class="annot"><span class="hs-number">1</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe RefetchInterval
-</span><a href="#local-6989586621690179059"><span class="hs-identifier hs-var">refetchInterval</span></a></span><span>
+</span><a href="#local-6989586621690179893"><span class="hs-identifier hs-var">refetchInterval</span></a></span><span>
 </span><span id="line-35"></span><span>    </span><span class="hs-special">}</span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690179045"><span id="local-6989586621690179047"><span id="local-6989586621690179049"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#SubscriptionsOptions"><span class="hs-identifier hs-type">SubscriptionsOptions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-38"></span><span>  </span><span id="local-6989586621690179033"><span class="annot"><span class="annottext">toJSON :: SubscriptionsOptions -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#SubscriptionsOptions"><span class="hs-identifier hs-type">SubscriptionsOptions</span></a></span><span> </span><span id="local-6989586621690179031"><span class="annot"><span class="annottext">BatchSize
-</span><a href="#local-6989586621690179031"><span class="hs-identifier hs-var">batchSize</span></a></span></span><span> </span><span id="local-6989586621690179030"><span class="annot"><span class="annottext">RefetchInterval
-</span><a href="#local-6989586621690179030"><span class="hs-identifier hs-var">refetchInterval</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-37"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690179879"><span id="local-6989586621690179881"><span id="local-6989586621690179883"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#SubscriptionsOptions"><span class="hs-identifier hs-type">SubscriptionsOptions</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-38"></span><span>  </span><span id="local-6989586621690179867"><span class="annot"><span class="annottext">toJSON :: SubscriptionsOptions -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#SubscriptionsOptions"><span class="hs-identifier hs-type">SubscriptionsOptions</span></a></span><span> </span><span id="local-6989586621690179865"><span class="annot"><span class="annottext">BatchSize
+</span><a href="#local-6989586621690179865"><span class="hs-identifier hs-var">batchSize</span></a></span></span><span> </span><span id="local-6989586621690179864"><span class="annot"><span class="annottext">RefetchInterval
+</span><a href="#local-6989586621690179864"><span class="hs-identifier hs-var">refetchInterval</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-39"></span><span>    </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span>
 </span><span id="line-40"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;batch_size&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">BatchSize
-</span><a href="#local-6989586621690179031"><span class="hs-identifier hs-var">batchSize</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690179865"><span class="hs-identifier hs-var">batchSize</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-41"></span><span>        </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;refetch_delay&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">RefetchInterval
-</span><a href="#local-6989586621690179030"><span class="hs-identifier hs-var">refetchInterval</span></a></span><span>
+</span><a href="#local-6989586621690179864"><span class="hs-identifier hs-var">refetchInterval</span></a></span><span>
 </span><span id="line-42"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-43"></span><span>
-</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690179025"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#SubscriptionsOptions"><span class="hs-identifier hs-type">SubscriptionsOptions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-45"></span><span>  </span><span id="local-6989586621690179013"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SubscriptionsOptions
+</span><span id="line-44"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690179859"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#SubscriptionsOptions"><span class="hs-identifier hs-type">SubscriptionsOptions</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-45"></span><span>  </span><span id="local-6989586621690179847"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SubscriptionsOptions
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;live query options&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690179010"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690179010"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-string">&quot;live query options&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690179844"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690179844"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">BatchSize -&gt; RefetchInterval -&gt; SubscriptionsOptions
 </span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#SubscriptionsOptions"><span class="hs-identifier hs-var">SubscriptionsOptions</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690179010"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690179844"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;batch_size&quot;</span></span><span>
 </span><span id="line-47"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690179010"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690179844"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;refetch_delay&quot;</span></span><span>
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="hs-keyword">newtype</span><span> </span><span id="BatchSize"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#BatchSize"><span class="hs-identifier hs-var">BatchSize</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BatchSize"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#BatchSize"><span class="hs-identifier hs-var">BatchSize</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unBatchSize"><span class="annot"><span class="annottext">BatchSize -&gt; Refined NonNegative Int
 </span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#unBatchSize"><span class="hs-identifier hs-var hs-var">unBatchSize</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Refined</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonNegative</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690178997"><span id="local-6989586621690178999"><span id="local-6989586621690179005"><span class="annot"><span class="annottext">Int -&gt; BatchSize -&gt; ShowS
+</span><span id="line-50"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690179831"><span id="local-6989586621690179833"><span id="local-6989586621690179839"><span class="annot"><span class="annottext">Int -&gt; BatchSize -&gt; ShowS
 [BatchSize] -&gt; ShowS
 BatchSize -&gt; String
 forall a.
@@ -112,13 +112,13 @@ show :: BatchSize -&gt; String
 $cshow :: BatchSize -&gt; String
 showsPrec :: Int -&gt; BatchSize -&gt; ShowS
 $cshowsPrec :: Int -&gt; BatchSize -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690178988"><span id="local-6989586621690178994"><span class="annot"><span class="annottext">BatchSize -&gt; BatchSize -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690179822"><span id="local-6989586621690179828"><span class="annot"><span class="annottext">BatchSize -&gt; BatchSize -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: BatchSize -&gt; BatchSize -&gt; Bool
 $c/= :: BatchSize -&gt; BatchSize -&gt; Bool
 == :: BatchSize -&gt; BatchSize -&gt; Bool
 $c== :: BatchSize -&gt; BatchSize -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690178966"><span id="local-6989586621690178971"><span id="local-6989586621690178976"><span id="local-6989586621690178982"><span class="annot"><span class="annottext">[BatchSize] -&gt; Value
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690179800"><span id="local-6989586621690179805"><span id="local-6989586621690179810"><span id="local-6989586621690179816"><span class="annot"><span class="annottext">[BatchSize] -&gt; Value
 [BatchSize] -&gt; Encoding
 BatchSize -&gt; Value
 BatchSize -&gt; Encoding
@@ -136,7 +136,7 @@ toEncoding :: BatchSize -&gt; Encoding
 $ctoEncoding :: BatchSize -&gt; Encoding
 toJSON :: BatchSize -&gt; Value
 $ctoJSON :: BatchSize -&gt; Value
-</span><a href="#local-6989586621690178966"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690178954"><span id="local-6989586621690178960"><span class="annot"><span class="annottext">Value -&gt; Parser [BatchSize]
+</span><a href="#local-6989586621690179800"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690179788"><span id="local-6989586621690179794"><span class="annot"><span class="annottext">Value -&gt; Parser [BatchSize]
 Value -&gt; Parser BatchSize
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -144,24 +144,24 @@ parseJSONList :: Value -&gt; Parser [BatchSize]
 $cparseJSONList :: Value -&gt; Parser [BatchSize]
 parseJSON :: Value -&gt; Parser BatchSize
 $cparseJSON :: Value -&gt; Parser BatchSize
-</span><a href="#local-6989586621690178954"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690179788"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#mkBatchSize"><span class="hs-identifier hs-type">mkBatchSize</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#BatchSize"><span class="hs-identifier hs-type">BatchSize</span></a></span><span>
 </span><span id="line-53"></span><span id="mkBatchSize"><span class="annot"><span class="annottext">mkBatchSize :: Int -&gt; Maybe BatchSize
-</span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#mkBatchSize"><span class="hs-identifier hs-var hs-var">mkBatchSize</span></a></span></span><span> </span><span id="local-6989586621690178949"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690178949"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Int -&gt; BatchSize
+</span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#mkBatchSize"><span class="hs-identifier hs-var hs-var">mkBatchSize</span></a></span></span><span> </span><span id="local-6989586621690179783"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690179783"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Refined NonNegative Int -&gt; BatchSize
 </span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#BatchSize"><span class="hs-identifier hs-var">BatchSize</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall {k} (p :: k) x (m :: * -&gt; *).
 (Predicate p x, MonadFail m) =&gt;
 x -&gt; m (Refined p x)
 </span><span class="hs-identifier hs-var">refineFail</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690178949"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621690179783"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-54"></span><span>
 </span><span id="line-55"></span><span class="hs-comment">-- TODO this is treated as milliseconds in fromEnv and as seconds in ToJSON.</span><span>
 </span><span id="line-56"></span><span class="hs-comment">--      ideally this would have e.g. ... unRefetchInterval :: Milliseconds</span><span>
 </span><span id="line-57"></span><span class="hs-keyword">newtype</span><span> </span><span id="RefetchInterval"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#RefetchInterval"><span class="hs-identifier hs-var">RefetchInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RefetchInterval"><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#RefetchInterval"><span class="hs-identifier hs-var">RefetchInterval</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unRefetchInterval"><span class="annot"><span class="annottext">RefetchInterval -&gt; Refined NonNegative DiffTime
 </span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#unRefetchInterval"><span class="hs-identifier hs-var hs-var">unRefetchInterval</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Refined</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">NonNegative</span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">DiffTime</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690178939"><span id="local-6989586621690178941"><span id="local-6989586621690178946"><span class="annot"><span class="annottext">Int -&gt; RefetchInterval -&gt; ShowS
+</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690179773"><span id="local-6989586621690179775"><span id="local-6989586621690179780"><span class="annot"><span class="annottext">Int -&gt; RefetchInterval -&gt; ShowS
 [RefetchInterval] -&gt; ShowS
 RefetchInterval -&gt; String
 forall a.
@@ -172,13 +172,13 @@ show :: RefetchInterval -&gt; String
 $cshow :: RefetchInterval -&gt; String
 showsPrec :: Int -&gt; RefetchInterval -&gt; ShowS
 $cshowsPrec :: Int -&gt; RefetchInterval -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690178931"><span id="local-6989586621690178936"><span class="annot"><span class="annottext">RefetchInterval -&gt; RefetchInterval -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690179765"><span id="local-6989586621690179770"><span class="annot"><span class="annottext">RefetchInterval -&gt; RefetchInterval -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: RefetchInterval -&gt; RefetchInterval -&gt; Bool
 $c/= :: RefetchInterval -&gt; RefetchInterval -&gt; Bool
 == :: RefetchInterval -&gt; RefetchInterval -&gt; Bool
 $c== :: RefetchInterval -&gt; RefetchInterval -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690178910"><span id="local-6989586621690178915"><span id="local-6989586621690178920"><span id="local-6989586621690178925"><span class="annot"><span class="annottext">[RefetchInterval] -&gt; Value
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690179744"><span id="local-6989586621690179749"><span id="local-6989586621690179754"><span id="local-6989586621690179759"><span class="annot"><span class="annottext">[RefetchInterval] -&gt; Value
 [RefetchInterval] -&gt; Encoding
 RefetchInterval -&gt; Value
 RefetchInterval -&gt; Encoding
@@ -196,7 +196,7 @@ toEncoding :: RefetchInterval -&gt; Encoding
 $ctoEncoding :: RefetchInterval -&gt; Encoding
 toJSON :: RefetchInterval -&gt; Value
 $ctoJSON :: RefetchInterval -&gt; Value
-</span><a href="#local-6989586621690178910"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690178899"><span id="local-6989586621690178904"><span class="annot"><span class="annottext">Value -&gt; Parser [RefetchInterval]
+</span><a href="#local-6989586621690179744"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></a></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690179733"><span id="local-6989586621690179738"><span class="annot"><span class="annottext">Value -&gt; Parser [RefetchInterval]
 Value -&gt; Parser RefetchInterval
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -204,16 +204,16 @@ parseJSONList :: Value -&gt; Parser [RefetchInterval]
 $cparseJSONList :: Value -&gt; Parser [RefetchInterval]
 parseJSON :: Value -&gt; Parser RefetchInterval
 $cparseJSON :: Value -&gt; Parser RefetchInterval
-</span><a href="#local-6989586621690178899"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690179733"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#mkRefetchInterval"><span class="hs-identifier hs-type">mkRefetchInterval</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">DiffTime</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.GraphQL.Execute.Subscription.Options.html#RefetchInterval"><span class="hs-identifier hs-type">RefetchInterval</span></a></span><span>
 </span><span id="line-61"></span><span id="mkRefetchInterval"><span class="annot"><span class="annottext">mkRefetchInterval :: DiffTime -&gt; Maybe RefetchInterval
-</span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#mkRefetchInterval"><span class="hs-identifier hs-var hs-var">mkRefetchInterval</span></a></span></span><span> </span><span id="local-6989586621690178894"><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690178894"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Refined NonNegative DiffTime -&gt; RefetchInterval
+</span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#mkRefetchInterval"><span class="hs-identifier hs-var hs-var">mkRefetchInterval</span></a></span></span><span> </span><span id="local-6989586621690179728"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621690179728"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Refined NonNegative DiffTime -&gt; RefetchInterval
 </span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#RefetchInterval"><span class="hs-identifier hs-var">RefetchInterval</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall {k} (p :: k) x (m :: * -&gt; *).
 (Predicate p x, MonadFail m) =&gt;
 x -&gt; m (Refined p x)
 </span><span class="hs-identifier hs-var">refineFail</span></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690178894"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621690179728"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-62"></span></pre></body></html>
