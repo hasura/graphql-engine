@@ -30,6 +30,7 @@ export type MetadataTableConfig = {
     update_by_pk?: string;
     delete?: string;
     delete_by_pk?: string;
+    update_many?: string;
   };
   column_config?: Record<string, { custom_name: string; comment?: string }>;
   comment?: string;
