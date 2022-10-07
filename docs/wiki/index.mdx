@@ -1,7 +1,9 @@
 ---
 sidebar_label: Index
-sidebar_position: 1
+sidebar_position: 10
 ---
+
+import Thumbnail from '@site/src/components/Thumbnail';
 
 # Hasura Docs Wiki
 
@@ -12,16 +14,79 @@ On the following pages, you'll find all the information you need to get started.
 [Contributing to Docs](/contributions.mdx) page that will walk you through the end-to-end contribution process from
 setting up your local development environment to creating your first PR.
 
-:::tip New to open-source?
+## Getting Started with documentation
+<video controls width="100%">
+  <source src={'https://graphql-engine-cdn.hasura.io/assets/videos/docs/documentation-presentation.mp4'} type="video/mp4" />
+  Sorry, your browser doesn't support embedded videos.
+</video>
 
-If you're here looking to get into open-source, a docs contribution is a great first step. We'd love to work with you on
-one of the issues labeled
-[`good first issue` on GitHub](https://github.com/hasura/graphql-engine/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22).
-Check out the list and follow our contribution guide below. If you have questions about the process,
-[reach out to us on Discord](https://discord.gg/ss4knTGzeP)!
+## What is good documentation?
+Good documentation uses clear, simple, effective communication to explain the usage and workings of our product as
+completely as possible.
+
+Documentation is critically important. It's our most visited web property besides the homepage and without good,
+thorough documentation, users can not use, or enjoy using our product.
+
+:::warning The Rule
+
+If a product feature doesn’t have excellent feature and reference documentation then it is not a finished feature.
 
 :::
 
+Good documentation is vital to the health of our company and brand. Users often discover new features or upgrade based
+on information they find in documentation.
+
+Every Hasurian is responsible for creating and continually improving the documentation.
+
+Your task is to create rich, correct documentation content which fully covers the feature being referenced in a
+user-obsessed, complete and compelling way.
+
+## Types of documentation
+
+We strive to create quality, rich content in four logical areas of documentation including:
+- Explanation
+- Task guides
+- Tutorials
+- Reference
+
+It is your task to consider which of these types of documentation fits the user requirement most for the feature you
+are documenting it. Maybe it's two or three, maybe it's all of them
+
+### Explanation
+
+Explanation documentation details and clarifies a particular topic, providing deep insight into the workings of a
+feature of Hasura delivered in a long-form format.
+
+### Task guides
+
+Task guides complement explanation sections by providing information about how to accomplish specific isolated tasks
+step-by-step.
+
+### Tutorials
+
+Tutorials teach the creation of a larger system based on generalized use-case scenarios. These are generally longer and
+more involved than task guides and cover the end-to-end creation and setup of a system.
+
+### Reference
+
+Reference guides, such as those for the Hasura API, exhaustively cover all possible usages, definitions and edge cases
+of a feature in a succinct, look-up type format.
+
+## The docs contribution process
+
+We have a full write-up on the wiki about the
+[docs contribution process](/contributions.mdx##step-1-create-a-new-branch), please check it out.
+
+Importantly, the docs team is tasked with maintaining and uplifting the quality of the documentation with every
+single pull request. Please also check out the [docs PR checklist](/checklist.mdx) with info about how you can
+ensure the quality of your docs PR.
+
+## Measurement & feedback
+
+The impact of all documentation whether new, changed or existing should be measured with analytics and user feedback
+tools over time to determine its quality and impact for our user audience.
+
+## Next steps...
 After your local environment is set up, feel free to poke around the style guide, explanation of our page structures,
 and info on working with Docusaurus (our docs framework).
 
