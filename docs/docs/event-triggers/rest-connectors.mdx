@@ -1,7 +1,7 @@
 ---
 sidebar_label: REST Connectors
 sidebar_position: 3
-description: Rest Connectors for event triggers
+description: Rest Connectors for Event Triggers
 keywords:
   - hasura
   - docs
@@ -15,14 +15,14 @@ import TabItem from '@theme/TabItem';
 import TOCInline from '@theme/TOCInline';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# REST Connectors for event triggers
+# REST Connectors for Event Triggers
 
 ## Introduction
 
-REST Connectors for event triggers are used to invoke existing or third-party webhooks without needing any middleware or
+REST Connectors for Event Triggers are used to invoke existing or third-party webhooks without needing any middleware or
 modifications to the upstream code.  
 
-REST Connectors modify the event trigger's HTTP request to adapt to your webhook's expected format by adding suitable
+REST Connectors modify the Event Trigger's HTTP request to adapt to your webhook's expected format by adding suitable
 transforms.
 
 :::info Note
@@ -40,25 +40,25 @@ REST Connectors are supported in Hasura GraphQL Engine versions `v2.1.0` and abo
 
 ## Configuring REST Connectors
 
-REST Connectors can be configured either when creating a new event trigger or editing an existing one. See the transform
+REST Connectors can be configured either when creating a new Event Trigger or editing an existing one. See the transform
 options [here](#event-trigger-transform-types):
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Go to the `Events` tab on the console and create or modify an event trigger. Scroll down to `Configure REST Connectors`
+Go to the `Events` tab on the console and create or modify an Event Trigger. Scroll down to `Configure REST Connectors`
 section:
 
 <Thumbnail
   src='/img/event-triggers/transform-configure-rest-connectors.png'
-  alt='Configure REST Connectors for event triggers'
+  alt='Configure REST Connectors for Event Triggers'
 />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
 Update the `databases > [source-name] > tables > [table-name].yaml` file inside the `metadata` directory and add a
-[request_transform][requesttransformation] field to the event trigger:
+[request_transform][requesttransformation] field to the Event Trigger:
 
 ```yaml {13-20}
 table:
@@ -95,7 +95,7 @@ hasura metadata apply
 
 <TabItem value="api" label="API">
 
-You can configure REST Connectors for event triggers using the
+You can configure REST Connectors for Event Triggers using the
 [pg_create_event_trigger][metadata-pg-create-event-trigger] metadata API and adding a
 [request_transform][requesttransformation] field to the args:
 
@@ -170,7 +170,7 @@ the sample context:
 
 <Thumbnail
   src='/img/event-triggers/transform-sample-context-0.png'
-  alt='Console event trigger webhook handler'
+  alt='Console Event Trigger webhook handler'
   width='650px'
 />
 
@@ -215,7 +215,7 @@ Hit `Save Event Trigger` to apply your changes.
 <TabItem value="cli" label="CLI">
 
 Update the `databases > [source-name] > tables > [table-name].yaml` file inside the `metadata` directory and add a
-[request_transform][requesttransformation] field to the event trigger:
+[request_transform][requesttransformation] field to the Event Trigger:
 
 ```yaml {15}
 table:
@@ -249,7 +249,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure REST Connectors for event triggers using the
+You can configure REST Connectors for Event Triggers using the
 [pg_create_event_trigger][metadata-pg-create-event-trigger] metadata API and adding a
 [request_transform][requesttransformation] field to the args:
 
@@ -315,7 +315,7 @@ Enter the `Request URL Template` and `Query Params`.
 
 <Thumbnail
   src='/img/event-triggers/transform-request-options.png'
-  alt='Console event trigger request options transformation'
+  alt='Console Event Trigger request options transformation'
   width='750px'
 />
 
@@ -328,7 +328,7 @@ Hit `Save Event Trigger` to apply your changes.
 <TabItem value="cli" label="CLI">
 
 Update the `databases > [source-name] > tables > [table-name].yaml` file inside the `metadata` directory and add a
-[request_transform][requesttransformation] field to the event trigger:
+[request_transform][requesttransformation] field to the Event Trigger:
 
 ```yaml {16-18}
 table:
@@ -362,7 +362,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure REST Connectors for event triggers using the
+You can configure REST Connectors for Event Triggers using the
 [pg_create_event_trigger][metadata-pg-create-event-trigger] metadata API and adding a
 [request_transform][requesttransformation] field to the args:
 
@@ -448,7 +448,7 @@ Hit `Create Event Trigger` to apply your changes.
 <TabItem value="cli" label="CLI">
 
 Update the `databases > [source-name] > tables > [table-name].yaml` file inside the `metadata` directory and add a
-[request_transform][requesttransformation] field to the event trigger:
+[request_transform][requesttransformation] field to the Event Trigger:
 
 ```yaml {15-16,20-23}
 table:
@@ -485,7 +485,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure REST Connectors for event triggers using the
+You can configure REST Connectors for Event Triggers using the
 [pg_create_event_trigger][metadata-pg-create-event-trigger] metadata API and adding a
 [request_transform][requesttransformation] field to the args:
 
@@ -558,7 +558,7 @@ Hit `Create Event Trigger` to apply your changes.
 <TabItem value="cli" label="CLI">
 
 Update the `databases > [source-name] > tables > [table-name].yaml` file inside the `metadata` directory and add a
-[request_transform][requesttransformation] field to the event trigger:
+[request_transform][requesttransformation] field to the Event Trigger:
 
 ```yaml {15,20-22}
 table:
@@ -594,7 +594,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure REST Connectors for event triggers using the
+You can configure REST Connectors for Event Triggers using the
 [pg_create_event_trigger][metadata-pg-create-event-trigger] metadata API and adding a
 [request_transform][requesttransformation] field to the args:
 
@@ -668,7 +668,7 @@ Hit `Create Event Trigger` to apply your changes.
 <TabItem value="cli" label="CLI">
 
 Update the `databases > [source-name] > tables > [table-name].yaml` file inside the `metadata` directory and add a
-[request_transform][requesttransformation] field to the event trigger:
+[request_transform][requesttransformation] field to the Event Trigger:
 
 ```yaml {15,20-27}
 table:
@@ -709,7 +709,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure REST Connectors for event triggers using the
+You can configure REST Connectors for Event Triggers using the
 [pg_create_event_trigger][metadata-pg-create-event-trigger] metadata API and adding a
 [request_transform][requesttransformation] field to the args:
 
@@ -768,25 +768,25 @@ X-Hasura-Role: admin
 
 ## Example: Trigger SendGrid's Mail Send API
 
-To see the REST Connectors for event triggers in action, let's set up an event trigger to send an email using the
+To see the REST Connectors for Event Triggers in action, let's set up an Event Trigger to send an email using the
 [SendGrid Mail Send API](https://docs.sendgrid.com/api-reference/mail-send/mail-send).
 
 Let's say you have a table `users (id int, name text, email text)` and you would like to send the user an email whenever
 a new user is inserted into the `users` table.
 
-### Step 1: Configure event trigger details
+### Step 1: Configure Event Trigger details
 
-Head to the `Events` tab on your console and create a new event trigger.
+Head to the `Events` tab on your console and create a new Event Trigger.
 
 The SendGrid Mail Send API is available at `POST https://api.sendgrid.com/v3/mail/send` and expects an `Authorization`
 header to be passed with a SendGrid API key for access (see
 [docs](https://docs.sendgrid.com/api-reference/how-to-use-the-sendgrid-v3-api/authentication)).
 
 You can configure env vars, say `SENDGRID_BASE_URL` with the value `https://api.sendgrid.com` and `SENDGRID_API_KEY`
-with the value `Bearer <sendgrid-api-key>` on the server so that they can be used for this event trigger and any other
+with the value `Bearer <sendgrid-api-key>` on the server so that they can be used for this Event Trigger and any other
 SendGrid requests we might want to use in the future.
 
-You can now configure the event trigger as follows:
+You can now configure the Event Trigger as follows:
 
 **Table:** `users`
 
@@ -796,7 +796,7 @@ You can now configure the event trigger as follows:
 
 **Headers:** `Authorization: SENDGRID_API_KEY`
 
-<Thumbnail src='/img/event-triggers/transform-sendgrid-def.png' alt='Sengrid event trigger config' width='900px' />
+<Thumbnail src='/img/event-triggers/transform-sendgrid-def.png' alt='Sengrid Event Trigger config' width='900px' />
 
 ### Step 2: Configure REST connector
 
@@ -805,7 +805,7 @@ You can now configure the event trigger as follows:
 Set a mock value for the `SENDGRID_BASE_URL` env var to verify your URL transform that we will be configuring next as
 the actual value is not exposed to the console.
 
-<Thumbnail src='/img/event-triggers/transform-sendgrid-context.png' alt='Sengrid event trigger context' width='750px' />
+<Thumbnail src='/img/event-triggers/transform-sendgrid-context.png' alt='Sengrid Event Trigger context' width='750px' />
 
 #### Step 2.2: Add Request Transforms
 
@@ -816,14 +816,14 @@ The SendGrid API request uses the `POST` request method so you can choose that.
 We need to add `/v3/mail/send` to the SendGrid base URL (`https://api.sendgrid.com`) that we configured in the env var.
 This can be done by setting the URL template as `{{$base_url}}/v3/mail/send`.
 
-<Thumbnail src='/img/event-triggers/transform-sendgrid-request.png' alt='Sengrid event trigger request options' />
+<Thumbnail src='/img/event-triggers/transform-sendgrid-request.png' alt='Sengrid Event Trigger request options' />
 
 ##### Request Body
 
 Here is the request body template we would need for the SendGrid Mail Send API (see
 [docs](https://docs.sendgrid.com/api-reference/mail-send/mail-send#body)).
 
-We replace the `email` and `name` values from the event trigger body:
+We replace the `email` and `name` values from the Event Trigger body:
 
 ```none {9-10}
 {
@@ -847,26 +847,26 @@ We replace the `email` and `name` values from the event trigger body:
     [
       {
         "type": "text/html",
-        "value": "<p>Mail from a Hasura event trigger!</p>"
+        "value": "<p>Mail from a Hasura Event Trigger!</p>"
       }
     ]
 }
 ```
 
-<Thumbnail src='/img/event-triggers/transform-sendgrid-body.png' alt='Sengrid event trigger payload' width='1100px' />
+<Thumbnail src='/img/event-triggers/transform-sendgrid-body.png' alt='Sengrid Event Trigger payload' width='1100px' />
 
-Hit `Create Event Trigger` to complete the event trigger set up.
+Hit `Create Event Trigger` to complete the Event Trigger set up.
 
-### Step 3: Test the event trigger
+### Step 3: Test the Event Trigger
 
 Insert a new user to the `users` table to call the SendGrid API.
 
 Navigate to `Data > [database-name] > public > users` and insert a new row.
 
-The `insert` operation triggers the event trigger and sends the transformed request to the SendGrid API which should
+The `insert` operation triggers the Event Trigger and sends the transformed request to the SendGrid API which should
 send an email to the inserted user.
 
-You can view the **Processed Events** and **Invocation Logs** for the event trigger to check the SendGrid API response.
+You can view the **Processed Events** and **Invocation Logs** for the Event Trigger to check the SendGrid API response.
 
 <Thumbnail src='/img/event-triggers/transform-sendgrid-processed-events.png' alt='Event trigger logs' width='1200px' />
 

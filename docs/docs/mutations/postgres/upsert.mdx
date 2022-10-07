@@ -51,7 +51,7 @@ You can fetch details of unique or primary key constraints on a table by running
 SELECT * FROM "information_schema"."table_constraints" WHERE table_name='<table>' AND table_schema='<schema>';
 ```
 
-GraphQL engine will automatically generate constraint names as enum values for the `constraint` field _(try
+GraphQL Engine will automatically generate constraint names as enum values for the `constraint` field _(try
 autocompleting in GraphiQL)_. Typically, the constraint is automatically named as `<table-name>_<column-name>_key`.
 
 :::

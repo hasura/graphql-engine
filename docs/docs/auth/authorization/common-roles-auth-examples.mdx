@@ -151,7 +151,7 @@ Sometimes your data/user model requires that:
 - Each role has access to different parts of your database schema.
 
 If you have the information about roles and how they map to your data in the same database as the one configured with
-the GraphQL engine, you can leverage relationships to define permissions that effectively control access to data and the
+the GraphQL Engine, you can leverage relationships to define permissions that effectively control access to data and the
 operations each role is allowed to perform.
 
 To understand how this works, let's model the roles and corresponding permissions in the context of a blog app with the
@@ -331,7 +331,7 @@ documented here_) .
 
 - **Allow users with the role** `author` **to insert only their own articles**
 
-  For this permission rule, we'll make use of two features of the GraphQL engine's permissions system:
+  For this permission rule, we'll make use of two features of the GraphQL Engine's permissions system:
 
   - [Column-level permissions](/auth/authorization/permission-rules.mdx#col-level-permissions): Restrict access to
     certain columns only.

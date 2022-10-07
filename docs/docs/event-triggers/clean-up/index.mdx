@@ -1,7 +1,7 @@
 ---
 
 title: Cleaning up event data
-description: Clean up event data of event triggers in Hasura
+description: Clean up event data of Event Triggers in Hasura
 keywords:
   - hasura
   - docs
@@ -59,7 +59,7 @@ DELETE FROM hdb_catalog.event_log
 WHERE delivered = true OR error = true;
 ```
 
-## Option 4: Clear all event data for a particular event trigger only
+## Option 4: Clear all event data for a particular Event Trigger only
 
 ```sql
 DELETE FROM

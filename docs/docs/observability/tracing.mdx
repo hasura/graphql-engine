@@ -20,8 +20,8 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 ## Introduction
 
 Hasura Cloud projects have support for _distributed tracing_, a technique for debugging Hasura in production in the
-context of the services it works with. These services might include your own Postgres database, any remote schemas,
-event trigger webhook providers, action providers or authentication hooks. Distributed tracing attempts to give a
+context of the services it works with. These services might include your own Postgres database, any Remote Schemas,
+Event Trigger webhook providers, action providers or authentication hooks. Distributed tracing attempts to give a
 unified view into the performance characteristics of all of these components of your architecture.
 
 ## Visualizing traces
@@ -35,7 +35,7 @@ Given that other system components will report their own tracing data to your AP
 possible to give a complete picture of a trace, but since Hasura sits in a central position in the architecture of many
 systems, it can often give a reasonably comprehensive view of the provenance of data in your system.
 
-For example, Hasura can report interactions with Postgres, remote schemas, event trigger webhooks and action handlers.
+For example, Hasura can report interactions with Postgres, Remote Schemas, Event Trigger webhooks and Action handlers.
 
 ## APM system integration
 
@@ -62,12 +62,12 @@ in various HTTP headers, which should be read and handled by any compatible web 
 If you are unsure how to implement B3 propagation in your own web service, the simplest thing to do is to read these
 headers and pass them along to any HTTP services you call which also support B3 propagation, including Hasura itself.
 
-In particular, if an event trigger webhook or action handler propagates these B3 headers back to Hasura, we will be able
+In particular, if an Event Trigger webhook or action handler propagates these B3 headers back to Hasura, we will be able
 to trace the entire interaction.
 
 ### Propagation via Postgres
 
-There is no standard method for trace propagation via Postgres transactions. For example, event triggers can be invoked
+There is no standard method for trace propagation via Postgres transactions. For example, Event Triggers can be invoked
 by mutations, and so their traces should be correlated.
 
 For this reason, we have adopted our method of propagating a trace context in Postgres transactions.

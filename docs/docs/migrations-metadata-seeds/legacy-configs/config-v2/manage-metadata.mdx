@@ -20,7 +20,7 @@ If your Postgres schema is already managed with a tool like knex, TypeORM, Djang
 a way to export the actions you performed on the Hasura console to apply it later on another Hasura instance.
 
 All the actions performed on the console, like tracking tables/views/functions, creating relationships, configuring
-permissions, creating event triggers and remote schemas, etc. can be exported as a JSON/yaml metadata file which can be
+permissions, creating Event Triggers and Remote Schemas, etc. can be exported as a JSON/yaml metadata file which can be
 version controlled. The metadata file can be later imported to another Hasura instance to get the same configuration.
 You can also manually edit the metadata file to add more objects to it and then use it to update the instance.
 
@@ -78,7 +78,7 @@ CI/CD and can be applied via the CLI or the
 
 ## Applying/Importing Hasura metadata
 
-You can apply exported metadata from one Hasura GraphQL engine instance to another. You can also apply an older or
+You can apply exported metadata from one Hasura GraphQL Engine instance to another. You can also apply an older or
 modified version of an instance's metadata onto itself.
 
 Importing completely replaces the metadata on that instance, i.e. you lose any metadata that was already present before.
@@ -179,7 +179,7 @@ delete them. After that, you need to reload metadata again.
 
 ## Resetting Hasura metadata {#reset-metadata-manual-v2}
 
-Resetting GraphQL engine's metadata is an irreversible process. It is recommended to first export the metadata so that
+Resetting GraphQL Engine's metadata is an irreversible process. It is recommended to first export the metadata so that
 it can be reapplied if needed or else that information will be lost and Hasura will have to be configured again from
 scratch (e.g. tracking tables, relationships, creating triggers, actions, etc.).
 
@@ -225,4 +225,4 @@ If an admin secret is set, add `-H 'X-Hasura-Admin-Secret: {your-admin-secret}'`
 
 In case you need an automated way of applying/importing the metadata, take a look at the
 [cli-migrations](/migrations-metadata-seeds/legacy-configs/config-v2/advanced/auto-apply-migrations.mdx) Docker image,
-which can start the GraphQL engine after automatically importing a mounted metadata directory.
+which can start the GraphQL Engine after automatically importing a mounted metadata directory.

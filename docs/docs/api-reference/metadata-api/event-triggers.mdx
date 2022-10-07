@@ -1,7 +1,7 @@
 ---
 sidebar_label: Event Triggers
 sidebar_position: 9
-description: Manage event triggers with the Hasura metadata API
+description: Manage Event Triggers with the Hasura metadata API
 keywords:
    - hasura
    - docs
@@ -14,7 +14,7 @@ keywords:
 
 ## Introduction
 
-Event triggers are used to capture database changes and send them to a
+Event Rriggers are used to capture database changes and send them to a
 configured webhook.
 
 :::tip Supported from
@@ -26,8 +26,8 @@ replaces the older [schema/metadata API](/api-reference/schema-metadata-api/inde
 
 ## pg_create_event_trigger {#metadata-pg-create-event-trigger}
 
-`pg_create_event_trigger` is used to create a new event trigger or
-replace an existing event trigger.
+`pg_create_event_trigger` is used to create a new Event Trigger or
+replace an existing Event Trigger.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -82,7 +82,7 @@ X-Hasura-Role: admin
 
 | Key                       | Required | Schema                                                                                                                                                              | Description                                                             |
 |---------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| name                      | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername)                                                                                              | Name of the event trigger                                               |
+| name                      | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername)                                                                                              | Name of the Event Trigger                                               |
 | table                     | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                                                                                        | Object with table name and schema                                       |
 | source                    | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                                                                                | Name of the source database of the table (default: `default`)           |
 | webhook                   | false    | String                                                                                                                                                              | Full url of webhook (\*)                                                |
@@ -92,8 +92,8 @@ X-Hasura-Role: admin
 | delete                    | false    | [OperationSpec](/api-reference/syntax-defs.mdx#operationspec)                                                                                          | Specification for delete operation                                      |
 | headers                   | false    | [ [HeaderFromValue](/api-reference/syntax-defs.mdx#headerfromvalue) \| [HeaderFromEnv](/api-reference/syntax-defs.mdx#headerfromenv) ]    | List of headers to be sent with the webhook                             |
 | retry_conf                | false    | [RetryConf](/api-reference/syntax-defs.mdx#retryconf)                                                                                                  | Retry configuration if event delivery fails                             |
-| replace                   | false    | Boolean                                                                                                                                                             | If set to true, the event trigger is replaced with the new definition   |
-| enable_manual             | false    | Boolean                                                                                                                                                             | If set to true, the event trigger can be invoked manually               |
+| replace                   | false    | Boolean                                                                                                                                                             | If set to true, the Event Trigger is replaced with the new definition   |
+| enable_manual             | false    | Boolean                                                                                                                                                             | If set to true, the Event Trigger can be invoked manually               |
 | request_transform         | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                                          | Attaches a Request Transformation to the Event Trigger.                 |
 | response_transform        | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                                        | Attaches a Request Transformation to the Event Trigger.                 |
 | cleanup_config            | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                                          | Cleanup config for the auto cleanup process (EE/Cloud only).            |
@@ -102,7 +102,7 @@ X-Hasura-Role: admin
 
 ## pg_delete_event_trigger {#metadata-pg-delete-event-trigger}
 
-`pg_delete_event_trigger` is used to delete an event trigger.
+`pg_delete_event_trigger` is used to delete an Event Trigger.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -122,7 +122,7 @@ X-Hasura-Role: admin
 
 | Key    | Required | Schema                                                                 | Description                                                     |
 |--------|----------|------------------------------------------------------------------------|-----------------------------------------------------------------|
-| name   | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the event trigger                                       |
+| name   | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                       |
 | source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`) |
 
 ## pg_redeliver_event {#metadata-pg-redeliver-event}
@@ -154,7 +154,7 @@ X-Hasura-Role: admin
 
 ## pg_invoke_event_trigger {#metadata-pg-invoke-event-trigger}
 
-`invoke_event_trigger` is used to invoke an event trigger with custom payload.
+`invoke_event_trigger` is used to invoke an Event Trigger with custom payload.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -175,7 +175,7 @@ X-Hasura-Role: admin
 
 | Key     | Required | Schema                                                                 | Description                                                     |
 |---------|----------|------------------------------------------------------------------------|-----------------------------------------------------------------|
-| name    | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the event trigger                                       |
+| name    | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                       |
 | payload | true     | JSON                                                                   | Some JSON payload to send to trigger                            |
 | source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`) |
 
@@ -186,8 +186,8 @@ X-Hasura-Role: admin
 
 ## mssql_create_event_trigger {#metadata-mssql-create-event-trigger}
 
-`mssql_create_event_trigger` is used to create a new event trigger or
-replace an existing event trigger.
+`mssql_create_event_trigger` is used to create a new Event Trigger or
+replace an existing Event Trigger.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -242,7 +242,7 @@ X-Hasura-Role: admin
 
 | Key                       | Required | Schema                                                                                                                                                              | Description                                                             |
 |---------------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|
-| name                      | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername)                                                                                              | Name of the event trigger                                               |
+| name                      | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername)                                                                                              | Name of the Event Trigger                                               |
 | table                     | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                                                                                        | Object with table name and schema                                       |
 | source                    | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)                                                                                                | Name of the source database of the table (default: `default`)           |
 | webhook                   | false    | String                                                                                                                                                              | Full url of webhook (\*)                                                |
@@ -252,8 +252,8 @@ X-Hasura-Role: admin
 | delete                    | false    | [OperationSpec](/api-reference/syntax-defs.mdx#operationspec)                                                                                          | Specification for delete operation                                      |
 | headers                   | false    | [ [HeaderFromValue](/api-reference/syntax-defs.mdx#headerfromvalue) \| [HeaderFromEnv](/api-reference/syntax-defs.mdx#headerfromenv) ]    | List of headers to be sent with the webhook                             |
 | retry_conf                | false    | [RetryConf](/api-reference/syntax-defs.mdx#retryconf)                                                                                                  | Retry configuration if event delivery fails                             |
-| replace                   | false    | Boolean                                                                                                                                                             | If set to true, the event trigger is replaced with the new definition   |
-| enable_manual             | false    | Boolean                                                                                                                                                             | If set to true, the event trigger can be invoked manually               |
+| replace                   | false    | Boolean                                                                                                                                                             | If set to true, the Event Trigger is replaced with the new definition   |
+| enable_manual             | false    | Boolean                                                                                                                                                             | If set to true, the Event Trigger can be invoked manually               |
 | request_transform         | false    | [RequestTransformation](/api-reference/syntax-defs.mdx#requesttransformation)                                                                          | Attaches a Request Transformation to the Event Trigger.                 |
 | response_transform        | false    | [ResponseTransformation](/api-reference/syntax-defs.mdx#responsetransformation)                                                                        | Attaches a Request Transformation to the Event Trigger.                 |
 | cleanup_config            | false    | [AutoEventTriggerCleanupConfig](/api-reference/syntax-defs.mdx#autoeventtriggercleanupconfig)                                                          | Cleanup config for the auto cleanup process (EE/Cloud only).            |
@@ -262,7 +262,7 @@ X-Hasura-Role: admin
 
 ## mssql_delete_event_trigger {#metadata-mssql-delete-event-trigger}
 
-`mssql_delete_event_trigger` is used to delete an event trigger.
+`mssql_delete_event_trigger` is used to delete an Event Trigger.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -282,7 +282,7 @@ X-Hasura-Role: admin
 
 | Key    | Required | Schema                                                                 | Description                                                     |
 |--------|----------|------------------------------------------------------------------------|-----------------------------------------------------------------|
-| name   | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the event trigger                                       |
+| name   | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                       |
 | source | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`) |
 
 ## mssql_redeliver_event {#metadata-mssql-redeliver-event}
@@ -314,7 +314,7 @@ X-Hasura-Role: admin
 
 ## mssql_invoke_event_trigger {#metadata-mssql-invoke-event-trigger}
 
-`invoke_event_trigger` is used to invoke an event trigger with custom payload.
+`invoke_event_trigger` is used to invoke an Event Trigger with custom payload.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -335,7 +335,7 @@ X-Hasura-Role: admin
 
 | Key     | Required | Schema                                                                 | Description                                                     |
 |---------|----------|------------------------------------------------------------------------|-----------------------------------------------------------------|
-| name    | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the event trigger                                       |
+| name    | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger                                       |
 | payload | true     | JSON                                                                   | Some JSON payload to send to trigger                            |
 | source  | false    | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Name of the source database of the trigger (default: `default`) |
 
@@ -343,7 +343,7 @@ X-Hasura-Role: admin
 
 <div className='badge badge--primary heading-badge'>Available on: Enterprise Edition/Cloud</div>
 
-`cleanup_event_trigger_logs` is used to manually delete the event logs for a given event trigger.
+`cleanup_event_trigger_logs` is used to manually delete the event logs for a given Event Trigger.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -366,9 +366,9 @@ X-Hasura-Role: admin
 
 | Key                   | Required      | Schema                                                    | Description                                                                   |
 |-----------------------|---------------|-----------------------------------------------------------|-------------------------------------------------------------------------------|
-| event_trigger_name    | true          | String                                                    | Name of the event trigger whose logs needs to be cleaned up                   |
-| source                | false         | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Source to which the event trigger belong. Default `default`                   |
-| batch_size            | false         | Int                                                       | Maximum number of event trigger logs to delete. Default 10000                 |
+| event_trigger_name    | true          | String                                                    | Name of the Event Trigger whose logs needs to be cleaned up                   |
+| source                | false         | [SourceName](/api-reference/syntax-defs.mdx#sourcename)   | Source to which the Event Trigger belong. Default `default`                   |
+| batch_size            | false         | Int                                                       | Maximum number of Event Trigger logs to delete. Default 10000                 |
 | clear_older_than      | true          | Int                                                       | Event logs retention period (in hours).                                       |
 | timeout               | false         | Int                                                       | Timeout for the cleanup query (in seconds). Default: 60                       |
 | clean_invocation_logs | false         | Boolean                                                   | Should corresponding invocation logs be cleaned. Default `false`              |
@@ -377,7 +377,7 @@ X-Hasura-Role: admin
 
 <div className='badge badge--primary heading-badge'>Available on: Enterprise Edition/Cloud</div>
 
-`resume_event_trigger_cleanups` is used to resume the paused log cleaner for event triggers.
+`resume_event_trigger_cleanups` is used to resume the paused log cleaner for Event Triggers.
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -401,7 +401,7 @@ X-Hasura-Role: admin
 
 | Key               | Required | Schema                                                                                                                                                                  | Description                                                 |
 |-------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------|
-| event_triggers    | true     | [TriggerLogCleanupSources](/api-reference/syntax-defs.mdx#triggerlogcleanupsources) \| [[EventTriggerQualifier]](/api-reference/syntax-defs.mdx#eventtriggerqualifier)  | Event triggers for which to start the cleanup process       |
+| event_triggers    | true     | [TriggerLogCleanupSources](/api-reference/syntax-defs.mdx#triggerlogcleanupsources) \| [[EventTriggerQualifier]](/api-reference/syntax-defs.mdx#eventtriggerqualifier)  | Event Triggers for which to start the cleanup process       |
 
 ## pause_event_trigger_cleanups {#metadata-pause-event-trigger-cleanups}
 
@@ -433,10 +433,10 @@ X-Hasura-Role: admin
 
 | Key               | Required | Schema                                                                                                                                                                  | Description                                           |
 |-------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------|
-| event_triggers    | true     | [TriggerLogCleanupSources](/api-reference/syntax-defs.mdx#triggerlogcleanupsources) \| [[EventTriggerQualifier]](/api-reference/syntax-defs.mdx#eventtriggerqualifier)  | Event triggers for which to pause the cleanup process |
+| event_triggers    | true     | [TriggerLogCleanupSources](/api-reference/syntax-defs.mdx#triggerlogcleanupsources) \| [[EventTriggerQualifier]](/api-reference/syntax-defs.mdx#eventtriggerqualifier)  | Event Triggers for which to pause the cleanup process |
 
 :::info Note
 
-The start and pause APIs for event trigger cleanup work only for event triggers that have a cleanup configuration defined.
+The start and pause APIs for Event Trigger cleanup work only for Event Triggers that have a cleanup configuration defined.
 
 :::

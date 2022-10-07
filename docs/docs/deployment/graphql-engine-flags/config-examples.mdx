@@ -1,5 +1,5 @@
 ---
-description: Examples of server configurations with Hasura GraphQL engine
+description: Examples of server configurations with Hasura GraphQL Engine
 keywords:
   - hasura
   - docs
@@ -43,7 +43,7 @@ docker run -P -d hasura/graphql-engine:latest graphql-engine \
              --auth-hook https://myauth.mywebsite.com/user/session-info
 ```
 
-In addition to flags, the GraphQL engine also accepts environment
+In addition to flags, the GraphQL Engine also accepts environment
 variables.
 
 In the above case, for adding an admin secret you will use the
@@ -52,7 +52,7 @@ In the above case, for adding an admin secret you will use the
 
 ## Using CLI commands with admin secret {#cli-with-admin-secret}
 
-When you start the GraphQL engine with an admin secret key, CLI commands
+When you start the GraphQL Engine with an admin secret key, CLI commands
 will also need this admin secret to contact APIs. It can be set in
 `config.yaml` or as an environment variable or as a flag to the command.
 For example, let's look at the case of the `console` command:
@@ -102,7 +102,7 @@ CLI flag > Environment variable > Config file
 
 ## Configure CORS {#configure-cors}
 
-By default, all CORS requests to the Hasura GraphQL engine are allowed.
+By default, all CORS requests to the Hasura GraphQL Engine are allowed.
 To run with more restrictive CORS settings, use the `--cors-domain` flag
 or the `HASURA_GRAPHQL_CORS_DOMAIN` ENV variable. The default value is
 `*`, which means CORS headers are sent for all domains.
@@ -149,7 +149,7 @@ assets are bundled with the Docker image published by Hasura. These
 files can be found at `/srv/console-assets`.
 
 If you're working in an environment with Hasura running locally and have
-no access to internet, you can configure the GraphQL engine to load
+no access to internet, you can configure the GraphQL Engine to load
 assets from the Docker image itself, instead of the CDN.
 
 Set the following env var or flag on the server:
@@ -177,14 +177,14 @@ it might not be the latest version of the console.
 
 ## Dev (debugging) mode {#dev-mode}
 
-The Hasura GraphQL engine may provide additional information for each
+The Hasura GraphQL Engine may provide additional information for each
 object in the `extensions` key of `errors`. The `internal` key contains
 error information including the generated SQL statement and exception
 information from Postgres. This can be highly useful, especially in the
 case of debugging errors in [action](/actions/debugging.mdx) requests.
 
 By default the `internal` key is not sent in the `extensions` response
-(except for `admin` roles). To enable this, start the GraphQL engine
+(except for `admin` roles). To enable this, start the GraphQL Engine
 server in debugging mode with the following configuration:
 
 ```bash
@@ -215,18 +215,18 @@ in production.
 
 ## Add a metadata database {#add-metadata-database}
 
-The Hasura GraphQL engine when initialized, creates a schema called
+The Hasura GraphQL Engine when initialized, creates a schema called
 `hdb_catalog` in the Postgres database and initializes a few tables
 under it. This schema and the internal tables are generally termed as
 the `metadata catalogue` and is responsible to manage the internal state
-of the Hasura GraphQL engine.
+of the Hasura GraphQL Engine.
 
 By default, the `metadata_catalogue` is created inside the primary
 database provided by the user. But sometimes it might be more
 advantageous to segregate the primary database and the metadata
 database.
 
-Hasura GraphQL engine provides a way to the users to provide an entirely
+Hasura GraphQL Engine provides a way to the users to provide an entirely
 separate database to store the `metadata catalogue`.
 
 To add a metadata database, set the following environment variable or
@@ -264,7 +264,7 @@ HASURA_GRAPHQL_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<db-name>
 --database-url=postgres://<user>:<password>@<host>:<port>/<db-name>
 ```
 
-In this case, Hasura GraphQL engine will use the
+In this case, Hasura GraphQL Engine will use the
 `HASURA_GRAPHQL_METADATA_DATABASE_URL` to store the `metadata catalogue`
 and starts the server with the database provided in the
 `HASURA_GRAPHQL_DATABASE_URL`.
@@ -279,7 +279,7 @@ HASURA_GRAPHQL_METADATA_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/
 --metadata-database-url=postgres://<user>:<password>@<host>:<port>/<metadata-db-name>
 ```
 
-In this case, Hasura GraphQL engine will use the
+In this case, Hasura GraphQL Engine will use the
 `HASURA_GRAPHQL_METADATA_DATABASE_URL` to store the `metadata catalogue`
 and starts the server without tracking/managing any database. *i.e* a
 Hasura GraphQL server will be started with no database. The user could
@@ -295,14 +295,14 @@ HASURA_GRAPHQL_DATABASE_URL=postgres://<user>:<password>@<host>:<port>/<db-name>
 --database-url=postgres://<user>:<password>@<host>:<port>/<db-name>
 ```
 
-In this case, Hasura GraphQL engine server will start with the database
+In this case, Hasura GraphQL Engine server will start with the database
 provided in the `HASURA_GRAPHQL_DATABASE_URL` and will also use the
 *same database* to store the `metadata catalogue`.
 
 **4. Neither** `primary database` **nor** `metadata database` **is
 provided to the server**
 
-Hasura GraphQL engine will fail to startup and will throw an error
+Hasura GraphQL Engine will fail to startup and will throw an error
 
 ```bash
 Fatal Error: Either of --metadata-database-url or --database-url option expected

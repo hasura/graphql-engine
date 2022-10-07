@@ -17,7 +17,7 @@ MS SQL Server: Supported types
 Introduction
 ------------
 
-List of MS SQL Server types supported by the Hasura GraphQL engine with their equivalent Hasura types:
+List of MS SQL Server types supported by the Hasura GraphQL Engine with their equivalent Hasura types:
 
 .. csv-table::
    :file: mssqltypes.csv
@@ -308,7 +308,7 @@ variables:
 
 Implicitly Supported types
 --------------------------
-All ``Implicit`` types in the :ref:`above table <ms_sql_server_types_table>` are implicitly supported by the GraphQL engine. You have to
+All ``Implicit`` types in the :ref:`above table <ms_sql_server_types_table>` are implicitly supported by the GraphQL Engine. You have to
 provide the value as a **String**.
 
 

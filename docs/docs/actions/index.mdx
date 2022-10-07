@@ -1,5 +1,5 @@
 ---
-description: Hasura actions
+description: Hasura Actions
 keywords:
   - hasura
   - docs
@@ -21,7 +21,7 @@ other complex business logic.
 
 :::tip Supported from
 
-Actions are supported in Hasura GraphQL engine versions `v1.2.0` and above.
+Actions are supported in Hasura GraphQL Engine versions `v1.2.0` and above.
 
 Actions are supported for **Postgres versions 10 and above**.
 
@@ -42,10 +42,10 @@ An action consists of the following parts:
 Actions can be of two types:
 
 - **Query action**: An action of type `query` extends the query root of the Hasura schema. This means that you can
-  execute this action through a GraphQL query. Query actions must be used where you want to fetch data from a data
+  execute this action through a GraphQL query. Query Actions must be used where you want to fetch data from a data
   source without changing anything on the data source.
 - **Mutation action**: An action of type `mutation` extends the mutation root of the Hasura schema. This means that you
-  can execute this action through a GraphQL mutation. Mutation actions must be used when you want to mutate the state of
+  can execute this action through a GraphQL mutation. Mutation Actions must be used when you want to mutate the state of
   a data source and fetch some data.
 
 ### Definition
@@ -101,13 +101,13 @@ Learn more about [writing an action handler](/actions/action-handlers.mdx).
 
 ### Kind
 
-**Mutation actions** are of two kinds:
+**Mutation Actions** are of two kinds:
 
-- **Synchronous**: Sync actions return a response to the client after receiving a response from the handler.
-- **Asynchronous**: [Async actions](/actions/async-actions.mdx) return an `action id` as response to the client before
+- **Synchronous**: Sync Actions return a response to the client after receiving a response from the handler.
+- **Asynchronous**: [Async Actions](/actions/async-actions.mdx) return an `action id` as response to the client before
   receiving a response from the handler and allow the client to subscribe to the actual response using the `action id`.
 
-**Query actions** don't have a kind, they always behave like sync mutation actions.
+**Query Actions** don't have a kind, they always behave like sync mutation Actions.
 
 ## How it works?
 
@@ -117,9 +117,9 @@ Learn more about [writing an action handler](/actions/action-handlers.mdx).
 - The action handler runs and returns a response that is captured as an event and again persisted to the event store.
 - The action response is returned to the client synchronously or asynchronously based on the kind.
 
-## Actions vs. remote schemas
+## Actions vs. Remote Schemas
 
-Both actions and remote schemas can be used to extend Hasura with business logic. However, they have slightly different
+Both Actions and Remote Schemas can be used to extend Hasura with business logic. However, they have slightly different
 use cases.
 
 **Actions**
@@ -127,23 +127,23 @@ use cases.
 Actions can be used when we want to call a REST endpoint from Hasura as a resolver for some custom types. They are
 especially useful for setting up serverless functions as resolvers.
 
-**Remote schemas**
+**Remote Schemas**
 
 If you have an existing GraphQL API or if you're comfortable building a GraphQL server yourself, you can use
-[remote schemas](/remote-schemas/index.mdx) to add custom types and resolvers.
+[Remote Schemas](/remote-schemas/index.mdx) to add custom types and resolvers.
 
 ## Learn more
 
-- [Creating actions](/actions/create.mdx)
+- [Creating Actions](/actions/create.mdx)
 - [Custom types](/actions/types.mdx)
 - [Action handlers](/actions/action-handlers.mdx)
-- [Async actions](/actions/async-actions.mdx)
+- [Async Actions](/actions/async-actions.mdx)
 - [Codegen](/actions/codegen/index.mdx)
-- [Deriving actions](/actions/derive.mdx)
+- [Deriving Actions](/actions/derive.mdx)
 - [Actions permissions](/actions/action-permissions.mdx)
 - [Actions relationships](/actions/action-relationships.mdx)
 - [REST Connectors for actions](/actions/rest-connectors.mdx)
-- [Debugging actions](/actions/debugging.mdx)
+- [Debugging Actions](/actions/debugging.mdx)
 - [Cleaning up async action logs](/actions/logs-clean-up.mdx)
 
 <!--

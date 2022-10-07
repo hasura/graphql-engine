@@ -43,7 +43,7 @@ For enums with values that are dynamic and may require updates, such as a list o
 strongly recommended. Modifying an enum defined this way is easy: simply insert, update, or delete rows in the enum
 table (and updates or deletes can even be cascaded to references, and they may be done within a transaction).
 
-## Enums in the Hasura GraphQL engine
+## Enums in the Hasura GraphQL Engine
 
 Given the limitations of native Postgres enum types (as described [above](#pg-native-enum)), Hasura currently only
 generates GraphQL enum types for enums defined using the [referenced tables](#pg-reference-table-enum) approach.

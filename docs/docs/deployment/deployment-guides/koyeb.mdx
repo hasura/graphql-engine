@@ -1,5 +1,5 @@
 ---
-description: Deploy Hasura GraphQL engine on Koyeb Serverless Platform with Docker
+description: Deploy Hasura GraphQL Engine on Koyeb Serverless Platform with Docker
 keywords:
   - hasura
   - docs
@@ -13,22 +13,22 @@ sidebar_label: Using Koyeb Serverless Platform
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Deploying Hasura GraphQL engine on Koyeb
+# Deploying Hasura GraphQL Engine on Koyeb
 
 ## Introduction
 
-This guide explains how to deploy the Hasura GraphQL engine on the [Koyeb Serverless Platform](https://koyeb.com).
+This guide explains how to deploy the Hasura GraphQL Engine on the [Koyeb Serverless Platform](https://koyeb.com).
 
 ## Prerequisites
 
 To successfully follow and complete this guide, you need:
 
-- A PostgreSQL database to use as the Hasura GraphQL engine backend.
-- A [Koyeb account](https://app.koyeb.com) to deploy and run the Hasura GraphQL engine.
+- A PostgreSQL database to use as the Hasura GraphQL Engine backend.
+- A [Koyeb account](https://app.koyeb.com) to deploy and run the Hasura GraphQL Engine.
 
-## Deploy Hasura GraphQL engine on Koyeb
+## Deploy Hasura GraphQL Engine on Koyeb
 
-To deploy the Hasura GraphQL engine on Koyeb, we use the `hasura/graphql-engine` Docker image.
+To deploy the Hasura GraphQL Engine on Koyeb, we use the `hasura/graphql-engine` Docker image.
 
 On the Koyeb control panel, click the **Create App** button. You land on the Koyeb App creation form.
 
@@ -38,11 +38,11 @@ On the Koyeb control panel, click the **Create App** button. You land on the Koy
 
 2. In the _Ports_ section, change the export port from `80` to `8080`, which is the port the `hasura/graphql-engine`
    Docker image app is listening on. This setting is required to let Koyeb know which port your application is listening
-   to and properly route incoming HTTP requests. If you want the Hasura GraphQL engine to be available on a specific
+   to and properly route incoming HTTP requests. If you want the Hasura GraphQL Engine to be available on a specific
    path, you can change the default one (`/`) to the path of your choice.
 
 3. In the _Environment variables_ section, configure the environment variables required to properly run the Hasura
-   GraphQL engine.
+   GraphQL Engine.
 
    - HASURA_GRAPHQL_DATABASE_URL: The environment variable containing the PostgreSQL URL, i.e.
      `postgres://<user>:<password>@<host>:<port>/<database>`. To store this value which contains sensitive information,
@@ -66,7 +66,7 @@ Once your Koyeb App is deployed, you can click the App link in the Koyeb control
 https://<your-app-name>-<your-org-name>.koyeb.app/
 ```
 
-At any time, you can track your Hasura service status in the Koyeb control panel and visualize the Hasura GraphQL engine
+At any time, you can track your Hasura service status in the Koyeb control panel and visualize the Hasura GraphQL Engine
 web service logs in the **Logs** tab of your service.
 
 ## References

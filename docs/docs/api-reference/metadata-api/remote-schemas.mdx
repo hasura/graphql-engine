@@ -1,7 +1,7 @@
 ---
 sidebar_label: Remote Schemas
 sidebar_position: 11
-description: Manage remote schemas with the Hasura metadata API
+description: Manage Remote Schemas with the Hasura metadata API
 keywords:
    - hasura
    - docs
@@ -10,12 +10,12 @@ keywords:
    - remote schema
 ---
 
-# Metadata API Reference: Remote schemas
+# Metadata API Reference: Remote Schemas
 
 ## Introduction
 
 Add/Remove a remote GraphQL server as remote schema in Hasura GraphQL
-engine.
+Engine.
 
 :::tip Supported from
 
@@ -27,7 +27,7 @@ replaces the older [schema/metadata API](/api-reference/schema-metadata-api/inde
 ## add_remote_schema {#metadata-add-remote-schema}
 
 `add_remote_schema` is used to add a remote GraphQL server as remote
-schema. GraphQL engine stitches it's schema with existing.
+schema. GraphQL Engine stitches it's schema with existing.
 
 An example request as follows:
 
@@ -137,7 +137,7 @@ X-Hasura-Role: admin
 
 ## remove_remote_schema {#metadata-remove-remote-schema}
 
-`remove_remote_schema` is used to delete a remote schema. GraphQL engine
+`remove_remote_schema` is used to delete a remote schema. GraphQL Engine
 de-stitches it's schema.
 
 An example request as follows:
@@ -165,7 +165,7 @@ X-Hasura-Role: admin
 ## reload_remote_schema {#metadata-reload-remote-schema}
 
 `reload_remote_schema` is used to refresh schema of the remote server.
-GraphQL engine refetches schema from server and stitches.
+GraphQL Engine refetches schema from server and stitches.
 
 An example request as follows:
 

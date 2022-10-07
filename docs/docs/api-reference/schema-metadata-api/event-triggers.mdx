@@ -1,7 +1,7 @@
 ---
 sidebar_label: Event Triggers
 sidebar_position: 8 
-description: Manage event triggers with the Hasura schema/metadata API
+description: Manage Event Triggers with the Hasura schema/metadata API
 keywords:
    - hasura
    - docs
@@ -26,13 +26,13 @@ continue to function.
 
 ## Introduction
 
-Event triggers are used to capture database changes and send them to a
+Event Triggers are used to capture database changes and send them to a
 configured webhook.
 
 ## create_event_trigger {#schema-metadata-create-event-trigger}
 
-`create_event_trigger` is used to create a new event trigger or replace
-an existing event trigger.
+`create_event_trigger` is used to create a new Event Trigger or replace
+an existing Event Trigger.
 
 ```http
 POST /v1/query HTTP/1.1
@@ -78,7 +78,7 @@ X-Hasura-Role: admin
 
 | Key              | Required | Schema                                                                                                                                                              | Description                                                           |
 |------------------|----------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| name             | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername)                                                                                              | Name of the event trigger                                             |
+| name             | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername)                                                                                              | Name of the Event Trigger                                             |
 | table            | true     | [QualifiedTable](/api-reference/syntax-defs.mdx#qualifiedtable)                                                                                        | Object with table name and schema                                     |
 | webhook          | false    | String                                                                                                                                                              | Full url of webhook (\*)                                              |
 | webhook_from_env | false    | String                                                                                                                                                              | Environment variable name of webhook (must exist at boot time) (\*)   |
@@ -87,14 +87,14 @@ X-Hasura-Role: admin
 | delete           | false    | [OperationSpec](/api-reference/syntax-defs.mdx#operationspec)                                                                                          | Specification for delete operation                                    |
 | headers          | false    | \[ [HeaderFromValue](/api-reference/syntax-defs.mdx#headerfromvalue) \| [HeaderFromEnv](/api-reference/syntax-defs.mdx#headerfromenv) \]  | List of headers to be sent with the webhook                           |
 | retry_conf       | false    | [RetryConf](/api-reference/syntax-defs.mdx#retryconf)                                                                                                  | Retry configuration if event delivery fails                           |
-| replace          | false    | Boolean                                                                                                                                                             | If set to true, the event trigger is replaced with the new definition |
-| enable_manual    | false    | Boolean                                                                                                                                                             | If set to true, the event trigger can be invoked manually             |
+| replace          | false    | Boolean                                                                                                                                                             | If set to true, the Event Trigger is replaced with the new definition |
+| enable_manual    | false    | Boolean                                                                                                                                                             | If set to true, the Event Trigger can be invoked manually             |
 
 (\*) Either `webhook` or `webhook_from_env` are required.
 
 ## delete_event_trigger {#schema-metadata-delete-event-trigger}
 
-`delete_event_trigger` is used to delete an event trigger.
+`delete_event_trigger` is used to delete an Event Trigger.
 
 ```http
 POST /v1/query HTTP/1.1
@@ -113,7 +113,7 @@ X-Hasura-Role: admin
 
 | Key  | Required | Schema                                                                 | Description               |
 |------|----------|------------------------------------------------------------------------|---------------------------|
-| name | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the event trigger |
+| name | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger |
 
 ## redeliver_event {#schema-metadata-redeliver-event}
 
@@ -144,7 +144,7 @@ X-Hasura-Role: admin
 
 ## invoke_event_trigger {#schema-metadata-invoke-event-trigger}
 
-`invoke_event_trigger` is used to invoke an event trigger with custom payload.
+`invoke_event_trigger` is used to invoke an Event Trigger with custom payload.
 
 ```http
 POST /v1/query HTTP/1.1
@@ -164,5 +164,5 @@ X-Hasura-Role: admin
 
 | Key     | Required | Schema                                                                 | Description                          |
 |---------|----------|------------------------------------------------------------------------|--------------------------------------|
-| name    | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the event trigger            |
+| name    | true     | [TriggerName](/api-reference/syntax-defs.mdx#triggername) | Name of the Event Trigger            |
 | payload | true     | JSON                                                                   | Some JSON payload to send to trigger |

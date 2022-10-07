@@ -24,7 +24,7 @@ Custom SQL functions are [user-defined SQL functions](https://www.postgresql.org
 that can be used to either encapsulate some custom business logic or extend the built-in SQL functions and operators.
 SQL functions are also referred to as **stored procedures**.
 
-Hasura GraphQL engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
+Hasura GraphQL Engine lets you expose certain types of custom functions as top level fields in the GraphQL API to allow
 querying them with either `queries` or `subscriptions`, or for `VOLATILE` functions as `mutations`.
 
 :::info Note
@@ -437,7 +437,7 @@ query {
 
 ### Using argument default values for custom functions
 
-If you omit an argument in the `args` input field then the GraphQL engine executes the SQL function without the
+If you omit an argument in the `args` input field then the GraphQL Engine executes the SQL function without the
 argument. Hence, the function will use the default value of that argument set in its definition.
 
 **For example:** In the above [PostGIS functions example](#pg-custom-functions-postgis), the function definition can be
@@ -572,7 +572,7 @@ are also applicable to the function itself.
 
 :::info Note
 
-In case of **functions exposed as queries**, if the Hasura GraphQL engine is started with inferring of function
+In case of **functions exposed as queries**, if the Hasura GraphQL Engine is started with inferring of function
 permissions set to `true` (by default: `true`) then a function exposed as a query will be accessible to a role even if
 the role doesn't have a function permission for the function - provided the role has select permission defined on the
 returning table of the function.

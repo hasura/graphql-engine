@@ -1,5 +1,5 @@
 ---
-description: Bypassing auth in your remote schema with Hasura
+description: Bypassing auth in your Remote Schema with Hasura
 keywords:
   - hasura
   - docs
@@ -9,13 +9,13 @@ keywords:
 sidebar_position: 4
 ---
 
-# Bypassing Hasura's auth for remote schemas
+# Bypassing Hasura's auth for Remote Schemas
 
 ## Introduction
 
 It might be necessary sometimes to bypass Hasura's authentication system (calling the configured webhook, or validating the JWT), for requests that are for a remote GraphQL server.
 
-**For example**, you have a remote GraphQL server which does authentication, i.e. signup and login, and you have added it as a remote schema. In this case, you would not want to perform Hasura's authorization when the user is making a login/signup request.
+**For example**, you have a remote GraphQL server which does authentication, i.e. signup and login, and you have added it as a Remote Schema. In this case, you would not want to perform Hasura's authorization when the user is making a login/signup request.
 
 There is no first-class option to currently do this via any configuration in Hasura. However a similar solution can be achieved by the following workarounds:
 
@@ -26,14 +26,14 @@ If you have a [webhook authorization setup](/auth/authentication/webhook.mdx), i
 To bypass the webhook auth:
 
 - the webhook should respond with `200` and `x-hasura-role: anonymous` instead of a `401` when the authorization information is absent or if it fails to resolve the authorization information.
-- when adding the remote schema, check the `Forward all headers from client` option so that the remote server will get the relevant cookie/header (from the client) and the role `anonymous`.
+- when adding the Remote Schema, check the `Forward all headers from client` option so that the remote server will get the relevant cookie/header (from the client) and the role `anonymous`.
 
 ## Bypassing JWT authentication
 
 If you have a [JWT authorization setup](/auth/authentication/jwt.mdx), to bypass the JWT auth:
 
 - your authentication server should generate a static JWT token for `anonymous` i.e. unauthenticated users.
-- when adding the remote schema, check the `Forward all headers from client` option so that the remote server will get the JWT (from the client).
+- when adding the Remote Schema, check the `Forward all headers from client` option so that the remote server will get the JWT (from the client).
 
 For example, the generated JWT can be:
 

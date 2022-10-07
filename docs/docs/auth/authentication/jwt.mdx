@@ -17,10 +17,10 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 ## Introduction
 
-You can configure the GraphQL engine to use JWT authorization mode to authorize all incoming requests to the Hasura
-GraphQL engine server.
+You can configure the GraphQL Engine to use JWT authorization mode to authorize all incoming requests to the Hasura
+GraphQL Engine server.
 
-The idea is that your auth server will return JWT tokens, which are decoded and verified by the GraphQL engine, to
+The idea is that your auth server will return JWT tokens, which are decoded and verified by the GraphQL Engine, to
 authorize and get metadata about the request (`x-hasura-*` values).
 
 <Thumbnail src='/img/auth/auth-jwt-overview.png' alt='Authentication using JWT' width='1000px' />
@@ -62,7 +62,7 @@ When your auth server generates the JWT, the custom claims in the JWT **must con
 The claims in the JWT can have other `x-hasura-*` fields where their values can only be strings. You can use these
 `x-hasura-*` fields in your permissions.
 
-Now the JWT should be sent by the client to the Hasura GraphQL engine via the `Authorization: Bearer <JWT>` header.
+Now the JWT should be sent by the client to the Hasura GraphQL Engine via the `Authorization: Bearer <JWT>` header.
 
 Example JWT claim:
 
@@ -165,14 +165,14 @@ Some providers rotate their JWKs (e.g. Firebase). If the provider sends
 2. `max-age` or `s-maxage` in `Cache-Control` header
 3. or `Expires` header
 
-with the response of JWK, then the GraphQL engine will refresh the JWKs automatically. If the provider does not send the
+with the response of JWK, then the GraphQL Engine will refresh the JWKs automatically. If the provider does not send the
 above, the JWKs are not refreshed.
 
 Following is the behaviour in detail:
 
 **On startup**:
 
-1.  GraphQL engine will fetch the JWK and will -
+1.  GraphQL Engine will fetch the JWK and will -
 
     1. first, try to parse `no-cache`, `no-store` or `must-revalidate` in `Cache-Control` header.
     2. second, try to parse `max-age` or `s-maxage` directive in `Cache-Control` header.
@@ -194,7 +194,7 @@ Following is the behaviour in detail:
 
 **While running**:
 
-1.  While GraphQL engine is running with refreshing JWKs, in one of the refresh cycles it will -
+1.  While GraphQL Engine is running with refreshing JWKs, in one of the refresh cycles it will -
 
     1. first, try to parse `max-age` or `s-maxage` directive in `Cache-Control` header.
     2. second, check if `Expires` header is present (if `Cache-Control` is not present), and try to parse the value as a
@@ -735,10 +735,10 @@ escaping new lines.
 Here are some sample apps that use JWT authorization. You can follow the instructions in the READMEs of the repositories
 to get started.
 
-- [Custom JWT server with Hasura actions](/actions/codegen/python-flask.mdx): A simple Python / Flask API that
-  implements `Signup` and `Login` methods as actions returning JWTs
+- [Custom JWT server with Hasura Actions](/actions/codegen/python-flask.mdx): A simple Python / Flask API that
+  implements `Signup` and `Login` methods as Actions returning JWTs
 - [Auth0 JWT example](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/todo-auth0-jwt): A todo
-  app that uses Hasura GraphQL engine and Auth0 JWT
+  app that uses Hasura GraphQL Engine and Auth0 JWT
 - [Firebase JWT example](https://github.com/hasura/graphql-engine/tree/master/community/sample-apps/firebase-jwt):
   Barebones example to show how to have Firebase Auth integrated with Hasura JWT mode
 

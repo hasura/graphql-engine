@@ -111,10 +111,10 @@ Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
 - If your **password contains special characters** (e.g. #, %, $, @, etc.), you need to URL encode them in the
   `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var (e.g. %40 for @).
 
-- The Hasura GraphQL engine needs access permissions on your Postgres database as described in
+- The Hasura GraphQL Engine needs access permissions on your Postgres database as described in
   [Postgres permissions](/deployment/postgres-requirements.mdx#postgres-permissions).
 
-- The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL engine as it would give
+- The `HASURA_GRAPHQL_ADMIN_SECRET` should never be passed from the client to the Hasura GraphQL Engine as it would give
   the client full admin rights to your Hasura instance. See [Authentication & Authorization](/auth/index.mdx) for
   information on setting up authentication.
 
@@ -122,7 +122,7 @@ Examples of `HASURA_GRAPHQL_REDIS_URL` and `HASURA_GRAPHQL_RATE_LIMIT_REDIS_URL`
   secrets,
   [see here for more information](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/specifying-sensitive-data.html).
 
-- Configure logging and monitoring for your Hasura graphql engine instance,
+- Configure logging and monitoring for your Hasura GraphQL Engine instance,
   [see here for more information](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-logging-monitoring.html).
 
 :::
@@ -262,13 +262,13 @@ The public IP address is in the output.
 
 ```
 
-Enter the public IP address in your web browser and you should see a webpage that displays the Hasura GraphQL engine
+Enter the public IP address in your web browser and you should see a webpage that displays the Hasura GraphQL Engine
 console.
 
-## Updating Hasura GraphQL engine {#ecs-update}
+## Updating Hasura GraphQL Engine {#ecs-update}
 
-This guide will help you update the Hasura GraphQL engine running on ECS. This guide assumes that you already have the
-Hasura GraphQL engine running on ECS.
+This guide will help you update the Hasura GraphQL Engine running on ECS. This guide assumes that you already have the
+Hasura GraphQL Engine running on ECS.
 
 ### Step 1: Check the latest release version
 
@@ -326,7 +326,7 @@ aws ecs update-service --cluster hasura-fargate-cluster --service hasura-fargate
 
 :::info Note
 
-If you are downgrading to an older version of the GraphQL engine, you might need to downgrade your metadata catalogue
-version as described in [Downgrading Hasura GraphQL engine](/deployment/downgrading.mdx).
+If you are downgrading to an older version of the GraphQL Engine, you might need to downgrade your metadata catalogue
+version as described in [Downgrading Hasura GraphQL Engine](/deployment/downgrading.mdx).
 
 :::

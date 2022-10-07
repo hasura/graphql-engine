@@ -16,7 +16,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 ## Introduction
 
-The Hasura GraphQL engine serves a [Relay](https://relay.dev/) schema for Postgres tables which have a primary key
+The Hasura GraphQL Engine serves a [Relay](https://relay.dev/) schema for Postgres tables which have a primary key
 defined. The Relay schema can be accessed through the `/v1beta1/relay` endpoint.
 
 <Thumbnail src='/img/schema/relay.png' alt='Relay API toggle' width='1200px' />
@@ -94,7 +94,7 @@ type in the Relay schema should implement the `Node` interface to provide
 [global object identification](https://relay.dev/graphql/objectidentification.htm).
 
 To identify each row in a table, the `id` field value is encoded with table information (schema and name) and primary
-key column values. The GraphQL engine uses `base64` encoded JSON string and the JSON schema looks as follows:
+key column values. The GraphQL Engine uses `base64` encoded JSON string and the JSON schema looks as follows:
 
 `[<version-integer>, "<table-schema>", "<table-name>", "column-1", "column-2", ... "column-n"]`
 
@@ -135,6 +135,6 @@ Persisted queries will be supported soon.
 
 :::info Note
 
-Currently, Hasura's Relay schema doesn't expose remote schemas or actions. This will be fixed in future releases.
+Currently, Hasura's Relay schema doesn't expose Remote Schemas or Actions. This will be fixed in future releases.
 
 :::

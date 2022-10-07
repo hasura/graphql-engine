@@ -20,7 +20,7 @@ hold true for subscriptions as well.
 
 ## Implementation
 
-The Hasura GraphQL engine subscriptions are actually **live queries**, i.e. a subscription will return the latest result
+The Hasura GraphQL Engine subscriptions are actually **live queries**, i.e. a subscription will return the latest result
 of the query being made and not necessarily all the individual events leading up to the result. By default, updates are
 delivered to clients every **1 sec**.
 
@@ -48,13 +48,13 @@ for only one root field in a subscription.
 
 ## Communication protocol
 
-Hasura GraphQL engine uses the
+Hasura GraphQL Engine uses the
 [GraphQL over WebSocket Protocol](https://github.com/apollographql/subscriptions-transport-ws/blob/master/PROTOCOL.md)
 by the [apollographql/subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) library
 and the [GraphQL over WebSocket Protocol](https://github.com/enisdenjo/graphql-ws/blob/master/PROTOCOL.md) by the
-[graphql-ws](https://github.com/enisdenjo/graphql-ws) library for sending and receiving events. The GraphQL engine uses
+[graphql-ws](https://github.com/enisdenjo/graphql-ws) library for sending and receiving events. The GraphQL Engine uses
 the `Sec-WebSocket-Protocol` header to determine the communication protocol that'll be used. By default, the GraphQL
-engine will use the `apollographql/subscriptions-transport-ws` protocol.
+Engine will use the `apollographql/subscriptions-transport-ws` protocol.
 
 :::info Setting headers for subscriptions with Apollo client
 
@@ -81,7 +81,7 @@ using `connectionParams`.
 
 ## Cookies and WebSockets
 
-The Hasura GraphQL engine will read cookies sent by the browser when initiating a WebSocket connection. The browser will
+The Hasura GraphQL Engine will read cookies sent by the browser when initiating a WebSocket connection. The browser will
 send the cookie only if it is a secure cookie (`secure` flag in the cookie) and if the cookie has a `HttpOnly` flag.
 
 Hasura will read this cookie and use it as headers when resolving authorization (i.e. when resolving the auth webhook).

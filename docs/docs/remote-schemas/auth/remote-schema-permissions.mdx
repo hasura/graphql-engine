@@ -1,5 +1,5 @@
 ---
-description: Remote schema permissions
+description: Remote Schema permissions
 keywords:
   - authorization
   - docs
@@ -12,43 +12,43 @@ import Thumbnail from '@site/src/components/Thumbnail';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-# Remote schema permissions
+# Remote Schema permissions
 
 ## Introduction
 
-Hasura supports [role-based authorization](/auth/authorization/index.mdx) for remote schemas.
+Hasura supports [role-based authorization](/auth/authorization/index.mdx) for Remote Schemas.
 
-Remote schema permissions can be defined to:
+Remote Schema permissions can be defined to:
 
-1. Expose only certain parts of the remote schema to a role
+1. Expose only certain parts of the Remote Schema to a role
 2. Preset arguments with static values or session variables for any field.
 
 :::tip Supported from
 
-Remote schema permissions are supported in Hasura GraphQL engine versions `v2.0.0` and above.
+Remote Schema permissions are supported in Hasura GraphQL Engine versions `v2.0.0` and above.
 
 :::
 
-:::info Enable remote schema permissions
+:::info Enable Remote Schema permissions
 
-Remote schema permissions are **not** enabled by default.
+Remote Schema permissions are **not** enabled by default.
 
-To enable them, you will have to run the GraphQL engine either with the server flag `--enable-remote-schema-permissions`
+To enable them, you will have to run the GraphQL Engine either with the server flag `--enable-remote-schema-permissions`
 or environment variable `HASURA_GRAPHQL_ENABLE_REMOTE_SCHEMA_PERMISSIONS` set to `true`.
 
-When remote schema permissions are not enabled, all remote schemas are considered to be public entities, i.e. all roles
-will have unrestricted access to the remote schemas. Once enabled, access to remote schemas will be restricted for all
-roles (other than `admin`) unless explicit permissions for the remote schema fields are granted to the roles.
+When Remote Schema permissions are not enabled, all Remote Schemas are considered to be public entities, i.e. all roles
+will have unrestricted access to the Remote Schemas. Once enabled, access to Remote Schemas will be restricted for all
+roles (other than `admin`) unless explicit permissions for the Remote Schema fields are granted to the roles.
 
 :::
 
-## Role based remote schemas {#role-based-remote-schemas}
+## Role based Remote Schemas {#role-based-remote-schemas}
 
-Role based remote schemas allow you to expose only certain parts of the remote schema . You can choose to remove any
+Role based Remote Schemas allow you to expose only certain parts of the Remote Schema. You can choose to remove any
 fields from objects, interfaces and input object types, doing this will ensure that these fields are not exposed for the
 role and they will not be able to query the fields that have been hidden.
 
-**For example**, let's say we have the following remote schema added to the GraphQL engine:
+**For example**, let's say we have the following Remote Schema added to the GraphQL Engine:
 
 ```graphql
 type User {
@@ -85,13 +85,13 @@ type Query {
 }
 ```
 
-We use the above schema document to configure the remote schema permissions for the `public` role by using the
+We use the above schema document to configure the Remote Schema permissions for the `public` role by using the
 [add_remote_schema_permissions](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions)
 metadata API.
 
 You can modify different [GraphQL Types](https://spec.graphql.org/June2018/#sec-Types) in the following manner:
 
-1. Scalar - A scalar definition cannot be modified differently from its correponding remote schema scalar definition.
+1. Scalar - A scalar definition cannot be modified differently from its correponding Remote Schema scalar definition.
 2. Object - An object can omit some of the fields from its definition.
 3. Interface - An interface, like the object type, can omit some of the fields from its definition.
 4. Union - A union can be modified to only support a subset of the `possibleTypes` of its original union definition.
@@ -101,7 +101,7 @@ You can modify different [GraphQL Types](https://spec.graphql.org/June2018/#sec-
 In a [field definition](https://spec.graphql.org/June2018/#FieldDefinition) the arguments can be configured to only
 expose a subset of the arguments defined.
 
-For example, let's consider the remote schema used in the example above, but in this case we want the `public` role to
+For example, let's consider the Remote Schema used in the example above, but in this case we want the `public` role to
 use the `get_user_by_name` with only the `first_name` argument and the `public` role should not be able to access the
 `last_name` argument. The schema should look like:
 
@@ -132,7 +132,7 @@ i.e. only at an input object field or an argument field.
 
 :::
 
-For example, let's say we have the following remote schema added to the GraphQL engine:
+For example, let's say we have the following Remote Schema added to the GraphQL Engine:
 
 ```graphql
 type User {
@@ -167,7 +167,7 @@ type Query {
 }
 ```
 
-Configuring the remote schema for the `user` role with the above schema will remove the `id` argument from the schema
+Configuring the Remote Schema for the `user` role with the above schema will remove the `id` argument from the schema
 and the value of the `id` argument will get injected via the `x-hasura-user-id` session variable, whenever the `user`
 role executes a query containing the `get_user` field.
 
@@ -206,7 +206,7 @@ executed, the user provided arguments are merged with the input object field pre
 
 Let's see an example, to see input object field presets in action.
 
-Suppose, a remote schema with the following schema is added to the GraphQL engine:
+Suppose, a Remote Schema with the following schema is added to the GraphQL Engine:
 
 ```graphql
 input MessageInput {
@@ -230,7 +230,7 @@ type Mutation {
 }
 ```
 
-We want to configure the remote schema in a way that when the `user` role creates a new message (using
+We want to configure the Remote Schema in a way that when the `user` role creates a new message (using
 `create_message`), we want the value of the `from` field of the `MessageInput` to come from the `x-hasura-user-id`
 session variable and the other fields (`to` and `content`) to be set by the user. The schema for the `user` role should
 be configured in the following manner:
@@ -265,7 +265,7 @@ mutation {
 }
 ```
 
-The `from` field will get injected into the input object before the GraphQL engine queries the remote server. The final
+The `from` field will get injected into the input object before the GraphQL Engine queries the remote server. The final
 query that will be sent to the remote server will be:
 
 ```graphql
@@ -274,11 +274,11 @@ mutation {
 }
 ```
 
-## Add remote schema permissions
+## Add Remote Schema permissions
 
-### Step 0: Add a remote schema
+### Step 0: Add a Remote Schema
 
-Add a remote schema as described [here](/remote-schemas/adding-schema.mdx), if the schema isn't already added.
+Add a Remote Schema as described [here](/remote-schemas/adding-schema.mdx), if the schema isn't already added.
 
 ### Step 1: Set permissions
 
@@ -303,7 +303,7 @@ Add a remote schema as described [here](/remote-schemas/adding-schema.mdx), if t
 You can add a new role or edit the permissions for an existing role by editing the `metadata -> remote_schemas.yaml`
 file:
 
-Add the subset of the remote schema that the role is allowed to access and set any presets.
+Add the subset of the Remote Schema that the role is allowed to access and set any presets.
 
 ```yaml {7-24}
 - name: countries
@@ -341,7 +341,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can create remote schema permissions by using the
+You can create Remote Schema permissions by using the
 [add_remote_schema_permissions metadata API](/api-reference/metadata-api/remote-schema-permissions.mdx#metadata-add-remote-schema-permissions):
 
 ```http
@@ -372,7 +372,7 @@ permissions in the previous step.
 
 <Thumbnail src='/img/remote-schemas/role-based-schema.png' width='1100px' />
 
-As we see, the role `user` has access restricted to certain fields of the remote schema.
+As we see, the role `user` has access restricted to certain fields of the Remote Schema.
 
 :::info Additional Resources
 

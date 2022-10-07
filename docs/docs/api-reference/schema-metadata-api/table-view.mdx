@@ -24,7 +24,7 @@ Though for backwards compatibility, the schema/metadata APIs will continue to fu
 
 ## Introduction
 
-Track/untrack a table/view in Hasura GraphQL engine.
+Track/untrack a table/view in Hasura GraphQL Engine.
 
 Only tracked tables/views are available for querying/mutating/subscribing data over the GraphQL API.
 
@@ -54,7 +54,7 @@ X-Hasura-Role: admin
 | ------------------------ | -------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | table                    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                           | Name of the table                                                                                          |
 | is_enum                  | false    | Boolean                                                                         | When set to `true`, creates the table as an [enum table](/schema/postgres/enums.mdx#pg-create-enum-table). |
-| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table                                                              |
+| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo Federation configuration for the table                                                              |
 
 ## set_table_is_enum {#schema-metadata-set-table-is-enum}
 
@@ -160,7 +160,7 @@ nodes generated will be:
 
 :::info Note
 
-GraphQL engine requires the constraint names (if any) of a table to be
+GraphQL Engine requires the constraint names (if any) of a table to be
 [GraphQL compliant](https://spec.graphql.org/June2018/#sec-Names) in order to be able to track it.
 
 :::
@@ -171,7 +171,7 @@ GraphQL engine requires the constraint names (if any) of a table to be
 | ------------------------ | -------- | ------------------------------------------------------------------------------- | -------------------------------- |
 | table                    | true     | [TableName](/api-reference/syntax-defs.mdx#tablename)                           | Name of the table                |
 | configuration            | false    | [Table Config](/api-reference/syntax-defs.mdx#table-config)                     | Configuration for the table/view |
-| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo federation configuration for the table                                                              |
+| apollo_federation_config | false    | [ApolloFederationConfig](/api-reference/syntax-defs.mdx#apollofederationconfig) | Apollo Federation configuration for the table                                                              |
 
 ## set_table_custom_fields (deprecated) {#schema-metadata-set-table-custom-fields}
 

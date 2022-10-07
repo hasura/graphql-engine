@@ -44,13 +44,13 @@ Usage:
   hasura [command]
 
 Available Commands:
-  actions     Manage Hasura actions
+  actions     Manage Hasura Actions
   completion  Generate auto completion code
   console     Open the console to manage the database and try out APIs
   deploy      (PREVIEW) Utility command to apply metadata & database migrations to graphql-engine
   help        Help about any command
-  init        Initialize a directory for Hasura GraphQL engine migrations
-  metadata    Manage Hasura GraphQL engine metadata saved in the database
+  init        Initialize a directory for Hasura GraphQL Engine migrations
+  metadata    Manage Hasura GraphQL Engine metadata saved in the database
   migrate     Manage migrations on the database
   plugins     Manage plugins for the CLI
   scripts     Execute helper scripts to manage Hasura projects
@@ -72,21 +72,21 @@ Use "hasura [command] --help" for more information about a command.
 Whereas writing `hasura actions --help` will return commands and flags specific to the `actions` category of commands:
 
 ```
-Manage Hasura actions
+Manage Hasura Actions
 
 Usage:
   hasura actions [command]
 
 Available Commands:
-  codegen     Generate code for actions
+  codegen     Generate code for Actions
   create      Create a Hasura action
-  use-codegen Use the codegen to generate code for Hasura actions
+  use-codegen Use the codegen to generate code for Hasura Actions
 
 Flags:
-      --admin-secret string            admin secret for Hasura GraphQL engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
+      --admin-secret string            admin secret for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ADMIN_SECRET")
       --certificate-authority string   path to a cert file for the certificate authority (env "HASURA_GRAPHQL_CERTIFICATE_AUTHORITY")
-      --endpoint string                http(s) endpoint for Hasura GraphQL engine (env "HASURA_GRAPHQL_ENDPOINT")
-  -h, --help                           help for actions
+      --endpoint string                http(s) endpoint for Hasura GraphQL Engine (env "HASURA_GRAPHQL_ENDPOINT")
+  -h, --help                           help for Actions
       --insecure-skip-tls-verify       skip TLS verification and disable cert checking (default: false) (env "HASURA_GRAPHQL_INSECURE_SKIP_TLS_VERIFY")
 
 Global Flags:

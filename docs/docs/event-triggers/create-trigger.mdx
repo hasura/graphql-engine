@@ -1,7 +1,7 @@
 ---
-sidebar_label: Creating an event trigger
+sidebar_label: Creating an Event Trigger
 sidebar_position: 1
-description: Create an event trigger with Hasura
+description: Create an Event Trigger with Hasura
 keywords:
   - hasura
   - docs
@@ -14,23 +14,23 @@ import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 import TOCInline from '@theme/TOCInline';
 
-# Creating an event trigger
+# Creating an Event Trigger
 
 ## Introduction
 
-Event triggers can be created using the Hasura console, CLI or metadata APIs.
+Event Triggers can be created using the Hasura console, CLI or metadata APIs.
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
 Open the Hasura console, head to the `Events` tab and click on the `Create` button to open the page below:
 
-<Thumbnail src='/img/event-triggers/create-event-trigger.png' alt='Create an event trigger' />
+<Thumbnail src='/img/event-triggers/create-event-trigger.png' alt='Create an Event Trigger' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can add an event trigger for a table by updating the `databases > [source-name] > tables > [table-name].yaml` file
+You can add an Event Trigger for a table by updating the `databases > [source-name] > tables > [table-name].yaml` file
 inside the `metadata` directory:
 
 ```yaml {4-12}
@@ -57,7 +57,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-Add an event trigger by using the
+Add an Event Trigger by using the
 [pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
 
 ```http
@@ -92,15 +92,15 @@ X-Hasura-Role: admin
 
 **Trigger Name**
 
-Unique name for event trigger.
+Unique name for Event Trigger.
 
 **Schema/Table**
 
-The postgres schema and table name on which the event trigger needs to be created.
+The Postgres schema and table name on which the Event Trigger needs to be created.
 
 **Trigger Operations**
 
-The table operation on which the event trigger will be invoked.
+The table operation on which the Event Trigger will be invoked.
 
 **Webhook URL**
 
@@ -129,17 +129,17 @@ If a column is not selected here, then an update to that column will not trigger
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an event trigger:
+Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an Event Trigger:
 
 <Thumbnail
   src='/img/event-triggers/create-event-trigger-listen-columns.png'
-  alt='Listen columns for update event triggers'
+  alt='Listen columns for update Event Triggers'
 />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can configure advanced settings for event triggers in the `tables.yaml` file inside the `metadata` directory:
+You can configure advanced settings for Event Triggers in the `tables.yaml` file inside the `metadata` directory:
 
 ```yaml {10-13}
 - table:
@@ -225,16 +225,16 @@ Retry configuration is available in the "Advanced settings" when you create a tr
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an event trigger:
+Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an Event Trigger:
 
 <Thumbnail
    src="/img/event-triggers/create-event-trigger-retry.png"
-   alt="Retry settings for event triggers"
+   alt="Retry settings for Event Triggers"
 />
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can configure advanced settings for event triggers in the `tables.yaml` file inside the `metadata` directory:
+You can configure advanced settings for Event Triggers in the `tables.yaml` file inside the `metadata` directory:
 
 ```yaml {12-15}
 - table:
@@ -318,29 +318,29 @@ X-Hasura-Role: admin
 
 ### Headers
 
-Custom headers can be added to an event trigger. Each webhook request will have these headers added.
+Custom headers can be added to an Event Trigger. Each webhook request will have these headers added.
 
 Each header has 3 parameters:
 
 1. `Key`: Name of the header e.g. Authorization or X-My-Header.
 2. `Type`: One of `static` or `from env variable`. `static` means the value provided in the `Value` field is the raw
    value of the header. `from env variable` means the value provided in the `Value` field is the name of the environment
-   variable in the GraphQL engine which will be resolved before sending the header.
+   variable in the GraphQL Engine which will be resolved before sending the header.
 3. `Value`: The value of the header. Either a static value or the name of an environment variable.
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an event trigger:
+Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an Event Trigger:
 
 <Thumbnail
    src="/img/event-triggers/create-event-trigger-headers.png"
-   alt="Headers for event triggers"
+   alt="Headers for Event Triggers"
 />
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-You can configure advanced settings for event triggers in the `tables.yaml` file inside the `metadata` directory:
+You can configure advanced settings for Event Triggers in the `tables.yaml` file inside the `metadata` directory:
 
 ```yaml {16-20}
 - table:

@@ -20,7 +20,7 @@ Hasura Graphql Subscriptions are **live queries** executing over the Websocket p
 Execution
 ---------
 
-The Hasura GraphQL engine subscriptions are actually **live queries**, i.e. a subscription will return the
+The Hasura GraphQL Engine subscriptions are actually **live queries**, i.e. a subscription will return the
 latest result of the query being made and not the individual events leading up to the result.
 
 Subscriptions, on start, will emit the result of the underlying query. Subsequently, results will be emitted only if the result of the query changes underneath (via insert/update/delete on the subscribed resource).

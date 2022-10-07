@@ -18,7 +18,7 @@ Hasura supports the following databases:
 
 - PostgresQL (and the Postgres family of databases: Yugabyte, Timescale, Citus, Aurora)
 - SQL Server
-- Big Query
+- BigQuery
 
 ## How does Hasura work? {#faq-how-hasura-works}
 
@@ -47,14 +47,14 @@ any code required for external or internal authorization rules.
 
 Hasura provides 4 ways for exposing existing or new business logic in your domain:
 
-**Event triggers:** Whenever there’s a change in the upstream database, Hasura can capture that change as an event and
+**Event Triggers:** Whenever there’s a change in the upstream database, Hasura can capture that change as an event and
 deliver that to a HTTP webhook that can process that data change event and react to it asynchronously. Apart from
 attaching specific pieces of logic to events, this is especially useful if you’re thinking about building end-to-end
 real-time and reactive applications.
 
 - Read more about this architecture at [https://3factor.app](https://3factor.app)
-- Read more about event triggers in the Hasura [docs.](/event-triggers/index.mdx)
-- Go through a quick tutorial on how to set event triggers up at [https://learn.hasura.io](https://learn.hasura.io)
+- Read more about Event Triggers in the Hasura [docs.](/event-triggers/index.mdx)
+- Go through a quick tutorial on how to set Event Triggers up at [https://learn.hasura.io](https://learn.hasura.io)
 
 **REST APIs:** If you have new or existing REST APIs that serve domain data or logic, you can easily connect Hasura to
 them and extend the GraphQL schema that Hasura exposes. This is useful not just when you have legacy APIs that contain a
@@ -82,7 +82,7 @@ Choose one or more of the methods above depending on where your existing busines
 in the future!
 
 For example, you might have existing logic in synchronous REST APIs in Java or .NET, but you might want to write new
-logic as reactive event triggers deployed as serverless functions (or lambdas) in Javascript or Python or Go!
+logic as reactive Event Triggers deployed as serverless functions (or lambdas) in Javascript or Python or Go!
 
 ## Can I use REST instead of GraphQL APIs? {#faq-REST-api}
 

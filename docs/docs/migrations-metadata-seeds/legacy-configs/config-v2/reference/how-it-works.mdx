@@ -22,7 +22,7 @@ Let's first talk about metadata. Whenever you do certain actions on the
 console or via the API, Hasura records it in the [metadata catalogue](/migrations-metadata-seeds/legacy-configs/config-v2/reference/metadata-format.mdx)
 which is a schema called `hdb_catalog` in your Postgres database. For example, if you track a table, a new entry is
 created in the `hdb_catalog.hdb_table` table in Postgres. Similarly, there are more tables in this schema to track
-relationships, event triggers, functions and remote schemas.
+relationships, Event Triggers, functions and Remote Schemas.
 
 All information in this schema can be exported as files. Export options
 are available on the console, CLI and via the API. These files when

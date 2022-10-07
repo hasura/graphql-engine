@@ -19,12 +19,12 @@ import TabItem from '@theme/TabItem';
 When you have an existing database with a schema already present, you don't need to create tables or views or run DDL
 queries through the Hasura console.
 
-All you need to do is indicate to Hasura GraphQL engine which tables and views you want to expose over GraphQL and how
+All you need to do is indicate to Hasura GraphQL Engine which tables and views you want to expose over GraphQL and how
 they are connected to each other so that you can query them as a "graph".
 
 ## Step 1: Track tables/views
 
-Tracking a table or a view means telling Hasura GraphQL engine that you want to expose that table/view over GraphQL.
+Tracking a table or a view means telling Hasura GraphQL Engine that you want to expose that table/view over GraphQL.
 
 ### To track a table or a view
 
@@ -363,7 +363,7 @@ To automate this, you could add the create relationships requests to the `bulk` 
 
 :::info Relationship nomenclature
 
-In this case, Hasura GraphQL engine will **automatically generate relationship names** (the names of the
+In this case, Hasura GraphQL Engine will **automatically generate relationship names** (the names of the
 [nested objects](/queries/postgres/nested-object-queries.mdx) in the GraphQL query) based on the table names and the
 foreign-key names.
 

@@ -10,11 +10,11 @@ sidebar_position: 60
 sidebar_label: Server logs
 ---
 
-# Hasura GraphQL engine logs
+# Hasura GraphQL Engine logs
 
 ## Accessing logs
 
-Based on your deployment method, the Hasura GraphQL engine logs can be accessed as follows:
+Based on your deployment method, the Hasura GraphQL Engine logs can be accessed as follows:
 
 - [On Heroku](/deployment/deployment-guides/heroku.mdx#heroku-logs)
 - [On Docker](/deployment/deployment-guides/docker.mdx#docker-logs)
@@ -32,13 +32,13 @@ If you’re looking for more in-depth logging information, along with a console 
 
 ## Different log-types {#log-types}
 
-The Hasura GraphQL engine has different kind of log-types depending on the sub-system or the layer. A log-type is simply
+The Hasura GraphQL Engine has different kind of log-types depending on the sub-system or the layer. A log-type is simply
 the `type` field in a log line, which indicates which sub-system the log comes from.
 
 For example, the HTTP webserver logs incoming requests as an access log and is called `http-log`. Similarly logs from
 the websocket layer are called `websocket-log`, logs from the event trigger system are called `event-trigger` etc.
 
-You can configure the GraphQL engine to enable/disable certain log-types using the the `--enabled-log-types` flag or the
+You can configure the GraphQL Engine to enable/disable certain log-types using the the `--enabled-log-types` flag or the
 `HASURA_GRAPHQL_ENABLED_LOG_TYPES` env var. See
 [GraphQL Engine server config reference](/deployment/graphql-engine-flags/reference.mdx)
 
@@ -94,7 +94,7 @@ This is useful to correlate logs from the server and the client.
 
 ### **query-log** structure
 
-On enabling verbose logging, i.e. enabling `query-log`, GraphQL engine will log the full GraphQL query object on each
+On enabling verbose logging, i.e. enabling `query-log`, GraphQL Engine will log the full GraphQL query object on each
 request.
 
 It will also log the generated SQL for GraphQL queries (but not mutations and subscriptions).

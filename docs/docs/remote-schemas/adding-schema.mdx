@@ -1,5 +1,5 @@
 ---
-description: Add a remote schema with Hasura
+description: Add a Remote Schema with Hasura
 keywords:
   - hasura
   - docs
@@ -16,7 +16,7 @@ import TabItem from '@theme/TabItem';
 
 ## Introduction
 
-Follow the steps below to merge your remote GraphQL API with the GraphQL engine's auto-generated API.
+Follow the steps below to merge your remote GraphQL API with the GraphQL Engine's auto-generated API.
 
 ## Step 0: Write a custom GraphQL server
 
@@ -29,11 +29,11 @@ You can use any language/framework of your choice to author this server and depl
 started is to use one of our
 [boilerplates](https://github.com/hasura/graphql-engine/tree/master/community/boilerplates/remote-schemas).
 
-## Step 1: Merge remote schema {#merge-remote-schema}
+## Step 1: Merge Remote Schema {#merge-remote-schema}
 
-The following details need to be specified for merging a remote schema:
+The following details need to be specified for merging a Remote Schema:
 
-- **Remote Schema name**: an alias for the remote schema that must be unique on an instance of the GraphQL engine.
+- **Remote Schema name**: an alias for the Remote Schema that must be unique on an instance of the GraphQL Engine.
 - **GraphQL server URL**: the endpoint at which your remote GraphQL server is available. This value can be entered
   manually or by specifying an environment variable that contains this information.
 - **Headers**: configure the headers to be sent to your custom GraphQL server:
@@ -46,7 +46,7 @@ The following details need to be specified for merging a remote schema:
 
     **Example**: Let's say your remote GraphQL server needs a `X-Api-Key` as a header. As this value contains sensitive
     data (like API key in this example), you can configure the name of an environment variable which will hold the
-    value. This environment variable needs to be present when you start the GraphQL engine. When Hasura sends requests
+    value. This environment variable needs to be present when you start the GraphQL Engine. When Hasura sends requests
     to your remote server, it will pick up the value from this environment variable.
 
 <Tabs className="api-tabs">
@@ -54,14 +54,14 @@ The following details need to be specified for merging a remote schema:
 
 Head to the `Remote Schemas` tab of the console and click on the `Add` button on the left sidebar.
 
-Add the required details and click on the `Add Remote Schema` button to merge the remote schema.
+Add the required details and click on the `Add Remote Schema` button to merge the Remote Schema.
 
-<Thumbnail src='/img/remote-schemas/add-remote-schemas-interface.png' alt='Merge remote schema' width='1100px' />
+<Thumbnail src='/img/remote-schemas/add-remote-schemas-interface.png' alt='Merge Remote Schema' width='1100px' />
 
 </TabItem>
 <TabItem value="cli" label="CLI">
 
-To add a remote schema, edit the `remote_schemas.yaml` file in the `metadata` directory as in this example:
+To add a Remote Schema, edit the `remote_schemas.yaml` file in the `metadata` directory as in this example:
 
 ```yaml {1-5}
 - name: my-remote-schema
@@ -80,7 +80,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add a remote schema by using the
+You can add a Remote Schema by using the
 [add_remote_schema](/api-reference/metadata-api/remote-schemas.mdx#metadata-add-remote-schema) metadata API:
 
 ```http
@@ -116,8 +116,8 @@ _docker run_. Example `-e REMOTE_SCHEMA_ENDPOINT=http://host.docker.internal:400
 
 :::info Using environment variables
 
-If you are using environment variables in the remote schema configuration - either for URL or headers - **the
-environment variables need to be present** with valid values when adding the remote schema i.e. the GraphQL engine
+If you are using environment variables in the Remote Schema configuration - either for URL or headers - **the
+environment variables need to be present** with valid values when adding the Remote Schema i.e. the GraphQL Engine
 should be started with these environment variables.
 
 :::
@@ -147,7 +147,7 @@ You can query your remote server by making requests to the Hasura GraphQL endpoi
 
 ### Schema refreshing
 
-A remote server's GraphQL schema is cached and refreshed only when user explicitly reloads the remote schema.
+A remote server's GraphQL schema is cached and refreshed only when user explicitly reloads the Remote Schema.
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
@@ -169,17 +169,17 @@ Make a request to the
 
 ### Extending the auto-generated GraphQL schema fields
 
-For some use cases, you may need to extend the GraphQL schema fields exposed by the Hasura GraphQL engine and not merely
+For some use cases, you may need to extend the GraphQL schema fields exposed by the Hasura GraphQL Engine and not merely
 add new fields as we have done here.
 
 To achieve this you can use community tooling to write your own client-facing GraphQL gateway which wraps around and
-interacts with the GraphQL engine API underneath.
+interacts with the GraphQL Engine API underneath.
 
 :::info Note
 
-**Adding an additional layer on top of the Hasura GraphQL engine significantly impacts the performance provided by it
+**Adding an additional layer on top of the Hasura GraphQL Engine significantly impacts the performance provided by it
 out of the box** (_by as much as 4x_). If you need any help with remodelling these kinds of use cases to use the
-built-in remote schemas feature, please get in touch with us on
+built-in Remote Schemas feature, please get in touch with us on
 [GitHub](https://github.com/hasura/graphql-engine/discussions).
 
 :::

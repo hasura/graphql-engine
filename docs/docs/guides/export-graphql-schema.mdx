@@ -28,11 +28,11 @@ Run `npm install -g graphqurl` to install `graphqurl`. Then you can run
 the following commands to download the GraphQL schema:
 
 ```bash
-# If the GraphQL engine is running at https://my-graphql-engine.com/v1/graphql,
+# If the GraphQL Engine is running at https://my-graphql-engine.com/v1/graphql,
 # without an admin secret
 gq https://my-graphql-engine.com/v1/graphql --introspect > schema.graphql
 
-# If Hasura GraphQL engine is running with an admin secret
+# If Hasura GraphQL Engine is running with an admin secret
 gq https://my-graphql-engine.com/v1/graphql -H "X-Hasura-Admin-Secret: adminsecretkey" --introspect > schema.graphql
 ```
 
@@ -52,11 +52,11 @@ Run `npm install -g apollo` to install the Apollo CLI. You can then run
 the following command to download the GraphQL schema:
 
 ```bash
-# If the GraphQL engine is running at https://my-graphql-engine.com/v1/graphql,
+# If the GraphQL Engine is running at https://my-graphql-engine.com/v1/graphql,
 # without an admin secret
 apollo schema:download --endpoint https://my-graphql-engine.com/v1/graphql
 
-# If Hasura GraphQL engine is running with an admin secret
+# If Hasura GraphQL Engine is running with an admin secret
 apollo schema:download --endpoint https://my-graphql-engine.com/v1/graphql --header "X-Hasura-Admin-Secret: adminsecretkey"
 ```
 

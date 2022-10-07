@@ -1,7 +1,7 @@
 ---
 sidebar_label: To Remote Schema
 sidebar_position: 3
-description: Adding remote schema relationships with Postgres tables in Hasura
+description: Adding Remote Schema relationships with Postgres tables in Hasura
 keywords:
   - hasura
   - docs
@@ -21,7 +21,7 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 ## Introduction
 
-Remote schema to remote schema relationships (a.k.a GraphQL joins) extend the concept of joining data across tables, to
+Remote schema to Remote Schema relationships (a.k.a GraphQL joins) extend the concept of joining data across tables, to
 joining across remote GraphQL sources. Once you create relationships between types from the GraphQL schemas, you can
 then "join" them by running GraphQL queries.
 
@@ -32,34 +32,34 @@ and authorization while providing remote joins.
 
 :::tip Supported from
 
-Relationships from remote schema to remote schema are supported from versions `v2.6.0` and above.
+Relationships from Remote Schema to Remote Schema are supported from versions `v2.6.0` and above.
 
 :::
 
-## Create remote schema relationships
+## Create Remote Schema relationships
 
-### Step 0: Add two remote schemas
+### Step 0: Add two Remote Schemas
 
-Add two remote schemas as described [here](/remote-schemas/adding-schema.mdx), if the schemas aren't already added.
+Add two Remote Schemas as described [here](/remote-schemas/adding-schema.mdx), if the schemas aren't already added.
 
 ### Step 1: Define and create the relationship
 
-The following fields can be defined for a remote schema relationship:
+The following fields can be defined for a Remote Schema relationship:
 
 - **Name**: Define a name for the relationship.
-- **Remote Schemas**: Select two remote schemas among all the ones you've created.
-- **Configuration**: Set up the join configuration, to inject values as input arguments of the remote schema field.
+- **Remote Schemas**: Select two Remote Schemas among all the ones you've created.
+- **Configuration**: Set up the join configuration, to inject values as input arguments of the Remote Schema field.
   - **From column**: Input injected from table column values.
   - **From static value**: Input injected from a static value of your choice.
 
-For example, let's assume that our first remote schema `order-remote-schema` has a field `order(id int, user_id int)`
-and our second remote schema `user-remote-schema` - which is another GraphQL API - has a field
-`user(id int, name text)`. Now we want to create a relationship between the `order` field of the first remote schema and
-the `user` field of the second remote schema.
+For example, let's assume that our first Remote Schema `order-remote-schema` has a field `order(id int, user_id int)`
+and our second Remote Schema `user-remote-schema` - which is another GraphQL API - has a field
+`user(id int, name text)`. Now we want to create a relationship between the `order` field of the first Remote Schema and
+the `user` field of the second Remote Schema.
 
 1.  We name the relationship `user`.
-2.  We select the source type `Order` of the remote schema that we'd like to join.
-3.  We select `user-remote-schema` as the reference remote schema.
+2.  We select the source type `Order` of the Remote Schema that we'd like to join.
+3.  We select `user-remote-schema` as the reference Remote Schema.
 4.  We select `id` as the source field and `user_id` as the from field.
 
 <Tabs className="api-tabs">
@@ -111,7 +111,7 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can add a remote schema relationship by using the
+You can add a Remote Schema relationship by using the
 [create_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-create-remote-schema-remote-relationship)
 metadata API and update it by using the
 [update_remote_schema_remote_relationship](/api-reference/metadata-api/remote-relationships.mdx#metadata-update-remote-schema-remote-relationship)
@@ -150,7 +150,7 @@ X-Hasura-Role: admin
 
 ### Step 2: Explore with GraphiQL
 
-In the `API` tab, test out your remote schema relationship.
+In the `API` tab, test out your Remote Schema relationship.
 
 <GraphiQLIDE
   query={`query {

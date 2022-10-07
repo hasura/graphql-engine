@@ -1,7 +1,7 @@
 ---
 sidebar_label: Invoke trigger manually
 sidebar_position: 4
-description: Invoke event triggers manually on the Hasura console or over the API
+description: Invoke Event Triggers manually on the Hasura console or over the API
 keywords:
   - hasura
   - docs
@@ -14,28 +14,28 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
 
-# Invoke event trigger manually
+# Invoke Event Trigger manually
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-You can select the `Via console` trigger operation while [creating an event trigger](/event-triggers/create-trigger.mdx)
-to allow invoking the event trigger on rows manually using the Hasura console.
+You can select the `Via console` trigger operation while [creating an Event Trigger](/event-triggers/create-trigger.mdx)
+to allow invoking the Event Trigger on rows manually using the Hasura console.
 
 In the `Data -> [table-name] -> Browse Rows` tab, clicking the `invoke trigger` button next to any row lets you invoke
-"manual event triggers" configured on the table with that row as payload _(the button will be shown only if you have any
+"manual Event Triggers" configured on the table with that row as payload _(the button will be shown only if you have any
 triggers configured)_:
 
-<Thumbnail src='/img/event-triggers/select-manual-trigger.png' alt='Invoke event trigger on console' />
+<Thumbnail src='/img/event-triggers/select-manual-trigger.png' alt='Invoke Event Trigger on console' />
 
-Click on the event trigger you want to run and a modal will pop up with the request and response.
+Click on the Event Trigger you want to run and a modal will pop up with the request and response.
 
-<Thumbnail src='/img/event-triggers/run-manual-trigger.png' alt='Request and response of event trigger' />
+<Thumbnail src='/img/event-triggers/run-manual-trigger.png' alt='Request and response of Event Trigger' />
 
 </TabItem>
 <TabItem value="api" label="API">
 
-When creating an event trigger over the
+When creating an Event Trigger over the
 [pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API,
 you can set the argument `enable_manual` to true.
 

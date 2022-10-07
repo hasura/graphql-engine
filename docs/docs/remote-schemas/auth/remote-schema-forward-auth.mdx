@@ -1,5 +1,5 @@
 ---
-description: Authorization in your remote schema server with Hasura
+description: Authorization in your Remote Schema server with Hasura
 keywords:
   - hasura
   - docs
@@ -8,15 +8,15 @@ keywords:
 sidebar_position: 2
 ---
 
-# Forwarding auth context to/from remote schemas
+# Forwarding auth context to/from Remote Schemas
 
 ## Introduction
 
-This page gives an overview of how Hasura allows you to pass auth context to your remote schema server.
+This page gives an overview of how Hasura allows you to pass auth context to your Remote Schema server.
 
-## Passing headers from Hasura to your remote schema
+## Passing headers from Hasura to your Remote Schema
 
-Hasura will forward the resolved `x-hasura-*` values as headers to your remote schema. You can use this information to apply authorization rules in your server. You don't have to redo authentication in your remote schema server.
+Hasura will forward the resolved `x-hasura-*` values as headers to your Remote Schema. You can use this information to apply authorization rules in your server. You don't have to redo authentication in your Remote Schema server.
 
 You can also configure Hasura to have (as shown [here](/remote-schemas/adding-schema.mdx#merge-remote-schema)):
 
@@ -34,9 +34,9 @@ The headers from the client behave similarly to the authorization system. If `x-
 
 :::
 
-## Passing cookie headers from your remote schema to the client
+## Passing cookie headers from your Remote Schema to the client
 
-`Set-Cookie` headers from your remote schema servers are sent back to the client over HTTP transport. **Over websocket transport there exists no means of sending headers after a query/mutation and hence the "Set-Cookie" headers are not sent to the client.** Use HTTP transport if your remote servers set cookies.
+`Set-Cookie` headers from your Remote Schema servers are sent back to the client over HTTP transport. **Over websocket transport there exists no means of sending headers after a query/mutation and hence the "Set-Cookie" headers are not sent to the client.** Use HTTP transport if your remote servers set cookies.
 
 :::info Additional Resources
 

@@ -1,5 +1,5 @@
 ---
-description: Manage remote schemas with Hasura
+description: Manage Remote Schemas with Hasura
 keywords:
   - hasura
   - docs
@@ -22,11 +22,11 @@ Hasura has the ability to merge remote GraphQL schemas and provide a unified Gra
 schema stitching. All you need to do is build your own GraphQL service and then provide the HTTP endpoint to Hasura.
 Your GraphQL service can be written in any language or framework.
 
-This is what Hasura running with "Remote schemas" looks like:
+This is what Hasura running with "Remote Schemas" looks like:
 
 <Thumbnail
   src='/img/remote-schemas/remote-schema-arch.png'
-  alt='Architecture of Hasura with remote schemas'
+  alt='Architecture of Hasura with Remote Schemas'
   width='900px'
   className='no-shadow'
 />
@@ -37,7 +37,7 @@ This is what Hasura running with "Remote schemas" looks like:
 - Querying data that is not available in your database
 
 You can handle these use cases by writing resolvers in a custom GraphQL server and making Hasura merge this "remote
-schema" with the existing auto-generated schema. You can also add multiple remote schemas. Think of the merged schema as
+schema" with the existing auto-generated schema. You can also add multiple Remote Schemas. Think of the merged schema as
 a union of top-level nodes from each of the sub-schemas.
 
 :::info Note
@@ -47,18 +47,18 @@ auto-generated via Hasura, head to [Authentication & Authorization](/auth/index.
 
 :::
 
-:::info Health monitoring of remote schemas in Hasura Cloud
+:::info Health monitoring of Remote Schemas in Hasura Cloud
 
-Hasura Cloud offers built-in API metrics with integrated health checks and distributed tracing for your remote schemas.
+Hasura Cloud offers built-in API metrics with integrated health checks and distributed tracing for your Remote Schemas.
 Read more at [Distributed Tracing in Hasura Cloud](/observability/tracing.mdx).
 
 :::
 
 ## Learn more
 
-- [Adding a remote schema](/remote-schemas/adding-schema.mdx)
+- [Adding a Remote Schema](/remote-schemas/adding-schema.mdx)
 - [Remote relationships](/remote-schemas/remote-relationships/index.mdx)
-- [Authorization in remote schemas](/remote-schemas/auth/index.mdx)
+- [Authorization in Remote Schemas](/remote-schemas/auth/index.mdx)
 
 :::info Additional Resources
 

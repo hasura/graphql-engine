@@ -1,5 +1,5 @@
 ---
-description: Deploy Hasura GraphQL engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
+description: Deploy Hasura GraphQL Engine on Google Cloud Platform with Kubernetes Engine and Cloud SQL
 keywords:
   - hasura
   - docs
@@ -12,13 +12,13 @@ sidebar_position: 8
 sidebar_label: Using Google Cloud Platform & Kubernetes
 ---
 
-# Hasura GraphQL engine on Google Cloud Platform with Kubernetes engine and Cloud SQL
+# Hasura GraphQL Engine on Google Cloud Platform with Kubernetes Engine and Cloud SQL
 
 ## Introduction
 
-This is a guide on deploying the Hasura GraphQL engine on the [Google
+This is a guide on deploying the Hasura GraphQL Engine on the [Google
 Cloud Platform](https://cloud.google.com/) using [Kubernetes
-engine](https://cloud.google.com/kubernetes-engine/) to run Hasura and
+Engine](https://cloud.google.com/kubernetes-engine/) to run Hasura and
 PosgreSQL backed by [Cloud SQL](https://cloud.google.com/sql/).
 
 ## Prerequisites
@@ -67,7 +67,7 @@ gcloud sql users set-password postgres --instance hasura-postgres \
 
 ## Create a Kubernetes Cluster
 
-Before creating the cluster, we need to enable the Kubernetes engine
+Before creating the cluster, we need to enable the Kubernetes Engine
 API. Visit the below link in a browser to enable the API. Replace
 `hasura` at the end of the URL with your project name, in case you're
 not using the same name. Note that, you will need a billing account
@@ -120,7 +120,7 @@ kubectl create secret generic cloudsql-db-credentials \
         --from-literal=username=postgres --from-literal=password=[PASSWORD]
 ```
 
-## Deploy the Hasura GraphQL engine
+## Deploy the Hasura GraphQL Engine
 
 Download the `deployment.yaml` file:
 
@@ -152,13 +152,13 @@ Ensure the pods are running:
 kubectl get pods
 ```
 
-If there are any errors, check the logs of the GraphQL engine:
+If there are any errors, check the logs of the GraphQL Engine:
 
 ```bash
 kubectl logs deployment/hasura -c graphql-engine
 ```
 
-## Expose GraphQL engine
+## Expose GraphQL Engine
 
 ### HTTP
 
@@ -239,7 +239,7 @@ spec:
 ## Logs {#gc-kubernetes-logs}
 
 Check the status for pods to see if they are running. If there are any
-errors, check the logs of the GraphQL engine:
+errors, check the logs of the GraphQL Engine:
 
 ```bash
 kubectl logs deployment/hasura -c graphql-engine

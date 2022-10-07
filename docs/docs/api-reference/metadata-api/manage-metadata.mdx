@@ -157,7 +157,7 @@ HTTP/1.1 400 Bad Request
         },
         "name": "test",
         "permissions": [],
-        "comment": "testing replace metadata with remote schemas"
+        "comment": "testing replace metadata with Remote Schemas"
       }
     }, ...
   ]
@@ -181,7 +181,7 @@ HTTP/1.1 200 OK
           },
           "name": "test",
           "permissions": [],
-          "comment": "testing replace metadata with remote schemas"
+          "comment": "testing replace metadata with Remote Schemas"
       },
       "reason": "HTTP exception occurred while sending the request to http://localhost:5000/hello-graphql",
       "type": "remote_schema"
@@ -257,15 +257,15 @@ If the metadata is not consistent:
 
 | Key                     | Required | Schema                              | Description                                                                                                                                                                                                                                                                                                                                                                         |
 |-------------------------|----------|-------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| reload_remote_schemas   | false    | `Boolean` \| \[[RemoteSchemaName](/api-reference/syntax-defs.mdx#remoteschemaname)\] | If set to `true`, all remote schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: `true`)                                                                                                                                                                                            |
+| reload_remote_schemas   | false    | `Boolean` \| \[[RemoteSchemaName](/api-reference/syntax-defs.mdx#remoteschemaname)\] | If set to `true`, all Remote Schemas' (including inconsistent ones) cached GraphQL schemas are refreshed (default: `true`)                                                                                                                                                                                            |
 | reload_sources          | false    | `Boolean` \| \[[SourceName](/api-reference/syntax-defs.mdx#sourcename)\]       | If set to `true`, all sources' (including inconsistent ones) cached GraphQL schemas are refreshed (default: `true`)                                                                                                                                                                                                         |
-| recreate_event_triggers | false    | `Boolean` \| \[[SourceName](/api-reference/syntax-defs.mdx#sourcename)\]       | If set to `true`, all sources' (including inconsistent ones) cached event triggers and their corresponding SQL triggers present in the source database will be recreated. When an array of [SourceName](/api-reference/syntax-defs.mdx#sourcename) is provided, the event triggers will only be recreated for those sources. (default: <em>false</em> i.e. no sources' event triggers will be recreated) |
+| recreate_event_triggers | false    | `Boolean` \| \[[SourceName](/api-reference/syntax-defs.mdx#sourcename)\]       | If set to `true`, all sources' (including inconsistent ones) cached Event Triggers and their corresponding SQL triggers present in the source database will be recreated. When an array of [SourceName](/api-reference/syntax-defs.mdx#sourcename) is provided, the Event Triggers will only be recreated for those sources. (default: <em>false</em> i.e. no sources' Event Triggers will be recreated) |
 
 ## clear_metadata {#metadata-clear-metadata}
 
 `clear_metadata` can be used to reset the state of Hasura -- clean the
 current state by forgetting the tables tracked, relationships,
-permissions, event triggers etc.
+permissions, Event Triggers etc.
 
 ```http
 POST /v1/metadata HTTP/1.1

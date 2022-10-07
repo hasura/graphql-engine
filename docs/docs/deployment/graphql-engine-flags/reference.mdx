@@ -1,5 +1,5 @@
 ---
-description: Hasura GraphQL engine server config reference (Flags/Environment variables)
+description: Hasura GraphQL Engine server config reference (Flags/Environment variables)
 keywords:
   - hasura
   - docs
@@ -17,7 +17,7 @@ sidebar_label: Server config reference
 
 ## Introduction
 
-Every GraphQL engine command is structured as:
+Every GraphQL Engine command is structured as:
 
 ```bash
 $ graphql-engine <server-flags> serve <command-flags>
@@ -389,7 +389,7 @@ Disable CORS. Do not send any CORS headers on any request.
 </td>
 <td>
 
-Restrict queries allowed to be executed by the GraphQL engine to those that are part of the configured allow-list.
+Restrict queries allowed to be executed by the GraphQL Engine to those that are part of the configured allow-list.
 Default: `false`
 
 </td>
@@ -645,7 +645,7 @@ _(Available for versions > v2.0.0)_
 </td>
 <td>
 
-Timeout (in seconds) to wait for the in-flight events (event triggers and scheduled triggers) and async actions to
+Timeout (in seconds) to wait for the in-flight events (Event Triggers and Scheduled Triggers) and async actions to
 complete before the server shuts down completely (default: `60` **sec**). If the in-flight events are not completed
 within the timeout, those events are marked as pending.
 
@@ -1323,7 +1323,7 @@ Maximum cache size in MB. (Default: 1 MB)
 </td>
 <td>
 
-Path for storage of postgres SSL certificates when set via environment variable reference.
+Path for storage of Postgres SSL certificates when set via environment variable reference.
 
 </td>
 </tr>

@@ -1,5 +1,5 @@
 ---
-description: Checklist for deploying Hasura GraphQL engine to production
+description: Checklist for deploying Hasura GraphQL Engine to production
 keywords:
   - hasura
   - docs
@@ -16,7 +16,7 @@ import TOCInline from '@theme/TOCInline';
 
 ## Introduction
 
-This guide is a checklist for configuring and securing GraphQL engine for a production deployment.
+This guide is a checklist for configuring and securing GraphQL Engine for a production deployment.
 
 :::info Hasura Cloud the fastest way to production
 
@@ -135,7 +135,7 @@ Read more at [Allow-list of operations](/security/allow-list.mdx).
 
 ## Restrict CORS domains
 
-By default, all cross-origin requests are allowed by Hasura GraphQL engine. You should restrict them to the domains
+By default, all cross-origin requests are allowed by Hasura GraphQL Engine. You should restrict them to the domains
 which you trust.
 
 ```bash
@@ -157,8 +157,8 @@ See [Enable HTTPS](/deployment/enable-https.mdx) for details on achieving this.
 
 ## Configure logging
 
-The [logs guide](/deployment/logging.mdx) describes different log types and log levels Hasura GraphQL engine uses. You
-can configure the GraphQL engine to enable/disable certain log-types using the the `--enabled-log-types` flag or the
+The [logs guide](/deployment/logging.mdx) describes different log types and log levels Hasura GraphQL Engine uses. You
+can configure the GraphQL Engine to enable/disable certain log-types using the the `--enabled-log-types` flag or the
 `HASURA_GRAPHQL_ENABLED_LOG_TYPES` env var.
 
 If you are collecting your logs using an agent and you're interested in capturing the request logs along with the SQL

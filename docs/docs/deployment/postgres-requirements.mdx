@@ -1,5 +1,5 @@
 ---
-description: Postgres requirements for Hasura GraphQL engine
+description: Postgres requirements for Hasura GraphQL Engine
 keywords:
   - hasura
   - docs
@@ -14,18 +14,18 @@ sidebar_position: 40
 
 ## Supported Postgres versions {#postgres-version-support}
 
-Hasura GraphQL engine supports **Postgres versions 9.5 and above**.
+Hasura GraphQL Engine supports **Postgres versions 9.5 and above**.
 
 ### Feature wise requirements
 
-- [Hasura actions](/actions/index.mdx) are supported in Postgres 10 and above.
+- [Hasura Actions](/actions/index.mdx) are supported in Postgres 10 and above.
 
 ## Postgres permissions {#postgres-permissions}
 
-If you're running in a controlled environment, you might need to configure the Hasura GraphQL engine to use a specific
+If you're running in a controlled environment, you might need to configure the Hasura GraphQL Engine to use a specific
 Postgres user that your DBA gives you.
 
-The Hasura GraphQL engine needs access to your Postgres database(s) with the following permissions. You may have a
+The Hasura GraphQL Engine needs access to your Postgres database(s) with the following permissions. You may have a
 dedicated metadata database as described
 [here](/deployment/graphql-engine-flags/config-examples.mdx#add-metadata-database).
 
@@ -42,7 +42,7 @@ dedicated metadata database as described
 - (optional) Write access to the schemas if you want to support mutations as well.
 - (optional) To create tables and views via the Hasura console (the admin UI) you'll need the privilege to create
   tables/views. This might not be required when you're working with an existing database.
-- (required only if event triggers are needed) Read, write & create access on schema: `hdb_catalog`.
+- (required only if Event Triggers are needed) Read, write & create access on schema: `hdb_catalog`.
 
 ## Sample scenarios
 
@@ -113,7 +113,7 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS;
 -- ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO hasurauser;
 -- ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON FUNCTIONS TO hasurauser;
 
--- grant these privileges to use create and use all Hasura GraphQL engine functionality
+-- grant these privileges to use create and use all Hasura GraphQL Engine functionality
 GRANT USAGE ON SCHEMA hdb_catalog TO hasurauser;
 GRANT CREATE ON SCHEMA hdb_catalog TO hasurauser;
 GRANT ALL ON ALL TABLES IN SCHEMA hdb_catalog TO hasurauser;
@@ -221,9 +221,9 @@ You can **ignore** these warnings/errors or skip granting these permission as us
 
 ## **pgcrypto** in PG search path
 
-Hasura GraphQL engine needs the `pgcrypto` Postgres extension to function.
+Hasura GraphQL Engine needs the `pgcrypto` Postgres extension to function.
 
-During initialization, Hasura GraphQL engine tries to install the `pgcrypto` extension in the `public` schema, if it is
+During initialization, Hasura GraphQL Engine tries to install the `pgcrypto` extension in the `public` schema, if it is
 not already installed.
 
 It needs to be ensured that `pgcrypto` is installed in a schema which is in the Postgres

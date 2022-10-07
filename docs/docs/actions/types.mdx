@@ -1,7 +1,7 @@
 ---
 sidebar_label: Custom types
 sidebar_position: 2
-description: Custom GraphQL types for Hasura actions
+description: Custom GraphQL types for Hasura Actions
 keywords:
   - hasura
   - docs
@@ -15,7 +15,7 @@ slug: types/index
 
 ## Introduction
 
-You can add custom GraphQL types in Hasura that you can utilise for defining your actions.
+You can add custom GraphQL types in Hasura that you can utilise for defining your Actions.
 
 :::caution Limitations
 
@@ -40,7 +40,7 @@ This is an object type called `UserInfo` that has two fields:
 - `accessToken`: This field is of type `String!` (non-nullable `String`)
 - `userId`: This field is of type `Int!` (non-nullable `Int`)
 
-From version `v2.2.0` onwards, Hasura GraphQL engine supports nested objects.
+From version `v2.2.0` onwards, Hasura GraphQL Engine supports nested objects.
 
 For example, you can define a type like the following:
 
@@ -142,7 +142,7 @@ Hasura has the following limitations for relationship in nested object types:
     relationships can only be defined using `accessToken` and `userID`, you cannot use `name`, `favFood` or `isAdmin`
     fields in a relationship definition.
 
-2.  For `async` actions, you cannot have nested object types and relationships in the same action.
+2.  For `async` Actions, you cannot have nested object types and relationships in the same action.
 
 :::
 
@@ -170,7 +170,7 @@ That's where the scalar types come in: they represent the leaves of the query.
 
 ### Inbuilt scalars
 
-Hasura comes with some default GraphQL scalars that you can directly start using while defining your actions:
+Hasura comes with some default GraphQL scalars that you can directly start using while defining your Actions:
 
 - `Int`: A signed 32‐bit integer.
 - `Float`: A signed double-precision floating-point value.

@@ -1,7 +1,7 @@
 ---
 sidebar_label: Python & Flask
 sidebar_position: 1
-description: Codegen for Hasura actions in Python & Flask
+description: Codegen for Hasura Actions in Python & Flask
 keywords:
   - hasura
   - docs
@@ -19,13 +19,13 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 ## Introduction
 
-This page describes how to use Hasura actions and codegen to build a Python & Flask API for JWT authentication.
+This page describes how to use Hasura Actions and codegen to build a Python & Flask API for JWT authentication.
 
 ## Step 1: Create action definition & custom types
 
 We will assume a `user` table with the fields `email` and `password`.
 
-We create two [actions](/actions/create.mdx), each with its own set of [custom types](/actions/types.mdx):
+We create two [Actions](/actions/create.mdx), each with its own set of [custom types](/actions/types.mdx):
 
 1.  `Signup`: returns a `CreateUserOutput`
 
@@ -345,9 +345,9 @@ $ decode_jwt 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwib
 }
 ```
 
-## Step 5: Calling the finished actions
+## Step 5: Calling the finished Actions
 
-Try out your defined actions from the GraphQL API.
+Try out your defined Actions from the GraphQL API.
 
 Call the `Signup` action:
 
