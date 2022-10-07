@@ -19,7 +19,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 If your Postgres schema is already managed with a tool like knex, TypeORM, Django/Rails migrations, you will still need
 a way to export the actions you performed on the Hasura console to apply it later on another Hasura instance.
 
-All the actions performed on the console, like tracking tables/views/functions, creating relationships, configuring
+All the actions performed on the console, like tracking tables/views/custom functions, creating relationships, configuring
 permissions, creating event triggers and remote schemas, etc. can be exported as a JSON/yaml metadata file which can be
 version controlled. The metadata file can be later imported to another Hasura instance to get the same configuration.
 You can also manually edit the metadata file to add more objects to it and then use it to update the instance.
