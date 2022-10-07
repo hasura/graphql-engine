@@ -45,8 +45,6 @@ instance BackendAPI ('Postgres 'Cockroach) where
       [ sourceCommands @('Postgres 'Cockroach),
         tableCommands @('Postgres 'Cockroach),
         tablePermissionsCommands @('Postgres 'Cockroach),
-        functionCommands @('Postgres 'Cockroach),
-        functionPermissionsCommands @('Postgres 'Cockroach),
         relationshipCommands @('Postgres 'Cockroach),
         remoteRelationshipCommands @('Postgres 'Cockroach)
       ]
