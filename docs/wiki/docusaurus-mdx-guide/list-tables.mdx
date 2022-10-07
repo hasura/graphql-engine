@@ -11,32 +11,6 @@ import Link from '@docusaurus/Link';
 
 Tables are the only complex stuff in markdown.
 
-## Sphinx - RST
-
-```rest
-.. list-table::
-   :header-rows: 1
-   :widths: 20 40
-
-   * - Field
-     - Description
-
-   * - Region 
-     - The region of the data centre where your New Relic account stores its data. `Read more about regions on New Relic docs. <https://docs.newrelic.com/docs/using-new-relic/welcome-new-relic/get-started/our-eu-us-region-data-centers>`_
-
-   * - API Key 
-     - API keys are unique to your organization. An API key is required by the New Relic API to submit metrics and events to New Relic. You can get the API key from `here <https://one.newrelic.com/launcher/api-keys-ui.api-keys-launcher>`__ if you are in New Relic US region and `here <https://one.eu.newrelic.com/launcher/api-keys-ui.api-keys-launcher>`__ if you're in New Relic EU region.
-   
-   * - Host
-     - The name of the originating host of the log and metrics.
-
-   * - Custom Attributes
-     - Custom Attributes associated with your logs and metrics. A default source tag ``hasura-cloud-metrics`` is added to all exported logs and metrics. Attributes ``project_id`` and ``project_name`` are added to all exported metrics. 
-
-   * - Service Name 
-     - The name of the application or service generating the log events.
-```
-
 ## Docusaurus - MDX
 
 If the table consists of simple text and no complex UI and no column width control. This can be plain markdown syntax as below:
@@ -88,7 +62,8 @@ Unfortunately, `markdown` doesn't have straightforward syntax to control the wid
 
 :::tip Few things to note:
 
-If a table cell is mixed with text and markdown stuff (`code highlighters`, [links](/rst-vs-mdx-guide/links.mdx) etc., Please prefer `html` syntax over markdown as markdown won't be parsed correctly.
+If a table cell is mixed with text and markdown elements (`code highlighters`, [links](/docusaurus-mdx-guide/links.mdx)
+etc., Please prefer `html` syntax over markdown as markdown won't be parsed correctly.
 
 ```html
 <!-- Usage of <Link> for `[link](https://...)` -->
@@ -197,53 +172,9 @@ Please do not that this is required only when there is a cell involving code blo
   </tbody>
 </table>
 
-### Sphinx - RST
-```rest {2-7}
-.. list-table::
-  :widths: 10 10 30
-  :header-rows: 1
 
-  * - Status code
-    - Description
-    - Response structure
-
-  * - ``200``
-    - Success
-    - .. parsed-literal::
-
-        Request specific
-
-  * - ``400``
-    - Bad request
-    - .. code-block:: haskell
-
-          {
-              "path"  : String,
-              "error" : String
-          }
-
-  * - ``401``
-    - Unauthorized
-    - .. code-block:: haskell
-
-          {
-              "error" : String
-          }
-
-  * - ``500``
-    - Internal server error
-    - .. code-block:: haskell
-
-          {
-              "error" : String
-          }
-```
-
-### Docusaurus - MDX
-
-The `:widths:` can be added as `width` attribute to `html` - `th`. And the `:header-rows:` determines the number of header rows to be considered for `<thead>`.
-
-Each row in RST syntax starts with `*` prefix (ex: `* - Status Code`). SO the first row will be header and rest of them will be `tr`s under table body.
+The `:widths:` can be added as `width` attribute to `html` - `th`. And the `:header-rows:` determines the number of
+header rows to be considered for `<thead>`.
 
 ```html {2-8}
     <table>

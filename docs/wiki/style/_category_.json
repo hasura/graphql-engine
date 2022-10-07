@@ -1,4 +1,8 @@
 {
   "label": "Style",
-  "position": 40
+  "position": 50,
+  "link": {
+    "type": "generated-index",
+    "title": "Documentation Style Guide Index"
+  }
 }

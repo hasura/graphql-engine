@@ -8,29 +8,11 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 # Thumbnail
 
-MDX doesn't have straight forward alternative for `thumbnail` custom directive from Sphinx. So, created a new component
-`Thumbnail` to function as alternative.
-
-<Tabs>
-  <TabItem value="sphinx" label="Sphinx - RST" default>
-
-```rest
-.. thumbnail:: /img/account-management/billing/add_new_card.png
-   :alt: add a new card
-   :width: 437px
-```
-
-  </TabItem>
-  <TabItem value="docusaurus" label="Docusaurus - MDX">
-
 ```jsx
 import Thumbnail from '@site/src/components/Thumbnail';
 
 <Thumbnail src='/img/account-management/billing/add_new_card.png' alt='add a new card' width='437px' />;
 ```
-
-  </TabItem>
-</Tabs>
 
 Just pass in all the valid attributes for image as props.
 

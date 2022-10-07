@@ -27,7 +27,7 @@ function HomepageHeader() {
             </Link>
           </div>
           <div className={styles.links}>
-            <Link className='button button--success button--lg' to='/wiki/style/index/'>
+            <Link className='button button--success button--lg' to='/wiki/category/style/'>
               Docs Style Guide
             </Link>
           </div>

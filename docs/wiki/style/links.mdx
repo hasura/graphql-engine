@@ -1,0 +1,44 @@
+---
+title: Links
+description: Style for links in documentation
+keywords:
+  - hasura
+  - style
+  - links
+---
+
+# Links
+
+#### Internal links
+
+When linking to other docs pages, use _root relative file paths_ (`/schema/postgres/tables.mdx`) rather than _relative
+links_ (`../../path/to/file.mdx`) in order to avoid broken links. Why? when files are moved around, we just need to
+replace old path with new path - no relative `../../../` resolution required.
+
+Please read the [Links](/docusaurus-mdx-guide/links.mdx) section for more details on how to work with Links.
+
+An example:
+
+```
+[Postgres tables](/schema/postgres/tables.mdx)
+```
+
+In this example, `Postgres tables` is the link text, and `/schema/postgres/tables.mdx` is the file path which will be
+resolved as link by docusaurus.
+
+#### External links
+
+External links are no different in syntax, replace the file paths with external links and that's it.
+
+An example:
+
+`[Google](https://www.google.com/)` [Google](https://www.google.com/)
+
+
+:::info Note
+
+If you link to an external resource, make sure to link to the most current version of the same, e.g.
+`https://www.postgresql.org/docs/current/intro-whatis.html` rather than
+`https://www.postgresql.org/docs/9.6/intro-whatis.html`.
+
+:::

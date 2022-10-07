@@ -14,3 +14,9 @@ slug: headings
 * Subheadings, anything less than `h1` or markdown level 1: `#`, should use `Sentence capitalization like this`.
 * Headings should not end with a period.
 * Leave a blank line above and below headings.
+* Add an introduction section as `## Introduction` with a short overview of what the page is about.
+* Page titles should be self-sufficient. Users might not have the context of the hierarchy of the page in the docs tree.
+  A user can land on a page via search as well. e.g. Say you are adding a new deployment guide for AWS under
+  `Guides -> Deployment -> AWS`. The title of this page should not be just `AWS` but instead
+  `AWS deployment guide for Hasura GraphQL engine`. It's ok to alias it to just `AWS` in the sidebar
+  (`sidebar_label: AWS`) as there the user has the context of the page hierarchy.

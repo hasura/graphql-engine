@@ -18,3 +18,13 @@ slug: general
 - All lines in markdown should break at **120 characters** for better readability in IDEs. 120 is useful because it
   still allows side-by-side editing on most screens and closely matches the line length of the final output page at max
   width.
+- Add appropriate cross-links in content to assist users.
+    - If you refer to some functionality that is documented in some other docs page, add a link to that page.
+    - If you have a statement like "create a relationship between tables X and Y ...", make "create a relationship"
+      a link to the `Create relationships` page.
+- Try to make each section within a page self-sufficient. i.e. avoid structuring all pages as step-by-step guides unless
+  it really is the intent. This ensures that we can refer to sections externally (from other docs pages, console, etc.)
+  and expect that the user will be able to follow the section without being lost on the context that was set in earlier
+  sections of the page. Adding statements such as "As we have described in the above section ..." might help to set up
+  the needed context.
+

@@ -9,28 +9,6 @@ import TabItem from '@theme/TabItem';
 
 Should be a straightforward syntax replacement:
 
-<Tabs>
-<TabItem value="sphinx" label="Sphinx - RST" default>
-
-```rest
-.. rst-class:: api_tabs
-// highlight-next-line
-.. tabs::
-
-  // highlight-next-line
-  .. tab:: Console
-
-    Click the ``Reload`` button in the ``Remote schema`` section on the Hasura console.
-
-  // highlight-next-line
-  .. tab:: API
-
-    Make a request to the :ref:`reload_remote_schema<reload_remote_schema>` API.
-```
-
-</TabItem>
-<TabItem value="docusaurus" label="Docusaurus - MDX">
-
 ```jsx
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -48,9 +26,6 @@ Make a request to the [reload_remote_schema](#) API.
 </TabItem>
 </Tabs>
 ```
-
-</TabItem>
-</Tabs>
 
 Which should render like below:
 

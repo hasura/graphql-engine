@@ -9,63 +9,37 @@ import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
 
 We use graphiql editor wherever applicable for example showcase throughout docs.
 
-A `GraphiQLIDE` component is already created with required custom logic. So, use `GraphiQLIDE` just like any other React component.
+A `GraphiQLIDE` component is already created with the required custom logic. So, use `GraphiQLIDE` just like any other
+React component.
 
-## Sphinx - RST
+- Use a tab-width of 2 for nesting the requests and responses for optimal use of the space and maintaining consistency.
+- Nest query arguments for logical readability. Unfortunately, GraphiQL prettify does not do a good job of doing this by
+default.
+- Ensure that the order of fields in the responses is the same as in the requests for better readability.
 
-```rest
-// highlight-start
-.. graphiql::
-  :view_only:
-  :query:
-// highlight-end
-    query get_authors_in_pincode ($jsonFilter: jsonb){
-      authors(
-        where: {
-          address: {_contains: $jsonFilter }
-        }
-      ) {
-        id
-        name
-        address
-      }
+Use it as follows:
+
+```jsx
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+<GraphiQLIDE
+  query={`query {
+  author_by_pk(id: 1) {
+    id
+    name
+  }
+}`}
+  response={`{
+  "data": {
+    "author_by_pk": {
+      "id": 1,
+      "name": "Justin"
     }
-  // highlight-next-line
-  :response:
-    {
-      "data": {
-        "authors": [
-          {
-            "id": 1,
-            "name": "Ash",
-            "address": {
-              "street_address": "161, 19th Main Road, Koramangala 6th Block",
-              "city": "Bengaluru",
-              "state": "Karnataka",
-              "pincode": 560095,
-              "phone": "9090909090",
-            }
-          }
-        ]
-      }
-    }
-  // highlight-next-line
-  :variables:
-    {
-      "jsonFilter": {
-        "pincode": 560095
-      }
-    }
+  }
+}`}
+/>;
 ```
 
-:::note
-
-`:view_only:` is `viewOnly` prop and by default set to `true` in the `GraphQLIDE` component.
-
-:::
-
-
-## Docusaurus - MDX
 ```jsx
 
 // highlight-start
