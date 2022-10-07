@@ -69,7 +69,7 @@ LEFT JOIN LATERAL
       'position', "column".attnum,
       'type', json_build_object('name', coalesce(base_type.typname, "type".typname), 'type', "type".typtype),
       'is_nullable', NOT "column".attnotnull,
-      'description', '', -- pg_catalog.col_description("table".oid, "column".attnum), -- removing this for now as it takes ~20 seconds per lookup
+      'description', pg_catalog.col_description("column".attrelid, "column".attnum),
       'mutability', jsonb_build_object(
         'is_insertable', NOT ("column".attidentity = 'a' OR "column".attgenerated = 's'),
         'is_updatable', NOT ("column".attidentity = 'a' OR "column".attgenerated = 's'))
