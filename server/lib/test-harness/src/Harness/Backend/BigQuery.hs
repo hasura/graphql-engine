@@ -1,8 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-{-# OPTIONS -Wno-redundant-constraints #-}
-
 -- | BigQuery helpers. This module contains BigQuery specific schema
 -- setup/teardown functions because BigQuery API has a different API
 -- (dataset field, manual_configuration field etc)

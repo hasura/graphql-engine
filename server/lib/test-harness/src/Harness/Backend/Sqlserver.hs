@@ -1,8 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-{-# OPTIONS -Wno-redundant-constraints #-}
-
 -- | SQLServer helpers.
 module Harness.Backend.Sqlserver
   ( livenessCheck,

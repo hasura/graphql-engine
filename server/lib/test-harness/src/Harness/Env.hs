@@ -1,5 +1,3 @@
-{-# OPTIONS -Wno-redundant-constraints #-}
-
 -- | Read environment variables
 module Harness.Env
   ( getEnvRead,
