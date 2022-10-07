@@ -26,6 +26,7 @@ database to store its metadata using Docker on Cloud Foundry.
 -   [Docker Compose](https://docs.docker.com/compose/install/)
 
 ### Step 1: Setup and Login to Cloud Foundry
+
 - The [hasura/graphql-engine/install-manifests](https://github.com/hasura/graphql-engine/tree/stable/install-manifests)
 repo contains all installation manifests required to deploy Hasura anywhere. 
 - Setup the docker environment on Hasura with reference to [Run Hasura GraphQL engine using Docker](https://hasura.io/docs/latest/deployment/deployment-guides/docker/)
@@ -36,5 +37,76 @@ repo contains all installation manifests required to deploy Hasura anywhere.
 ```
 
 ### Step 2: Push app from docker container
+
+To deploy a Docker image from a Docker Hub repository, run:
+
+```bash
+> cf push APP-NAME --docker-image REPO/IMAGE:TAG
+```
+
+- `cf push` - The CLI command pushes apps to Cloud Foundry.
+- `<APP_NAME>` - It is the name of your app. You need to pick a name of your app and insert it in place of `<APP_NAME>`.
+- `--random-route` - It creates a route that includes the app name and random words to ensure route uniqueness.
+- `REPO/IMAGE` - It is name of the repository where the image is stored & name of the app image on Docker Hub. In this deployment, the name of the repository is Hasura and app image is Graphql-Engine. 
+
+The following command pushes the graphql-engine image from Docker Hub to a Cloud Foundry app:
+
+```bash
+> cf push <APP_NAME> --random-route --docker-image hasura/graphql-engine --no-start
+```
+
+### Step 3: Setup of environment variables
+
+- `HASURA_GRAPHQL_DATABASE_URL` - It is a graphql-engine environment varialble for Postgres database URL.
+- `HASURA_GRAPHQL_ENABLE_CONSOLE` - Enable the Hasura Console (served by the server on `/` and `/console`). (default: `false`)
+- `HASURA_GRAPHQL_ADMIN_SECRET` - Admin secret key, required to access this instance. This is mandatory when you use webhook or JWT.
+
+The following command sets up some environment variables for the new app:
+
+```bash
+> cf set-env <APP_NAME> HASURA_GRAPHQL_DATABASE_URL postgres://<ADMIN_USERNAME>:<ADMIN_PASSWORD>@<DB_ENDPOINT>:<DB_PORT>/<DB_NAME>
+> cf set-env <APP_NAME> HASURA_GRAPHQL_ENABLE_CONSOLE true
+> cf set-env <APP_NAME> HASURA_GRAPHQL_ADMIN_SECRET <ADMIN_SECRET>
+```
+
+The different parameters are visible in the AWS console (and/or defined during the service instance creation):
+
+- `<ADMIN_USERNAME>` -  Service instance adminUsername
+- `<ADMIN_PASSWORD>` - Service instance adminPassword
+- `<DB_ENDPOINT>` - RDS DB Endpoint
+- `<DB_PORT>` - RDS DB Port
+- `<DB_NAME>` - Service instance dbName
+- `<ADMIN_SECRET>` - Password to protect GraphQL endpoint
+
+### Step 5: Restage the app
+
+To restage your app, run the following command:
+
+```bash
+> cf restage <APP_NAME>
+```
+
+- `restage` - It recreates the app's executable artifact using the latest pushed app files and the latest environment. Restaging your app stops your app and restages it, by compiling a new droplet and starting it. Restage your app if you have changed the environment in a way that affects your staging process, such as setting an environment variable, service bindings, buildpack, stack, etc.
+
+:::info Note
+
+Restaging your app stops your app and restages it, by compiling a new droplet and starting it.
+
+:::
+
+### Step 6: Display route for the app and open it
+
+To open the app after restaging and display its route use the following command:
+
+```bash
+> cf app <APP_NAME>
+```
+
+Once you have completed the deployment, you can now [make your first Query](https://hasura.io/docs/latest/queries/index/).
+
+## Advanced
+
+-   [Setting up migrations](/migrations-metadata-seeds/migrations-metadata-setup.mdx)
+
 
 
