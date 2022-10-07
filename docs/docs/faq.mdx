@@ -22,7 +22,7 @@ Hasura supports the following databases:
 
 ## How does Hasura work? {#faq-how-hasura-works}
 
-Although Hasura presents itself as a web-service, Hasura is quite a JIT compiler. Hasura takes incoming GraphQL API
+Although Hasura presents itself as a web service, Hasura is quite a JIT compiler. Hasura takes incoming GraphQL API
 calls over HTTP and then tries to achieve theoretically optimal performance while delegating the data fetches to
 downstream data sources. You can read more about Hasura’s design philosophy in this
 [blog post](https://hasura.io/blog/how-hasura-works/)
@@ -36,7 +36,7 @@ Hasura cuts down development time by 50-80%. You can find out more from our case
 
 Hasura is designed for incremental adoption without having to rip-and-replace or entirely rebuild your stack. You can
 incrementally migrate your application to Hasura. Use Hasura to first build any new features for your application using
-your existing data as well as a high performance read layer for any read-heavy use-cases as this takes no time to set
+your existing data as well as a high-performance read layer for any read-heavy use-cases as this takes no time to set
 up. You can also use any business logic in your existing applications by delegating to them via Hasura Actions. This
 gives you the time to migrate over any legacy code or rewrite existing micro-services with Hasura.
 
@@ -48,7 +48,7 @@ any code required for external or internal authorization rules.
 Hasura provides 4 ways for exposing existing or new business logic in your domain:
 
 **Event triggers:** Whenever there’s a change in the upstream database, Hasura can capture that change as an event and
-deliver that to a HTTP webhook that can process that data change event and react to it asynchronously. Apart from
+deliver that to an HTTP webhook that can process that data change event and react to it asynchronously. Apart from
 attaching specific pieces of logic to events, this is especially useful if you’re thinking about building end-to-end
 real-time and reactive applications.
 
