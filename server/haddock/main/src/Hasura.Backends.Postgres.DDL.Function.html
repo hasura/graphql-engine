@@ -33,80 +33,80 @@
 </span><span id="line-33"></span><span>
 </span><span id="line-34"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#mkFunctionArgs"><span class="hs-identifier hs-type">mkFunctionArgs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedPGType"><span class="hs-identifier hs-type">QualifiedPGType</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.Types.Function.html#FunctionArg"><span class="hs-identifier hs-type">FunctionArg</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-35"></span><span id="mkFunctionArgs"><span class="annot"><span class="annottext">mkFunctionArgs :: Int -&gt; [QualifiedPGType] -&gt; [FunctionArgName] -&gt; [FunctionArg]
-</span><a href="Hasura.Backends.Postgres.DDL.Function.html#mkFunctionArgs"><span class="hs-identifier hs-var hs-var">mkFunctionArgs</span></a></span></span><span> </span><span id="local-6989586621690440147"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690440147"><span class="hs-identifier hs-var">defArgsNo</span></a></span></span><span> </span><span id="local-6989586621690440146"><span class="annot"><span class="annottext">[QualifiedPGType]
-</span><a href="#local-6989586621690440146"><span class="hs-identifier hs-var">tys</span></a></span></span><span> </span><span id="local-6989586621690440145"><span class="annot"><span class="annottext">[FunctionArgName]
-</span><a href="#local-6989586621690440145"><span class="hs-identifier hs-var">argNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.Backends.Postgres.DDL.Function.html#mkFunctionArgs"><span class="hs-identifier hs-var hs-var">mkFunctionArgs</span></a></span></span><span> </span><span id="local-6989586621690440063"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690440063"><span class="hs-identifier hs-var">defArgsNo</span></a></span></span><span> </span><span id="local-6989586621690440062"><span class="annot"><span class="annottext">[QualifiedPGType]
+</span><a href="#local-6989586621690440062"><span class="hs-identifier hs-var">tys</span></a></span></span><span> </span><span id="local-6989586621690440061"><span class="annot"><span class="annottext">[FunctionArgName]
+</span><a href="#local-6989586621690440061"><span class="hs-identifier hs-var">argNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-36"></span><span>  </span><span class="annot"><span class="annottext">forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">bool</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArg]
-</span><a href="#local-6989586621690440143"><span class="hs-identifier hs-var">withNames</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArg]
-</span><a href="#local-6989586621690440142"><span class="hs-identifier hs-var">withNoNames</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690440059"><span class="hs-identifier hs-var">withNames</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArg]
+</span><a href="#local-6989586621690440058"><span class="hs-identifier hs-var">withNoNames</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArgName]
-</span><a href="#local-6989586621690440145"><span class="hs-identifier hs-var">argNames</span></a></span><span>
+</span><a href="#local-6989586621690440061"><span class="hs-identifier hs-var">argNames</span></a></span><span>
 </span><span id="line-37"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-38"></span><span>    </span><span id="local-6989586621690440140"><span class="annot"><span class="annottext">hasDefaultBoolSeq :: [HasDefault]
-</span><a href="#local-6989586621690440140"><span class="hs-identifier hs-var hs-var">hasDefaultBoolSeq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-38"></span><span>    </span><span id="local-6989586621690440056"><span class="annot"><span class="annottext">hasDefaultBoolSeq :: [HasDefault]
+</span><a href="#local-6989586621690440056"><span class="hs-identifier hs-var hs-var">hasDefaultBoolSeq</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-39"></span><span>      </span><span class="annot"><span class="annottext">forall a. Int -&gt; a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">replicate</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">length</span></a></span><span> </span><span class="annot"><span class="annottext">[QualifiedPGType]
-</span><a href="#local-6989586621690440146"><span class="hs-identifier hs-var">tys</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690440062"><span class="hs-identifier hs-var">tys</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-glyph hs-var">-</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690440147"><span class="hs-identifier hs-var">defArgsNo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; HasDefault
+</span><a href="#local-6989586621690440063"><span class="hs-identifier hs-var">defArgsNo</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; HasDefault
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#HasDefault"><span class="hs-identifier hs-var">HasDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-40"></span><span>        </span><span class="hs-comment">-- only last arguments can have default expression</span><span>
 </span><span id="line-41"></span><span>        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Int -&gt; a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">replicate</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690440147"><span class="hs-identifier hs-var">defArgsNo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; HasDefault
+</span><a href="#local-6989586621690440063"><span class="hs-identifier hs-var">defArgsNo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; HasDefault
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#HasDefault"><span class="hs-identifier hs-var">HasDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-42"></span><span>
-</span><span id="line-43"></span><span>    </span><span id="local-6989586621690440136"><span class="annot"><span class="annottext">tysWithHasDefault :: [(QualifiedPGType, HasDefault)]
-</span><a href="#local-6989586621690440136"><span class="hs-identifier hs-var hs-var">tysWithHasDefault</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. [a] -&gt; [b] -&gt; [(a, b)]
+</span><span id="line-43"></span><span>    </span><span id="local-6989586621690440052"><span class="annot"><span class="annottext">tysWithHasDefault :: [(QualifiedPGType, HasDefault)]
+</span><a href="#local-6989586621690440052"><span class="hs-identifier hs-var hs-var">tysWithHasDefault</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. [a] -&gt; [b] -&gt; [(a, b)]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">zip</span></a></span><span> </span><span class="annot"><span class="annottext">[QualifiedPGType]
-</span><a href="#local-6989586621690440146"><span class="hs-identifier hs-var">tys</span></a></span><span> </span><span class="annot"><span class="annottext">[HasDefault]
-</span><a href="#local-6989586621690440140"><span class="hs-identifier hs-var">hasDefaultBoolSeq</span></a></span><span>
+</span><a href="#local-6989586621690440062"><span class="hs-identifier hs-var">tys</span></a></span><span> </span><span class="annot"><span class="annottext">[HasDefault]
+</span><a href="#local-6989586621690440056"><span class="hs-identifier hs-var">hasDefaultBoolSeq</span></a></span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span>    </span><span id="local-6989586621690440142"><span class="annot"><span class="annottext">withNoNames :: [FunctionArg]
-</span><a href="#local-6989586621690440142"><span class="hs-identifier hs-var hs-var">withNoNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span id="line-45"></span><span>    </span><span id="local-6989586621690440058"><span class="annot"><span class="annottext">withNoNames :: [FunctionArg]
+</span><a href="#local-6989586621690440058"><span class="hs-identifier hs-var hs-var">withNoNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">[(QualifiedPGType, HasDefault)]
-</span><a href="#local-6989586621690440136"><span class="hs-identifier hs-var">tysWithHasDefault</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690440052"><span class="hs-identifier hs-var">tysWithHasDefault</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">uncurry</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe FunctionArgName
 -&gt; QualifiedPGType -&gt; HasDefault -&gt; FunctionArg
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#FunctionArg"><span class="hs-identifier hs-var">FunctionArg</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-46"></span><span>    </span><span id="local-6989586621690440143"><span class="annot"><span class="annottext">withNames :: [FunctionArg]
-</span><a href="#local-6989586621690440143"><span class="hs-identifier hs-var hs-var">withNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; [a] -&gt; [b] -&gt; [c]
+</span><span id="line-46"></span><span>    </span><span id="local-6989586621690440059"><span class="annot"><span class="annottext">withNames :: [FunctionArg]
+</span><a href="#local-6989586621690440059"><span class="hs-identifier hs-var hs-var">withNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; [a] -&gt; [b] -&gt; [c]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">zipWith</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; (QualifiedPGType, HasDefault) -&gt; FunctionArg
-</span><a href="#local-6989586621690440131"><span class="hs-identifier hs-var">mkArg</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArgName]
-</span><a href="#local-6989586621690440145"><span class="hs-identifier hs-var">argNames</span></a></span><span> </span><span class="annot"><span class="annottext">[(QualifiedPGType, HasDefault)]
-</span><a href="#local-6989586621690440136"><span class="hs-identifier hs-var">tysWithHasDefault</span></a></span><span>
+</span><a href="#local-6989586621690440047"><span class="hs-identifier hs-var">mkArg</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArgName]
+</span><a href="#local-6989586621690440061"><span class="hs-identifier hs-var">argNames</span></a></span><span> </span><span class="annot"><span class="annottext">[(QualifiedPGType, HasDefault)]
+</span><a href="#local-6989586621690440052"><span class="hs-identifier hs-var">tysWithHasDefault</span></a></span><span>
 </span><span id="line-47"></span><span>
-</span><span id="line-48"></span><span>    </span><span id="local-6989586621690440131"><span class="annot"><span class="annottext">mkArg :: FunctionArgName -&gt; (QualifiedPGType, HasDefault) -&gt; FunctionArg
-</span><a href="#local-6989586621690440131"><span class="hs-identifier hs-var hs-var">mkArg</span></a></span></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
-</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690440126"><span class="annot"><span class="annottext">QualifiedPGType
-</span><a href="#local-6989586621690440126"><span class="hs-identifier hs-var">ty</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690440125"><span class="annot"><span class="annottext">HasDefault
-</span><a href="#local-6989586621690440125"><span class="hs-identifier hs-var">hasDef</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe FunctionArgName
+</span><span id="line-48"></span><span>    </span><span id="local-6989586621690440047"><span class="annot"><span class="annottext">mkArg :: FunctionArgName -&gt; (QualifiedPGType, HasDefault) -&gt; FunctionArg
+</span><a href="#local-6989586621690440047"><span class="hs-identifier hs-var hs-var">mkArg</span></a></span></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
+</span><span class="hs-string">&quot;&quot;</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690440042"><span class="annot"><span class="annottext">QualifiedPGType
+</span><a href="#local-6989586621690440042"><span class="hs-identifier hs-var">ty</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690440041"><span class="annot"><span class="annottext">HasDefault
+</span><a href="#local-6989586621690440041"><span class="hs-identifier hs-var">hasDef</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe FunctionArgName
 -&gt; QualifiedPGType -&gt; HasDefault -&gt; FunctionArg
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#FunctionArg"><span class="hs-identifier hs-var">FunctionArg</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedPGType
-</span><a href="#local-6989586621690440126"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">HasDefault
-</span><a href="#local-6989586621690440125"><span class="hs-identifier hs-var">hasDef</span></a></span><span>
-</span><span id="line-49"></span><span>    </span><span class="annot"><a href="#local-6989586621690440131"><span class="hs-identifier hs-var">mkArg</span></a></span><span> </span><span id="local-6989586621690440124"><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690440124"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690440123"><span class="annot"><span class="annottext">QualifiedPGType
-</span><a href="#local-6989586621690440123"><span class="hs-identifier hs-var">ty</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690440122"><span class="annot"><span class="annottext">HasDefault
-</span><a href="#local-6989586621690440122"><span class="hs-identifier hs-var">hasDef</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe FunctionArgName
+</span><a href="#local-6989586621690440042"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">HasDefault
+</span><a href="#local-6989586621690440041"><span class="hs-identifier hs-var">hasDef</span></a></span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><a href="#local-6989586621690440047"><span class="hs-identifier hs-var">mkArg</span></a></span><span> </span><span id="local-6989586621690440040"><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621690440040"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690440039"><span class="annot"><span class="annottext">QualifiedPGType
+</span><a href="#local-6989586621690440039"><span class="hs-identifier hs-var">ty</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690440038"><span class="annot"><span class="annottext">HasDefault
+</span><a href="#local-6989586621690440038"><span class="hs-identifier hs-var">hasDef</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe FunctionArgName
 -&gt; QualifiedPGType -&gt; HasDefault -&gt; FunctionArg
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#FunctionArg"><span class="hs-identifier hs-var">FunctionArg</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690440124"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QualifiedPGType
-</span><a href="#local-6989586621690440123"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">HasDefault
-</span><a href="#local-6989586621690440122"><span class="hs-identifier hs-var">hasDef</span></a></span><span>
+</span><a href="#local-6989586621690440040"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QualifiedPGType
+</span><a href="#local-6989586621690440039"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">HasDefault
+</span><a href="#local-6989586621690440038"><span class="hs-identifier hs-var">hasDef</span></a></span><span>
 </span><span id="line-50"></span><span>
 </span><span id="line-51"></span><span class="hs-keyword">data</span><span> </span><span id="FunctionIntegrityError"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionIntegrityError"><span class="hs-identifier hs-var">FunctionIntegrityError</span></a></span></span><span>
 </span><span id="line-52"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="FunctionNameNotGQLCompliant"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionNameNotGQLCompliant"><span class="hs-identifier hs-var">FunctionNameNotGQLCompliant</span></a></span></span><span>
@@ -117,7 +117,7 @@
 </span><span id="line-57"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FunctionSessionArgumentNotJSON"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionSessionArgumentNotJSON"><span class="hs-identifier hs-var">FunctionSessionArgumentNotJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span>
 </span><span id="line-58"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FunctionInvalidSessionArgument"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionInvalidSessionArgument"><span class="hs-identifier hs-var">FunctionInvalidSessionArgument</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span>
 </span><span id="line-59"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="FunctionInvalidArgumentNames"><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionInvalidArgumentNames"><span class="hs-identifier hs-var">FunctionInvalidArgumentNames</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgName"><span class="hs-identifier hs-type">FunctionArgName</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690440099"><span id="local-6989586621690440101"><span id="local-6989586621690440112"><span class="annot"><span class="annottext">Int -&gt; FunctionIntegrityError -&gt; ShowS
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690440015"><span id="local-6989586621690440017"><span id="local-6989586621690440028"><span class="annot"><span class="annottext">Int -&gt; FunctionIntegrityError -&gt; ShowS
 [FunctionIntegrityError] -&gt; ShowS
 FunctionIntegrityError -&gt; String
 forall a.
@@ -128,7 +128,7 @@ show :: FunctionIntegrityError -&gt; String
 $cshow :: FunctionIntegrityError -&gt; String
 showsPrec :: Int -&gt; FunctionIntegrityError -&gt; ShowS
 $cshowsPrec :: Int -&gt; FunctionIntegrityError -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690440090"><span id="local-6989586621690440096"><span class="annot"><span class="annottext">FunctionIntegrityError -&gt; FunctionIntegrityError -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690440006"><span id="local-6989586621690440012"><span class="annot"><span class="annottext">FunctionIntegrityError -&gt; FunctionIntegrityError -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: FunctionIntegrityError -&gt; FunctionIntegrityError -&gt; Bool
 $c/= :: FunctionIntegrityError -&gt; FunctionIntegrityError -&gt; Bool
@@ -137,17 +137,17 @@ $c== :: FunctionIntegrityError -&gt; FunctionIntegrityError -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-61"></span><span>
 </span><span id="line-62"></span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#buildFunctionInfo"><span class="hs-identifier hs-type">buildFunctionInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-63"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690440302"><span class="annot"><a href="#local-6989586621690440302"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621690440299"><span class="annot"><a href="#local-6989586621690440299"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-64"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440302"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440299"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-63"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690440218"><span class="annot"><a href="#local-6989586621690440218"><span class="hs-identifier hs-type">pgKind</span></a></span></span><span> </span><span id="local-6989586621690440215"><span class="annot"><a href="#local-6989586621690440215"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-64"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440218"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErrM"><span class="hs-identifier hs-type">QErrM</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440215"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-65"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-66"></span><span>  </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedFunction"><span class="hs-identifier hs-type">QualifiedFunction</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-67"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SystemDefined"><span class="hs-identifier hs-type">SystemDefined</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-68"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-69"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionPermissionsMap"><span class="hs-identifier hs-type">FunctionPermissionsMap</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-70"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#RawFunctionInfo"><span class="hs-identifier hs-type">RawFunctionInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440302"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-70"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#RawFunctionInfo"><span class="hs-identifier hs-type">RawFunctionInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440218"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-71"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-72"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.NamingCase.html#NamingCase"><span class="hs-identifier hs-type">NamingCase</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-73"></span><span>  </span><span class="annot"><a href="#local-6989586621690440299"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440302"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>  </span><span class="annot"><a href="#local-6989586621690440215"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-type">FunctionInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440218"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-type">SchemaDependency</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span id="buildFunctionInfo"><span class="annot"><span class="annottext">buildFunctionInfo :: forall (pgKind :: PostgresKind) (m :: * -&gt; *).
 (Backend ('Postgres pgKind), QErrM m) =&gt;
 SourceName
@@ -159,11 +159,11 @@ SourceName
 -&gt; Maybe Text
 -&gt; NamingCase
 -&gt; m (FunctionInfo ('Postgres pgKind), SchemaDependency)
-</span><a href="Hasura.Backends.Postgres.DDL.Function.html#buildFunctionInfo"><span class="hs-identifier hs-var hs-var">buildFunctionInfo</span></a></span></span><span> </span><span id="local-6989586621690439995"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690439995"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621690439994"><span class="annot"><span class="annottext">QualifiedFunction
-</span><a href="#local-6989586621690439994"><span class="hs-identifier hs-var">qf</span></a></span></span><span> </span><span id="local-6989586621690439993"><span class="annot"><span class="annottext">SystemDefined
-</span><a href="#local-6989586621690439993"><span class="hs-identifier hs-var">systemDefined</span></a></span></span><span> </span><span id="local-6989586621690439992"><span class="annot"><span class="annottext">fc :: FunctionConfig
-</span><a href="#local-6989586621690439992"><span class="hs-identifier hs-var">fc</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690439987"><span id="local-6989586621690439988"><span id="local-6989586621690439989"><span id="local-6989586621690439990"><span class="annot"><span class="annottext">Maybe Name
+</span><a href="Hasura.Backends.Postgres.DDL.Function.html#buildFunctionInfo"><span class="hs-identifier hs-var hs-var">buildFunctionInfo</span></a></span></span><span> </span><span id="local-6989586621690439911"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621690439911"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span id="local-6989586621690439910"><span class="annot"><span class="annottext">QualifiedFunction
+</span><a href="#local-6989586621690439910"><span class="hs-identifier hs-var">qf</span></a></span></span><span> </span><span id="local-6989586621690439909"><span class="annot"><span class="annottext">SystemDefined
+</span><a href="#local-6989586621690439909"><span class="hs-identifier hs-var">systemDefined</span></a></span></span><span> </span><span id="local-6989586621690439908"><span class="annot"><span class="annottext">fc :: FunctionConfig
+</span><a href="#local-6989586621690439908"><span class="hs-identifier hs-var">fc</span></a></span></span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionConfig"><span class="hs-identifier hs-type">FunctionConfig</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690439903"><span id="local-6989586621690439904"><span id="local-6989586621690439905"><span id="local-6989586621690439906"><span class="annot"><span class="annottext">Maybe Name
 Maybe FunctionArgName
 Maybe FunctionExposedAs
 FunctionCustomRootFields
@@ -175,17 +175,17 @@ _fcCustomName :: Maybe Name
 _fcCustomRootFields :: FunctionCustomRootFields
 _fcExposedAs :: Maybe FunctionExposedAs
 _fcSessionArgument :: Maybe FunctionArgName
-</span><a href="Hasura.RQL.Types.Function.html#_fcCustomName"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621690439982"><span class="annot"><span class="annottext">FunctionPermissionsMap
-</span><a href="#local-6989586621690439982"><span class="hs-identifier hs-var">permissions</span></a></span></span><span> </span><span id="local-6989586621690439981"><span class="annot"><span class="annottext">RawFunctionInfo ('Postgres pgKind)
-</span><a href="#local-6989586621690439981"><span class="hs-identifier hs-var">rawFuncInfo</span></a></span></span><span> </span><span id="local-6989586621690439980"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690439980"><span class="hs-identifier hs-var">comment</span></a></span></span><span> </span><span id="local-6989586621690439979"><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621690439979"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Hasura.RQL.Types.Function.html#_fcCustomName"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span id="local-6989586621690439898"><span class="annot"><span class="annottext">FunctionPermissionsMap
+</span><a href="#local-6989586621690439898"><span class="hs-identifier hs-var">permissions</span></a></span></span><span> </span><span id="local-6989586621690439897"><span class="annot"><span class="annottext">RawFunctionInfo ('Postgres pgKind)
+</span><a href="#local-6989586621690439897"><span class="hs-identifier hs-var">rawFuncInfo</span></a></span></span><span> </span><span id="local-6989586621690439896"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621690439896"><span class="hs-identifier hs-var">comment</span></a></span></span><span> </span><span id="local-6989586621690439895"><span class="annot"><span class="annottext">NamingCase
+</span><a href="#local-6989586621690439895"><span class="hs-identifier hs-var">tCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-75"></span><span>  </span><span class="annot"><span class="annottext">forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">either</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#NotSupported"><span class="hs-identifier hs-var">NotSupported</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionIntegrityError] -&gt; Text
-</span><a href="#local-6989586621690439974"><span class="hs-identifier hs-var">showErrors</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="#local-6989586621690439890"><span class="hs-identifier hs-var">showErrors</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
 </span><span id="line-76"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">=&lt;&lt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a.
@@ -195,59 +195,59 @@ ValidateT e m a -&gt; m (Either e a)
   [FunctionIntegrityError]
   m
   (FunctionInfo ('Postgres pgKind), SchemaDependency)
-</span><a href="#local-6989586621690439971"><span class="hs-identifier hs-var">validateFunction</span></a></span><span>
+</span><a href="#local-6989586621690439887"><span class="hs-identifier hs-var">validateFunction</span></a></span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-78"></span><span>    </span><span id="local-6989586621690439970"><span class="annot"><span class="annottext">functionArgs :: [FunctionArg]
-</span><a href="#local-6989586621690439970"><span class="hs-identifier hs-var hs-var">functionArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; [QualifiedPGType] -&gt; [FunctionArgName] -&gt; [FunctionArg]
+</span><span id="line-78"></span><span>    </span><span id="local-6989586621690439886"><span class="annot"><span class="annottext">functionArgs :: [FunctionArg]
+</span><a href="#local-6989586621690439886"><span class="hs-identifier hs-var hs-var">functionArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; [QualifiedPGType] -&gt; [FunctionArgName] -&gt; [FunctionArg]
 </span><a href="Hasura.Backends.Postgres.DDL.Function.html#mkFunctionArgs"><span class="hs-identifier hs-var">mkFunctionArgs</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690439969"><span class="hs-identifier hs-var">defArgsNo</span></a></span><span> </span><span class="annot"><span class="annottext">[QualifiedPGType]
-</span><a href="#local-6989586621690439968"><span class="hs-identifier hs-var">inpArgTyps</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArgName]
-</span><a href="#local-6989586621690439967"><span class="hs-identifier hs-var">inpArgNames</span></a></span><span>
+</span><a href="#local-6989586621690439885"><span class="hs-identifier hs-var">defArgsNo</span></a></span><span> </span><span class="annot"><span class="annottext">[QualifiedPGType]
+</span><a href="#local-6989586621690439884"><span class="hs-identifier hs-var">inpArgTyps</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArgName]
+</span><a href="#local-6989586621690439883"><span class="hs-identifier hs-var">inpArgNames</span></a></span><span>
 </span><span id="line-79"></span><span>    </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGRawFunctionInfo"><span class="hs-identifier hs-type">PGRawFunctionInfo</span></a></span><span>
 </span><span id="line-80"></span><span>      </span><span class="annot"><span class="annottext">OID
 </span><span class="hs-identifier">_</span></span><span>
-</span><span id="line-81"></span><span>      </span><span id="local-6989586621690439965"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690439965"><span class="hs-identifier hs-var">hasVariadic</span></a></span></span><span>
-</span><span id="line-82"></span><span>      </span><span id="local-6989586621690439964"><span class="annot"><span class="annottext">FunctionVolatility
-</span><a href="#local-6989586621690439964"><span class="hs-identifier hs-var">funVol</span></a></span></span><span>
-</span><span id="line-83"></span><span>      </span><span id="local-6989586621690439963"><span class="annot"><span class="annottext">SchemaName
-</span><a href="#local-6989586621690439963"><span class="hs-identifier hs-var">retSn</span></a></span></span><span>
-</span><span id="line-84"></span><span>      </span><span id="local-6989586621690439962"><span class="annot"><span class="annottext">PGScalarType
-</span><a href="#local-6989586621690439962"><span class="hs-identifier hs-var">retN</span></a></span></span><span>
-</span><span id="line-85"></span><span>      </span><span id="local-6989586621690439961"><span class="annot"><span class="annottext">PGTypeKind
-</span><a href="#local-6989586621690439961"><span class="hs-identifier hs-var">retTyTyp</span></a></span></span><span>
-</span><span id="line-86"></span><span>      </span><span id="local-6989586621690439960"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690439960"><span class="hs-identifier hs-var">retSet</span></a></span></span><span>
-</span><span id="line-87"></span><span>      </span><span id="local-6989586621690439968"><span class="annot"><span class="annottext">[QualifiedPGType]
-</span><a href="#local-6989586621690439968"><span class="hs-identifier hs-var">inpArgTyps</span></a></span></span><span>
-</span><span id="line-88"></span><span>      </span><span id="local-6989586621690439967"><span class="annot"><span class="annottext">[FunctionArgName]
-</span><a href="#local-6989586621690439967"><span class="hs-identifier hs-var">inpArgNames</span></a></span></span><span>
-</span><span id="line-89"></span><span>      </span><span id="local-6989586621690439969"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690439969"><span class="hs-identifier hs-var">defArgsNo</span></a></span></span><span>
-</span><span id="line-90"></span><span>      </span><span id="local-6989586621690439959"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690439959"><span class="hs-identifier hs-var">returnsTab</span></a></span></span><span>
-</span><span id="line-91"></span><span>      </span><span id="local-6989586621690439958"><span class="annot"><span class="annottext">Maybe PGDescription
-</span><a href="#local-6989586621690439958"><span class="hs-identifier hs-var">descM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-81"></span><span>      </span><span id="local-6989586621690439881"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690439881"><span class="hs-identifier hs-var">hasVariadic</span></a></span></span><span>
+</span><span id="line-82"></span><span>      </span><span id="local-6989586621690439880"><span class="annot"><span class="annottext">FunctionVolatility
+</span><a href="#local-6989586621690439880"><span class="hs-identifier hs-var">funVol</span></a></span></span><span>
+</span><span id="line-83"></span><span>      </span><span id="local-6989586621690439879"><span class="annot"><span class="annottext">SchemaName
+</span><a href="#local-6989586621690439879"><span class="hs-identifier hs-var">retSn</span></a></span></span><span>
+</span><span id="line-84"></span><span>      </span><span id="local-6989586621690439878"><span class="annot"><span class="annottext">PGScalarType
+</span><a href="#local-6989586621690439878"><span class="hs-identifier hs-var">retN</span></a></span></span><span>
+</span><span id="line-85"></span><span>      </span><span id="local-6989586621690439877"><span class="annot"><span class="annottext">PGTypeKind
+</span><a href="#local-6989586621690439877"><span class="hs-identifier hs-var">retTyTyp</span></a></span></span><span>
+</span><span id="line-86"></span><span>      </span><span id="local-6989586621690439876"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690439876"><span class="hs-identifier hs-var">retSet</span></a></span></span><span>
+</span><span id="line-87"></span><span>      </span><span id="local-6989586621690439884"><span class="annot"><span class="annottext">[QualifiedPGType]
+</span><a href="#local-6989586621690439884"><span class="hs-identifier hs-var">inpArgTyps</span></a></span></span><span>
+</span><span id="line-88"></span><span>      </span><span id="local-6989586621690439883"><span class="annot"><span class="annottext">[FunctionArgName]
+</span><a href="#local-6989586621690439883"><span class="hs-identifier hs-var">inpArgNames</span></a></span></span><span>
+</span><span id="line-89"></span><span>      </span><span id="local-6989586621690439885"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690439885"><span class="hs-identifier hs-var">defArgsNo</span></a></span></span><span>
+</span><span id="line-90"></span><span>      </span><span id="local-6989586621690439875"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690439875"><span class="hs-identifier hs-var">returnsTab</span></a></span></span><span>
+</span><span id="line-91"></span><span>      </span><span id="local-6989586621690439874"><span class="annot"><span class="annottext">Maybe PGDescription
+</span><a href="#local-6989586621690439874"><span class="hs-identifier hs-var">descM</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-92"></span><span>        </span><span class="annot"><span class="annottext">RawFunctionInfo ('Postgres pgKind)
-</span><a href="#local-6989586621690439981"><span class="hs-identifier hs-var">rawFuncInfo</span></a></span><span>
-</span><span id="line-93"></span><span>    </span><span id="local-6989586621690439957"><span class="annot"><span class="annottext">returnType :: QualifiedPGType
-</span><a href="#local-6989586621690439957"><span class="hs-identifier hs-var hs-var">returnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; PGScalarType -&gt; PGTypeKind -&gt; QualifiedPGType
+</span><a href="#local-6989586621690439897"><span class="hs-identifier hs-var">rawFuncInfo</span></a></span><span>
+</span><span id="line-93"></span><span>    </span><span id="local-6989586621690439873"><span class="annot"><span class="annottext">returnType :: QualifiedPGType
+</span><a href="#local-6989586621690439873"><span class="hs-identifier hs-var hs-var">returnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SchemaName -&gt; PGScalarType -&gt; PGTypeKind -&gt; QualifiedPGType
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedPGType"><span class="hs-identifier hs-var">QualifiedPGType</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaName
-</span><a href="#local-6989586621690439963"><span class="hs-identifier hs-var">retSn</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
-</span><a href="#local-6989586621690439962"><span class="hs-identifier hs-var">retN</span></a></span><span> </span><span class="annot"><span class="annottext">PGTypeKind
-</span><a href="#local-6989586621690439961"><span class="hs-identifier hs-var">retTyTyp</span></a></span><span>
+</span><a href="#local-6989586621690439879"><span class="hs-identifier hs-var">retSn</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
+</span><a href="#local-6989586621690439878"><span class="hs-identifier hs-var">retN</span></a></span><span> </span><span class="annot"><span class="annottext">PGTypeKind
+</span><a href="#local-6989586621690439877"><span class="hs-identifier hs-var">retTyTyp</span></a></span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span>    </span><span id="local-6989586621690439953"><span class="annot"><span class="annottext">throwValidateError :: FunctionIntegrityError -&gt; ValidateT [FunctionIntegrityError] m ()
-</span><a href="#local-6989586621690439953"><span class="hs-identifier hs-var hs-var">throwValidateError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *). MonadValidate e m =&gt; e -&gt; m ()
+</span><span id="line-95"></span><span>    </span><span id="local-6989586621690439869"><span class="annot"><span class="annottext">throwValidateError :: FunctionIntegrityError -&gt; ValidateT [FunctionIntegrityError] m ()
+</span><a href="#local-6989586621690439869"><span class="hs-identifier hs-var hs-var">throwValidateError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *). MonadValidate e m =&gt; e -&gt; m ()
 </span><span class="hs-identifier hs-var">MV.dispute</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
 </span><span id="line-96"></span><span>
-</span><span id="line-97"></span><span>    </span><span id="local-6989586621690439971"><span class="annot"><span class="annottext">validateFunction :: ValidateT
+</span><span id="line-97"></span><span>    </span><span id="local-6989586621690439887"><span class="annot"><span class="annottext">validateFunction :: ValidateT
   [FunctionIntegrityError]
   m
   (FunctionInfo ('Postgres pgKind), SchemaDependency)
-</span><a href="#local-6989586621690439971"><span class="hs-identifier hs-var hs-var">validateFunction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621690439887"><span class="hs-identifier hs-var hs-var">validateFunction</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-98"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall s a. Getting Any s a -&gt; s -&gt; Bool
 </span><span class="hs-identifier hs-var">has</span></span><span> </span><span class="annot"><span class="annottext">forall c a b. Prism (Either c a) (Either c b) a b
@@ -256,30 +256,30 @@ ValidateT e m a -&gt; m (Either e a)
 (ToTxt a, MonadError QErr m) =&gt;
 QualifiedObject a -&gt; m Name
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#qualifiedObjectToName"><span class="hs-identifier hs-var">qualifiedObjectToName</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedFunction
-</span><a href="#local-6989586621690439994"><span class="hs-identifier hs-var">qf</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690439910"><span class="hs-identifier hs-var">qf</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-99"></span><span>        </span><span class="annot"><span class="annottext">FunctionIntegrityError -&gt; ValidateT [FunctionIntegrityError] m ()
-</span><a href="#local-6989586621690439953"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError
+</span><a href="#local-6989586621690439869"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError
 </span><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionNameNotGQLCompliant"><span class="hs-identifier hs-var">FunctionNameNotGQLCompliant</span></a></span><span>
 </span><span id="line-100"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690439965"><span class="hs-identifier hs-var">hasVariadic</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690439881"><span class="hs-identifier hs-var">hasVariadic</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError -&gt; ValidateT [FunctionIntegrityError] m ()
-</span><a href="#local-6989586621690439953"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError
+</span><a href="#local-6989586621690439869"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError
 </span><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionVariadic"><span class="hs-identifier hs-var">FunctionVariadic</span></a></span><span>
 </span><span id="line-101"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGTypeKind
-</span><a href="#local-6989586621690439961"><span class="hs-identifier hs-var">retTyTyp</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690439877"><span class="hs-identifier hs-var">retTyTyp</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">/=</span></a></span><span> </span><span class="annot"><span class="annottext">PGTypeKind
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGKindComposite"><span class="hs-identifier hs-var">PGKindComposite</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError -&gt; ValidateT [FunctionIntegrityError] m ()
-</span><a href="#local-6989586621690439953"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError
+</span><a href="#local-6989586621690439869"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError
 </span><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionReturnNotCompositeType"><span class="hs-identifier hs-var">FunctionReturnNotCompositeType</span></a></span><span>
 </span><span id="line-102"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690439959"><span class="hs-identifier hs-var">returnsTab</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690439875"><span class="hs-identifier hs-var">returnsTab</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError -&gt; ValidateT [FunctionIntegrityError] m ()
-</span><a href="#local-6989586621690439953"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError
+</span><a href="#local-6989586621690439869"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError
 </span><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionReturnNotTable"><span class="hs-identifier hs-var">FunctionReturnNotTable</span></a></span><span>
 </span><span id="line-103"></span><span>      </span><span class="hs-comment">-- We mostly take the user at their word here and will, e.g. expose a</span><span>
 </span><span id="line-104"></span><span>      </span><span class="hs-comment">-- function as a query if it is marked VOLATILE (since perhaps the user</span><span>
@@ -293,26 +293,26 @@ QualifiedObject a -&gt; m Name
 </span><span id="line-112"></span><span>      </span><span class="hs-comment">-- it, but this seemed like an obvious case:</span><span>
 </span><span id="line-113"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FunctionVolatility
-</span><a href="#local-6989586621690439964"><span class="hs-identifier hs-var">funVol</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690439880"><span class="hs-identifier hs-var">funVol</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">/=</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionVolatility
 </span><a href="Hasura.RQL.Types.Function.html#FTVOLATILE"><span class="hs-identifier hs-var">FTVOLATILE</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe FunctionExposedAs
-</span><a href="#local-6989586621690439989"><span class="hs-identifier hs-var">_fcExposedAs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690439905"><span class="hs-identifier hs-var">_fcExposedAs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionExposedAs
 </span><a href="Hasura.RQL.Types.Function.html#FEAMutation"><span class="hs-identifier hs-var">FEAMutation</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-114"></span><span>        </span><span class="annot"><span class="annottext">FunctionIntegrityError -&gt; ValidateT [FunctionIntegrityError] m ()
-</span><a href="#local-6989586621690439953"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError
+</span><a href="#local-6989586621690439869"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError
 </span><a href="Hasura.Backends.Postgres.DDL.Function.html#NonVolatileFunctionAsMutation"><span class="hs-identifier hs-var">NonVolatileFunctionAsMutation</span></a></span><span>
 </span><span id="line-115"></span><span>      </span><span class="hs-comment">-- If 'exposed_as' is omitted we'll infer it from the volatility:</span><span>
-</span><span id="line-116"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690439941"><span class="annot"><span class="annottext">exposeAs :: FunctionExposedAs
-</span><a href="#local-6989586621690439941"><span class="hs-identifier hs-var hs-var">exposeAs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span id="line-116"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690439857"><span class="annot"><span class="annottext">exposeAs :: FunctionExposedAs
+</span><a href="#local-6989586621690439857"><span class="hs-identifier hs-var hs-var">exposeAs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe FunctionExposedAs
-</span><a href="#local-6989586621690439989"><span class="hs-identifier hs-var">_fcExposedAs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690439905"><span class="hs-identifier hs-var">_fcExposedAs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FunctionVolatility
-</span><a href="#local-6989586621690439964"><span class="hs-identifier hs-var">funVol</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690439880"><span class="hs-identifier hs-var">funVol</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-117"></span><span>            </span><span class="annot"><span class="annottext">FunctionVolatility
 </span><a href="Hasura.RQL.Types.Function.html#FTVOLATILE"><span class="hs-identifier hs-var">FTVOLATILE</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">FunctionExposedAs
 </span><a href="Hasura.RQL.Types.Function.html#FEAMutation"><span class="hs-identifier hs-var">FEAMutation</span></a></span><span>
@@ -322,41 +322,41 @@ QualifiedObject a -&gt; m Name
 </span><span id="line-119"></span><span>
 </span><span id="line-120"></span><span>      </span><span class="hs-comment">-- validate function argument names</span><span>
 </span><span id="line-121"></span><span>      </span><span class="annot"><span class="annottext">ValidateT [FunctionIntegrityError] m ()
-</span><a href="#local-6989586621690439938"><span class="hs-identifier hs-var">validateFunctionArgNames</span></a></span><span>
+</span><a href="#local-6989586621690439854"><span class="hs-identifier hs-var">validateFunctionArgNames</span></a></span><span>
 </span><span id="line-122"></span><span>
-</span><span id="line-123"></span><span>      </span><span id="local-6989586621690439937"><span class="annot"><span class="annottext">Seq (InputArgument FunctionArg)
-</span><a href="#local-6989586621690439937"><span class="hs-identifier hs-var">inputArguments</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ValidateT
+</span><span id="line-123"></span><span>      </span><span id="local-6989586621690439853"><span class="annot"><span class="annottext">Seq (InputArgument FunctionArg)
+</span><a href="#local-6989586621690439853"><span class="hs-identifier hs-var">inputArguments</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">ValidateT
   [FunctionIntegrityError] m (Seq (InputArgument FunctionArg))
-</span><a href="#local-6989586621690439936"><span class="hs-identifier hs-var">makeInputArguments</span></a></span><span>
+</span><a href="#local-6989586621690439852"><span class="hs-identifier hs-var">makeInputArguments</span></a></span><span>
 </span><span id="line-124"></span><span>
-</span><span id="line-125"></span><span>      </span><span id="local-6989586621690439935"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690439935"><span class="hs-identifier hs-var">funcGivenName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span id="line-125"></span><span>      </span><span id="local-6989586621690439851"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690439851"><span class="hs-identifier hs-var">funcGivenName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
 FunctionName b -&gt; Either QErr Name
-</span><a href="Hasura.RQL.Types.Backend.html#functionGraphQLName"><span class="hs-identifier hs-var">functionGraphQLName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440302"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QualifiedFunction
-</span><a href="#local-6989586621690439994"><span class="hs-identifier hs-var">qf</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
+</span><a href="Hasura.RQL.Types.Backend.html#functionGraphQLName"><span class="hs-identifier hs-var">functionGraphQLName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440218"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QualifiedFunction
+</span><a href="#local-6989586621690439910"><span class="hs-identifier hs-var">qf</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-operator hs-var">`onLeft`</span></a></span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">throwError</span></a></span><span>
 </span><span id="line-126"></span><span>
-</span><span id="line-127"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690439931"><span class="annot"><span class="annottext">retTable :: QualifiedTable
-</span><a href="#local-6989586621690439931"><span class="hs-identifier hs-var hs-var">retTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QualifiedPGType -&gt; QualifiedTable
+</span><span id="line-127"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690439847"><span class="annot"><span class="annottext">retTable :: QualifiedTable
+</span><a href="#local-6989586621690439847"><span class="hs-identifier hs-var hs-var">retTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QualifiedPGType -&gt; QualifiedTable
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#typeToTable"><span class="hs-identifier hs-var">typeToTable</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedPGType
-</span><a href="#local-6989586621690439957"><span class="hs-identifier hs-var">returnType</span></a></span><span>
-</span><span id="line-128"></span><span>          </span><span id="local-6989586621690439929"><span class="annot"><span class="annottext">retJsonAggSelect :: JsonAggSelect
-</span><a href="#local-6989586621690439929"><span class="hs-identifier hs-var hs-var">retJsonAggSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; a -&gt; Bool -&gt; a
+</span><a href="#local-6989586621690439873"><span class="hs-identifier hs-var">returnType</span></a></span><span>
+</span><span id="line-128"></span><span>          </span><span id="local-6989586621690439845"><span class="annot"><span class="annottext">retJsonAggSelect :: JsonAggSelect
+</span><a href="#local-6989586621690439845"><span class="hs-identifier hs-var hs-var">retJsonAggSelect</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">bool</span></a></span><span> </span><span class="annot"><span class="annottext">JsonAggSelect
 </span><a href="Hasura.RQL.Types.Common.html#JASSingleObject"><span class="hs-identifier hs-var">JASSingleObject</span></a></span><span> </span><span class="annot"><span class="annottext">JsonAggSelect
 </span><a href="Hasura.RQL.Types.Common.html#JASMultipleRows"><span class="hs-identifier hs-var">JASMultipleRows</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690439960"><span class="hs-identifier hs-var">retSet</span></a></span><span>
-</span><span id="line-129"></span><span>          </span><span id="local-6989586621690439926"><span class="annot"><span class="annottext">setNamingCase :: Name -&gt; Name
-</span><a href="#local-6989586621690439926"><span class="hs-identifier hs-var hs-var">setNamingCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Name -&gt; Name
+</span><a href="#local-6989586621690439876"><span class="hs-identifier hs-var">retSet</span></a></span><span>
+</span><span id="line-129"></span><span>          </span><span id="local-6989586621690439842"><span class="annot"><span class="annottext">setNamingCase :: Name -&gt; Name
+</span><a href="#local-6989586621690439842"><span class="hs-identifier hs-var hs-var">setNamingCase</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NamingCase -&gt; Name -&gt; Name
 </span><a href="Hasura.RQL.Types.SourceCustomization.html#applyFieldNameCaseCust"><span class="hs-identifier hs-var">applyFieldNameCaseCust</span></a></span><span> </span><span class="annot"><span class="annottext">NamingCase
-</span><a href="#local-6989586621690439979"><span class="hs-identifier hs-var">tCase</span></a></span><span>
+</span><a href="#local-6989586621690439895"><span class="hs-identifier hs-var">tCase</span></a></span><span>
 </span><span id="line-130"></span><span>
-</span><span id="line-131"></span><span>          </span><span id="local-6989586621690439925"><span class="annot"><span class="annottext">functionInfo :: FunctionInfo ('Postgres pgKind)
-</span><a href="#local-6989586621690439925"><span class="hs-identifier hs-var hs-var">functionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-131"></span><span>          </span><span id="local-6989586621690439841"><span class="annot"><span class="annottext">functionInfo :: FunctionInfo ('Postgres pgKind)
+</span><a href="#local-6989586621690439841"><span class="hs-identifier hs-var hs-var">functionInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-132"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 FunctionName b
 -&gt; Name
@@ -374,52 +374,52 @@ FunctionName b
 -&gt; FunctionInfo b
 </span><a href="Hasura.RQL.Types.Function.html#FunctionInfo"><span class="hs-identifier hs-var">FunctionInfo</span></a></span><span>
 </span><span id="line-133"></span><span>              </span><span class="annot"><span class="annottext">QualifiedFunction
-</span><a href="#local-6989586621690439994"><span class="hs-identifier hs-var">qf</span></a></span><span>
+</span><a href="#local-6989586621690439910"><span class="hs-identifier hs-var">qf</span></a></span><span>
 </span><span id="line-134"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; FunctionConfig -&gt; (Name -&gt; Name) -&gt; Name
 </span><a href="Hasura.RQL.Types.Function.html#getFunctionGQLName"><span class="hs-identifier hs-var">getFunctionGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690439935"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionConfig
-</span><a href="#local-6989586621690439992"><span class="hs-identifier hs-var">fc</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name
-</span><a href="#local-6989586621690439926"><span class="hs-identifier hs-var">setNamingCase</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690439851"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionConfig
+</span><a href="#local-6989586621690439908"><span class="hs-identifier hs-var">fc</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621690439842"><span class="hs-identifier hs-var">setNamingCase</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-135"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; FunctionConfig -&gt; (Name -&gt; Name) -&gt; Name
 </span><a href="Hasura.RQL.Types.Function.html#getFunctionArgsGQLName"><span class="hs-identifier hs-var">getFunctionArgsGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690439935"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionConfig
-</span><a href="#local-6989586621690439992"><span class="hs-identifier hs-var">fc</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name
-</span><a href="#local-6989586621690439926"><span class="hs-identifier hs-var">setNamingCase</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690439851"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionConfig
+</span><a href="#local-6989586621690439908"><span class="hs-identifier hs-var">fc</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621690439842"><span class="hs-identifier hs-var">setNamingCase</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-136"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; FunctionConfig -&gt; (Name -&gt; Name) -&gt; Name
 </span><a href="Hasura.RQL.Types.Function.html#getFunctionAggregateGQLName"><span class="hs-identifier hs-var">getFunctionAggregateGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690439935"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionConfig
-</span><a href="#local-6989586621690439992"><span class="hs-identifier hs-var">fc</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name
-</span><a href="#local-6989586621690439926"><span class="hs-identifier hs-var">setNamingCase</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690439851"><span class="hs-identifier hs-var">funcGivenName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionConfig
+</span><a href="#local-6989586621690439908"><span class="hs-identifier hs-var">fc</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name
+</span><a href="#local-6989586621690439842"><span class="hs-identifier hs-var">setNamingCase</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-137"></span><span>              </span><span class="annot"><span class="annottext">SystemDefined
-</span><a href="#local-6989586621690439993"><span class="hs-identifier hs-var">systemDefined</span></a></span><span>
+</span><a href="#local-6989586621690439909"><span class="hs-identifier hs-var">systemDefined</span></a></span><span>
 </span><span id="line-138"></span><span>              </span><span class="annot"><span class="annottext">FunctionVolatility
-</span><a href="#local-6989586621690439964"><span class="hs-identifier hs-var">funVol</span></a></span><span>
+</span><a href="#local-6989586621690439880"><span class="hs-identifier hs-var">funVol</span></a></span><span>
 </span><span id="line-139"></span><span>              </span><span class="annot"><span class="annottext">FunctionExposedAs
-</span><a href="#local-6989586621690439941"><span class="hs-identifier hs-var">exposeAs</span></a></span><span>
+</span><a href="#local-6989586621690439857"><span class="hs-identifier hs-var">exposeAs</span></a></span><span>
 </span><span id="line-140"></span><span>              </span><span class="annot"><span class="annottext">Seq (InputArgument FunctionArg)
-</span><a href="#local-6989586621690439937"><span class="hs-identifier hs-var">inputArguments</span></a></span><span>
+</span><a href="#local-6989586621690439853"><span class="hs-identifier hs-var">inputArguments</span></a></span><span>
 </span><span id="line-141"></span><span>              </span><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621690439931"><span class="hs-identifier hs-var">retTable</span></a></span><span>
+</span><a href="#local-6989586621690439847"><span class="hs-identifier hs-var">retTable</span></a></span><span>
 </span><span id="line-142"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGDescription -&gt; Text
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#getPGDescription"><span class="hs-identifier hs-var">getPGDescription</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PGDescription
-</span><a href="#local-6989586621690439958"><span class="hs-identifier hs-var">descM</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690439874"><span class="hs-identifier hs-var">descM</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-143"></span><span>              </span><span class="annot"><span class="annottext">FunctionPermissionsMap
-</span><a href="#local-6989586621690439982"><span class="hs-identifier hs-var">permissions</span></a></span><span>
+</span><a href="#local-6989586621690439898"><span class="hs-identifier hs-var">permissions</span></a></span><span>
 </span><span id="line-144"></span><span>              </span><span class="annot"><span class="annottext">JsonAggSelect
-</span><a href="#local-6989586621690439929"><span class="hs-identifier hs-var">retJsonAggSelect</span></a></span><span>
+</span><a href="#local-6989586621690439845"><span class="hs-identifier hs-var">retJsonAggSelect</span></a></span><span>
 </span><span id="line-145"></span><span>              </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690439980"><span class="hs-identifier hs-var">comment</span></a></span><span>
+</span><a href="#local-6989586621690439896"><span class="hs-identifier hs-var">comment</span></a></span><span>
 </span><span id="line-146"></span><span>
 </span><span id="line-147"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
 </span><span id="line-148"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">FunctionInfo ('Postgres pgKind)
-</span><a href="#local-6989586621690439925"><span class="hs-identifier hs-var">functionInfo</span></a></span><span class="hs-special">,</span><span>
+</span><a href="#local-6989586621690439841"><span class="hs-identifier hs-var">functionInfo</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-149"></span><span>          </span><span class="annot"><span class="annottext">SchemaObjId -&gt; DependencyReason -&gt; SchemaDependency
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SchemaDependency"><span class="hs-identifier hs-var">SchemaDependency</span></a></span><span>
 </span><span id="line-150"></span><span>            </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">SourceName -&gt; AnyBackend SourceObjId -&gt; SchemaObjId
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOSourceObj"><span class="hs-identifier hs-var">SOSourceObj</span></a></span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690439995"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690439911"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-151"></span><span>                </span><span class="annot"><span class="annottext">forall (b :: BackendType) (i :: BackendType -&gt; *).
 HasTag b =&gt;
@@ -427,47 +427,47 @@ i b -&gt; AnyBackend i
 </span><a href="Hasura.SQL.AnyBackend.html#mkAnyBackend"><span class="hs-identifier hs-var">AB.mkAnyBackend</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-152"></span><span>                  </span><span class="annot"><span class="annottext">forall (b :: BackendType). TableName b -&gt; SourceObjId b
-</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOITable"><span class="hs-identifier hs-var">SOITable</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440302"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QualifiedTable
-</span><a href="#local-6989586621690439931"><span class="hs-identifier hs-var">retTable</span></a></span><span>
+</span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOITable"><span class="hs-identifier hs-var">SOITable</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690440218"><span class="hs-identifier hs-type">pgKind</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">QualifiedTable
+</span><a href="#local-6989586621690439847"><span class="hs-identifier hs-var">retTable</span></a></span><span>
 </span><span id="line-153"></span><span>            </span><span class="hs-special">)</span><span>
 </span><span id="line-154"></span><span>            </span><span class="annot"><span class="annottext">DependencyReason
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#DRTable"><span class="hs-identifier hs-var">DRTable</span></a></span><span>
 </span><span id="line-155"></span><span>        </span><span class="hs-special">)</span><span>
 </span><span id="line-156"></span><span>
-</span><span id="line-157"></span><span>    </span><span id="local-6989586621690439938"><span class="annot"><span class="annottext">validateFunctionArgNames :: ValidateT [FunctionIntegrityError] m ()
-</span><a href="#local-6989586621690439938"><span class="hs-identifier hs-var hs-var">validateFunctionArgNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-158"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690439913"><span class="annot"><span class="annottext">argNames :: [FunctionArgName]
-</span><a href="#local-6989586621690439913"><span class="hs-identifier hs-var hs-var">argNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b.
+</span><span id="line-157"></span><span>    </span><span id="local-6989586621690439854"><span class="annot"><span class="annottext">validateFunctionArgNames :: ValidateT [FunctionIntegrityError] m ()
+</span><a href="#local-6989586621690439854"><span class="hs-identifier hs-var hs-var">validateFunctionArgNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-158"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690439829"><span class="annot"><span class="annottext">argNames :: [FunctionArgName]
+</span><a href="#local-6989586621690439829"><span class="hs-identifier hs-var hs-var">argNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b.
 Filterable f =&gt;
 (a -&gt; Maybe b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">mapMaybe</span></span><span> </span><span class="annot"><span class="annottext">FunctionArg -&gt; Maybe FunctionArgName
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#faName"><span class="hs-identifier hs-var">faName</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArg]
-</span><a href="#local-6989586621690439970"><span class="hs-identifier hs-var">functionArgs</span></a></span><span>
-</span><span id="line-159"></span><span>          </span><span id="local-6989586621690439910"><span class="annot"><span class="annottext">invalidArgs :: [FunctionArgName]
-</span><a href="#local-6989586621690439910"><span class="hs-identifier hs-var hs-var">invalidArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
+</span><a href="#local-6989586621690439886"><span class="hs-identifier hs-var">functionArgs</span></a></span><span>
+</span><span id="line-159"></span><span>          </span><span id="local-6989586621690439826"><span class="annot"><span class="annottext">invalidArgs :: [FunctionArgName]
+</span><a href="#local-6989586621690439826"><span class="hs-identifier hs-var hs-var">invalidArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Maybe a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">isNothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe Name
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.mkName</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; Text
 </span><a href="Hasura.RQL.Types.Function.html#getFuncArgNameTxt"><span class="hs-identifier hs-var">getFuncArgNameTxt</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FunctionArgName]
-</span><a href="#local-6989586621690439913"><span class="hs-identifier hs-var">argNames</span></a></span><span>
+</span><a href="#local-6989586621690439829"><span class="hs-identifier hs-var">argNames</span></a></span><span>
 </span><span id="line-160"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArgName]
-</span><a href="#local-6989586621690439910"><span class="hs-identifier hs-var">invalidArgs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690439826"><span class="hs-identifier hs-var">invalidArgs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-161"></span><span>        </span><span class="annot"><span class="annottext">FunctionIntegrityError -&gt; ValidateT [FunctionIntegrityError] m ()
-</span><a href="#local-6989586621690439953"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690439869"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArgName] -&gt; FunctionIntegrityError
 </span><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionInvalidArgumentNames"><span class="hs-identifier hs-var">FunctionInvalidArgumentNames</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArgName]
-</span><a href="#local-6989586621690439910"><span class="hs-identifier hs-var">invalidArgs</span></a></span><span>
+</span><a href="#local-6989586621690439826"><span class="hs-identifier hs-var">invalidArgs</span></a></span><span>
 </span><span id="line-162"></span><span>
-</span><span id="line-163"></span><span>    </span><span id="local-6989586621690439936"><span class="annot"><span class="annottext">makeInputArguments :: ValidateT
+</span><span id="line-163"></span><span>    </span><span id="local-6989586621690439852"><span class="annot"><span class="annottext">makeInputArguments :: ValidateT
   [FunctionIntegrityError] m (Seq (InputArgument FunctionArg))
-</span><a href="#local-6989586621690439936"><span class="hs-identifier hs-var hs-var">makeInputArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621690439852"><span class="hs-identifier hs-var hs-var">makeInputArguments</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-164"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe FunctionArgName
-</span><a href="#local-6989586621690439990"><span class="hs-identifier hs-var">_fcSessionArgument</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690439906"><span class="hs-identifier hs-var">_fcSessionArgument</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-165"></span><span>        </span><span class="annot"><span class="annottext">Maybe FunctionArgName
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -476,25 +476,25 @@ Filterable f =&gt;
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; InputArgument a
 </span><a href="Hasura.RQL.Types.Function.html#IAUserProvided"><span class="hs-identifier hs-var">IAUserProvided</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArg]
-</span><a href="#local-6989586621690439970"><span class="hs-identifier hs-var">functionArgs</span></a></span><span>
-</span><span id="line-166"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690439904"><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690439904"><span class="hs-identifier hs-var">sessionArgName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621690439886"><span class="hs-identifier hs-var">functionArgs</span></a></span><span>
+</span><span id="line-166"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690439820"><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621690439820"><span class="hs-identifier hs-var">sessionArgName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-167"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">any</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690439902"><span class="annot"><span class="annottext">FunctionArg
-</span><a href="#local-6989586621690439902"><span class="hs-identifier hs-var">arg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">any</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690439818"><span class="annot"><span class="annottext">FunctionArg
+</span><a href="#local-6989586621690439818"><span class="hs-identifier hs-var">arg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690439904"><span class="hs-identifier hs-var">sessionArgName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690439820"><span class="hs-identifier hs-var">sessionArgName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArg -&gt; Maybe FunctionArgName
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#faName"><span class="hs-identifier hs-var">faName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArg
-</span><a href="#local-6989586621690439902"><span class="hs-identifier hs-var">arg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FunctionArg]
-</span><a href="#local-6989586621690439970"><span class="hs-identifier hs-var">functionArgs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690439818"><span class="hs-identifier hs-var">arg</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FunctionArg]
+</span><a href="#local-6989586621690439886"><span class="hs-identifier hs-var">functionArgs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-168"></span><span>            </span><span class="annot"><span class="annottext">FunctionIntegrityError -&gt; ValidateT [FunctionIntegrityError] m ()
-</span><a href="#local-6989586621690439953"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690439869"><span class="hs-identifier hs-var">throwValidateError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; FunctionIntegrityError
 </span><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionInvalidSessionArgument"><span class="hs-identifier hs-var">FunctionInvalidSessionArgument</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690439904"><span class="hs-identifier hs-var">sessionArgName</span></a></span><span>
+</span><a href="#local-6989586621690439820"><span class="hs-identifier hs-var">sessionArgName</span></a></span><span>
 </span><span id="line-169"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; Seq a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-var">Seq.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -503,61 +503,61 @@ Filterable f =&gt;
 (Traversable t, Monad m) =&gt;
 t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">forM</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArg]
-</span><a href="#local-6989586621690439970"><span class="hs-identifier hs-var">functionArgs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690439900"><span class="annot"><span class="annottext">FunctionArg
-</span><a href="#local-6989586621690439900"><span class="hs-identifier hs-var">arg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621690439886"><span class="hs-identifier hs-var">functionArgs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690439816"><span class="annot"><span class="annottext">FunctionArg
+</span><a href="#local-6989586621690439816"><span class="hs-identifier hs-var">arg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-171"></span><span>              </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690439904"><span class="hs-identifier hs-var">sessionArgName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690439820"><span class="hs-identifier hs-var">sessionArgName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArg -&gt; Maybe FunctionArgName
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#faName"><span class="hs-identifier hs-var">faName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArg
-</span><a href="#local-6989586621690439900"><span class="hs-identifier hs-var">arg</span></a></span><span>
+</span><a href="#local-6989586621690439816"><span class="hs-identifier hs-var">arg</span></a></span><span>
 </span><span id="line-172"></span><span>                </span><span class="hs-keyword">then</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-173"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690439899"><span class="annot"><span class="annottext">argTy :: PGScalarType
-</span><a href="#local-6989586621690439899"><span class="hs-identifier hs-var hs-var">argTy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QualifiedPGType -&gt; PGScalarType
+</span><span id="line-173"></span><span>                  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690439815"><span class="annot"><span class="annottext">argTy :: PGScalarType
+</span><a href="#local-6989586621690439815"><span class="hs-identifier hs-var hs-var">argTy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">QualifiedPGType -&gt; PGScalarType
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#_qptName"><span class="hs-identifier hs-var">_qptName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArg -&gt; QualifiedPGType
 </span><a href="Hasura.Backends.Postgres.Types.Function.html#faType"><span class="hs-identifier hs-var">faType</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArg
-</span><a href="#local-6989586621690439900"><span class="hs-identifier hs-var">arg</span></a></span><span>
+</span><a href="#local-6989586621690439816"><span class="hs-identifier hs-var">arg</span></a></span><span>
 </span><span id="line-174"></span><span>                  </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">PGScalarType
-</span><a href="#local-6989586621690439899"><span class="hs-identifier hs-var">argTy</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690439815"><span class="hs-identifier hs-var">argTy</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#PGJSON"><span class="hs-identifier hs-var">PGJSON</span></a></span><span>
 </span><span id="line-175"></span><span>                    </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FunctionArgName -&gt; InputArgument a
 </span><a href="Hasura.RQL.Types.Function.html#IASessionVariables"><span class="hs-identifier hs-var">IASessionVariables</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690439904"><span class="hs-identifier hs-var">sessionArgName</span></a></span><span>
+</span><a href="#local-6989586621690439820"><span class="hs-identifier hs-var">sessionArgName</span></a></span><span>
 </span><span id="line-176"></span><span>                    </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadValidate e m =&gt; e -&gt; m a
 </span><span class="hs-identifier hs-var">MV.refute</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; FunctionIntegrityError
 </span><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionSessionArgumentNotJSON"><span class="hs-identifier hs-var">FunctionSessionArgumentNotJSON</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690439904"><span class="hs-identifier hs-var">sessionArgName</span></a></span><span>
+</span><a href="#local-6989586621690439820"><span class="hs-identifier hs-var">sessionArgName</span></a></span><span>
 </span><span id="line-177"></span><span>                </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; InputArgument a
 </span><a href="Hasura.RQL.Types.Function.html#IAUserProvided"><span class="hs-identifier hs-var">IAUserProvided</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArg
-</span><a href="#local-6989586621690439900"><span class="hs-identifier hs-var">arg</span></a></span><span>
+</span><a href="#local-6989586621690439816"><span class="hs-identifier hs-var">arg</span></a></span><span>
 </span><span id="line-178"></span><span>
-</span><span id="line-179"></span><span>    </span><span id="local-6989586621690439974"><span class="annot"><span class="annottext">showErrors :: [FunctionIntegrityError] -&gt; Text
-</span><a href="#local-6989586621690439974"><span class="hs-identifier hs-var hs-var">showErrors</span></a></span></span><span> </span><span id="local-6989586621690439893"><span class="annot"><span class="annottext">[FunctionIntegrityError]
-</span><a href="#local-6989586621690439893"><span class="hs-identifier hs-var">allErrors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-179"></span><span>    </span><span id="local-6989586621690439890"><span class="annot"><span class="annottext">showErrors :: [FunctionIntegrityError] -&gt; Text
+</span><a href="#local-6989586621690439890"><span class="hs-identifier hs-var hs-var">showErrors</span></a></span></span><span> </span><span id="local-6989586621690439809"><span class="annot"><span class="annottext">[FunctionIntegrityError]
+</span><a href="#local-6989586621690439809"><span class="hs-identifier hs-var">allErrors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-180"></span><span>      </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the function &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedFunction
-</span><a href="#local-6989586621690439994"><span class="hs-identifier hs-var">qf</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="#local-6989586621690439910"><span class="hs-identifier hs-var">qf</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; cannot be tracked &quot;</span></span><span>
 </span><span id="line-181"></span><span>        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; (a -&gt; Text) -&gt; Text
 </span><a href="Hasura.Server.Utils.html#makeReasonMessage"><span class="hs-identifier hs-var">makeReasonMessage</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionIntegrityError]
-</span><a href="#local-6989586621690439893"><span class="hs-identifier hs-var">allErrors</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError -&gt; Text
-</span><a href="#local-6989586621690439890"><span class="hs-identifier hs-var">showOneError</span></a></span><span>
+</span><a href="#local-6989586621690439809"><span class="hs-identifier hs-var">allErrors</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionIntegrityError -&gt; Text
+</span><a href="#local-6989586621690439806"><span class="hs-identifier hs-var">showOneError</span></a></span><span>
 </span><span id="line-182"></span><span>
-</span><span id="line-183"></span><span>    </span><span id="local-6989586621690439890"><span class="annot"><span class="annottext">showOneError :: FunctionIntegrityError -&gt; Text
-</span><a href="#local-6989586621690439890"><span class="hs-identifier hs-var hs-var">showOneError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-183"></span><span>    </span><span id="local-6989586621690439806"><span class="annot"><span class="annottext">showOneError :: FunctionIntegrityError -&gt; Text
+</span><a href="#local-6989586621690439806"><span class="hs-identifier hs-var hs-var">showOneError</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
 </span><span id="line-184"></span><span>      </span><span class="annot"><span class="annottext">FunctionIntegrityError
 </span><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionNameNotGQLCompliant"><span class="hs-identifier hs-var">FunctionNameNotGQLCompliant</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;function name is not a legal GraphQL identifier&quot;</span></span><span>
@@ -577,36 +577,36 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><span id="line-190"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Maybe the function was given the wrong volatility when it was defined?&quot;</span></span><span>
-</span><span id="line-191"></span><span>      </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionSessionArgumentNotJSON"><span class="hs-identifier hs-type">FunctionSessionArgumentNotJSON</span></a></span><span> </span><span id="local-6989586621690439868"><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690439868"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-191"></span><span>      </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionSessionArgumentNotJSON"><span class="hs-identifier hs-type">FunctionSessionArgumentNotJSON</span></a></span><span> </span><span id="local-6989586621690439784"><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621690439784"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-192"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;given session argument &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690439868"><span class="hs-identifier hs-var">argName</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="#local-6989586621690439784"><span class="hs-identifier hs-var">argName</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is not of type json&quot;</span></span><span>
-</span><span id="line-193"></span><span>      </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionInvalidSessionArgument"><span class="hs-identifier hs-type">FunctionInvalidSessionArgument</span></a></span><span> </span><span id="local-6989586621690439867"><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690439867"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-193"></span><span>      </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionInvalidSessionArgument"><span class="hs-identifier hs-type">FunctionInvalidSessionArgument</span></a></span><span> </span><span id="local-6989586621690439783"><span class="annot"><span class="annottext">FunctionArgName
+</span><a href="#local-6989586621690439783"><span class="hs-identifier hs-var">argName</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-194"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;given session argument &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName
-</span><a href="#local-6989586621690439867"><span class="hs-identifier hs-var">argName</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><a href="#local-6989586621690439783"><span class="hs-identifier hs-var">argName</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; not the input argument of the function&quot;</span></span><span>
-</span><span id="line-195"></span><span>      </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionInvalidArgumentNames"><span class="hs-identifier hs-type">FunctionInvalidArgumentNames</span></a></span><span> </span><span id="local-6989586621690439866"><span class="annot"><span class="annottext">[FunctionArgName]
-</span><a href="#local-6989586621690439866"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-196"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690439865"><span class="annot"><span class="annottext">argsText :: Text
-</span><a href="#local-6989586621690439865"><span class="hs-identifier hs-var hs-var">argsText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
+</span><span id="line-195"></span><span>      </span><span class="annot"><a href="Hasura.Backends.Postgres.DDL.Function.html#FunctionInvalidArgumentNames"><span class="hs-identifier hs-type">FunctionInvalidArgumentNames</span></a></span><span> </span><span id="local-6989586621690439782"><span class="annot"><span class="annottext">[FunctionArgName]
+</span><a href="#local-6989586621690439782"><span class="hs-identifier hs-var">args</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-196"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690439781"><span class="annot"><span class="annottext">argsText :: Text
+</span><a href="#local-6989586621690439781"><span class="hs-identifier hs-var hs-var">argsText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
 </span><span class="hs-identifier hs-var">T.intercalate</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;,&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; Text
 </span><a href="Hasura.RQL.Types.Function.html#getFuncArgNameTxt"><span class="hs-identifier hs-var">getFuncArgNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArgName]
-</span><a href="#local-6989586621690439866"><span class="hs-identifier hs-var">args</span></a></span><span>
+</span><a href="#local-6989586621690439782"><span class="hs-identifier hs-var">args</span></a></span><span>
 </span><span id="line-197"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;the function arguments &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690439865"><span class="hs-identifier hs-var">argsText</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690439781"><span class="hs-identifier hs-var">argsText</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; are not in compliance with GraphQL spec&quot;</span></span><span>
 </span><span id="line-198"></span></pre></body></html>

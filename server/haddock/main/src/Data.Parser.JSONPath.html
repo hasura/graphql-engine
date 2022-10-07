@@ -20,63 +20,63 @@
 </span><span id="line-20"></span><span class="hs-comment">-- in order to traverse that path in JavaScript.</span><span>
 </span><span id="line-21"></span><span class="annot"><a href="Data.Parser.JSONPath.html#encodeJSONPath"><span class="hs-identifier hs-type">encodeJSONPath</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONPath</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-22"></span><span id="encodeJSONPath"><span class="annot"><span class="annottext">encodeJSONPath :: JSONPath -&gt; Text
-</span><a href="Data.Parser.JSONPath.html#encodeJSONPath"><span class="hs-identifier hs-var hs-var">encodeJSONPath</span></a></span></span><span> </span><span id="local-6989586621690172753"><span class="annot"><span class="annottext">JSONPath
-</span><a href="#local-6989586621690172753"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="Data.Parser.JSONPath.html#encodeJSONPath"><span class="hs-identifier hs-var hs-var">encodeJSONPath</span></a></span></span><span> </span><span id="local-6989586621690172669"><span class="annot"><span class="annottext">JSONPath
+</span><a href="#local-6989586621690172669"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) m a.
 (Foldable t, Monoid m) =&gt;
 (a -&gt; m) -&gt; t a -&gt; m
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">foldMap</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPathElement -&gt; Text
-</span><a href="#local-6989586621690172751"><span class="hs-identifier hs-var">formatPart</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPath
-</span><a href="#local-6989586621690172753"><span class="hs-identifier hs-var">path</span></a></span><span>
+</span><a href="#local-6989586621690172667"><span class="hs-identifier hs-var">formatPart</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPath
+</span><a href="#local-6989586621690172669"><span class="hs-identifier hs-var">path</span></a></span><span>
 </span><span id="line-23"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-24"></span><span>    </span><span id="local-6989586621690172751"><span class="annot"><span class="annottext">formatPart :: JSONPathElement -&gt; Text
-</span><a href="#local-6989586621690172751"><span class="hs-identifier hs-var hs-var">formatPart</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Index</span></span><span> </span><span id="local-6989586621690172733"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690172733"><span class="hs-identifier hs-var">idx</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-24"></span><span>    </span><span id="local-6989586621690172667"><span class="annot"><span class="annottext">formatPart :: JSONPathElement -&gt; Text
+</span><a href="#local-6989586621690172667"><span class="hs-identifier hs-var hs-var">formatPart</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Index</span></span><span> </span><span id="local-6989586621690172649"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690172649"><span class="hs-identifier hs-var">idx</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;[&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690172733"><span class="hs-identifier hs-var">idx</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690172649"><span class="hs-identifier hs-var">idx</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;]&quot;</span></span><span>
-</span><span id="line-25"></span><span>    </span><span class="annot"><a href="#local-6989586621690172751"><span class="hs-identifier hs-var">formatPart</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Key</span></span><span> </span><span id="local-6989586621690172730"><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621690172730"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>    </span><span class="annot"><a href="#local-6989586621690172667"><span class="hs-identifier hs-var">formatPart</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Key</span></span><span> </span><span id="local-6989586621690172646"><span class="annot"><span class="annottext">Key
+</span><a href="#local-6989586621690172646"><span class="hs-identifier hs-var">key</span></a></span></span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Bool
-</span><a href="#local-6989586621690172729"><span class="hs-identifier hs-var">specialChars</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
-</span><a href="#local-6989586621690172728"><span class="hs-identifier hs-var">stringKey</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><a href="#local-6989586621690172645"><span class="hs-identifier hs-var">specialChars</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621690172644"><span class="hs-identifier hs-var">stringKey</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">TL.toStrict</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;[&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><span class="hs-identifier hs-var">TL.decodeUtf8</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
 </span><span class="hs-identifier hs-var">Aeson.encode</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172723"><span class="hs-identifier hs-var">textKey</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690172639"><span class="hs-identifier hs-var">textKey</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;]&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;.&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172723"><span class="hs-identifier hs-var">textKey</span></a></span><span>
+</span><a href="#local-6989586621690172639"><span class="hs-identifier hs-var">textKey</span></a></span><span>
 </span><span id="line-28"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-29"></span><span>        </span><span id="local-6989586621690172723"><span class="annot"><span class="annottext">textKey :: Text
-</span><a href="#local-6989586621690172723"><span class="hs-identifier hs-var hs-var">textKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text
+</span><span id="line-29"></span><span>        </span><span id="local-6989586621690172639"><span class="annot"><span class="annottext">textKey :: Text
+</span><a href="#local-6989586621690172639"><span class="hs-identifier hs-var hs-var">textKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Key -&gt; Text
 </span><span class="hs-identifier hs-var">K.toText</span></span><span> </span><span class="annot"><span class="annottext">Key
-</span><a href="#local-6989586621690172730"><span class="hs-identifier hs-var">key</span></a></span><span>
-</span><span id="line-30"></span><span>        </span><span id="local-6989586621690172728"><span class="annot"><span class="annottext">stringKey :: [Char]
-</span><a href="#local-6989586621690172728"><span class="hs-identifier hs-var hs-var">stringKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Char]
+</span><a href="#local-6989586621690172646"><span class="hs-identifier hs-var">key</span></a></span><span>
+</span><span id="line-30"></span><span>        </span><span id="local-6989586621690172644"><span class="annot"><span class="annottext">stringKey :: [Char]
+</span><a href="#local-6989586621690172644"><span class="hs-identifier hs-var hs-var">stringKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Char]
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172723"><span class="hs-identifier hs-var">textKey</span></a></span><span>
-</span><span id="line-31"></span><span>        </span><span id="local-6989586621690172729"><span class="annot"><span class="annottext">specialChars :: [Char] -&gt; Bool
-</span><a href="#local-6989586621690172729"><span class="hs-identifier hs-var hs-var">specialChars</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690172639"><span class="hs-identifier hs-var">textKey</span></a></span><span>
+</span><span id="line-31"></span><span>        </span><span id="local-6989586621690172645"><span class="annot"><span class="annottext">specialChars :: [Char] -&gt; Bool
+</span><a href="#local-6989586621690172645"><span class="hs-identifier hs-var hs-var">specialChars</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
 </span><span id="line-32"></span><span>        </span><span class="hs-comment">-- first char must not be number</span><span>
-</span><span id="line-33"></span><span>        </span><span class="annot"><a href="#local-6989586621690172729"><span class="hs-identifier hs-var">specialChars</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690172710"><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621690172710"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-type">:</span></a></span><span> </span><span id="local-6989586621690172709"><span class="annot"><span class="annottext">[Char]
-</span><a href="#local-6989586621690172709"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-33"></span><span>        </span><span class="annot"><a href="#local-6989586621690172645"><span class="hs-identifier hs-var">specialChars</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690172626"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621690172626"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-type">:</span></a></span><span> </span><span id="local-6989586621690172625"><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621690172625"><span class="hs-identifier hs-var">xs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-34"></span><span>          </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">notElem</span></a></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621690172710"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621690172626"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Char]
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">alphabet</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;_&quot;</span></span><span class="hs-special">)</span><span>
@@ -87,21 +87,21 @@
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">alphaNumerics</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">++</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;_-&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Char]
-</span><a href="#local-6989586621690172709"><span class="hs-identifier hs-var">xs</span></a></span><span>
+</span><a href="#local-6989586621690172625"><span class="hs-identifier hs-var">xs</span></a></span><span>
 </span><span id="line-36"></span><span>
 </span><span id="line-37"></span><span class="annot"><a href="Data.Parser.JSONPath.html#parseJSONPath"><span class="hs-identifier hs-type">parseJSONPath</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">JSONPath</span></span><span>
 </span><span id="line-38"></span><span id="parseJSONPath"><span class="annot"><span class="annottext">parseJSONPath :: Text -&gt; Either Text JSONPath
 </span><a href="Data.Parser.JSONPath.html#parseJSONPath"><span class="hs-identifier hs-var hs-var">parseJSONPath</span></a></span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;$&quot;</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. b -&gt; Either a b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Right</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-39"></span><span class="annot"><a href="Data.Parser.JSONPath.html#parseJSONPath"><span class="hs-identifier hs-var">parseJSONPath</span></a></span><span> </span><span id="local-6989586621690172703"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172703"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-39"></span><span class="annot"><a href="Data.Parser.JSONPath.html#parseJSONPath"><span class="hs-identifier hs-var">parseJSONPath</span></a></span><span> </span><span id="local-6989586621690172619"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690172619"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-40"></span><span>  </span><span class="annot"><span class="annottext">forall (p :: * -&gt; * -&gt; *) a b c.
 Bifunctor p =&gt;
 (a -&gt; b) -&gt; p a c -&gt; p b c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Bifunctor.first</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. a -&gt; b -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172700"><span class="hs-identifier hs-var">invalidMessage</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690172616"><span class="hs-identifier hs-var">invalidMessage</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; Text -&gt; Either [Char] a
 </span><span class="hs-identifier hs-var">parseOnly</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f (Maybe a)
@@ -113,12 +113,12 @@ Bifunctor p =&gt;
 </span><a href="Data.Parser.JSONPath.html#element"><span class="hs-identifier hs-var">element</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. Chunk t =&gt; Parser t ()
 </span><span class="hs-identifier hs-var">endOfInput</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172703"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><a href="#local-6989586621690172619"><span class="hs-identifier hs-var">txt</span></a></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-43"></span><span>    </span><span id="local-6989586621690172700"><span class="annot"><span class="annottext">invalidMessage :: Text
-</span><a href="#local-6989586621690172700"><span class="hs-identifier hs-var hs-var">invalidMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-43"></span><span>    </span><span id="local-6989586621690172616"><span class="annot"><span class="annottext">invalidMessage :: Text
+</span><a href="#local-6989586621690172616"><span class="hs-identifier hs-var hs-var">invalidMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-44"></span><span>      </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172703"><span class="hs-identifier hs-var">txt</span></a></span><span>
+</span><a href="#local-6989586621690172619"><span class="hs-identifier hs-var">txt</span></a></span><span>
 </span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;. Accept letters, digits, underscore (_) or hyphen (-) only&quot;</span></span><span>
@@ -144,14 +144,14 @@ Bifunctor p =&gt;
 </span><span id="line-53"></span><span class="annot"><a href="Data.Parser.JSONPath.html#name"><span class="hs-identifier hs-type">name</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Key</span></span><span>
 </span><span id="line-54"></span><span id="name"><span class="annot"><span class="annottext">name :: Parser Text Key
 </span><a href="Data.Parser.JSONPath.html#name"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text Key
-</span><a href="#local-6989586621690172688"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">forall i a. Parser i a -&gt; [Char] -&gt; Parser i a
+</span><a href="#local-6989586621690172604"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">forall i a. Parser i a -&gt; [Char] -&gt; Parser i a
 </span><span class="hs-operator hs-var">&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;property name&quot;</span></span><span>
 </span><span id="line-55"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-56"></span><span>    </span><span id="local-6989586621690172688"><span class="annot"><span class="annottext">go :: Parser Text Key
-</span><a href="#local-6989586621690172688"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-57"></span><span>      </span><span id="local-6989586621690172679"><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621690172679"><span class="hs-identifier hs-var">firstChar</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-56"></span><span>    </span><span id="local-6989586621690172604"><span class="annot"><span class="annottext">go :: Parser Text Key
+</span><a href="#local-6989586621690172604"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-57"></span><span>      </span><span id="local-6989586621690172595"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621690172595"><span class="hs-identifier hs-var">firstChar</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">Parser Char
 </span><span class="hs-identifier hs-var">letter</span></span><span>
 </span><span id="line-59"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
@@ -161,8 +161,8 @@ Bifunctor p =&gt;
 </span><span id="line-60"></span><span>          </span><span class="annot"><span class="annottext">forall i a. Parser i a -&gt; [Char] -&gt; Parser i a
 </span><span class="hs-operator hs-var">&lt;?&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;first character of property name must be a letter or underscore&quot;</span></span><span>
-</span><span id="line-61"></span><span>      </span><span id="local-6989586621690172677"><span class="annot"><span class="annottext">[Char]
-</span><a href="#local-6989586621690172677"><span class="hs-identifier hs-var">otherChars</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadPlus m =&gt; m a -&gt; m [a]
+</span><span id="line-61"></span><span>      </span><span id="local-6989586621690172593"><span class="annot"><span class="annottext">[Char]
+</span><a href="#local-6989586621690172593"><span class="hs-identifier hs-var">otherChars</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadPlus m =&gt; m a -&gt; m [a]
 </span><span class="hs-identifier hs-var">many'</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser Char
 </span><span class="hs-identifier hs-var">letter</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Char
@@ -177,9 +177,9 @@ Bifunctor p =&gt;
 </span><span class="hs-identifier hs-var">K.fromText</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621690172679"><span class="hs-identifier hs-var">firstChar</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="#local-6989586621690172595"><span class="hs-identifier hs-var">firstChar</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
-</span><a href="#local-6989586621690172677"><span class="hs-identifier hs-var">otherChars</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690172593"><span class="hs-identifier hs-var">otherChars</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-63"></span><span>
 </span><span id="line-64"></span><span class="hs-comment">-- | Parses a JSON property key or index in square bracket format, e.g.</span><span>
 </span><span id="line-65"></span><span class="hs-comment">-- &gt; [42]</span><span>
@@ -197,8 +197,8 @@ Bifunctor p =&gt;
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'['</span></span><span>
-</span><span id="line-71"></span><span>  </span><span id="local-6989586621690172669"><span class="annot"><span class="annottext">JSONPathElement
-</span><a href="#local-6989586621690172669"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-71"></span><span>  </span><span id="local-6989586621690172585"><span class="annot"><span class="annottext">JSONPathElement
+</span><a href="#local-6989586621690172585"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-72"></span><span>    </span><span class="annot"><span class="annottext">Int -&gt; JSONPathElement
 </span><span class="hs-identifier hs-var">Index</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Integral a =&gt; Parser a
@@ -207,12 +207,12 @@ Bifunctor p =&gt;
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
 </span><span class="hs-identifier hs-var">Key</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text Key
-</span><a href="#local-6989586621690172667"><span class="hs-identifier hs-var">doubleQuotedString</span></a></span><span>
+</span><a href="#local-6989586621690172583"><span class="hs-identifier hs-var">doubleQuotedString</span></a></span><span>
 </span><span id="line-74"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Key -&gt; JSONPathElement
 </span><span class="hs-identifier hs-var">Key</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text Key
-</span><a href="#local-6989586621690172666"><span class="hs-identifier hs-var">singleQuotedString</span></a></span><span>
+</span><a href="#local-6989586621690172582"><span class="hs-identifier hs-var">singleQuotedString</span></a></span><span>
 </span><span id="line-75"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
@@ -220,11 +220,11 @@ Bifunctor p =&gt;
 </span><span class="hs-char">']'</span></span><span>
 </span><span id="line-76"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPathElement
-</span><a href="#local-6989586621690172669"><span class="hs-identifier hs-var">result</span></a></span><span>
+</span><a href="#local-6989586621690172585"><span class="hs-identifier hs-var">result</span></a></span><span>
 </span><span id="line-77"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-78"></span><span>    </span><span id="local-6989586621690172652"><span class="annot"><span class="annottext">parseJSONString :: Text -&gt; m Key
-</span><a href="#local-6989586621690172652"><span class="hs-identifier hs-var hs-var">parseJSONString</span></a></span></span><span> </span><span id="local-6989586621690172651"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172651"><span class="hs-identifier hs-var">inQuotes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-78"></span><span>    </span><span id="local-6989586621690172568"><span class="annot"><span class="annottext">parseJSONString :: Text -&gt; m Key
+</span><a href="#local-6989586621690172568"><span class="hs-identifier hs-var hs-var">parseJSONString</span></a></span></span><span> </span><span id="local-6989586621690172567"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690172567"><span class="hs-identifier hs-var">inQuotes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-79"></span><span>      </span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; [Char] -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
@@ -240,63 +240,63 @@ Bifunctor p =&gt;
 </span><span id="line-80"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;\&quot;&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172651"><span class="hs-identifier hs-var">inQuotes</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690172567"><span class="hs-identifier hs-var">inQuotes</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;\&quot;&quot;</span></span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span>    </span><span id="local-6989586621690172667"><span class="annot"><span class="annottext">doubleQuotedString :: Parser Text Key
-</span><a href="#local-6989586621690172667"><span class="hs-identifier hs-var hs-var">doubleQuotedString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-82"></span><span>    </span><span id="local-6989586621690172583"><span class="annot"><span class="annottext">doubleQuotedString :: Parser Text Key
+</span><a href="#local-6989586621690172583"><span class="hs-identifier hs-var hs-var">doubleQuotedString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-83"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'&quot;'</span></span><span>
-</span><span id="line-84"></span><span>      </span><span id="local-6989586621690172637"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172637"><span class="hs-identifier hs-var">inQuotes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><span id="line-84"></span><span>      </span><span id="local-6989586621690172553"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690172553"><span class="hs-identifier hs-var">inQuotes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
 </span><span class="hs-identifier hs-var">TL.concat</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">many</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text Text
-</span><a href="#local-6989586621690172634"><span class="hs-identifier hs-var">doubleQuotedChar</span></a></span><span>
+</span><a href="#local-6989586621690172550"><span class="hs-identifier hs-var">doubleQuotedChar</span></a></span><span>
 </span><span id="line-85"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'&quot;'</span></span><span>
 </span><span id="line-86"></span><span>      </span><span class="annot"><span class="annottext">forall {m :: * -&gt; *}. MonadFail m =&gt; Text -&gt; m Key
-</span><a href="#local-6989586621690172652"><span class="hs-identifier hs-var">parseJSONString</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172637"><span class="hs-identifier hs-var">inQuotes</span></a></span><span>
+</span><a href="#local-6989586621690172568"><span class="hs-identifier hs-var">parseJSONString</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690172553"><span class="hs-identifier hs-var">inQuotes</span></a></span><span>
 </span><span id="line-87"></span><span>
-</span><span id="line-88"></span><span>    </span><span id="local-6989586621690172634"><span class="annot"><span class="annottext">doubleQuotedChar :: Parser Text Text
-</span><a href="#local-6989586621690172634"><span class="hs-identifier hs-var hs-var">doubleQuotedChar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Text Text
-</span><a href="#local-6989586621690172633"><span class="hs-identifier hs-var">jsonChar</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><span id="line-88"></span><span>    </span><span id="local-6989586621690172550"><span class="annot"><span class="annottext">doubleQuotedChar :: Parser Text Text
+</span><a href="#local-6989586621690172550"><span class="hs-identifier hs-var hs-var">doubleQuotedChar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Text Text
+</span><a href="#local-6989586621690172549"><span class="hs-identifier hs-var">jsonChar</span></a></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'&quot;'</span></span><span>
 </span><span id="line-89"></span><span>
 </span><span id="line-90"></span><span>    </span><span class="hs-comment">-- Converts `'foo'` to `&quot;foo&quot;` and then parses it.</span><span>
-</span><span id="line-91"></span><span>    </span><span id="local-6989586621690172666"><span class="annot"><span class="annottext">singleQuotedString :: Parser Text Key
-</span><a href="#local-6989586621690172666"><span class="hs-identifier hs-var hs-var">singleQuotedString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-91"></span><span>    </span><span id="local-6989586621690172582"><span class="annot"><span class="annottext">singleQuotedString :: Parser Text Key
+</span><a href="#local-6989586621690172582"><span class="hs-identifier hs-var hs-var">singleQuotedString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-92"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'\''</span></span><span>
-</span><span id="line-93"></span><span>      </span><span id="local-6989586621690172624"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172624"><span class="hs-identifier hs-var">inQuotes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
+</span><span id="line-93"></span><span>      </span><span id="local-6989586621690172540"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690172540"><span class="hs-identifier hs-var">inQuotes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Text] -&gt; Text
 </span><span class="hs-identifier hs-var">TL.concat</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">many</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text Text
-</span><a href="#local-6989586621690172623"><span class="hs-identifier hs-var">singleQuotedChar</span></a></span><span>
+</span><a href="#local-6989586621690172539"><span class="hs-identifier hs-var">singleQuotedChar</span></a></span><span>
 </span><span id="line-94"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'\''</span></span><span>
 </span><span id="line-95"></span><span>      </span><span class="annot"><span class="annottext">forall {m :: * -&gt; *}. MonadFail m =&gt; Text -&gt; m Key
-</span><a href="#local-6989586621690172652"><span class="hs-identifier hs-var">parseJSONString</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690172624"><span class="hs-identifier hs-var">inQuotes</span></a></span><span>
+</span><a href="#local-6989586621690172568"><span class="hs-identifier hs-var">parseJSONString</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690172540"><span class="hs-identifier hs-var">inQuotes</span></a></span><span>
 </span><span id="line-96"></span><span>
 </span><span id="line-97"></span><span>    </span><span class="hs-comment">-- Un-escapes single quotes, and escapes double quotes.</span><span>
-</span><span id="line-98"></span><span>    </span><span id="local-6989586621690172623"><span class="annot"><span class="annottext">singleQuotedChar :: Parser Text Text
-</span><a href="#local-6989586621690172623"><span class="hs-identifier hs-var hs-var">singleQuotedChar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-98"></span><span>    </span><span id="local-6989586621690172539"><span class="annot"><span class="annottext">singleQuotedChar :: Parser Text Text
+</span><a href="#local-6989586621690172539"><span class="hs-identifier hs-var hs-var">singleQuotedChar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-99"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Parser Text
 </span><span class="hs-identifier hs-var">string</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;\\'&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
@@ -312,12 +312,12 @@ Bifunctor p =&gt;
 </span><span class="hs-string">&quot;\\\&quot;&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-101"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Text Text
-</span><a href="#local-6989586621690172633"><span class="hs-identifier hs-var">jsonChar</span></a></span><span> </span><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621690172549"><span class="hs-identifier hs-var">jsonChar</span></a></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'\''</span></span><span>
 </span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span>    </span><span id="local-6989586621690172633"><span class="annot"><span class="annottext">jsonChar :: Char -&gt; Parser Text Text
-</span><a href="#local-6989586621690172633"><span class="hs-identifier hs-var hs-var">jsonChar</span></a></span></span><span> </span><span id="local-6989586621690172605"><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621690172605"><span class="hs-identifier hs-var">delimiter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-103"></span><span>    </span><span id="local-6989586621690172549"><span class="annot"><span class="annottext">jsonChar :: Char -&gt; Parser Text Text
+</span><a href="#local-6989586621690172549"><span class="hs-identifier hs-var hs-var">jsonChar</span></a></span></span><span> </span><span id="local-6989586621690172521"><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621690172521"><span class="hs-identifier hs-var">delimiter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-104"></span><span>      </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;\\&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -333,5 +333,5 @@ Bifunctor p =&gt;
 </span><span class="hs-identifier hs-var">TL.singleton</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">notChar</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621690172605"><span class="hs-identifier hs-var">delimiter</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690172521"><span class="hs-identifier hs-var">delimiter</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-106"></span></pre></body></html>

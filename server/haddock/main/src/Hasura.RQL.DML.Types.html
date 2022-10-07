@@ -41,7 +41,7 @@
 </span><span id="line-41"></span><span>
 </span><span id="line-42"></span><span class="hs-keyword">newtype</span><span> </span><span id="OrderByExp"><span class="annot"><a href="Hasura.RQL.DML.Types.html#OrderByExp"><span class="hs-identifier hs-var">OrderByExp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="OrderByExp"><span class="annot"><a href="Hasura.RQL.DML.Types.html#OrderByExp"><span class="hs-identifier hs-var">OrderByExp</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getOrderByItems"><span class="annot"><span class="annottext">OrderByExp -&gt; [OrderByItem ('Postgres 'Vanilla)]
 </span><a href="Hasura.RQL.DML.Types.html#getOrderByItems"><span class="hs-identifier hs-var hs-var">getOrderByItems</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.IR.OrderBy.html#OrderByItem"><span class="hs-identifier hs-type">OrderByItem</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690284402"><span id="local-6989586621690284404"><span id="local-6989586621690284411"><span class="annot"><span class="annottext">Int -&gt; OrderByExp -&gt; ShowS
+</span><span id="line-43"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690284318"><span id="local-6989586621690284320"><span id="local-6989586621690284327"><span class="annot"><span class="annottext">Int -&gt; OrderByExp -&gt; ShowS
 [OrderByExp] -&gt; ShowS
 OrderByExp -&gt; String
 forall a.
@@ -52,7 +52,7 @@ show :: OrderByExp -&gt; String
 $cshow :: OrderByExp -&gt; String
 showsPrec :: Int -&gt; OrderByExp -&gt; ShowS
 $cshowsPrec :: Int -&gt; OrderByExp -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690284377"><span id="local-6989586621690284383"><span class="annot"><span class="annottext">OrderByExp -&gt; OrderByExp -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690284293"><span id="local-6989586621690284299"><span class="annot"><span class="annottext">OrderByExp -&gt; OrderByExp -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: OrderByExp -&gt; OrderByExp -&gt; Bool
 $c/= :: OrderByExp -&gt; OrderByExp -&gt; Bool
@@ -60,19 +60,19 @@ $c/= :: OrderByExp -&gt; OrderByExp -&gt; Bool
 $c== :: OrderByExp -&gt; OrderByExp -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690284349"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#OrderByExp"><span class="hs-identifier hs-type">OrderByExp</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-46"></span><span>  </span><span id="local-6989586621690284314"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OrderByExp
+</span><span id="line-45"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690284265"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#OrderByExp"><span class="hs-identifier hs-type">OrderByExp</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>  </span><span id="local-6989586621690284230"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser OrderByExp
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-47"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621690284311"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690284311"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[OrderByItem ('Postgres 'Vanilla)] -&gt; OrderByExp
+</span><span id="line-47"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621690284227"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690284227"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[OrderByItem ('Postgres 'Vanilla)] -&gt; OrderByExp
 </span><a href="Hasura.RQL.DML.Types.html#OrderByExp"><span class="hs-identifier hs-var">OrderByExp</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser (OrderByItem ('Postgres 'Vanilla))
-</span><a href="#local-6989586621690284308"><span class="hs-identifier hs-var">parseString</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690284311"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-48"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Object</span></span><span> </span><span id="local-6989586621690284306"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284306"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[OrderByItem ('Postgres 'Vanilla)] -&gt; OrderByExp
+</span><a href="#local-6989586621690284224"><span class="hs-identifier hs-var">parseString</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690284227"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-48"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Object</span></span><span> </span><span id="local-6989586621690284222"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690284222"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[OrderByItem ('Postgres 'Vanilla)] -&gt; OrderByExp
 </span><a href="Hasura.RQL.DML.Types.html#OrderByExp"><span class="hs-identifier hs-var">OrderByExp</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -80,10 +80,10 @@ $c== :: OrderByExp -&gt; OrderByExp -&gt; Bool
 (FromJSON a, FromJSON (BasicOrderType b),
  FromJSON (NullsOrderType b)) =&gt;
 Object -&gt; Parser (OrderByItemG b a)
-</span><a href="#local-6989586621690284305"><span class="hs-identifier hs-var">parseObject</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284306"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-49"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Array</span></span><span> </span><span id="local-6989586621690284303"><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621690284303"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621690284221"><span class="hs-identifier hs-var">parseObject</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690284222"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><span id="line-49"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Array</span></span><span> </span><span id="local-6989586621690284219"><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621690284219"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-50"></span><span>      </span><span class="annot"><span class="annottext">[OrderByItem ('Postgres 'Vanilla)] -&gt; OrderByExp
 </span><a href="Hasura.RQL.DML.Types.html#OrderByExp"><span class="hs-identifier hs-var">OrderByExp</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
@@ -91,18 +91,18 @@ Object -&gt; Parser (OrderByItemG b a)
 t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">toList</span></a></span><span> </span><span class="annot"><span class="annottext">Array
-</span><a href="#local-6989586621690284303"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-51"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621690284300"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690284300"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser (OrderByItem ('Postgres 'Vanilla))
-</span><a href="#local-6989586621690284308"><span class="hs-identifier hs-var">parseString</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690284300"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-52"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Object</span></span><span> </span><span id="local-6989586621690284299"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284299"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall {a} {b :: BackendType}.
+</span><a href="#local-6989586621690284219"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
+</span><span id="line-51"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621690284216"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690284216"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Parser (OrderByItem ('Postgres 'Vanilla))
+</span><a href="#local-6989586621690284224"><span class="hs-identifier hs-var">parseString</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690284216"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-52"></span><span>        </span><span class="annot"><span class="hs-identifier hs-type">Object</span></span><span> </span><span id="local-6989586621690284215"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690284215"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall {a} {b :: BackendType}.
 (FromJSON a, FromJSON (BasicOrderType b),
  FromJSON (NullsOrderType b)) =&gt;
 Object -&gt; Parser (OrderByItemG b a)
-</span><a href="#local-6989586621690284305"><span class="hs-identifier hs-var">parseObject</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284299"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621690284221"><span class="hs-identifier hs-var">parseObject</span></a></span><span> </span><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690284215"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-53"></span><span>        </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
@@ -112,13 +112,13 @@ Object -&gt; Parser (OrderByItemG b a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Expecting : array/string/object&quot;</span></span><span>
 </span><span id="line-55"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-56"></span><span>      </span><span id="local-6989586621690284308"><span class="annot"><span class="annottext">parseString :: Text -&gt; Parser (OrderByItem ('Postgres 'Vanilla))
-</span><a href="#local-6989586621690284308"><span class="hs-identifier hs-var hs-var">parseString</span></a></span></span><span> </span><span id="local-6989586621690284298"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690284298"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-56"></span><span>      </span><span id="local-6989586621690284224"><span class="annot"><span class="annottext">parseString :: Text -&gt; Parser (OrderByItem ('Postgres 'Vanilla))
+</span><a href="#local-6989586621690284224"><span class="hs-identifier hs-var hs-var">parseString</span></a></span></span><span> </span><span id="local-6989586621690284214"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690284214"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; Text -&gt; Either String a
 </span><span class="hs-identifier hs-var">AT.parseOnly</span></span><span> </span><span class="annot"><span class="annottext">Parser Text (OrderByItem ('Postgres 'Vanilla))
-</span><a href="#local-6989586621690284296"><span class="hs-identifier hs-var">orderByParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690284298"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621690284212"><span class="hs-identifier hs-var">orderByParser</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690284214"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-58"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
@@ -126,46 +126,46 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">const</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;string format for 'order_by' entry : {+/-}column Eg : +posted&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-59"></span><span>      </span><span id="local-6989586621690284305"><span class="annot"><span class="annottext">parseObject :: Object -&gt; Parser (OrderByItemG b a)
-</span><a href="#local-6989586621690284305"><span class="hs-identifier hs-var hs-var">parseObject</span></a></span></span><span> </span><span id="local-6989586621690284280"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284280"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-59"></span><span>      </span><span id="local-6989586621690284221"><span class="annot"><span class="annottext">parseObject :: Object -&gt; Parser (OrderByItemG b a)
+</span><a href="#local-6989586621690284221"><span class="hs-identifier hs-var hs-var">parseObject</span></a></span></span><span> </span><span id="local-6989586621690284196"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690284196"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-60"></span><span>        </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
 Maybe (BasicOrderType b)
 -&gt; a -&gt; Maybe (NullsOrderType b) -&gt; OrderByItemG b a
 </span><a href="Hasura.RQL.IR.OrderBy.html#OrderByItemG"><span class="hs-identifier hs-var">OrderByItemG</span></a></span><span>
 </span><span id="line-61"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284280"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690284196"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;type&quot;</span></span><span>
 </span><span id="line-62"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284280"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690284196"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;column&quot;</span></span><span>
 </span><span id="line-63"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284280"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690284196"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;nulls&quot;</span></span><span>
-</span><span id="line-64"></span><span>      </span><span id="local-6989586621690284296"><span class="annot"><span class="annottext">orderByParser :: Parser Text (OrderByItem ('Postgres 'Vanilla))
-</span><a href="#local-6989586621690284296"><span class="hs-identifier hs-var hs-var">orderByParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-64"></span><span>      </span><span id="local-6989586621690284212"><span class="annot"><span class="annottext">orderByParser :: Parser Text (OrderByItem ('Postgres 'Vanilla))
+</span><a href="#local-6989586621690284212"><span class="hs-identifier hs-var hs-var">orderByParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-65"></span><span>        </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
 Maybe (BasicOrderType b)
 -&gt; a -&gt; Maybe (NullsOrderType b) -&gt; OrderByItemG b a
 </span><a href="Hasura.RQL.IR.OrderBy.html#OrderByItemG"><span class="hs-identifier hs-var">OrderByItemG</span></a></span><span>
 </span><span id="line-66"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text (Maybe OrderType)
-</span><a href="#local-6989586621690284276"><span class="hs-identifier hs-var">orderTypeParser</span></a></span><span>
+</span><a href="#local-6989586621690284192"><span class="hs-identifier hs-var">orderTypeParser</span></a></span><span>
 </span><span id="line-67"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Parser Text OrderByCol
-</span><a href="#local-6989586621690284275"><span class="hs-identifier hs-var">orderColumnParser</span></a></span><span>
+</span><a href="#local-6989586621690284191"><span class="hs-identifier hs-var">orderColumnParser</span></a></span><span>
 </span><span id="line-68"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-69"></span><span>      </span><span id="local-6989586621690284276"><span class="annot"><span class="annottext">orderTypeParser :: Parser Text (Maybe OrderType)
-</span><a href="#local-6989586621690284276"><span class="hs-identifier hs-var hs-var">orderTypeParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-69"></span><span>      </span><span id="local-6989586621690284192"><span class="annot"><span class="annottext">orderTypeParser :: Parser Text (Maybe OrderType)
+</span><a href="#local-6989586621690284192"><span class="hs-identifier hs-var hs-var">orderTypeParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-70"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; [f a] -&gt; f a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">choice</span></a></span><span>
 </span><span id="line-71"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
@@ -184,15 +184,15 @@ Maybe (BasicOrderType b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
 </span><span id="line-74"></span><span>          </span><span class="hs-special">]</span><span>
-</span><span id="line-75"></span><span>      </span><span id="local-6989586621690284275"><span class="annot"><span class="annottext">orderColumnParser :: Parser Text OrderByCol
-</span><a href="#local-6989586621690284275"><span class="hs-identifier hs-var hs-var">orderColumnParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
+</span><span id="line-75"></span><span>      </span><span id="local-6989586621690284191"><span class="annot"><span class="annottext">orderColumnParser :: Parser Text OrderByCol
+</span><a href="#local-6989586621690284191"><span class="hs-identifier hs-var hs-var">orderColumnParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Text Text
 </span><span class="hs-identifier hs-var">AT.takeText</span></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadFail m =&gt; Text -&gt; m OrderByCol
 </span><a href="Hasura.RQL.IR.OrderBy.html#orderByColFromTxt"><span class="hs-identifier hs-var">orderByColFromTxt</span></a></span><span>
 </span><span id="line-76"></span><span>
-</span><span id="line-77"></span><span class="hs-keyword">data</span><span> </span><span id="DMLQuery"><span class="annot"><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-var">DMLQuery</span></a></span></span><span> </span><span id="local-6989586621690284601"><span class="annot"><a href="#local-6989586621690284601"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="DMLQuery"><span class="annot"><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-var">DMLQuery</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedTable"><span class="hs-identifier hs-type">QualifiedTable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284601"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690284241"><span id="local-6989586621690284243"><span id="local-6989586621690284252"><span class="annot"><span class="annottext">Int -&gt; DMLQuery a -&gt; ShowS
+</span><span id="line-77"></span><span class="hs-keyword">data</span><span> </span><span id="DMLQuery"><span class="annot"><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-var">DMLQuery</span></a></span></span><span> </span><span id="local-6989586621690284517"><span class="annot"><a href="#local-6989586621690284517"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-78"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="DMLQuery"><span class="annot"><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-var">DMLQuery</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#QualifiedTable"><span class="hs-identifier hs-type">QualifiedTable</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284517"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-79"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690284157"><span id="local-6989586621690284159"><span id="local-6989586621690284168"><span class="annot"><span class="annottext">Int -&gt; DMLQuery a -&gt; ShowS
 forall a. Show a =&gt; Int -&gt; DMLQuery a -&gt; ShowS
 forall a. Show a =&gt; [DMLQuery a] -&gt; ShowS
 forall a. Show a =&gt; DMLQuery a -&gt; String
@@ -204,7 +204,7 @@ show :: DMLQuery a -&gt; String
 $cshow :: forall a. Show a =&gt; DMLQuery a -&gt; String
 showsPrec :: Int -&gt; DMLQuery a -&gt; ShowS
 $cshowsPrec :: forall a. Show a =&gt; Int -&gt; DMLQuery a -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690284230"><span id="local-6989586621690284238"><span class="annot"><span class="annottext">DMLQuery a -&gt; DMLQuery a -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690284146"><span id="local-6989586621690284154"><span class="annot"><span class="annottext">DMLQuery a -&gt; DMLQuery a -&gt; Bool
 forall a. Eq a =&gt; DMLQuery a -&gt; DMLQuery a -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: DMLQuery a -&gt; DMLQuery a -&gt; Bool
@@ -213,53 +213,53 @@ $c/= :: forall a. Eq a =&gt; DMLQuery a -&gt; DMLQuery a -&gt; Bool
 $c== :: forall a. Eq a =&gt; DMLQuery a -&gt; DMLQuery a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-80"></span><span>
-</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690284226"><span id="local-6989586621690284599"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621690284599"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-type">DMLQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284599"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-82"></span><span>  </span><span id="local-6989586621690284213"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (DMLQuery a)
-</span><a href="#local-6989586621690284213"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span id="line-81"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690284142"><span id="local-6989586621690284515"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621690284515"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-type">DMLQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284515"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-82"></span><span>  </span><span id="local-6989586621690284129"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser (DMLQuery a)
+</span><a href="#local-6989586621690284129"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;query&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690284211"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284211"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-string">&quot;query&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690284127"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690284127"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-83"></span><span>    </span><span class="annot"><span class="annottext">forall a. SourceName -&gt; QualifiedTable -&gt; a -&gt; DMLQuery a
 </span><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-var">DMLQuery</span></a></span><span>
 </span><span id="line-84"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284211"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690284127"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span>
 </span><span id="line-85"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284211"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690284127"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;table&quot;</span></span><span>
 </span><span id="line-86"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object -&gt; Value
 </span><span class="hs-identifier hs-var">Object</span></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690284211"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690284127"><span class="hs-identifier hs-var">o</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-87"></span><span>
-</span><span id="line-88"></span><span class="annot"><a href="Hasura.RQL.DML.Types.html#getSourceDMLQuery"><span class="hs-identifier hs-type">getSourceDMLQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690284595"><span class="annot"><a href="#local-6989586621690284595"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-type">DMLQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284595"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span>
+</span><span id="line-88"></span><span class="annot"><a href="Hasura.RQL.DML.Types.html#getSourceDMLQuery"><span class="hs-identifier hs-type">getSourceDMLQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690284511"><span class="annot"><a href="#local-6989586621690284511"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-type">DMLQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284511"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span>
 </span><span id="line-89"></span><span id="getSourceDMLQuery"><span class="annot"><span class="annottext">getSourceDMLQuery :: forall a. DMLQuery a -&gt; SourceName
-</span><a href="Hasura.RQL.DML.Types.html#getSourceDMLQuery"><span class="hs-identifier hs-var hs-var">getSourceDMLQuery</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-type">DMLQuery</span></a></span><span> </span><span id="local-6989586621690284208"><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690284208"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
+</span><a href="Hasura.RQL.DML.Types.html#getSourceDMLQuery"><span class="hs-identifier hs-var hs-var">getSourceDMLQuery</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-type">DMLQuery</span></a></span><span> </span><span id="local-6989586621690284124"><span class="annot"><span class="annottext">SourceName
+</span><a href="#local-6989586621690284124"><span class="hs-identifier hs-var">source</span></a></span></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
 </span><span class="hs-identifier">_</span></span><span> </span><span class="annot"><span class="annottext">a
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SourceName
-</span><a href="#local-6989586621690284208"><span class="hs-identifier hs-var">source</span></a></span><span>
+</span><a href="#local-6989586621690284124"><span class="hs-identifier hs-var">source</span></a></span><span>
 </span><span id="line-90"></span><span>
-</span><span id="line-91"></span><span class="hs-keyword">data</span><span> </span><span id="SelectG"><span class="annot"><a href="Hasura.RQL.DML.Types.html#SelectG"><span class="hs-identifier hs-var">SelectG</span></a></span></span><span> </span><span id="local-6989586621690284593"><span class="annot"><a href="#local-6989586621690284593"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621690284592"><span class="annot"><a href="#local-6989586621690284592"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621690284591"><span class="annot"><a href="#local-6989586621690284591"><span class="hs-identifier hs-type">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SelectG"><span class="annot"><a href="Hasura.RQL.DML.Types.html#SelectG"><span class="hs-identifier hs-var">SelectG</span></a></span></span><span>
+</span><span id="line-91"></span><span class="hs-keyword">data</span><span> </span><span id="SelectG"><span class="annot"><a href="Hasura.RQL.DML.Types.html#SelectG"><span class="hs-identifier hs-var">SelectG</span></a></span></span><span> </span><span id="local-6989586621690284509"><span class="annot"><a href="#local-6989586621690284509"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621690284508"><span class="annot"><a href="#local-6989586621690284508"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span id="local-6989586621690284507"><span class="annot"><a href="#local-6989586621690284507"><span class="hs-identifier hs-type">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="SelectG"><span class="annot"><a href="Hasura.RQL.DML.Types.html#SelectG"><span class="hs-identifier hs-var">SelectG</span></a></span></span><span>
 </span><span id="line-92"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="sqColumns"><span class="annot"><span class="annottext">forall a b c. SelectG a b c -&gt; [a]
-</span><a href="Hasura.RQL.DML.Types.html#sqColumns"><span class="hs-identifier hs-var hs-var">sqColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621690284593"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- Postgres columns and relationships</span><span>
+</span><a href="Hasura.RQL.DML.Types.html#sqColumns"><span class="hs-identifier hs-var hs-var">sqColumns</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621690284509"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- Postgres columns and relationships</span><span>
 </span><span id="line-93"></span><span>    </span><span id="sqWhere"><span class="annot"><span class="annottext">forall a b c. SelectG a b c -&gt; Maybe b
-</span><a href="Hasura.RQL.DML.Types.html#sqWhere"><span class="hs-identifier hs-var hs-var">sqWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284592"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- Filter</span><span>
+</span><a href="Hasura.RQL.DML.Types.html#sqWhere"><span class="hs-identifier hs-var hs-var">sqWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284508"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- Filter</span><span>
 </span><span id="line-94"></span><span>    </span><span id="sqOrderBy"><span class="annot"><span class="annottext">forall a b c. SelectG a b c -&gt; Maybe OrderByExp
 </span><a href="Hasura.RQL.DML.Types.html#sqOrderBy"><span class="hs-identifier hs-var hs-var">sqOrderBy</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#OrderByExp"><span class="hs-identifier hs-type">OrderByExp</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- Ordering</span><span>
 </span><span id="line-95"></span><span>    </span><span id="sqLimit"><span class="annot"><span class="annottext">forall a b c. SelectG a b c -&gt; Maybe c
-</span><a href="Hasura.RQL.DML.Types.html#sqLimit"><span class="hs-identifier hs-var hs-var">sqLimit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284591"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- Limit</span><span>
+</span><a href="Hasura.RQL.DML.Types.html#sqLimit"><span class="hs-identifier hs-var hs-var">sqLimit</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284507"><span class="hs-identifier hs-type">c</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- Limit</span><span>
 </span><span id="line-96"></span><span>    </span><span id="sqOffset"><span class="annot"><span class="annottext">forall a b c. SelectG a b c -&gt; Maybe c
-</span><a href="Hasura.RQL.DML.Types.html#sqOffset"><span class="hs-identifier hs-var hs-var">sqOffset</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284591"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-comment">-- Offset</span><span>
+</span><a href="Hasura.RQL.DML.Types.html#sqOffset"><span class="hs-identifier hs-var hs-var">sqOffset</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690284507"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-comment">-- Offset</span><span>
 </span><span id="line-97"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690284188"><span id="local-6989586621690284190"><span id="local-6989586621690284200"><span class="annot"><span class="annottext">Int -&gt; SelectG a b c -&gt; ShowS
+</span><span id="line-98"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690284104"><span id="local-6989586621690284106"><span id="local-6989586621690284116"><span class="annot"><span class="annottext">Int -&gt; SelectG a b c -&gt; ShowS
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
 forall a b c.
@@ -275,7 +275,7 @@ showsPrec :: Int -&gt; SelectG a b c -&gt; ShowS
 $cshowsPrec :: forall a b c.
 (Show a, Show b, Show c) =&gt;
 Int -&gt; SelectG a b c -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690284177"><span id="local-6989586621690284186"><span class="annot"><span class="annottext">SelectG a b c -&gt; SelectG a b c -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690284093"><span id="local-6989586621690284102"><span class="annot"><span class="annottext">SelectG a b c -&gt; SelectG a b c -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 forall a b c.
 (Eq a, Eq b, Eq c) =&gt;
@@ -290,12 +290,12 @@ $c== :: forall a b c.
 SelectG a b c -&gt; SelectG a b c -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-99"></span><span>
-</span><span id="line-100"></span><span class="hs-special">$</span><span id="local-6989586621690284153"><span id="local-6989586621690284175"><span id="local-6989586621690284591"><span id="local-6989586621690284592"><span id="local-6989586621690284593"><span class="hs-special">(</span><span class="hs-identifier">deriveFromJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SelectG</span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-100"></span><span class="hs-special">$</span><span id="local-6989586621690284069"><span id="local-6989586621690284091"><span id="local-6989586621690284507"><span id="local-6989586621690284508"><span id="local-6989586621690284509"><span class="hs-special">(</span><span class="hs-identifier">deriveFromJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">SelectG</span><span class="hs-special">)</span></span></span></span></span></span><span>
 </span><span id="line-101"></span><span>
 </span><span id="line-102"></span><span class="hs-keyword">data</span><span> </span><span id="Wildcard"><span class="annot"><a href="Hasura.RQL.DML.Types.html#Wildcard"><span class="hs-identifier hs-var">Wildcard</span></a></span></span><span>
 </span><span id="line-103"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Star"><span class="annot"><a href="Hasura.RQL.DML.Types.html#Star"><span class="hs-identifier hs-var">Star</span></a></span></span><span>
 </span><span id="line-104"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="StarDot"><span class="annot"><a href="Hasura.RQL.DML.Types.html#StarDot"><span class="hs-identifier hs-var">StarDot</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#Wildcard"><span class="hs-identifier hs-type">Wildcard</span></a></span><span>
-</span><span id="line-105"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690284136"><span id="local-6989586621690284138"><span id="local-6989586621690284142"><span class="annot"><span class="annottext">Int -&gt; Wildcard -&gt; ShowS
+</span><span id="line-105"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690284052"><span id="local-6989586621690284054"><span id="local-6989586621690284058"><span class="annot"><span class="annottext">Int -&gt; Wildcard -&gt; ShowS
 [Wildcard] -&gt; ShowS
 Wildcard -&gt; String
 forall a.
@@ -306,13 +306,13 @@ show :: Wildcard -&gt; String
 $cshow :: Wildcard -&gt; String
 showsPrec :: Int -&gt; Wildcard -&gt; ShowS
 $cshowsPrec :: Int -&gt; Wildcard -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690284131"><span id="local-6989586621690284134"><span class="annot"><span class="annottext">Wildcard -&gt; Wildcard -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690284047"><span id="local-6989586621690284050"><span class="annot"><span class="annottext">Wildcard -&gt; Wildcard -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Wildcard -&gt; Wildcard -&gt; Bool
 $c/= :: Wildcard -&gt; Wildcard -&gt; Bool
 == :: Wildcard -&gt; Wildcard -&gt; Bool
 $c== :: Wildcard -&gt; Wildcard -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690284110"><span id="local-6989586621690284112"><span id="local-6989586621690284115"><span id="local-6989586621690284118"><span id="local-6989586621690284121"><span id="local-6989586621690284124"><span id="local-6989586621690284127"><span class="annot"><span class="annottext">Eq Wildcard
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690284026"><span id="local-6989586621690284028"><span id="local-6989586621690284031"><span id="local-6989586621690284034"><span id="local-6989586621690284037"><span id="local-6989586621690284040"><span id="local-6989586621690284043"><span class="annot"><span class="annottext">Eq Wildcard
 Wildcard -&gt; Wildcard -&gt; Bool
 Wildcard -&gt; Wildcard -&gt; Ordering
 Wildcard -&gt; Wildcard -&gt; Wildcard
@@ -346,36 +346,36 @@ $ccompare :: Wildcard -&gt; Wildcard -&gt; Ordering
 </span><span id="line-108"></span><span id="parseWildcard"><span class="annot"><span class="annottext">parseWildcard :: Parser Wildcard
 </span><a href="Hasura.RQL.DML.Types.html#parseWildcard"><span class="hs-identifier hs-var hs-var">parseWildcard</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-109"></span><span>  </span><span class="annot"><span class="annottext">[Wildcard] -&gt; Wildcard
-</span><a href="#local-6989586621690284107"><span class="hs-identifier hs-var">fromList</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="#local-6989586621690284023"><span class="hs-identifier hs-var">fromList</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Parser Wildcard
-</span><a href="#local-6989586621690284106"><span class="hs-identifier hs-var">starParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a s. Alternative f =&gt; f a -&gt; f s -&gt; f [a]
+</span><a href="#local-6989586621690284022"><span class="hs-identifier hs-var">starParser</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a s. Alternative f =&gt; f a -&gt; f s -&gt; f [a]
 </span><span class="hs-operator hs-var">`AT.sepBy1`</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">AT.char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'.'</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. Chunk t =&gt; Parser t ()
 </span><span class="hs-identifier hs-var">AT.endOfInput</span></span><span class="hs-special">)</span><span>
 </span><span id="line-110"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-111"></span><span>    </span><span id="local-6989586621690284106"><span class="annot"><span class="annottext">starParser :: Parser Wildcard
-</span><a href="#local-6989586621690284106"><span class="hs-identifier hs-var hs-var">starParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621690284022"><span class="annot"><span class="annottext">starParser :: Parser Wildcard
+</span><a href="#local-6989586621690284022"><span class="hs-identifier hs-var hs-var">starParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Char
 </span><span class="hs-identifier hs-var">AT.char</span></span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'*'</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">Wildcard
 </span><a href="Hasura.RQL.DML.Types.html#Star"><span class="hs-identifier hs-var">Star</span></a></span><span>
-</span><span id="line-112"></span><span>    </span><span id="local-6989586621690284107"><span class="annot"><span class="annottext">fromList :: [Wildcard] -&gt; Wildcard
-</span><a href="#local-6989586621690284107"><span class="hs-identifier hs-var hs-var">fromList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; a -&gt; a) -&gt; t a -&gt; a
+</span><span id="line-112"></span><span>    </span><span id="local-6989586621690284023"><span class="annot"><span class="annottext">fromList :: [Wildcard] -&gt; Wildcard
+</span><a href="#local-6989586621690284023"><span class="hs-identifier hs-var hs-var">fromList</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; a -&gt; a) -&gt; t a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">foldr1</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">Wildcard
-</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690284096"><span class="annot"><span class="annottext">Wildcard
-</span><a href="#local-6989586621690284096"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Wildcard -&gt; Wildcard
+</span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690284012"><span class="annot"><span class="annottext">Wildcard
+</span><a href="#local-6989586621690284012"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Wildcard -&gt; Wildcard
 </span><a href="Hasura.RQL.DML.Types.html#StarDot"><span class="hs-identifier hs-var">StarDot</span></a></span><span> </span><span class="annot"><span class="annottext">Wildcard
-</span><a href="#local-6989586621690284096"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690284012"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-113"></span><span>
 </span><span id="line-114"></span><span class="hs-comment">-- Columns in RQL</span><span>
 </span><span id="line-115"></span><span class="hs-keyword">data</span><span> </span><span id="SelCol"><span class="annot"><a href="Hasura.RQL.DML.Types.html#SelCol"><span class="hs-identifier hs-var">SelCol</span></a></span></span><span>
 </span><span id="line-116"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="SCStar"><span class="annot"><a href="Hasura.RQL.DML.Types.html#SCStar"><span class="hs-identifier hs-var">SCStar</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#Wildcard"><span class="hs-identifier hs-type">Wildcard</span></a></span><span>
 </span><span id="line-117"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SCExtSimple"><span class="annot"><a href="Hasura.RQL.DML.Types.html#SCExtSimple"><span class="hs-identifier hs-var">SCExtSimple</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span>
 </span><span id="line-118"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="SCExtRel"><span class="annot"><a href="Hasura.RQL.DML.Types.html#SCExtRel"><span class="hs-identifier hs-var">SCExtRel</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#SelectQ"><span class="hs-identifier hs-type">SelectQ</span></a></span><span>
-</span><span id="line-119"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690284074"><span id="local-6989586621690284076"><span id="local-6989586621690284091"><span class="annot"><span class="annottext">Int -&gt; SelCol -&gt; ShowS
+</span><span id="line-119"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283990"><span id="local-6989586621690283992"><span id="local-6989586621690284007"><span class="annot"><span class="annottext">Int -&gt; SelCol -&gt; ShowS
 [SelCol] -&gt; ShowS
 SelCol -&gt; String
 forall a.
@@ -386,7 +386,7 @@ show :: SelCol -&gt; String
 $cshow :: SelCol -&gt; String
 showsPrec :: Int -&gt; SelCol -&gt; ShowS
 $cshowsPrec :: Int -&gt; SelCol -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690284050"><span id="local-6989586621690284062"><span class="annot"><span class="annottext">SelCol -&gt; SelCol -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283966"><span id="local-6989586621690283978"><span class="annot"><span class="annottext">SelCol -&gt; SelCol -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: SelCol -&gt; SelCol -&gt; Bool
 $c/= :: SelCol -&gt; SelCol -&gt; Bool
@@ -394,46 +394,46 @@ $c/= :: SelCol -&gt; SelCol -&gt; Bool
 $c== :: SelCol -&gt; SelCol -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-120"></span><span>
-</span><span id="line-121"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690284037"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#SelCol"><span class="hs-identifier hs-type">SelCol</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-122"></span><span>  </span><span id="local-6989586621690284002"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SelCol
-</span><a href="#local-6989586621690284002"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621690284001"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690284001"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-121"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283953"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#SelCol"><span class="hs-identifier hs-type">SelCol</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-122"></span><span>  </span><span id="local-6989586621690283918"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser SelCol
+</span><a href="#local-6989586621690283918"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span id="local-6989586621690283917"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690283917"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-123"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall a. Parser a -&gt; Text -&gt; Either String a
 </span><span class="hs-identifier hs-var">AT.parseOnly</span></span><span> </span><span class="annot"><span class="annottext">Parser Wildcard
 </span><a href="Hasura.RQL.DML.Types.html#parseWildcard"><span class="hs-identifier hs-var">parseWildcard</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690284001"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690283917"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-124"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PGCol -&gt; SelCol
 </span><a href="Hasura.RQL.DML.Types.html#SCExtSimple"><span class="hs-identifier hs-var">SCExtSimple</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">String</span></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690284001"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-125"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621690284000"><span class="annot"><span class="annottext">Wildcard
-</span><a href="#local-6989586621690284000"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><a href="#local-6989586621690283917"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-125"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621690283916"><span class="annot"><span class="annottext">Wildcard
+</span><a href="#local-6989586621690283916"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Wildcard -&gt; SelCol
 </span><a href="Hasura.RQL.DML.Types.html#SCStar"><span class="hs-identifier hs-var">SCStar</span></a></span><span> </span><span class="annot"><span class="annottext">Wildcard
-</span><a href="#local-6989586621690284000"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-126"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span id="local-6989586621690283999"><span class="annot"><span class="annottext">v :: Value
-</span><a href="#local-6989586621690283999"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Object</span></span><span> </span><span id="local-6989586621690283998"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283998"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621690283916"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-126"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span id="local-6989586621690283915"><span class="annot"><span class="annottext">v :: Value
+</span><a href="#local-6989586621690283915"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Object</span></span><span> </span><span id="local-6989586621690283914"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690283914"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-127"></span><span>    </span><span class="annot"><span class="annottext">RelName -&gt; Maybe RelName -&gt; SelectQ -&gt; SelCol
 </span><a href="Hasura.RQL.DML.Types.html#SCExtRel"><span class="hs-identifier hs-var">SCExtRel</span></a></span><span>
 </span><span id="line-128"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283998"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690283914"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
 </span><span id="line-129"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283998"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283914"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;alias&quot;</span></span><span>
 </span><span id="line-130"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621690283999"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621690283915"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-131"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-132"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
@@ -455,12 +455,12 @@ $c== :: SelCol -&gt; SelCol -&gt; Bool
 </span><span id="line-143"></span><span>
 </span><span id="line-144"></span><span class="hs-keyword">type</span><span> </span><span id="SelectQueryT"><span class="annot"><a href="Hasura.RQL.DML.Types.html#SelectQueryT"><span class="hs-identifier hs-var">SelectQueryT</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#DMLQuery"><span class="hs-identifier hs-type">DMLQuery</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#SelectQT"><span class="hs-identifier hs-type">SelectQT</span></a></span><span>
 </span><span id="line-145"></span><span>
-</span><span id="line-146"></span><span class="hs-keyword">type</span><span> </span><span id="InsObj"><span class="annot"><a href="Hasura.RQL.DML.Types.html#InsObj"><span class="hs-identifier hs-var">InsObj</span></a></span></span><span> </span><span id="local-6989586621690283997"><span class="annot"><a href="#local-6989586621690283997"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValues"><span class="hs-identifier hs-type">ColumnValues</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690283997"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span>
+</span><span id="line-146"></span><span class="hs-keyword">type</span><span> </span><span id="InsObj"><span class="annot"><a href="Hasura.RQL.DML.Types.html#InsObj"><span class="hs-identifier hs-var">InsObj</span></a></span></span><span> </span><span id="local-6989586621690283913"><span class="annot"><a href="#local-6989586621690283913"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValues"><span class="hs-identifier hs-type">ColumnValues</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690283913"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span>
 </span><span id="line-147"></span><span>
 </span><span id="line-148"></span><span class="hs-keyword">data</span><span> </span><span id="ConflictAction"><span class="annot"><a href="Hasura.RQL.DML.Types.html#ConflictAction"><span class="hs-identifier hs-var">ConflictAction</span></a></span></span><span>
 </span><span id="line-149"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="CAIgnore"><span class="annot"><a href="Hasura.RQL.DML.Types.html#CAIgnore"><span class="hs-identifier hs-var">CAIgnore</span></a></span></span><span>
 </span><span id="line-150"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CAUpdate"><span class="annot"><a href="Hasura.RQL.DML.Types.html#CAUpdate"><span class="hs-identifier hs-var">CAUpdate</span></a></span></span><span>
-</span><span id="line-151"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283988"><span id="local-6989586621690283990"><span id="local-6989586621690283992"><span class="annot"><span class="annottext">Int -&gt; ConflictAction -&gt; ShowS
+</span><span id="line-151"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283904"><span id="local-6989586621690283906"><span id="local-6989586621690283908"><span class="annot"><span class="annottext">Int -&gt; ConflictAction -&gt; ShowS
 [ConflictAction] -&gt; ShowS
 ConflictAction -&gt; String
 forall a.
@@ -471,7 +471,7 @@ show :: ConflictAction -&gt; String
 $cshow :: ConflictAction -&gt; String
 showsPrec :: Int -&gt; ConflictAction -&gt; ShowS
 $cshowsPrec :: Int -&gt; ConflictAction -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283984"><span id="local-6989586621690283986"><span class="annot"><span class="annottext">ConflictAction -&gt; ConflictAction -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283900"><span id="local-6989586621690283902"><span class="annot"><span class="annottext">ConflictAction -&gt; ConflictAction -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: ConflictAction -&gt; ConflictAction -&gt; Bool
 $c/= :: ConflictAction -&gt; ConflictAction -&gt; Bool
@@ -479,9 +479,9 @@ $c/= :: ConflictAction -&gt; ConflictAction -&gt; Bool
 $c== :: ConflictAction -&gt; ConflictAction -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-152"></span><span>
-</span><span id="line-153"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283981"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#ConflictAction"><span class="hs-identifier hs-type">ConflictAction</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-154"></span><span>  </span><span id="local-6989586621690283971"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConflictAction
-</span><a href="#local-6989586621690283971"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-153"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283897"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#ConflictAction"><span class="hs-identifier hs-type">ConflictAction</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-154"></span><span>  </span><span id="local-6989586621690283887"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConflictAction
+</span><a href="#local-6989586621690283887"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;ignore&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">ConflictAction
 </span><a href="Hasura.RQL.DML.Types.html#CAIgnore"><span class="hs-identifier hs-var">CAIgnore</span></a></span><span>
@@ -496,7 +496,7 @@ $c== :: ConflictAction -&gt; ConflictAction -&gt; Bool
 </span><span id="line-157"></span><span>
 </span><span id="line-158"></span><span class="hs-keyword">newtype</span><span> </span><span id="ConstraintOn"><span class="annot"><a href="Hasura.RQL.DML.Types.html#ConstraintOn"><span class="hs-identifier hs-var">ConstraintOn</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ConstraintOn"><span class="annot"><a href="Hasura.RQL.DML.Types.html#ConstraintOn"><span class="hs-identifier hs-var">ConstraintOn</span></a></span></span><span> </span><span class="hs-special">{</span><span id="getPGCols"><span class="annot"><span class="annottext">ConstraintOn -&gt; [PGCol]
 </span><a href="Hasura.RQL.DML.Types.html#getPGCols"><span class="hs-identifier hs-var hs-var">getPGCols</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-159"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283960"><span id="local-6989586621690283962"><span id="local-6989586621690283967"><span class="annot"><span class="annottext">Int -&gt; ConstraintOn -&gt; ShowS
+</span><span id="line-159"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283876"><span id="local-6989586621690283878"><span id="local-6989586621690283883"><span class="annot"><span class="annottext">Int -&gt; ConstraintOn -&gt; ShowS
 [ConstraintOn] -&gt; ShowS
 ConstraintOn -&gt; String
 forall a.
@@ -507,7 +507,7 @@ show :: ConstraintOn -&gt; String
 $cshow :: ConstraintOn -&gt; String
 showsPrec :: Int -&gt; ConstraintOn -&gt; ShowS
 $cshowsPrec :: Int -&gt; ConstraintOn -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283953"><span id="local-6989586621690283958"><span class="annot"><span class="annottext">ConstraintOn -&gt; ConstraintOn -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283869"><span id="local-6989586621690283874"><span class="annot"><span class="annottext">ConstraintOn -&gt; ConstraintOn -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: ConstraintOn -&gt; ConstraintOn -&gt; Bool
 $c/= :: ConstraintOn -&gt; ConstraintOn -&gt; Bool
@@ -515,10 +515,10 @@ $c/= :: ConstraintOn -&gt; ConstraintOn -&gt; Bool
 $c== :: ConstraintOn -&gt; ConstraintOn -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-160"></span><span>
-</span><span id="line-161"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283946"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#ConstraintOn"><span class="hs-identifier hs-type">ConstraintOn</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-162"></span><span>  </span><span id="local-6989586621690283940"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConstraintOn
-</span><a href="#local-6989586621690283940"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621690283939"><span class="annot"><span class="annottext">v :: Value
-</span><a href="#local-6989586621690283939"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-161"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283862"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#ConstraintOn"><span class="hs-identifier hs-type">ConstraintOn</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-162"></span><span>  </span><span id="local-6989586621690283856"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser ConstraintOn
+</span><a href="#local-6989586621690283856"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span id="local-6989586621690283855"><span class="annot"><span class="annottext">v :: Value
+</span><a href="#local-6989586621690283855"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-163"></span><span>    </span><span class="annot"><span class="annottext">[PGCol] -&gt; ConstraintOn
 </span><a href="Hasura.RQL.DML.Types.html#ConstraintOn"><span class="hs-identifier hs-var">ConstraintOn</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -526,15 +526,15 @@ $c== :: ConstraintOn -&gt; ConstraintOn -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621690283939"><span class="hs-identifier hs-var">v</span></a></span><span>
-</span><span id="line-164"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span id="local-6989586621690283938"><span class="annot"><span class="annottext">v :: Value
-</span><a href="#local-6989586621690283938"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Array</span></span><span> </span><span class="annot"><span class="annottext">Array
+</span><a href="#local-6989586621690283855"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><span id="line-164"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span id="local-6989586621690283854"><span class="annot"><span class="annottext">v :: Value
+</span><a href="#local-6989586621690283854"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Array</span></span><span> </span><span class="annot"><span class="annottext">Array
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-165"></span><span>    </span><span class="annot"><span class="annottext">[PGCol] -&gt; ConstraintOn
 </span><a href="Hasura.RQL.DML.Types.html#ConstraintOn"><span class="hs-identifier hs-var">ConstraintOn</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
-</span><a href="#local-6989586621690283938"><span class="hs-identifier hs-var">v</span></a></span><span>
+</span><a href="#local-6989586621690283854"><span class="hs-identifier hs-var">v</span></a></span><span>
 </span><span id="line-166"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-167"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
@@ -550,7 +550,7 @@ $c== :: ConstraintOn -&gt; ConstraintOn -&gt; Bool
 </span><span id="line-173"></span><span>    </span><span id="ocAction"><span class="annot"><span class="annottext">OnConflict -&gt; ConflictAction
 </span><a href="Hasura.RQL.DML.Types.html#ocAction"><span class="hs-identifier hs-var hs-var">ocAction</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#ConflictAction"><span class="hs-identifier hs-type">ConflictAction</span></a></span><span>
 </span><span id="line-174"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283922"><span id="local-6989586621690283924"><span id="local-6989586621690283932"><span class="annot"><span class="annottext">Int -&gt; OnConflict -&gt; ShowS
+</span><span id="line-175"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283838"><span id="local-6989586621690283840"><span id="local-6989586621690283848"><span class="annot"><span class="annottext">Int -&gt; OnConflict -&gt; ShowS
 [OnConflict] -&gt; ShowS
 OnConflict -&gt; String
 forall a.
@@ -561,7 +561,7 @@ show :: OnConflict -&gt; String
 $cshow :: OnConflict -&gt; String
 showsPrec :: Int -&gt; OnConflict -&gt; ShowS
 $cshowsPrec :: Int -&gt; OnConflict -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283912"><span id="local-6989586621690283919"><span class="annot"><span class="annottext">OnConflict -&gt; OnConflict -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283828"><span id="local-6989586621690283835"><span class="annot"><span class="annottext">OnConflict -&gt; OnConflict -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: OnConflict -&gt; OnConflict -&gt; Bool
 $c/= :: OnConflict -&gt; OnConflict -&gt; Bool
@@ -569,7 +569,7 @@ $c/= :: OnConflict -&gt; OnConflict -&gt; Bool
 $c== :: OnConflict -&gt; OnConflict -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-176"></span><span>
-</span><span id="line-177"></span><span class="hs-special">$</span><span id="local-6989586621690283896"><span id="local-6989586621690283909"><span class="hs-special">(</span><span class="hs-identifier">deriveFromJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">OnConflict</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-177"></span><span class="hs-special">$</span><span id="local-6989586621690283812"><span id="local-6989586621690283825"><span class="hs-special">(</span><span class="hs-identifier">deriveFromJSON</span><span> </span><span class="hs-identifier">hasuraJSON</span><span> </span><span class="hs-special">{</span><span class="hs-identifier">omitNothingFields</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">True</span><span class="hs-special">}</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">OnConflict</span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-178"></span><span>
 </span><span id="line-179"></span><span class="hs-keyword">data</span><span> </span><span id="InsertQuery"><span class="annot"><a href="Hasura.RQL.DML.Types.html#InsertQuery"><span class="hs-identifier hs-var">InsertQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InsertQuery"><span class="annot"><a href="Hasura.RQL.DML.Types.html#InsertQuery"><span class="hs-identifier hs-var">InsertQuery</span></a></span></span><span>
 </span><span id="line-180"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="iqTable"><span class="annot"><span class="annottext">InsertQuery -&gt; QualifiedTable
@@ -583,7 +583,7 @@ $c== :: OnConflict -&gt; OnConflict -&gt; Bool
 </span><span id="line-184"></span><span>    </span><span id="iqReturning"><span class="annot"><span class="annottext">InsertQuery -&gt; Maybe [PGCol]
 </span><a href="Hasura.RQL.DML.Types.html#iqReturning"><span class="hs-identifier hs-var hs-var">iqReturning</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-185"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-186"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283870"><span id="local-6989586621690283872"><span id="local-6989586621690283884"><span class="annot"><span class="annottext">Int -&gt; InsertQuery -&gt; ShowS
+</span><span id="line-186"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283786"><span id="local-6989586621690283788"><span id="local-6989586621690283800"><span class="annot"><span class="annottext">Int -&gt; InsertQuery -&gt; ShowS
 [InsertQuery] -&gt; ShowS
 InsertQuery -&gt; String
 forall a.
@@ -594,7 +594,7 @@ show :: InsertQuery -&gt; String
 $cshow :: InsertQuery -&gt; String
 showsPrec :: Int -&gt; InsertQuery -&gt; ShowS
 $cshowsPrec :: Int -&gt; InsertQuery -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283856"><span id="local-6989586621690283867"><span class="annot"><span class="annottext">InsertQuery -&gt; InsertQuery -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283772"><span id="local-6989586621690283783"><span class="annot"><span class="annottext">InsertQuery -&gt; InsertQuery -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: InsertQuery -&gt; InsertQuery -&gt; Bool
 $c/= :: InsertQuery -&gt; InsertQuery -&gt; Bool
@@ -602,13 +602,13 @@ $c/= :: InsertQuery -&gt; InsertQuery -&gt; Bool
 $c== :: InsertQuery -&gt; InsertQuery -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-187"></span><span>
-</span><span id="line-188"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283852"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#InsertQuery"><span class="hs-identifier hs-type">InsertQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-189"></span><span>  </span><span id="local-6989586621690283833"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser InsertQuery
-</span><a href="#local-6989586621690283833"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span id="line-188"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283768"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#InsertQuery"><span class="hs-identifier hs-type">InsertQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-189"></span><span>  </span><span id="local-6989586621690283749"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser InsertQuery
+</span><a href="#local-6989586621690283749"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;insert query&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690283832"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283832"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690283748"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690283748"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-190"></span><span>    </span><span class="annot"><span class="annottext">QualifiedTable
 -&gt; SourceName
 -&gt; Value
@@ -618,33 +618,33 @@ $c== :: InsertQuery -&gt; InsertQuery -&gt; Bool
 </span><a href="Hasura.RQL.DML.Types.html#InsertQuery"><span class="hs-identifier hs-var">InsertQuery</span></a></span><span>
 </span><span id="line-191"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283832"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690283748"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;table&quot;</span></span><span>
 </span><span id="line-192"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283832"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283748"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span>
 </span><span id="line-193"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283832"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690283748"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;objects&quot;</span></span><span>
 </span><span id="line-194"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283832"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283748"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;on_conflict&quot;</span></span><span>
 </span><span id="line-195"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283832"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283748"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;returning&quot;</span></span><span>
 </span><span id="line-196"></span><span>
-</span><span id="line-197"></span><span class="hs-keyword">type</span><span> </span><span id="UpdVals"><span class="annot"><a href="Hasura.RQL.DML.Types.html#UpdVals"><span class="hs-identifier hs-var">UpdVals</span></a></span></span><span> </span><span id="local-6989586621690283831"><span class="annot"><a href="#local-6989586621690283831"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValues"><span class="hs-identifier hs-type">ColumnValues</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690283831"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span>
+</span><span id="line-197"></span><span class="hs-keyword">type</span><span> </span><span id="UpdVals"><span class="annot"><a href="Hasura.RQL.DML.Types.html#UpdVals"><span class="hs-identifier hs-var">UpdVals</span></a></span></span><span> </span><span id="local-6989586621690283747"><span class="annot"><a href="#local-6989586621690283747"><span class="hs-identifier hs-type">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnValues"><span class="hs-identifier hs-type">ColumnValues</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690283747"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span>
 </span><span id="line-198"></span><span>
 </span><span id="line-199"></span><span class="hs-keyword">data</span><span> </span><span id="UpdateQuery"><span class="annot"><a href="Hasura.RQL.DML.Types.html#UpdateQuery"><span class="hs-identifier hs-var">UpdateQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="UpdateQuery"><span class="annot"><a href="Hasura.RQL.DML.Types.html#UpdateQuery"><span class="hs-identifier hs-var">UpdateQuery</span></a></span></span><span>
 </span><span id="line-200"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="uqTable"><span class="annot"><span class="annottext">UpdateQuery -&gt; QualifiedTable
@@ -664,7 +664,7 @@ $c== :: InsertQuery -&gt; InsertQuery -&gt; Bool
 </span><span id="line-207"></span><span>    </span><span id="uqReturning"><span class="annot"><span class="annottext">UpdateQuery -&gt; Maybe [PGCol]
 </span><a href="Hasura.RQL.DML.Types.html#uqReturning"><span class="hs-identifier hs-var hs-var">uqReturning</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-208"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-209"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283802"><span id="local-6989586621690283804"><span id="local-6989586621690283820"><span class="annot"><span class="annottext">Int -&gt; UpdateQuery -&gt; ShowS
+</span><span id="line-209"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283718"><span id="local-6989586621690283720"><span id="local-6989586621690283736"><span class="annot"><span class="annottext">Int -&gt; UpdateQuery -&gt; ShowS
 [UpdateQuery] -&gt; ShowS
 UpdateQuery -&gt; String
 forall a.
@@ -675,7 +675,7 @@ show :: UpdateQuery -&gt; String
 $cshow :: UpdateQuery -&gt; String
 showsPrec :: Int -&gt; UpdateQuery -&gt; ShowS
 $cshowsPrec :: Int -&gt; UpdateQuery -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283778"><span id="local-6989586621690283793"><span class="annot"><span class="annottext">UpdateQuery -&gt; UpdateQuery -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283694"><span id="local-6989586621690283709"><span class="annot"><span class="annottext">UpdateQuery -&gt; UpdateQuery -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: UpdateQuery -&gt; UpdateQuery -&gt; Bool
 $c/= :: UpdateQuery -&gt; UpdateQuery -&gt; Bool
@@ -683,12 +683,12 @@ $c/= :: UpdateQuery -&gt; UpdateQuery -&gt; Bool
 $c== :: UpdateQuery -&gt; UpdateQuery -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-210"></span><span>
-</span><span id="line-211"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283768"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#UpdateQuery"><span class="hs-identifier hs-type">UpdateQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-212"></span><span>  </span><span id="local-6989586621690283721"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser UpdateQuery
-</span><a href="#local-6989586621690283721"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span id="line-211"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283684"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#UpdateQuery"><span class="hs-identifier hs-type">UpdateQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-212"></span><span>  </span><span id="local-6989586621690283637"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser UpdateQuery
+</span><a href="#local-6989586621690283637"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><span class="hs-string">&quot;update query&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690283720"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283720"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span class="hs-string">&quot;update query&quot;</span></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690283636"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690283636"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-213"></span><span>    </span><span class="annot"><span class="annottext">QualifiedTable
 -&gt; SourceName
 -&gt; BoolExp ('Postgres 'Vanilla)
@@ -701,55 +701,55 @@ $c== :: UpdateQuery -&gt; UpdateQuery -&gt; Bool
 </span><a href="Hasura.RQL.DML.Types.html#UpdateQuery"><span class="hs-identifier hs-var">UpdateQuery</span></a></span><span>
 </span><span id="line-214"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283720"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690283636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;table&quot;</span></span><span>
 </span><span id="line-215"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283720"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span>
 </span><span id="line-216"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283720"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690283636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;where&quot;</span></span><span>
 </span><span id="line-217"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283720"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690283636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;$set&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;|&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283720"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;values&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v
 </span><span class="hs-identifier hs-var">M.empty</span></span><span class="hs-special">)</span><span>
 </span><span id="line-218"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283720"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;$inc&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v
 </span><span class="hs-identifier hs-var">M.empty</span></span><span class="hs-special">)</span><span>
 </span><span id="line-219"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283720"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;$mul&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v
 </span><span class="hs-identifier hs-var">M.empty</span></span><span class="hs-special">)</span><span>
 </span><span id="line-220"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283720"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;$default&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-221"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283720"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283636"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;returning&quot;</span></span><span>
 </span><span id="line-222"></span><span>
@@ -763,7 +763,7 @@ $c== :: UpdateQuery -&gt; UpdateQuery -&gt; Bool
 </span><span id="line-227"></span><span>    </span><span id="doReturning"><span class="annot"><span class="annottext">DeleteQuery -&gt; Maybe [PGCol]
 </span><a href="Hasura.RQL.DML.Types.html#doReturning"><span class="hs-identifier hs-var hs-var">doReturning</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.Postgres.SQL.Types.html#PGCol"><span class="hs-identifier hs-type">PGCol</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-comment">-- columns returning</span><span>
 </span><span id="line-228"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-229"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283699"><span id="local-6989586621690283701"><span id="local-6989586621690283711"><span class="annot"><span class="annottext">Int -&gt; DeleteQuery -&gt; ShowS
+</span><span id="line-229"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283615"><span id="local-6989586621690283617"><span id="local-6989586621690283627"><span class="annot"><span class="annottext">Int -&gt; DeleteQuery -&gt; ShowS
 [DeleteQuery] -&gt; ShowS
 DeleteQuery -&gt; String
 forall a.
@@ -774,7 +774,7 @@ show :: DeleteQuery -&gt; String
 $cshow :: DeleteQuery -&gt; String
 showsPrec :: Int -&gt; DeleteQuery -&gt; ShowS
 $cshowsPrec :: Int -&gt; DeleteQuery -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283680"><span id="local-6989586621690283689"><span class="annot"><span class="annottext">DeleteQuery -&gt; DeleteQuery -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283596"><span id="local-6989586621690283605"><span class="annot"><span class="annottext">DeleteQuery -&gt; DeleteQuery -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: DeleteQuery -&gt; DeleteQuery -&gt; Bool
 $c/= :: DeleteQuery -&gt; DeleteQuery -&gt; Bool
@@ -782,13 +782,13 @@ $c/= :: DeleteQuery -&gt; DeleteQuery -&gt; Bool
 $c== :: DeleteQuery -&gt; DeleteQuery -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-230"></span><span>
-</span><span id="line-231"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283669"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#DeleteQuery"><span class="hs-identifier hs-type">DeleteQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-232"></span><span>  </span><span id="local-6989586621690283646"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DeleteQuery
-</span><a href="#local-6989586621690283646"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span id="line-231"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283585"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#DeleteQuery"><span class="hs-identifier hs-type">DeleteQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-232"></span><span>  </span><span id="local-6989586621690283562"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser DeleteQuery
+</span><a href="#local-6989586621690283562"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;delete query&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690283645"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283645"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690283561"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690283561"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-233"></span><span>    </span><span class="annot"><span class="annottext">QualifiedTable
 -&gt; SourceName
 -&gt; BoolExp ('Postgres 'Vanilla)
@@ -797,24 +797,24 @@ $c== :: DeleteQuery -&gt; DeleteQuery -&gt; Bool
 </span><a href="Hasura.RQL.DML.Types.html#DeleteQuery"><span class="hs-identifier hs-var">DeleteQuery</span></a></span><span>
 </span><span id="line-234"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283645"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690283561"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;table&quot;</span></span><span>
 </span><span id="line-235"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283645"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283561"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span>
 </span><span id="line-236"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283645"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690283561"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;where&quot;</span></span><span>
 </span><span id="line-237"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283645"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283561"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;returning&quot;</span></span><span>
 </span><span id="line-238"></span><span>
@@ -828,7 +828,7 @@ $c== :: DeleteQuery -&gt; DeleteQuery -&gt; Bool
 </span><span id="line-243"></span><span>    </span><span id="cqWhere"><span class="annot"><span class="annottext">CountQuery -&gt; Maybe (BoolExp ('Postgres 'Vanilla))
 </span><a href="Hasura.RQL.DML.Types.html#cqWhere"><span class="hs-identifier hs-var hs-var">cqWhere</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.BoolExp.html#BoolExp"><span class="hs-identifier hs-type">BoolExp</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Postgres"><span class="hs-identifier hs-type">Postgres</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#Vanilla"><span class="hs-identifier hs-type">Vanilla</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-244"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-245"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283626"><span id="local-6989586621690283628"><span id="local-6989586621690283638"><span class="annot"><span class="annottext">Int -&gt; CountQuery -&gt; ShowS
+</span><span id="line-245"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283542"><span id="local-6989586621690283544"><span id="local-6989586621690283554"><span class="annot"><span class="annottext">Int -&gt; CountQuery -&gt; ShowS
 [CountQuery] -&gt; ShowS
 CountQuery -&gt; String
 forall a.
@@ -839,7 +839,7 @@ show :: CountQuery -&gt; String
 $cshow :: CountQuery -&gt; String
 showsPrec :: Int -&gt; CountQuery -&gt; ShowS
 $cshowsPrec :: Int -&gt; CountQuery -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283606"><span id="local-6989586621690283615"><span class="annot"><span class="annottext">CountQuery -&gt; CountQuery -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283522"><span id="local-6989586621690283531"><span class="annot"><span class="annottext">CountQuery -&gt; CountQuery -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: CountQuery -&gt; CountQuery -&gt; Bool
 $c/= :: CountQuery -&gt; CountQuery -&gt; Bool
@@ -847,13 +847,13 @@ $c/= :: CountQuery -&gt; CountQuery -&gt; Bool
 $c== :: CountQuery -&gt; CountQuery -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-246"></span><span>
-</span><span id="line-247"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283594"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#CountQuery"><span class="hs-identifier hs-type">CountQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-248"></span><span>  </span><span id="local-6989586621690283571"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CountQuery
-</span><a href="#local-6989586621690283571"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
+</span><span id="line-247"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690283510"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#CountQuery"><span class="hs-identifier hs-type">CountQuery</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-248"></span><span>  </span><span id="local-6989586621690283487"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser CountQuery
+</span><a href="#local-6989586621690283487"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;count query&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690283570"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283570"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690283486"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690283486"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-249"></span><span>    </span><span class="annot"><span class="annottext">QualifiedTable
 -&gt; SourceName
 -&gt; Maybe [PGCol]
@@ -862,24 +862,24 @@ $c== :: CountQuery -&gt; CountQuery -&gt; Bool
 </span><a href="Hasura.RQL.DML.Types.html#CountQuery"><span class="hs-identifier hs-var">CountQuery</span></a></span><span>
 </span><span id="line-250"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283570"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690283486"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;table&quot;</span></span><span>
 </span><span id="line-251"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283570"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283486"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span>
 </span><span id="line-252"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283570"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283486"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;distinct&quot;</span></span><span>
 </span><span id="line-253"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690283570"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690283486"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;where&quot;</span></span><span>
 </span><span id="line-254"></span><span>
@@ -890,7 +890,7 @@ $c== :: CountQuery -&gt; CountQuery -&gt; Bool
 </span><span id="line-259"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QTDelete"><span class="annot"><a href="Hasura.RQL.DML.Types.html#QTDelete"><span class="hs-identifier hs-var">QTDelete</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#DeleteQuery"><span class="hs-identifier hs-type">DeleteQuery</span></a></span><span>
 </span><span id="line-260"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QTCount"><span class="annot"><a href="Hasura.RQL.DML.Types.html#QTCount"><span class="hs-identifier hs-var">QTCount</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DML.Types.html#CountQuery"><span class="hs-identifier hs-type">CountQuery</span></a></span><span>
 </span><span id="line-261"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="QTBulk"><span class="annot"><a href="Hasura.RQL.DML.Types.html#QTBulk"><span class="hs-identifier hs-var">QTBulk</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.DML.Types.html#QueryT"><span class="hs-identifier hs-type">QueryT</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-262"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283544"><span id="local-6989586621690283546"><span id="local-6989586621690283562"><span class="annot"><span class="annottext">Int -&gt; QueryT -&gt; ShowS
+</span><span id="line-262"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690283460"><span id="local-6989586621690283462"><span id="local-6989586621690283478"><span class="annot"><span class="annottext">Int -&gt; QueryT -&gt; ShowS
 [QueryT] -&gt; ShowS
 QueryT -&gt; String
 forall a.
@@ -901,7 +901,7 @@ show :: QueryT -&gt; String
 $cshow :: QueryT -&gt; String
 showsPrec :: Int -&gt; QueryT -&gt; ShowS
 $cshowsPrec :: Int -&gt; QueryT -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283521"><span id="local-6989586621690283531"><span class="annot"><span class="annottext">QueryT -&gt; QueryT -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690283437"><span id="local-6989586621690283447"><span class="annot"><span class="annottext">QueryT -&gt; QueryT -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: QueryT -&gt; QueryT -&gt; Bool
 $c/= :: QueryT -&gt; QueryT -&gt; Bool
@@ -909,7 +909,7 @@ $c/= :: QueryT -&gt; QueryT -&gt; Bool
 $c== :: QueryT -&gt; QueryT -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-263"></span><span>
-</span><span id="line-264"></span><span class="hs-special">$</span><span id="local-6989586621690283470"><span id="local-6989586621690283508"><span class="hs-special">(</span><span> </span><span class="hs-identifier">deriveFromJSON</span><span>
+</span><span id="line-264"></span><span class="hs-special">$</span><span id="local-6989586621690283386"><span id="local-6989586621690283424"><span class="hs-special">(</span><span> </span><span class="hs-identifier">deriveFromJSON</span><span>
 </span><span id="line-265"></span><span>     </span><span class="hs-identifier">defaultOptions</span><span>
 </span><span id="line-266"></span><span>       </span><span class="hs-special">{</span><span> </span><span class="hs-identifier">constructorTagModifier</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">snakeCase</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">drop</span><span> </span><span class="hs-number">2</span><span class="hs-special">,</span><span>
 </span><span id="line-267"></span><span>         </span><span class="hs-identifier">sumEncoding</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier">TaggedObject</span><span> </span><span class="hs-string">&quot;type&quot;</span><span> </span><span class="hs-string">&quot;args&quot;</span><span>

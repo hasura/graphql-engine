@@ -35,7 +35,7 @@
 </span><span id="line-35"></span><span>
 </span><span id="line-36"></span><span class="hs-keyword">newtype</span><span> </span><span id="WsHeaders"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WsHeaders"><span class="hs-identifier hs-var">WsHeaders</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="WsHeaders"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WsHeaders"><span class="hs-identifier hs-var">WsHeaders</span></a></span></span><span> </span><span class="hs-special">{</span><span id="unWsHeaders"><span class="annot"><span class="annottext">WsHeaders -&gt; [Header]
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#unWsHeaders"><span class="hs-identifier hs-var hs-var">unWsHeaders</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">HTTP.Header</span></span><span class="hs-special">]</span><span class="hs-special">}</span><span>
-</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690559890"><span id="local-6989586621690559892"><span id="local-6989586621690559899"><span class="annot"><span class="annottext">Int -&gt; WsHeaders -&gt; ShowS
+</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690559804"><span id="local-6989586621690559806"><span id="local-6989586621690559813"><span class="annot"><span class="annottext">Int -&gt; WsHeaders -&gt; ShowS
 [WsHeaders] -&gt; ShowS
 WsHeaders -&gt; String
 forall a.
@@ -46,7 +46,7 @@ show :: WsHeaders -&gt; String
 $cshow :: WsHeaders -&gt; String
 showsPrec :: Int -&gt; WsHeaders -&gt; ShowS
 $cshowsPrec :: Int -&gt; WsHeaders -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690559875"><span id="local-6989586621690559881"><span class="annot"><span class="annottext">WsHeaders -&gt; WsHeaders -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690559789"><span id="local-6989586621690559795"><span class="annot"><span class="annottext">WsHeaders -&gt; WsHeaders -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: WsHeaders -&gt; WsHeaders -&gt; Bool
 $c/= :: WsHeaders -&gt; WsHeaders -&gt; Bool
@@ -57,7 +57,7 @@ $c== :: WsHeaders -&gt; WsHeaders -&gt; Bool
 </span><span id="line-39"></span><span class="hs-keyword">data</span><span> </span><span id="ErrRespType"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#ErrRespType"><span class="hs-identifier hs-var">ErrRespType</span></a></span></span><span>
 </span><span id="line-40"></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="ERTLegacy"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#ERTLegacy"><span class="hs-identifier hs-var">ERTLegacy</span></a></span></span><span>
 </span><span id="line-41"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="ERTGraphqlCompliant"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#ERTGraphqlCompliant"><span class="hs-identifier hs-var">ERTGraphqlCompliant</span></a></span></span><span>
-</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690559855"><span id="local-6989586621690559857"><span id="local-6989586621690559859"><span class="annot"><span class="annottext">Int -&gt; ErrRespType -&gt; ShowS
+</span><span id="line-42"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690559769"><span id="local-6989586621690559771"><span id="local-6989586621690559773"><span class="annot"><span class="annottext">Int -&gt; ErrRespType -&gt; ShowS
 [ErrRespType] -&gt; ShowS
 ErrRespType -&gt; String
 forall a.
@@ -75,7 +75,7 @@ $cshowsPrec :: Int -&gt; ErrRespType -&gt; ShowS
 </span><span id="line-46"></span><span>    </span><span id="CSNotInitialised"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#CSNotInitialised"><span class="hs-identifier hs-var">CSNotInitialised</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WsHeaders"><span class="hs-identifier hs-type">WsHeaders</span></a></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CSInitError"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#CSInitError"><span class="hs-identifier hs-var">CSInitError</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
 </span><span id="line-48"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="CSInitialised"><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#CSInitialised"><span class="hs-identifier hs-var">CSInitialised</span></a></span></span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#WsClientState"><span class="hs-identifier hs-type">WsClientState</span></a></span><span>
-</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690559840"><span id="local-6989586621690559842"><span id="local-6989586621690559853"><span class="annot"><span class="annottext">Int -&gt; WSConnState -&gt; ShowS
+</span><span id="line-49"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690559754"><span id="local-6989586621690559756"><span id="local-6989586621690559767"><span class="annot"><span class="annottext">Int -&gt; WSConnState -&gt; ShowS
 [WSConnState] -&gt; ShowS
 WSConnState -&gt; String
 forall a.
@@ -102,7 +102,7 @@ $cshowsPrec :: Int -&gt; WSConnState -&gt; ShowS
 </span><span id="line-59"></span><span>    </span><span id="wscsIpAddress"><span class="annot"><span class="annottext">WsClientState -&gt; IpAddress
 </span><a href="Hasura.GraphQL.Transport.WebSocket.Types.html#wscsIpAddress"><span class="hs-identifier hs-var hs-var">wscsIpAddress</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Network.Wai.Extended.html#IpAddress"><span class="hs-identifier hs-type">Wai.IpAddress</span></a></span><span>
 </span><span id="line-60"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-61"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690559825"><span id="local-6989586621690559827"><span id="local-6989586621690559838"><span class="annot"><span class="annottext">Int -&gt; WsClientState -&gt; ShowS
+</span><span id="line-61"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690559739"><span id="local-6989586621690559741"><span id="local-6989586621690559752"><span class="annot"><span class="annottext">Int -&gt; WsClientState -&gt; ShowS
 [WsClientState] -&gt; ShowS
 WsClientState -&gt; String
 forall a.
