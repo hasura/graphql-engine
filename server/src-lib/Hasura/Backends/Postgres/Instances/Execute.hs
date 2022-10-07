@@ -158,7 +158,7 @@ pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection = do
       withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
   let action =
         liftTx $
-          PG.listQE dmlTxErrorHandler (PG.fromText withExplain) () True <&> \planList ->
+          PG.withQE dmlTxErrorHandler (PG.fromText withExplain) () True <&> \planList ->
             encJFromJValue $ ExplainPlan fieldName (Just textSQL) (Just $ map runIdentity planList)
   pure $
     AB.mkAnyBackend $

@@ -528,7 +528,7 @@ mkInvocation eventId status reqHeaders respBody respHeaders reqBodyJson =
 getDeprivedCronTriggerStatsTx :: [TriggerName] -> PG.TxE QErr [CronTriggerStats]
 getDeprivedCronTriggerStatsTx cronTriggerNames =
   map (\(n, count, maxTx) -> CronTriggerStats n count maxTx)
-    <$> PG.listQE
+    <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
       SELECT t.trigger_name, coalesce(q.upcoming_events_count, 0), coalesce(q.max_scheduled_time, now())
@@ -561,7 +561,7 @@ getScheduledEventsForDeliveryTx =
     getCronEventsForDelivery :: PG.TxE QErr [CronEvent]
     getCronEventsForDelivery =
       map (PG.getViaJSON . runIdentity)
-        <$> PG.listQE
+        <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
         WITH cte AS
@@ -587,7 +587,7 @@ getScheduledEventsForDeliveryTx =
     getOneOffEventsForDelivery :: PG.TxE QErr [OneOffScheduledEvent]
     getOneOffEventsForDelivery = do
       map (PG.getViaJSON . runIdentity)
-        <$> PG.listQE
+        <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
          WITH cte AS (

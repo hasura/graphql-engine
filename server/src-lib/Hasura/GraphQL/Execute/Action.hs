@@ -706,7 +706,7 @@ insertActionTx actionName sessionVariables httpHeaders inputArgsPayload =
 fetchUndeliveredActionEventsTx :: PG.TxE QErr [ActionLogItem]
 fetchUndeliveredActionEventsTx =
   map mapEvent
-    <$> PG.listQE
+    <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
     update hdb_catalog.hdb_action_log set status = 'processing'

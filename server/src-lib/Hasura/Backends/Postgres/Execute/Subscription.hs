@@ -299,4 +299,4 @@ executeQuery ::
 executeQuery query cohorts =
   let (cohortIds, cohortVars) = unzip cohorts
       preparedArgs = (CohortIdArray cohortIds, CohortVariablesArray cohortVars)
-   in liftTx $ PG.listQE defaultTxErrorHandler query preparedArgs True
+   in liftTx $ PG.withQE defaultTxErrorHandler query preparedArgs True
