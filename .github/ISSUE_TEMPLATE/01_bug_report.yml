@@ -1,0 +1,90 @@
+name: "🐜 Bug report"
+description: "If something isn't working 🔧"
+title: "[Bug]: "
+labels: ["k/bug"]
+body:
+  - type: input
+    id: server-version
+    attributes:
+      label: "Server Version"
+    validations:
+      required: true
+  - type: input
+    id: cli-version
+    attributes:
+      label: "CLI Version"
+      description: "for CLI related issue"
+    validations:
+      required: false
+  - type: dropdown
+    id: environment
+    attributes:
+      label: "Environment"
+      description: "Provide a clear description of what is the current behaviour."
+      options:
+        - Cloud
+        - OSS
+        - EE
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behaviour
+    attributes:
+      label: "What is the expected behaviour?"
+      description: "Provide a clear description of what you want to happen."
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: "How to reproduce the issue?"
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: "Screenshots or Screencast"
+      description: "Providing relevant Screenshots/ Screencasts would help us to debug the issue quickly."
+    validations:
+      required: false
+  - type: textarea
+    id: trace
+    attributes:
+      label: "Please provide any traces or logs that could help here."
+      description: "Provide your answer here."
+    validations:
+      required: false
+  - type: textarea
+    id: solution
+    attributes:
+      label: "Any possible solutions?"
+      description: "Provide your answer here."
+    validations:
+      required: false
+  - type: textarea
+    id: problem-location
+    attributes:
+      label: "Can you identify the location in the source code where the problem exists?"
+      description: "Provide your answer here."
+    validations:
+      required: false
+  - type: textarea
+    id: pr
+    attributes:
+      label: "If the bug is confirmed, would you be willing to submit a PR?"
+      description: "Provide your answer here."
+    validations:
+      required: false
+  - type: textarea
+    id: keyword
+    attributes:
+      label: Keywords
+      description: |
+        What keywords did you use when trying to find an existing bug report?
+        List them here so people in the future can find this one more easily.
+    validations:
+      required: false
