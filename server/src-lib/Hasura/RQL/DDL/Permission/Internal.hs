@@ -57,7 +57,7 @@ assertPermDefined ::
   TableInfo backend ->
   m ()
 assertPermDefined role pt tableInfo =
-  unless (maybe False (permissionIsDefined pt) rpi) $
+  unless (any (permissionIsDefined pt) rpi) $
     throw400 PermissionDenied $
       "'" <> tshow pt <> "'"
         <> " permission on "

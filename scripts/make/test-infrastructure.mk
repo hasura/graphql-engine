@@ -1,5 +1,5 @@
 # the following variables are set up in Docker Compose
-# and are also defined in Harness.Constants for use in hspec tests
+# and are also defined in Harness.Constants for use in api tests
 PG_PORT = 65002
 PG_DBNAME = hasura
 PG_DBUSER = hasura
@@ -155,5 +155,4 @@ stop-everything:
 
 .PHONY: remove-tix-file
 remove-tix-file:
-	@ rm -f tests-hspec.tix
-	@ rm -f graphql-engine-tests.tix
+	@ find . -name '*.tix' -delete

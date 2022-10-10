@@ -24,6 +24,16 @@ package graphql-engine
   executable-dynamic: True
   library-vanilla: False
 
+package test-harness
+  ghc-options: -Werror -j
+  executable-dynamic: True
+  library-vanilla: False
+
+package api-tests
+  ghc-options: -Werror -j
+  executable-dynamic: True
+  library-vanilla: False
+
 -- %%%-BEGIN-PRO-ONLY-CONTENT-%%%
 
 package graphql-engine-pro

@@ -5,9 +5,12 @@ import { envToBool } from "./util"
 export const capabilitiesResponse: CapabilitiesResponse = {
   config_schemas: configSchema,
   capabilities: {
-    queries: {
-      supports_primary_keys: true
+    data_schema: {
+      supports_primary_keys: true,
+      supports_foreign_keys: true,
+      column_nullability: "nullable_and_non_nullable",
     },
+    queries: {},
     relationships: {},
     comparisons: {
       subquery: {

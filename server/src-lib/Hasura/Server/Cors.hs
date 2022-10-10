@@ -104,7 +104,7 @@ mkDefaultCorsPolicy cfg =
 
 inWildcardList :: Domains -> Text -> Bool
 inWildcardList (Domains _ wildcards) origin =
-  either (const False) (`Set.member` wildcards) $ parseOrigin origin
+  any (`Set.member` wildcards) $ parseOrigin origin
 
 -- | Parsers for wildcard domains
 runParser :: AT.Parser a -> Text -> Either String a

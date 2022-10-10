@@ -173,9 +173,9 @@ data TablePermissionInputs b = TablePermissionInputs
   }
   deriving (Generic)
 
-deriving instance (Backend b, Show (TableName b)) => Show (TablePermissionInputs b)
+deriving instance (Backend b) => Show (TablePermissionInputs b)
 
-deriving instance (Backend b, Eq (TableName b)) => Eq (TablePermissionInputs b)
+deriving instance (Backend b) => Eq (TablePermissionInputs b)
 
 instance (Backend b) => Inc.Cacheable (TablePermissionInputs b)
 

@@ -13,7 +13,7 @@ const MigrationCheckbox = ({
   onChange,
   isCLIMode,
 }: MigrationCheckboxProps) =>
-  isCLIMode && (
+  isCLIMode ? (
     <div className="flex items-center">
       <label className="text-sm">
         <input
@@ -30,6 +30,6 @@ const MigrationCheckbox = ({
         />
       </label>
     </div>
-  );
+  ) : null;
 
 export default MigrationCheckbox;

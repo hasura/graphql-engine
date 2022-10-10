@@ -291,8 +291,8 @@ streamingSubscriptionPollingSpec srcConfig = do
 
         -- Checking below that the newly added subscriber is not added in the updated cohort
         cohortKey2CohortSnapshot <- STM.atomically $ traverse getStaticCohortSnapshot cohortKey2Cohort
-        _cssNewSubscribers <$> cohortKey2CohortSnapshot `shouldSatisfy` maybe True (notElem temporarySubscriberId)
-        _cssExistingSubscribers <$> cohortKey2CohortSnapshot `shouldSatisfy` maybe True (notElem temporarySubscriberId)
+        _cssNewSubscribers <$> cohortKey2CohortSnapshot `shouldSatisfy` all (notElem temporarySubscriberId)
+        _cssExistingSubscribers <$> cohortKey2CohortSnapshot `shouldSatisfy` all (notElem temporarySubscriberId)
         STM.atomically $
           TMap.delete temporarySubscriberId (_cNewSubscribers cohort1)
 

@@ -221,8 +221,7 @@ deriving instance
 
 deriving instance
   ( Backend b,
-    Eq (IR.SourceRelationshipSelection b Void IR.UnpreparedValue),
-    Eq (SourceConfig b)
+    Eq (IR.SourceRelationshipSelection b Void IR.UnpreparedValue)
   ) =>
   Eq (RemoteSourceJoin b)
 

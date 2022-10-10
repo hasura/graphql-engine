@@ -40,7 +40,7 @@
 -- We could iterate over @postIds@ in Haskell, executing the same prepared query 10 times:
 --
 -- > for postIds $ \postId ->
--- >   PG.listQE defaultTxErrorHandler preparedQuery (Identity postId) True
+-- >   PG.withQE defaultTxErrorHandler preparedQuery (Identity postId) True
 --
 -- Sadly, that on its own isn’t good enough. The overhead of running each query is large enough that
 -- Postgres becomes overwhelmed if we have to serve lots of concurrent subscribers. Therefore, what we

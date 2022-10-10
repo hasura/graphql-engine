@@ -2,6 +2,7 @@
 -- intrsospection schema.
 module Hasura.GraphQL.Parser.Schema.Convert
   ( convertToSchemaIntrospection,
+    convertType,
   )
 where
 

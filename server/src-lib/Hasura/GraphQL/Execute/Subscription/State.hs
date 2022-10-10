@@ -193,7 +193,7 @@ addLiveQuery
 
     -- we can then attach a polling thread if it is new the livequery can only be
     -- cancelled after putTMVar
-    onJust pollerMaybe $ \poller -> do
+    for_ pollerMaybe $ \poller -> do
       pollerId <- PollerId <$> UUID.nextRandom
       threadRef <- forkImmortal ("pollLiveQuery." <> show pollerId) logger $
         forever $ do
@@ -283,7 +283,7 @@ addStreamSubscriptionQuery
 
     -- we can then attach a polling thread if it is new the subscription can only be
     -- cancelled after putTMVar
-    onJust handlerM $ \handler -> do
+    for_ handlerM $ \handler -> do
       pollerId <- PollerId <$> UUID.nextRandom
       threadRef <- forkImmortal ("pollStreamingQuery." <> show (unPollerId pollerId)) logger $
         forever $ do

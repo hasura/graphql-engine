@@ -13,6 +13,14 @@ export const zip = <T, U>(arr1: T[], arr2: U[]): [T, U][] => {
   return newArray;
 };
 
+export const mapObject = <T, U>(obj: Record<string, T>, fn: (entry: [string, T]) => [string, U]): Record<string, U> => {
+  return Object.fromEntries(Object.entries(obj).map(fn));
+}
+
+export const mapObjectValues = <T, U>(obj: Record<string, T>, fn: (value: T, propertyName: string) => U): Record<string, U> => {
+  return Object.fromEntries(Object.entries(obj).map(([prop, val]) => [prop, fn(val, prop)]));
+}
+
 export function* mapIterable<T, U>(iterable: Iterable<T>, fn: (item: T) => U) {
   for (const x of iterable) {
     yield fn(x);

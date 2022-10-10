@@ -245,7 +245,7 @@ parseConnParams =
 pgStripesOption :: Config.Option (Refined NonNegative Int)
 pgStripesOption =
   Config.Option
-    { _default = $$(refineTH 1),
+    { _default = $$(refineTH @NonNegative @Int 1),
       _envVar = "HASURA_GRAPHQL_PG_STRIPES",
       _helpMessage =
         "Number of stripes (distinct sub-pools) to maintain with Postgres (default: 1). "
@@ -255,7 +255,7 @@ pgStripesOption =
 pgConnsOption :: Config.Option (Refined NonNegative Int)
 pgConnsOption =
   Config.Option
-    { _default = $$(refineTH 50),
+    { _default = $$(refineTH @NonNegative @Int 50),
       _envVar = "HASURA_GRAPHQL_PG_CONNECTIONS",
       _helpMessage =
         "Maximum number of Postgres connections that can be opened per stripe (default: 50). "
@@ -266,7 +266,7 @@ pgConnsOption =
 pgTimeoutOption :: Config.Option (Refined NonNegative Int)
 pgTimeoutOption =
   Config.Option
-    { _default = $$(refineTH 180),
+    { _default = $$(refineTH @NonNegative @Int 180),
       _envVar = "HASURA_GRAPHQL_PG_TIMEOUT",
       _helpMessage = "Each connection's idle time before it is closed (default: 180 sec)"
     }
@@ -274,7 +274,7 @@ pgTimeoutOption =
 pgConnLifetimeOption :: Config.Option (Refined NonNegative Time.NominalDiffTime)
 pgConnLifetimeOption =
   Config.Option
-    { _default = $$(refineTH 600),
+    { _default = $$(refineTH @NonNegative @Time.NominalDiffTime 600),
       _envVar = "HASURA_GRAPHQL_PG_CONN_LIFETIME",
       _helpMessage =
         "Time from connection creation after which the connection should be destroyed and a new one "
@@ -812,7 +812,7 @@ parseGraphqlEventsHttpPoolSize =
 graphqlEventsHttpPoolSizeOption :: Config.Option (Refined Positive Int)
 graphqlEventsHttpPoolSizeOption =
   Config.Option
-    { Config._default = $$(refineTH 100),
+    { Config._default = $$(refineTH @Positive @Int 100),
       Config._envVar = "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE",
       Config._helpMessage = "Max event processing threads (default: 100)"
     }
@@ -830,7 +830,7 @@ parseGraphqlEventsFetchInterval =
 graphqlEventsFetchIntervalOption :: Config.Option (Refined NonNegative Milliseconds)
 graphqlEventsFetchIntervalOption =
   Config.Option
-    { Config._default = $$(refineTH 1000),
+    { Config._default = $$(refineTH @NonNegative @Milliseconds 1000),
       Config._envVar = "HASURA_GRAPHQL_EVENTS_FETCH_INTERVAL",
       Config._helpMessage = "Interval in milliseconds to sleep before trying to fetch events again after a fetch returned no events from postgres (default: 1 second)."
     }
@@ -994,7 +994,7 @@ parseEventsFetchBatchSize =
 eventsFetchBatchSizeOption :: Config.Option (Refined NonNegative Int)
 eventsFetchBatchSizeOption =
   Config.Option
-    { Config._default = $$(refineTH 100),
+    { Config._default = $$(refineTH @NonNegative @Int 100),
       Config._envVar = "HASURA_GRAPHQL_EVENTS_FETCH_BATCH_SIZE",
       Config._helpMessage =
         "The maximum number of events to be fetched from the events table in a single batch. Default 100"
@@ -1014,7 +1014,7 @@ parseGracefulShutdownTimeout =
 gracefulShutdownOption :: Config.Option (Refined NonNegative Seconds)
 gracefulShutdownOption =
   Config.Option
-    { Config._default = $$(refineTH 60),
+    { Config._default = $$(refineTH @NonNegative @Seconds 60),
       Config._envVar = "HASURA_GRAPHQL_GRACEFUL_SHUTDOWN_TIMEOUT",
       Config._helpMessage =
         "Timeout for graceful shutdown before which in-flight scheduled events, "

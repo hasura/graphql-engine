@@ -278,7 +278,7 @@ getFinalRecordSet recordSet =
           fmap
             ( OMap.filterWithKey
                 ( \(FieldNameText k) _ ->
-                    maybe True (elem k) (wantedFields recordSet)
+                    all (elem k) (wantedFields recordSet)
                 )
             )
             (rows recordSet)

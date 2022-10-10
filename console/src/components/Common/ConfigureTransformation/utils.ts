@@ -2,6 +2,7 @@ import {
   RequestTransform,
   RequestTransformBody,
   RequestTransformMethod,
+  ResponseTranform,
 } from '@/metadata/types';
 import { getLSItem, setLSItem, LS_KEYS } from '@/utils/localStorage';
 import {
@@ -10,6 +11,7 @@ import {
   KeyValuePair,
   RequestTransformState,
   RequestTransformStateBody,
+  ResponseTransformState,
 } from './stateDefaults';
 import { isEmpty, isJsonString } from '../utils/jsUtils';
 import { Nullable } from '../utils/tsUtils';
@@ -173,6 +175,14 @@ export const getRequestTransformObject = (
 
   return obj;
 };
+
+export const getResponseTransformObject = (
+  transformState: ResponseTransformState
+): ResponseTranform => ({
+  version: 2,
+  body: getTransformBodyServer(transformState.requestBody),
+  template_engine: transformState.templatingEngine,
+});
 
 const getErrorFromCode = (data: Record<string, any>) => {
   const errorCode = data.code ? data.code : '';

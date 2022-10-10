@@ -16,6 +16,7 @@ const state = {
   forwardClientHeaders: false,
   timeout: '',
   comment: '',
+  response_transfrom: {},
 };
 
 export default state;

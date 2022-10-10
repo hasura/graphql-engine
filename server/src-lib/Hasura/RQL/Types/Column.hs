@@ -125,9 +125,9 @@ data ColumnValue (b :: BackendType) = ColumnValue
     cvValue :: ScalarValue b
   }
 
-deriving instance (Backend b, Eq (ScalarValue b)) => Eq (ColumnValue b)
+deriving instance (Backend b) => Eq (ColumnValue b)
 
-deriving instance (Backend b, Show (ScalarValue b)) => Show (ColumnValue b)
+deriving instance (Backend b) => Show (ColumnValue b)
 
 isScalarColumnWhere :: (ScalarType b -> Bool) -> ColumnType b -> Bool
 isScalarColumnWhere f = \case
@@ -153,7 +153,7 @@ parseScalarValueColumnType columnType value = case columnType of
     where
       parseEnumValue :: Maybe G.Name -> m (ScalarValue b)
       parseEnumValue enumValueName = do
-        onJust enumValueName \evn -> do
+        for_ enumValueName \evn -> do
           let enums = map getEnumValue $ M.keys enumValues
           unless (evn `elem` enums) $
             throw400 UnexpectedPayload $

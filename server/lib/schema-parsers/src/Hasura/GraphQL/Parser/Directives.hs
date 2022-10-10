@@ -46,8 +46,9 @@ import Hasura.GraphQL.Parser.Internal.Scalars
 import Hasura.GraphQL.Parser.Schema
 import Hasura.GraphQL.Parser.Variable
 import Language.GraphQL.Draft.Syntax qualified as G
-import Type.Reflection (Typeable, typeRep, (:~:) (..))
+import Type.Reflection (Typeable, typeRep, (:~:) (Refl))
 import Witherable (catMaybes)
+import Prelude
 
 -- Disable custom prelude warnings in preparation for extracting this module into a separate package.
 {-# ANN module ("HLint: ignore Use onNothing" :: String) #-}
@@ -101,7 +102,7 @@ customDirectives = [cachedDirective @m, multipleRootFieldsDirective @m]
 -- Example use:
 --
 --     dMap <- parseDirectives customDirectives (DLExecutable EDLQUERY) directives
---     withDirective dMap cached $ onJust \_ -> tagAsCached
+--     withDirective dMap cached $ for_ \_ -> tagAsCached
 parseDirectives ::
   forall origin m.
   MonadParse m =>

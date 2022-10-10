@@ -25,6 +25,8 @@ module Hasura.Backends.Postgres.SQL.Types
     isGeoType,
     IsIdentifier (..),
     Identifier (..),
+    ColumnIdentifier (..),
+    TableIdentifier (..),
     SchemaName (..),
     publicSchema,
     hdbCatalogSchema,
@@ -49,6 +51,8 @@ module Hasura.Backends.Postgres.SQL.Types
     PGRawFunctionInfo (..),
     mkScalarTypeName,
     pgTypeOid,
+    tableIdentifierToIdentifier,
+    identifierToTableIdentifier,
   )
 where
 
@@ -92,6 +96,32 @@ class IsIdentifier a where
 
 instance IsIdentifier Identifier where
   toIdentifier = id
+
+-- | The type of identifiers representing tabular values
+newtype TableIdentifier = TableIdentifier {unTableIdentifier :: Text}
+  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
+
+-- | Temporary conversion function, to be removed once 'Identifier' has been
+-- entirely split into 'TableIdentifier' and 'ColumnIdentifier'.
+tableIdentifierToIdentifier :: TableIdentifier -> Identifier
+tableIdentifierToIdentifier = Identifier . unTableIdentifier
+
+-- | Temporary conversion function, to be removed once 'Identifier' has been
+-- entirely split into 'TableIdentifier' and 'ColumnIdentifier'.
+identifierToTableIdentifier :: Identifier -> TableIdentifier
+identifierToTableIdentifier = TableIdentifier . getIdenTxt
+
+instance ToSQL TableIdentifier where
+  toSQL (TableIdentifier t) =
+    TB.text $ pgFmtIdentifier t
+
+-- | The type of identifiers representing scalar values
+newtype ColumnIdentifier = ColumnIdentifier {unColumnIdentifier :: Text}
+  deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
+
+instance ToSQL ColumnIdentifier where
+  toSQL (ColumnIdentifier t) =
+    TB.text $ pgFmtIdentifier t
 
 pgFmtIdentifier :: Text -> Text
 pgFmtIdentifier x =

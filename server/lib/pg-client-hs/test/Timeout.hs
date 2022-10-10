@@ -1,6 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# OPTIONS_GHC -fno-warn-incomplete-uni-patterns #-}
 
 module Timeout (specTimeout) where
 
@@ -121,8 +120,7 @@ initDB = do
 
 countRows :: PGPool -> IO Int
 countRows pool = do
-  res <- runExceptT $ runIdentity . getRow <$> runTx pool mode tx
-  let Right count = res
+  Right count <- runExceptT $ runIdentity . getRow <$> runTx pool mode tx
   return count
   where
     query = "SELECT count(*) FROM test_timeout"

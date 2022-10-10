@@ -320,7 +320,7 @@ instance (Backend b) => FromJSON (SetFunctionCustomization b) where
 -- | Changes the custom names of a function. Used in the API command 'pg_set_function_customization'.
 runSetFunctionCustomization ::
   forall b m.
-  (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b) =>
+  (QErrM m, CacheRWM m, MetadataM m, Backend b) =>
   SetFunctionCustomization b ->
   m EncJSON
 runSetFunctionCustomization (SetFunctionCustomization source function config) = do

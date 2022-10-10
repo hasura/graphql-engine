@@ -48,3 +48,21 @@ package graphql-engine
   executable-dynamic: True
   library-vanilla: False
 
+package test-harness
+  documentation: false
+  coverage: true
+  ghc-options: -Werror
+  ghc-options: -j
+  -- See "package graphql-engine" for more information
+  executable-dynamic: True
+  library-vanilla: False
+
+package api-tests
+  documentation: false
+  coverage: true
+  ghc-options: -Werror
+  ghc-options: -j
+  -- See "package graphql-engine" for more information
+  executable-dynamic: True
+  library-vanilla: False
+

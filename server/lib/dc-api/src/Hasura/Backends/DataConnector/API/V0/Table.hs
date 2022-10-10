@@ -13,6 +13,8 @@ module Hasura.Backends.DataConnector.API.V0.Table
     ForeignKeys (..),
     ConstraintName (..),
     Constraint (..),
+    cForeignTable,
+    cColumnMapping,
   )
 where
 
@@ -55,8 +57,8 @@ instance HasCodec TableName where
 data TableInfo = TableInfo
   { _tiName :: TableName,
     _tiColumns :: [API.V0.ColumnInfo],
-    _tiPrimaryKey :: Maybe [API.V0.ColumnName],
-    _tiForeignKeys :: Maybe ForeignKeys,
+    _tiPrimaryKey :: [API.V0.ColumnName],
+    _tiForeignKeys :: ForeignKeys,
     _tiDescription :: Maybe Text
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -69,19 +71,19 @@ instance HasCodec TableInfo where
       TableInfo
         <$> requiredField "name" "The name of the table" .= _tiName
         <*> requiredField "columns" "The columns of the table" .= _tiColumns
-        <*> optionalFieldOrNull "primary_key" "The primary key of the table" .= _tiPrimaryKey
-        <*> optionalFieldOrNull "foreign_keys" "Foreign key constraints" .= _tiForeignKeys
+        <*> optionalFieldWithOmittedDefault "primary_key" [] "The primary key of the table" .= _tiPrimaryKey
+        <*> optionalFieldWithOmittedDefault "foreign_keys" (ForeignKeys mempty) "Foreign key constraints" .= _tiForeignKeys
         <*> optionalFieldOrNull "description" "Description of the table" .= _tiDescription
 
 --------------------------------------------------------------------------------
 
-newtype ForeignKeys = ForeignKeys {unConstraints :: HashMap ConstraintName Constraint}
+newtype ForeignKeys = ForeignKeys {unForeignKeys :: HashMap ConstraintName Constraint}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON) via Autodocodec ForeignKeys
 
 instance HasCodec ForeignKeys where
-  codec = dimapCodec ForeignKeys unConstraints $ codec @(HashMap ConstraintName Constraint)
+  codec = dimapCodec ForeignKeys unForeignKeys $ codec @(HashMap ConstraintName Constraint)
 
 newtype ConstraintName = ConstraintName {unConstraintName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -90,7 +92,7 @@ newtype ConstraintName = ConstraintName {unConstraintName :: Text}
 
 data Constraint = Constraint
   { _cForeignTable :: TableName,
-    _cColumnMapping :: HashMap Text Text
+    _cColumnMapping :: HashMap API.V0.ColumnName API.V0.ColumnName
   }
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
@@ -104,3 +106,4 @@ instance HasCodec Constraint where
         <*> requiredField "column_mapping" "The columns on which you want want to define the foreign key." .= _cColumnMapping
 
 $(makeLenses ''TableInfo)
+$(makeLenses ''Constraint)

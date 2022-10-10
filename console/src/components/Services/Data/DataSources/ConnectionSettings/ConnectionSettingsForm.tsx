@@ -4,7 +4,6 @@ import { buildFormSettings } from './buildFormSettings';
 import {
   FormContainer,
   ConnectionLifetime,
-  CumulativeMaxConnections,
   IdleTimeout,
   IsolationLevel,
   MaxConnections,
@@ -32,9 +31,9 @@ const ConnectionSettingsForm: React.FC<ConnectionSettingsFormProps> = props => {
   return (
     <FormContainer>
       <MaxConnections {...props} />
-      {formSettings.cumulativeMaxConnections && (
+      {/* {formSettings.cumulativeMaxConnections && (
         <CumulativeMaxConnections {...props} />
-      )}
+      )} */}
       <IdleTimeout {...props} />
       {formSettings.retries && <Retries {...props} />}
       {formSettings.pool_timeout && <PoolTimeout {...props} />}

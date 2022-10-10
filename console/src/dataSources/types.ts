@@ -189,6 +189,7 @@ export type CustomRootFields = {
   update_by_pk?: Nullable<string> | CustomRootField;
   delete?: Nullable<string> | CustomRootField;
   delete_by_pk?: Nullable<string> | CustomRootField;
+  update_many?: Nullable<string> | CustomRootField;
 };
 
 export type CustomRootField = {

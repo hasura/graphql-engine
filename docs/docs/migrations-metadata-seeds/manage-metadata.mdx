@@ -16,7 +16,7 @@ import Thumbnail from '@site/src/components/Thumbnail';
 ## Introduction
 
 We call the Hasura Server configuration the Metadata. All changes made to the Hasura instance via the Console or via the
-API such as tracking tables / views / functions, creating relationships, configuring permissions, creating event
+API such as tracking tables / views / custom functions, creating relationships, configuring permissions, creating event
 triggers and remote schemas, etc. are tracked by Hasura using the Metadata Catalogue and their state can be exported as
 YAML or JSON Metadata files.
 
@@ -215,7 +215,7 @@ is set, add `-H 'X-Hasura-Admin-Secret: [your-admin-secret]'` as the API is an a
 
 :::info Note
 
-All the dependent objects, like tables, views, functions etc. should exist on the database before importing the
+All the dependent objects, like tables, views, custom functions etc. should exist on the database before importing the
 Metadata. Otherwise, it will result in an error saying the object does not exist. So,
 [apply the database Migration](/migrations-metadata-seeds/manage-migrations.mdx#apply-migrations) schema first, before
 apply the Metadata.

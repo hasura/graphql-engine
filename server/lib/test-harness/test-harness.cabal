@@ -1,0 +1,107 @@
+cabal-version: 2.2
+name: test-harness
+version: 0.1.0.0
+
+library
+  build-depends:
+    , Spock-core
+    , aeson
+    , aeson-pretty
+    , async
+    , base
+    , bytestring
+    , conduit
+    , containers
+    , dc-api
+    , ekg-core
+    , fast-logger
+    , graphql-engine
+    , haskell-src-meta
+    , hasura-prelude
+    , hspec
+    , hspec-core
+    , http-conduit
+    , http-types
+    , insert-ordered-containers
+    , libyaml
+    , morpheus-graphql
+    , mtl
+    , mysql-simple
+    , network
+    , odbc
+    , openapi3
+    , parsec
+    , pg-client
+    , postgresql-simple
+    , refined
+    , resourcet
+    , safe-exceptions
+    , servant-server
+    , template-haskell
+    , text
+    , th-lift
+    , th-lift-instances
+    , time
+    , typed-process
+    , unordered-containers
+    , uuid
+    , vector
+    , warp
+    , websockets
+    , yaml
+
+  hs-source-dirs: src
+  default-language: Haskell2010
+
+  default-extensions:
+    BlockArguments
+    DeriveLift
+    DerivingStrategies
+    FlexibleContexts
+    FlexibleInstances
+    GADTs
+    GeneralisedNewtypeDeriving
+    ImportQualifiedPost
+    LambdaCase
+    NamedFieldPuns
+    NoImplicitPrelude
+    OverloadedStrings
+    RankNTypes
+    RecordWildCards
+    ScopedTypeVariables
+    StandaloneDeriving
+    TupleSections
+    TypeApplications
+    TypeSynonymInstances
+
+  ghc-options: -Wall -O0
+
+  exposed-modules:
+    Harness.Constants
+    Harness.Env
+    Harness.Exceptions
+    Harness.GraphqlEngine
+    Harness.Http
+    Harness.RemoteServer
+    Harness.TestEnvironment
+    Harness.Webhook
+    Harness.Yaml
+    Harness.Backend.BigQuery
+    Harness.Backend.Citus
+    Harness.Backend.Cockroach
+    Harness.Backend.DataConnector
+    Harness.Backend.DataConnector.MockAgent
+    Harness.Backend.Mysql
+    Harness.Backend.Postgres
+    Harness.Backend.Sqlserver
+    Harness.Test.BackendType
+    Harness.Test.CustomOptions
+    Harness.Test.Fixture
+    Harness.Test.Hspec.Extended
+    Harness.Test.Introspection
+    Harness.Test.Schema
+    Harness.Test.Permissions
+    Harness.Test.SchemaName
+    Harness.Quoter.Graphql
+    Harness.Quoter.Yaml
+    Harness.Quoter.Yaml.InterpolateYaml

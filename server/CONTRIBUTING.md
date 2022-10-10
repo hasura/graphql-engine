@@ -5,7 +5,7 @@ own machine and how to contribute.
 
 ## Pre-requisites
 
-- [GHC](https://www.haskell.org/ghc/) 8.10.7 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+- [GHC](https://www.haskell.org/ghc/) 9.2.4 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
 - There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the packager [Dockerfile](../.buildkite/dockerfiles/ci-builders/server-builder.dockerfile)
 - Additional Haskell tools (expected versions can be found in _VERSIONS.json_):
@@ -135,7 +135,7 @@ This will launch a server on port 8080, and it will serve the console assets if 
 
 1. A small set of unit tests and integration tests written in Haskell, in `server/src-test`.
 
-2. A new integration test suite written in Haskell, in `server/tests-hspec`.
+2. A new integration test suite written in Haskell, in `server/lib/api-tests`.
 
 3. An extensive set of end-to-end tests written in Python, in `server/tests-py`.
 
@@ -198,10 +198,10 @@ docker compose up
 2. Once the containers are up, you can run the test suite via
 
 ```sh
-cabal test tests-hspec --test-show-details=direct
+cabal run api-tests
 ```
 
-For more details please check out the [README](./tests-hspec/README.md).
+For more details please check out the [README](./lib/api-tests/README.md).
 
 ##### Running unit tests and recompiling
 
