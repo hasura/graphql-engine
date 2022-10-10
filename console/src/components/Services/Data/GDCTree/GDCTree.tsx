@@ -16,7 +16,7 @@ const getCurrentActiveKeys = () => {
   const table = params.get('table');
 
   if (table) {
-    activeKey.push(JSON.stringify({ database, ...JSON.parse(table) }));
+    activeKey.push(JSON.stringify({ database, table: JSON.parse(table) }));
   } else {
     activeKey.push(JSON.stringify({ database }));
   }
