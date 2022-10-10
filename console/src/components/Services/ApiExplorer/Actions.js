@@ -48,6 +48,18 @@ const UNFOCUS_ROLE_HEADER = 'ApiExplorer/UNFOCUS_ROLE_HEADER';
 
 const TRACK_RESPONSE_DETAILS = 'ApiExplorer/TRACK_RESPONSE_DETAILS';
 
+const SET_FORCE_INTROSPECT_AT = 'ApiExplorer/FORCE_INTROSPECTION_AT';
+export const setForceIntrospectAt = data => ({
+  type: SET_FORCE_INTROSPECT_AT,
+  data,
+});
+
+const SET_GRAPHIQL_QUERY = 'ApiExplorer/SET_GRAPHIQL_QUERY';
+export const setGraphiQLQuery = data => ({
+  type: SET_GRAPHIQL_QUERY,
+  data,
+});
+
 let websocketSubscriptionClient;
 
 const getSubscriptionInstance = (url, headers) => {
@@ -719,6 +731,22 @@ const apiExplorerReducer = (state = defaultState, action) => {
             isResponseCached: action.data.isResponseCached,
             responseTrackingId: action.data.responseTrackingId,
           },
+        },
+      };
+    case SET_FORCE_INTROSPECT_AT:
+      return {
+        ...state,
+        graphiql: {
+          ...state.graphiql,
+          forceIntrospectAt: action.data,
+        },
+      };
+    case SET_GRAPHIQL_QUERY:
+      return {
+        ...state,
+        graphiql: {
+          ...state.graphiql,
+          query: action.data,
         },
       };
     default:

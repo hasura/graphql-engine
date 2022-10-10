@@ -1,3 +1,3 @@
-import { Root } from './Root';
+import { RootWithCloudCheck } from './Root';
 
-export const OnboardingWizard = Root;
+export const OnboardingWizard = RootWithCloudCheck;

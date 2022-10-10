@@ -2,7 +2,7 @@
  * GraphQl query to fetch all growth experiments data related to the current user.
  */
 export const query = `
-query {
+query fetchAllExperimentsData {
   experiments_config {
     experiment
     metadata

@@ -58,6 +58,9 @@ export const stories = {
   'Variant - Mode primary': {
     mode: 'primary',
   },
+  'Variant - Mode brand': {
+    mode: 'brand',
+  },
   'Variant - Size sm': {
     size: 'sm',
   },
@@ -79,6 +82,7 @@ export const stories = {
     args={{
       'Variant - Mode default': stories['Variant - Mode default'],
       'Variant - Mode primary': stories['Variant - Mode primary'],
+      'Variant - Mode brand': stories['Variant - Mode brand'],
     }}
   >
     {TemplateStoriesFactory(Template).bind({})}

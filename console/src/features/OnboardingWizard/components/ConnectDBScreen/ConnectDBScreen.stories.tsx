@@ -1,5 +1,6 @@
 import React from 'react';
 import { ComponentMeta, Story } from '@storybook/react';
+import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 import { ConnectDBScreen } from './ConnectDBScreen';
@@ -7,22 +8,41 @@ import { ConnectDBScreen } from './ConnectDBScreen';
 export default {
   title: 'features/Onboarding Wizard/Connect DB screen',
   component: ConnectDBScreen,
+  decorators: [ReactQueryDecorator()],
 } as ComponentMeta<typeof ConnectDBScreen>;
 
-export const Base: Story = () => (
-  <ConnectDBScreen skipOnboarding={() => {}} completeOnboarding={() => {}} />
+export const WithoutNeon: Story = () => (
+  <ConnectDBScreen
+    proceed={() => {}}
+    dismissOnboarding={() => {}}
+    dispatch={() => {}}
+    hasNeonAccess={!true}
+    setStepperIndex={() => {}}
+  />
 );
 
-Base.play = async ({ canvasElement }) => {
+WithoutNeon.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   // Expect element renders successfully
-  expect(
-    await canvas.findByText('Welcome to your new Hasura project!')
-  ).toBeVisible();
-  expect(
-    await canvas.findByText(
-      "Let's get started by connecting your first database"
-    )
-  ).toBeVisible();
+  expect(canvas.getByText('Connect Your Database')).toBeVisible();
+};
+
+export const WithNeon: Story = () => (
+  <ConnectDBScreen
+    proceed={() => {}}
+    dismissOnboarding={() => {}}
+    hasNeonAccess
+    dispatch={() => {}}
+    setStepperIndex={() => {}}
+  />
+);
+
+WithNeon.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+
+  // Expect element renders successfully, these texts are highly dynamic
+  // according to product needs, and doesn't make sense to keep a lot of
+  // "renders successfully" tests.
+  expect(canvas.getByText('Connect Neon Database')).toBeVisible();
 };
