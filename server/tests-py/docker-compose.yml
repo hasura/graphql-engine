@@ -80,14 +80,6 @@ services:
     volumes:
       - /var/lib/postgresql/data
 
-  citus-healthy:
-    image: busybox
-    command:
-      - 'true'
-    depends_on:
-      citus:
-        condition: service_healthy
-
   mssql:
     # Uses a different image for arm64.
     image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest@sha256:a098c9ff6fbb8e1c9608ad7511fa42dba8d22e0d50b48302761717840ccc26af}
@@ -142,14 +134,6 @@ services:
       - /var/lib/postgresql/data
     deploy:
       replicas: 2
-
-  postgres-healthy:
-    image: busybox
-    command:
-      - 'true'
-    depends_on:
-      postgres:
-        condition: service_healthy
 
 volumes:
   cabal-cache:
