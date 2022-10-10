@@ -14,6 +14,7 @@ export const Base: Story = () => (
     onClickConnect={() => window.alert('clicked connect button')}
     status={{ status: 'default' }}
     buttonText="Create a Neon Database"
+    setStepperIndex={() => {}}
   />
 );
 Base.play = async ({ canvasElement }) => {
@@ -34,6 +35,7 @@ export const Creating: Story = () => (
     onClickConnect={() => window.alert('clicked connect button')}
     status={{ status: 'loading' }}
     buttonText="Creating Neon Database"
+    setStepperIndex={() => {}}
   />
 );
 Creating.play = async ({ canvasElement }) => {
@@ -60,6 +62,7 @@ export const Error: Story = () => (
     }}
     buttonText="Try Again"
     icon="refresh"
+    setStepperIndex={() => {}}
   />
 );
 Error.play = async ({ canvasElement }) => {

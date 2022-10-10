@@ -2,24 +2,27 @@ import * as React from 'react';
 import { Dispatch } from '@/types';
 import { useNeonIntegration } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';
 import { transformNeonIntegrationStatusToNeonBannerProps } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/utils';
-import { NeonBanner } from '../NeonConnectBanner/NeonBanner';
-import _push from '../../../../components/Services/Data/push';
+import { reactQueryClient } from '@/lib/reactQuery';
+import { FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
+import { NeonBanner } from '../../NeonConnectBanner/NeonBanner';
+import _push from '../../../../../components/Services/Data/push';
 import {
   useInstallTemplate,
   usePrefetchNeonOnboardingTemplateData,
   useEmitOnboardingEvents,
-} from '../../hooks';
-import { NEON_TEMPLATE_BASE_PATH } from '../../constants';
-import { persistSkippedOnboarding } from '../../utils';
+} from '../../../hooks';
+import { NEON_TEMPLATE_BASE_PATH } from '../../../constants';
+import { persistSkippedOnboarding } from '../../../utils';
 
 export function NeonOnboarding(props: {
   dispatch: Dispatch;
   dismiss: VoidFunction;
   proceed: VoidFunction;
+  setStepperIndex: (index: number) => void;
 }) {
   const [installingTemplate, setInstallingTemplate] = React.useState(false);
 
-  const { dispatch, dismiss, proceed } = props;
+  const { dispatch, dismiss, proceed, setStepperIndex } = props;
 
   const onSkipHandler = () => {
     persistSkippedOnboarding();
@@ -49,6 +52,12 @@ export function NeonOnboarding(props: {
   const neonIntegrationStatus = useNeonIntegration(
     'default',
     () => {
+      // on success, refetch queries to show neon onboarding link in connect database page,
+      // overriding the stale time
+      reactQueryClient.refetchQueries(
+        FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY
+      );
+
       setInstallingTemplate(true);
       install();
     },
@@ -80,11 +89,11 @@ export function NeonOnboarding(props: {
   return (
     <div className="w-full">
       <div className="w-full mb-sm">
-        <NeonBanner {...neonBannerProps} />
+        <NeonBanner {...neonBannerProps} setStepperIndex={setStepperIndex} />
       </div>
       <div className="flex justify-start items-center w-full">
         <a
-          className={`w-auto text-secondary cursor-pointer text-sm hover:text-secondary-dark ${
+          className={`w-auto text-secondary text-sm hover:text-secondary-dark hover:no-underline ${
             allowSkipping ? 'cursor-pointer' : 'cursor-not-allowed'
           }`}
           data-trackid="onboarding-skip-button"

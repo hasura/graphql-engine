@@ -7,7 +7,7 @@ import {
   templateSummaryRunQueryClickVariables,
   templateSummaryRunQuerySkipVariables,
 } from '../../constants';
-import { QueryDialog } from './QueryDialog';
+import { QueryScreen } from './QueryScreen';
 import {
   fetchTemplateDataQueryFn,
   runQueryInGraphiQL,
@@ -22,7 +22,31 @@ type Props = {
 };
 
 const defaultQuery = `
-# Make a GraphQL query
+#
+#  An example query:
+#  Lookup all customers and their orders based on a foreign key relationship.
+#  ┌──────────┐     ┌───────┐
+#  │ customer │---->│ order │
+#  └──────────┘     └───────┘
+#
+
+query lookupCustomerOrder {
+  customer {
+    id
+    first_name
+    last_name
+    username
+    email
+    phone
+    orders {
+      id
+      order_date
+      product
+      purchase_price
+      discount_price
+    }
+  }
+}
 `;
 
 export function TemplateSummary(props: Props) {
@@ -72,13 +96,11 @@ export function TemplateSummary(props: Props) {
   };
 
   return (
-    <QueryDialog
-      title="Welcome to Hasura"
-      description="Get started learning Hasura with an example."
-      query={sampleQuery}
+    <QueryScreen
       schemaImage={schemaImagePath}
       onRunHandler={onRunHandler}
       onSkipHandler={onSkipHandler}
+      query={sampleQuery}
     />
   );
 }

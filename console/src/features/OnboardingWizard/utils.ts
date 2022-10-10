@@ -17,6 +17,7 @@ import {
   hasuraSourceCreationStartVariables,
   graphQlMutation,
 } from './constants';
+import { WizardState } from './hooks/useWizardState';
 
 export function isExperimentActive(
   experimentsData: ExperimentConfig[],
@@ -57,6 +58,22 @@ export function shouldShowOnboarding(
     return false;
   }
   return true;
+}
+
+export function getWizardState(
+  experimentsData: ExperimentConfig[],
+  experimentId: string,
+  showFamiliaritySurvey: boolean,
+  hasNeonAccess: boolean
+): WizardState {
+  if (
+    shouldShowOnboarding(experimentsData, experimentId, hasNeonAccess) &&
+    isExperimentActive(experimentsData, experimentId)
+  ) {
+    if (showFamiliaritySurvey) return 'familiarity-survey';
+    return 'landing-page';
+  }
+  return 'hidden';
 }
 
 type ResponseDataOnMutation = {
