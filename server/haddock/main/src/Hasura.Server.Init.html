@@ -109,39 +109,39 @@ Following is the precise behaviour -
 </span><span id="line-93"></span><span class="hs-comment">-- postprocess the db url and fetch env vars associated with the main</span><span>
 </span><span id="line-94"></span><span class="hs-comment">-- command parser, then process the subcommand raw values if</span><span>
 </span><span id="line-95"></span><span class="hs-comment">-- necessary.</span><span>
-</span><span id="line-96"></span><span id="local-6989586621690544178"><span class="annot"><a href="Hasura.Server.Init.html#mkHGEOptions"><span class="hs-identifier hs-type">mkHGEOptions</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-97"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544178"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544178"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Env.html#WithEnv"><span class="hs-identifier hs-type">WithEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptions"><span class="hs-identifier hs-type">HGEOptions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-type">ServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544178"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
+</span><span id="line-96"></span><span id="local-6989586621690544093"><span class="annot"><a href="Hasura.Server.Init.html#mkHGEOptions"><span class="hs-identifier hs-type">mkHGEOptions</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-97"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544093"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544093"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Env.html#WithEnv"><span class="hs-identifier hs-type">WithEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptions"><span class="hs-identifier hs-type">HGEOptions</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-type">ServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544093"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span><span>
 </span><span id="line-98"></span><span id="mkHGEOptions"><span class="annot"><span class="annottext">mkHGEOptions :: forall impl.
 EnabledLogTypes impl =&gt;
 HGEOptionsRaw (ServeOptionsRaw impl)
 -&gt; WithEnv (HGEOptions (ServeOptions impl))
-</span><a href="Hasura.Server.Init.html#mkHGEOptions"><span class="hs-identifier hs-var hs-var">mkHGEOptions</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span id="local-6989586621690543951"><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresConnInfoRaw)
-</span><a href="#local-6989586621690543951"><span class="hs-identifier hs-var">rawDbUrl</span></a></span></span><span> </span><span id="local-6989586621690543950"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621690543950"><span class="hs-identifier hs-var">rawMetadataDbUrl</span></a></span></span><span> </span><span id="local-6989586621690543949"><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
-</span><a href="#local-6989586621690543949"><span class="hs-identifier hs-var">rawCmd</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-99"></span><span>  </span><span id="local-6989586621690543948"><span class="annot"><span class="annottext">PostgresConnInfo (Maybe UrlConf)
-</span><a href="#local-6989586621690543948"><span class="hs-identifier hs-var">dbUrl</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresConnInfoRaw)
+</span><a href="Hasura.Server.Init.html#mkHGEOptions"><span class="hs-identifier hs-var hs-var">mkHGEOptions</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#HGEOptionsRaw"><span class="hs-identifier hs-type">HGEOptionsRaw</span></a></span><span> </span><span id="local-6989586621690543866"><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresConnInfoRaw)
+</span><a href="#local-6989586621690543866"><span class="hs-identifier hs-var">rawDbUrl</span></a></span></span><span> </span><span id="local-6989586621690543865"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621690543865"><span class="hs-identifier hs-var">rawMetadataDbUrl</span></a></span></span><span> </span><span id="local-6989586621690543864"><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
+</span><a href="#local-6989586621690543864"><span class="hs-identifier hs-var">rawCmd</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621690543863"><span class="annot"><span class="annottext">PostgresConnInfo (Maybe UrlConf)
+</span><a href="#local-6989586621690543863"><span class="hs-identifier hs-var">dbUrl</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresConnInfoRaw)
 -&gt; WithEnv (PostgresConnInfo (Maybe UrlConf))
 </span><a href="Hasura.Server.Init.html#processPostgresConnInfo"><span class="hs-identifier hs-var">processPostgresConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresConnInfo (Maybe PostgresConnInfoRaw)
-</span><a href="#local-6989586621690543951"><span class="hs-identifier hs-var">rawDbUrl</span></a></span><span>
-</span><span id="line-100"></span><span>  </span><span id="local-6989586621690543947"><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621690543947"><span class="hs-identifier hs-var">metadataDbUrl</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><a href="#local-6989586621690543866"><span class="hs-identifier hs-var">rawDbUrl</span></a></span><span>
+</span><span id="line-100"></span><span>  </span><span id="local-6989586621690543862"><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621690543862"><span class="hs-identifier hs-var">metadataDbUrl</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="Hasura.Server.Init.Env.html#withOption"><span class="hs-identifier hs-var">withOption</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621690543950"><span class="hs-identifier hs-var">rawMetadataDbUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
+</span><a href="#local-6989586621690543865"><span class="hs-identifier hs-var">rawMetadataDbUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.html#metadataDbUrlOption"><span class="hs-identifier hs-var">metadataDbUrlOption</span></a></span><span>
-</span><span id="line-101"></span><span>  </span><span id="local-6989586621690543944"><span class="annot"><span class="annottext">HGECommand (ServeOptions impl)
-</span><a href="#local-6989586621690543944"><span class="hs-identifier hs-var">cmd</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
-</span><a href="#local-6989586621690543949"><span class="hs-identifier hs-var">rawCmd</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-102"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Config.html#HCServe"><span class="hs-identifier hs-type">HCServe</span></a></span><span> </span><span id="local-6989586621690543942"><span class="annot"><span class="annottext">ServeOptionsRaw impl
-</span><a href="#local-6989586621690543942"><span class="hs-identifier hs-var">rso</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; HGECommand a
+</span><span id="line-101"></span><span>  </span><span id="local-6989586621690543859"><span class="annot"><span class="annottext">HGECommand (ServeOptions impl)
+</span><a href="#local-6989586621690543859"><span class="hs-identifier hs-var">cmd</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
+</span><a href="#local-6989586621690543864"><span class="hs-identifier hs-var">rawCmd</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-102"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Config.html#HCServe"><span class="hs-identifier hs-type">HCServe</span></a></span><span> </span><span id="local-6989586621690543857"><span class="annot"><span class="annottext">ServeOptionsRaw impl
+</span><a href="#local-6989586621690543857"><span class="hs-identifier hs-var">rso</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; HGECommand a
 </span><a href="Hasura.Server.Init.Config.html#HCServe"><span class="hs-identifier hs-var">HCServe</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall impl.
 EnabledLogTypes impl =&gt;
 ServeOptionsRaw impl -&gt; WithEnv (ServeOptions impl)
 </span><a href="Hasura.Server.Init.html#mkServeOptions"><span class="hs-identifier hs-var">mkServeOptions</span></a></span><span> </span><span class="annot"><span class="annottext">ServeOptionsRaw impl
-</span><a href="#local-6989586621690543942"><span class="hs-identifier hs-var">rso</span></a></span><span>
+</span><a href="#local-6989586621690543857"><span class="hs-identifier hs-var">rso</span></a></span><span>
 </span><span id="line-103"></span><span>    </span><span class="annot"><span class="annottext">HGECommand (ServeOptionsRaw impl)
 </span><a href="Hasura.Server.Init.Config.html#HCExport"><span class="hs-identifier hs-var">HCExport</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. HGECommand a
@@ -154,20 +154,20 @@ ServeOptionsRaw impl -&gt; WithEnv (ServeOptions impl)
 </span><a href="Hasura.Server.Init.Config.html#HCVersion"><span class="hs-identifier hs-var">HCVersion</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. HGECommand a
 </span><a href="Hasura.Server.Init.Config.html#HCVersion"><span class="hs-identifier hs-var">HCVersion</span></a></span><span>
-</span><span id="line-106"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Config.html#HCDowngrade"><span class="hs-identifier hs-type">HCDowngrade</span></a></span><span> </span><span id="local-6989586621690543937"><span class="annot"><span class="annottext">DowngradeOptions
-</span><a href="#local-6989586621690543937"><span class="hs-identifier hs-var">tgt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-106"></span><span>    </span><span class="annot"><a href="Hasura.Server.Init.Config.html#HCDowngrade"><span class="hs-identifier hs-type">HCDowngrade</span></a></span><span> </span><span id="local-6989586621690543852"><span class="annot"><span class="annottext">DowngradeOptions
+</span><a href="#local-6989586621690543852"><span class="hs-identifier hs-var">tgt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. DowngradeOptions -&gt; HGECommand a
 </span><a href="Hasura.Server.Init.Config.html#HCDowngrade"><span class="hs-identifier hs-var">HCDowngrade</span></a></span><span> </span><span class="annot"><span class="annottext">DowngradeOptions
-</span><a href="#local-6989586621690543937"><span class="hs-identifier hs-var">tgt</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690543852"><span class="hs-identifier hs-var">tgt</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-107"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall impl.
 PostgresConnInfo (Maybe UrlConf)
 -&gt; Maybe String -&gt; HGECommand impl -&gt; HGEOptions impl
 </span><a href="Hasura.Server.Init.Config.html#HGEOptions"><span class="hs-identifier hs-var">HGEOptions</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresConnInfo (Maybe UrlConf)
-</span><a href="#local-6989586621690543948"><span class="hs-identifier hs-var">dbUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
-</span><a href="#local-6989586621690543947"><span class="hs-identifier hs-var">metadataDbUrl</span></a></span><span> </span><span class="annot"><span class="annottext">HGECommand (ServeOptions impl)
-</span><a href="#local-6989586621690543944"><span class="hs-identifier hs-var">cmd</span></a></span><span>
+</span><a href="#local-6989586621690543863"><span class="hs-identifier hs-var">dbUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe String
+</span><a href="#local-6989586621690543862"><span class="hs-identifier hs-var">metadataDbUrl</span></a></span><span> </span><span class="annot"><span class="annottext">HGECommand (ServeOptions impl)
+</span><a href="#local-6989586621690543859"><span class="hs-identifier hs-var">cmd</span></a></span><span>
 </span><span id="line-108"></span><span>
 </span><span id="line-109"></span><span class="hs-comment">-- | 'PostressConnInfo' is a a tuple of some @a@ with a 'Maybe Int'</span><span>
 </span><span id="line-110"></span><span class="hs-comment">-- representing the retries setting. This function thus takes a</span><span>
@@ -179,63 +179,63 @@ PostgresConnInfo (Maybe UrlConf)
 </span><span id="line-116"></span><span>  </span><span class="annot"><a href="Hasura.Server.Init.Env.html#WithEnv"><span class="hs-identifier hs-type">WithEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#UrlConf"><span class="hs-identifier hs-type">Common.UrlConf</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-117"></span><span id="processPostgresConnInfo"><span class="annot"><span class="annottext">processPostgresConnInfo :: PostgresConnInfo (Maybe PostgresConnInfoRaw)
 -&gt; WithEnv (PostgresConnInfo (Maybe UrlConf))
-</span><a href="Hasura.Server.Init.html#processPostgresConnInfo"><span class="hs-identifier hs-var hs-var">processPostgresConnInfo</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690543933"><span id="local-6989586621690543934"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="Hasura.Server.Init.html#processPostgresConnInfo"><span class="hs-identifier hs-var hs-var">processPostgresConnInfo</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-type">PostgresConnInfo</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690543848"><span id="local-6989586621690543849"><span class="annot"><span class="annottext">Maybe Int
 Maybe PostgresConnInfoRaw
 _pciRetries :: forall a. PostgresConnInfo a -&gt; Maybe Int
 _pciDatabaseConn :: forall a. PostgresConnInfo a -&gt; a
 _pciRetries :: Maybe Int
 _pciDatabaseConn :: Maybe PostgresConnInfoRaw
 </span><a href="Hasura.Server.Init.Config.html#_pciRetries"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-118"></span><span>  </span><span id="local-6989586621690543930"><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621690543930"><span class="hs-identifier hs-var">withEnvRetries</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-118"></span><span>  </span><span id="local-6989586621690543845"><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621690543845"><span class="hs-identifier hs-var">withEnvRetries</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="Hasura.Server.Init.Env.html#withOption"><span class="hs-identifier hs-var">withOption</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621690543933"><span class="hs-identifier hs-var">_pciRetries</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
+</span><a href="#local-6989586621690543848"><span class="hs-identifier hs-var">_pciRetries</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.html#retriesNumOption"><span class="hs-identifier hs-var">retriesNumOption</span></a></span><span>
-</span><span id="line-119"></span><span>  </span><span id="local-6989586621690543928"><span class="annot"><span class="annottext">Maybe UrlConf
-</span><a href="#local-6989586621690543928"><span class="hs-identifier hs-var">databaseUrl</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw -&gt; WithEnv (Maybe UrlConf)
+</span><span id="line-119"></span><span>  </span><span id="local-6989586621690543843"><span class="annot"><span class="annottext">Maybe UrlConf
+</span><a href="#local-6989586621690543843"><span class="hs-identifier hs-var">databaseUrl</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw -&gt; WithEnv (Maybe UrlConf)
 </span><a href="Hasura.Server.Init.html#rawConnInfoToUrlConf"><span class="hs-identifier hs-var">rawConnInfoToUrlConf</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw
-</span><a href="#local-6989586621690543934"><span class="hs-identifier hs-var">_pciDatabaseConn</span></a></span><span>
+</span><a href="#local-6989586621690543849"><span class="hs-identifier hs-var">_pciDatabaseConn</span></a></span><span>
 </span><span id="line-120"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe Int -&gt; PostgresConnInfo a
 </span><a href="Hasura.Server.Init.Config.html#PostgresConnInfo"><span class="hs-identifier hs-var">PostgresConnInfo</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe UrlConf
-</span><a href="#local-6989586621690543928"><span class="hs-identifier hs-var">databaseUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
-</span><a href="#local-6989586621690543930"><span class="hs-identifier hs-var">withEnvRetries</span></a></span><span>
+</span><a href="#local-6989586621690543843"><span class="hs-identifier hs-var">databaseUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
+</span><a href="#local-6989586621690543845"><span class="hs-identifier hs-var">withEnvRetries</span></a></span><span>
 </span><span id="line-121"></span><span>
 </span><span id="line-122"></span><span class="hs-comment">-- | A helper function for 'processPostgresConnInfo' which fetches</span><span>
 </span><span id="line-123"></span><span class="hs-comment">-- postgres connection info from the 'WithEnv' and merges it with the</span><span>
 </span><span id="line-124"></span><span class="hs-comment">-- arg parser result.</span><span>
 </span><span id="line-125"></span><span class="annot"><a href="Hasura.Server.Init.html#rawConnInfoToUrlConf"><span class="hs-identifier hs-type">rawConnInfoToUrlConf</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PostgresConnInfoRaw"><span class="hs-identifier hs-type">PostgresConnInfoRaw</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Env.html#WithEnv"><span class="hs-identifier hs-type">WithEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#UrlConf"><span class="hs-identifier hs-type">Common.UrlConf</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-126"></span><span id="rawConnInfoToUrlConf"><span class="annot"><span class="annottext">rawConnInfoToUrlConf :: Maybe PostgresConnInfoRaw -&gt; WithEnv (Maybe UrlConf)
-</span><a href="Hasura.Server.Init.html#rawConnInfoToUrlConf"><span class="hs-identifier hs-var hs-var">rawConnInfoToUrlConf</span></a></span></span><span> </span><span id="local-6989586621690543926"><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw
-</span><a href="#local-6989586621690543926"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-127"></span><span>  </span><span id="local-6989586621690543925"><span class="annot"><span class="annottext">[(String, String)]
-</span><a href="#local-6989586621690543925"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
+</span><a href="Hasura.Server.Init.html#rawConnInfoToUrlConf"><span class="hs-identifier hs-var hs-var">rawConnInfoToUrlConf</span></a></span></span><span> </span><span id="local-6989586621690543841"><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw
+</span><a href="#local-6989586621690543841"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-127"></span><span>  </span><span id="local-6989586621690543840"><span class="annot"><span class="annottext">[(String, String)]
+</span><a href="#local-6989586621690543840"><span class="hs-identifier hs-var">env</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *). MonadReader r m =&gt; m r
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">ask</span></a></span><span>
-</span><span id="line-128"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690543923"><span class="annot"><span class="annottext">databaseUrlEnvVar :: String
-</span><a href="#local-6989586621690543923"><span class="hs-identifier hs-var hs-var">databaseUrlEnvVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall def. Option def -&gt; String
+</span><span id="line-128"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690543838"><span class="annot"><span class="annottext">databaseUrlEnvVar :: String
+</span><a href="#local-6989586621690543838"><span class="hs-identifier hs-var hs-var">databaseUrlEnvVar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall def. Option def -&gt; String
 </span><a href="Hasura.Server.Init.Config.html#_envVar"><span class="hs-identifier hs-var">_envVar</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.html#databaseUrlOption"><span class="hs-identifier hs-var">databaseUrlOption</span></a></span><span>
-</span><span id="line-129"></span><span>      </span><span id="local-6989586621690543920"><span class="annot"><span class="annottext">hasDatabaseUrlEnv :: Bool
-</span><a href="#local-6989586621690543920"><span class="hs-identifier hs-var hs-var">hasDatabaseUrlEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
+</span><span id="line-129"></span><span>      </span><span id="local-6989586621690543835"><span class="annot"><span class="annottext">hasDatabaseUrlEnv :: Bool
+</span><a href="#local-6989586621690543835"><span class="hs-identifier hs-var hs-var">hasDatabaseUrlEnv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">any</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690543923"><span class="hs-identifier hs-var">databaseUrlEnvVar</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="#local-6989586621690543838"><span class="hs-identifier hs-var">databaseUrlEnvVar</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a, b) -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fst</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(String, String)]
-</span><a href="#local-6989586621690543925"><span class="hs-identifier hs-var">env</span></a></span><span>
+</span><a href="#local-6989586621690543840"><span class="hs-identifier hs-var">env</span></a></span><span>
 </span><span id="line-130"></span><span>
 </span><span id="line-131"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw
-</span><a href="#local-6989586621690543926"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690543841"><span class="hs-identifier hs-var">maybeRawConnInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-132"></span><span>    </span><span class="hs-comment">-- If no --database-url or connection options provided in CLI command</span><span>
 </span><span id="line-133"></span><span>    </span><span class="annot"><span class="annottext">Maybe PostgresConnInfoRaw
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-134"></span><span>      </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543920"><span class="hs-identifier hs-var">hasDatabaseUrlEnv</span></a></span><span>
+</span><a href="#local-6989586621690543835"><span class="hs-identifier hs-var">hasDatabaseUrlEnv</span></a></span><span>
 </span><span id="line-135"></span><span>        </span><span class="hs-keyword">then</span><span> </span><span class="hs-comment">-- Consider env variable as is in order to store it as @`UrlConf`</span><span>
 </span><span id="line-136"></span><span>        </span><span class="hs-comment">-- in default source configuration in metadata</span><span>
 </span><span id="line-137"></span><span>          </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
@@ -244,11 +244,11 @@ Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="Hasura.RQL.Types.Common.html#UrlFromEnv"><span class="hs-identifier hs-var">Common.UrlFromEnv</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">Text.pack</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690543923"><span class="hs-identifier hs-var">databaseUrlEnvVar</span></a></span><span>
+</span><a href="#local-6989586621690543838"><span class="hs-identifier hs-var">databaseUrlEnvVar</span></a></span><span>
 </span><span id="line-138"></span><span>        </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-139"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690543916"><span class="annot"><span class="annottext">PostgresConnInfoRaw
-</span><a href="#local-6989586621690543916"><span class="hs-identifier hs-var">databaseConn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-139"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690543831"><span class="annot"><span class="annottext">PostgresConnInfoRaw
+</span><a href="#local-6989586621690543831"><span class="hs-identifier hs-var">databaseConn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-140"></span><span>      </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">InputWebhook -&gt; UrlConf
@@ -256,24 +256,24 @@ Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">URLTemplate -&gt; InputWebhook
 </span><a href="Hasura.RQL.Types.Common.html#InputWebhook"><span class="hs-identifier hs-var">Common.InputWebhook</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">PostgresConnInfoRaw
-</span><a href="#local-6989586621690543916"><span class="hs-identifier hs-var">databaseConn</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-141"></span><span>        </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PGConnDatabaseUrl"><span class="hs-identifier hs-type">PGConnDatabaseUrl</span></a></span><span> </span><span id="local-6989586621690543912"><span class="annot"><span class="annottext">URLTemplate
-</span><a href="#local-6989586621690543912"><span class="hs-identifier hs-var">urlTemplate</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">URLTemplate
-</span><a href="#local-6989586621690543912"><span class="hs-identifier hs-var">urlTemplate</span></a></span><span>
-</span><span id="line-142"></span><span>        </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PGConnDetails"><span class="hs-identifier hs-type">PGConnDetails</span></a></span><span> </span><span id="local-6989586621690543910"><span class="annot"><span class="annottext">PostgresConnDetailsRaw
-</span><a href="#local-6989586621690543910"><span class="hs-identifier hs-var">connDetails</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PostgresConnDetailsRaw -&gt; URLTemplate
+</span><a href="#local-6989586621690543831"><span class="hs-identifier hs-var">databaseConn</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-141"></span><span>        </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PGConnDatabaseUrl"><span class="hs-identifier hs-type">PGConnDatabaseUrl</span></a></span><span> </span><span id="local-6989586621690543827"><span class="annot"><span class="annottext">URLTemplate
+</span><a href="#local-6989586621690543827"><span class="hs-identifier hs-var">urlTemplate</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">URLTemplate
+</span><a href="#local-6989586621690543827"><span class="hs-identifier hs-var">urlTemplate</span></a></span><span>
+</span><span id="line-142"></span><span>        </span><span class="annot"><a href="Hasura.Server.Init.Config.html#PGConnDetails"><span class="hs-identifier hs-type">PGConnDetails</span></a></span><span> </span><span id="local-6989586621690543825"><span class="annot"><span class="annottext">PostgresConnDetailsRaw
+</span><a href="#local-6989586621690543825"><span class="hs-identifier hs-var">connDetails</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">PostgresConnDetailsRaw -&gt; URLTemplate
 </span><a href="Hasura.Server.Init.Config.html#rawConnDetailsToUrl"><span class="hs-identifier hs-var">rawConnDetailsToUrl</span></a></span><span> </span><span class="annot"><span class="annottext">PostgresConnDetailsRaw
-</span><a href="#local-6989586621690543910"><span class="hs-identifier hs-var">connDetails</span></a></span><span>
+</span><a href="#local-6989586621690543825"><span class="hs-identifier hs-var">connDetails</span></a></span><span>
 </span><span id="line-143"></span><span>
 </span><span id="line-144"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
 </span><span id="line-145"></span><span>
 </span><span id="line-146"></span><span class="hs-comment">-- | Merge the results of the serve subcommmand arg parser with</span><span>
 </span><span id="line-147"></span><span class="hs-comment">-- corresponding values from the 'WithEnv' context.</span><span>
-</span><span id="line-148"></span><span class="annot"><a href="Hasura.Server.Init.html#mkServeOptions"><span class="hs-identifier hs-type">mkServeOptions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690544161"><span class="annot"><a href="#local-6989586621690544161"><span class="hs-identifier hs-type">impl</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544161"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544161"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Env.html#WithEnv"><span class="hs-identifier hs-type">WithEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-type">ServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544161"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-148"></span><span class="annot"><a href="Hasura.Server.Init.html#mkServeOptions"><span class="hs-identifier hs-type">mkServeOptions</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690544076"><span class="annot"><a href="#local-6989586621690544076"><span class="hs-identifier hs-type">impl</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EnabledLogTypes"><span class="hs-identifier hs-type">Logging.EnabledLogTypes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544076"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544076"><span class="hs-identifier hs-type">impl</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Init.Env.html#WithEnv"><span class="hs-identifier hs-type">WithEnv</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptions"><span class="hs-identifier hs-type">ServeOptions</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690544076"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span id="mkServeOptions"><span class="annot"><span class="annottext">mkServeOptions :: forall impl.
 EnabledLogTypes impl =&gt;
 ServeOptionsRaw impl -&gt; WithEnv (ServeOptions impl)
-</span><a href="Hasura.Server.Init.html#mkServeOptions"><span class="hs-identifier hs-var hs-var">mkServeOptions</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690543658"><span id="local-6989586621690543659"><span id="local-6989586621690543660"><span id="local-6989586621690543661"><span id="local-6989586621690543662"><span id="local-6989586621690543663"><span id="local-6989586621690543664"><span id="local-6989586621690543665"><span id="local-6989586621690543666"><span id="local-6989586621690543667"><span id="local-6989586621690543668"><span id="local-6989586621690543669"><span id="local-6989586621690543670"><span id="local-6989586621690543671"><span id="local-6989586621690543672"><span id="local-6989586621690543673"><span id="local-6989586621690543674"><span id="local-6989586621690543675"><span id="local-6989586621690543676"><span id="local-6989586621690543677"><span id="local-6989586621690543678"><span id="local-6989586621690543679"><span id="local-6989586621690543680"><span id="local-6989586621690543681"><span id="local-6989586621690543682"><span id="local-6989586621690543683"><span id="local-6989586621690543684"><span id="local-6989586621690543685"><span id="local-6989586621690543686"><span id="local-6989586621690543687"><span id="local-6989586621690543688"><span id="local-6989586621690543689"><span id="local-6989586621690543690"><span id="local-6989586621690543691"><span id="local-6989586621690543692"><span id="local-6989586621690543693"><span id="local-6989586621690543694"><span id="local-6989586621690543695"><span id="local-6989586621690543696"><span id="local-6989586621690543697"><span id="local-6989586621690543698"><span id="local-6989586621690543699"><span class="annot"><span class="annottext">Bool
+</span><a href="Hasura.Server.Init.html#mkServeOptions"><span class="hs-identifier hs-var hs-var">mkServeOptions</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ServeOptionsRaw"><span class="hs-identifier hs-type">ServeOptionsRaw</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690543573"><span id="local-6989586621690543574"><span id="local-6989586621690543575"><span id="local-6989586621690543576"><span id="local-6989586621690543577"><span id="local-6989586621690543578"><span id="local-6989586621690543579"><span id="local-6989586621690543580"><span id="local-6989586621690543581"><span id="local-6989586621690543582"><span id="local-6989586621690543583"><span id="local-6989586621690543584"><span id="local-6989586621690543585"><span id="local-6989586621690543586"><span id="local-6989586621690543587"><span id="local-6989586621690543588"><span id="local-6989586621690543589"><span id="local-6989586621690543590"><span id="local-6989586621690543591"><span id="local-6989586621690543592"><span id="local-6989586621690543593"><span id="local-6989586621690543594"><span id="local-6989586621690543595"><span id="local-6989586621690543596"><span id="local-6989586621690543597"><span id="local-6989586621690543598"><span id="local-6989586621690543599"><span id="local-6989586621690543600"><span id="local-6989586621690543601"><span id="local-6989586621690543602"><span id="local-6989586621690543603"><span id="local-6989586621690543604"><span id="local-6989586621690543605"><span id="local-6989586621690543606"><span id="local-6989586621690543607"><span id="local-6989586621690543608"><span id="local-6989586621690543609"><span id="local-6989586621690543610"><span id="local-6989586621690543611"><span id="local-6989586621690543612"><span id="local-6989586621690543613"><span id="local-6989586621690543614"><span class="annot"><span class="annottext">Bool
 Maybe Bool
 Maybe Text
 Maybe (HashSet (EngineLogType impl))
@@ -397,35 +397,35 @@ rsoConnParams :: ConnParamsRaw
 rsoHost :: Maybe HostPreference
 rsoPort :: Maybe Port
 </span><a href="Hasura.Server.Init.Config.html#rsoExtensionsSchema"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-150"></span><span>  </span><span id="local-6989586621690543615"><span class="annot"><span class="annottext">Port
-</span><a href="#local-6989586621690543615"><span class="hs-identifier hs-var">soPort</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-150"></span><span>  </span><span id="local-6989586621690543530"><span class="annot"><span class="annottext">Port
+</span><a href="#local-6989586621690543530"><span class="hs-identifier hs-var">soPort</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Port
-</span><a href="#local-6989586621690543699"><span class="hs-identifier hs-var">rsoPort</span></a></span><span> </span><span class="annot"><span class="annottext">Option Port
+</span><a href="#local-6989586621690543614"><span class="hs-identifier hs-var">rsoPort</span></a></span><span> </span><span class="annot"><span class="annottext">Option Port
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#servePortOption"><span class="hs-identifier hs-var">servePortOption</span></a></span><span>
-</span><span id="line-151"></span><span>  </span><span id="local-6989586621690543612"><span class="annot"><span class="annottext">HostPreference
-</span><a href="#local-6989586621690543612"><span class="hs-identifier hs-var">soHost</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-151"></span><span>  </span><span id="local-6989586621690543527"><span class="annot"><span class="annottext">HostPreference
+</span><a href="#local-6989586621690543527"><span class="hs-identifier hs-var">soHost</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe HostPreference
-</span><a href="#local-6989586621690543698"><span class="hs-identifier hs-var">rsoHost</span></a></span><span> </span><span class="annot"><span class="annottext">Option HostPreference
+</span><a href="#local-6989586621690543613"><span class="hs-identifier hs-var">rsoHost</span></a></span><span> </span><span class="annot"><span class="annottext">Option HostPreference
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#serveHostOption"><span class="hs-identifier hs-var">serveHostOption</span></a></span><span>
-</span><span id="line-152"></span><span>  </span><span id="local-6989586621690543610"><span class="annot"><span class="annottext">ConnParams
-</span><a href="#local-6989586621690543610"><span class="hs-identifier hs-var">soConnParams</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {m :: * -&gt; *}.
+</span><span id="line-152"></span><span>  </span><span id="local-6989586621690543525"><span class="annot"><span class="annottext">ConnParams
+</span><a href="#local-6989586621690543525"><span class="hs-identifier hs-var">soConnParams</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {m :: * -&gt; *}.
 Monad m =&gt;
 ConnParamsRaw -&gt; WithEnvT m ConnParams
-</span><a href="#local-6989586621690543609"><span class="hs-identifier hs-var">mkConnParams</span></a></span><span> </span><span class="annot"><span class="annottext">ConnParamsRaw
-</span><a href="#local-6989586621690543697"><span class="hs-identifier hs-var">rsoConnParams</span></a></span><span>
-</span><span id="line-153"></span><span>  </span><span id="local-6989586621690543608"><span class="annot"><span class="annottext">TxIsolation
-</span><a href="#local-6989586621690543608"><span class="hs-identifier hs-var">soTxIso</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><a href="#local-6989586621690543524"><span class="hs-identifier hs-var">mkConnParams</span></a></span><span> </span><span class="annot"><span class="annottext">ConnParamsRaw
+</span><a href="#local-6989586621690543612"><span class="hs-identifier hs-var">rsoConnParams</span></a></span><span>
+</span><span id="line-153"></span><span>  </span><span id="local-6989586621690543523"><span class="annot"><span class="annottext">TxIsolation
+</span><a href="#local-6989586621690543523"><span class="hs-identifier hs-var">soTxIso</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe TxIsolation
-</span><a href="#local-6989586621690543696"><span class="hs-identifier hs-var">rsoTxIso</span></a></span><span> </span><span class="annot"><span class="annottext">Option TxIsolation
+</span><a href="#local-6989586621690543611"><span class="hs-identifier hs-var">rsoTxIso</span></a></span><span> </span><span class="annot"><span class="annottext">Option TxIsolation
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#txIsolationOption"><span class="hs-identifier hs-var">txIsolationOption</span></a></span><span>
-</span><span id="line-154"></span><span>  </span><span id="local-6989586621690543606"><span class="annot"><span class="annottext">HashSet AdminSecretHash
-</span><a href="#local-6989586621690543606"><span class="hs-identifier hs-var">soAdminSecret</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
+</span><span id="line-154"></span><span>  </span><span id="local-6989586621690543521"><span class="annot"><span class="annottext">HashSet AdminSecretHash
+</span><a href="#local-6989586621690543521"><span class="hs-identifier hs-var">soAdminSecret</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Hashable a =&gt; a -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HashSet.singleton</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -433,67 +433,67 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; [Option ()] -&gt; WithEnvT m (Maybe option)
 </span><a href="Hasura.Server.Init.Env.html#withOptions"><span class="hs-identifier hs-var">withOptions</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe AdminSecretHash
-</span><a href="#local-6989586621690543695"><span class="hs-identifier hs-var">rsoAdminSecret</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Option ()
+</span><a href="#local-6989586621690543610"><span class="hs-identifier hs-var">rsoAdminSecret</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#adminSecretOption"><span class="hs-identifier hs-var">adminSecretOption</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#accessKeyOption"><span class="hs-identifier hs-var">accessKeyOption</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-155"></span><span>  </span><span id="local-6989586621690543600"><span class="annot"><span class="annottext">Maybe AuthHook
-</span><a href="#local-6989586621690543600"><span class="hs-identifier hs-var">soAuthHook</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {m :: * -&gt; *}.
+</span><span id="line-155"></span><span>  </span><span id="local-6989586621690543515"><span class="annot"><span class="annottext">Maybe AuthHook
+</span><a href="#local-6989586621690543515"><span class="hs-identifier hs-var">soAuthHook</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {m :: * -&gt; *}.
 Monad m =&gt;
 AuthHookRaw -&gt; WithEnvT m (Maybe AuthHook)
-</span><a href="#local-6989586621690543599"><span class="hs-identifier hs-var">mkAuthHook</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHookRaw
-</span><a href="#local-6989586621690543694"><span class="hs-identifier hs-var">rsoAuthHook</span></a></span><span>
-</span><span id="line-156"></span><span>  </span><span id="local-6989586621690543598"><span class="annot"><span class="annottext">[JWTConfig]
-</span><a href="#local-6989586621690543598"><span class="hs-identifier hs-var">soJwtSecret</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a -&gt; [a]
+</span><a href="#local-6989586621690543514"><span class="hs-identifier hs-var">mkAuthHook</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHookRaw
+</span><a href="#local-6989586621690543609"><span class="hs-identifier hs-var">rsoAuthHook</span></a></span><span>
+</span><span id="line-156"></span><span>  </span><span id="local-6989586621690543513"><span class="annot"><span class="annottext">[JWTConfig]
+</span><a href="#local-6989586621690543513"><span class="hs-identifier hs-var">soJwtSecret</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">maybeToList</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="Hasura.Server.Init.Env.html#withOption"><span class="hs-identifier hs-var">withOption</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe JWTConfig
-</span><a href="#local-6989586621690543693"><span class="hs-identifier hs-var">rsoJwtSecret</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
+</span><a href="#local-6989586621690543608"><span class="hs-identifier hs-var">rsoJwtSecret</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#jwtSecretOption"><span class="hs-identifier hs-var">jwtSecretOption</span></a></span><span>
-</span><span id="line-157"></span><span>  </span><span id="local-6989586621690543595"><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621690543595"><span class="hs-identifier hs-var">soUnAuthRole</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-157"></span><span>  </span><span id="local-6989586621690543510"><span class="annot"><span class="annottext">Maybe RoleName
+</span><a href="#local-6989586621690543510"><span class="hs-identifier hs-var">soUnAuthRole</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="Hasura.Server.Init.Env.html#withOption"><span class="hs-identifier hs-var">withOption</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RoleName
-</span><a href="#local-6989586621690543692"><span class="hs-identifier hs-var">rsoUnAuthRole</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
+</span><a href="#local-6989586621690543607"><span class="hs-identifier hs-var">rsoUnAuthRole</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#unAuthRoleOption"><span class="hs-identifier hs-var">unAuthRoleOption</span></a></span><span>
-</span><span id="line-158"></span><span>  </span><span id="local-6989586621690543593"><span class="annot"><span class="annottext">CorsConfig
-</span><a href="#local-6989586621690543593"><span class="hs-identifier hs-var">soCorsConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe CorsConfig -&gt; WithEnvT Identity CorsConfig
-</span><a href="#local-6989586621690543592"><span class="hs-identifier hs-var">mkCorsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CorsConfig
-</span><a href="#local-6989586621690543691"><span class="hs-identifier hs-var">rsoCorsConfig</span></a></span><span>
-</span><span id="line-159"></span><span>  </span><span id="local-6989586621690543591"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543591"><span class="hs-identifier hs-var">soEnableConsole</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-158"></span><span>  </span><span id="local-6989586621690543508"><span class="annot"><span class="annottext">CorsConfig
+</span><a href="#local-6989586621690543508"><span class="hs-identifier hs-var">soCorsConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Maybe CorsConfig -&gt; WithEnvT Identity CorsConfig
+</span><a href="#local-6989586621690543507"><span class="hs-identifier hs-var">mkCorsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CorsConfig
+</span><a href="#local-6989586621690543606"><span class="hs-identifier hs-var">rsoCorsConfig</span></a></span><span>
+</span><span id="line-159"></span><span>  </span><span id="local-6989586621690543506"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543506"><span class="hs-identifier hs-var">soEnableConsole</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 Monad m =&gt;
 Bool -&gt; Option Bool -&gt; WithEnvT m Bool
 </span><a href="Hasura.Server.Init.Env.html#withOptionSwitch"><span class="hs-identifier hs-var">withOptionSwitch</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543690"><span class="hs-identifier hs-var">rsoEnableConsole</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
+</span><a href="#local-6989586621690543605"><span class="hs-identifier hs-var">rsoEnableConsole</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#enableConsoleOption"><span class="hs-identifier hs-var">enableConsoleOption</span></a></span><span>
-</span><span id="line-160"></span><span>  </span><span id="local-6989586621690543588"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690543588"><span class="hs-identifier hs-var">soConsoleAssetsDir</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-160"></span><span>  </span><span id="local-6989586621690543503"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621690543503"><span class="hs-identifier hs-var">soConsoleAssetsDir</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="Hasura.Server.Init.Env.html#withOption"><span class="hs-identifier hs-var">withOption</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690543689"><span class="hs-identifier hs-var">rsoConsoleAssetsDir</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
+</span><a href="#local-6989586621690543604"><span class="hs-identifier hs-var">rsoConsoleAssetsDir</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#consoleAssetsDirOption"><span class="hs-identifier hs-var">consoleAssetsDirOption</span></a></span><span>
-</span><span id="line-161"></span><span>  </span><span id="local-6989586621690543586"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690543586"><span class="hs-identifier hs-var">soConsoleSentryDsn</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-161"></span><span>  </span><span id="local-6989586621690543501"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621690543501"><span class="hs-identifier hs-var">soConsoleSentryDsn</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="Hasura.Server.Init.Env.html#withOption"><span class="hs-identifier hs-var">withOption</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690543688"><span class="hs-identifier hs-var">rsoConsoleSentryDsn</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
+</span><a href="#local-6989586621690543603"><span class="hs-identifier hs-var">rsoConsoleSentryDsn</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#consoleSentryDsnOption"><span class="hs-identifier hs-var">consoleSentryDsnOption</span></a></span><span>
-</span><span id="line-162"></span><span>  </span><span id="local-6989586621690543584"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543584"><span class="hs-identifier hs-var">soEnableTelemetry</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-162"></span><span>  </span><span id="local-6989586621690543499"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543499"><span class="hs-identifier hs-var">soEnableTelemetry</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Bool
-</span><a href="#local-6989586621690543687"><span class="hs-identifier hs-var">rsoEnableTelemetry</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
+</span><a href="#local-6989586621690543602"><span class="hs-identifier hs-var">rsoEnableTelemetry</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#enableTelemetryOption"><span class="hs-identifier hs-var">enableTelemetryOption</span></a></span><span>
-</span><span id="line-163"></span><span>  </span><span id="local-6989586621690543582"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621690543582"><span class="hs-identifier hs-var">soStringifyNum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-163"></span><span>  </span><span id="local-6989586621690543497"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621690543497"><span class="hs-identifier hs-var">soStringifyNum</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-164"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621690543685"><span class="hs-identifier hs-var">rsoStringifyNum</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690543600"><span class="hs-identifier hs-var">rsoStringifyNum</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-165"></span><span>      </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tStringifyNumbers"><span class="hs-identifier hs-var">Options.Don'tStringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
@@ -501,39 +501,39 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Option StringifyNumbers
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#stringifyNumOption"><span class="hs-identifier hs-var">stringifyNumOption</span></a></span><span>
-</span><span id="line-166"></span><span>      </span><span id="local-6989586621690543579"><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621690543579"><span class="hs-identifier hs-var">stringifyNums</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-166"></span><span>      </span><span id="local-6989586621690543494"><span class="annot"><span class="annottext">StringifyNumbers
+</span><a href="#local-6989586621690543494"><span class="hs-identifier hs-var">stringifyNums</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
-</span><a href="#local-6989586621690543579"><span class="hs-identifier hs-var">stringifyNums</span></a></span><span>
-</span><span id="line-167"></span><span>  </span><span id="local-6989586621690543578"><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
-</span><a href="#local-6989586621690543578"><span class="hs-identifier hs-var">soDangerousBooleanCollapse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><a href="#local-6989586621690543494"><span class="hs-identifier hs-var">stringifyNums</span></a></span><span>
+</span><span id="line-167"></span><span>  </span><span id="local-6989586621690543493"><span class="annot"><span class="annottext">DangerouslyCollapseBooleans
+</span><a href="#local-6989586621690543493"><span class="hs-identifier hs-var">soDangerousBooleanCollapse</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe DangerouslyCollapseBooleans
-</span><a href="#local-6989586621690543684"><span class="hs-identifier hs-var">rsoDangerousBooleanCollapse</span></a></span><span> </span><span class="annot"><span class="annottext">Option DangerouslyCollapseBooleans
+</span><a href="#local-6989586621690543599"><span class="hs-identifier hs-var">rsoDangerousBooleanCollapse</span></a></span><span> </span><span class="annot"><span class="annottext">Option DangerouslyCollapseBooleans
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#dangerousBooleanCollapseOption"><span class="hs-identifier hs-var">dangerousBooleanCollapseOption</span></a></span><span>
-</span><span id="line-168"></span><span>  </span><span id="local-6989586621690543576"><span class="annot"><span class="annottext">HashSet API
-</span><a href="#local-6989586621690543576"><span class="hs-identifier hs-var">soEnabledAPIs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-168"></span><span>  </span><span id="local-6989586621690543491"><span class="annot"><span class="annottext">HashSet API
+</span><a href="#local-6989586621690543491"><span class="hs-identifier hs-var">soEnabledAPIs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (HashSet API)
-</span><a href="#local-6989586621690543683"><span class="hs-identifier hs-var">rsoEnabledAPIs</span></a></span><span> </span><span class="annot"><span class="annottext">Option (HashSet API)
+</span><a href="#local-6989586621690543598"><span class="hs-identifier hs-var">rsoEnabledAPIs</span></a></span><span> </span><span class="annot"><span class="annottext">Option (HashSet API)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#enabledAPIsOption"><span class="hs-identifier hs-var">enabledAPIsOption</span></a></span><span>
-</span><span id="line-169"></span><span>  </span><span id="local-6989586621690543574"><span class="annot"><span class="annottext">SubscriptionsOptions
-</span><a href="#local-6989586621690543574"><span class="hs-identifier hs-var">soLiveQueryOpts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-170"></span><span>    </span><span id="local-6989586621690543573"><span class="annot"><span class="annottext">RefetchInterval
-</span><a href="#local-6989586621690543573"><span class="hs-identifier hs-var">_lqoRefetchInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-169"></span><span>  </span><span id="local-6989586621690543489"><span class="annot"><span class="annottext">SubscriptionsOptions
+</span><a href="#local-6989586621690543489"><span class="hs-identifier hs-var">soLiveQueryOpts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-170"></span><span>    </span><span id="local-6989586621690543488"><span class="annot"><span class="annottext">RefetchInterval
+</span><a href="#local-6989586621690543488"><span class="hs-identifier hs-var">_lqoRefetchInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RefetchInterval
-</span><a href="#local-6989586621690543682"><span class="hs-identifier hs-var">rsoMxRefetchInt</span></a></span><span> </span><span class="annot"><span class="annottext">Option RefetchInterval
+</span><a href="#local-6989586621690543597"><span class="hs-identifier hs-var">rsoMxRefetchInt</span></a></span><span> </span><span class="annot"><span class="annottext">Option RefetchInterval
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#mxRefetchDelayOption"><span class="hs-identifier hs-var">mxRefetchDelayOption</span></a></span><span>
-</span><span id="line-171"></span><span>    </span><span id="local-6989586621690543571"><span class="annot"><span class="annottext">BatchSize
-</span><a href="#local-6989586621690543571"><span class="hs-identifier hs-var">_lqoBatchSize</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-171"></span><span>    </span><span id="local-6989586621690543486"><span class="annot"><span class="annottext">BatchSize
+</span><a href="#local-6989586621690543486"><span class="hs-identifier hs-var">_lqoBatchSize</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe BatchSize
-</span><a href="#local-6989586621690543681"><span class="hs-identifier hs-var">rsoMxBatchSize</span></a></span><span> </span><span class="annot"><span class="annottext">Option BatchSize
+</span><a href="#local-6989586621690543596"><span class="hs-identifier hs-var">rsoMxBatchSize</span></a></span><span> </span><span class="annot"><span class="annottext">Option BatchSize
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#mxBatchSizeOption"><span class="hs-identifier hs-var">mxBatchSizeOption</span></a></span><span>
 </span><span id="line-172"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -544,21 +544,21 @@ _lqoBatchSize :: BatchSize
 _lqoBatchSize :: BatchSize
 _lqoRefetchInterval :: RefetchInterval
 </span><a href="Hasura.GraphQL.Execute.Subscription.Options.html#_lqoRefetchInterval"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-173"></span><span>  </span><span id="local-6989586621690543566"><span class="annot"><span class="annottext">SubscriptionsOptions
-</span><a href="#local-6989586621690543566"><span class="hs-identifier hs-var">soStreamingQueryOpts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-174"></span><span>    </span><span id="local-6989586621690543565"><span class="annot"><span class="annottext">RefetchInterval
-</span><a href="#local-6989586621690543565"><span class="hs-identifier hs-var">_lqoRefetchInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-173"></span><span>  </span><span id="local-6989586621690543481"><span class="annot"><span class="annottext">SubscriptionsOptions
+</span><a href="#local-6989586621690543481"><span class="hs-identifier hs-var">soStreamingQueryOpts</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-174"></span><span>    </span><span id="local-6989586621690543480"><span class="annot"><span class="annottext">RefetchInterval
+</span><a href="#local-6989586621690543480"><span class="hs-identifier hs-var">_lqoRefetchInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe RefetchInterval
-</span><a href="#local-6989586621690543680"><span class="hs-identifier hs-var">rsoStreamingMxRefetchInt</span></a></span><span> </span><span class="annot"><span class="annottext">Option RefetchInterval
+</span><a href="#local-6989586621690543595"><span class="hs-identifier hs-var">rsoStreamingMxRefetchInt</span></a></span><span> </span><span class="annot"><span class="annottext">Option RefetchInterval
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#streamingMxRefetchDelayOption"><span class="hs-identifier hs-var">streamingMxRefetchDelayOption</span></a></span><span>
-</span><span id="line-175"></span><span>    </span><span id="local-6989586621690543563"><span class="annot"><span class="annottext">BatchSize
-</span><a href="#local-6989586621690543563"><span class="hs-identifier hs-var">_lqoBatchSize</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-175"></span><span>    </span><span id="local-6989586621690543478"><span class="annot"><span class="annottext">BatchSize
+</span><a href="#local-6989586621690543478"><span class="hs-identifier hs-var">_lqoBatchSize</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe BatchSize
-</span><a href="#local-6989586621690543679"><span class="hs-identifier hs-var">rsoStreamingMxBatchSize</span></a></span><span> </span><span class="annot"><span class="annottext">Option BatchSize
+</span><a href="#local-6989586621690543594"><span class="hs-identifier hs-var">rsoStreamingMxBatchSize</span></a></span><span> </span><span class="annot"><span class="annottext">Option BatchSize
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#streamingMxBatchSizeOption"><span class="hs-identifier hs-var">streamingMxBatchSizeOption</span></a></span><span>
 </span><span id="line-176"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -568,66 +568,66 @@ _lqoBatchSize :: BatchSize
 _lqoRefetchInterval :: RefetchInterval
 _lqoRefetchInterval :: RefetchInterval
 _lqoBatchSize :: BatchSize
-</span><a href="#local-6989586621690543563"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-177"></span><span>  </span><span id="local-6989586621690543561"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543561"><span class="hs-identifier hs-var">soEnableAllowlist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><a href="#local-6989586621690543478"><span class="hs-glyph hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-177"></span><span>  </span><span id="local-6989586621690543476"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543476"><span class="hs-identifier hs-var">soEnableAllowlist</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 Monad m =&gt;
 Bool -&gt; Option Bool -&gt; WithEnvT m Bool
 </span><a href="Hasura.Server.Init.Env.html#withOptionSwitch"><span class="hs-identifier hs-var">withOptionSwitch</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543678"><span class="hs-identifier hs-var">rsoEnableAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
+</span><a href="#local-6989586621690543593"><span class="hs-identifier hs-var">rsoEnableAllowlist</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#enableAllowlistOption"><span class="hs-identifier hs-var">enableAllowlistOption</span></a></span><span>
-</span><span id="line-178"></span><span>  </span><span id="local-6989586621690543559"><span class="annot"><span class="annottext">HashSet (EngineLogType impl)
-</span><a href="#local-6989586621690543559"><span class="hs-identifier hs-var">soEnabledLogTypes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-178"></span><span>  </span><span id="local-6989586621690543474"><span class="annot"><span class="annottext">HashSet (EngineLogType impl)
+</span><a href="#local-6989586621690543474"><span class="hs-identifier hs-var">soEnabledLogTypes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (HashSet (EngineLogType impl))
-</span><a href="#local-6989586621690543677"><span class="hs-identifier hs-var">rsoEnabledLogTypes</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall impl.
+</span><a href="#local-6989586621690543592"><span class="hs-identifier hs-var">rsoEnabledLogTypes</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall impl.
 EnabledLogTypes impl =&gt;
 Option (HashSet (EngineLogType impl))
-</span><a href="Hasura.Server.Init.Arg.Command.Serve.html#enabledLogsOption"><span class="hs-identifier hs-var">enabledLogsOption</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690544161"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-179"></span><span>  </span><span id="local-6989586621690543557"><span class="annot"><span class="annottext">LogLevel
-</span><a href="#local-6989586621690543557"><span class="hs-identifier hs-var">soLogLevel</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><a href="Hasura.Server.Init.Arg.Command.Serve.html#enabledLogsOption"><span class="hs-identifier hs-var">enabledLogsOption</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690544076"><span class="hs-identifier hs-type">impl</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-179"></span><span>  </span><span id="local-6989586621690543472"><span class="annot"><span class="annottext">LogLevel
+</span><a href="#local-6989586621690543472"><span class="hs-identifier hs-var">soLogLevel</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe LogLevel
-</span><a href="#local-6989586621690543676"><span class="hs-identifier hs-var">rsoLogLevel</span></a></span><span> </span><span class="annot"><span class="annottext">Option LogLevel
+</span><a href="#local-6989586621690543591"><span class="hs-identifier hs-var">rsoLogLevel</span></a></span><span> </span><span class="annot"><span class="annottext">Option LogLevel
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#logLevelOption"><span class="hs-identifier hs-var">logLevelOption</span></a></span><span>
-</span><span id="line-180"></span><span>  </span><span id="local-6989586621690543555"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543555"><span class="hs-identifier hs-var">soDevMode</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-180"></span><span>  </span><span id="local-6989586621690543470"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543470"><span class="hs-identifier hs-var">soDevMode</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 Monad m =&gt;
 Bool -&gt; Option Bool -&gt; WithEnvT m Bool
 </span><a href="Hasura.Server.Init.Env.html#withOptionSwitch"><span class="hs-identifier hs-var">withOptionSwitch</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543675"><span class="hs-identifier hs-var">rsoDevMode</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
+</span><a href="#local-6989586621690543590"><span class="hs-identifier hs-var">rsoDevMode</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#graphqlDevModeOption"><span class="hs-identifier hs-var">graphqlDevModeOption</span></a></span><span>
-</span><span id="line-181"></span><span>  </span><span id="local-6989586621690543553"><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
-</span><a href="#local-6989586621690543553"><span class="hs-identifier hs-var">soResponseInternalErrorsConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; WithEnvT Identity ResponseInternalErrorsConfig
-</span><a href="#local-6989586621690543552"><span class="hs-identifier hs-var">mkResponseInternalErrorsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543555"><span class="hs-identifier hs-var">soDevMode</span></a></span><span>
-</span><span id="line-182"></span><span>  </span><span id="local-6989586621690543551"><span class="annot"><span class="annottext">Refined Positive Int
-</span><a href="#local-6989586621690543551"><span class="hs-identifier hs-var">soEventsHttpPoolSize</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-181"></span><span>  </span><span id="local-6989586621690543468"><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
+</span><a href="#local-6989586621690543468"><span class="hs-identifier hs-var">soResponseInternalErrorsConfig</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; WithEnvT Identity ResponseInternalErrorsConfig
+</span><a href="#local-6989586621690543467"><span class="hs-identifier hs-var">mkResponseInternalErrorsConfig</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543470"><span class="hs-identifier hs-var">soDevMode</span></a></span><span>
+</span><span id="line-182"></span><span>  </span><span id="local-6989586621690543466"><span class="annot"><span class="annottext">Refined Positive Int
+</span><a href="#local-6989586621690543466"><span class="hs-identifier hs-var">soEventsHttpPoolSize</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Refined Positive Int)
-</span><a href="#local-6989586621690543673"><span class="hs-identifier hs-var">rsoEventsHttpPoolSize</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined Positive Int)
+</span><a href="#local-6989586621690543588"><span class="hs-identifier hs-var">rsoEventsHttpPoolSize</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined Positive Int)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#graphqlEventsHttpPoolSizeOption"><span class="hs-identifier hs-var">graphqlEventsHttpPoolSizeOption</span></a></span><span>
-</span><span id="line-183"></span><span>  </span><span id="local-6989586621690543549"><span class="annot"><span class="annottext">Refined NonNegative Milliseconds
-</span><a href="#local-6989586621690543549"><span class="hs-identifier hs-var">soEventsFetchInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-183"></span><span>  </span><span id="local-6989586621690543464"><span class="annot"><span class="annottext">Refined NonNegative Milliseconds
+</span><a href="#local-6989586621690543464"><span class="hs-identifier hs-var">soEventsFetchInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Refined NonNegative Milliseconds)
-</span><a href="#local-6989586621690543672"><span class="hs-identifier hs-var">rsoEventsFetchInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Milliseconds)
+</span><a href="#local-6989586621690543587"><span class="hs-identifier hs-var">rsoEventsFetchInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Milliseconds)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#graphqlEventsFetchIntervalOption"><span class="hs-identifier hs-var">graphqlEventsFetchIntervalOption</span></a></span><span>
-</span><span id="line-184"></span><span>  </span><span id="local-6989586621690543547"><span class="annot"><span class="annottext">OptionalInterval
-</span><a href="#local-6989586621690543547"><span class="hs-identifier hs-var">soAsyncActionsFetchInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-184"></span><span>  </span><span id="local-6989586621690543462"><span class="annot"><span class="annottext">OptionalInterval
+</span><a href="#local-6989586621690543462"><span class="hs-identifier hs-var">soAsyncActionsFetchInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OptionalInterval
-</span><a href="#local-6989586621690543671"><span class="hs-identifier hs-var">rsoAsyncActionsFetchInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Option OptionalInterval
+</span><a href="#local-6989586621690543586"><span class="hs-identifier hs-var">rsoAsyncActionsFetchInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Option OptionalInterval
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#asyncActionsFetchIntervalOption"><span class="hs-identifier hs-var">asyncActionsFetchIntervalOption</span></a></span><span>
-</span><span id="line-185"></span><span>  </span><span id="local-6989586621690543545"><span class="annot"><span class="annottext">RemoteSchemaPermissions
-</span><a href="#local-6989586621690543545"><span class="hs-identifier hs-var">soEnableRemoteSchemaPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-185"></span><span>  </span><span id="local-6989586621690543460"><span class="annot"><span class="annottext">RemoteSchemaPermissions
+</span><a href="#local-6989586621690543460"><span class="hs-identifier hs-var">soEnableRemoteSchemaPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-186"></span><span>    </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
-</span><a href="#local-6989586621690543670"><span class="hs-identifier hs-var">rsoEnableRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690543585"><span class="hs-identifier hs-var">rsoEnableRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-187"></span><span>      </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
 </span><a href="Hasura.GraphQL.Schema.Options.html#DisableRemoteSchemaPermissions"><span class="hs-identifier hs-var">Options.DisableRemoteSchemaPermissions</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
@@ -635,30 +635,30 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Option RemoteSchemaPermissions
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#enableRemoteSchemaPermsOption"><span class="hs-identifier hs-var">enableRemoteSchemaPermsOption</span></a></span><span>
-</span><span id="line-188"></span><span>      </span><span id="local-6989586621690543542"><span class="annot"><span class="annottext">RemoteSchemaPermissions
-</span><a href="#local-6989586621690543542"><span class="hs-identifier hs-var">enableRemoteSchemaPermissions</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-188"></span><span>      </span><span id="local-6989586621690543457"><span class="annot"><span class="annottext">RemoteSchemaPermissions
+</span><a href="#local-6989586621690543457"><span class="hs-identifier hs-var">enableRemoteSchemaPermissions</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteSchemaPermissions
-</span><a href="#local-6989586621690543542"><span class="hs-identifier hs-var">enableRemoteSchemaPermissions</span></a></span><span>
-</span><span id="line-189"></span><span>  </span><span id="local-6989586621690543541"><span class="annot"><span class="annottext">ConnectionOptions
-</span><a href="#local-6989586621690543541"><span class="hs-identifier hs-var">soConnectionOptions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">WithEnvT Identity ConnectionOptions
-</span><a href="#local-6989586621690543540"><span class="hs-identifier hs-var">mkConnectionOptions</span></a></span><span>
-</span><span id="line-190"></span><span>  </span><span id="local-6989586621690543539"><span class="annot"><span class="annottext">KeepAliveDelay
-</span><a href="#local-6989586621690543539"><span class="hs-identifier hs-var">soWebSocketKeepAlive</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><a href="#local-6989586621690543457"><span class="hs-identifier hs-var">enableRemoteSchemaPermissions</span></a></span><span>
+</span><span id="line-189"></span><span>  </span><span id="local-6989586621690543456"><span class="annot"><span class="annottext">ConnectionOptions
+</span><a href="#local-6989586621690543456"><span class="hs-identifier hs-var">soConnectionOptions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">WithEnvT Identity ConnectionOptions
+</span><a href="#local-6989586621690543455"><span class="hs-identifier hs-var">mkConnectionOptions</span></a></span><span>
+</span><span id="line-190"></span><span>  </span><span id="local-6989586621690543454"><span class="annot"><span class="annottext">KeepAliveDelay
+</span><a href="#local-6989586621690543454"><span class="hs-identifier hs-var">soWebSocketKeepAlive</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe KeepAliveDelay
-</span><a href="#local-6989586621690543668"><span class="hs-identifier hs-var">rsoWebSocketKeepAlive</span></a></span><span> </span><span class="annot"><span class="annottext">Option KeepAliveDelay
+</span><a href="#local-6989586621690543583"><span class="hs-identifier hs-var">rsoWebSocketKeepAlive</span></a></span><span> </span><span class="annot"><span class="annottext">Option KeepAliveDelay
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#webSocketKeepAliveOption"><span class="hs-identifier hs-var">webSocketKeepAliveOption</span></a></span><span>
-</span><span id="line-191"></span><span>  </span><span id="local-6989586621690543537"><span class="annot"><span class="annottext">InferFunctionPermissions
-</span><a href="#local-6989586621690543537"><span class="hs-identifier hs-var">soInferFunctionPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-191"></span><span>  </span><span id="local-6989586621690543452"><span class="annot"><span class="annottext">InferFunctionPermissions
+</span><a href="#local-6989586621690543452"><span class="hs-identifier hs-var">soInferFunctionPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe InferFunctionPermissions
-</span><a href="#local-6989586621690543667"><span class="hs-identifier hs-var">rsoInferFunctionPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">Option InferFunctionPermissions
+</span><a href="#local-6989586621690543582"><span class="hs-identifier hs-var">rsoInferFunctionPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">Option InferFunctionPermissions
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#inferFunctionPermsOption"><span class="hs-identifier hs-var">inferFunctionPermsOption</span></a></span><span>
-</span><span id="line-192"></span><span>  </span><span id="local-6989586621690543535"><span class="annot"><span class="annottext">MaintenanceMode ()
-</span><a href="#local-6989586621690543535"><span class="hs-identifier hs-var">soEnableMaintenanceMode</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MaintenanceMode ()
-</span><a href="#local-6989586621690543666"><span class="hs-identifier hs-var">rsoEnableMaintenanceMode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-192"></span><span>  </span><span id="local-6989586621690543450"><span class="annot"><span class="annottext">MaintenanceMode ()
+</span><a href="#local-6989586621690543450"><span class="hs-identifier hs-var">soEnableMaintenanceMode</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MaintenanceMode ()
+</span><a href="#local-6989586621690543581"><span class="hs-identifier hs-var">rsoEnableMaintenanceMode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-193"></span><span>    </span><span class="annot"><span class="annottext">MaintenanceMode ()
 </span><a href="Hasura.Server.Types.html#MaintenanceModeDisabled"><span class="hs-identifier hs-var">Types.MaintenanceModeDisabled</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
@@ -666,54 +666,54 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Option (MaintenanceMode ())
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#enableMaintenanceModeOption"><span class="hs-identifier hs-var">enableMaintenanceModeOption</span></a></span><span>
-</span><span id="line-194"></span><span>    </span><span id="local-6989586621690543532"><span class="annot"><span class="annottext">MaintenanceMode ()
-</span><a href="#local-6989586621690543532"><span class="hs-identifier hs-var">maintenanceModeEnabled</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-194"></span><span>    </span><span id="local-6989586621690543447"><span class="annot"><span class="annottext">MaintenanceMode ()
+</span><a href="#local-6989586621690543447"><span class="hs-identifier hs-var">maintenanceModeEnabled</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">MaintenanceMode ()
-</span><a href="#local-6989586621690543532"><span class="hs-identifier hs-var">maintenanceModeEnabled</span></a></span><span>
-</span><span id="line-195"></span><span>  </span><span id="local-6989586621690543531"><span class="annot"><span class="annottext">OptionalInterval
-</span><a href="#local-6989586621690543531"><span class="hs-identifier hs-var">soSchemaPollInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><a href="#local-6989586621690543447"><span class="hs-identifier hs-var">maintenanceModeEnabled</span></a></span><span>
+</span><span id="line-195"></span><span>  </span><span id="local-6989586621690543446"><span class="annot"><span class="annottext">OptionalInterval
+</span><a href="#local-6989586621690543446"><span class="hs-identifier hs-var">soSchemaPollInterval</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe OptionalInterval
-</span><a href="#local-6989586621690543665"><span class="hs-identifier hs-var">rsoSchemaPollInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Option OptionalInterval
+</span><a href="#local-6989586621690543580"><span class="hs-identifier hs-var">rsoSchemaPollInterval</span></a></span><span> </span><span class="annot"><span class="annottext">Option OptionalInterval
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#schemaPollIntervalOption"><span class="hs-identifier hs-var">schemaPollIntervalOption</span></a></span><span>
-</span><span id="line-196"></span><span>  </span><span id="local-6989586621690543529"><span class="annot"><span class="annottext">HashSet ExperimentalFeature
-</span><a href="#local-6989586621690543529"><span class="hs-identifier hs-var">soExperimentalFeatures</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-196"></span><span>  </span><span id="local-6989586621690543444"><span class="annot"><span class="annottext">HashSet ExperimentalFeature
+</span><a href="#local-6989586621690543444"><span class="hs-identifier hs-var">soExperimentalFeatures</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (HashSet ExperimentalFeature)
-</span><a href="#local-6989586621690543664"><span class="hs-identifier hs-var">rsoExperimentalFeatures</span></a></span><span> </span><span class="annot"><span class="annottext">Option (HashSet ExperimentalFeature)
+</span><a href="#local-6989586621690543579"><span class="hs-identifier hs-var">rsoExperimentalFeatures</span></a></span><span> </span><span class="annot"><span class="annottext">Option (HashSet ExperimentalFeature)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#experimentalFeaturesOption"><span class="hs-identifier hs-var">experimentalFeaturesOption</span></a></span><span>
-</span><span id="line-197"></span><span>  </span><span id="local-6989586621690543527"><span class="annot"><span class="annottext">Refined NonNegative Int
-</span><a href="#local-6989586621690543527"><span class="hs-identifier hs-var">soEventsFetchBatchSize</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-197"></span><span>  </span><span id="local-6989586621690543442"><span class="annot"><span class="annottext">Refined NonNegative Int
+</span><a href="#local-6989586621690543442"><span class="hs-identifier hs-var">soEventsFetchBatchSize</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Refined NonNegative Int)
-</span><a href="#local-6989586621690543663"><span class="hs-identifier hs-var">rsoEventsFetchBatchSize</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Int)
+</span><a href="#local-6989586621690543578"><span class="hs-identifier hs-var">rsoEventsFetchBatchSize</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Int)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#eventsFetchBatchSizeOption"><span class="hs-identifier hs-var">eventsFetchBatchSizeOption</span></a></span><span>
-</span><span id="line-198"></span><span>  </span><span id="local-6989586621690543525"><span class="annot"><span class="annottext">Refined NonNegative Seconds
-</span><a href="#local-6989586621690543525"><span class="hs-identifier hs-var">soGracefulShutdownTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-198"></span><span>  </span><span id="local-6989586621690543440"><span class="annot"><span class="annottext">Refined NonNegative Seconds
+</span><a href="#local-6989586621690543440"><span class="hs-identifier hs-var">soGracefulShutdownTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Refined NonNegative Seconds)
-</span><a href="#local-6989586621690543662"><span class="hs-identifier hs-var">rsoGracefulShutdownTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Seconds)
+</span><a href="#local-6989586621690543577"><span class="hs-identifier hs-var">rsoGracefulShutdownTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Seconds)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#gracefulShutdownOption"><span class="hs-identifier hs-var">gracefulShutdownOption</span></a></span><span>
-</span><span id="line-199"></span><span>  </span><span id="local-6989586621690543523"><span class="annot"><span class="annottext">WSConnectionInitTimeout
-</span><a href="#local-6989586621690543523"><span class="hs-identifier hs-var">soWebSocketConnectionInitTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-199"></span><span>  </span><span id="local-6989586621690543438"><span class="annot"><span class="annottext">WSConnectionInitTimeout
+</span><a href="#local-6989586621690543438"><span class="hs-identifier hs-var">soWebSocketConnectionInitTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe WSConnectionInitTimeout
-</span><a href="#local-6989586621690543661"><span class="hs-identifier hs-var">rsoWebSocketConnectionInitTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Option WSConnectionInitTimeout
+</span><a href="#local-6989586621690543576"><span class="hs-identifier hs-var">rsoWebSocketConnectionInitTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Option WSConnectionInitTimeout
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#webSocketConnectionInitTimeoutOption"><span class="hs-identifier hs-var">webSocketConnectionInitTimeoutOption</span></a></span><span>
-</span><span id="line-200"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690543521"><span class="annot"><span class="annottext">soEventingMode :: EventingMode
-</span><a href="#local-6989586621690543521"><span class="hs-identifier hs-var hs-var">soEventingMode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EventingMode
+</span><span id="line-200"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690543436"><span class="annot"><span class="annottext">soEventingMode :: EventingMode
+</span><a href="#local-6989586621690543436"><span class="hs-identifier hs-var hs-var">soEventingMode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">EventingMode
 </span><a href="Hasura.Server.Types.html#EventingEnabled"><span class="hs-identifier hs-var">Types.EventingEnabled</span></a></span><span>
-</span><span id="line-201"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690543519"><span class="annot"><span class="annottext">soReadOnlyMode :: ReadOnlyMode
-</span><a href="#local-6989586621690543519"><span class="hs-identifier hs-var hs-var">soReadOnlyMode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReadOnlyMode
+</span><span id="line-201"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690543434"><span class="annot"><span class="annottext">soReadOnlyMode :: ReadOnlyMode
+</span><a href="#local-6989586621690543434"><span class="hs-identifier hs-var hs-var">soReadOnlyMode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ReadOnlyMode
 </span><a href="Hasura.Server.Types.html#ReadOnlyModeDisabled"><span class="hs-identifier hs-var">Types.ReadOnlyModeDisabled</span></a></span><span>
-</span><span id="line-202"></span><span>  </span><span id="local-6989586621690543517"><span class="annot"><span class="annottext">MetadataQueryLoggingMode
-</span><a href="#local-6989586621690543517"><span class="hs-identifier hs-var">soEnableMetadataQueryLogging</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MetadataQueryLoggingMode
-</span><a href="#local-6989586621690543660"><span class="hs-identifier hs-var">rsoEnableMetadataQueryLoggingEnv</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-202"></span><span>  </span><span id="local-6989586621690543432"><span class="annot"><span class="annottext">MetadataQueryLoggingMode
+</span><a href="#local-6989586621690543432"><span class="hs-identifier hs-var">soEnableMetadataQueryLogging</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">MetadataQueryLoggingMode
+</span><a href="#local-6989586621690543575"><span class="hs-identifier hs-var">rsoEnableMetadataQueryLoggingEnv</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-203"></span><span>    </span><span class="annot"><span class="annottext">MetadataQueryLoggingMode
 </span><a href="Hasura.Server.Logging.html#MetadataQueryLoggingDisabled"><span class="hs-identifier hs-var">Server.Logging.MetadataQueryLoggingDisabled</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
@@ -721,23 +721,23 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Option MetadataQueryLoggingMode
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#enableMetadataQueryLoggingOption"><span class="hs-identifier hs-var">enableMetadataQueryLoggingOption</span></a></span><span>
-</span><span id="line-204"></span><span>    </span><span id="local-6989586621690543514"><span class="annot"><span class="annottext">MetadataQueryLoggingMode
-</span><a href="#local-6989586621690543514"><span class="hs-identifier hs-var">metadataQueryLoggingEnabled</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-204"></span><span>    </span><span id="local-6989586621690543429"><span class="annot"><span class="annottext">MetadataQueryLoggingMode
+</span><a href="#local-6989586621690543429"><span class="hs-identifier hs-var">metadataQueryLoggingEnabled</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataQueryLoggingMode
-</span><a href="#local-6989586621690543514"><span class="hs-identifier hs-var">metadataQueryLoggingEnabled</span></a></span><span>
-</span><span id="line-205"></span><span>  </span><span id="local-6989586621690543513"><span class="annot"><span class="annottext">Maybe NamingCase
-</span><a href="#local-6989586621690543513"><span class="hs-identifier hs-var">soDefaultNamingConvention</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><a href="#local-6989586621690543429"><span class="hs-identifier hs-var">metadataQueryLoggingEnabled</span></a></span><span>
+</span><span id="line-205"></span><span>  </span><span id="local-6989586621690543428"><span class="annot"><span class="annottext">Maybe NamingCase
+</span><a href="#local-6989586621690543428"><span class="hs-identifier hs-var">soDefaultNamingConvention</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="Hasura.Server.Init.Env.html#withOption"><span class="hs-identifier hs-var">withOption</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe NamingCase
-</span><a href="#local-6989586621690543659"><span class="hs-identifier hs-var">rsoDefaultNamingConvention</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
+</span><a href="#local-6989586621690543574"><span class="hs-identifier hs-var">rsoDefaultNamingConvention</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#defaultNamingConventionOption"><span class="hs-identifier hs-var">defaultNamingConventionOption</span></a></span><span>
-</span><span id="line-206"></span><span>  </span><span id="local-6989586621690543511"><span class="annot"><span class="annottext">ExtensionsSchema
-</span><a href="#local-6989586621690543511"><span class="hs-identifier hs-var">soExtensionsSchema</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-206"></span><span>  </span><span id="local-6989586621690543426"><span class="annot"><span class="annottext">ExtensionsSchema
+</span><a href="#local-6989586621690543426"><span class="hs-identifier hs-var">soExtensionsSchema</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe ExtensionsSchema
-</span><a href="#local-6989586621690543658"><span class="hs-identifier hs-var">rsoExtensionsSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Option ExtensionsSchema
+</span><a href="#local-6989586621690543573"><span class="hs-identifier hs-var">rsoExtensionsSchema</span></a></span><span> </span><span class="annot"><span class="annottext">Option ExtensionsSchema
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#metadataDBExtensionsSchemaOption"><span class="hs-identifier hs-var">metadataDBExtensionsSchemaOption</span></a></span><span>
 </span><span id="line-207"></span><span>
 </span><span id="line-208"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -860,8 +860,8 @@ soHost :: HostPreference
 soPort :: Port
 </span><a href="Hasura.Server.Init.Config.html#soExtensionsSchema"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-209"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-210"></span><span>    </span><span id="local-6989586621690543609"><span class="annot"><span class="annottext">mkConnParams :: ConnParamsRaw -&gt; WithEnvT m ConnParams
-</span><a href="#local-6989586621690543609"><span class="hs-identifier hs-var hs-var">mkConnParams</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ConnParamsRaw"><span class="hs-identifier hs-type">ConnParamsRaw</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690543413"><span id="local-6989586621690543414"><span id="local-6989586621690543415"><span id="local-6989586621690543416"><span id="local-6989586621690543417"><span id="local-6989586621690543418"><span class="annot"><span class="annottext">Maybe Bool
+</span><span id="line-210"></span><span>    </span><span id="local-6989586621690543524"><span class="annot"><span class="annottext">mkConnParams :: ConnParamsRaw -&gt; WithEnvT m ConnParams
+</span><a href="#local-6989586621690543524"><span class="hs-identifier hs-var hs-var">mkConnParams</span></a></span></span><span> </span><span class="annot"><a href="Hasura.Server.Init.Config.html#ConnParamsRaw"><span class="hs-identifier hs-type">ConnParamsRaw</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690543328"><span id="local-6989586621690543329"><span id="local-6989586621690543330"><span id="local-6989586621690543331"><span id="local-6989586621690543332"><span id="local-6989586621690543333"><span class="annot"><span class="annottext">Maybe Bool
 Maybe (Refined NonNegative Int)
 Maybe (Refined NonNegative NominalDiffTime)
 rcpPoolTimeout :: ConnParamsRaw -&gt; Maybe (Refined NonNegative NominalDiffTime)
@@ -877,56 +877,56 @@ rcpIdleTime :: Maybe (Refined NonNegative Int)
 rcpConns :: Maybe (Refined NonNegative Int)
 rcpStripes :: Maybe (Refined NonNegative Int)
 </span><a href="Hasura.Server.Init.Config.html#rcpPoolTimeout"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-211"></span><span>      </span><span id="local-6989586621690543406"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690543406"><span class="hs-identifier hs-var">cpStripes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {k} (p :: k) x. Refined p x -&gt; x
+</span><span id="line-211"></span><span>      </span><span id="local-6989586621690543321"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690543321"><span class="hs-identifier hs-var">cpStripes</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {k} (p :: k) x. Refined p x -&gt; x
 </span><span class="hs-identifier hs-var">unrefine</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Refined NonNegative Int)
-</span><a href="#local-6989586621690543418"><span class="hs-identifier hs-var">rcpStripes</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Int)
+</span><a href="#local-6989586621690543333"><span class="hs-identifier hs-var">rcpStripes</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Int)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgStripesOption"><span class="hs-identifier hs-var">pgStripesOption</span></a></span><span>
 </span><span id="line-212"></span><span>      </span><span class="hs-comment">-- Note: by Little's Law we can expect e.g. (with 50 max connections) a</span><span>
 </span><span id="line-213"></span><span>      </span><span class="hs-comment">-- hard throughput cap at 1000RPS when db queries take 50ms on average:</span><span>
-</span><span id="line-214"></span><span>      </span><span id="local-6989586621690543404"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690543404"><span class="hs-identifier hs-var">cpConns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {k} (p :: k) x. Refined p x -&gt; x
+</span><span id="line-214"></span><span>      </span><span id="local-6989586621690543319"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690543319"><span class="hs-identifier hs-var">cpConns</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {k} (p :: k) x. Refined p x -&gt; x
 </span><span class="hs-identifier hs-var">unrefine</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Refined NonNegative Int)
-</span><a href="#local-6989586621690543417"><span class="hs-identifier hs-var">rcpConns</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Int)
+</span><a href="#local-6989586621690543332"><span class="hs-identifier hs-var">rcpConns</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Int)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgConnsOption"><span class="hs-identifier hs-var">pgConnsOption</span></a></span><span>
-</span><span id="line-215"></span><span>      </span><span id="local-6989586621690543402"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690543402"><span class="hs-identifier hs-var">cpIdleTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {k} (p :: k) x. Refined p x -&gt; x
+</span><span id="line-215"></span><span>      </span><span id="local-6989586621690543317"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690543317"><span class="hs-identifier hs-var">cpIdleTime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {k} (p :: k) x. Refined p x -&gt; x
 </span><span class="hs-identifier hs-var">unrefine</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Refined NonNegative Int)
-</span><a href="#local-6989586621690543416"><span class="hs-identifier hs-var">rcpIdleTime</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Int)
+</span><a href="#local-6989586621690543331"><span class="hs-identifier hs-var">rcpIdleTime</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative Int)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgTimeoutOption"><span class="hs-identifier hs-var">pgTimeoutOption</span></a></span><span>
-</span><span id="line-216"></span><span>      </span><span id="local-6989586621690543400"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543400"><span class="hs-identifier hs-var">cpAllowPrepare</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-216"></span><span>      </span><span id="local-6989586621690543315"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543315"><span class="hs-identifier hs-var">cpAllowPrepare</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Bool
-</span><a href="#local-6989586621690543414"><span class="hs-identifier hs-var">rcpAllowPrepare</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
+</span><a href="#local-6989586621690543329"><span class="hs-identifier hs-var">rcpAllowPrepare</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgUsePreparedStatementsOption"><span class="hs-identifier hs-var">pgUsePreparedStatementsOption</span></a></span><span>
 </span><span id="line-217"></span><span>      </span><span class="hs-comment">-- TODO: Add newtype to allow this:</span><span>
-</span><span id="line-218"></span><span>      </span><span id="local-6989586621690543398"><span class="annot"><span class="annottext">Maybe NominalDiffTime
-</span><a href="#local-6989586621690543398"><span class="hs-identifier hs-var">cpMbLifetime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-219"></span><span>        </span><span id="local-6989586621690543397"><span class="annot"><span class="annottext">NominalDiffTime
-</span><a href="#local-6989586621690543397"><span class="hs-identifier hs-var">lifetime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {k} (p :: k) x. Refined p x -&gt; x
+</span><span id="line-218"></span><span>      </span><span id="local-6989586621690543313"><span class="annot"><span class="annottext">Maybe NominalDiffTime
+</span><a href="#local-6989586621690543313"><span class="hs-identifier hs-var">cpMbLifetime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-219"></span><span>        </span><span id="local-6989586621690543312"><span class="annot"><span class="annottext">NominalDiffTime
+</span><a href="#local-6989586621690543312"><span class="hs-identifier hs-var">lifetime</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall {k} (p :: k) x. Refined p x -&gt; x
 </span><span class="hs-identifier hs-var">unrefine</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Refined NonNegative NominalDiffTime)
-</span><a href="#local-6989586621690543415"><span class="hs-identifier hs-var">rcpConnLifetime</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative NominalDiffTime)
+</span><a href="#local-6989586621690543330"><span class="hs-identifier hs-var">rcpConnLifetime</span></a></span><span> </span><span class="annot"><span class="annottext">Option (Refined NonNegative NominalDiffTime)
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgConnLifetimeOption"><span class="hs-identifier hs-var">pgConnLifetimeOption</span></a></span><span>
 </span><span id="line-220"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">NominalDiffTime
-</span><a href="#local-6989586621690543397"><span class="hs-identifier hs-var">lifetime</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690543312"><span class="hs-identifier hs-var">lifetime</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">NominalDiffTime
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-221"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -935,19 +935,19 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><span id="line-222"></span><span>          </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">NominalDiffTime
-</span><a href="#local-6989586621690543397"><span class="hs-identifier hs-var">lifetime</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-223"></span><span>      </span><span id="local-6989586621690543395"><span class="annot"><span class="annottext">Maybe NominalDiffTime
-</span><a href="#local-6989586621690543395"><span class="hs-identifier hs-var">cpTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="#local-6989586621690543312"><span class="hs-identifier hs-var">lifetime</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-223"></span><span>      </span><span id="local-6989586621690543310"><span class="annot"><span class="annottext">Maybe NominalDiffTime
+</span><a href="#local-6989586621690543310"><span class="hs-identifier hs-var">cpTimeout</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">forall {k} (p :: k) x. Refined p x -&gt; x
 </span><span class="hs-identifier hs-var">unrefine</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="Hasura.Server.Init.Env.html#withOption"><span class="hs-identifier hs-var">withOption</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Refined NonNegative NominalDiffTime)
-</span><a href="#local-6989586621690543413"><span class="hs-identifier hs-var">rcpPoolTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
+</span><a href="#local-6989586621690543328"><span class="hs-identifier hs-var">rcpPoolTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#pgPoolTimeoutOption"><span class="hs-identifier hs-var">pgPoolTimeoutOption</span></a></span><span>
-</span><span id="line-224"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690543393"><span class="annot"><span class="annottext">cpCancel :: Bool
-</span><a href="#local-6989586621690543393"><span class="hs-identifier hs-var hs-var">cpCancel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-224"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690543308"><span class="annot"><span class="annottext">cpCancel :: Bool
+</span><a href="#local-6989586621690543308"><span class="hs-identifier hs-var hs-var">cpCancel</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
 </span><span id="line-225"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -969,27 +969,27 @@ cpAllowPrepare :: Bool
 cpIdleTime :: Int
 cpConns :: Int
 cpStripes :: Int
-</span><a href="#local-6989586621690543385"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
+</span><a href="#local-6989586621690543300"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-227"></span><span>
-</span><span id="line-228"></span><span>    </span><span id="local-6989586621690543599"><span class="annot"><span class="annottext">mkAuthHook :: AuthHookRaw -&gt; WithEnvT m (Maybe AuthHook)
-</span><a href="#local-6989586621690543599"><span class="hs-identifier hs-var hs-var">mkAuthHook</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#AuthHookRaw"><span class="hs-identifier hs-type">AuthHookRaw</span></a></span><span> </span><span id="local-6989586621690543367"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690543367"><span class="hs-identifier hs-var">mUrl</span></a></span></span><span> </span><span id="local-6989586621690543366"><span class="annot"><span class="annottext">Maybe AuthHookType
-</span><a href="#local-6989586621690543366"><span class="hs-identifier hs-var">mType</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-229"></span><span>      </span><span id="local-6989586621690543365"><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690543365"><span class="hs-identifier hs-var">mUrlEnv</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-228"></span><span>    </span><span id="local-6989586621690543514"><span class="annot"><span class="annottext">mkAuthHook :: AuthHookRaw -&gt; WithEnvT m (Maybe AuthHook)
+</span><a href="#local-6989586621690543514"><span class="hs-identifier hs-var hs-var">mkAuthHook</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Init.Config.html#AuthHookRaw"><span class="hs-identifier hs-type">AuthHookRaw</span></a></span><span> </span><span id="local-6989586621690543282"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621690543282"><span class="hs-identifier hs-var">mUrl</span></a></span></span><span> </span><span id="local-6989586621690543281"><span class="annot"><span class="annottext">Maybe AuthHookType
+</span><a href="#local-6989586621690543281"><span class="hs-identifier hs-var">mType</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-229"></span><span>      </span><span id="local-6989586621690543280"><span class="annot"><span class="annottext">Maybe Text
+</span><a href="#local-6989586621690543280"><span class="hs-identifier hs-var">mUrlEnv</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="Hasura.Server.Init.Env.html#withOption"><span class="hs-identifier hs-var">withOption</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690543367"><span class="hs-identifier hs-var">mUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
+</span><a href="#local-6989586621690543282"><span class="hs-identifier hs-var">mUrl</span></a></span><span> </span><span class="annot"><span class="annottext">Option ()
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#authHookOption"><span class="hs-identifier hs-var">authHookOption</span></a></span><span>
 </span><span id="line-230"></span><span>      </span><span class="hs-comment">-- Also support HASURA_GRAPHQL_AUTH_HOOK_TYPE</span><span>
 </span><span id="line-231"></span><span>      </span><span class="hs-comment">-- TODO (from master):- drop this in next major update &lt;--- (NOTE: This comment is from 2020-08-21)</span><span>
-</span><span id="line-232"></span><span>      </span><span id="local-6989586621690543363"><span class="annot"><span class="annottext">AuthHookType
-</span><a href="#local-6989586621690543363"><span class="hs-identifier hs-var">authMode</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-232"></span><span>      </span><span id="local-6989586621690543278"><span class="annot"><span class="annottext">AuthHookType
+</span><a href="#local-6989586621690543278"><span class="hs-identifier hs-var">authMode</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-233"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span>
 </span><span id="line-234"></span><span>          </span><span class="annot"><span class="annottext">Maybe AuthHookType
-</span><a href="#local-6989586621690543366"><span class="hs-identifier hs-var">mType</span></a></span><span>
+</span><a href="#local-6989586621690543281"><span class="hs-identifier hs-var">mType</span></a></span><span>
 </span><span id="line-235"></span><span>          </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall def. Option def -&gt; def
 </span><a href="Hasura.Server.Init.Config.html#_default"><span class="hs-identifier hs-var">_default</span></a></span><span> </span><span class="annot"><span class="annottext">Option AuthHookType
@@ -1008,24 +1008,24 @@ Maybe option -&gt; Option () -&gt; WithEnvT m (Maybe option)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; AuthHookType -&gt; AuthHook
 </span><a href="Hasura.Server.Auth.WebHook.html#AuthHook"><span class="hs-operator hs-var">`Auth.AuthHook`</span></a></span><span> </span><span class="annot"><span class="annottext">AuthHookType
-</span><a href="#local-6989586621690543363"><span class="hs-identifier hs-var">authMode</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="#local-6989586621690543278"><span class="hs-identifier hs-var">authMode</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
-</span><a href="#local-6989586621690543365"><span class="hs-identifier hs-var">mUrlEnv</span></a></span><span>
+</span><a href="#local-6989586621690543280"><span class="hs-identifier hs-var">mUrlEnv</span></a></span><span>
 </span><span id="line-240"></span><span>
-</span><span id="line-241"></span><span>    </span><span id="local-6989586621690543592"><span class="annot"><span class="annottext">mkCorsConfig :: Maybe CorsConfig -&gt; WithEnvT Identity CorsConfig
-</span><a href="#local-6989586621690543592"><span class="hs-identifier hs-var hs-var">mkCorsConfig</span></a></span></span><span> </span><span id="local-6989586621690543356"><span class="annot"><span class="annottext">Maybe CorsConfig
-</span><a href="#local-6989586621690543356"><span class="hs-identifier hs-var">mCfg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-242"></span><span>      </span><span id="local-6989586621690543355"><span class="annot"><span class="annottext">CorsConfig
-</span><a href="#local-6989586621690543355"><span class="hs-identifier hs-var">corsCfg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-243"></span><span>        </span><span id="local-6989586621690543354"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543354"><span class="hs-identifier hs-var">corsDisabled</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-241"></span><span>    </span><span id="local-6989586621690543507"><span class="annot"><span class="annottext">mkCorsConfig :: Maybe CorsConfig -&gt; WithEnvT Identity CorsConfig
+</span><a href="#local-6989586621690543507"><span class="hs-identifier hs-var hs-var">mkCorsConfig</span></a></span></span><span> </span><span id="local-6989586621690543271"><span class="annot"><span class="annottext">Maybe CorsConfig
+</span><a href="#local-6989586621690543271"><span class="hs-identifier hs-var">mCfg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-242"></span><span>      </span><span id="local-6989586621690543270"><span class="annot"><span class="annottext">CorsConfig
+</span><a href="#local-6989586621690543270"><span class="hs-identifier hs-var">corsCfg</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-243"></span><span>        </span><span id="local-6989586621690543269"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543269"><span class="hs-identifier hs-var">corsDisabled</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#disableCorsOption"><span class="hs-identifier hs-var">disableCorsOption</span></a></span><span>
 </span><span id="line-244"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543354"><span class="hs-identifier hs-var">corsDisabled</span></a></span><span>
+</span><a href="#local-6989586621690543269"><span class="hs-identifier hs-var">corsDisabled</span></a></span><span>
 </span><span id="line-245"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; CorsConfig
 </span><a href="Hasura.Server.Cors.html#CCDisabled"><span class="hs-identifier hs-var">Cors.CCDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1036,13 +1036,13 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe CorsConfig
-</span><a href="#local-6989586621690543356"><span class="hs-identifier hs-var">mCfg</span></a></span><span> </span><span class="annot"><span class="annottext">Option CorsConfig
+</span><a href="#local-6989586621690543271"><span class="hs-identifier hs-var">mCfg</span></a></span><span> </span><span class="annot"><span class="annottext">Option CorsConfig
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#corsDomainOption"><span class="hs-identifier hs-var">corsDomainOption</span></a></span><span>
 </span><span id="line-247"></span><span>
-</span><span id="line-248"></span><span>      </span><span id="local-6989586621690543350"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543350"><span class="hs-identifier hs-var">readCookVal</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
+</span><span id="line-248"></span><span>      </span><span id="local-6989586621690543265"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543265"><span class="hs-identifier hs-var">readCookVal</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
 </span><span id="line-249"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543686"><span class="hs-identifier hs-var">rsoWsReadCookie</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690543601"><span class="hs-identifier hs-var">rsoWsReadCookie</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-250"></span><span>          </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
@@ -1050,20 +1050,20 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#wsReadCookieOption"><span class="hs-identifier hs-var">wsReadCookieOption</span></a></span><span>
-</span><span id="line-251"></span><span>          </span><span id="local-6989586621690543348"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543348"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-251"></span><span>          </span><span id="local-6989586621690543263"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543263"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543348"><span class="hs-identifier hs-var">p</span></a></span><span>
-</span><span id="line-252"></span><span>      </span><span id="local-6989586621690543347"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543347"><span class="hs-identifier hs-var">wsReadCookie</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CorsConfig -&gt; Bool
+</span><a href="#local-6989586621690543263"><span class="hs-identifier hs-var">p</span></a></span><span>
+</span><span id="line-252"></span><span>      </span><span id="local-6989586621690543262"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543262"><span class="hs-identifier hs-var">wsReadCookie</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">CorsConfig -&gt; Bool
 </span><a href="Hasura.Server.Cors.html#isCorsDisabled"><span class="hs-identifier hs-var">Cors.isCorsDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">CorsConfig
-</span><a href="#local-6989586621690543355"><span class="hs-identifier hs-var">corsCfg</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543350"><span class="hs-identifier hs-var">readCookVal</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690543270"><span class="hs-identifier hs-var">corsCfg</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543265"><span class="hs-identifier hs-var">readCookVal</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-253"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543350"><span class="hs-identifier hs-var">readCookVal</span></a></span><span>
+</span><a href="#local-6989586621690543265"><span class="hs-identifier hs-var">readCookVal</span></a></span><span>
 </span><span id="line-254"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -1084,33 +1084,33 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><span id="line-259"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">CorsConfig
-</span><a href="#local-6989586621690543355"><span class="hs-identifier hs-var">corsCfg</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690543270"><span class="hs-identifier hs-var">corsCfg</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-260"></span><span>        </span><span class="annot"><a href="Hasura.Server.Cors.html#CCDisabled"><span class="hs-identifier hs-type">Cors.CCDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; CorsConfig
 </span><a href="Hasura.Server.Cors.html#CCDisabled"><span class="hs-identifier hs-var">Cors.CCDisabled</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543347"><span class="hs-identifier hs-var">wsReadCookie</span></a></span><span>
+</span><a href="#local-6989586621690543262"><span class="hs-identifier hs-var">wsReadCookie</span></a></span><span>
 </span><span id="line-261"></span><span>        </span><span class="annot"><span class="annottext">CorsConfig
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">CorsConfig
-</span><a href="#local-6989586621690543355"><span class="hs-identifier hs-var">corsCfg</span></a></span><span>
+</span><a href="#local-6989586621690543270"><span class="hs-identifier hs-var">corsCfg</span></a></span><span>
 </span><span id="line-262"></span><span>
-</span><span id="line-263"></span><span>    </span><span id="local-6989586621690543552"><span class="annot"><span class="annottext">mkResponseInternalErrorsConfig :: Bool -&gt; WithEnvT Identity ResponseInternalErrorsConfig
-</span><a href="#local-6989586621690543552"><span class="hs-identifier hs-var hs-var">mkResponseInternalErrorsConfig</span></a></span></span><span> </span><span id="local-6989586621690543344"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543344"><span class="hs-identifier hs-var">devMode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-264"></span><span>      </span><span id="local-6989586621690543343"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543343"><span class="hs-identifier hs-var">adminInternalErrors</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
+</span><span id="line-263"></span><span>    </span><span id="local-6989586621690543467"><span class="annot"><span class="annottext">mkResponseInternalErrorsConfig :: Bool -&gt; WithEnvT Identity ResponseInternalErrorsConfig
+</span><a href="#local-6989586621690543467"><span class="hs-identifier hs-var hs-var">mkResponseInternalErrorsConfig</span></a></span></span><span> </span><span id="local-6989586621690543259"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543259"><span class="hs-identifier hs-var">devMode</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-264"></span><span>      </span><span id="local-6989586621690543258"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543258"><span class="hs-identifier hs-var">adminInternalErrors</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) option.
 (Monad m, FromEnv option) =&gt;
 Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="Hasura.Server.Init.Env.html#withOptionDefault"><span class="hs-identifier hs-var">withOptionDefault</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Bool
-</span><a href="#local-6989586621690543674"><span class="hs-identifier hs-var">rsoAdminInternalErrors</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
+</span><a href="#local-6989586621690543589"><span class="hs-identifier hs-var">rsoAdminInternalErrors</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#graphqlAdminInternalErrorsOption"><span class="hs-identifier hs-var">graphqlAdminInternalErrorsOption</span></a></span><span>
 </span><span id="line-265"></span><span>
 </span><span id="line-266"></span><span>      </span><span class="hs-keyword">if</span><span>
 </span><span id="line-267"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543344"><span class="hs-identifier hs-var">devMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="#local-6989586621690543259"><span class="hs-identifier hs-var">devMode</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
 </span><a href="Hasura.Server.Init.Config.html#InternalErrorsAllRequests"><span class="hs-identifier hs-var">InternalErrorsAllRequests</span></a></span><span>
 </span><span id="line-268"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543343"><span class="hs-identifier hs-var">adminInternalErrors</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><a href="#local-6989586621690543258"><span class="hs-identifier hs-var">adminInternalErrors</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
 </span><a href="Hasura.Server.Init.Config.html#InternalErrorsAdminOnly"><span class="hs-identifier hs-var">InternalErrorsAdminOnly</span></a></span><span>
 </span><span id="line-269"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
@@ -1118,14 +1118,14 @@ Maybe option -&gt; Option option -&gt; WithEnvT m option
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">ResponseInternalErrorsConfig
 </span><a href="Hasura.Server.Init.Config.html#InternalErrorsDisabled"><span class="hs-identifier hs-var">InternalErrorsDisabled</span></a></span><span>
 </span><span id="line-270"></span><span>
-</span><span id="line-271"></span><span>    </span><span id="local-6989586621690543540"><span class="annot"><span class="annottext">mkConnectionOptions :: WithEnvT Identity ConnectionOptions
-</span><a href="#local-6989586621690543540"><span class="hs-identifier hs-var hs-var">mkConnectionOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-272"></span><span>      </span><span id="local-6989586621690543338"><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543338"><span class="hs-identifier hs-var">webSocketCompressionFromEnv</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-271"></span><span>    </span><span id="local-6989586621690543455"><span class="annot"><span class="annottext">mkConnectionOptions :: WithEnvT Identity ConnectionOptions
+</span><a href="#local-6989586621690543455"><span class="hs-identifier hs-var hs-var">mkConnectionOptions</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-272"></span><span>      </span><span id="local-6989586621690543253"><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621690543253"><span class="hs-identifier hs-var">webSocketCompressionFromEnv</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 Monad m =&gt;
 Bool -&gt; Option Bool -&gt; WithEnvT m Bool
 </span><a href="Hasura.Server.Init.Env.html#withOptionSwitch"><span class="hs-identifier hs-var">withOptionSwitch</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543669"><span class="hs-identifier hs-var">rsoWebSocketCompression</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
+</span><a href="#local-6989586621690543584"><span class="hs-identifier hs-var">rsoWebSocketCompression</span></a></span><span> </span><span class="annot"><span class="annottext">Option Bool
 </span><a href="Hasura.Server.Init.Arg.Command.Serve.html#webSocketCompressionOption"><span class="hs-identifier hs-var">webSocketCompressionOption</span></a></span><span>
 </span><span id="line-273"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1133,9 +1133,9 @@ Bool -&gt; Option Bool -&gt; WithEnvT m Bool
 </span><span id="line-274"></span><span>        </span><span class="annot"><span class="annottext">ConnectionOptions
 </span><span class="hs-identifier hs-var">WebSockets.defaultConnectionOptions</span></span><span>
 </span><span id="line-275"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">connectionCompressionOptions :: CompressionOptions
-</span><a href="#local-6989586621690543335"><span class="hs-identifier hs-var">WebSockets.connectionCompressionOptions</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621690543250"><span class="hs-identifier hs-var">WebSockets.connectionCompressionOptions</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-276"></span><span>              </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690543338"><span class="hs-identifier hs-var">webSocketCompressionFromEnv</span></a></span><span>
+</span><a href="#local-6989586621690543253"><span class="hs-identifier hs-var">webSocketCompressionFromEnv</span></a></span><span>
 </span><span id="line-277"></span><span>                </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">PermessageDeflate -&gt; CompressionOptions
 </span><span class="hs-identifier hs-var">WebSockets.PermessageDeflateCompression</span></span><span> </span><span class="annot"><span class="annottext">PermessageDeflate
 </span><span class="hs-identifier hs-var">WebSockets.defaultPermessageDeflate</span></span><span>

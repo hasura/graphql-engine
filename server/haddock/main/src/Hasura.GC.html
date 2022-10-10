@@ -24,7 +24,7 @@
 </span><span id="line-24"></span><span class="hs-comment">--</span><span>
 </span><span id="line-25"></span><span class="hs-comment">-- ...so we hack together our own using GHC.Stats, which should have</span><span>
 </span><span id="line-26"></span><span class="hs-comment">-- insignificant runtime overhead.</span><span>
-</span><span id="line-27"></span><span id="local-6989586621690182379"><span class="annot"><a href="Hasura.GC.html#ourIdleGC"><span class="hs-identifier hs-type">ourIdleGC</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-27"></span><span id="local-6989586621690182302"><span class="annot"><a href="Hasura.GC.html#ourIdleGC"><span class="hs-identifier hs-type">ourIdleGC</span></a></span><span> </span><span class="hs-glyph">::</span><span>
 </span><span id="line-28"></span><span>  </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-comment">-- | Run a major GC when we've been &quot;idle&quot; for idleInterval</span><span>
 </span><span id="line-30"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">DiffTime</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
@@ -32,50 +32,50 @@
 </span><span id="line-32"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">DiffTime</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-comment">-- | Additionally, if it has been &gt; maxNoGCInterval time, force a GC regardless.</span><span>
 </span><span id="line-34"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-type">DiffTime</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-35"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690182379"><span class="hs-identifier hs-type">void</span></a></span></span><span>
+</span><span id="line-35"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690182302"><span class="hs-identifier hs-type">void</span></a></span></span><span>
 </span><span id="line-36"></span><span id="ourIdleGC"><span class="annot"><span class="annottext">ourIdleGC :: forall void.
 Logger Hasura -&gt; DiffTime -&gt; DiffTime -&gt; DiffTime -&gt; IO void
-</span><a href="Hasura.GC.html#ourIdleGC"><span class="hs-identifier hs-var hs-var">ourIdleGC</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span id="local-6989586621690182313"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
+</span><a href="Hasura.GC.html#ourIdleGC"><span class="hs-identifier hs-var hs-var">ourIdleGC</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span id="local-6989586621690182236"><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621690182313"><span class="hs-identifier hs-var">logger</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621690182312"><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690182312"><span class="hs-identifier hs-var">idleInterval</span></a></span></span><span> </span><span id="local-6989586621690182311"><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690182311"><span class="hs-identifier hs-var">minGCInterval</span></a></span></span><span> </span><span id="local-6989586621690182310"><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690182310"><span class="hs-identifier hs-var">maxNoGCInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621690182236"><span class="hs-identifier hs-var">logger</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621690182235"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621690182235"><span class="hs-identifier hs-var">idleInterval</span></a></span></span><span> </span><span id="local-6989586621690182234"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621690182234"><span class="hs-identifier hs-var">minGCInterval</span></a></span></span><span> </span><span id="local-6989586621690182233"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621690182233"><span class="hs-identifier hs-var">maxNoGCInterval</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-37"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadIO m, MonadIO n) =&gt;
 m (n DiffTime)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">startTimer</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
-</span><a href="#local-6989586621690182308"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690182231"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
 </span><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Word32
 </span><span class="hs-number">0</span></span><span>
 </span><span id="line-38"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-39"></span><span>    </span><span id="local-6989586621690182308"><span class="annot"><span class="annottext">go :: Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
-</span><a href="#local-6989586621690182308"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621690182307"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182307"><span class="hs-identifier hs-var">gcs_prev</span></a></span></span><span> </span><span id="local-6989586621690182306"><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182306"><span class="hs-identifier hs-var">major_gcs_prev</span></a></span></span><span> </span><span id="local-6989586621690182305"><span class="annot"><span class="annottext">IO DiffTime
-</span><a href="#local-6989586621690182305"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-40"></span><span>      </span><span id="local-6989586621690182304"><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690182304"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO DiffTime
-</span><a href="#local-6989586621690182305"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span><span>
+</span><span id="line-39"></span><span>    </span><span id="local-6989586621690182231"><span class="annot"><span class="annottext">go :: Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
+</span><a href="#local-6989586621690182231"><span class="hs-identifier hs-var hs-var">go</span></a></span></span><span> </span><span id="local-6989586621690182230"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690182230"><span class="hs-identifier hs-var">gcs_prev</span></a></span></span><span> </span><span id="local-6989586621690182229"><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690182229"><span class="hs-identifier hs-var">major_gcs_prev</span></a></span></span><span> </span><span id="local-6989586621690182228"><span class="annot"><span class="annottext">IO DiffTime
+</span><a href="#local-6989586621690182228"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-40"></span><span>      </span><span id="local-6989586621690182227"><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621690182227"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO DiffTime
+</span><a href="#local-6989586621690182228"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span><span>
 </span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690182304"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690182227"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&lt;</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690182311"><span class="hs-identifier hs-var">minGCInterval</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690182234"><span class="hs-identifier hs-var">minGCInterval</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-42"></span><span>        </span><span class="hs-comment">-- no need to check idle until we've passed the minGCInterval:</span><span>
 </span><span id="line-43"></span><span>        </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
 </span><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-var">C.sleep</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690182311"><span class="hs-identifier hs-var">minGCInterval</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690182234"><span class="hs-identifier hs-var">minGCInterval</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-glyph hs-var">-</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690182304"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690182227"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span>
-</span><span id="line-45"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">RTSStats</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690182299"><span class="annot"><span class="annottext">Word32
+</span><span id="line-45"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">RTSStats</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690182222"><span class="annot"><span class="annottext">Word32
 gcs :: RTSStats -&gt; Word32
 gcs :: Word32
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var">gcs</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690182297"><span class="annot"><span class="annottext">Word32
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var">gcs</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690182220"><span class="annot"><span class="annottext">Word32
 major_gcs :: RTSStats -&gt; Word32
 major_gcs :: Word32
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var">major_gcs</span></a></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">IO RTSStats
@@ -83,48 +83,48 @@ major_gcs :: Word32
 </span><span id="line-46"></span><span>      </span><span class="hs-comment">-- We use minor GCs as a proxy for &quot;activity&quot;, which seems to work</span><span>
 </span><span id="line-47"></span><span>      </span><span class="hs-comment">-- well-enough (in tests it stays stable for a few seconds when we're</span><span>
 </span><span id="line-48"></span><span>      </span><span class="hs-comment">-- logically &quot;idle&quot; and otherwise increments quickly)</span><span>
-</span><span id="line-49"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690182294"><span class="annot"><span class="annottext">areIdle :: Bool
-</span><a href="#local-6989586621690182294"><span class="hs-identifier hs-var hs-var">areIdle</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182299"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span id="line-49"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690182217"><span class="annot"><span class="annottext">areIdle :: Bool
+</span><a href="#local-6989586621690182217"><span class="hs-identifier hs-var hs-var">areIdle</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690182222"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182307"><span class="hs-identifier hs-var">gcs_prev</span></a></span><span>
-</span><span id="line-50"></span><span>          </span><span id="local-6989586621690182293"><span class="annot"><span class="annottext">areOverdue :: Bool
-</span><a href="#local-6989586621690182293"><span class="hs-identifier hs-var hs-var">areOverdue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690182304"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690182230"><span class="hs-identifier hs-var">gcs_prev</span></a></span><span>
+</span><span id="line-50"></span><span>          </span><span id="local-6989586621690182216"><span class="annot"><span class="annottext">areOverdue :: Bool
+</span><a href="#local-6989586621690182216"><span class="hs-identifier hs-var hs-var">areOverdue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">DiffTime
+</span><a href="#local-6989586621690182227"><span class="hs-identifier hs-var">timeSinceLastGC</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690182310"><span class="hs-identifier hs-var">maxNoGCInterval</span></a></span><span>
+</span><a href="#local-6989586621690182233"><span class="hs-identifier hs-var">maxNoGCInterval</span></a></span><span>
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span>      </span><span class="hs-comment">-- a major GC was run since last iteration (cool!), reset timer:</span><span>
 </span><span id="line-53"></span><span>      </span><span class="hs-keyword">if</span><span>
 </span><span id="line-54"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182297"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621690182220"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182306"><span class="hs-identifier hs-var">major_gcs_prev</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621690182229"><span class="hs-identifier hs-var">major_gcs_prev</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-55"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (n :: * -&gt; *).
 (MonadIO m, MonadIO n) =&gt;
 m (n DiffTime)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">startTimer</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
-</span><a href="#local-6989586621690182308"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182299"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182297"><span class="hs-identifier hs-var">major_gcs</span></a></span><span>
+</span><a href="#local-6989586621690182231"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690182222"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690182220"><span class="hs-identifier hs-var">major_gcs</span></a></span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span>          </span><span class="hs-comment">-- we are idle and its a good time to do a GC, or we're overdue and must run a GC:</span><span>
 </span><span id="line-58"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690182294"><span class="hs-identifier hs-var">areIdle</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621690182217"><span class="hs-identifier hs-var">areIdle</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690182293"><span class="hs-identifier hs-var">areOverdue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
+</span><a href="#local-6989586621690182216"><span class="hs-identifier hs-var">areOverdue</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-59"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690182293"><span class="hs-identifier hs-var">areOverdue</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621690182216"><span class="hs-identifier hs-var">areOverdue</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621690182294"><span class="hs-identifier hs-var">areIdle</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690182217"><span class="hs-identifier hs-var">areIdle</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-60"></span><span>              </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (ToEngineLog a Hasura, MonadIO m) =&gt;
 a -&gt; m ()
-</span><a href="#local-6989586621690182313"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="#local-6989586621690182236"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-61"></span><span>                </span><span class="annot"><span class="annottext">LogLevel -&gt; SerializableBlob -&gt; UnstructuredLog
 </span><a href="Hasura.Logging.html#UnstructuredLog"><span class="hs-identifier hs-var">UnstructuredLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
@@ -139,11 +139,11 @@ a -&gt; m ()
 m (n DiffTime)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">startTimer</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&gt;&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
-</span><a href="#local-6989586621690182308"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182299"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690182231"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690182222"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182297"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690182220"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
 </span><span id="line-65"></span><span>
@@ -152,10 +152,10 @@ m (n DiffTime)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-68"></span><span>            </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
 </span><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-var">C.sleep</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime
-</span><a href="#local-6989586621690182312"><span class="hs-identifier hs-var">idleInterval</span></a></span><span>
+</span><a href="#local-6989586621690182235"><span class="hs-identifier hs-var">idleInterval</span></a></span><span>
 </span><span id="line-69"></span><span>            </span><span class="annot"><span class="annottext">Word32 -&gt; Word32 -&gt; IO DiffTime -&gt; IO void
-</span><a href="#local-6989586621690182308"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182299"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
-</span><a href="#local-6989586621690182297"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">IO DiffTime
-</span><a href="#local-6989586621690182305"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span><span>
+</span><a href="#local-6989586621690182231"><span class="hs-identifier hs-var">go</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690182222"><span class="hs-identifier hs-var">gcs</span></a></span><span> </span><span class="annot"><span class="annottext">Word32
+</span><a href="#local-6989586621690182220"><span class="hs-identifier hs-var">major_gcs</span></a></span><span> </span><span class="annot"><span class="annottext">IO DiffTime
+</span><a href="#local-6989586621690182228"><span class="hs-identifier hs-var">timerSinceLastMajorGC</span></a></span><span>
 </span><span id="line-70"></span></pre></body></html>

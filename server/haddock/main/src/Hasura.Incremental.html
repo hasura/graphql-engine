@@ -43,7 +43,7 @@
 </span><span id="line-43"></span><span class="hs-comment">-- count, so depending on an 'InvalidationKey' provides a mechanism to force portions of the build</span><span>
 </span><span id="line-44"></span><span class="hs-comment">-- process to be reexecuted by calling 'invalidate' before running the build.</span><span>
 </span><span id="line-45"></span><span class="hs-keyword">newtype</span><span> </span><span id="InvalidationKey"><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="InvalidationKey"><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Int</span></a></span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690204527"><span id="local-6989586621690204529"><span id="local-6989586621690204535"><span class="annot"><span class="annottext">Int -&gt; InvalidationKey -&gt; ShowS
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690204450"><span id="local-6989586621690204452"><span id="local-6989586621690204458"><span class="annot"><span class="annottext">Int -&gt; InvalidationKey -&gt; ShowS
 [InvalidationKey] -&gt; ShowS
 InvalidationKey -&gt; String
 forall a.
@@ -54,13 +54,13 @@ show :: InvalidationKey -&gt; String
 $cshow :: InvalidationKey -&gt; String
 showsPrec :: Int -&gt; InvalidationKey -&gt; ShowS
 $cshowsPrec :: Int -&gt; InvalidationKey -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204519"><span id="local-6989586621690204524"><span class="annot"><span class="annottext">InvalidationKey -&gt; InvalidationKey -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204442"><span id="local-6989586621690204447"><span class="annot"><span class="annottext">InvalidationKey -&gt; InvalidationKey -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
 $c/= :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
 == :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
 $c== :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204487"><span id="local-6989586621690204491"><span id="local-6989586621690204495"><span id="local-6989586621690204499"><span id="local-6989586621690204503"><span id="local-6989586621690204507"><span id="local-6989586621690204511"><span class="annot"><span class="annottext">Eq InvalidationKey
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204410"><span id="local-6989586621690204414"><span id="local-6989586621690204418"><span id="local-6989586621690204422"><span id="local-6989586621690204426"><span id="local-6989586621690204430"><span id="local-6989586621690204434"><span class="annot"><span class="annottext">Eq InvalidationKey
 InvalidationKey -&gt; InvalidationKey -&gt; Bool
 InvalidationKey -&gt; InvalidationKey -&gt; Ordering
 InvalidationKey -&gt; InvalidationKey -&gt; InvalidationKey
@@ -88,7 +88,7 @@ $c&lt;= :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
 $c&lt; :: InvalidationKey -&gt; InvalidationKey -&gt; Bool
 compare :: InvalidationKey -&gt; InvalidationKey -&gt; Ordering
 $ccompare :: InvalidationKey -&gt; InvalidationKey -&gt; Ordering
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204479"><span class="annot"><span class="annottext">Eq InvalidationKey
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690204402"><span class="annot"><span class="annottext">Eq InvalidationKey
 Accesses -&gt; InvalidationKey -&gt; InvalidationKey -&gt; Bool
 forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; InvalidationKey -&gt; InvalidationKey -&gt; Bool
@@ -103,10 +103,10 @@ $cunchanged :: Accesses -&gt; InvalidationKey -&gt; InvalidationKey -&gt; Bool
 </span><span id="line-50"></span><span>
 </span><span id="line-51"></span><span class="annot"><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-type">invalidate</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span>
 </span><span id="line-52"></span><span id="invalidate"><span class="annot"><span class="annottext">invalidate :: InvalidationKey -&gt; InvalidationKey
-</span><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-var hs-var">invalidate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span> </span><span id="local-6989586621690204473"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690204473"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; InvalidationKey
+</span><a href="Hasura.Incremental.html#invalidate"><span class="hs-identifier hs-var hs-var">invalidate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-type">InvalidationKey</span></a></span><span> </span><span id="local-6989586621690204396"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621690204396"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; InvalidationKey
 </span><a href="Hasura.Incremental.html#InvalidationKey"><span class="hs-identifier hs-var">InvalidationKey</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621690204473"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690204396"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">+</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">1</span></span><span class="hs-special">)</span><span>
 </span><span id="line-53"></span></pre></body></html>

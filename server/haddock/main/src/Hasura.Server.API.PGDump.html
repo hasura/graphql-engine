@@ -28,7 +28,7 @@
 </span><span id="line-26"></span><span>    </span><span id="prbCleanOutput"><span class="annot"><span class="annottext">PGDumpReqBody -&gt; Bool
 </span><a href="Hasura.Server.API.PGDump.html#prbCleanOutput"><span class="hs-identifier hs-var hs-var">prbCleanOutput</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">Bool</span></a></span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690224184"><span id="local-6989586621690224186"><span id="local-6989586621690224197"><span class="annot"><span class="annottext">Int -&gt; PGDumpReqBody -&gt; ShowS
+</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690224107"><span id="local-6989586621690224109"><span id="local-6989586621690224120"><span class="annot"><span class="annottext">Int -&gt; PGDumpReqBody -&gt; ShowS
 [PGDumpReqBody] -&gt; ShowS
 PGDumpReqBody -&gt; String
 forall a.
@@ -39,7 +39,7 @@ show :: PGDumpReqBody -&gt; String
 $cshow :: PGDumpReqBody -&gt; String
 showsPrec :: Int -&gt; PGDumpReqBody -&gt; ShowS
 $cshowsPrec :: Int -&gt; PGDumpReqBody -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690224170"><span id="local-6989586621690224179"><span class="annot"><span class="annottext">PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690224093"><span id="local-6989586621690224102"><span class="annot"><span class="annottext">PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool
 $c/= :: PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool
@@ -47,94 +47,94 @@ $c/= :: PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool
 $c== :: PGDumpReqBody -&gt; PGDumpReqBody -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690224164"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.API.PGDump.html#PGDumpReqBody"><span class="hs-identifier hs-type">PGDumpReqBody</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-31"></span><span>  </span><span id="local-6989586621690224144"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PGDumpReqBody
+</span><span id="line-30"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690224087"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.API.PGDump.html#PGDumpReqBody"><span class="hs-identifier hs-type">PGDumpReqBody</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-31"></span><span>  </span><span id="local-6989586621690224067"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser PGDumpReqBody
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Object&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690224141"><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690224141"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690224064"><span class="annot"><span class="annottext">Object
+</span><a href="#local-6989586621690224064"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-32"></span><span>    </span><span class="annot"><span class="annottext">SourceName -&gt; [String] -&gt; Bool -&gt; PGDumpReqBody
 </span><a href="Hasura.Server.API.PGDump.html#PGDumpReqBody"><span class="hs-identifier hs-var">PGDumpReqBody</span></a></span><span>
 </span><span id="line-33"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690224141"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690224064"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;source&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">SourceName
 </span><a href="Hasura.RQL.Types.Common.html#defaultSource"><span class="hs-identifier hs-var">defaultSource</span></a></span><span>
 </span><span id="line-34"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690224141"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><a href="#local-6989586621690224064"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;opts&quot;</span></span><span>
 </span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
-</span><a href="#local-6989586621690224141"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><a href="#local-6989586621690224064"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;clean_output&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
 </span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span id="local-6989586621690224278"><span class="annot"><a href="Hasura.Server.API.PGDump.html#execPGDump"><span class="hs-identifier hs-type">execPGDump</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-38"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">RTE.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690224278"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690224278"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-37"></span><span id="local-6989586621690224201"><span class="annot"><a href="Hasura.Server.API.PGDump.html#execPGDump"><span class="hs-identifier hs-type">execPGDump</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-38"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">RTE.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690224201"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690224201"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
 </span><span id="line-39"></span><span>  </span><span class="annot"><a href="Hasura.Server.API.PGDump.html#PGDumpReqBody"><span class="hs-identifier hs-type">PGDumpReqBody</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-40"></span><span>  </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-type">PG.ConnInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-41"></span><span>  </span><span class="annot"><a href="#local-6989586621690224278"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span></span><span>
+</span><span id="line-41"></span><span>  </span><span class="annot"><a href="#local-6989586621690224201"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span></span><span>
 </span><span id="line-42"></span><span id="execPGDump"><span class="annot"><span class="annottext">execPGDump :: forall (m :: * -&gt; *).
 (MonadError QErr m, MonadIO m) =&gt;
 PGDumpReqBody -&gt; ConnInfo -&gt; m ByteString
-</span><a href="Hasura.Server.API.PGDump.html#execPGDump"><span class="hs-identifier hs-var hs-var">execPGDump</span></a></span></span><span> </span><span id="local-6989586621690224095"><span class="annot"><span class="annottext">PGDumpReqBody
-</span><a href="#local-6989586621690224095"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690224094"><span class="annot"><span class="annottext">ConnInfo
-</span><a href="#local-6989586621690224094"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-43"></span><span>  </span><span id="local-6989586621690224093"><span class="annot"><span class="annottext">Either IOException (Either Text ByteString)
-</span><a href="#local-6989586621690224093"><span class="hs-identifier hs-var">eOutput</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><a href="Hasura.Server.API.PGDump.html#execPGDump"><span class="hs-identifier hs-var hs-var">execPGDump</span></a></span></span><span> </span><span id="local-6989586621690224018"><span class="annot"><span class="annottext">PGDumpReqBody
+</span><a href="#local-6989586621690224018"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span id="local-6989586621690224017"><span class="annot"><span class="annottext">ConnInfo
+</span><a href="#local-6989586621690224017"><span class="hs-identifier hs-var">ci</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-43"></span><span>  </span><span id="local-6989586621690224016"><span class="annot"><span class="annottext">Either IOException (Either Text ByteString)
+</span><a href="#local-6989586621690224016"><span class="hs-identifier hs-var">eOutput</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall e a. Exception e =&gt; IO a -&gt; IO (Either e a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">try</span></a></span><span> </span><span class="annot"><span class="annottext">IO (Either Text ByteString)
-</span><a href="#local-6989586621690224091"><span class="hs-identifier hs-var">execProcess</span></a></span><span>
-</span><span id="line-44"></span><span>  </span><span id="local-6989586621690224090"><span class="annot"><span class="annottext">Either Text ByteString
-</span><a href="#local-6989586621690224090"><span class="hs-identifier hs-var">output</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
+</span><a href="#local-6989586621690224014"><span class="hs-identifier hs-var">execProcess</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span id="local-6989586621690224013"><span class="annot"><span class="annottext">Either Text ByteString
+</span><a href="#local-6989586621690224013"><span class="hs-identifier hs-var">output</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="annot"><span class="annottext">Either IOException (Either Text ByteString)
-</span><a href="#local-6989586621690224093"><span class="hs-identifier hs-var">eOutput</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadError QErr m =&gt; IOException -&gt; m a
-</span><a href="#local-6989586621690224088"><span class="hs-identifier hs-var">throwException</span></a></span><span>
+</span><a href="#local-6989586621690224016"><span class="hs-identifier hs-var">eOutput</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadError QErr m =&gt; IOException -&gt; m a
+</span><a href="#local-6989586621690224011"><span class="hs-identifier hs-var">throwException</span></a></span><span>
 </span><span id="line-45"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="annot"><span class="annottext">Either Text ByteString
-</span><a href="#local-6989586621690224090"><span class="hs-identifier hs-var">output</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690224087"><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690224087"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621690224013"><span class="hs-identifier hs-var">output</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690224010"><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690224010"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-46"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">RTE.throw500</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;error while executing pg_dump: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690224087"><span class="hs-identifier hs-var">err</span></a></span><span>
+</span><a href="#local-6989586621690224010"><span class="hs-identifier hs-var">err</span></a></span><span>
 </span><span id="line-47"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-48"></span><span>    </span><span id="local-6989586621690224249"><span id="local-6989586621690224250"><span class="annot"><a href="#local-6989586621690224088"><span class="hs-identifier hs-type">throwException</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">RTE.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690224250"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">IOException</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690224250"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690224249"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
-</span><span id="line-49"></span><span>    </span><span id="local-6989586621690224088"><span class="annot"><span class="annottext">throwException :: forall (m :: * -&gt; *) a. MonadError QErr m =&gt; IOException -&gt; m a
-</span><a href="#local-6989586621690224088"><span class="hs-identifier hs-var hs-var">throwException</span></a></span></span><span> </span><span class="annot"><span class="annottext">IOException
+</span><span id="line-48"></span><span>    </span><span id="local-6989586621690224172"><span id="local-6989586621690224173"><span class="annot"><a href="#local-6989586621690224011"><span class="hs-identifier hs-type">throwException</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">RTE.QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690224173"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">IOException</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690224173"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690224172"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-49"></span><span>    </span><span id="local-6989586621690224011"><span class="annot"><span class="annottext">throwException :: forall (m :: * -&gt; *) a. MonadError QErr m =&gt; IOException -&gt; m a
+</span><a href="#local-6989586621690224011"><span class="hs-identifier hs-var hs-var">throwException</span></a></span></span><span> </span><span class="annot"><span class="annottext">IOException
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">RTE.throw500</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;internal exception while executing pg_dump&quot;</span></span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span>    </span><span id="local-6989586621690224091"><span class="annot"><span class="annottext">execProcess :: IO (Either Text ByteString)
-</span><a href="#local-6989586621690224091"><span class="hs-identifier hs-var hs-var">execProcess</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-52"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621690224082"><span class="annot"><span class="annottext">ExitCode
-</span><a href="#local-6989586621690224082"><span class="hs-identifier hs-var">exitCode</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690224081"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224081"><span class="hs-identifier hs-var">stdOut</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690224080"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224080"><span class="hs-identifier hs-var">stdErr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; String -&gt; IO (ExitCode, String, String)
+</span><span id="line-51"></span><span>    </span><span id="local-6989586621690224014"><span class="annot"><span class="annottext">execProcess :: IO (Either Text ByteString)
+</span><a href="#local-6989586621690224014"><span class="hs-identifier hs-var hs-var">execProcess</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-52"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621690224005"><span class="annot"><span class="annottext">ExitCode
+</span><a href="#local-6989586621690224005"><span class="hs-identifier hs-var">exitCode</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690224004"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690224004"><span class="hs-identifier hs-var">stdOut</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690224003"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690224003"><span class="hs-identifier hs-var">stdErr</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; [String] -&gt; String -&gt; IO (ExitCode, String, String)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/process-1.6.13.2/src"><span class="hs-identifier hs-var">readProcessWithExitCode</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;pg_dump&quot;</span></span><span> </span><span class="annot"><span class="annottext">[String]
-</span><a href="#local-6989586621690224078"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690224001"><span class="hs-identifier hs-var">opts</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;&quot;</span></span><span>
 </span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ExitCode
-</span><a href="#local-6989586621690224082"><span class="hs-identifier hs-var">exitCode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><a href="#local-6989586621690224005"><span class="hs-identifier hs-var">exitCode</span></a></span><span> </span><span class="hs-keyword">of</span><span>
 </span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">ExitCode
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">ExitSuccess</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a b. b -&gt; Either a b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Right</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -142,17 +142,17 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><span class="hs-identifier hs-var">unUTF8</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (ToText a, FromText b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">convertText</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ShowS
-</span><a href="#local-6989586621690224074"><span class="hs-identifier hs-var">clean</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224081"><span class="hs-identifier hs-var">stdOut</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690223997"><span class="hs-identifier hs-var">clean</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690224004"><span class="hs-identifier hs-var">stdOut</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">ExitFailure</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; Either a b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToText a =&gt; a -&gt; Text
 </span><span class="hs-identifier hs-var">toText</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224080"><span class="hs-identifier hs-var">stdErr</span></a></span><span>
+</span><a href="#local-6989586621690224003"><span class="hs-identifier hs-var">stdErr</span></a></span><span>
 </span><span id="line-56"></span><span>
-</span><span id="line-57"></span><span>    </span><span id="local-6989586621690224071"><span class="annot"><span class="annottext">connString :: String
-</span><a href="#local-6989586621690224071"><span class="hs-identifier hs-var hs-var">connString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
+</span><span id="line-57"></span><span>    </span><span id="local-6989586621690223994"><span class="annot"><span class="annottext">connString :: String
+</span><a href="#local-6989586621690223994"><span class="hs-identifier hs-var hs-var">connString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">bsToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -160,66 +160,66 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.pgConnString</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ConnInfo -&gt; ConnDetails
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.ciDetails</span></a></span><span> </span><span class="annot"><span class="annottext">ConnInfo
-</span><a href="#local-6989586621690224094"><span class="hs-identifier hs-var">ci</span></a></span><span>
-</span><span id="line-58"></span><span>    </span><span id="local-6989586621690224078"><span class="annot"><span class="annottext">opts :: [String]
-</span><a href="#local-6989586621690224078"><span class="hs-identifier hs-var hs-var">opts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224071"><span class="hs-identifier hs-var">connString</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="#local-6989586621690224017"><span class="hs-identifier hs-var">ci</span></a></span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621690224001"><span class="annot"><span class="annottext">opts :: [String]
+</span><a href="#local-6989586621690224001"><span class="hs-identifier hs-var hs-var">opts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690223994"><span class="hs-identifier hs-var">connString</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;--encoding=utf8&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="annot"><span class="annottext">PGDumpReqBody -&gt; [String]
 </span><a href="Hasura.Server.API.PGDump.html#prbOpts"><span class="hs-identifier hs-var">prbOpts</span></a></span><span> </span><span class="annot"><span class="annottext">PGDumpReqBody
-</span><a href="#local-6989586621690224095"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><a href="#local-6989586621690224018"><span class="hs-identifier hs-var">b</span></a></span><span>
 </span><span id="line-59"></span><span>
-</span><span id="line-60"></span><span>    </span><span id="local-6989586621690224074"><span class="annot"><span class="annottext">clean :: ShowS
-</span><a href="#local-6989586621690224074"><span class="hs-identifier hs-var hs-var">clean</span></a></span></span><span> </span><span id="local-6989586621690224066"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224066"><span class="hs-identifier hs-var">str</span></a></span></span><span>
+</span><span id="line-60"></span><span>    </span><span id="local-6989586621690223997"><span class="annot"><span class="annottext">clean :: ShowS
+</span><a href="#local-6989586621690223997"><span class="hs-identifier hs-var hs-var">clean</span></a></span></span><span> </span><span id="local-6989586621690223989"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690223989"><span class="hs-identifier hs-var">str</span></a></span></span><span>
 </span><span id="line-61"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">PGDumpReqBody -&gt; Bool
 </span><a href="Hasura.Server.API.PGDump.html#prbCleanOutput"><span class="hs-identifier hs-var">prbCleanOutput</span></a></span><span> </span><span class="annot"><span class="annottext">PGDumpReqBody
-</span><a href="#local-6989586621690224095"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621690224018"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">[String] -&gt; String
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">unlines</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Bool
-</span><a href="#local-6989586621690224062"><span class="hs-identifier hs-var">shouldDropLine</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; [String]
+</span><a href="#local-6989586621690223985"><span class="hs-identifier hs-var">shouldDropLine</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; [String]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">lines</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224066"><span class="hs-identifier hs-var">str</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690223989"><span class="hs-identifier hs-var">str</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-63"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224066"><span class="hs-identifier hs-var">str</span></a></span><span>
+</span><a href="#local-6989586621690223989"><span class="hs-identifier hs-var">str</span></a></span><span>
 </span><span id="line-64"></span><span>
-</span><span id="line-65"></span><span>    </span><span id="local-6989586621690224062"><span class="annot"><span class="annottext">shouldDropLine :: String -&gt; Bool
-</span><a href="#local-6989586621690224062"><span class="hs-identifier hs-var hs-var">shouldDropLine</span></a></span></span><span> </span><span id="local-6989586621690224060"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224060"><span class="hs-identifier hs-var">line</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-65"></span><span>    </span><span id="local-6989586621690223985"><span class="annot"><span class="annottext">shouldDropLine :: String -&gt; Bool
+</span><a href="#local-6989586621690223985"><span class="hs-identifier hs-var hs-var">shouldDropLine</span></a></span></span><span> </span><span id="local-6989586621690223983"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690223983"><span class="hs-identifier hs-var">line</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-66"></span><span>      </span><span class="hs-comment">-- delete empty lines</span><span>
 </span><span id="line-67"></span><span>      </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; (a -&gt; Bool) -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">all</span></a></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">isSpace</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224060"><span class="hs-identifier hs-var">line</span></a></span><span>
+</span><a href="#local-6989586621690223983"><span class="hs-identifier hs-var">line</span></a></span><span>
 </span><span id="line-68"></span><span>        </span><span class="hs-comment">-- delete comments</span><span>
 </span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;--&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; [a] -&gt; [a] -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">`L.isPrefixOf`</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224060"><span class="hs-identifier hs-var">line</span></a></span><span>
+</span><a href="#local-6989586621690223983"><span class="hs-identifier hs-var">line</span></a></span><span>
 </span><span id="line-70"></span><span>        </span><span class="hs-comment">-- delete front matter</span><span>
 </span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224060"><span class="hs-identifier hs-var">line</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
+</span><a href="#local-6989586621690223983"><span class="hs-identifier hs-var">line</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">`elem`</span></a></span><span> </span><span class="annot"><span class="annottext">[String]
-</span><a href="#local-6989586621690224055"><span class="hs-identifier hs-var">preambleLines</span></a></span><span>
+</span><a href="#local-6989586621690223978"><span class="hs-identifier hs-var">preambleLines</span></a></span><span>
 </span><span id="line-72"></span><span>        </span><span class="hs-comment">-- delete notify triggers</span><span>
 </span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">Regex
-</span><a href="#local-6989586621690224054"><span class="hs-identifier hs-var">eventTriggerRegex</span></a></span><span> </span><span class="annot"><span class="annottext">forall regex source target.
+</span><a href="#local-6989586621690223977"><span class="hs-identifier hs-var">eventTriggerRegex</span></a></span><span> </span><span class="annot"><span class="annottext">forall regex source target.
 RegexContext regex source target =&gt;
 regex -&gt; source -&gt; target
 </span><span class="hs-operator hs-var">`TDFA.match`</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224060"><span class="hs-identifier hs-var">line</span></a></span><span>
+</span><a href="#local-6989586621690223983"><span class="hs-identifier hs-var">line</span></a></span><span>
 </span><span id="line-74"></span><span>
-</span><span id="line-75"></span><span>    </span><span id="local-6989586621690224055"><span class="annot"><span class="annottext">preambleLines :: [String]
-</span><a href="#local-6989586621690224055"><span class="hs-identifier hs-var hs-var">preambleLines</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621690223978"><span class="annot"><span class="annottext">preambleLines :: [String]
+</span><a href="#local-6989586621690223978"><span class="hs-identifier hs-var hs-var">preambleLines</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-76"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;SET statement_timeout = 0;&quot;</span></span><span class="hs-special">,</span><span>
 </span><span id="line-77"></span><span>        </span><span class="annot"><span class="annottext">String
@@ -250,10 +250,10 @@ regex -&gt; source -&gt; target
 </span><span class="hs-string">&quot;COMMENT ON SCHEMA public IS 'standard public schema';&quot;</span></span><span>
 </span><span id="line-90"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-91"></span><span>
-</span><span id="line-92"></span><span>    </span><span id="local-6989586621690224054"><span class="annot"><span class="annottext">eventTriggerRegex :: Regex
-</span><a href="#local-6989586621690224054"><span class="hs-identifier hs-var hs-var">eventTriggerRegex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-93"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690224029"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224029"><span class="hs-identifier hs-var">regexStr</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-92"></span><span>    </span><span id="local-6989586621690223977"><span class="annot"><span class="annottext">eventTriggerRegex :: Regex
+</span><a href="#local-6989586621690223977"><span class="hs-identifier hs-var hs-var">eventTriggerRegex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-93"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690223952"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690223952"><span class="hs-identifier hs-var">regexStr</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">String</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-94"></span><span>            </span><span class="hs-comment">-- pg functions created by hasura for event triggers used &quot;notify_hasura&quot;</span><span>
 </span><span id="line-95"></span><span>            </span><span class="hs-comment">-- These changes are also documented on the method pgIdenTrigger</span><span>
 </span><span id="line-96"></span><span>            </span><span class="annot"><span class="annottext">String
@@ -268,5 +268,5 @@ regex -&gt; source -&gt; target
 RegexMaker regex compOpt execOpt source =&gt;
 source -&gt; regex
 </span><span class="hs-identifier hs-var">TDFA.makeRegex</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690224029"><span class="hs-identifier hs-var">regexStr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.Regex</span></span><span>
+</span><a href="#local-6989586621690223952"><span class="hs-identifier hs-var">regexStr</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">TDFA.Regex</span></span><span>
 </span><span id="line-100"></span></pre></body></html>
