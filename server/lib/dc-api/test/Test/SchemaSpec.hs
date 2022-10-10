@@ -2,11 +2,11 @@ module Test.SchemaSpec (spec) where
 
 --------------------------------------------------------------------------------
 
-import Control.Lens ((%~), (.~))
+import Control.Lens ((%~), (.~), (?~))
 import Control.Lens.At (at)
 import Control.Lens.Lens ((&))
 import Control.Monad (forM_)
-import Data.Aeson (toJSON)
+import Data.Aeson (Value (..), toJSON)
 import Data.Aeson.Lens (_Object)
 import Data.Foldable (find)
 import Data.HashMap.Strict qualified as HashMap
@@ -42,12 +42,17 @@ spec TestData {..} api sourceName config API.Capabilities {..} = describe "schem
                 column
                   & _Object . at "type" .~ Nothing -- Types can vary between agents since underlying datatypes can change
                   & _Object . at "description" .~ Nothing -- Descriptions are not supported by all agents
+                  -- If the agent only supports nullable columns, we make all columns nullable
+    let setExpectedColumnNullability columns =
+          if API._dscColumnNullability _cDataSchema == API.OnlyNullableColumns
+            then columns & traverse %~ (_Object . at "nullable" ?~ Bool True)
+            else columns
     let actualJsonColumns = extractJsonForComparison <$> tables
-    let expectedJsonColumns = Just $ extractJsonForComparison expectedTable
+    let expectedJsonColumns = Just . setExpectedColumnNullability $ extractJsonForComparison expectedTable
 
     actualJsonColumns `jsonShouldBe` expectedJsonColumns
 
-  if (API._qcSupportsPrimaryKeys <$> _cQueries) == Just True
+  if API._dscSupportsPrimaryKeys _cDataSchema
     then testPerTable "returns the correct primary keys for the Chinook tables" $ \API.TableInfo {..} -> do
       tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
       let actualPrimaryKey = API._tiPrimaryKey <$> tables
@@ -57,7 +62,7 @@ spec TestData {..} api sourceName config API.Capabilities {..} = describe "schem
       let actualPrimaryKey = API._tiPrimaryKey <$> tables
       actualPrimaryKey `jsonShouldBe` Just []
 
-  if (API._qcSupportsPrimaryKeys <$> _cQueries) == Just True
+  if API._dscSupportsForeignKeys _cDataSchema
     then testPerTable "returns the correct foreign keys for the Chinook tables" $ \expectedTable@API.TableInfo {..} -> do
       tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
 

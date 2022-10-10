@@ -18,9 +18,12 @@ const scalarTypes: ScalarTypesCapabilities = {
 }
 
 const capabilities: Capabilities = {
-  queries: {
+  data_schema: {
     supports_primary_keys: true,
+    supports_foreign_keys: true,
+    column_nullability: "nullable_and_non_nullable",
   },
+  queries: {},
   relationships: {},
   comparisons: {
     subquery: {

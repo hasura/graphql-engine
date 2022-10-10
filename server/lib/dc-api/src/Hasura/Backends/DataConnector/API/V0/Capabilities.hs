@@ -1,10 +1,15 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use onNothing" #-}
 
 module Hasura.Backends.DataConnector.API.V0.Capabilities
   ( Capabilities (..),
+    defaultCapabilities,
+    DataSchemaCapabilities (..),
+    defaultDataSchemaCapabilities,
+    ColumnNullability (..),
     QueryCapabilities (..),
     MutationCapabilities (..),
     SubscriptionCapabilities (..),
@@ -18,7 +23,6 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     ExplainCapabilities (..),
     RawCapabilities (..),
     CapabilitiesResponse (..),
-    emptyCapabilities,
     lookupComparisonInputObjectDefinition,
     mkGraphQLTypeDefinitions,
   )
@@ -55,7 +59,8 @@ import Prelude
 -- service. Specifically, the service is capable of serving queries
 -- which involve relationships.
 data Capabilities = Capabilities
-  { _cQueries :: Maybe QueryCapabilities,
+  { _cDataSchema :: DataSchemaCapabilities,
+    _cQueries :: Maybe QueryCapabilities,
     _cMutations :: Maybe MutationCapabilities,
     _cSubscriptions :: Maybe SubscriptionCapabilities,
     _cScalarTypes :: Maybe ScalarTypesCapabilities,
@@ -70,14 +75,15 @@ data Capabilities = Capabilities
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Capabilities
 
-emptyCapabilities :: Capabilities
-emptyCapabilities = Capabilities Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+defaultCapabilities :: Capabilities
+defaultCapabilities = Capabilities defaultDataSchemaCapabilities Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 instance HasCodec Capabilities where
   codec =
     object "Capabilities" $
       Capabilities
-        <$> optionalField "queries" "The agent's query capabilities" .= _cQueries
+        <$> optionalFieldWithOmittedDefault "data_schema" defaultDataSchemaCapabilities "The agent's data schema capabilities" .= _cDataSchema
+        <*> optionalField "queries" "The agent's query capabilities" .= _cQueries
         <*> optionalField "mutations" "The agent's mutation capabilities" .= _cMutations
         <*> optionalField "subscriptions" "The agent's subscription capabilities" .= _cSubscriptions
         <*> optionalField "scalar_types" "The agent's scalar types and their capabilities" .= _cScalarTypes
@@ -88,18 +94,50 @@ instance HasCodec Capabilities where
         <*> optionalField "explain" "The agent's explain capabilities" .= _cExplain
         <*> optionalField "raw" "The agent's raw query capabilities" .= _cRaw
 
-data QueryCapabilities = QueryCapabilities
-  { _qcSupportsPrimaryKeys :: Bool
+data DataSchemaCapabilities = DataSchemaCapabilities
+  { _dscSupportsPrimaryKeys :: Bool,
+    _dscSupportsForeignKeys :: Bool,
+    _dscColumnNullability :: ColumnNullability
   }
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec DataSchemaCapabilities
+
+defaultDataSchemaCapabilities :: DataSchemaCapabilities
+defaultDataSchemaCapabilities =
+  DataSchemaCapabilities False False NullableAndNonNullableColumns
+
+instance HasCodec DataSchemaCapabilities where
+  codec =
+    object "DataSchemaCapabilities" $
+      DataSchemaCapabilities
+        <$> optionalFieldWithOmittedDefault "supports_primary_keys" (_dscSupportsPrimaryKeys defaultDataSchemaCapabilities) "Whether tables can have primary keys" .= _dscSupportsPrimaryKeys
+        <*> optionalFieldWithOmittedDefault "supports_foreign_keys" (_dscSupportsForeignKeys defaultDataSchemaCapabilities) "Whether tables can have foreign keys" .= _dscSupportsForeignKeys
+        <*> optionalFieldWithOmittedDefault "column_nullability" (_dscColumnNullability defaultDataSchemaCapabilities) "The sort of column nullability that is supported" .= _dscColumnNullability
+
+data ColumnNullability
+  = OnlyNullableColumns
+  | NullableAndNonNullableColumns
+  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ColumnNullability
+
+instance HasCodec ColumnNullability where
+  codec =
+    named "ColumnNullability" $
+      stringConstCodec
+        [ (OnlyNullableColumns, "only_nullable"),
+          (NullableAndNonNullableColumns, "nullable_and_non_nullable")
+        ]
+
+data QueryCapabilities = QueryCapabilities {}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec QueryCapabilities
 
 instance HasCodec QueryCapabilities where
   codec =
-    object "QueryCapabilities" $
-      QueryCapabilities
-        <$> requiredField "supports_primary_keys" "Does the agent support querying a table by primary key?" .= _qcSupportsPrimaryKeys
+    object "QueryCapabilities" $ pure QueryCapabilities
 
 data MutationCapabilities = MutationCapabilities {}
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -247,7 +285,7 @@ instance HasCodec SubqueryComparisonCapabilities where
   codec =
     object "SubqueryComparisonCapabilities" $
       SubqueryComparisonCapabilities
-        <$> requiredField "supports_relations" "Does the agent support comparisons that involve related tables (ie. joins)?" .= _ctccSupportsRelations
+        <$> optionalFieldWithOmittedDefault "supports_relations" False "Does the agent support comparisons that involve related tables (ie. joins)?" .= _ctccSupportsRelations
 
 data MetricsCapabilities = MetricsCapabilities {}
   deriving stock (Eq, Ord, Show, Generic, Data)

@@ -33,7 +33,8 @@ capabilities =
   API.CapabilitiesResponse
     { _crCapabilities =
         API.Capabilities
-          { API._cQueries = Just API.QueryCapabilities {API._qcSupportsPrimaryKeys = True},
+          { API._cDataSchema = API.defaultDataSchemaCapabilities,
+            API._cQueries = Just API.QueryCapabilities,
             API._cMutations = Nothing,
             API._cSubscriptions = Nothing,
             API._cScalarTypes = Nothing,

@@ -2,7 +2,7 @@ module Main (main) where
 
 --------------------------------------------------------------------------------
 
-import Command (AgentCapabilities (..), Command (..), TestOptions (..), parseCommandLine)
+import Command (Command (..), TestOptions (..), parseCommandLine)
 import Control.Exception (throwIO)
 import Control.Monad (join, (>=>))
 import Data.Aeson.Text (encodeToLazyText)
@@ -50,7 +50,7 @@ main = do
   case command of
     Test testOptions@TestOptions {..} -> do
       api <- mkIOApiClient testOptions
-      agentCapabilities <- getAgentCapabilities api _toAgentCapabilities
+      agentCapabilities <- API._crCapabilities <$> (api // _capabilities)
       let testData = mkTestData _toTestConfig
       let spec = tests testData api testSourceName _toAgentConfig agentCapabilities
       case _toExportMatchStrings of
@@ -71,11 +71,6 @@ mkIOApiClient TestOptions {..} = do
 
 throwClientError :: Either ClientError a -> IO a
 throwClientError = either throwIO pure
-
-getAgentCapabilities :: Client IO (NamedRoutes Routes) -> AgentCapabilities -> IO API.Capabilities
-getAgentCapabilities api = \case
-  AutoDetect -> API._crCapabilities <$> (api // _capabilities)
-  Explicit capabilities -> pure capabilities
 
 applyTestConfig :: Config -> TestOptions -> Config
 applyTestConfig config TestOptions {..} =

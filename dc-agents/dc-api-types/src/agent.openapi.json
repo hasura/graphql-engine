@@ -276,6 +276,9 @@
           "comparisons": {
             "$ref": "#/components/schemas/ComparisonCapabilities"
           },
+          "data_schema": {
+            "$ref": "#/components/schemas/DataSchemaCapabilities"
+          },
           "explain": {
             "$ref": "#/components/schemas/ExplainCapabilities"
           },
@@ -306,18 +309,32 @@
         },
         "type": "object"
       },
-      "QueryCapabilities": {
+      "ColumnNullability": {
+        "enum": [
+          "only_nullable",
+          "nullable_and_non_nullable"
+        ],
+        "type": "string"
+      },
+      "DataSchemaCapabilities": {
         "properties": {
+          "column_nullability": {
+            "$ref": "#/components/schemas/ColumnNullability"
+          },
+          "supports_foreign_keys": {
+            "default": false,
+            "description": "Whether tables can have foreign keys",
+            "type": "boolean"
+          },
           "supports_primary_keys": {
-            "description": "Does the agent support querying a table by primary key?",
+            "default": false,
+            "description": "Whether tables can have primary keys",
             "type": "boolean"
           }
         },
-        "required": [
-          "supports_primary_keys"
-        ],
         "type": "object"
       },
+      "QueryCapabilities": {},
       "MutationCapabilities": {},
       "SubscriptionCapabilities": {},
       "GraphQLName": {
@@ -349,13 +366,11 @@
         "nullable": true,
         "properties": {
           "supports_relations": {
+            "default": false,
             "description": "Does the agent support comparisons that involve related tables (ie. joins)?",
             "type": "boolean"
           }
         },
-        "required": [
-          "supports_relations"
-        ],
         "type": "object"
       },
       "ComparisonCapabilities": {

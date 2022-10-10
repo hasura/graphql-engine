@@ -51,34 +51,38 @@ defaultBackendCapabilities = \case
   DataConnectorSqlite ->
     Just
       [yaml|
-      relationships: {}
-      comparisons:
-        subquery:
-          supports_relations: true
-      explain: {}
-      metrics: {}
-      raw: {}
-      queries:
-        supports_primary_keys: true
+        data_schema:
+          supports_primary_keys: true
+          supports_foreign_keys: true
+        queries: {}
+        relationships: {}
+        comparisons:
+          subquery:
+            supports_relations: true
+        explain: {}
+        metrics: {}
+        raw: {}
     |]
   DataConnectorReference ->
     Just
       [yaml|
-      queries:
-        supports_primary_keys: true
-      graphql_schema: |-
-        scalar DateTime
+        data_schema:
+          supports_primary_keys: true
+          supports_foreign_keys: true
+        queries: {}
+        graphql_schema: |-
+          scalar DateTime
 
-        input DateTimeComparisons {in_year: Int
-          same_day_as: DateTime
-        }
-      relationships: {}
-      comparisons:
-        subquery:
-          supports_relations: true
-      scalar_types:
-        DateTime:
-          comparison_type: DateTimeComparisons
+          input DateTimeComparisons {in_year: Int
+            same_day_as: DateTime
+          }
+        relationships: {}
+        comparisons:
+          subquery:
+            supports_relations: true
+        scalar_types:
+          DateTime:
+            comparison_type: DateTimeComparisons
     |]
   _ -> Nothing
 

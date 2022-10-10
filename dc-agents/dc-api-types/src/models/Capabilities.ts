@@ -3,6 +3,7 @@
 /* eslint-disable */
 
 import type { ComparisonCapabilities } from './ComparisonCapabilities';
+import type { DataSchemaCapabilities } from './DataSchemaCapabilities';
 import type { ExplainCapabilities } from './ExplainCapabilities';
 import type { GraphQLTypeDefinitions } from './GraphQLTypeDefinitions';
 import type { MetricsCapabilities } from './MetricsCapabilities';
@@ -15,6 +16,7 @@ import type { SubscriptionCapabilities } from './SubscriptionCapabilities';
 
 export type Capabilities = {
   comparisons?: ComparisonCapabilities;
+  data_schema?: DataSchemaCapabilities;
   explain?: ExplainCapabilities;
   graphql_schema?: GraphQLTypeDefinitions;
   metrics?: MetricsCapabilities;
