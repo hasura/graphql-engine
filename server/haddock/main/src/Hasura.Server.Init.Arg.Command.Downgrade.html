@@ -60,7 +60,7 @@
 </span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; (a, b) -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">uncurry</span></a></span><span> </span><span class="annot"><span class="annottext">forall {a}. IsString a =&gt; String -&gt; String -&gt; Parser a
-</span><a href="#local-6989586621690541970"><span class="hs-identifier hs-var">shortcut</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(String, String)]
+</span><a href="#local-6989586621690542156"><span class="hs-identifier hs-var">shortcut</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(String, String)]
 </span><a href="Hasura.Server.Init.Arg.Command.Downgrade.html#downgradeShortcuts"><span class="hs-identifier hs-var">downgradeShortcuts</span></a></span><span>
 </span><span id="line-46"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-47"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
@@ -75,30 +75,30 @@
 </span><span class="hs-string">&quot;Don't run any migrations, just print out the SQL.&quot;</span></span><span>
 </span><span id="line-50"></span><span>      </span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-52"></span><span>    </span><span id="local-6989586621690541970"><span class="annot"><span class="annottext">shortcut :: String -&gt; String -&gt; Parser a
-</span><a href="#local-6989586621690541970"><span class="hs-identifier hs-var hs-var">shortcut</span></a></span></span><span> </span><span id="local-6989586621690541952"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690541952"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621690541951"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690541951"><span class="hs-identifier hs-var">catalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621690542156"><span class="annot"><span class="annottext">shortcut :: String -&gt; String -&gt; Parser a
+</span><a href="#local-6989586621690542156"><span class="hs-identifier hs-var hs-var">shortcut</span></a></span></span><span> </span><span id="local-6989586621690542138"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690542138"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621690542137"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621690542137"><span class="hs-identifier hs-var">catalogVersion</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-53"></span><span>      </span><span class="annot"><span class="annottext">forall a. a -&gt; Mod FlagFields a -&gt; Parser a
 </span><span class="hs-identifier hs-var">Opt.flag'</span></span><span>
 </span><span id="line-54"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">String.fromString</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690541951"><span class="hs-identifier hs-var">catalogVersion</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690542137"><span class="hs-identifier hs-var">catalogVersion</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. HasName f =&gt; String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.long</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;to-&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690541952"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621690542138"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. String -&gt; Mod f a
 </span><span class="hs-identifier hs-var">Opt.help</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Downgrade to graphql-engine version &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690541952"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690542138"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot; (equivalent to --to-catalog-version &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690541951"><span class="hs-identifier hs-var">catalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690542137"><span class="hs-identifier hs-var">catalogVersion</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;)&quot;</span></span><span class="hs-special">)</span><span>
 </span><span id="line-57"></span><span>        </span><span class="hs-special">)</span><span>
