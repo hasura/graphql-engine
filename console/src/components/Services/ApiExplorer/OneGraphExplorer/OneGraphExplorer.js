@@ -29,7 +29,7 @@ class OneGraphExplorer extends React.Component {
     explorerWidth: getExplorerWidth(),
     explorerClientX: null,
     schema: null,
-    query: undefined,
+    query: this.props.query || '',
     isResizing: false,
     previousIntrospectionHeaders: [],
   };
@@ -47,12 +47,28 @@ class OneGraphExplorer extends React.Component {
       this.introspect();
       return;
     }
+
     if (!headerFocus && !loading) {
       if (
         JSON.stringify(headers) !== JSON.stringify(previousIntrospectionHeaders)
       ) {
         this.introspect();
       }
+    }
+
+    // introspect by force if toggled through Redux
+    if (
+      this.props.forceIntrospectAt &&
+      this.props.forceIntrospectAt != prevProps.forceIntrospectAt
+    ) {
+      this.introspect();
+      return;
+    }
+
+    // set query in graphiql through Redux
+    if (this.props.query != prevProps.query) {
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ query: this.props.query });
     }
   }
 

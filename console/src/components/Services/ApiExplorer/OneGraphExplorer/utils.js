@@ -1,5 +1,6 @@
 import GraphiQLExplorer from 'graphiql-explorer';
 import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
+import { setForceIntrospectAt, setGraphiQLQuery } from '../Actions';
 
 export const makeDefaultArg = () => {
   return false;
@@ -48,4 +49,27 @@ export const getPersistedCodeExporterOpen = () => {
   } catch {
     return false;
   }
+};
+
+// Simulates the Run button click on the GraphiQL editor
+export const clickRunQueryButton = () => {
+  const runQueryButton = document.getElementsByClassName('execute-button');
+
+  // trigger click
+  if (runQueryButton && runQueryButton[0]) {
+    runQueryButton[0].click();
+  } else {
+    // TODO throw Sentry alert
+    console.error('could not find run query button in the DOM');
+  }
+};
+
+// ATTENTION: use with care -- this function forces introspection in graphiql
+export const forceGraphiQLIntrospection = dispatch => {
+  dispatch(setForceIntrospectAt(new Date().getTime().toString()));
+};
+
+// ATTENTION: use with care -- this function replaces the existing query in graphiql
+export const forceChangeGraphiqlQuery = (query, dispatch) => {
+  dispatch(setGraphiQLQuery(query));
 };

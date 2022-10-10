@@ -7,7 +7,7 @@ export const surveyName = 'Hasura familiarity survey';
  * GraphQl query to fetch all surveys related data
  */
 export const fetchAllSurveysDataQuery = `
- query ($currentTime: timestamptz!) {
+ query fetchAllSurveysData($currentTime: timestamptz!) {
    survey(where: {
        _or: [
          {ended_at: {_gte: $currentTime}}
@@ -39,7 +39,7 @@ export const fetchAllSurveysDataQueryVariables = {
  * GraphQl mutation to save the survey answer
  */
 export const addSurveyAnswerMutation = `
- mutation ($responses: [QuestionAnswers]!, $surveyName: String!) {
+ mutation addSurveyAnswer ($responses: [QuestionAnswers]!, $surveyName: String!) {
     saveSurveyAnswer(payload: {responses: $responses, surveyName: $surveyName}) {
       status
     }

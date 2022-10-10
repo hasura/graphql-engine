@@ -165,7 +165,7 @@ export const MOCK_ONE_TO_ONE_METADATA = {
     ],
   },
 };
-const BASE_PS_URL = `${BASE_URL_TEMPLATE}/./postgres-template-1`;
+const BASE_PS_URL = `${BASE_URL_TEMPLATE}/postgres-template-1`;
 
 export const networkStubs = {
   rootJson: rest.get(ROOT_CONFIG_PATH, (req, res, context) => {
