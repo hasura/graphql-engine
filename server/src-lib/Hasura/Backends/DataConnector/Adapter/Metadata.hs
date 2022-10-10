@@ -1,5 +1,4 @@
 {-# LANGUAGE Arrows #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Hasura.Backends.DataConnector.Adapter.Metadata () where
@@ -188,7 +187,7 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
   let foreignKeys = fmap API._tiForeignKeys _srTables
       tables = Map.fromList $ do
         API.TableInfo {..} <- _srTables
-        let primaryKeyColumns = Seq.fromList $ coerce <$> fromMaybe [] _tiPrimaryKey
+        let primaryKeyColumns = Seq.fromList $ coerce <$> _tiPrimaryKey
         let meta =
               RQL.T.T.DBTableMetadata
                 { _ptmiOid = OID 0,
@@ -225,8 +224,8 @@ resolveDatabaseMetadata' _ sc@(DC.SourceConfig {_scSchema = API.SchemaResponse {
 -- | Construct a 'HashSet' 'RQL.T.T.ForeignKeyMetadata'
 -- 'DataConnector' to build the foreign key constraints in the table
 -- metadata.
-buildForeignKeySet :: [Maybe API.ForeignKeys] -> HashSet (RQL.T.T.ForeignKeyMetadata 'DataConnector)
-buildForeignKeySet (catMaybes -> foreignKeys) =
+buildForeignKeySet :: [API.ForeignKeys] -> HashSet (RQL.T.T.ForeignKeyMetadata 'DataConnector)
+buildForeignKeySet foreignKeys =
   HashSet.fromList $
     join $
       foreignKeys <&> \(API.ForeignKeys constraints) ->

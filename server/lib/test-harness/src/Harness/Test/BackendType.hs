@@ -64,6 +64,8 @@ defaultBackendCapabilities = \case
   DataConnectorReference ->
     Just
       [yaml|
+      queries:
+        supports_primary_keys: true
       graphql_schema: |-
         scalar DateTime
 

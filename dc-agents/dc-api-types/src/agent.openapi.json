@@ -768,19 +768,19 @@
             "additionalProperties": {
               "$ref": "#/components/schemas/Constraint"
             },
+            "default": {},
             "description": "Foreign key constraints",
-            "nullable": true,
             "type": "object"
           },
           "name": {
             "$ref": "#/components/schemas/TableName"
           },
           "primary_key": {
+            "default": [],
             "description": "The primary key of the table",
             "items": {
               "type": "string"
             },
-            "nullable": true,
             "type": "array"
           }
         },

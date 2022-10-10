@@ -39,7 +39,7 @@ tests :: TestData -> Client IO (NamedRoutes Routes) -> API.SourceName -> API.Con
 tests testData api sourceName agentConfig capabilities = do
   Test.HealthSpec.spec api sourceName agentConfig
   Test.CapabilitiesSpec.spec api agentConfig capabilities
-  Test.SchemaSpec.spec testData api sourceName agentConfig
+  Test.SchemaSpec.spec testData api sourceName agentConfig capabilities
   Test.QuerySpec.spec testData api sourceName agentConfig capabilities
   for_ (API._cMetrics capabilities) \m -> Test.MetricsSpec.spec api m
   for_ (API._cExplain capabilities) \_ -> Test.ExplainSpec.spec testData api sourceName agentConfig capabilities

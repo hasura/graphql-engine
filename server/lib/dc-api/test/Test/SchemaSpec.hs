@@ -2,39 +2,82 @@ module Test.SchemaSpec (spec) where
 
 --------------------------------------------------------------------------------
 
+import Control.Lens ((%~), (.~))
+import Control.Lens.At (at)
+import Control.Lens.Lens ((&))
+import Control.Monad (forM_)
+import Data.Aeson (toJSON)
+import Data.Aeson.Lens (_Object)
+import Data.Foldable (find)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List (sort, sortOn)
+import Data.List.NonEmpty qualified as NonEmpty
+import Data.Text qualified as Text
 import Hasura.Backends.DataConnector.API qualified as API
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, (//))
 import Test.Data (TestData (..))
 import Test.Expectations (jsonShouldBe)
-import Test.Hspec (Spec, describe, it)
+import Test.Hspec (Expectation, Spec, SpecWith, describe, it)
 import Prelude
 
 --------------------------------------------------------------------------------
 
-removeDescriptionFromColumn :: API.ColumnInfo -> API.ColumnInfo
-removeDescriptionFromColumn c = c {API._ciDescription = Nothing}
+spec :: TestData -> Client IO (NamedRoutes API.Routes) -> API.SourceName -> API.Config -> API.Capabilities -> Spec
+spec TestData {..} api sourceName config API.Capabilities {..} = describe "schema API" $ do
+  it "returns the Chinook tables" $ do
+    let extractTableNames = sort . fmap API._tiName
+    tableNames <- (extractTableNames . API._srTables) <$> (api // API._schema) sourceName config
 
-removeDescription :: API.TableInfo -> API.TableInfo
-removeDescription t@API.TableInfo {API._tiColumns} = t {API._tiDescription = Nothing, API._tiColumns = newColumns}
+    let expectedTableNames = extractTableNames _tdSchemaTables
+    tableNames `jsonShouldBe` expectedTableNames
+
+  testPerTable "returns the correct columns in the Chinook tables" $ \expectedTable@API.TableInfo {..} -> do
+    tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
+
+    -- We remove some properties here so that we don't compare them since they vary between agent implementations
+    let extractJsonForComparison table =
+          let columns = fmap toJSON . sortOn API._ciName $ API._tiColumns table
+           in columns & traverse %~ \column ->
+                column
+                  & _Object . at "type" .~ Nothing -- Types can vary between agents since underlying datatypes can change
+                  & _Object . at "description" .~ Nothing -- Descriptions are not supported by all agents
+    let actualJsonColumns = extractJsonForComparison <$> tables
+    let expectedJsonColumns = Just $ extractJsonForComparison expectedTable
+
+    actualJsonColumns `jsonShouldBe` expectedJsonColumns
+
+  if (API._qcSupportsPrimaryKeys <$> _cQueries) == Just True
+    then testPerTable "returns the correct primary keys for the Chinook tables" $ \API.TableInfo {..} -> do
+      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
+      let actualPrimaryKey = API._tiPrimaryKey <$> tables
+      actualPrimaryKey `jsonShouldBe` Just _tiPrimaryKey
+    else testPerTable "returns no primary keys for the Chinook tables" $ \API.TableInfo {..} -> do
+      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
+      let actualPrimaryKey = API._tiPrimaryKey <$> tables
+      actualPrimaryKey `jsonShouldBe` Just []
+
+  if (API._qcSupportsPrimaryKeys <$> _cQueries) == Just True
+    then testPerTable "returns the correct foreign keys for the Chinook tables" $ \expectedTable@API.TableInfo {..} -> do
+      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
+
+      -- We compare only the constraints and ignore the constraint names since some agents will have
+      -- different constraint names
+      let extractConstraintsForComparison table =
+            sort . HashMap.elems . API.unForeignKeys $ API._tiForeignKeys table
+      let actualConstraints = extractConstraintsForComparison <$> tables
+      let expectedConstraints = Just $ extractConstraintsForComparison expectedTable
+
+      actualConstraints `jsonShouldBe` expectedConstraints
+    else testPerTable "returns no foreign keys for the Chinook tables" $ \API.TableInfo {..} -> do
+      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
+
+      let actualJsonConstraints = API._tiForeignKeys <$> tables
+      actualJsonConstraints `jsonShouldBe` Just (API.ForeignKeys mempty)
   where
-    newColumns = map removeDescriptionFromColumn _tiColumns
-
-removeForeignKeys :: API.TableInfo -> API.TableInfo
-removeForeignKeys t = t {API._tiForeignKeys = Nothing}
-
-extractForeignKeys :: API.TableInfo -> [API.Constraint]
-extractForeignKeys = foldMap (HashMap.elems . API.unConstraints) . API._tiForeignKeys
-
-spec :: TestData -> Client IO (NamedRoutes API.Routes) -> API.SourceName -> API.Config -> Spec
-spec TestData {..} api sourceName config = describe "schema API" $ do
-  it "returns Chinook schema" $ do
-    tables <- (map removeDescription . sortOn API._tiName . API._srTables) <$> (api // API._schema) sourceName config
-
-    -- NOTE: Constraint names arent guaranteed to be the same across
-    -- Chinook backends so we compare Constraints without their names
-    -- independently from the rest of the schema.
-    (map removeForeignKeys tables) `jsonShouldBe` map (removeForeignKeys . removeDescription) _tdSchemaTables
-    (map (sort . extractForeignKeys) tables) `jsonShouldBe` map (sort . extractForeignKeys) _tdSchemaTables
+    testPerTable :: String -> (API.TableInfo -> Expectation) -> SpecWith ()
+    testPerTable description test =
+      describe description $ do
+        forM_ _tdSchemaTables $ \expectedTable@API.TableInfo {..} -> do
+          it (Text.unpack . NonEmpty.last $ API.unTableName _tiName) $
+            test expectedTable

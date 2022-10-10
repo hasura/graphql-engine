@@ -90,9 +90,9 @@ schema =
                       API._ciDescription = Just "The name of the artist"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "ArtistId"],
+              API._tiPrimaryKey = [API.ColumnName "ArtistId"],
               API._tiDescription = Just "Collection of artists of music",
-              API._tiForeignKeys = Nothing
+              API._tiForeignKeys = API.ForeignKeys mempty
             },
           API.TableInfo
             { API._tiName = mkTableName "Album",
@@ -116,12 +116,11 @@ schema =
                       API._ciDescription = Just "The ID of the artist that created the album"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "AlbumId"],
+              API._tiPrimaryKey = [API.ColumnName "AlbumId"],
               API._tiDescription = Just "Collection of music albums created by artists",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.singleton (API.ConstraintName "Artist") (API.Constraint (mkTableName "Artist") (HashMap.singleton (API.ColumnName "ArtistId") (API.ColumnName "ArtistId")))
+                API.ForeignKeys $
+                  HashMap.singleton (API.ConstraintName "Artist") (API.Constraint (mkTableName "Artist") (HashMap.singleton (API.ColumnName "ArtistId") (API.ColumnName "ArtistId")))
             },
           API.TableInfo
             { API._tiName = mkTableName "Customer",
@@ -205,12 +204,11 @@ schema =
                       API._ciDescription = Just "The ID of the Employee who is this customer's support representative"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "CustomerId"],
+              API._tiPrimaryKey = [API.ColumnName "CustomerId"],
               API._tiDescription = Just "Collection of customers who can buy tracks",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.singleton (API.ConstraintName "CustomerSupportRep") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "SupportRepId") (API.ColumnName "EmployeeId")))
+                API.ForeignKeys $
+                  HashMap.singleton (API.ConstraintName "CustomerSupportRep") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "SupportRepId") (API.ColumnName "EmployeeId")))
             },
           API.TableInfo
             { API._tiName = mkTableName "Employee",
@@ -306,12 +304,11 @@ schema =
                       API._ciDescription = Just "The employee's email address"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "EmployeeId"],
+              API._tiPrimaryKey = [API.ColumnName "EmployeeId"],
               API._tiDescription = Just "Collection of employees who work for the business",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.singleton (API.ConstraintName "EmployeeReportsTo") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "ReportsTo") (API.ColumnName "EmployeeId")))
+                API.ForeignKeys $
+                  HashMap.singleton (API.ConstraintName "EmployeeReportsTo") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "ReportsTo") (API.ColumnName "EmployeeId")))
             },
           API.TableInfo
             { API._tiName = mkTableName "Genre",
@@ -329,9 +326,9 @@ schema =
                       API._ciDescription = Just "The name of the genre"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "GenreId"],
+              API._tiPrimaryKey = [API.ColumnName "GenreId"],
               API._tiDescription = Just "Genres of music",
-              API._tiForeignKeys = Nothing
+              API._tiForeignKeys = API.ForeignKeys mempty
             },
           API.TableInfo
             { API._tiName = mkTableName "Invoice",
@@ -391,13 +388,12 @@ schema =
                       API._ciDescription = Just "The total amount due on the invoice"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "InvoiceId"],
+              API._tiPrimaryKey = [API.ColumnName "InvoiceId"],
               API._tiDescription = Just "Collection of invoices of music purchases by a customer",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.singleton (API.ConstraintName "InvoiceCustomer") $
-                      API.Constraint (mkTableName "Customer") (HashMap.singleton (API.ColumnName "CustomerId") (API.ColumnName "CustomerId"))
+                API.ForeignKeys $
+                  HashMap.singleton (API.ConstraintName "InvoiceCustomer") $
+                    API.Constraint (mkTableName "Customer") (HashMap.singleton (API.ColumnName "CustomerId") (API.ColumnName "CustomerId"))
             },
           API.TableInfo
             { API._tiName = mkTableName "InvoiceLine",
@@ -433,15 +429,14 @@ schema =
                       API._ciDescription = Just "Quantity of the track purchased"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "InvoiceLineId"],
+              API._tiPrimaryKey = [API.ColumnName "InvoiceLineId"],
               API._tiDescription = Just "Collection of track purchasing line items of invoices",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.fromList
-                      [ (API.ConstraintName "Invoice", API.Constraint (mkTableName "Invoice") (HashMap.singleton (API.ColumnName "InvoiceId") (API.ColumnName "InvoiceId"))),
-                        (API.ConstraintName "Track", API.Constraint (mkTableName "Track") (HashMap.singleton (API.ColumnName "TrackId") (API.ColumnName "TrackId")))
-                      ]
+                API.ForeignKeys $
+                  HashMap.fromList
+                    [ (API.ConstraintName "Invoice", API.Constraint (mkTableName "Invoice") (HashMap.singleton (API.ColumnName "InvoiceId") (API.ColumnName "InvoiceId"))),
+                      (API.ConstraintName "Track", API.Constraint (mkTableName "Track") (HashMap.singleton (API.ColumnName "TrackId") (API.ColumnName "TrackId")))
+                    ]
             },
           API.TableInfo
             { API._tiName = mkTableName "MediaType",
@@ -459,9 +454,9 @@ schema =
                       API._ciDescription = Just "The name of the media type format"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "MediaTypeId"],
+              API._tiPrimaryKey = [API.ColumnName "MediaTypeId"],
               API._tiDescription = Just "Collection of media types that tracks can be encoded in",
-              API._tiForeignKeys = Nothing
+              API._tiForeignKeys = API.ForeignKeys mempty
             },
           API.TableInfo
             { API._tiName = mkTableName "Track",
@@ -521,16 +516,15 @@ schema =
                       API._ciDescription = Just "The price of the track"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "TrackId"],
+              API._tiPrimaryKey = [API.ColumnName "TrackId"],
               API._tiDescription = Just "Collection of music tracks",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.fromList
-                      [ (API.ConstraintName "Album", API.Constraint (mkTableName "Album") (HashMap.singleton (API.ColumnName "AlbumId") (API.ColumnName "AlbumId"))),
-                        (API.ConstraintName "Genre", API.Constraint (mkTableName "Genre") (HashMap.singleton (API.ColumnName "GenreId") (API.ColumnName "GenreId"))),
-                        (API.ConstraintName "MediaType", API.Constraint (mkTableName "MediaType") (HashMap.singleton (API.ColumnName "MediaTypeId") (API.ColumnName "MediaTypeId")))
-                      ]
+                API.ForeignKeys $
+                  HashMap.fromList
+                    [ (API.ConstraintName "Album", API.Constraint (mkTableName "Album") (HashMap.singleton (API.ColumnName "AlbumId") (API.ColumnName "AlbumId"))),
+                      (API.ConstraintName "Genre", API.Constraint (mkTableName "Genre") (HashMap.singleton (API.ColumnName "GenreId") (API.ColumnName "GenreId"))),
+                      (API.ConstraintName "MediaType", API.Constraint (mkTableName "MediaType") (HashMap.singleton (API.ColumnName "MediaTypeId") (API.ColumnName "MediaTypeId")))
+                    ]
             }
         ]
     }

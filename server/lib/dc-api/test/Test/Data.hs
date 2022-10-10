@@ -30,7 +30,7 @@ where
 import Codec.Compression.GZip qualified as GZip
 import Command (NameCasing (..), TestConfig (..))
 import Control.Arrow (first, (>>>))
-import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?), _Just)
+import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?))
 import Data.Aeson (eitherDecodeStrict)
 import Data.Aeson qualified as J
 import Data.Aeson.Lens (_Bool, _Number, _String)
@@ -387,8 +387,8 @@ mkTestData TestConfig {..} =
     formatTableInfo =
       API.tiName %~ formatTableName
         >>> API.tiColumns . traverse . API.ciName %~ formatColumnName
-        >>> API.tiPrimaryKey . _Just . traverse %~ formatColumnName
-        >>> API.tiForeignKeys . _Just . lens API.unConstraints (const API.ForeignKeys) . traverse
+        >>> API.tiPrimaryKey . traverse %~ formatColumnName
+        >>> API.tiForeignKeys . lens API.unForeignKeys (const API.ForeignKeys) . traverse
           %~ ( API.cForeignTable %~ formatTableName
                  >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
              )

@@ -18,6 +18,9 @@ const scalarTypes: ScalarTypesCapabilities = {
 }
 
 const capabilities: Capabilities = {
+  queries: {
+    supports_primary_keys: true,
+  },
   relationships: {},
   comparisons: {
     subquery: {
