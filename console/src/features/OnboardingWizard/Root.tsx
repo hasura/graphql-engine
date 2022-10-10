@@ -1,9 +1,21 @@
 import React from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
-import { TopHeaderBar, ConnectDBScreen } from './components';
+import { useAppDispatch } from '@/store';
+import globals from '@/Globals';
+import { hasLuxFeatureAccess, isCloudConsole } from '@/utils/cloudConsole';
+import {
+  ConnectDBScreen,
+  TemplateSummary,
+  DialogContainer,
+} from './components';
+
 import { useWizardState } from './hooks';
+import {
+  NEON_TEMPLATE_BASE_PATH,
+  dialogHeader,
+  familiaritySurveySubHeader,
+} from './constants';
 import { GrowthExperimentsClient } from '../GrowthExperiments';
-import { useFamiliaritySurveyData, HasuraFamiliaritySurvey } from '../Surveys';
+import { HasuraFamiliaritySurvey } from '../Surveys';
 
 type Props = {
   growthExperimentsClient: GrowthExperimentsClient;
@@ -12,47 +24,90 @@ type Props = {
 /**
  * Parent container for the onboarding wizard. Takes care of assembling and rendering all steps.
  */
-export function Root(props: Props) {
+function Root(props: Props) {
   const { growthExperimentsClient } = props;
 
-  // dialog cannot be reopened once closed
-  const { isWizardOpen, skipOnboarding, completeOnboarding } = useWizardState(
-    growthExperimentsClient
-  );
+  const dispatch = useAppDispatch();
+
+  const hasNeonAccess = hasLuxFeatureAccess(globals, 'NeonDatabaseIntegration');
+
+  const [stepperIndex, setStepperIndex] = React.useState<number>(1);
 
   const {
-    showFamiliaritySurvey,
-    data: familiaritySurveyData,
-    onSkip: familiaritySurveyOnSkip,
-    onOptionClick: familiaritySurveyOnOptionClick,
-  } = useFamiliaritySurveyData();
+    state,
+    setState,
+    familiaritySurveyData,
+    familiaritySurveyOnOptionClick,
+    familiaritySurveyOnSkip,
+  } = useWizardState(growthExperimentsClient, hasNeonAccess);
 
-  if (!isWizardOpen) return null;
+  const transitionToTemplateSummary = () => {
+    setState('template-summary');
+  };
 
-  // Radix dialog is being used for creating a layover component over the whole app.
-  // It does not make sense to extend common dialog component to fit this one-off use case.
-  //
-  // modal={false} is set to prevent focus issues when multiple modals are visible,
-  // for example survey modal and onboarding modal
-  return (
-    <Dialog.Root modal={false} open>
-      <Dialog.Content className="fixed top-0 w-full h-full focus:outline-none bg-gray-50 overflow-hidden z-[100]">
-        <TopHeaderBar />
-        <div className="max-w-5xl p-md ml-auto mr-auto mt-xl">
-          {showFamiliaritySurvey ? (
-            <HasuraFamiliaritySurvey
-              data={familiaritySurveyData}
-              onSkip={familiaritySurveyOnSkip}
-              onOptionClick={familiaritySurveyOnOptionClick}
-            />
-          ) : (
-            <ConnectDBScreen
-              skipOnboarding={skipOnboarding}
-              completeOnboarding={completeOnboarding}
-            />
-          )}
-        </div>
-      </Dialog.Content>
-    </Dialog.Root>
-  );
+  const dismiss = () => {
+    setState('hidden');
+  };
+
+  switch (state) {
+    case 'familiarity-survey': {
+      return (
+        <DialogContainer
+          header={dialogHeader}
+          subHeader={familiaritySurveySubHeader}
+        >
+          <HasuraFamiliaritySurvey
+            data={familiaritySurveyData}
+            onSkip={familiaritySurveyOnSkip}
+            onOptionClick={familiaritySurveyOnOptionClick}
+          />
+        </DialogContainer>
+      );
+    }
+    case 'landing-page': {
+      return (
+        <DialogContainer
+          showStepper
+          activeIndex={stepperIndex}
+          header={dialogHeader}
+        >
+          <ConnectDBScreen
+            dismissOnboarding={dismiss}
+            proceed={transitionToTemplateSummary}
+            hasNeonAccess={hasNeonAccess}
+            dispatch={dispatch}
+            setStepperIndex={setStepperIndex}
+          />
+        </DialogContainer>
+      );
+    }
+    case 'template-summary': {
+      return (
+        <DialogContainer showStepper activeIndex={3} header={dialogHeader}>
+          <TemplateSummary
+            templateUrl={NEON_TEMPLATE_BASE_PATH}
+            dismiss={dismiss}
+            dispatch={dispatch}
+          />
+        </DialogContainer>
+      );
+    }
+    case 'hidden':
+    default: {
+      return null;
+    }
+  }
 }
+
+export function RootWithCloudCheck(props: Props) {
+  /*
+   * Don't render Root component if current context is not cloud-console
+   * and current user is not project owner
+   */
+  if (isCloudConsole(globals) && globals.userRole === 'owner') {
+    return <Root {...props} />;
+  }
+  return null;
+}
+
+export const RootWithoutCloudCheck = Root;

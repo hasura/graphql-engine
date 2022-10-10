@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react';
-import { useDispatch } from 'react-redux';
 import { tracingTools } from '@/features/TracingTools';
+import { Dispatch } from '@/types';
 import {
   setDBURLInEnvVars,
   verifyProjectHealthAndConnectDataSource,
 } from '../utils';
+import { NeonIntegrationContext } from './utils';
 import { setDBConnectionDetails } from '../../../DataActions';
 import {
   connectDataSource,
@@ -44,12 +45,12 @@ type HasuraDatasourceStatus =
       payload: HasuraDBCreationPayload;
     };
 
-export function useCreateHasuraDatasource(
+export function useCreateHasuraCloudDatasource(
   dbUrl: string,
-  dataSourceName = 'default'
+  dataSourceName = 'default',
+  dispatch: Dispatch,
+  context: NeonIntegrationContext
 ) {
-  const dispatch = useDispatch();
-
   const [state, setState] = useState<HasuraDatasourceStatus>({
     status: 'idle',
   });
@@ -82,7 +83,12 @@ export function useCreateHasuraDatasource(
           getDefaultState({
             dbConnection: connectionConfig,
           }),
-          successCallback
+          successCallback,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          context === 'data-manage-create'
         );
       } catch (e) {
         errorCallback();
