@@ -1,6 +1,6 @@
-import { TableColumn } from '../../DataSource';
-import { adaptFormValuesToQuery } from './FiltersSectionContainer.utils';
-import { FiltersAndSortFormValues, UserQuery } from './types';
+import { TableColumn } from '../../../../DataSource';
+import { adaptFormValuesToQuery } from './LegacyRunQueryContainer.utils';
+import { FiltersAndSortFormValues, UserQuery } from '../types';
 
 describe('adaptFormValuesToQuery', () => {
   it('adapts the form values into a query', () => {
@@ -9,7 +9,7 @@ describe('adaptFormValuesToQuery', () => {
         { column: 'text', operator: '$eq', value: 'aaaa' },
         { column: 'id', operator: '$eq', value: '1' },
       ],
-      sort: [{ column: 'id', order: 'asc' }],
+      sort: [{ column: 'id', type: 'asc' }],
     };
     const expected: UserQuery = {
       where: {

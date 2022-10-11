@@ -1,16 +1,12 @@
 import { Table } from '@/features/MetadataAPI';
-import { BigQueryTable } from '@/features/DataSource';
-
-export type SqlTable = { schema: string; name: string };
-
-export type BrowseRowsTable = SqlTable | BigQueryTable;
+import { BigQueryTable, PostgresTable } from '@/features/DataSource';
 
 export const getTableSchemaName = (table: Table) => {
   const isObject =
     table && typeof table === 'object' && Object.keys(table).length > 0;
 
   if (isObject && 'schema' in table) {
-    const sqlTable = table as SqlTable;
+    const sqlTable = table as PostgresTable;
     return sqlTable?.schema;
   }
   if (isObject && 'dataset' in table) {

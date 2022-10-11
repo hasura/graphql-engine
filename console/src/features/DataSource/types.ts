@@ -35,6 +35,10 @@ export type IntrospectedTable = {
 export type TableColumn = {
   name: string;
   dataType: string;
+  graphQLProperties?: {
+    name: string;
+    scalarType: string;
+  };
 };
 
 export type GetTrackableTablesProps = {
@@ -79,7 +83,7 @@ export type GetTableRowsProps = {
   dataSourceName: string;
   columns: string[];
   options?: {
-    where?: WhereClause;
+    where?: WhereClause[];
     offset?: number;
     limit?: number;
     order_by?: OrderBy[];
@@ -88,12 +92,12 @@ export type GetTableRowsProps = {
 export type TableRow = Record<string, unknown>;
 
 export type validOperators = string;
-
+type columnName = string;
 export type SelectColumn = string | { name: string; columns: SelectColumn[] };
 export type WhereClause = Record<
-  validOperators,
-  Record<string, string | number | boolean>
->[];
+  columnName,
+  Record<validOperators, string | number | boolean>
+>;
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
 export type OrderBy = {
@@ -101,5 +105,12 @@ export type OrderBy = {
   type: OrderByType;
   nulls?: OrderByNulls;
 };
+
+export type Operator = {
+  name: string;
+  value: string;
+  defaultValue?: string;
+};
+export type GetSupportedOperatorsProps = NetworkArgs;
 
 export { NetworkArgs };

@@ -1,32 +1,30 @@
-import { dataSource } from '@/dataSources';
 import { useAppDispatch, useAppSelector } from '@/store';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   downloadObjectAsCsvFile,
   downloadObjectAsJsonFile,
   getCurrTimeForFileName,
 } from '@/components/Common/utils/jsUtils';
-import { vMakeExportRequest } from '../../../components/Services/Data/TableBrowseRows/ViewActions';
-import { setOffset } from '../../../components/Services/Data/TableBrowseRows/FilterActions';
-import { OperatorItem } from './FilterRow';
+import { Table } from '@/features/MetadataAPI';
+import { vMakeExportRequest } from '../../../../../components/Services/Data/TableBrowseRows/ViewActions';
+import { setOffset } from '../../../../../components/Services/Data/TableBrowseRows/FilterActions';
 import {
   adaptFormValuesToQuery,
   filterValidUserQuery,
-  getColumns,
   runFilterQuery,
   setUrlParams,
-} from './FiltersSectionContainer.utils';
-import { FiltersSection, sortOptions } from './FiltersSection';
-import { FiltersAndSortFormValues, UserQuery } from './types';
-import { useTableSchema } from './hooks/useTableSchema';
-import type { BrowseRowsTable } from './hooks/useTableSchema.utils';
-import { useTableColumns } from './hooks/useTableColumns';
-import { useTableName } from './hooks/useTableName';
+} from './LegacyRunQueryContainer.utils';
+import { LegacyRunQuery } from './LegacyRunQuery';
+import { FiltersAndSortFormValues, UserQuery } from '../types';
+import { useTableColumns } from '../hooks/useTableColumns';
+import { useTableName } from '../hooks/useTableName';
+import { useDatabaseOperators } from '../hooks/useDatabaseOperators';
+import { useTableSchema } from '../hooks/useTableSchema';
 
-type FilterSectionContainerProps = {
+type LegacyRunQueryContainerProps = {
   onRunQuery: (userQuery: UserQuery) => void | null;
   dataSourceName: string;
-  table: BrowseRowsTable;
+  table: Table;
 };
 
 const replaceAllDotsWithUnderscore = (text: string) => text.replace(/\./g, '_');
@@ -36,34 +34,19 @@ const getFileName = (tableName: string) => {
   return `export_${replacedTableName}_${currentTime}`;
 };
 
-export const FilterSectionContainer = ({
+export const LegacyRunQueryContainer = ({
   onRunQuery,
   dataSourceName,
   table,
-}: FilterSectionContainerProps) => {
+}: LegacyRunQueryContainerProps) => {
   const dispatch = useAppDispatch();
-  const query = useAppSelector(state => state.tables.view.query);
   const curFilter = useAppSelector(state => state.tables.view.curFilter);
   const limit = curFilter.limit;
   const offset = curFilter.offset;
 
-  const tableSchema = useTableSchema(table);
-
   const tableColumns = useTableColumns({ dataSourceName, table });
-
-  const columns = getColumns(query.columns);
-
-  const [operators, setOperators] = useState<OperatorItem[]>([]);
-  useEffect(() => {
-    const operatorItems: OperatorItem[] = dataSource.operators.map(op => {
-      return {
-        label: `[${op.graphqlOp}] ${op.name}`,
-        value: op.value,
-        defaultValue: op?.defaultValue,
-      };
-    });
-    setOperators(operatorItems);
-  }, []);
+  const tableOperators = useDatabaseOperators({ dataSourceName });
+  const tableSchema = useTableSchema(table);
 
   const onSubmit = (userQuery: UserQuery) => {
     if (!tableSchema) {
@@ -113,10 +96,9 @@ export const FilterSectionContainer = ({
   };
 
   return (
-    <FiltersSection
-      columns={columns}
-      operators={operators}
-      orders={sortOptions}
+    <LegacyRunQuery
+      columns={tableColumns}
+      operators={tableOperators}
       onExport={onExportData}
       onSubmit={(values: FiltersAndSortFormValues) => {
         const userQuery = filterValidUserQuery(

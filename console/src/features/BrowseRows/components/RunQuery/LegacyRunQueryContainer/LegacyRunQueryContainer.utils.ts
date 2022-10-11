@@ -5,10 +5,12 @@ import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
 import { ReduxState } from '@/types';
 import { NormalizedTable } from '@/dataSources/types';
-import { Integers, Reals } from '../../../components/Services/Data/constants';
-import { vMakeTableRequests } from '../../../components/Services/Data/TableBrowseRows/ViewActions';
-import { sortPlaceholder } from './FiltersSection';
-import { FiltersAndSortFormValues, OrderCondition, UserQuery } from './types';
+import {
+  Integers,
+  Reals,
+} from '../../../../../components/Services/Data/constants';
+import { vMakeTableRequests } from '../../../../../components/Services/Data/TableBrowseRows/ViewActions';
+import { FiltersAndSortFormValues, OrderCondition, UserQuery } from '../types';
 
 export const columnPlaceholder = '-- column --';
 
@@ -64,7 +66,7 @@ export const adaptFormValuesToQuery = (
     formValues?.sort?.map(order => {
       const orderCondition: OrderCondition = {
         column: order.column,
-        type: order.order,
+        type: order.type,
         nulls: 'last',
       };
       return orderCondition;
@@ -149,16 +151,12 @@ export const getColumns = (columns: string[]) => {
 };
 
 export const filterValidUserQuery = (userQuery: UserQuery): UserQuery => {
-  const filteredWhere = userQuery.where.$and.filter(
-    condition => Object.keys(condition)[0] !== columnPlaceholder
-  );
-  const filteredOrderBy = userQuery.order_by.filter(
-    order => order.type !== sortPlaceholder
-  );
   return {
     ...userQuery,
-    where: { $and: filteredWhere },
-    order_by: filteredOrderBy,
+    where: { $and: userQuery.where.$and },
+    order_by: userQuery.order_by.filter(
+      clause => !!clause.column && !!clause.type
+    ),
   };
 };
 

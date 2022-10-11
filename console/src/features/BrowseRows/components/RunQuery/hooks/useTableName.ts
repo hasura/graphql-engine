@@ -28,7 +28,7 @@ export const useTableName = ({ dataSourceName, table }: UseTableNameProps) => {
       setTableName(aTableName);
     }
     fetchTableHierarchy();
-  }, [dataSourceName, table, httpClient, isUnMounted]);
+  }, [dataSourceName, isUnMounted, table]);
 
   return tableName;
 };

@@ -6,7 +6,7 @@ export type FiltersAndSortFormValues = {
   }[];
   sort: {
     column: string;
-    order: 'asc' | 'desc' | '--';
+    type: 'asc' | 'desc' | '--';
   }[];
 };
 

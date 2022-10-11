@@ -1,133 +1,125 @@
-import React from 'react';
-import {
-  FaClone,
-  FaEdit,
-  FaExpand,
-  FaTrash,
-  FaCaretDown,
-  FaCaretUp,
-  FaSort,
-} from 'react-icons/fa';
-import { z } from 'zod';
-import { Form, Checkbox } from '@/new-components/Form';
-import { CardedTable } from '@/new-components/CardedTable';
-import { GridIconButton } from '../../../../features/BrowseRows/components/DataGrid/GridIconButton';
-import { UseRowsData } from '../../../../features/BrowseRows/components/DataGrid/types';
+import { useRows } from '@/components/Services/Data/TableBrowseRows/Hooks';
+import { Feature, OrderBy, WhereClause } from '@/features/DataSource';
+import { Table } from '@/features/MetadataAPI';
+import { IndicatorCard } from '@/new-components/IndicatorCard';
+import { PaginationState, SortingState } from '@tanstack/react-table';
+import React, { useEffect, useState } from 'react';
+import { DataTable } from './parts/DataTable';
 
-// Todo: add validation as forms is developed
-const validationSchema = z.object({});
+import { QueryDialog } from './QueryDialog';
 
-type IconSortingMapType = Record<'asc' | 'desc' | 'none', React.ReactElement>;
-
-const IconSortingMap: IconSortingMapType = {
-  desc: <FaCaretUp className="w-2 h-3 ml-1" />,
-  asc: <FaCaretDown className="w-2 h-3 ml-1" />,
-  none: <FaSort className="w-2 h-3 ml-1" />,
-};
-
-const HeaderAction = (
-  columnName: string,
-  onClick: (column: string) => void,
-  Icon: React.ReactElement
-) => {
-  return (
-    <div
-      className="flex items-center cursor-pointer"
-      onClick={() => onClick(columnName)}
-    >
-      <div>{columnName}</div>
-      {Icon}
-    </div>
-  );
-};
-
-type DataGridProps = {
-  data: UseRowsData;
-  onColumnSortClick: (column: string) => void;
-  isLoading: boolean;
-};
-
-const formatData = (rows: Record<string, string | number>[]) => {
-  // Todo: hook up to react-query hooks
-  const rowActions = [
-    { icon: FaClone, type: 'clone', onClick: () => {} },
-    { icon: FaEdit, type: 'edit', onClick: () => {} },
-    { icon: FaExpand, type: 'expand', onClick: () => {} },
-    { icon: FaTrash, type: 'delete', onClick: () => {} },
-  ];
-
-  const tableDataRows = rows?.map(objectRow => Object.values(objectRow)) ?? [];
-  return tableDataRows.map((row, i) => {
-    return [
-      <div>
-        {rowActions.map((action, index) => (
-          <GridIconButton
-            icon={<action.icon />}
-            onClick={() => {}}
-            rowIndex={index}
-            type={action.type}
-          />
-        ))}
-      </div>,
-      <Checkbox
-        name={`browse-rows-check-${i}`}
-        options={[{ value: row[0], label: '' }]}
-        noErrorPlaceholder
-      />,
-      ...row.map(value => <div>{value}</div>),
-    ];
-  });
-};
+interface DataGridProps {
+  table: Table;
+  dataSourceName: string;
+}
 
 export const DataGrid = (props: DataGridProps) => {
-  const { data, onColumnSortClick, isLoading } = props;
+  const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [queryDialogVisibility, setQueryDialogVisibility] = useState(false);
+  const [whereClauses, setWhereClauses] = React.useState<WhereClause[]>();
+  const [orderByClauses, setOrderClauses] = React.useState<OrderBy[]>([]);
+  const pagination = React.useMemo(
+    () => ({
+      pageIndex,
+      pageSize,
+    }),
+    [pageIndex, pageSize]
+  );
 
-  if (isLoading) return <>Loading data ...</>;
+  const { dataSourceName, table } = props;
 
-  const formattedRows = formatData(data.rows);
+  useEffect(() => {
+    setPagination({
+      pageIndex: 0,
+      pageSize: 10,
+    });
+    setSorting([]);
+    setQueryDialogVisibility(false);
+    setWhereClauses([]);
+    setOrderClauses([]);
+  }, [dataSourceName, table]);
+
+  const {
+    data: rows,
+    isLoading,
+    isError,
+  } = useRows({
+    table,
+    dataSourceName,
+    options: {
+      limit: pageSize,
+      offset: pageIndex * pageSize,
+      order_by: [
+        ...orderByClauses,
+        ...sorting.map<OrderBy>(sort => ({
+          column: sort.id,
+          type: sort.desc ? 'desc' : 'asc',
+        })),
+      ],
+
+      where: whereClauses,
+    },
+  });
+
+  if (rows === Feature.NotImplemented)
+    return <IndicatorCard status="info" headline="Feature Not Implemented" />;
+
+  if (isError)
+    return <IndicatorCard status="negative" headline="Something went wrong" />;
+
+  const columns = rows?.length ? Object.keys(rows[0]) : [];
+
   return (
-    <Form
-      // Todo: Add form handling as needed
-      schema={validationSchema}
-      options={{
-        defaultValues: undefined,
-      }}
-      onSubmit={() => {}}
-      className="p-0"
-    >
-      {() => {
-        return (
-          <CardedTable.Table>
-            <CardedTable.Header
-              columns={
-                data.columns
-                  ? [
-                      '', // Padding for first column with actions
-                      <Checkbox
-                        name="browse-rows-check-all"
-                        options={[{ value: 'all', label: '' }]}
-                        noErrorPlaceholder
-                      />,
-
-                      ...data.columns.map(column =>
-                        HeaderAction(
-                          column,
-                          onColumnSortClick,
-                          <div className="flex flex-col">
-                            {column === data.orderBy?.column
-                              ? IconSortingMap[data.orderBy?.type]
-                              : IconSortingMap.none}
-                          </div>
-                        )
-                      ),
-                    ]
-                  : []
-              }
-            />
-            <CardedTable.Body data={formattedRows} />
-          </CardedTable.Table>
-        );
-      }}
-    </Form>
+    <div>
+      <DataTable
+        rows={rows ?? []}
+        columns={columns}
+        pagination={pagination}
+        setPagination={setPagination}
+        sorting={sorting}
+        setSorting={setSorting}
+        onQueryClick={() => {
+          setQueryDialogVisibility(true);
+        }}
+        resetQuery={() => {
+          setWhereClauses(undefined);
+          setOrderClauses([]);
+        }}
+        isLoading={isLoading}
+      />
+      {queryDialogVisibility && (
+        <QueryDialog
+          onClose={() => {
+            setQueryDialogVisibility(false);
+          }}
+          table={table}
+          dataSourceName={dataSourceName}
+          onSubmit={data => {
+            const { filters, sorts } = data;
+            setWhereClauses(
+              filters.map(filter => {
+                return {
+                  [filter.column]: {
+                    [filter.operator]: filter.value ?? '',
+                  },
+                };
+              })
+            );
+            setOrderClauses(sorts);
+            setQueryDialogVisibility(false);
+          }}
+          filters={whereClauses?.map(clause => {
+            const [column, rest] = Object.entries(clause)[0];
+            const [operator, value] = Object.entries(rest)[0];
+            return { column, operator, value };
+          })}
+          sorts={orderByClauses}
+        />
+      )}
+    </div>
   );
 };

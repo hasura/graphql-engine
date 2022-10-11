@@ -11,6 +11,8 @@ export const useGDCTreeItemClick = (dispatch: Dispatch) => {
 
   const handleClick = useCallback(
     async value => {
+      if (!value.length) return;
+
       if (isUnmounted()) return;
 
       const { metadata } = await exportMetadata({ httpClient });

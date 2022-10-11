@@ -3,6 +3,7 @@ import {
   getTrackableTables,
   getTableColumns,
   getTablesListAsTree,
+  getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -25,6 +26,7 @@ export const bigquery: Database = {
     getTableColumns,
     getFKRelationships: async () => Feature.NotImplemented,
     getTablesListAsTree,
+    getSupportedOperators,
   },
   query: {
     getTableRows,

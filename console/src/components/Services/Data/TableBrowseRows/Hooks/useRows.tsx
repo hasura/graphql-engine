@@ -8,7 +8,7 @@ export type UseRowsPropType = {
   table: Table;
   columns?: string[];
   options?: {
-    where?: WhereClause;
+    where?: WhereClause[];
     offset?: number;
     limit?: number;
     order_by?: OrderBy[];
@@ -23,7 +23,13 @@ export const useRows = ({
 }: UseRowsPropType) => {
   const httpClient = useHttpClient();
   return useQuery({
-    queryKey: ['browse-rows', dataSourceName, table, columns],
+    queryKey: [
+      'browse-rows',
+      dataSourceName,
+      table,
+      columns,
+      JSON.stringify(options),
+    ],
     queryFn: async () => {
       const tableColumns = await DataSource(httpClient).getTableColumns({
         dataSourceName,
@@ -39,5 +45,6 @@ export const useRows = ({
 
       return result;
     },
+    refetchOnWindowFocus: false,
   });
 };
