@@ -94,6 +94,8 @@ executable api-tests
     Test.Mutations.Insert.MultipleSpec
     Test.Mutations.Insert.SingleSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
+    Test.Mutations.Update.FieldSpec
+    Test.Mutations.Update.PrimaryKeySpec
     Test.Postgres.BackendOnlyPermissionsSpec
     Test.Postgres.DataValidation.PermissionSpec
     Test.Postgres.DefaultValuesSpec
