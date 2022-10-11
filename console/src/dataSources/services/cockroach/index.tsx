@@ -101,7 +101,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
       computedFields: true,
       triggers: true,
       customGqlRoot: true,
-      setAsEnum: false,
+      setAsEnum: true,
       untrack: true,
       delete: true,
       indexes: {
