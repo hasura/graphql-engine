@@ -33,6 +33,8 @@ import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
 import Control.Monad ((<=<))
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson qualified as J
+import Data.Aeson.Text (encodeToLazyText)
 import Data.Bifunctor (first)
 import Data.Data (Data, Proxy (..))
 import Data.Foldable (toList)
@@ -43,7 +45,7 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.Hashable (Hashable)
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
 import Data.Maybe (mapMaybe)
-import Data.OpenApi (NamedSchema (..), OpenApiType (OpenApiObject), Schema (..), ToSchema (..), declareSchemaRef)
+import Data.OpenApi (NamedSchema (..), OpenApiType (OpenApiObject, OpenApiString), Referenced (..), Schema (..), ToSchema (..), declareSchemaRef)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Lazy (toStrict)
@@ -53,6 +55,8 @@ import Hasura.Backends.DataConnector.API.V0.ConfigSchema (ConfigSchemaResponse)
 import Language.GraphQL.Draft.Parser qualified as GQL.Parser
 import Language.GraphQL.Draft.Printer qualified as GQL.Printer
 import Language.GraphQL.Draft.Syntax qualified as GQL.Syntax
+import Servant.API (HasStatus)
+import Servant.API.UVerb qualified as Servant
 import Prelude
 
 -- | The 'Capabilities' describes the _capabilities_ of the
@@ -320,6 +324,9 @@ data CapabilitiesResponse = CapabilitiesResponse
   }
   deriving stock (Eq, Show, Generic)
   deriving (FromJSON, ToJSON) via Autodocodec CapabilitiesResponse
+
+instance Servant.HasStatus CapabilitiesResponse where
+  type StatusOf CapabilitiesResponse = 200
 
 instance HasCodec CapabilitiesResponse where
   codec =

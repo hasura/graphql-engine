@@ -13,8 +13,8 @@ import Data.Maybe (isJust)
 import Data.Ord (Down (..))
 import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
-import Servant.Client (Client, (//))
-import Test.Data (TestData (..))
+import Servant.Client (Client)
+import Test.Data (TestData (..), guardedQuery)
 import Test.Data qualified as Data
 import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Hspec (Spec, describe, it)
@@ -25,7 +25,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
   it "can order results in ascending order" $ do
     let orderBy = OrderBy mempty $ _tdOrderByColumn [] "Title" Ascending :| []
     let query = albumsQueryRequest & qrQuery . qOrderBy ?~ orderBy
-    receivedAlbums <- (api // _query) sourceName config query
+    receivedAlbums <- guardedQuery api sourceName config query
 
     let expectedAlbums = sortOn (^? Data.field "Title") _tdAlbumsRows
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
@@ -34,7 +34,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
   it "can order results in descending order" $ do
     let orderBy = OrderBy mempty $ _tdOrderByColumn [] "Title" Descending :| []
     let query = albumsQueryRequest & qrQuery . qOrderBy ?~ orderBy
-    receivedAlbums <- (api // _query) sourceName config query
+    receivedAlbums <- guardedQuery api sourceName config query
 
     let expectedAlbums = sortOn (Down . (^? Data.field "Title")) _tdAlbumsRows
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
@@ -43,7 +43,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
   it "can use multiple order by elements to order results" $ do
     let orderBy = OrderBy mempty $ _tdOrderByColumn [] "ArtistId" Ascending :| [_tdOrderByColumn [] "Title" Descending]
     let query = albumsQueryRequest & qrQuery . qOrderBy ?~ orderBy
-    receivedAlbums <- (api // _query) sourceName config query
+    receivedAlbums <- guardedQuery api sourceName config query
 
     let expectedAlbums =
           sortOn (\album -> (album ^? Data.field "ArtistId", Down (album ^? Data.field "Title"))) _tdAlbumsRows
@@ -59,7 +59,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
             albumsQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
               & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
-      receivedAlbums <- (api // _query) sourceName config query
+      receivedAlbums <- guardedQuery api sourceName config query
 
       let getRelatedArtist (album :: HashMap FieldName FieldValue) =
             (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
@@ -81,7 +81,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
             albumsQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
               & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships]
-      receivedAlbums <- (api // _query) sourceName config query
+      receivedAlbums <- guardedQuery api sourceName config query
 
       let getRelatedArtist (album :: HashMap FieldName FieldValue) = do
             artist <- (album ^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>= \artistId -> _tdArtistsRowsById ^? ix artistId
@@ -127,7 +127,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
                 .~ [ Data.onlyKeepRelationships [_tdAlbumRelationshipName] _tdTracksTableRelationships,
                      Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships
                    ]
-      receivedTracks <- (api // _query) sourceName config query
+      receivedTracks <- guardedQuery api sourceName config query
 
       let getRelatedArtist (track :: HashMap FieldName FieldValue) = do
             albumId <- track ^? Data.field "AlbumId" . Data._ColumnFieldNumber
@@ -151,7 +151,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
             artistsQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
               & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
-      receivedArtists <- (api // _query) sourceName config query
+      receivedArtists <- guardedQuery api sourceName config query
 
       let getAlbumsCount (artist :: HashMap FieldName FieldValue) = do
             artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
@@ -175,7 +175,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
             artistsQueryRequest
               & qrQuery . qOrderBy ?~ orderBy
               & qrTableRelationships .~ [Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships]
-      receivedArtists <- (api // _query) sourceName config query
+      receivedArtists <- guardedQuery api sourceName config query
 
       let getAlbumsCount (artist :: HashMap FieldName FieldValue) = do
             artistId <- artist ^? Data.field "ArtistId" . Data._ColumnFieldNumber
@@ -220,7 +220,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
                 .~ [ Data.onlyKeepRelationships [_tdArtistRelationshipName] _tdAlbumsTableRelationships,
                      Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
                    ]
-      receivedAlbums <- (api // _query) sourceName config query
+      receivedAlbums <- guardedQuery api sourceName config query
 
       let getTotalArtistAlbumsCount (album :: HashMap FieldName FieldValue) = do
             artistId <- album ^? Data.field "ArtistId" . Data._ColumnFieldNumber

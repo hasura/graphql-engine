@@ -9,11 +9,11 @@ The SQLite agent currently supports the following capabilities:
 
 * [x] GraphQL Schema
 * [x] GraphQL Queries
-* [ ] GraphQL Mutations
 * [x] Relationships
 * [x] Aggregations
 * [x] Prometheus Metrics
-* [ ] Exposing Foreign-Key Information
+* [x] Exposing Foreign-Key Information
+* [ ] Mutations
 * [ ] Subscriptions
 * [ ] Streaming Subscriptions
 
@@ -26,6 +26,7 @@ Note: You are able to get detailed metadata about the agent's capabilities by
 * SQLite `>= 3.38.0` or compiled in JSON support
     * Required for the json_group_array() and json_group_object() aggregate SQL functions
     * https://www.sqlite.org/json1.html#jgrouparray
+* Note: NPM is used for the [TS Types for the DC-API protocol](https://www.npmjs.com/package/@hasura/dc-api-types)
 
 ## Build & Run
 
@@ -40,6 +41,15 @@ Or a simple dev-loop via `entr`:
 ```sh
 echo src/**/*.ts | xargs -n1 echo | DB_READONLY=y entr -r npm run start
 ```
+
+## Docker Build & Run
+
+```
+> docker build . -t dc-sqlite-agent:latest
+> docker run -it --rm -p 8100:8100 dc-sqlite-agent:latest
+```
+
+You will want to mount a volume with your database(s) so that they can be referenced in configuration.
 
 ## Options / Environment Variables
 
@@ -57,6 +67,7 @@ Note: Boolean flags `{FLAG}` can be provided as `1`, `true`, `yes`, or omitted a
 | `PRETTY_PRINT_LOGS` | `{FLAG}` | `false` | Uses `pino-pretty` to pretty print request logs |
 | `LOG_LEVEL` | `fatal` \| `error` \| `info` \| `debug` \| `trace` \| `silent` | `info` | The minimum log level to output |
 | `METRICS` | `{FLAG}` | `false` | Enables a `/metrics` prometheus metrics endpoint.
+| `QUERY_LENGTH_LIMIT` | `INT` | `Infinity` | Puts a limit on the length of generated SQL before execution. |
 
 ## Agent usage
 
@@ -68,16 +79,6 @@ The schema is exposed via introspection, but you can limit which tables are refe
 
 * Explicitly enumerating them via the `tables` field, or
 * Toggling the `include_sqlite_meta_tables` to include or exclude sqlite meta tables.
-
-
-## Docker Build & Run
-
-```
-> docker build . -t dc-sqlite-agent:latest
-> docker run -it --rm -p 8100:8100 dc-sqlite-agent:latest
-```
-
-You will want to mount a volume with your database(s) so that they can be referenced in configuration.
 
 ## Dataset
 
@@ -130,27 +131,6 @@ From the HGE repo.
 * [x] ORDER clause in aggregates breaks SQLite parser for some reason
 * [x] Check that looped exist check doesn't cause name conflicts
 * [ ] `NOT EXISTS IS NULL` != `EXISTS IS NOT NULL`, Example:
-    sqlite> create table test(testid string);
-    sqlite> .schema
-    CREATE TABLE test(testid string);
-    sqlite> select 1 where exists(select * from test where testid is null);
-    sqlite> select 1 where exists(select * from test where testid is not null);
-    sqlite> select 1 where not exists(select * from test where testid is null);
-    1
-    sqlite> select 1 where not exists(select * from test where testid is not null);
-    1
-    sqlite> insert into test(testid) values('foo');
-    sqlite> insert into test(testid) values(NULL);
-    sqlite> select * from test;
-    foo
-
-    sqlite> select 1 where exists(select * from test where testid is null);
-    1
-    sqlite> select 1 where exists(select * from test where testid is not null);
-    1
-    sqlite> select 1 where not exists(select * from test where testid is null);
-    sqlite> select 1 where exists(select * from test where testid is not null);
-    1
 
 # Known Bugs
 

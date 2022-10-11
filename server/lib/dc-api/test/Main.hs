@@ -15,9 +15,10 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.Capabilities as API
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Servant.API (NamedRoutes)
-import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM, (//))
+import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM)
 import Test.CapabilitiesSpec qualified
-import Test.Data (TestData, mkTestData)
+import Test.Data (TestData, guardedCapabilities, mkTestData)
+import Test.ErrorSpec qualified
 import Test.ExplainSpec qualified
 import Test.HealthSpec qualified
 import Test.Hspec (Spec)
@@ -41,6 +42,7 @@ tests testData api sourceName agentConfig capabilities = do
   Test.CapabilitiesSpec.spec api agentConfig capabilities
   Test.SchemaSpec.spec testData api sourceName agentConfig capabilities
   Test.QuerySpec.spec testData api sourceName agentConfig capabilities
+  Test.ErrorSpec.spec testData api sourceName agentConfig capabilities
   for_ (API._cMetrics capabilities) \m -> Test.MetricsSpec.spec api m
   for_ (API._cExplain capabilities) \_ -> Test.ExplainSpec.spec testData api sourceName agentConfig capabilities
 
@@ -50,7 +52,7 @@ main = do
   case command of
     Test testOptions@TestOptions {..} -> do
       api <- mkIOApiClient testOptions
-      agentCapabilities <- API._crCapabilities <$> (api // _capabilities)
+      agentCapabilities <- API._crCapabilities <$> guardedCapabilities api
       let testData = mkTestData _toTestConfig
       let spec = tests testData api testSourceName _toAgentConfig agentCapabilities
       case _toExportMatchStrings of

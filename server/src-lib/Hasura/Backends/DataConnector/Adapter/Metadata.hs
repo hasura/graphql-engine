@@ -17,12 +17,14 @@ import Data.Sequence qualified as Seq
 import Data.Sequence.NonEmpty qualified as NESeq
 import Data.Text qualified as Text
 import Data.Text.Extended (toTxt, (<<>), (<>>))
+import Hasura.Backends.DataConnector.API (capabilitiesCase, errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
 import Hasura.Backends.Postgres.SQL.Types (PGDescription (..))
-import Hasura.Base.Error (Code (..), QErr, decodeValue, throw400, throw500, withPathK)
+import Hasura.Base.Error (Code (..), QErr, decodeValue, throw400, throw400WithDetail, throw500, withPathK)
 import Hasura.Incremental qualified as Inc
 import Hasura.Logging (Hasura, Logger)
 import Hasura.Prelude
@@ -112,11 +114,15 @@ resolveBackendInfo' logger = proc (invalidationKeys, optionsMap) -> do
       HTTP.Manager ->
       m (Either QErr DC.DataConnectorInfo)
     getDataConnectorCapabilities options@DC.DataConnectorOptions {..} manager = runExceptT do
-      API.CapabilitiesResponse {..} <-
+      capabilitiesU <-
         runTraceTWithReporter noReporter "capabilities"
           . flip runAgentClientT (AgentClientContext logger _dcoUri manager Nothing)
           $ genericClient // API._capabilities
-      return $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse
+
+      let defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
+          capabilitiesAction API.CapabilitiesResponse {..} = pure $ DC.DataConnectorInfo options _crCapabilities _crConfigSchemaResponse
+
+      capabilitiesCase defaultAction capabilitiesAction errorAction capabilitiesU
 
 resolveSourceConfig' ::
   MonadIO m =>
@@ -144,10 +150,14 @@ resolveSourceConfig'
 
     validateConfiguration sourceName dataConnectorName _dciConfigSchemaResponse transformedConfig
 
-    schemaResponse <-
+    schemaResponseU <-
       runTraceTWithReporter noReporter "resolve source"
         . flip runAgentClientT (AgentClientContext logger _dcoUri manager (DC.sourceTimeoutMicroseconds <$> timeout))
         $ (genericClient // API._schema) (toTxt sourceName) transformedConfig
+
+    let defaultAction = throw400 DataConnectorError "Unexpected data connector schema response - Unexpected Type"
+
+    schemaResponse <- schemaCase defaultAction pure errorAction schemaResponseU
 
     pure
       DC.SourceConfig
@@ -384,3 +394,6 @@ columnTypeToScalarType = \case
   RQL.T.C.ColumnScalar scalarType -> scalarType
   -- NOTE: This should be unreachable:
   RQL.T.C.ColumnEnumReference _ -> DC.StringTy
+
+errorAction :: MonadError QErr m => API.ErrorResponse -> m a
+errorAction e = throw400WithDetail DataConnectorError (errorResponseSummary e) (_crDetails e)

@@ -38,6 +38,11 @@ export function envToString(envVarName: string, defaultValue: string): string {
   return val === undefined ? defaultValue : val;
 }
 
+export function envToNum(envVarName: string, defaultValue: number): number {
+  const val = process.env[envVarName];
+  return val === undefined ? defaultValue : Number(val);
+}
+
 export function last<T>(x: Array<T>): T {
   return x[x.length - 1];
 }

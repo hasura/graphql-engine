@@ -17,6 +17,16 @@
               }
             },
             "description": ""
+          },
+          "500": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -56,6 +66,16 @@
           },
           "400": {
             "description": "Invalid `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          },
+          "500": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -104,6 +124,16 @@
           },
           "400": {
             "description": "Invalid `body` or `X-Hasura-DataConnector-Config` or `X-Hasura-DataConnector-SourceName`"
+          },
+          "500": {
+            "content": {
+              "application/json;charset=utf-8": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": ""
           }
         }
       }
@@ -681,6 +711,32 @@
           }
         },
         "type": "object"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "details": {
+            "additionalProperties": true,
+            "default": null,
+            "description": "Error details"
+          },
+          "message": {
+            "description": "Error message",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/ErrorResponseType"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "ErrorResponseType": {
+        "enum": [
+          "uncaught-error"
+        ],
+        "type": "string"
       },
       "SchemaResponse": {
         "properties": {

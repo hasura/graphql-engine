@@ -5,8 +5,8 @@ import Control.Lens ((%~), (&), (?~))
 import Data.HashMap.Strict qualified as HashMap
 import Hasura.Backends.DataConnector.API
 import Servant.API (NamedRoutes)
-import Servant.Client (Client, (//))
-import Test.Data (TestData (..))
+import Servant.Client (Client)
+import Test.Data (TestData (..), guardedQuery)
 import Test.Data qualified as Data
 import Test.Expectations (jsonShouldBe, rowsShouldBe)
 import Test.Hspec (Spec, describe, it)
@@ -17,7 +17,7 @@ spec TestData {..} api sourceName config = describe "Basic Queries" $ do
   describe "Column Fields" $ do
     it "can query for a list of artists" $ do
       let query = artistsQueryRequest
-      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
+      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> guardedQuery api sourceName config query
 
       let expectedArtists = _tdArtistsRows
       Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
@@ -26,7 +26,7 @@ spec TestData {..} api sourceName config = describe "Basic Queries" $ do
     it "can query for a list of albums with a subset of columns" $ do
       let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId"), ("Title", _tdColumnField "Title")]
       let query = albumsQueryRequest & qrQuery . qFields ?~ fields
-      receivedAlbums <- Data.sortResponseRowsBy "Title" <$> (api // _query) sourceName config query
+      receivedAlbums <- Data.sortResponseRowsBy "Title" <$> guardedQuery api sourceName config query
 
       let filterToRequiredProperties =
             HashMap.filterWithKey (\(FieldName propName) _value -> propName == "ArtistId" || propName == "Title")
@@ -38,7 +38,7 @@ spec TestData {..} api sourceName config = describe "Basic Queries" $ do
     it "can project columns into fields with different names" $ do
       let fields = Data.mkFieldsMap [("Artist_Id", _tdColumnField "ArtistId"), ("Artist_Name", _tdColumnField "Name")]
       let query = artistsQueryRequest & qrQuery . qFields ?~ fields
-      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> (api // _query) sourceName config query
+      receivedArtists <- Data.sortResponseRowsBy "ArtistId" <$> guardedQuery api sourceName config query
 
       let renameProperties =
             HashMap.mapKeys
@@ -58,9 +58,9 @@ spec TestData {..} api sourceName config = describe "Basic Queries" $ do
       let page1Query = artistsQueryRequest & qrQuery %~ (qLimit ?~ 10 >>> qOffset ?~ 0)
       let page2Query = artistsQueryRequest & qrQuery %~ (qLimit ?~ 10 >>> qOffset ?~ 10)
 
-      allArtists <- Data.responseRows <$> (api // _query) sourceName config allQuery
-      page1Artists <- Data.responseRows <$> (api // _query) sourceName config page1Query
-      page2Artists <- Data.responseRows <$> (api // _query) sourceName config page2Query
+      allArtists <- Data.responseRows <$> guardedQuery api sourceName config allQuery
+      page1Artists <- Data.responseRows <$> guardedQuery api sourceName config page1Query
+      page2Artists <- Data.responseRows <$> guardedQuery api sourceName config page2Query
 
       page1Artists `rowsShouldBe` take 10 allArtists
       page2Artists `rowsShouldBe` take 10 (drop 10 allArtists)

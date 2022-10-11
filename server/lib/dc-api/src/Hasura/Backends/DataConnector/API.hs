@@ -1,13 +1,21 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 --
 module Hasura.Backends.DataConnector.API
   ( module V0,
     Api,
+    CapabilitiesResponses,
+    QueryResponses,
     SchemaApi,
+    SchemaResponses,
     QueryApi,
     ConfigHeader,
     Prometheus,
     SourceNameHeader,
     SourceName,
+    capabilitiesCase,
+    schemaCase,
+    queryCase,
     openApiSchema,
     Routes (..),
     apiClient,
@@ -25,29 +33,69 @@ import Hasura.Backends.DataConnector.API.V0 as V0
 import Network.HTTP.Media ((//), (/:))
 import Servant.API
 import Servant.API.Generic
-import Servant.Client (Client, ClientM, client)
+import Servant.Client (Client, ClientM, client, matchUnion)
 import Servant.OpenApi
-import Prelude (show)
+import Prelude (Maybe (Just, Nothing), Monad, show)
 
 --------------------------------------------------------------------------------
 -- Servant Routes
 
+-- | This function defines a central place to ensure that all cases are covered for capabilities and error responses.
+--   When additional responses are added to the Union, this should be updated to ensure that all responses have been considered.
+--   A general function of this form doesn't seem easy to write currently as you need a type inequality with ErrorResponse.
+capabilitiesCase :: a -> (CapabilitiesResponse -> a) -> (ErrorResponse -> a) -> Union CapabilitiesResponses -> a
+capabilitiesCase defaultAction capabilitiesAction errorAction union = do
+  let capabilitiesM = matchUnion @CapabilitiesResponse union
+  let errorM = matchUnion @ErrorResponse union
+  case (capabilitiesM, errorM) of
+    (Just c, Nothing) -> capabilitiesAction c
+    (Nothing, Just e) -> errorAction e
+    _ -> defaultAction -- Note, this could technically include the (Just _, Just _) scenario which is not possible.
+
+type CapabilitiesResponses = '[V0.CapabilitiesResponse, V0.ErrorResponse]
+
 type CapabilitiesApi =
   "capabilities"
-    :> Get '[JSON] V0.CapabilitiesResponse
+    :> UVerb 'GET '[JSON] CapabilitiesResponses
+
+-- | This function defines a central place to ensure that all cases are covered for schema and error responses.
+--   When additional responses are added to the Union, this should be updated to ensure that all responses have been considered.
+schemaCase :: Monad m => m a -> (SchemaResponse -> m a) -> (ErrorResponse -> m a) -> Union SchemaResponses -> m a
+schemaCase defaultAction schemaAction errorAction union = do
+  let schemaM = matchUnion @SchemaResponse union
+  let errorM = matchUnion @ErrorResponse union
+  case (schemaM, errorM) of
+    (Just c, Nothing) -> schemaAction c
+    (Nothing, Just e) -> errorAction e
+    _ -> defaultAction -- Note, this could technically include the (Just _, Just _) scenario which is not possible.
+
+type SchemaResponses = '[V0.SchemaResponse, V0.ErrorResponse]
 
 type SchemaApi =
   "schema"
     :> SourceNameHeader Required
     :> ConfigHeader Required
-    :> Get '[JSON] V0.SchemaResponse
+    :> UVerb 'GET '[JSON] SchemaResponses
+
+-- | This function defines a central place to ensure that all cases are covered for query and error responses.
+--   When additional responses are added to the Union, this should be updated to ensure that all responses have been considered.
+queryCase :: Monad m => m a -> (QueryResponse -> m a) -> (ErrorResponse -> m a) -> Union QueryResponses -> m a
+queryCase defaultAction queryAction errorAction union = do
+  let queryM = matchUnion @QueryResponse union
+  let errorM = matchUnion @ErrorResponse union
+  case (queryM, errorM) of
+    (Just c, Nothing) -> queryAction c
+    (Nothing, Just e) -> errorAction e
+    _ -> defaultAction -- Note, this could technically include the (Just _, Just _) scenario which is not possible.
+
+type QueryResponses = '[V0.QueryResponse, V0.ErrorResponse]
 
 type QueryApi =
   "query"
     :> SourceNameHeader Required
     :> ConfigHeader Required
     :> ReqBody '[JSON] V0.QueryRequest
-    :> Post '[JSON] V0.QueryResponse
+    :> UVerb 'POST '[JSON] QueryResponses
 
 type ExplainApi =
   "explain"

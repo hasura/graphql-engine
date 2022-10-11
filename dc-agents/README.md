@@ -1457,6 +1457,19 @@ For example, here's a query that retrieves artists ordered descending by the cou
 The `QueryRequest` TypeScript type in the [reference implementation](./reference/src/types/index.ts) describes the valid request body payloads which may be passed to the `POST /query` endpoint. The response body structure is captured by the `QueryResponse` type.
 
 ### Health endpoint
+
 Agents must expose a `/health` endpoint which must return a 204 No Content HTTP response code if the agent is up and running. This does not mean that the agent is able to connect to any data source it performs queries against, only that the agent is running and can accept requests, even if some of those requests might fail because a dependant service is unavailable.
 
 However, this endpoint can also be used to check whether the ability of the agent to talk to a particular data source is healthy. If the endpoint is sent the `X-Hasura-DataConnector-Config` and `X-Hasura-DataConnector-SourceName` headers, then the agent is expected to check that it can successfully talk to whatever data source is being specified by those headers. If it can do so, then it must return a 204 No Content response code.
+
+### Reporting Errors
+
+Any non-200 response code from an Agent (except for the `/health` endpoint) will be interpreted as an error. These should be handled gracefully by `graphql-engine` but provide limited details to users. If you wish to return structured error information to users you can return a status of `500` from the `/capabilities`, `/schema`, and `/query` endpoints with the following JSON format:
+
+```
+{
+  "type": "uncaught-error",      // This may be extended to more types in future
+  "message": String,             // A plain-text message for display purposes
+  "details": Value               // An arbitrary JSON Value containing error details
+}
+```

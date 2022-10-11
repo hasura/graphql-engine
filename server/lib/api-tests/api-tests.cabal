@@ -23,6 +23,7 @@ executable api-tests
     , postgresql-simple
     , safe-exceptions
     , split
+    , sop-core
     , test-harness
     , text
     , unordered-containers
@@ -66,6 +67,7 @@ executable api-tests
     Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
+    Test.DataConnector.MockAgent.ErrorSpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.QuerySpec

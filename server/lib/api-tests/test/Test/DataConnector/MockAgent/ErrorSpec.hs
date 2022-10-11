@@ -1,7 +1,8 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
--- | Configuration Transformation Tests for Data Connector Backend using a Mock Agent
-module Test.DataConnector.MockAgent.TransformedConfigurationSpec
+-- | Tests for Error Conditions in Data Connector Backends
+module Test.DataConnector.MockAgent.ErrorSpec
   ( spec,
   )
 where
@@ -31,11 +32,7 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorMock)
             { Fixture.mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
               Fixture.setupTeardown = \(testEnv, mockEnv) ->
-                [ DataConnector.setupMockAction
-                    sourceMetadata
-                    DataConnector.mockBackendConfig
-                    (testEnv, mockEnv)
-                ]
+                [DataConnector.setupMockAction sourceMetadata DataConnector.mockBackendConfig (testEnv, mockEnv)]
             }
         ]
     )
@@ -59,60 +56,18 @@ sourceMetadata =
                   custom_name: id
                 Title:
                   custom_name: title
-                ArtistId:
-                  custom_name: artist_id
-            object_relationships:
-              - name: artist
-                using:
-                  manual_configuration:
-                    remote_table: [Artist]
-                    column_mapping:
-                      ArtistId: ArtistId
-          - table: [Artist]
-            configuration:
-              custom_root_fields:
-                select: artists
-                select_by_pk: artists_by_pk
-              column_config:
-                ArtistId:
-                  custom_name: id
-                Name:
-                  custom_name: name
-            array_relationships:
-              - name: albums
-                using:
-                  manual_configuration:
-                    remote_table: [Album]
-                    column_mapping:
-                      ArtistId: ArtistId
-        configuration:
-          value: {}
-          template: |
-            {
-              "DEBUG": {
-                "session": {{ $session?.foo ?? "foo session default" }},
-                "env":     {{ $env?.bar     ?? "bar env default"     }},
-                "config":  {{ $config?.baz  ?? "baz config default"  }}
-              }
-            }
-        |]
-
---------------------------------------------------------------------------------
+        configuration: {}
+      |]
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, DataConnector.MockAgentEnvironment)
 tests opts = do
-  describe "Basic Tests" $ do
-    it "works with configuration transformation Kriti template" $
+  describe "Error Protocol Tests" $ do
+    it "handles returned errors correctly" $
       DataConnector.runMockedTest opts $
-        let required =
+        let errorResponse = API.ErrorResponse API.UncaughtError "Hello World!" [yaml| { foo: "bar" } |]
+            required =
               DataConnector.TestCaseRequired
-                { _givenRequired =
-                    let albums =
-                          [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
-                              (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
-                            ]
-                          ]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse albums)},
+                { _givenRequired = DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Left errorResponse},
                   _whenRequestRequired =
                     [graphql|
                       query getAlbum {
@@ -124,10 +79,14 @@ tests opts = do
                     |],
                   _thenRequired =
                     [yaml|
-                      data:
-                        albums:
-                          - id: 1
-                            title: For Those About To Rock We Salute You
+                      errors:
+                        -
+                          extensions:
+                            code: "data-connector-error"
+                            path: "$"
+                            internal:
+                              foo: "bar"
+                          message: "UncaughtError: Hello World!"
                     |]
                 }
          in (DataConnector.defaultTestCase required)
@@ -151,21 +110,5 @@ tests opts = do
                                 _qOrderBy = Nothing
                               }
                         }
-                    ),
-                _whenConfig =
-                  -- TODO: Create a QQ for this purpose.
-                  let conf =
-                        Aeson.fromJSON
-                          [yaml|
-                            DEBUG:
-                              config: "baz config default"
-                              env: "bar env default"
-                              session: "foo session default"
-                          |]
-                   in case conf of
-                        Aeson.Success r -> Just r
-                        _ -> error "Should parse."
+                    )
               }
-
-rowsResponse :: [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
-rowsResponse rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) Nothing

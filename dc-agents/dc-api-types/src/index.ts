@@ -23,6 +23,8 @@ export type { ComparisonValue } from './models/ComparisonValue';
 export type { ConfigSchemaResponse } from './models/ConfigSchemaResponse';
 export type { Constraint } from './models/Constraint';
 export type { DataSchemaCapabilities } from './models/DataSchemaCapabilities';
+export type { ErrorResponse } from './models/ErrorResponse';
+export type { ErrorResponseType } from './models/ErrorResponseType';
 export type { ExistsExpression } from './models/ExistsExpression';
 export type { ExistsInTable } from './models/ExistsInTable';
 export type { ExplainCapabilities } from './models/ExplainCapabilities';

@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+
 module Harness.Backend.DataConnector.MockAgent
   ( MockConfig (..),
     chinookMock,
@@ -11,6 +13,7 @@ import Data.HashMap.Strict.InsOrd qualified as HMap
 import Data.IORef qualified as I
 import Data.OpenApi qualified as OpenApi
 import Data.Proxy
+import Data.SOP.BasicFunctors qualified as SOP
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Network.Wai.Handler.Warp qualified as Warp
@@ -18,10 +21,13 @@ import Servant
 
 --------------------------------------------------------------------------------
 
+-- Note: Only the _queryResponse field allows mock errors at present.
+-- This can be extended at a later point if required.
+--
 data MockConfig = MockConfig
   { _capabilitiesResponse :: API.CapabilitiesResponse,
     _schemaResponse :: API.SchemaResponse,
-    _queryResponse :: API.QueryRequest -> API.QueryResponse
+    _queryResponse :: API.QueryRequest -> Either API.ErrorResponse API.QueryResponse
   }
 
 mkTableName :: Text -> API.TableName
@@ -536,28 +542,30 @@ chinookMock =
   MockConfig
     { _capabilitiesResponse = capabilities,
       _schemaResponse = schema,
-      _queryResponse = \_ -> API.QueryResponse (Just []) Nothing
+      _queryResponse = \_ -> Right $ API.QueryResponse (Just []) Nothing
     }
 
 --------------------------------------------------------------------------------
 
-mockCapabilitiesHandler :: I.IORef MockConfig -> Handler API.CapabilitiesResponse
+mockCapabilitiesHandler :: I.IORef MockConfig -> Handler (Union API.CapabilitiesResponses)
 mockCapabilitiesHandler mcfg = liftIO $ do
   cfg <- I.readIORef mcfg
-  pure $ _capabilitiesResponse cfg
+  pure $ inject $ SOP.I $ _capabilitiesResponse cfg
 
-mockSchemaHandler :: I.IORef MockConfig -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> Handler API.SchemaResponse
+mockSchemaHandler :: I.IORef MockConfig -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> Handler (Union API.SchemaResponses)
 mockSchemaHandler mcfg mQueryConfig _sourceName queryConfig = liftIO $ do
   cfg <- I.readIORef mcfg
   I.writeIORef mQueryConfig (Just queryConfig)
-  pure $ _schemaResponse cfg
+  pure $ inject $ SOP.I $ _schemaResponse cfg
 
-mockQueryHandler :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> API.QueryRequest -> Handler API.QueryResponse
+mockQueryHandler :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> API.QueryRequest -> Handler (Union API.QueryResponses)
 mockQueryHandler mcfg mquery mQueryCfg _sourceName queryConfig query = liftIO $ do
   handler <- fmap _queryResponse $ I.readIORef mcfg
   I.writeIORef mquery (Just query)
   I.writeIORef mQueryCfg (Just queryConfig)
-  pure $ handler query
+  case handler query of
+    Left e -> pure $ inject $ SOP.I e
+    Right r -> pure $ inject $ SOP.I r
 
 -- Returns an empty explain response for now
 explainHandler :: API.SourceName -> API.Config -> API.QueryRequest -> Handler API.ExplainResponse

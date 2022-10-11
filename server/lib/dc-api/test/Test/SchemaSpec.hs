@@ -27,13 +27,13 @@ spec :: TestData -> Client IO (NamedRoutes API.Routes) -> API.SourceName -> API.
 spec TestData {..} api sourceName config API.Capabilities {..} = describe "schema API" $ do
   it "returns the Chinook tables" $ do
     let extractTableNames = sort . fmap API._tiName
-    tableNames <- (extractTableNames . API._srTables) <$> (api // API._schema) sourceName config
+    tableNames <- (extractTableNames . API._srTables) <$> (schemaGuard =<< (api // API._schema) sourceName config)
 
     let expectedTableNames = extractTableNames _tdSchemaTables
     tableNames `jsonShouldBe` expectedTableNames
 
   testPerTable "returns the correct columns in the Chinook tables" $ \expectedTable@API.TableInfo {..} -> do
-    tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
+    tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (schemaGuard =<< (api // API._schema) sourceName config)
 
     -- We remove some properties here so that we don't compare them since they vary between agent implementations
     let extractJsonForComparison table =
@@ -54,17 +54,17 @@ spec TestData {..} api sourceName config API.Capabilities {..} = describe "schem
 
   if API._dscSupportsPrimaryKeys _cDataSchema
     then testPerTable "returns the correct primary keys for the Chinook tables" $ \API.TableInfo {..} -> do
-      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
+      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (schemaGuard =<< (api // API._schema) sourceName config)
       let actualPrimaryKey = API._tiPrimaryKey <$> tables
       actualPrimaryKey `jsonShouldBe` Just _tiPrimaryKey
     else testPerTable "returns no primary keys for the Chinook tables" $ \API.TableInfo {..} -> do
-      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
+      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (schemaGuard =<< (api // API._schema) sourceName config)
       let actualPrimaryKey = API._tiPrimaryKey <$> tables
       actualPrimaryKey `jsonShouldBe` Just []
 
   if API._dscSupportsForeignKeys _cDataSchema
     then testPerTable "returns the correct foreign keys for the Chinook tables" $ \expectedTable@API.TableInfo {..} -> do
-      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
+      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (schemaGuard =<< (api // API._schema) sourceName config)
 
       -- We compare only the constraints and ignore the constraint names since some agents will have
       -- different constraint names
@@ -75,7 +75,7 @@ spec TestData {..} api sourceName config API.Capabilities {..} = describe "schem
 
       actualConstraints `jsonShouldBe` expectedConstraints
     else testPerTable "returns no foreign keys for the Chinook tables" $ \API.TableInfo {..} -> do
-      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (api // API._schema) sourceName config
+      tables <- find (\t -> API._tiName t == _tiName) . API._srTables <$> (schemaGuard =<< (api // API._schema) sourceName config)
 
       let actualJsonConstraints = API._tiForeignKeys <$> tables
       actualJsonConstraints `jsonShouldBe` Just (API.ForeignKeys mempty)
@@ -86,3 +86,7 @@ spec TestData {..} api sourceName config API.Capabilities {..} = describe "schem
         forM_ _tdSchemaTables $ \expectedTable@API.TableInfo {..} -> do
           it (Text.unpack . NonEmpty.last $ API.unTableName _tiName) $
             test expectedTable
+
+    schemaGuard = API.schemaCase defaultAction pure errorAction
+    defaultAction = fail "Error resolving source schema"
+    errorAction e = fail ("Error resolving source schema: " <> Text.unpack (API.errorResponseJsonText e))

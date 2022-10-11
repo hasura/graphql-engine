@@ -4,7 +4,7 @@ import { getSchema } from './schema';
 import { explain, queryData } from './query';
 import { getConfig, tryGetConfig } from './config';
 import { capabilitiesResponse } from './capabilities';
-import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse } from '@hasura/dc-api-types';
+import { QueryResponse, SchemaResponse, QueryRequest, CapabilitiesResponse, ExplainResponse, RawRequest, RawResponse, ErrorResponse } from '@hasura/dc-api-types';
 import { connect } from './db';
 import { envToBool, envToString } from './util';
 import metrics from 'fastify-metrics';
@@ -28,6 +28,20 @@ const server = Fastify({
           : {}
       )
     }
+})
+
+server.setErrorHandler(function (error, _request, reply) {
+  // Log error
+  this.log.error(error)
+
+  const errorResponse: ErrorResponse = {
+    type: "uncaught-error",
+    message: "SQLite Agent: Uncaught Exception",
+    details: error
+  };
+
+  // Send error response
+  reply.status(500).send(errorResponse);
 })
 
 const METRICS_ENABLED = envToBool('METRICS');
@@ -88,7 +102,12 @@ const sqlLogger = (sql: string): void => {
   server.log.debug({sql}, "Executed SQL");
 };
 
-server.get<{ Reply: CapabilitiesResponse }>("/capabilities", async (request, _response) => {
+// NOTE:
+// 
+// While an ErrorResponse is available it is not currently used as there are no errors anticipated.
+// It is included here for illustrative purposes.
+// 
+server.get<{ Reply: CapabilitiesResponse | ErrorResponse }>("/capabilities", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "capabilities.request");
   return capabilitiesResponse;
 });
@@ -99,12 +118,15 @@ server.get<{ Reply: SchemaResponse }>("/schema", async (request, _response) => {
   return getSchema(config, sqlLogger);
 });
 
-server.post<{ Body: QueryRequest, Reply: QueryResponse }>("/query", async (request, _response) => {
+server.post<{ Body: QueryRequest, Reply: QueryResponse | ErrorResponse }>("/query", async (request, response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "query.request");
   const end = queryHistogram.startTimer()
   const config = getConfig(request);
-  const result = queryData(config, sqlLogger, request.body);
+  const result : QueryResponse | ErrorResponse = await queryData(config, sqlLogger, request.body);
   end();
+  if("message" in result) {
+    response.statusCode = 500;
+  }
   return result;
 });
 

@@ -1,6 +1,6 @@
 import { Config }  from "./config";
 import { connect, SqlLogger } from "./db";
-import { coerceUndefinedToNull, omap, last, coerceUndefinedOrNullToEmptyRecord, envToBool, isEmptyObject, tableNameEquals, unreachable, logDeep } from "./util";
+import { coerceUndefinedToNull, omap, last, coerceUndefinedOrNullToEmptyRecord, envToBool, isEmptyObject, tableNameEquals, unreachable, logDeep, envToString, envToNum } from "./util";
 import {
     Expression,
     BinaryComparisonOperator,
@@ -20,6 +20,7 @@ import {
     UnaryComparisonOperator,
     ExplainResponse,
     ExistsExpression,
+    ErrorResponse,
   } from "@hasura/dc-api-types";
 import { customAlphabet } from "nanoid";
 
@@ -507,12 +508,25 @@ function tag(t: string, s: string): string {
  * ```
  *
  */
-export async function queryData(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<QueryResponse> {
+export async function queryData(config: Config, sqlLogger: SqlLogger, queryRequest: QueryRequest): Promise<QueryResponse | ErrorResponse> {
   const db = connect(config, sqlLogger); // TODO: Should this be cached?
   const q = query(queryRequest);
-  const [result, metadata] = await db.query(q);
 
-  return output(result);
+  const query_length_limit = envToNum('QUERY_LENGTH_LIMIT', Infinity);
+  if(q.length > query_length_limit) {
+    const result: ErrorResponse =
+      {
+        message: `Generated SQL Query was too long (${q.length} > ${query_length_limit})`,
+        details: {
+          "query.length": q.length,
+          "limit": query_length_limit
+        }
+      };
+    return result;
+  } else {
+    const [result, metadata] = await db.query(q);
+    return output(result);
+  }
 }
 
 /**

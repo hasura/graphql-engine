@@ -35,6 +35,7 @@ export const configSchema: ConfigSchemaResponse = {
   config_schema: {
     type: "object",
     nullable: false,
+    required: ["db"],
     properties: {
       db: {
         description: "The SQLite database file to use.",
