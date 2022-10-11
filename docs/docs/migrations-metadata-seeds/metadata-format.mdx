@@ -11,40 +11,41 @@ toc_max_heading_level: 6
 
 # Metadata Format Reference
 
-With Metadata config `v3`, the Metadata that is exported from the server by the CLI is a directory of multiple files
-and directories as per the example below:
+With Metadata config `v3`, the Metadata that is exported from the server by the CLI is a directory of multiple files and
+directories as per the example below:
 
-  ```text
-  📂 metadata
-  ├─ 📂 databases
-  │  ├─ 📄 databases.yaml
-  │  └─ 📂 default
-  │     ├─ 📂 tables
-  │     │  ├─ 📄 public_author.yaml
-  │     │  ├─ 📄 public_article.yaml
-  │     │  └─ 📄 tables.yaml
-  │     └─ 📂 functions
-  │        ├─ 📄 public_search_author.yaml
-  │        └─ 📄 functions.yaml
-  ├─ 📄 actions.graphql
-  ├─ 📄 actions.yaml
-  ├─ 📄 allow_list.yaml
-  ├─ 📄 api_limits.yaml
-  ├─ 📄 cron_triggers.yaml
-  ├─ 📄 graphql_schema_introspection.yaml
-  ├─ 📄 inherited_roles.yaml
-  ├─ 📄 network.yaml
-  ├─ 📄 query_collections.yaml
-  ├─ 📄 remote_schemas.yaml
-  ├─ 📄 rest_endpoints.yaml
-  └─ 📄 version.yaml
-  ```
+```text
+📂 metadata
+├─ 📂 databases
+│  ├─ 📄 databases.yaml
+│  └─ 📂 default
+│     ├─ 📂 tables
+│     │  ├─ 📄 public_author.yaml
+│     │  ├─ 📄 public_article.yaml
+│     │  └─ 📄 tables.yaml
+│     └─ 📂 functions
+│        ├─ 📄 public_search_author.yaml
+│        └─ 📄 functions.yaml
+├─ 📄 actions.graphql
+├─ 📄 actions.yaml
+├─ 📄 allow_list.yaml
+├─ 📄 api_limits.yaml
+├─ 📄 cron_triggers.yaml
+├─ 📄 graphql_schema_introspection.yaml
+├─ 📄 inherited_roles.yaml
+├─ 📄 network.yaml
+├─ 📄 query_collections.yaml
+├─ 📄 remote_schemas.yaml
+├─ 📄 rest_endpoints.yaml
+└─ 📄 version.yaml
+```
 
 Internally in Hasura Server, Metadata is maintained as a JSON blob in the `hdb_metadata` table of the Metadata database.
 
 :::info note
 
-For `config v2`, see [Metadata format reference (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/reference/metadata-format.mdx).
+For `config v2`, see
+[Metadata format reference (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/reference/metadata-format.mdx).
 
 :::
 
@@ -54,8 +55,8 @@ The following files will be generated in the `metadata/` directory of your proje
 
 :::info Note
 
-The output of the [export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata)
-Metadata API is a JSON version of the Metadata files.
+The output of the [export_metadata](/api-reference/metadata-api/manage-metadata.mdx#metadata-export-metadata) Metadata
+API is a JSON version of the Metadata files.
 
 :::
 
@@ -85,7 +86,7 @@ Metadata API is a JSON version of the Metadata files.
       database_url:
         from_env: PG_DATABASE_URL
       isolation_level: read-committed
-  tables: "!include default/tables/tables.yaml"
+  tables: '!include default/tables/tables.yaml'
 ```
 
 :::info Note
@@ -128,8 +129,8 @@ metadata.
 **Example**: A `tables.yaml` file which specifies further `author` and `article` table files
 
 ```yaml
-- "!include public_author.yaml"
-- "!include public_article.yaml"
+- '!include public_author.yaml'
+- '!include public_article.yaml'
 ```
 
 ###### [table-name].yaml
@@ -137,6 +138,7 @@ metadata.
 The specific files for each database table contain all the metadata information regarding each database table.
 
 These files can contain information relating to the table for:
+
 - Relationships including object and array relationships
 - Remote relationships including those to remote schemas and remote databases
 - Operation permissions per role
@@ -221,7 +223,7 @@ metadata to be exposed as top-level GraphQL fields.
 **Example**: A `functions.yaml` file which specifies further `search_author` function file
 
 ```yaml
-- "!include public_search_author.yaml"
+- '!include public_search_author.yaml'
 ```
 
 ###### [function-name].yaml
@@ -269,7 +271,7 @@ The `actions.yaml` file contains Metadata related to [actions](/actions/index.md
 actions:
   - name: greet
     definition:
-      kind: ""
+      kind: ''
       handler: <base_url>/greet
       forward_client_headers: true
       headers:
@@ -290,8 +292,8 @@ custom_types:
 actions:
   - name: greet
     definition:
-      kind: ""
-      handler: "{{ACTION_BASE_URL}}/greet"
+      kind: ''
+      handler: '{{ACTION_BASE_URL}}/greet'
       forward_client_headers: true
       headers:
         - value: application/json
@@ -348,9 +350,8 @@ time_limit:
 
 ### cron_triggers.yaml
 
-The `cron_triggers.yaml` file contains Metadata related to
-[cron triggers](/scheduled-triggers/create-cron-trigger.mdx). The `webhook` can be an HTTP endpoint or
-an environment variable containing the HTTP endpoint.
+The `cron_triggers.yaml` file contains Metadata related to [cron triggers](/scheduled-triggers/create-cron-trigger.mdx).
+The `webhook` can be an HTTP endpoint or an environment variable containing the HTTP endpoint.
 
 **Example**: A cron trigger called `test-trigger`
 
@@ -389,7 +390,7 @@ disabled_for_roles:
 
 ### inherited_roles.yaml
 
-The `inherited_roles.yaml` file contains Metadata related to [inherited roles](/auth/authorization/inherited-roles).
+The `inherited_roles.yaml` file contains Metadata related to [inherited roles](/auth/authorization/inherited-roles.mdx).
 
 **Example**: An inherited role of `manager` which inherits from `user` and `customer`
 
