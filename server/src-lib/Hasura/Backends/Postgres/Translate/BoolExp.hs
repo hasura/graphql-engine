@@ -166,11 +166,12 @@ translateBoolExp = \case
       return $ sqlAnd bExps
     AVRelationship (RelInfo _ _ colMapping relTN _ _) nesAnn -> do
       -- Convert the where clause on the relationship
-      aliasRelTN <- freshIdentifier relTN
-      annRelBoolExp <- withCurrentTable (S.QualifiedIdentifier aliasRelTN Nothing) (translateBoolExp nesAnn)
-      tableRelExp <- translateTableRelationship colMapping aliasRelTN
+      relTNAlias <- S.toTableAlias <$> freshIdentifier relTN
+      let relTNIdentifier = S.tableAliasToIdentifier relTNAlias
+      annRelBoolExp <- withCurrentTable (S.QualifiedIdentifier relTNIdentifier Nothing) (translateBoolExp nesAnn)
+      tableRelExp <- translateTableRelationship colMapping relTNIdentifier
       let innerBoolExp = S.BEBin S.AndOp tableRelExp annRelBoolExp
-      return $ S.mkExists (S.FISimple relTN $ Just $ S.toTableAlias aliasRelTN) innerBoolExp
+      return $ S.mkExists (S.FISimple relTN $ Just $ relTNAlias) innerBoolExp
     AVComputedField (AnnComputedFieldBoolExp _ _ function sessionArgPresence cfBoolExp) -> do
       case cfBoolExp of
         CFBEScalar opExps -> do
@@ -181,11 +182,12 @@ translateBoolExp = \case
         CFBETable _ be -> do
           -- Convert the where clause on table computed field
           BoolExpCtx {currTableReference} <- ask
-          aliasFunction <- freshIdentifier function
-          let functionExp =
+          functionAlias <- S.toTableAlias <$> freshIdentifier function
+          let functionIdentifier = S.tableAliasToIdentifier functionAlias
+              functionExp =
                 mkComputedFieldFunctionExp currTableReference function sessionArgPresence $
-                  Just $ S.toTableAlias aliasFunction
-          S.mkExists (S.FIFunc functionExp) <$> withCurrentTable (S.QualifiedIdentifier aliasFunction Nothing) (translateBoolExp be)
+                  Just $ functionAlias
+          S.mkExists (S.FIFunc functionExp) <$> withCurrentTable (S.QualifiedIdentifier functionIdentifier Nothing) (translateBoolExp be)
     AVAggregationPredicates aggPreds -> translateAVAggregationPredicates aggPreds
 
 -- | Call a given translation action recursively using the given identifier for the 'current' table.
@@ -236,40 +238,42 @@ translateAVAggregationPredicates ::
 translateAVAggregationPredicates
   api@(AggregationPredicatesImplementation (RelInfo {riRTable = relTableName, riMapping = colMapping}) _rowPermissions predicate) = do
     -- e.g. __be_0_<schema>_<table_name>
-    relTableNameAlias <- freshIdentifier relTableName
-    tableRelExp <- translateTableRelationship colMapping relTableNameAlias
-    let subselectAlias = Identifier "_sub"
-        relTable = S.QualifiedIdentifier relTableNameAlias Nothing
+    relTableNameAlias <- S.toTableAlias <$> freshIdentifier relTableName
+    let relTableNameIdentifier = S.tableAliasToIdentifier relTableNameAlias
+    tableRelExp <- translateTableRelationship colMapping relTableNameIdentifier
+    let subselectAlias = S.mkTableAlias "_sub"
+        subselectIdentifier = S.tableAliasToIdentifier subselectAlias
+        relTable = S.QualifiedIdentifier relTableNameIdentifier Nothing
     subselect <-
       local
         (\e -> e {currTableReference = relTable, rootReference = relTable})
         $ translateAggPredsSubselect subselectAlias relTableNameAlias tableRelExp api
-    outerWhereFrag <- translateAggPredBoolExp relTableName subselectAlias predicate
+    outerWhereFrag <- translateAggPredBoolExp relTableName subselectIdentifier predicate
     pure $ S.mkExists subselect outerWhereFrag
 
 translateAggPredBoolExp ::
   forall pgKind.
   TableName ('Postgres pgKind) ->
-  Identifier ->
+  TableIdentifier ->
   AggregationPredicate ('Postgres pgKind) S.SQLExp ->
   BoolExpM S.BoolExp
 translateAggPredBoolExp
   relTableName
-  subselectAlias
+  subselectIdentifier
   (AggregationPredicate {aggPredFunctionName, aggPredPredicate}) = do
     BoolExpCtx {rootReference} <- ask
     let (Identifier aggAlias) = identifierWithSuffix relTableName aggPredFunctionName
         boolExps =
           map
-            (mkFieldCompExp rootReference (S.QualifiedIdentifier subselectAlias Nothing) $ LColumn (FieldName aggAlias))
+            (mkFieldCompExp rootReference (S.QualifiedIdentifier subselectIdentifier Nothing) $ LColumn (FieldName aggAlias))
             aggPredPredicate
     pure $ sqlAnd boolExps
 
 translateAggPredsSubselect ::
   forall pgKind.
   (Backend ('Postgres pgKind)) =>
-  Identifier ->
-  Identifier ->
+  S.TableAlias ->
+  S.TableAlias ->
   S.BoolExp ->
   AggregationPredicatesImplementation ('Postgres pgKind) S.SQLExp ->
   BoolExpM S.FromItem
@@ -284,8 +288,9 @@ translateAggPredsSubselect
     ) = do
     mFilter <- traverse translateBoolExp (aggPredFilter predicate)
     rowPermExp <- translateBoolExp rowPermissions
-    let -- SELECT <aggregate_function> AS <aggregate_function_alias>
-        extractorsExp = translateAggPredExtractor relTableNameAlias relTableName predicate
+    let relTableNameIdentifier = S.tableAliasToIdentifier relTableNameAlias
+        -- SELECT <aggregate_function> AS <aggregate_function_alias>
+        extractorsExp = translateAggPredExtractor relTableNameIdentifier relTableName predicate
         -- FROM <array_relationship_table> AS <array_relationship_table_alias>
         fromExp = pure $ S.FISimple relTableName $ Just $ S.toTableAlias relTableNameAlias
         -- WHERE <relationship_table_key> AND <row_permissions> AND <mFilter>
@@ -297,39 +302,39 @@ translateAggPredsSubselect
             S.selFrom = Just $ S.FromExp fromExp,
             S.selWhere = Just $ S.WhereFrag whereExp
           }
-        (S.toTableAlias subselectAlias)
+        subselectAlias
 
 translateAggPredExtractor ::
   forall pgKind field.
-  Identifier ->
+  TableIdentifier ->
   TableName ('Postgres pgKind) ->
   AggregationPredicate ('Postgres pgKind) field ->
   S.Extractor
-translateAggPredExtractor relTableNameAlias relTableName (AggregationPredicate {aggPredFunctionName, aggPredArguments}) =
-  let predArgsExp = toList $ translateAggPredArguments aggPredArguments relTableNameAlias
+translateAggPredExtractor relTableNameIdentifier relTableName (AggregationPredicate {aggPredFunctionName, aggPredArguments}) =
+  let predArgsExp = toList $ translateAggPredArguments aggPredArguments relTableNameIdentifier
       aggAlias = S.toColumnAlias $ identifierWithSuffix relTableName aggPredFunctionName
    in S.Extractor (S.SEFnApp aggPredFunctionName predArgsExp Nothing) (Just aggAlias)
 
 translateAggPredArguments ::
   forall pgKind.
   AggregationPredicateArguments ('Postgres pgKind) ->
-  Identifier ->
+  TableIdentifier ->
   NonEmpty S.SQLExp
-translateAggPredArguments predArgs relTableNameAlias =
+translateAggPredArguments predArgs relTableNameIdentifier =
   case predArgs of
     AggregationPredicateArgumentsStar -> pure $ S.SEStar Nothing
     (AggregationPredicateArguments cols) ->
-      S.SEQIdentifier . S.mkQIdentifier relTableNameAlias <$> cols
+      S.SEQIdentifier . S.mkQIdentifier relTableNameIdentifier <$> cols
 
-translateTableRelationship :: HashMap PGCol PGCol -> Identifier -> BoolExpM S.BoolExp
-translateTableRelationship colMapping relTableNameAlias = do
+translateTableRelationship :: HashMap PGCol PGCol -> TableIdentifier -> BoolExpM S.BoolExp
+translateTableRelationship colMapping relTableNameIdentifier = do
   BoolExpCtx {currTableReference} <- ask
   pure $
     sqlAnd $
       flip map (M.toList colMapping) $ \(lCol, rCol) ->
         S.BECompare
           S.SEQ
-          (S.mkIdentifierSQLExp (S.QualifiedIdentifier relTableNameAlias Nothing) rCol)
+          (S.mkIdentifierSQLExp (S.QualifiedIdentifier relTableNameIdentifier Nothing) rCol)
           (S.mkIdentifierSQLExp currTableReference lCol)
 
 data LHSField b

@@ -14,6 +14,7 @@ import Data.HashMap.Strict qualified as HM
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Types qualified as S
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases (mkBaseTableAlias)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
   ( cursorIdentifier,
@@ -72,7 +73,9 @@ generateSQLSelect joinCondition selectSource selectNode =
           S.selOffset = S.OffsetExp . S.int64ToSQLExp <$> _ssOffset baseSlicing,
           S.selDistinct = baseDistinctOn
         }
-    baseSelectAlias = mkBaseTableAlias sourcePrefix
+    -- This is why 'SelectSource{sourcePrefix}' needs to be a TableAlias!
+    baseSelectAlias = mkBaseTableAlias (S.toTableAlias sourcePrefix)
+    baseSelectIdentifier = S.tableAliasToIdentifier baseSelectAlias
     baseFromItem = S.mkSelFromItem baseSelect baseSelectAlias
 
     injectJoinCond ::
@@ -103,7 +106,7 @@ generateSQLSelect joinCondition selectSource selectNode =
       let ObjectRelationSource _ colMapping objectSelectSource = objectRelationSource
           alias = S.toTableAlias $ _ossPrefix objectSelectSource
           source = objectSelectSourceToSelectSource objectSelectSource
-          select = generateSQLSelect (mkJoinCond baseSelectAlias colMapping) source node
+          select = generateSQLSelect (mkJoinCond baseSelectIdentifier colMapping) source node
        in S.mkLateralFromItem select alias
 
     arrayRelationToFromItem ::
@@ -113,7 +116,7 @@ generateSQLSelect joinCondition selectSource selectNode =
           alias = S.toTableAlias $ _ssPrefix source
           select =
             generateSQLSelectFromArrayNode source arraySelectNode $
-              mkJoinCond baseSelectAlias colMapping
+              mkJoinCond baseSelectIdentifier colMapping
        in S.mkLateralFromItem select alias
 
     arrayConnectionToFromItem ::
@@ -154,7 +157,7 @@ generateSQLSelectFromArrayNode selectSource (MultiRowSelectNode topExtractors se
             ]
     }
 
-mkJoinCond :: S.TableAlias -> HashMap PGCol PGCol -> S.BoolExp
+mkJoinCond :: S.TableIdentifier -> HashMap PGCol PGCol -> S.BoolExp
 mkJoinCond baseTablepfx colMapn =
   foldl' (S.BEBin S.AndOp) (S.BELit True) $
     flip map (HM.toList colMapn) $ \(lCol, rCol) ->
@@ -176,6 +179,8 @@ connectionToSelectWith rootSelectAlias arrayConnectionSource arraySelectNode =
     ArrayConnectionSource _ columnMapping maybeSplit maybeSlice selectSource =
       arrayConnectionSource
     MultiRowSelectNode topExtractors selectNode = arraySelectNode
+
+    rootSelectIdentifier = S.tableAliasToIdentifier rootSelectAlias
 
     baseSelectAlias = S.mkTableAlias "__base_select"
     baseSelectIdentifier = S.tableAliasToIdentifier baseSelectAlias
@@ -201,7 +206,7 @@ connectionToSelectWith rootSelectAlias arrayConnectionSource arraySelectNode =
     endRowNumberExp = mkLastElementExp $ S.SEIdentifier rowNumberIdentifier
 
     fromBaseSelections =
-      let joinCond = mkJoinCond rootSelectAlias columnMapping
+      let joinCond = mkJoinCond rootSelectIdentifier columnMapping
           baseSelectFrom =
             S.mkSelFromItem
               (generateSQLSelect joinCond selectSource selectNode)

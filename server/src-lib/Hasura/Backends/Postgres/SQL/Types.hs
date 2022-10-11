@@ -63,6 +63,7 @@ import Data.Aeson.TH
 import Data.Aeson.Types (toJSONKeyText)
 import Data.Int
 import Data.List (uncons)
+import Data.String
 import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
@@ -84,6 +85,26 @@ import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Decoding qualified as PD
 import Text.Builder qualified as TB
 
+{- Note [About identifier types]
+
+In order to better be able to reason about values representing SQL binders and
+variables we are in the process of retiring the generic 'Identifier' type in
+favor of the more specific types 'TableIdentifier' and 'ColumnIdentifier'.
+
+Likewise, we distinguish binders of names from uses of names: The types
+'TableAlias' and `ColumnAlias` are used to for binders, whereas
+`TableIdentifier` and `ColumnIdentifier` represent usages or references of
+previously bound names.
+
+We want to ensure these are handled in an hygenic way:
+* 'TableAlias'es and 'ColumnAlias'es can be constructed freely, but
+* 'TableIdentifier' can only be constructed from a 'TableAlias' via
+  'tableAliasToIdentifier', and
+* 'ColumnIdentifier's can only be constructed from a 'ColumnAlias', and
+  potentially be qualified with a 'TableIdentifier'.
+
+-}
+
 newtype Identifier = Identifier {getIdenTxt :: Text}
   deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
 
@@ -97,7 +118,9 @@ class IsIdentifier a where
 instance IsIdentifier Identifier where
   toIdentifier = id
 
--- | The type of identifiers representing tabular values
+-- | The type of identifiers representing tabular values.
+-- While we are transitioning away from 'Identifier' we provisionally export
+-- the value constructor.
 newtype TableIdentifier = TableIdentifier {unTableIdentifier :: Text}
   deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
 

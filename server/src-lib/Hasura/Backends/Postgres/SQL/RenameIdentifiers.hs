@@ -396,7 +396,7 @@ uSqlExp =
     -- rename the table alias if needed
     uQual = \case
       S.QualifiedIdentifier identifier typeAnnotation ->
-        S.QualifiedIdentifier <$> getTableNameAndPrefixHash identifier <*> pure typeAnnotation
+        S.QualifiedIdentifier <$> getTableIdentifierAndPrefixHash identifier <*> pure typeAnnotation
       -- refers to a database table
       S.QualTable t -> pure $ S.QualTable t
       S.QualVar t -> pure $ S.QualVar t

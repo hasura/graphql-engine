@@ -5,8 +5,9 @@ module Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
     mkArrayRelationAlias,
     mkArrayRelationSourcePrefix,
     mkBaseTableAlias,
-    mkBaseTableColumnAlias,
-    mkComputedFieldTableAlias,
+    mkBaseTableIdentifier,
+    contextualizeBaseTableColumn,
+    mkComputedFieldTableIdentifier,
     mkObjectRelationTableAlias,
     mkOrderByFieldName,
   )
@@ -29,65 +30,52 @@ import Hasura.SQL.Backend
 
 -- | Generate alias for order by extractors
 mkAnnOrderByAlias ::
-  Identifier -> FieldName -> SimilarArrayFields -> AnnotatedOrderByElement ('Postgres pgKind) v -> S.ColumnAlias
-mkAnnOrderByAlias pfx parAls similarFields = \case
+  TableIdentifier -> FieldName -> SimilarArrayFields -> AnnotatedOrderByElement ('Postgres pgKind) v -> S.ColumnAlias
+mkAnnOrderByAlias tablePrefix parAls similarFields = \case
   AOCColumn pgColumnInfo ->
     let pgColumn = ciColumn pgColumnInfo
-        obColAls = mkBaseTableColumnAlias pfx pgColumn
+        obColAls = contextualizeBaseTableColumn tablePrefix pgColumn
      in obColAls
   -- "pfx.or.relname"."pfx.ob.or.relname.rest" AS "pfx.ob.or.relname.rest"
   AOCObjectRelation relInfo _ rest ->
     let rn = riName relInfo
-        relPfx = mkObjectRelationTableAlias pfx rn
+        relPfx = mkObjectRelationTableAlias tablePrefix rn
         ordByFldName = mkOrderByFieldName rn
         nesAls = mkAnnOrderByAlias relPfx ordByFldName mempty rest
      in nesAls
   AOCArrayAggregation relInfo _ aggOrderBy ->
     let rn = riName relInfo
         arrPfx =
-          mkArrayRelationSourcePrefix pfx parAls similarFields $
+          mkArrayRelationSourcePrefix tablePrefix parAls similarFields $
             mkOrderByFieldName rn
-        obAls = arrPfx <> Identifier "." <> toIdentifier (mkAggregateOrderByAlias aggOrderBy)
+        obAls = S.tableIdentifierToColumnAlias arrPfx <> "." <> mkAggregateOrderByAlias aggOrderBy
      in S.toColumnAlias obAls
   AOCComputedField cfOrderBy ->
     let fieldName = fromComputedField $ _cfobName cfOrderBy
      in case _cfobOrderByElement cfOrderBy of
-          CFOBEScalar _ -> S.toColumnAlias $ mkComputedFieldTableAlias pfx fieldName
+          CFOBEScalar _ -> S.tableIdentifierToColumnAlias $ mkComputedFieldTableIdentifier tablePrefix fieldName
           CFOBETableAggregation _ _ aggOrderBy ->
-            let cfPfx = mkComputedFieldTableAlias pfx fieldName
-                obAls = cfPfx <> Identifier "." <> toIdentifier (mkAggregateOrderByAlias aggOrderBy)
+            let cfPfx = mkComputedFieldTableIdentifier tablePrefix fieldName
+                obAls = S.tableIdentifierToColumnAlias cfPfx <> "." <> mkAggregateOrderByAlias aggOrderBy
              in S.toColumnAlias obAls
 
--- array relationships are not grouped, so have to be prefixed by
--- parent's alias
-mkUniqArrayRelationAlias :: FieldName -> [FieldName] -> Identifier
-mkUniqArrayRelationAlias parAls flds =
-  let sortedFields = sort flds
-   in Identifier $
-        getFieldNameTxt parAls <> "."
-          <> T.intercalate "." (map getFieldNameTxt sortedFields)
-
-mkArrayRelationTableAlias :: Identifier -> FieldName -> [FieldName] -> Identifier
-mkArrayRelationTableAlias pfx parAls flds =
-  pfx <> Identifier ".ar." <> uniqArrRelAls
-  where
-    uniqArrRelAls = mkUniqArrayRelationAlias parAls flds
-
-mkObjectRelationTableAlias :: Identifier -> RelName -> Identifier
+mkObjectRelationTableAlias :: TableIdentifier -> RelName -> TableIdentifier
 mkObjectRelationTableAlias pfx relName =
-  pfx <> Identifier ".or." <> toIdentifier relName
+  pfx <> TableIdentifier (".or." <> relNameToTxt relName)
 
-mkComputedFieldTableAlias :: Identifier -> FieldName -> Identifier
-mkComputedFieldTableAlias pfx fldAls =
-  pfx <> Identifier ".cf." <> toIdentifier fldAls
+mkComputedFieldTableIdentifier :: TableIdentifier -> FieldName -> TableIdentifier
+mkComputedFieldTableIdentifier pfx fldAls =
+  pfx <> TableIdentifier ".cf." <> TableIdentifier (getFieldNameTxt fldAls)
 
-mkBaseTableAlias :: Identifier -> S.TableAlias
-mkBaseTableAlias pfx =
-  S.toTableAlias $ pfx <> Identifier ".base"
+mkBaseTableIdentifier :: TableIdentifier -> TableIdentifier
+mkBaseTableIdentifier pfx = pfx <> TableIdentifier ".base"
 
-mkBaseTableColumnAlias :: Identifier -> PGCol -> S.ColumnAlias
-mkBaseTableColumnAlias pfx pgColumn =
-  S.toColumnAlias $ pfx <> Identifier ".pg." <> toIdentifier pgColumn
+mkBaseTableAlias :: S.TableAlias -> S.TableAlias
+mkBaseTableAlias pfx = pfx <> ".base"
+
+contextualizeBaseTableColumn :: TableIdentifier -> PGCol -> S.ColumnAlias
+contextualizeBaseTableColumn pfx pgColumn =
+  S.tableIdentifierToColumnAlias pfx <> ".pg." <> S.mkColumnAlias (getPGColTxt pgColumn)
 
 mkAggregateOrderByAlias :: AnnotatedAggregateOrderBy ('Postgres pgKind) -> S.ColumnAlias
 mkAggregateOrderByAlias =
@@ -100,14 +88,20 @@ mkOrderByFieldName name =
   FieldName $ toTxt name <> "." <> "order_by"
 
 mkArrayRelationSourcePrefix ::
-  Identifier ->
+  TableIdentifier ->
   FieldName ->
   HM.HashMap FieldName [FieldName] ->
   FieldName ->
-  Identifier
+  TableIdentifier
 mkArrayRelationSourcePrefix parentSourcePrefix parentFieldName similarFieldsMap fieldName =
-  mkArrayRelationTableAlias parentSourcePrefix parentFieldName $
+  mkArrayRelationTableIdentifier parentSourcePrefix parentFieldName $
     HM.lookupDefault [fieldName] fieldName similarFieldsMap
+
+mkArrayRelationTableIdentifier :: TableIdentifier -> FieldName -> [FieldName] -> TableIdentifier
+mkArrayRelationTableIdentifier pfx parAls flds =
+  pfx <> TableIdentifier ".ar." <> TableIdentifier uniqArrRelAls
+  where
+    uniqArrRelAls = mkUniqArrayRelationAlias parAls flds
 
 mkArrayRelationAlias ::
   FieldName ->
@@ -115,6 +109,14 @@ mkArrayRelationAlias ::
   FieldName ->
   S.TableAlias
 mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
-  S.toTableAlias $
+  S.mkTableAlias $
     mkUniqArrayRelationAlias parentFieldName $
       HM.lookupDefault [fieldName] fieldName similarFieldsMap
+
+-- array relationships are not grouped, so have to be prefixed by
+-- parent's alias
+mkUniqArrayRelationAlias :: FieldName -> [FieldName] -> Text
+mkUniqArrayRelationAlias parAls flds =
+  let sortedFields = sort flds
+   in getFieldNameTxt parAls <> "."
+        <> T.intercalate "." (map getFieldNameTxt sortedFields)
