@@ -7,6 +7,7 @@
   - [Update Event Trigger MSSQL Spec](update-event-trigger-mssql-spec.md)
   - [Checking metadata consistency in run_sql](checking-metadata-consistency-in-runsql.md)
   - [Postgres identifier length limitations](postgres-identifier-length-limitations.md)
+  - [About identifier types](about-identifier-types.md)
   - [Type casting prepared params](type-casting-prepared-params.md)
   - [Mutation output expression](mutation-output-expression.md)
   - [Optimizing queries using limit/offset](optimizing-queries-using-limitoffset.md)
