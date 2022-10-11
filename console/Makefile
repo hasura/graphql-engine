@@ -2,17 +2,18 @@ export PATH := node_modules/.bin:$(PATH)
 DIST_PATH ?= ./static/dist
 BUCKET_NAME ?= graphql-engine-cdn.hasura.io
 VERSION ?= $(shell ../scripts/get-version.sh)
+NODE_OPTIONS=--max-old-space-size=3072
 
 all: deps build gzip-assets gcloud-cp-stable gcloud-set-metadata
 
 deps:
-	npm install
+	NODE_OPTIONS=$(NODE_OPTIONS) npm install
 
 ci-deps:
-	if [ ! -d "node_modules" ]; then npm ci; fi
+	if [ ! -d "node_modules" ]; then NODE_OPTIONS=$(NODE_OPTIONS) npm ci; fi
 
 build:
-	npm run build
+	NODE_OPTIONS=$(NODE_OPTIONS) npm run build
 
 jest:
 	npm run jest -- --runInBand
@@ -45,7 +46,7 @@ gcloud-set-metadata:
 
 server-build: node_modules $(DIST_PATH)/common
 	rm -rf "$(DIST_PATH)/versioned"
-	npm run build
+	NODE_OPTIONS=$(NODE_OPTIONS) npm run build
 	mkdir -p "$(DIST_PATH)/versioned"
 	cp "$(DIST_PATH)"/*.js "$(DIST_PATH)"/*.css "$(DIST_PATH)/versioned/"
 	gzip -r -f "$(DIST_PATH)/versioned"
@@ -56,4 +57,4 @@ $(DIST_PATH)/common:
 	touch $@
 
 node_modules: package.json package-lock.json
-	npm ci
+	NODE_OPTIONS=(NODE_OPTIONS) npm ci
