@@ -77,7 +77,7 @@ The fastest way to try Hasura out is via Heroku.
 
 3. Make your first GraphQL query
 
-   Create a table and instantly run your first query. Follow this [simple guide](https://docs.hasura.io/1.0/graphql/manual/getting-started/first-graphql-query.html).
+   Create a table and instantly run your first query. Follow this [simple guide](https://hasura.io/docs/latest/queries/index/#first-graphql-query).
 
 ### Other one-click deployment options
 
@@ -127,7 +127,7 @@ Transform data in Postgres or run business logic on it to derive another dataset
 ## Demos
 
 Check out all the example applications in the
-[community/examples](community/examples) directory.
+[community/examples](community/sample-apps) directory.
 
 ### Realtime applications
 
