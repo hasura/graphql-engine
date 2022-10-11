@@ -1,0 +1,16 @@
+<div class="loading_overlay hide">
+  <div class="loader"></div>
+  <div class="subhead_wrapper_loader body_content_position">Loading...</div>
+  <div class="overlay_wrapper"></div>
+</div>
+
+
+<script type="text/javascript">
+  const showLoading = function() {
+    Array.from(document.getElementsByClassName('loading_overlay')).forEach(el => el.classList.remove('hide'));
+  };
+
+  const hideLoading = function() {
+    Array.from(document.getElementsByClassName('loading_overlay')).forEach(el => el.classList.add('hide'));
+  };
+</script>

@@ -1,0 +1,6 @@
+type: run_sql
+args:
+  sql: |
+    DROP TABLE table1 cascade;
+    DROP TABLE table2 cascade;
+    DROP TABLE joint_foreign_key cascade;

@@ -1,0 +1,19 @@
+- description: query with namespace
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      {
+        foo {
+          hero(episode: 4) {
+            id
+            name
+          }
+        }
+      }
+  response:
+    data:
+      foo:
+        hero:
+          id: '1'
+          name: R2-D2

@@ -1,0 +1,39 @@
+type: bulk
+args:
+  - type: mssql_track_table
+    args:
+      source: mssql
+      table:
+        name: test
+  - type: mssql_track_table
+    args:
+      source: mssql
+      table:
+        name: articles
+  - type: mssql_create_select_permission
+    args:
+      source: mssql
+      table:
+        name: articles
+      role: public
+      permission:
+        columns:
+          - title
+          - content
+        filter:
+          is_public: 1
+  - type: mssql_create_select_permission
+    args:
+      source: mssql
+      table:
+        name: articles
+      role: user
+      permission:
+        columns:
+          - user_id
+          - title
+          - content
+          - is_public
+        filter:
+          id:
+            _eq: X-Hasura-User-Id

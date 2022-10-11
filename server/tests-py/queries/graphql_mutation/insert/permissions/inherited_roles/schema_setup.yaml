@@ -1,0 +1,12 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE authors (
+        id serial primary key,
+        name text,
+        phone text,
+        email text
+      );

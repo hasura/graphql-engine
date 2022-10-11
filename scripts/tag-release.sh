@@ -2,46 +2,39 @@
 #
 # tag-release.sh
 #
-# Update installation manifests with the release tag, and execute other release
-# hygiene tasks, makes a commit and tags that commit with the given tag.
+# This script is executed before every OSS release.
 #
-# Usage: ./tag-release.sh <tag> [<optional-tag-message>]
+# Usage: ./tag-release.sh <oss_tag>
 #
-# Example: ./tag-release.sh v1.1.0
+# Example: ./tag-release.sh v2.10.0 release/v2.10
 #
 
 # exit on error
-set -e
+set -eo pipefail
 
 # get the repo root
-ROOT="$(readlink -f ${BASH_SOURCE[0]%/*}/../)"
+ROOT="$(readlink -f "${BASH_SOURCE[0]%/*}/../" || greadlink -f "${BASH_SOURCE[0]%/*}/../")"
+
+# assign arguments to variables
+OSS_TAG="$1"
+RELEASE_BRANCH="$2"
 
 # check if required argument is set
-if [ -z "$1" ]; then
-    echo "Usage: ./tag-release.sh <tag> [<optional-tag-message>]"
+if [[ -z "$OSS_TAG" || -z "$RELEASE_BRANCH" ]]; then
+    echo "Please mention both OSS_TAG and RELEASE_BRANCH"
+    echo ""
+    echo "Usage: ./tag-release.sh <oss_tag> <release_branch>"
     exit 1
 fi
 
-# assign arguments to variables
-TAG=$1
-MESSAGE=$2
+echo "Please make that your $RELEASE_BRANCH is up-to date with hasura/graphql-engine-mono repo."
 
-# default message to tag
-if [ -z "$MESSAGE" ]; then
-    MESSAGE="$TAG"
-fi
+# add the latest tag to the catalog_versions file
+pushd "$ROOT"
+[ -n "$(tail -c1 "$ROOT/server/src-rsr/catalog_versions.txt")" ] && echo >> "$ROOT/server/src-rsr/catalog_versions.txt"
+echo "$OSS_TAG $(git show "${RELEASE_BRANCH}:server/src-rsr/catalog_version.txt")" >> "$ROOT/server/src-rsr/catalog_versions.txt"
+popd
 
-# replace the image version with latest tag for all references in install-manifests
-find "$ROOT/install-manifests" \
-     "$ROOT/scripts/cli-migrations" \
-     -type f -exec sed -i -E \
-     's#(hasura/graphql-engine:)v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(\-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(.*)*$#\1'"${TAG}"'\9#' {} \;
+git add "$ROOT/server/src-rsr"
 
-git add "$ROOT/install-manifests" \
-        "$ROOT/scripts/cli-migrations"
-
-git commit -m "update manifests to $TAG"
-
-git tag -a "$TAG" -m "$MESSAGE"
-
-echo "tagged $TAG"
+git commit -m "ci: tag release $OSS_TAG"

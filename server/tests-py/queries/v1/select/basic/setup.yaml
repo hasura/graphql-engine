@@ -1,23 +1,14 @@
 type: bulk
 args:
 
-#Author table
 - type: run_sql
   args:
     sql: |
-      create table author(
-          id serial primary key, 
-          name text unique
+      CREATE TABLE author (
+          id SERIAL PRIMARY KEY,
+          name TEXT UNIQUE
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
 
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -25,45 +16,15 @@ args:
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
-- type: track_table
-  args:
-    schema: public
-    name: article
+      );
 
-#Object relationship
-- type: create_object_relationship
-  args:
-    table: article
-    name: author
-    using:
-      foreign_key_constraint_on: author_id
-
-#Array relationship
-- type: create_array_relationship
-  args:
-    table: author
-    name: articles
-    using:
-      foreign_key_constraint_on:
-        table: article
-        column: author_id
-
-
-#Insert values
-- type: run_sql
-  args:
-    sql: |
-      insert into author (name)
-      values
+      INSERT INTO author (name)
+      VALUES
       ('Author 1'),
-      ('Author 2') 
+      ('Author 2');
 
-- type: run_sql
-  args:
-    sql: |
-      insert into article (title,content,author_id,is_published)
-      values
+      INSERT INTO article (title,content,author_id,is_published)
+      VALUES
       (
         'Article 1',
         'Sample article content 1',
@@ -81,21 +42,29 @@ args:
         'Sample article content 3',
         2,
         true
-      )
+      );
 
-#User table with bigserial and bigint columns
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE "user" (
         id BIGSERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         number BIGINT
       );
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+- type: track_table
+  args:
+    schema: public
+    name: article
+
 - type: track_table
   args:
     schema: public
     name: user
+
 - type: insert
   args:
     table: user
@@ -104,3 +73,28 @@ args:
       number: '123456789'
     - name: User 2
       number: '123456780'
+
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+- type: create_select_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns:
+        - name
+      filter: {}

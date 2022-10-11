@@ -1,0 +1,18 @@
+- server
++ project
+@@ -1,8 +1,19 @@
+-tables: []
++tables:
++  - table:
++      schema: pub
++      name: t3
++  - table:
++      schema: pub
++      name: t4
++  - table:
++      schema: public
++      name: t1
++  - table:
++      schema: public
++      name: t2
+-network: {}

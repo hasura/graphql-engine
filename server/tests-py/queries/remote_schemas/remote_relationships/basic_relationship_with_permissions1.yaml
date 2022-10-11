@@ -1,0 +1,47 @@
+- description: Simple remote relationship query with permissions
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  response:
+    data:
+      custom_profiles:
+        - id: 1
+          profile_name: alice
+          messageBasic:
+            name: alice
+  query:
+    query: |
+      query {
+        custom_profiles {
+          id
+          profile_name
+          messageBasic {
+            name
+          }
+        }
+      }
+
+- description: Simple remote relationship query with permissions
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '2'
+  response:
+    data:
+      custom_profiles:
+        - id: 2
+          messageBasic:
+            name: bob
+  query:
+    query: |
+      query {
+        custom_profiles {
+          id
+          messageBasic {
+            name
+          }
+        }
+      }

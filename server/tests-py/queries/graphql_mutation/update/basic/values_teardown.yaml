@@ -13,3 +13,6 @@ args:
 
       delete from person;
       SELECT setval('person_id_seq', 1, FALSE);
+
+      delete from numerics;
+      SELECT setval('numerics_id_seq', 1, FALSE);

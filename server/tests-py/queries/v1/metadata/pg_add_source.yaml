@@ -1,0 +1,59 @@
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries: 1
+
+- description: PG add same source twice
+  url: /v1/metadata
+  status: 400
+  response:
+    path: $.args
+    error: source with name "pg1" already exists
+    code: already-exists
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries: 1
+
+- description: PG Drop Source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1
+
+- description: PG non-existent drop source
+  url: /v1/metadata
+  status: 400
+  response:
+    path: $.args
+    error: source with name "pg1" does not exist
+    code: not-exists
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1

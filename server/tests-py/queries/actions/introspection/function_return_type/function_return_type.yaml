@@ -1,0 +1,87 @@
+# Test case for bug reported at https://github.com/hasura/graphql-engine/issues/6631
+description: Action introspection to check return types
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      __schema {
+        queryType {
+          fields {
+            name
+            type {
+              name
+              kind
+              ofType {
+                name
+                kind
+                ofType {
+                  name
+                  kind
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+response:
+  data:
+    __schema:
+      queryType:
+        fields:
+        - name: multi
+          type:
+            name:
+            kind: NON_NULL
+            ofType:
+              name:
+              kind: LIST
+              ofType:
+                name:
+                kind: NON_NULL
+        - name: multi_aggregate
+          type:
+            name:
+            kind: NON_NULL
+            ofType:
+              name: user_aggregate
+              kind: OBJECT
+              ofType:
+        - name: single
+          type:
+            name: user
+            kind: OBJECT
+            ofType:
+        - name: single_aggregate
+          type:
+            name:
+            kind: NON_NULL
+            ofType:
+              name: user_aggregate
+              kind: OBJECT
+              ofType:
+        - name: user
+          type:
+            name:
+            kind: NON_NULL
+            ofType:
+              name:
+              kind: LIST
+              ofType:
+                name:
+                kind: NON_NULL
+        - name: user_aggregate
+          type:
+            name:
+            kind: NON_NULL
+            ofType:
+              name: user_aggregate
+              kind: OBJECT
+              ofType:
+        - name: user_by_pk
+          type:
+            name: user
+            kind: OBJECT
+            ofType:

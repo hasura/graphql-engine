@@ -1,0 +1,2 @@
+foo: fooval
+bar: !include "bar.yaml"

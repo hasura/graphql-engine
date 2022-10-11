@@ -1,0 +1,15 @@
+{
+  "name": "auth0-graphql",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "apollo-server": "^2.9.0",
+    "graphql": "^14.5.3",
+    "graphql-tools": "^4.0.5",
+    "node-fetch": "^2.6.0"
+  }
+}

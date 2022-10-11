@@ -1,0 +1,24 @@
+description: Insert a single row in author table with a conflict clause without update_columns
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      insert_author_one(
+        object: {
+          name: "Author 1"
+          is_registered: true
+        }
+        on_conflict: {
+          constraint:author_name_key
+          update_columns: []
+        }
+      ){
+        id
+        name
+      }
+    }
+
+response:
+  data:
+    insert_author_one: null

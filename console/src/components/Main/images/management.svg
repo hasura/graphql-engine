@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="23.999" height="24.204" viewBox="0 0 23.999 24.204">
+    <defs>
+        <style>
+            .prefix__cls-1{fill:none;stroke:#1eb4d4;stroke-linecap:round;stroke-linejoin:round;stroke-width:1.5px}
+        </style>
+    </defs>
+    <g id="prefix__streamline-icon-multiple-users-3_24x24" data-name="streamline-icon-multiple-users-3@24x24" transform="translate(.75 .75)">
+        <path id="prefix__Path_3010" d="M12 14.25a2.625 2.625 0 1 1-2.625 2.625A2.625 2.625 0 0 1 12 14.25z" class="prefix__cls-1" data-name="Path 3010" transform="translate(-.751 -.751)"/>
+        <path id="prefix__Path_3011" d="M16.224 23.25a4.474 4.474 0 0 0-8.448 0" class="prefix__cls-1" data-name="Path 3011" transform="translate(-.751 -.751)"/>
+        <path id="prefix__Path_3012" d="M4.974.75a2.625 2.625 0 1 1-2.625 2.625A2.625 2.625 0 0 1 4.974.75z" class="prefix__cls-1" data-name="Path 3012" transform="translate(-.751 -.75)"/>
+        <path id="prefix__Path_3013" d="M9.2 9.75a4.474 4.474 0 0 0-8.449 0z" class="prefix__cls-1" data-name="Path 3013" transform="translate(-.751 -.75)"/>
+        <path id="prefix__Path_3014" d="M19.026.75A2.625 2.625 0 1 1 16.4 3.375 2.625 2.625 0 0 1 19.026.75z" class="prefix__cls-1" data-name="Path 3014" transform="translate(-.751 -.75)"/>
+        <path id="prefix__Path_3015" d="M23.25 9.75a4.474 4.474 0 0 0-8.449 0z" class="prefix__cls-1" data-name="Path 3015" transform="translate(-.751 -.75)"/>
+        <path id="prefix__Path_3016" d="M3.75 12.75v3.75A2.249 2.249 0 0 0 6 18.75h.75" class="prefix__cls-1" data-name="Path 3016" transform="translate(-.751 -.751)"/>
+        <path id="prefix__Path_3017" d="M20.25 12.75v3.75A2.249 2.249 0 0 1 18 18.75h-.75" class="prefix__cls-1" data-name="Path 3017" transform="translate(-.751 -.751)"/>
+    </g>
+</svg>

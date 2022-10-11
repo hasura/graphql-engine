@@ -1,0 +1,15 @@
+type Mutation {
+  foo(
+    arg1: FooInput!
+  ): FooOutput
+}
+
+input FooInput {
+  username: String!
+  password: String!
+}
+
+type FooOutput {
+  accessToken: String!
+}
+

@@ -1,0 +1,46 @@
+name: server lint
+on:
+  label:
+  pull_request:
+    paths:
+      - "server/**"
+
+jobs:
+  hlint:
+    runs-on: ubuntu-20.04
+    if: "!contains(github.event.pull_request.labels.*.name, 'ignore-server-hlint-checks') && github.event.label.name != 'ignore-server-hlint-checks'"
+    env:
+      working-directory: .
+      HLINT_BASE_URL: https://github.com/ndmitchell/hlint/releases/download
+      HLINT_ARCH: x86_64
+      HLINT_OS: linux
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Download hlint
+        run: |
+          HLINT_VERSION="$(jq -r '.hlint' ./server/VERSIONS.json)"
+          HLINT_URL="${{env.HLINT_BASE_URL}}/v${HLINT_VERSION}/hlint-${HLINT_VERSION}-${{env.HLINT_ARCH}}-${{env.HLINT_OS}}.tar.gz"
+          echo "Downloading from ${HLINT_URL}"
+          curl --fail --location --output "./hlint.tar.gz" "${HLINT_URL}"
+          tar xvf \
+            hlint.tar.gz \
+            --directory='.' \
+            --strip-components=1 \
+            "hlint-${HLINT_VERSION}/hlint"
+
+      - name: Run hlint
+        shell: bash
+        run: |
+          CHANGED_HS_FILES=$(git diff --name-only origin/${{github.base_ref}}...${{github.sha}} -- "./*.hs" | xargs -i -d '\n' sh -c 'ls -d {} 2>/dev/null || true')
+          echo "$CHANGED_HS_FILES"
+          JQ_SCRIPT='.[] | "::" + (if (.severity=="Warning" or .severity=="Error") then "error" else "warning" end) + " file=\(.file),line=\(.startLine),col=\(.startColumn)::\(.severity):" + " \(.hint)%0AFound:%0A  \(.from | gsub("\n";"%0A  "))%0A" + try ("Perhaps:%0A  " + (.to | gsub("\n";"%0A  ")) + "%0A") catch "" + try (if .note | length > 0 then "Note:%0A  " + (.note | join("\n") | gsub("\n";"%0A  ")) else "" end) catch ""'
+          if [[ "$CHANGED_HS_FILES" ]]
+          then
+            OUT=$(mktemp)
+            echo "$CHANGED_HS_FILES" | xargs ${{env.working-directory}}/hlint --no-exit-code --json --hint=./.hlint.yaml | jq -r "$JQ_SCRIPT" | tee $OUT
+            test -z "$(grep -E '^::error' $OUT)"
+          fi

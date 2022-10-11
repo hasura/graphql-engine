@@ -1,0 +1,73 @@
+type: bulk
+args:
+    - type: mssql_run_sql
+      args:
+          source: mssql
+          sql: |
+              CREATE TABLE author(
+                  id int identity NOT NULL PRIMARY KEY,
+                  name varchar(450) UNIQUE
+              );
+
+              INSERT INTO
+                  author (name)
+              VALUES
+                  ('Author 1'),
+                  ('Author 2'),
+                  ('Author 3');
+
+              CREATE TABLE article (
+                  id int identity NOT NULL PRIMARY KEY,
+                  title TEXT,
+                  content TEXT,
+                  author_id INTEGER REFERENCES author(id),
+                  is_published BIT,
+                  published_on TIMESTAMP
+              );
+
+              INSERT INTO
+                  article (title, content, author_id, is_published)
+              VALUES
+                  (
+                      'Article 1',
+                      'Sample article content 1',
+                      1,
+                      0
+                  ),
+                  (
+                      'Article 2',
+                      'Sample article content 2',
+                      1,
+                      1
+                  ),
+                  (
+                      'Article 3',
+                      'Sample article content 3',
+                      2,
+                      0
+                  ),
+                  (
+                      'Article 4',
+                      'Sample article content 4',
+                      3,
+                      1
+                  );
+
+              CREATE TABLE city (
+                  id int identity NOT NULL PRIMARY KEY,
+                  name TEXT NOT NULL,
+                  name_varchar varchar(30) NOT NULL,
+                  name_char char(11) NOT NULL,
+                  name_nvarchar nvarchar(30) NOT NULL,
+                  name_nchar nchar(11) NOT NULL,
+                  name_ntext ntext NOT NULL,
+                  country TEXT
+              );
+
+              INSERT INTO
+                  city ([name], name_varchar, name_char, name_nvarchar, name_nchar, name_ntext, country)
+              VALUES
+                  ('Durham', 'Durham','Durham','Durham','Durham','Durham', 'USA'),
+                  ('New York', 'New York','New York','New York','New York','New York', 'USA'),
+                  ('Framlingham', 'Framlingham','Framlingham','Framlingham','Framlingham','Framlingham', 'UK'),
+                  ('New Orleans', 'New Orleans','New Orleans','New Orleans','New Orleans','New Orleans', 'USA');

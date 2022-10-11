@@ -1,6 +1,0 @@
-- args:
-    sql: |-
-      UPDATE article
-      SET published_on = NULL
-      WHERE is_published=false;
-  type: run_sql

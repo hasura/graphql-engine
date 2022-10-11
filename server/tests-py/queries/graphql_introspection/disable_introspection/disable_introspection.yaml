@@ -1,0 +1,64 @@
+- description: throw error when executing query with the '__schema' field for a introspection disabled role
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: introspection_disabled
+  response:
+    errors:
+      - extensions:
+          path: $
+          code: not-supported
+        message: "introspection is disabled for role: \"introspection_disabled\""
+  query:
+    query: |
+      query {
+        __schema {
+          types {
+            name
+          }
+        }
+      }
+
+- description: throw error when executing query with the '__type' field for a introspection disabled role
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: introspection_disabled
+  response:
+    errors:
+      - extensions:
+          path: $
+          code: not-supported
+        message: "introspection is disabled for role: \"introspection_disabled\""
+  query:
+    query: |
+      query {
+        __type (name: "authors") {
+          fields {
+            name
+          }
+        }
+      }
+
+- description: allow '__typename' in the query for a introspection disabled role
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: introspection_disabled
+  response:
+    data:
+      __typename: query_root
+      authors:
+        - __typename: authors
+          name: J.K.Rowling
+        - __typename: authors
+          name: Paulo Coelho
+  query:
+    query: |
+      query {
+        __typename
+        authors {
+          __typename
+          name
+        }
+      }

@@ -1,0 +1,12 @@
+description: Track function search_articles
+url: /v1/query
+status: 400
+response:
+  path: "$.version"
+  error: expected 1 or 2, encountered 3
+  code: parse-failed
+query:
+  type: track_function
+  version: 3
+  args:
+    function: search_articles

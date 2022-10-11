@@ -1,0 +1,17 @@
+url: /v2/query
+status: 200
+response:
+  result_type: TuplesOk
+  result:
+  - - id
+    - name
+  - - 1
+    - Bob
+  - - 2
+    - Alice
+query:
+  type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      SELECT * FROM author;

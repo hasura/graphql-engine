@@ -1,0 +1,34 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        name TEXT
+      );
+      INSERT INTO users VALUES (1, 'alice');
+      INSERT INTO users VALUES (2, 'bob');
+
+- type: track_table
+  args:
+    schema: public
+    name: users
+
+- type: create_select_permission
+  args:
+    table: users
+    role: user
+    permission:
+      columns: '*'
+      filter:
+        id: X-Hasura-User-Id
+
+- type: create_insert_permission
+  args:
+    table: users
+    role: user
+    permission:
+      check:
+        id: X-Hasura-User-Id

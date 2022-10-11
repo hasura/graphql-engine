@@ -1,0 +1,52 @@
+- description: |
+    Only the `author` role has insert permissions on the
+    authors table, so the permission of the inherited role
+    should be the same as that of the author role, the author
+    role expects the `x-hasura-author-id` session variable to
+    be present which we don't provide in this test
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: author_editor
+  status: 200
+  query:
+    query: |
+      mutation {
+        insert_authors (objects: { first_name: "Alex"
+                                 , last_name: "Michaeledes"
+                                 , phone: "32132314"
+                                 , age: 32
+                                 , editor_id: 1
+                                 })
+        {
+          affected_rows
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $
+        code: not-found
+      message: 'missing session variable: "x-hasura-author-id"'
+
+- url: /v1/graphql
+  headers:
+    X-Hasura-Role: author_editor
+    X-Hasura-Author-Id: '4'
+  query:
+    query: |
+      mutation {
+        insert_authors (objects: { first_name: "Alex"
+                                 , last_name: "Michaeledes"
+                                 , phone: "32132314"
+                                 , age: 32
+                                 , editor_id: 1
+                                 })
+        {
+          affected_rows
+        }
+      }
+  status: 200
+  response:
+    data:
+      insert_authors:
+        affected_rows: 1

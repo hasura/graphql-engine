@@ -1,0 +1,40 @@
+- description: Select ancestors of an `ltree` argument
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      tree:
+        - path: Tree
+        - path: Tree.Collections
+        - path: Tree.Collections.Pictures
+        - path: Tree.Collections.Pictures.Astronomy
+        - path: Tree.Collections.Pictures.Astronomy.Astronauts
+  query:
+    query: |
+      query {
+        tree (
+          where: {path: {_ancestor: "Tree.Collections.Pictures.Astronomy.Astronauts"}}
+        ) {
+          path
+        }
+      }
+
+- description: Select ancestors of an invalid `ltree` argument
+  url: /v1/graphql
+  status: 200
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.tree.args.where.path._ancestor
+        code: parse-failed
+      message: 'Expecting label path: a sequence of zero or more labels separated by
+        dots, for example L1.L2.L3'
+  query:
+    query: |
+      query {
+        tree (
+          where: {path: {_ancestor: "Tree.Collections.Pictures.Astronomy.Astronauts."}}
+        ) {
+          path
+        }
+      }

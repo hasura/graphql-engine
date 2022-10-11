@@ -23,6 +23,7 @@ schema:
   commands:
     install:
       status: true
+      method: go install
   watcher:
     paths:
     - /

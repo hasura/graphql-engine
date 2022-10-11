@@ -1,0 +1,7 @@
+object_relationships:
+- name: poll
+  using:
+    foreign_key_constraint_on: poll_id
+table:
+  name: option
+  schema: public

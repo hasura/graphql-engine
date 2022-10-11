@@ -1,0 +1,10 @@
+type: bulk
+args:
+
+- type: bigquery_untrack_table
+  args:
+    source: bigquery
+    table:
+      dataset: hasura
+      name: city
+    cascade: true

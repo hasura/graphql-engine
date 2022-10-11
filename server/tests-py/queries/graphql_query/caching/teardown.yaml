@@ -1,0 +1,5 @@
+type: run_sql
+args:
+  sql: |
+    DROP TABLE users;
+  cascade: true

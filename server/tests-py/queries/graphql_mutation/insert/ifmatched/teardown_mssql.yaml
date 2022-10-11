@@ -1,0 +1,10 @@
+type: bulk
+args:
+
+# Drop relationship first
+- type: mssql_drop_relationship
+  args:
+    source: mssql
+    relationship: articles
+    table:
+      name: author

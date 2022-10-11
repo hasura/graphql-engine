@@ -4,7 +4,7 @@ status: 200
 response:
   errors:
   - extensions:
-      path: "$.variableValues.rast"
+      path: "$.selectionSet.dummy_rast.args.where.rast._st_intersects_rast"
       code: parse-failed
     message: invalid hexadecimal representation of raster well known binary format
 

@@ -1,0 +1,40 @@
+description: Simple GraphQL object query on author, exercising multiple operations. Test case for bug reported at https://github.com/hasura/graphql-engine/issues/7181
+url: /v1/graphql
+status: 200
+response:
+  data:
+    person_aggregate:
+      welp:
+        count: 4
+        sum:
+          id: 10
+        min:
+          id: 1
+      blah:
+      - id: 1
+        name: John\
+      - id: 2
+        name: ' Clarke '
+      - id: 3
+        name: ' clarke '
+      - id: 4
+        name: null
+query:
+  query: |
+    query {
+      person_aggregate {
+        welp: aggregate {
+          count
+          sum {
+            id
+          }
+          min {
+            id
+          }
+        }
+        blah: nodes {
+          id
+          name
+        }
+      }
+    }

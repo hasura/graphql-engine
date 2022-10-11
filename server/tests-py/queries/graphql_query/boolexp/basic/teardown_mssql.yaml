@@ -1,0 +1,64 @@
+type: bulk
+args:
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table:
+        name: author
+      cascade: true
+
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table:
+        name: article
+      cascade: true
+
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table:
+        name: city
+      cascade: true
+
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table:
+        name: orders
+      cascade: true
+
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table:
+        name: message
+      cascade: true
+
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table:
+        name: uuid_test
+      cascade: true
+
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table:
+        name: user
+      cascade: true
+
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table:
+        name: account
+      cascade: true
+
+  - type: mssql_untrack_table
+    args:
+      source: mssql
+      table:
+        name: table_with_sql_identifier
+      cascade: true

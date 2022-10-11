@@ -5,4 +5,6 @@ args:
     sql: |
       DROP TABLE users;
       DROP TABLE colors;
+      DROP TABLE zones;
+      DROP TABLE country;
     cascade: true

@@ -1,0 +1,19 @@
+type: pg_add_source
+args:
+  name: pg1
+  configuration:
+    connection_info:
+      database_url:
+        from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+      pool_settings:
+        max_connections: 50
+        idle_timeout: 180
+        retries:
+  customization:
+    root_fields:
+      namespace: my_source
+      prefix: fpref_
+      suffix: _fsuff
+    type_names:
+      prefix: tpref_
+      suffix: _tsuff

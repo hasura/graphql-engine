@@ -1,7 +1,7 @@
 import React from 'react';
-
 import { getIntrospectionQuery, buildClientSchema } from 'graphql';
 import GraphiQLExplorer from 'graphiql-explorer';
+import { setLoading } from '../Actions';
 
 import {
   makeDefaultArg,
@@ -14,9 +14,14 @@ import {
 import { getGraphiQLQueryFromLocalStorage } from '../GraphiQLWrapper/utils';
 import { getRemoteQueries } from '../Actions';
 import { getHeadersAsJSON } from '../utils';
-
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
+import Spinner from '../../../Common/Spinner/Spinner';
+import {
+  showErrorNotification,
+  showWarningNotification,
+} from '../../Common/Notification';
+import requestAction from '../../../../utils/requestAction';
 
 class OneGraphExplorer extends React.Component {
   state = {
@@ -24,9 +29,8 @@ class OneGraphExplorer extends React.Component {
     explorerWidth: getExplorerWidth(),
     explorerClientX: null,
     schema: null,
-    query: undefined,
+    query: this.props.query || '',
     isResizing: false,
-    loading: false,
     previousIntrospectionHeaders: [],
   };
 
@@ -35,36 +39,62 @@ class OneGraphExplorer extends React.Component {
     this.introspect();
   }
 
-  componentDidUpdate() {
-    if (!this.props.headerFocus && !this.state.loading) {
+  componentDidUpdate(prevProps) {
+    const { headerFocus, headers, loading } = this.props;
+    const { previousIntrospectionHeaders } = this.state;
+    // always introspect if mode changes
+    if (this.props.mode !== prevProps.mode) {
+      this.introspect();
+      return;
+    }
+
+    if (!headerFocus && !loading) {
       if (
-        JSON.stringify(this.props.headers) !==
-        JSON.stringify(this.state.previousIntrospectionHeaders)
+        JSON.stringify(headers) !== JSON.stringify(previousIntrospectionHeaders)
       ) {
         this.introspect();
       }
     }
+
+    // introspect by force if toggled through Redux
+    if (
+      this.props.forceIntrospectAt &&
+      this.props.forceIntrospectAt != prevProps.forceIntrospectAt
+    ) {
+      this.introspect();
+      return;
+    }
+
+    // set query in graphiql through Redux
+    if (this.props.query != prevProps.query) {
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ query: this.props.query });
+    }
   }
 
   setPersistedQuery() {
-    const { urlParams, numberOfTables } = this.props;
+    const { urlParams, numberOfTables, dispatch } = this.props;
 
     const queryFile = urlParams ? urlParams.query_file : null;
-
+    const localStorageQuery = getGraphiQLQueryFromLocalStorage();
     if (queryFile) {
-      getRemoteQueries(queryFile, remoteQuery =>
-        this.setState({ query: remoteQuery })
+      getRemoteQueries(
+        queryFile,
+        remoteQuery => this.setState({ query: remoteQuery }),
+        dispatch
       );
-    } else if (numberOfTables === 0) {
+    } else if (numberOfTables === 0 && !localStorageQuery) {
+      // when there are no tables and nothing in the localstorage, show the following comment in the graphiQL
       const NO_TABLES_MESSAGE = `# Looks like you do not have any tables.
 # Click on the "Data" tab on top to create tables
 # Try out GraphQL queries here after you create tables
 `;
+      // FIX ME : this message will be shown, whenever there are no tables tracked and nothing in history (LS),
+      // there could still be a possibility when there are no tables but remote schemas even then this message will be shown only for the first time
+      // after that when the user type something, the LS gets populated and this message will not be shown afterwards
 
       this.setState({ query: NO_TABLES_MESSAGE });
     } else {
-      const localStorageQuery = getGraphiQLQueryFromLocalStorage();
-
       if (localStorageQuery) {
         if (localStorageQuery.includes('do not have')) {
           const FRESH_GRAPHQL_MSG = '# Try out GraphQL queries here\n';
@@ -78,33 +108,87 @@ class OneGraphExplorer extends React.Component {
   }
 
   introspect() {
-    const { endpoint, headersInitialised } = this.props;
+    const {
+      endpoint,
+      headersInitialised,
+      headers: headers_,
+      dispatch,
+    } = this.props;
     if (!headersInitialised) {
       return;
     }
-    const headers = JSON.parse(JSON.stringify(this.props.headers));
-    this.setState({ loading: true });
-    fetch(endpoint, {
-      method: 'POST',
-      headers: getHeadersAsJSON(headers || []),
-      body: JSON.stringify({
-        query: getIntrospectionQuery(),
-      }),
-    })
-      .then(response => response.json())
+    const headers = JSON.parse(JSON.stringify(headers_));
+    dispatch(setLoading(true));
+    this.setState({ schema: null });
+    dispatch(
+      requestAction(endpoint, {
+        method: 'POST',
+        headers: getHeadersAsJSON(headers || []),
+        body: JSON.stringify({
+          query: getIntrospectionQuery(),
+        }),
+      })
+    )
       .then(result => {
+        if (result.errors && result.errors.length > 0) {
+          const errorMessage = result.errors[0].message;
+          dispatch(
+            showErrorNotification(
+              'Schema introspection query failed',
+              errorMessage
+            )
+          );
+          this.setState({
+            schema: null,
+            previousIntrospectionHeaders: headers,
+          });
+          return;
+        }
+        let clientSchema = null;
+        try {
+          clientSchema = buildClientSchema(result.data);
+        } catch (err) {
+          console.error(err);
+          dispatch(
+            showWarningNotification(
+              `Failed to parse the schema`,
+              `We are not able to render GraphiQL Explorer and Docs.
+              You should still be able to try out your API from the GraphiQL Editor.`,
+              null,
+              <p className="pt-sm m-0">
+                Please report an issue on our{' '}
+                <a
+                  target="_blank"
+                  href="https://github.com/hasura/graphql-engine/issues/new"
+                  rel="noopener noreferrer"
+                >
+                  GitHub
+                </a>
+                , so we can triage this and improve your experience.
+              </p>
+            )
+          );
+        }
         this.setState({
-          schema: buildClientSchema(result.data),
-          loading: false,
+          schema: clientSchema,
           previousIntrospectionHeaders: headers,
         });
       })
-      .catch(() => {
+      .catch(err => {
+        dispatch(
+          showErrorNotification(
+            'Schema introspection query failed',
+            err.message,
+            err
+          )
+        );
         this.setState({
           schema: null,
-          loading: false,
           previousIntrospectionHeaders: headers,
         });
+      })
+      .finally(() => {
+        dispatch(setLoading(false));
       });
   }
 
@@ -154,28 +238,10 @@ class OneGraphExplorer extends React.Component {
   };
 
   render() {
-    const {
-      schema,
-      explorerOpen,
-      query,
-      explorerWidth,
-      isResizing,
-    } = this.state;
+    const { schema, explorerOpen, query, explorerWidth, isResizing } =
+      this.state;
 
     const { renderGraphiql } = this.props;
-
-    const explorer = (
-      <GraphiQLExplorer
-        schema={schema}
-        query={query}
-        onEdit={this.editQuery}
-        explorerIsOpen={explorerOpen}
-        onToggleExplorer={this.handleToggle}
-        getDefaultScalarArgValue={getDefaultScalarArgValue}
-        makeDefaultArg={makeDefaultArg}
-        width={explorerWidth}
-      />
-    );
 
     let explorerSeparator;
     if (explorerOpen) {
@@ -203,7 +269,24 @@ class OneGraphExplorer extends React.Component {
         onMouseUp={this.handleExplorerResizeStop}
       >
         <div className="gqlexplorer">
-          {explorer}
+          {this.props.loading ? (
+            <div
+              className={`h-full flex w-[${String(explorerWidth) || '300'}px]`}
+            >
+              <Spinner />
+            </div>
+          ) : (
+            <GraphiQLExplorer
+              schema={schema}
+              query={query}
+              onEdit={this.editQuery}
+              explorerIsOpen={explorerOpen}
+              onToggleExplorer={this.handleToggle}
+              getDefaultScalarArgValue={getDefaultScalarArgValue}
+              makeDefaultArg={makeDefaultArg}
+              width={explorerWidth}
+            />
+          )}
           {explorerSeparator}
         </div>
         {graphiql}

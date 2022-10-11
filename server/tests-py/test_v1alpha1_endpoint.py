@@ -1,13 +1,12 @@
-import yaml
 import pytest
-#from validate import check_query, test_forbidden_when_admin_secret_reqd, test_forbidden_webhook
 from validate import check_query
 import validate
-from super_classes import DefaultTestSelectQueries
 from context import GQLWsClient
 
+usefixtures = pytest.mark.usefixtures
 
-class TestV1Alpha1GraphQLErrors(DefaultTestSelectQueries):
+@usefixtures('per_class_tests_db_state')
+class TestV1Alpha1GraphQLErrors:
 
     @classmethod
     def dir(cls):
@@ -61,7 +60,7 @@ class TestV1Alpha1GraphQLErrors(DefaultTestSelectQueries):
                         "path": "$.selectionSet.author.selectionSet.notPresentCol",
                         "code": "validation-failed"
                     },
-                    "message": "field \"notPresentCol\" not found in type: 'author'"
+                    "message": "field 'notPresentCol' not found in type: 'author'"
                 }]
             }
         }
@@ -71,7 +70,7 @@ class TestV1Alpha1GraphQLErrors(DefaultTestSelectQueries):
             'response': {
                 "path": "$.selectionSet.author.selectionSet.notPresentCol",
                 "code": "validation-failed",
-                "error": "field \"notPresentCol\" not found in type: 'author'"
+                "error": "field 'notPresentCol' not found in type: 'author'"
             }
         }
 

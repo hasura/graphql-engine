@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "actions": {
+      "type": "array",
+      "items": {
+        "$ref": "./HasuraMetadataV2.schema.json#definitions/Action"
+      }
+    },
+    "custom_types": {
+      "type": "object",
+      "$ref": "./HasuraMetadataV2.schema.json#definitions/CustomTypes"
+    }
+  }
+}

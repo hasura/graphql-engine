@@ -1,0 +1,23 @@
+description: When any of the parent roles can access the function then add as inherited role
+url: /v1/graphql
+headers:
+  X-Hasura-Role: inherited_role1
+status: 200
+query:
+  query: |
+    mutation {
+      add_to_score (args: {search: "er"}) {
+        name
+        score
+        role_echo
+      }
+    }
+response:
+  data:
+    add_to_score:
+      - name: user 1
+        score: 144
+        role_echo: inherited_role1
+      - name: user 2
+        score: 133
+        role_echo: inherited_role1

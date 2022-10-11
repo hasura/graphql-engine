@@ -1,0 +1,35 @@
+type: replace_metadata
+args:
+  version: 3
+  allow_inconsistent_metadata: false
+  sources:
+
+  - name: hasura_global_limited
+    kind: bigquery
+    configuration:
+      service_account: {from_env: HASURA_BIGQUERY_SERVICE_KEY}
+      project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
+      datasets:
+      - hasura
+      global_select_limit: 1
+    tables: []
+
+  - name: bigquery
+    kind: bigquery
+    configuration:
+      service_account: {from_env: HASURA_BIGQUERY_SERVICE_KEY}
+      project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
+      datasets:
+      - hasura
+      global_select_limit: 10
+    tables: []
+
+  - name: bigquery2
+    kind: bigquery
+    configuration:
+      service_account: {from_env: HASURA_BIGQUERY_SERVICE_KEY}
+      project_id: {from_env: HASURA_BIGQUERY_PROJECT_ID}
+      datasets:
+      - hasura
+      global_select_limit: 10
+    tables: []

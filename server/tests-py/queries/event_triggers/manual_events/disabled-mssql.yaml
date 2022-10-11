@@ -1,0 +1,6 @@
+type: mssql_invoke_event_trigger
+args:
+  source: mssql
+  name: t1_disabled
+  payload:
+    some_key: "some_value"

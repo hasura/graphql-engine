@@ -1,0 +1,10 @@
+type: mssql_run_sql
+args:
+  source: mssql1
+  sql: |
+    create table author(
+        id int,
+        name text
+    );
+    INSERT INTO author (id, name)
+      VALUES (1, 'Author 1'), (2, 'Author 2');

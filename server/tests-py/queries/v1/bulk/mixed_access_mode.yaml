@@ -1,0 +1,22 @@
+description: Bulk query with mixed transaction access mode
+url: /v1/query
+status: 400
+response:
+  path: $
+  error: "incompatible access mode requirements in bulk query, expected access mode: READ WRITE but $.args[1] forces READ ONLY"
+  code: bad-request
+query:
+  type: bulk
+  args:
+  - type: insert
+    args:
+      table: author
+      objects:
+        - name: "author1"
+          is_registered: true
+        - name: "author2"
+          is_registered: false
+  - type: run_sql
+    args:
+      sql: "select * from author"
+      read_only: true

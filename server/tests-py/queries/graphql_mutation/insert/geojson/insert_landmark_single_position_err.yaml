@@ -4,7 +4,7 @@ status: 200
 response:
   errors:
   - extensions:
-      path: '$.variableValues.landmarks[0].location.coordinates'
+      path: '$.selectionSet.insert_landmark.args.objects[0].location'
       code: parse-failed
     message: A Position needs at least 2 elements
 query:

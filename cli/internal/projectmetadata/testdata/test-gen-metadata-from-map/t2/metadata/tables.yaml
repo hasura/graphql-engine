@@ -1,0 +1,98 @@
+- table:
+    schema: public
+    name: albums
+  object_relationships:
+  - name: artist
+    using:
+      foreign_key_constraint_on: artist_id
+  array_relationships:
+  - name: tracks
+    using:
+      foreign_key_constraint_on:
+        column: album_id
+        table:
+          schema: public
+          name: tracks
+  insert_permissions:
+  - role: user
+    permission:
+      check:
+        id:
+          _eq: X-Hasura-User-Id
+      columns: []
+      backend_only: false
+- table:
+    schema: public
+    name: artists
+  array_relationships:
+  - name: albums
+    using:
+      foreign_key_constraint_on:
+        column: artist_id
+        table:
+          schema: public
+          name: albums
+- table:
+    schema: public
+    name: genres
+  array_relationships:
+  - name: tracks
+    using:
+      foreign_key_constraint_on:
+        column: genre_id
+        table:
+          schema: public
+          name: tracks
+- table:
+    schema: public
+    name: media_types
+  array_relationships:
+  - name: tracks
+    using:
+      foreign_key_constraint_on:
+        column: media_type_id
+        table:
+          schema: public
+          name: tracks
+- table:
+    schema: public
+    name: playlist_track
+  object_relationships:
+  - name: playlist
+    using:
+      foreign_key_constraint_on: playlist_id
+  - name: track
+    using:
+      foreign_key_constraint_on: track_id
+- table:
+    schema: public
+    name: playlists
+  array_relationships:
+  - name: playlist_tracks
+    using:
+      foreign_key_constraint_on:
+        column: playlist_id
+        table:
+          schema: public
+          name: playlist_track
+- table:
+    schema: public
+    name: tracks
+  object_relationships:
+  - name: album
+    using:
+      foreign_key_constraint_on: album_id
+  - name: genre
+    using:
+      foreign_key_constraint_on: genre_id
+  - name: media_type
+    using:
+      foreign_key_constraint_on: media_type_id
+  array_relationships:
+  - name: playlist_tracks
+    using:
+      foreign_key_constraint_on:
+        column: track_id
+        table:
+          schema: public
+          name: playlist_track

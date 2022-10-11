@@ -1,0 +1,14 @@
+backcall==0.2.0
+decorator==4.4.2
+ipython==7.19.0
+ipython-genutils==0.2.0
+jedi==0.18.0
+parso==0.8.1
+pexpect==4.8.0
+pickleshare==0.7.5
+prompt-toolkit==3.0.8
+ptyprocess==0.6.0
+Pygments==2.7.3
+ruamel.yaml==0.16.12
+traitlets==5.0.5
+wcwidth==0.2.5

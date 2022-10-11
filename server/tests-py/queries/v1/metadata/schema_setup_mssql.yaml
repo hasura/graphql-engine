@@ -1,0 +1,10 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      CREATE TABLE [table_to_customize] (
+         column_to_customize int NOT NULL PRIMARY KEY
+         );

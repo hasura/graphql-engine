@@ -1,89 +1,146 @@
-package cli_test
+package cli
 
 import (
-	"math/rand"
 	"os"
-	"path/filepath"
-	"strconv"
 	"testing"
-	"time"
 
-	"github.com/briandowns/spinner"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/commands"
-	"github.com/hasura/graphql-engine/cli/util/fake"
-	"github.com/sirupsen/logrus/hooks/test"
+	"github.com/spf13/afero"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
+func TestExecutionContext_readAdminSecret(t *testing.T) {
+	adminSecretEnv := "HASURA_GRAPHQL_ADMIN_SECRET"
+	oldAdminSecret := os.Getenv(adminSecretEnv)
+	os.Setenv(adminSecretEnv, "")
+	defer func() {
+		os.Setenv(adminSecretEnv, oldAdminSecret)
+	}()
+	fs := afero.NewMemMapFs()
+	require.NoError(t, fs.MkdirAll("/project", 0755))
+	tests := []struct {
+		name             string
+		before           func() func()
+		wantAdminSecret  string
+		wantAdminSecrets []string
+		wantErr          bool
+	}{
+		{
+			"can set admin secret from config file",
+			func() func() {
+				configFile := `admin_secret: test`
+				require.NoError(t, afero.WriteFile(fs, "/project/config.yml", []byte(configFile), 0644))
+				_, err := fs.Stat("/project/config.yml")
+				require.NoError(t, err)
+				return func() {}
+			},
+			"test",
+			[]string{},
+			false,
+		},
+		{
+			"can set admin secrets from config file",
+			func() func() {
+				configFile := `admin_secrets: '["s1","s2","s3"]'`
+				require.NoError(t, afero.WriteFile(fs, "/project/config.yml", []byte(configFile), 0644))
+				_, err := fs.Stat("/project/config.yml")
+				require.NoError(t, err)
+				return func() {}
+			},
+			"",
+			[]string{"s1", "s2", "s3"},
+			false,
+		},
+		{
+			"can set admin secret from env variable",
+			func() func() {
+				require.NoError(t, afero.WriteFile(fs, "/project/config.yml", []byte(""), 0644))
+				oldEnvValue := os.Getenv(adminSecretEnv)
+				teardown := func() {
+					os.Setenv(adminSecretEnv, oldEnvValue)
+				}
+				os.Setenv(adminSecretEnv, "test")
+				return teardown
+			},
+			"test",
+			[]string{},
+			false,
+		},
+		{
+			"can set admin secrets from env variable",
+			func() func() {
+				require.NoError(t, afero.WriteFile(fs, "/project/config.yml", []byte(""), 0644))
+				adminSecretEnv := "HASURA_GRAPHQL_ADMIN_SECRETS"
+				oldEnvValue := os.Getenv(adminSecretEnv)
+				teardown := func() {
+					os.Setenv(adminSecretEnv, oldEnvValue)
+				}
+				os.Setenv(adminSecretEnv, "[\"s1\",\"s2\",\"s3\"]")
+				return teardown
+			},
+			"",
+			[]string{"s1", "s2", "s3"},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			teardown := tt.before()
+			defer teardown()
+
+			v := viper.New()
+			v.SetFs(fs)
+			v.AddConfigPath("/project")
+			ec := &ExecutionContext{
+				Viper: v,
+			}
+			err := ec.readConfig()
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantAdminSecret, ec.Config.AdminSecret)
+				assert.Equal(t, tt.wantAdminSecrets, ec.Config.AdminSecrets)
+			}
+		})
+	}
 }
 
-func TestPrepare(t *testing.T) {
-	logger, _ := test.NewNullLogger()
-	ec := cli.NewExecutionContext()
-	ec.Logger = logger
-	ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-	ec.Spinner.Writer = &fake.FakeWriter{}
-	err := ec.Prepare()
-	if err != nil {
-		t.Fatalf("prepare failed: %v", err)
+func TestServerConfig_GetAdminSecret(t *testing.T) {
+	type fields struct {
+		adminSecret  string
+		adminSecrets []string
 	}
-	if ec.CMDName == "" {
-		t.Fatalf("expected CMDName, got: %v", ec.CMDName)
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			"admin secrets takes precedence when adminSecret & adminSecrets are set",
+			fields{"test", []string{"foo", "bar"}},
+			"foo",
+		},
+		{
+			"admin secret is returned when set",
+			fields{"test", []string{}},
+			"test",
+		},
+		{
+			"empty string is returned when none is set",
+			fields{"", []string{}},
+			"",
+		},
 	}
-	if ec.Spinner == nil {
-		t.Fatal("got spinner empty")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &ServerConfig{
+				AdminSecret:  tt.fields.adminSecret,
+				AdminSecrets: tt.fields.adminSecrets,
+			}
+			got := c.GetAdminSecret()
+			assert.Equal(t, tt.want, got)
+		})
 	}
-	if ec.Logger == nil {
-		t.Fatal("got empty logger")
-	}
-	if ec.GlobalConfigDir == "" {
-		t.Fatalf("global config dir: expected $HOME/%s, got %s", cli.GlobalConfigDirName, ec.GlobalConfigDir)
-	}
-	if ec.GlobalConfigFile == "" {
-		t.Fatalf("global config file: expected $HOME/%s/%s, got %s", cli.GlobalConfigDirName, cli.GlobalConfigFileName, ec.GlobalConfigFile)
-	}
-	if ec.ServerConfig == nil {
-		t.Fatal("got empty Config")
-	}
-}
-
-func TestValidate(t *testing.T) {
-	logger, _ := test.NewNullLogger()
-	ec := cli.NewExecutionContext()
-	ec.Logger = logger
-	ec.Spinner = spinner.New(spinner.CharSets[7], 100*time.Millisecond)
-	ec.Spinner.Writer = &fake.FakeWriter{}
-	ec.ExecutionDirectory = filepath.Join(os.TempDir(), "hasura-gql-tests-"+strconv.Itoa(rand.Intn(1000)))
-	ec.Viper = viper.New()
-
-	// validate a directory created by init
-	initCmd := commands.NewInitCmd(ec)
-	initCmd.Flags().Set("directory", ec.ExecutionDirectory)
-	err := initCmd.Execute()
-	if err != nil {
-		t.Fatalf("execution failed: %v", err)
-	}
-	err = ec.Prepare()
-	if err != nil {
-		t.Fatalf("prepare failed: %v", err)
-	}
-	err = ec.Validate()
-	if err != nil {
-		t.Fatalf("validate failed: %v", err)
-	}
-
-	// remove config.yaml and validate, should result in an error
-	err = os.Remove(filepath.Join(ec.ExecutionDirectory, "config.yaml"))
-	if err != nil {
-		t.Fatalf("remove failed: %v", err)
-	}
-	err = ec.Validate()
-	if err == nil {
-		t.Fatal("validate succeeded with no config.yaml")
-	}
-
-	os.RemoveAll(ec.ExecutionDirectory)
 }

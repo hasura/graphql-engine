@@ -1,0 +1,20 @@
+description: Regression test for hasura/graphql-engine#7172
+url: /v1/graphql
+status: 200
+response:
+  data:
+    regression_7172:
+    - features:
+        "Start Color": 44
+      project:
+        id: 1
+query:
+  query: |
+    query {
+      regression_7172 {
+        features
+        project {
+          id
+        }
+      }
+    }

@@ -1,0 +1,27 @@
+- description: Create insert permission for author table with long (> 63 chars) role
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: create_insert_permission
+    args:
+      table: author
+      role: this.is.really.a.very.long.and.long.role.more.than.63.characters.one
+      permission:
+        columns: '*'
+        check: {}
+
+- description: Create insert permission for author table with long (> 63 chars) role
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: create_insert_permission
+    args:
+      table: author
+      role: this.is.really.a.very.long.and.long.role.more.than.63.characters.two
+      permission:
+        columns: '*'
+        check: {}

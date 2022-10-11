@@ -1,0 +1,223 @@
+type: bulk
+args:
+
+- type: pg_track_table
+  args:
+    table: employee
+
+- type: pg_track_table
+  args:
+    table: team
+
+- type: pg_track_table
+  args:
+    table: manager
+
+#Object relationship
+- type: pg_create_object_relationship
+  args:
+    name: manager
+    table: employee
+    using:
+      foreign_key_constraint_on: manager_id
+
+#Array relationship
+- type: pg_create_array_relationship
+  args:
+    table: manager
+    name: employees
+    using:
+      foreign_key_constraint_on:
+        table: employee
+        column: manager_id
+
+- type: pg_add_computed_field
+  args:
+    table: employee
+    name: yearly_salary
+    definition:
+      function: employee_yearly_salary
+      table_argument: employee_row
+
+- type: pg_create_select_permission
+  args:
+    table: employee
+    role: employee
+    permission:
+      columns:
+        - id
+        - name
+        - salary
+        - title
+        - team_id
+      computed_fields:
+        - yearly_salary
+      filter:
+        id:
+          _eq: X-Hasura-User-Id
+
+- type: pg_create_select_permission
+  args:
+    table: employee
+    role:  manager
+    permission:
+      columns:
+        - name
+        - title
+        - manager_remarks
+      filter:
+        manager_id:
+          _eq: X-Hasura-Manager-Id
+      allow_aggregations: true
+
+- type: pg_create_select_permission
+  args:
+    table: manager
+    role:  manager
+    permission:
+      columns: '*'
+      allow_aggregations: true
+      filter:
+        id: X-Hasura-Manager-Id
+
+- type: pg_create_select_permission
+  args:
+    table: manager
+    role:  employee
+    permission:
+      columns:
+        - name
+        - phone
+      allow_aggregations: true
+      filter:
+        employees:
+          manager_id:
+            _eq: X-Hasura-Manager-Id
+
+- type: add_inherited_role
+  args:
+    role_name: manager_employee
+    role_set:
+      - manager
+      - employee
+
+- type: pg_track_table
+  args:
+    table: authors
+
+- type: pg_track_table
+  args:
+    table: articles
+
+- type: pg_create_select_permission
+  args:
+    table: authors
+    role: author
+    permission:
+      columns:
+        - id
+        - name
+        - followers
+      allow_aggregations: false
+      filter:
+        id: X-Hasura-Author-Id
+
+- type: pg_create_select_permission
+  args:
+    table: authors
+    role: editor
+    permission:
+      columns:
+        - name
+        - followers
+      allow_aggregations: true
+      filter: {}
+
+- type: pg_create_select_permission
+  args:
+    table: articles
+    role: guest
+    permission:
+      columns:
+        - title
+        - content
+        - author_id
+      allow_aggregations: true
+      filter:
+        is_published: true
+
+- type: pg_create_select_permission
+  args:
+    table: articles
+    role: author
+    permission:
+      columns: "*"
+      allow_aggregations: true
+      filter:
+        author_id: X-Hasura-Author-Id
+
+- type: pg_create_select_permission
+  args:
+    table: articles
+    role: editor
+    permission:
+      columns: "*"
+      filter: {}
+
+- type: pg_create_select_permission
+  args:
+    table: articles
+    role: free_user
+    permission:
+      columns:
+        - title
+        - content
+      filter:
+        is_published:
+          _eq: true
+      limit: 2
+
+- type: pg_create_select_permission
+  args:
+    table: articles
+    role: premium_user_free_trial
+    permission:
+      columns:
+        - title
+        - content
+      filter:
+        is_published:
+          _eq: true
+      limit: 4
+
+- type: add_inherited_role
+  args:
+    role_name: author_editor_guest_inherited_role
+    role_set:
+      - author
+      - editor
+      - guest
+
+- type: add_inherited_role
+  args:
+    role_name: non_paying_user
+    role_set:
+      - free_user
+      - premium_user_free_trial
+
+- type: pg_create_select_permission
+  args:
+    table: authors
+    role: non_paying_user
+    permission:
+      columns:
+        - name
+        - followers
+      filter: {}
+
+- type: add_inherited_role
+  args:
+    role_name: non_paying_user_and_guest
+    role_set:
+      - non_paying_user
+      - guest

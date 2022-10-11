@@ -2,7 +2,7 @@
 #Array relationship
 - description: Create array relationship using manual method
   url: /v1/query
-  status: 200  
+  status: 200
   response:
     message: success
   query:
@@ -29,6 +29,45 @@
       table: author_view
       name: articles
       new_name: articles_array
+
+#Rename tables associated with the relationship
+
+- description: Rename the remote table
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER TABLE article RENAME TO articles;
+
+- description: Rename the original table/view
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER TABLE author_view RENAME TO authors_view;
+
+- description: Rename tables back to the original name for the teardown process
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER view authors_view RENAME TO author_view;
+
+- description: Rename tables back to the original name for the teardown process
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        ALTER TABLE articles RENAME TO article;
+
 
 #Drop relationship
 - description: Drop object relationship

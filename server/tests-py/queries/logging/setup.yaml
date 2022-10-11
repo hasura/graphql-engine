@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -8,10 +9,6 @@ args:
         code TEXT,
         name TEXT
       );
-
-- type: run_sql
-  args:
-    sql: |
       INSERT INTO hello VALUES
       (1, 'abc', 'Some data');
 

@@ -1,0 +1,47 @@
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query topLevelFragmentQuery {
+      author {
+        name
+      }
+      ...topLevelAuthorFieldFragment
+      article {
+        title
+      }
+      ...topLevelArticleFieldFragment
+    }
+
+    fragment topLevelAuthorFieldFragment on query_root {
+      author {
+        id
+      }
+    }
+
+    fragment topLevelArticleFieldFragment on query_root {
+      author {
+        name
+      }
+      article {
+        author {
+          name
+        }
+      }
+    }
+response:
+  data:
+    author:
+    - name: Author 1
+      id: 1
+    - name: Author 2
+      id: 2
+    article:
+    - title: Article 1
+      author: &id001
+        name: Author 1
+    - title: Article 2
+      author: *id001
+    - title: Article 3
+      author:
+        name: Author 2

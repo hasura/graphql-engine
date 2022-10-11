@@ -1,0 +1,3 @@
+type: remove_remote_schema
+args:
+  name: my-remote-schema

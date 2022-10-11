@@ -1,291 +1,270 @@
+{-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.GraphQL.Schema.BoolExp
-  ( geoInputTypes
-  , rasterIntersectsInputTypes
-  , mkCompExpInp
+  ( AggregationPredicatesSchema (..),
+    boolExp,
+    mkBoolOperator,
+    equalityOperators,
+    comparisonOperators,
+  )
+where
 
-  , mkBoolExpTy
-  , mkBoolExpInp
-  ) where
+import Data.Has (getter)
+import Data.Text.Casing (GQLNameIdentifier)
+import Data.Text.Casing qualified as C
+import Data.Text.Extended
+import Hasura.GraphQL.Parser.Class
+import Hasura.GraphQL.Schema.Backend
+import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
+import Hasura.GraphQL.Schema.Parser
+  ( InputFieldsParser,
+    Kind (..),
+    Parser,
+  )
+import Hasura.GraphQL.Schema.Parser qualified as P
+import Hasura.GraphQL.Schema.Table
+import Hasura.GraphQL.Schema.Typename (mkTypename)
+import Hasura.Name qualified as Name
+import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.Value
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.ComputedField
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.Relationships.Local
+import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend (BackendType)
+import Language.GraphQL.Draft.Syntax qualified as G
 
-import qualified Data.HashMap.Strict           as Map
-import qualified Language.GraphQL.Draft.Syntax as G
+-- | Backends implement this type class to specify the schema of
+-- aggregation predicates.
+--
+-- The default implementation results in a parser that does not parse anything.
+--
+-- The scope of this class is local to the function 'boolExp'. In particular,
+-- methods in `class BackendSchema` and `type MonadBuildSchema` should *NOT*
+-- include this class as a constraint.
+class AggregationPredicatesSchema (b :: BackendType) where
+  aggregationPredicatesParser ::
+    forall r m n.
+    MonadBuildSourceSchema r m n =>
+    SourceInfo b ->
+    TableInfo b ->
+    SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
 
-import           Hasura.GraphQL.Schema.Common
-import           Hasura.GraphQL.Validate.Types
-import           Hasura.Prelude
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
+-- Overlapping instance for backends that do not implement Aggregation Predicates.
+instance {-# OVERLAPPABLE #-} (AggregationPredicates b ~ Const Void) => AggregationPredicatesSchema (b :: BackendType) where
+  aggregationPredicatesParser ::
+    forall r m n.
+    (MonadBuildSchemaBase r m n) =>
+    SourceInfo b ->
+    TableInfo b ->
+    SchemaT r m (Maybe (InputFieldsParser n [AggregationPredicates b (UnpreparedValue b)]))
+  aggregationPredicatesParser _ _ = return Nothing
 
-typeToDescription :: G.NamedType -> G.Description
-typeToDescription = G.Description . G.unName . G.unNamedType
+-- |
+-- > input type_bool_exp {
+-- >   _or: [type_bool_exp!]
+-- >   _and: [type_bool_exp!]
+-- >   _not: type_bool_exp
+-- >   column: type_comparison_exp
+-- >   ...
+-- > }
+boolExp ::
+  forall b r m n.
+  (MonadBuildSchema b r m n, AggregationPredicatesSchema b) =>
+  SourceInfo b ->
+  TableInfo b ->
+  SchemaT r m (Parser 'Input n (AnnBoolExp b (UnpreparedValue b)))
+boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableName) $ do
+  tCase <- asks getter
+  tableGQLName <- getTableIdentifierName tableInfo
+  name <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableBoolExpTypeName tableGQLName
+  let description =
+        G.Description $
+          "Boolean expression to filter rows from the table " <> tableName
+            <<> ". All fields are combined with a logical 'AND'."
 
-mkCompExpTy :: PGColumnType -> G.NamedType
-mkCompExpTy = addTypeSuffix "_comparison_exp" . mkColumnType
+  fieldInfos <- tableSelectFields sourceInfo tableInfo
+  tableFieldParsers <- catMaybes <$> traverse mkField fieldInfos
+  -- TODO: This naming is somewhat unsatifactory..
+  aggregationPredicatesParser' <- fromMaybe (pure []) <$> aggregationPredicatesParser sourceInfo tableInfo
+  recur <- boolExp sourceInfo tableInfo
+  -- Bafflingly, ApplicativeDo doesn’t work if we inline this definition (I
+  -- think the TH splices throw it off), so we have to define it separately.
+  let connectiveFieldParsers =
+        [ P.fieldOptional Name.__or Nothing (BoolOr <$> P.list recur),
+          P.fieldOptional Name.__and Nothing (BoolAnd <$> P.list recur),
+          P.fieldOptional Name.__not Nothing (BoolNot <$> recur)
+        ]
 
-mkCastExpTy :: PGColumnType -> G.NamedType
-mkCastExpTy = addTypeSuffix "_cast_exp" . mkColumnType
+  pure $
+    BoolAnd <$> P.object name (Just description) do
+      tableFields <- map BoolField . catMaybes <$> sequenceA tableFieldParsers
+      specialFields <- catMaybes <$> sequenceA connectiveFieldParsers
+      aggregationPredicateFields <- map (BoolField . AVAggregationPredicates) <$> aggregationPredicatesParser'
+      pure (tableFields ++ specialFields ++ aggregationPredicateFields)
+  where
+    tableName = tableInfoName tableInfo
 
--- TODO(shahidhk) this should ideally be st_d_within_geometry
-{-
-input st_d_within_input {
-  distance: Float!
-  from: geometry!
-}
+    mkField ::
+      FieldInfo b ->
+      SchemaT r m (Maybe (InputFieldsParser n (Maybe (AnnBoolExpFld b (UnpreparedValue b)))))
+    mkField fieldInfo = runMaybeT do
+      roleName <- retrieve scRole
+      fieldName <- hoistMaybe $ fieldInfoGraphQLName fieldInfo
+      P.fieldOptional fieldName Nothing <$> case fieldInfo of
+        -- field_name: field_type_comparison_exp
+        FIColumn columnInfo ->
+          lift $ fmap (AVColumn columnInfo) <$> comparisonExps @b sourceInfo (ciType columnInfo)
+        -- field_name: field_type_bool_exp
+        FIRelationship relationshipInfo -> do
+          remoteTableInfo <- askTableInfo sourceInfo $ riRTable relationshipInfo
+          let remoteTableFilter =
+                (fmap . fmap) partialSQLExpToUnpreparedValue $
+                  maybe annBoolExpTrue spiFilter $
+                    tableSelectPermissions roleName remoteTableInfo
+          remoteBoolExp <- lift $ boolExp sourceInfo remoteTableInfo
+          pure $ fmap (AVRelationship relationshipInfo . andAnnBoolExps remoteTableFilter) remoteBoolExp
+        FIComputedField ComputedFieldInfo {..} -> do
+          let ComputedFieldFunction {..} = _cfiFunction
+          -- For a computed field to qualify in boolean expression it shouldn't have any input arguments
+          case toList _cffInputArgs of
+            [] -> do
+              let functionArgs =
+                    flip FunctionArgsExp mempty $
+                      fromComputedFieldImplicitArguments @b UVSession _cffComputedFieldImplicitArgs
+
+              fmap (AVComputedField . AnnComputedFieldBoolExp _cfiXComputedFieldInfo _cfiName _cffName functionArgs)
+                <$> case computedFieldReturnType @b _cfiReturnType of
+                  ReturnsScalar scalarType -> lift $ fmap CFBEScalar <$> comparisonExps @b sourceInfo (ColumnScalar scalarType)
+                  ReturnsTable table -> do
+                    info <- askTableInfo sourceInfo table
+                    lift $ fmap (CFBETable table) <$> boolExp sourceInfo info
+                  ReturnsOthers -> hoistMaybe Nothing
+            _ -> hoistMaybe Nothing
+
+        -- Using remote relationship fields in boolean expressions is not supported.
+        FIRemoteRelationship _ -> empty
+
+{- Note [Nullability in comparison operators]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In comparisonExps, we hardcode most operators with `Nullability False` when
+calling `column`, which might seem a bit sketchy. Shouldn’t the nullability
+depend on the nullability of the underlying Postgres column?
+
+No. If we did that, then we would allow boolean expressions like this:
+
+    delete_users(where: {status: {eq: null}})
+
+which in turn would generate a SQL query along the lines of:
+
+    DELETE FROM users WHERE users.status = NULL
+
+but `= NULL` might not do what they expect. For instance, on Postgres, it always
+evaluates to False!
+
+Even operators for which `null` is a valid value must be careful in their
+implementation. An explicit `null` must always be handled explicitly! If,
+instead, an explicit null is ignored:
+
+    foo <- fmap join $ fieldOptional "_foo_level" $ nullable int
+
+then
+
+       delete_users(where: {_foo_level: null})
+    => delete_users(where: {})
+    => delete_users()
+
+Now we’ve gone and deleted every user in the database. Whoops! Hopefully the
+user had backups!
+
+In most cases, as mentioned above, we avoid this problem by making the column
+value non-nullable (which is correct, since we never treat a null value as a SQL
+NULL), then creating the field using 'fieldOptional'. This creates a parser that
+rejects nulls, but won’t be called at all if the field is not specified, which
+is permitted by the GraphQL specification. See Note [The value of omitted
+fields] in Hasura.GraphQL.Parser.Internal.Parser for more details.
+
+Additionally, it is worth nothing that the `column` parser *does* handle
+explicit nulls, by creating a Null column value.
+
+But... the story doesn't end there. Some of our users WANT this peculiar
+behaviour. For instance, they want to be able to express the following:
+
+    query($isVerified: Boolean) {
+      users(where: {_isVerified: {_eq: $isVerified}}) {
+        name
+      }
+    }
+
+    $isVerified is True  -> return users who are verified
+    $isVerified is False -> return users who aren't
+    $isVerified is null  -> return all users
+
+In the future, we will likely introduce a separate group of operators that do
+implement this particular behaviour explicitly; but for now we have an option that
+reverts to the previous behaviour.
+
+To do so, we have to treat explicit nulls as implicit one: this is what the
+'nullable' combinator does: it treats an explicit null as if the field has never
+been called at all.
 -}
-stDWithinGeometryInpTy :: G.NamedType
-stDWithinGeometryInpTy = G.NamedType "st_d_within_input"
 
-{-
-input st_d_within_geography_input {
-  distance: Float!
-  from: geography!
-  use_spheroid: Bool!
-}
--}
-stDWithinGeographyInpTy :: G.NamedType
-stDWithinGeographyInpTy = G.NamedType "st_d_within_geography_input"
+-- This is temporary, and should be removed as soon as possible.
+mkBoolOperator ::
+  (MonadParse n, 'Input P.<: k) =>
+  -- | Naming convention for the field
+  NamingCase ->
+  -- | shall this be collapsed to True when null is given?
+  Options.DangerouslyCollapseBooleans ->
+  -- | name of this operator
+  GQLNameIdentifier ->
+  -- | optional description
+  Maybe G.Description ->
+  -- | parser for the underlying value
+  Parser k n a ->
+  InputFieldsParser n (Maybe a)
+mkBoolOperator tCase Options.DangerouslyCollapseBooleans name desc = fmap join . P.fieldOptional (applyFieldNameCaseIdentifier tCase name) desc . P.nullable
+mkBoolOperator tCase Options.Don'tDangerouslyCollapseBooleans name desc = P.fieldOptional (applyFieldNameCaseIdentifier tCase name) desc
 
-
--- | Makes an input type declaration for the @_cast@ field of a comparison expression.
--- (Currently only used for casting between geometry and geography types.)
-mkCastExpressionInputType :: PGColumnType -> [PGColumnType] -> InpObjTyInfo
-mkCastExpressionInputType sourceType targetTypes =
-  mkHsraInpTyInfo (Just description) (mkCastExpTy sourceType) (fromInpValL targetFields)
-  where
-    description = mconcat
-      [ "Expression to compare the result of casting a column of type "
-      , typeToDescription $ mkColumnType sourceType
-      , ". Multiple cast targets are combined with logical 'AND'."
-      ]
-    targetFields = map targetField targetTypes
-    targetField targetType = InpValInfo
-      Nothing
-      (G.unNamedType $ mkColumnType targetType)
-      Nothing
-      (G.toGT $ mkCompExpTy targetType)
-
---- | make compare expression input type
-mkCompExpInp :: PGColumnType -> InpObjTyInfo
-mkCompExpInp colTy =
-  InpObjTyInfo (Just tyDesc) (mkCompExpTy colTy) (fromInpValL $ concat
-  [ map (mk colGqlType) eqOps
-  , guard (isScalarWhere (/= PGRaster)) *> map (mk colGqlType) compOps
-  , map (mk $ G.toLT $ G.toNT colGqlType) listOps
-  , guard (isScalarWhere isStringType) *> map (mk $ mkScalarTy PGText) stringOps
-  , guard (isScalarWhere (== PGJSONB)) *> map opToInpVal jsonbOps
-  , guard (isScalarWhere (== PGGeometry)) *>
-      (stDWithinGeoOpInpVal stDWithinGeometryInpTy : map geoOpToInpVal (geoOps ++ geomOps))
-  , guard (isScalarWhere (== PGGeography)) *>
-      (stDWithinGeoOpInpVal stDWithinGeographyInpTy : map geoOpToInpVal geoOps)
-  , [InpValInfo Nothing "_is_null" Nothing $ G.TypeNamed (G.Nullability True) $ G.NamedType "Boolean"]
-  , castOpInputValues
-  , guard (isScalarWhere (== PGRaster)) *> map opToInpVal rasterOps
-  ]) TLHasuraType
-  where
-    colGqlType = mkColumnType colTy
-    colTyDesc = typeToDescription colGqlType
-    tyDesc =
-      "expression to compare columns of type " <> colTyDesc
-        <> ". All fields are combined with logical 'AND'."
-    isScalarWhere = flip isScalarColumnWhere colTy
-    mk t n = InpValInfo Nothing n Nothing $ G.toGT t
-
-    -- colScalarListTy = GA.GTList colGTy
-    eqOps =
-       ["_eq", "_neq"]
-    compOps =
-      ["_gt", "_lt", "_gte", "_lte"]
-
-    listOps =
-      [ "_in", "_nin" ]
-    -- TODO
-    -- columnOps =
-    --   [ "_ceq", "_cneq", "_cgt", "_clt", "_cgte", "_clte"]
-    stringOps =
-      [ "_like", "_nlike", "_ilike", "_nilike"
-      , "_similar", "_nsimilar"
-      ]
-
-    opToInpVal (opName, ty, desc) = InpValInfo (Just desc) opName Nothing ty
-
-    jsonbOps =
-      [ ( "_contains"
-        , G.toGT $ mkScalarTy PGJSONB
-        , "does the column contain the given json value at the top level"
-        )
-      , ( "_contained_in"
-        , G.toGT $ mkScalarTy PGJSONB
-        , "is the column contained in the given json value"
-        )
-      , ( "_has_key"
-        , G.toGT $ mkScalarTy PGText
-        , "does the string exist as a top-level key in the column"
-        )
-      , ( "_has_keys_any"
-        , G.toGT $ G.toLT $ G.toNT $ mkScalarTy PGText
-        , "do any of these strings exist as top-level keys in the column"
-        )
-      , ( "_has_keys_all"
-        , G.toGT $ G.toLT $ G.toNT $ mkScalarTy PGText
-        , "do all of these strings exist as top-level keys in the column"
-        )
-      ]
-
-    castOpInputValues =
-      -- currently, only geometry/geography types support casting
-      guard (isScalarWhere isGeoType) $>
-        InpValInfo Nothing "_cast" Nothing (G.toGT $ mkCastExpTy colTy)
-
-    stDWithinGeoOpInpVal ty =
-      InpValInfo (Just stDWithinGeoDesc) "_st_d_within" Nothing $ G.toGT ty
-    stDWithinGeoDesc =
-      "is the column within a distance from a " <> colTyDesc <> " value"
-
-    geoOpToInpVal (opName, desc) =
-      InpValInfo (Just desc) opName Nothing $ G.toGT colGqlType
-
-    -- operators applicable only to geometry types
-    geomOps :: [(G.Name, G.Description)]
-    geomOps =
-      [
-        ( "_st_contains"
-        , "does the column contain the given geometry value"
-        )
-      , ( "_st_crosses"
-        , "does the column crosses the given geometry value"
-        )
-      , ( "_st_equals"
-        , "is the column equal to given geometry value. Directionality is ignored"
-        )
-      , ( "_st_overlaps"
-        , "does the column 'spatially overlap' (intersect but not completely contain) the given geometry value"
-        )
-      , ( "_st_touches"
-        , "does the column have atleast one point in common with the given geometry value"
-        )
-      , ( "_st_within"
-        , "is the column contained in the given geometry value"
-        )
-      ]
-
-    -- operators applicable to geometry and geography types
-    geoOps =
-      [
-        ( "_st_intersects"
-        , "does the column spatially intersect the given " <> colTyDesc <> " value"
-        )
-      ]
-
-    -- raster related operators
-    rasterOps =
-      [
-        ( "_st_intersects_rast"
-        , G.toGT $ mkScalarTy PGRaster
-        , boolFnMsg <> "ST_Intersects(raster <raster-col>, raster <raster-input>)"
-        )
-      , ( "_st_intersects_nband_geom"
-        , G.toGT stIntersectsNbandGeomInputTy
-        , boolFnMsg <> "ST_Intersects(raster <raster-col>, integer nband, geometry geommin)"
-        )
-      , ( "_st_intersects_geom_nband"
-        , G.toGT stIntersectsGeomNbandInputTy
-        , boolFnMsg <> "ST_Intersects(raster <raster-col> , geometry geommin, integer nband=NULL)"
-        )
-      ]
-
-    boolFnMsg = "evaluates the following boolean Postgres function; "
-
-geoInputTypes :: [InpObjTyInfo]
-geoInputTypes =
-  [ stDWithinGeometryInputType
-  , stDWithinGeographyInputType
-  , mkCastExpressionInputType (PGColumnScalar PGGeometry) [PGColumnScalar PGGeography]
-  , mkCastExpressionInputType (PGColumnScalar PGGeography) [PGColumnScalar PGGeometry]
+equalityOperators ::
+  (MonadParse n, 'Input P.<: k) =>
+  NamingCase ->
+  -- | shall this be collapsed to True when null is given?
+  Options.DangerouslyCollapseBooleans ->
+  -- | parser for one column value
+  Parser k n (UnpreparedValue b) ->
+  -- | parser for a list of column values
+  Parser k n (UnpreparedValue b) ->
+  [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
+equalityOperators tCase collapseIfNull valueParser valueListParser =
+  [ mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedTuple $$(G.litGQLIdentifier ["_is", "null"])) Nothing $ bool ANISNOTNULL ANISNULL <$> P.boolean,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__eq) Nothing $ AEQ True <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__neq) Nothing $ ANE True <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__in) Nothing $ AIN <$> valueListParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__nin) Nothing $ ANIN <$> valueListParser
   ]
-  where
-    stDWithinGeometryInputType =
-      mkHsraInpTyInfo Nothing stDWithinGeometryInpTy $ fromInpValL
-      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeometry
-      , InpValInfo Nothing "distance" Nothing $ G.toNT $ mkScalarTy PGFloat
-      ]
-    stDWithinGeographyInputType =
-      mkHsraInpTyInfo Nothing stDWithinGeographyInpTy $ fromInpValL
-      [ InpValInfo Nothing "from" Nothing $ G.toGT $ G.toNT $ mkScalarTy PGGeography
-      , InpValInfo Nothing "distance" Nothing $ G.toNT $ mkScalarTy PGFloat
-      , InpValInfo
-        Nothing "use_spheroid" (Just $ G.VCBoolean True) $ G.toGT $ mkScalarTy PGBoolean
-      ]
 
-stIntersectsNbandGeomInputTy :: G.NamedType
-stIntersectsNbandGeomInputTy = G.NamedType "st_intersects_nband_geom_input"
-
-stIntersectsGeomNbandInputTy :: G.NamedType
-stIntersectsGeomNbandInputTy = G.NamedType "st_intersects_geom_nband_input"
-
-rasterIntersectsInputTypes :: [InpObjTyInfo]
-rasterIntersectsInputTypes =
-  [ stIntersectsNbandGeomInput
-  , stIntersectsGeomNbandInput
+comparisonOperators ::
+  (MonadParse n, 'Input P.<: k) =>
+  NamingCase ->
+  -- | shall this be collapsed to True when null is given?
+  Options.DangerouslyCollapseBooleans ->
+  -- | parser for one column value
+  Parser k n (UnpreparedValue b) ->
+  [InputFieldsParser n (Maybe (OpExpG b (UnpreparedValue b)))]
+comparisonOperators tCase collapseIfNull valueParser =
+  [ mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__gt) Nothing $ AGT <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__lt) Nothing $ ALT <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__gte) Nothing $ AGTE <$> valueParser,
+    mkBoolOperator tCase collapseIfNull (C.fromAutogeneratedName Name.__lte) Nothing $ ALTE <$> valueParser
   ]
-  where
-    stIntersectsNbandGeomInput =
-      mkHsraInpTyInfo Nothing stIntersectsNbandGeomInputTy $ fromInpValL
-      [ InpValInfo Nothing "nband" Nothing $
-        G.toGT $ G.toNT $ mkScalarTy PGInteger
-      , InpValInfo Nothing "geommin" Nothing $
-        G.toGT $ G.toNT $ mkScalarTy PGGeometry
-      ]
-
-    stIntersectsGeomNbandInput =
-      mkHsraInpTyInfo Nothing stIntersectsGeomNbandInputTy $ fromInpValL
-      [ InpValInfo Nothing "geommin" Nothing $
-        G.toGT $ G.toNT $ mkScalarTy PGGeometry
-      , InpValInfo Nothing "nband" Nothing $
-        G.toGT $ mkScalarTy PGInteger
-      ]
-
-mkBoolExpName :: QualifiedTable -> G.Name
-mkBoolExpName tn =
-  qualObjectToName tn <> "_bool_exp"
-
-mkBoolExpTy :: QualifiedTable -> G.NamedType
-mkBoolExpTy =
-  G.NamedType . mkBoolExpName
-
--- table_bool_exp
-mkBoolExpInp
-  :: QualifiedTable
-  -- the fields that are allowed
-  -> [SelField]
-  -> InpObjTyInfo
-mkBoolExpInp tn fields =
-  mkHsraInpTyInfo (Just desc) boolExpTy $ Map.fromList
-    [(_iviName inpVal, inpVal) | inpVal <- inpValues]
-  where
-    desc = G.Description $
-      "Boolean expression to filter rows from the table " <> tn <<>
-      ". All fields are combined with a logical 'AND'."
-
-    -- the type of this boolean expression
-    boolExpTy = mkBoolExpTy tn
-
-    -- all the fields of this input object
-    inpValues = combinators <> map mkFldExpInp fields
-
-    mk n ty = InpValInfo Nothing n Nothing $ G.toGT ty
-
-    boolExpListTy = G.toLT boolExpTy
-
-    combinators =
-      [ mk "_not" boolExpTy
-      , mk "_and" boolExpListTy
-      , mk "_or"  boolExpListTy
-      ]
-
-    mkFldExpInp = \case
-      Left (PGColumnInfo _ name colTy _ _) ->
-        mk name (mkCompExpTy colTy)
-      Right relationshipField ->
-        let relationshipName = riName $ _rfiInfo relationshipField
-            remoteTable = riRTable $  _rfiInfo relationshipField
-        in mk (mkRelName relationshipName) (mkBoolExpTy remoteTable)

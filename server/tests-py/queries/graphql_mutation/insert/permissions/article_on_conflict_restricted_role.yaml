@@ -1,0 +1,72 @@
+- description: Upserts article data via GraphQL mutation as Restricted role (no column in update permissions)
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: restricted
+    X-Hasura-User-Id: '1'
+  response:
+    data:
+      insert_article:
+        affected_rows: 0
+        returning: []
+  query:
+    query: |
+      mutation insert_article {
+        insert_article (
+          objects: [
+            {
+              id: 1
+              content: "Updated Article 1 content"
+              author_id: 1
+            }
+            ],
+          on_conflict: {
+            constraint: article_pkey
+            update_columns: []
+          }
+        ) {
+          affected_rows
+          returning {
+            title
+            content
+            author_id
+            }
+          }
+        }
+
+- description: Upserts article data via GraphQL mutation as Restricted role (error when using placeholder)
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: restricted
+    X-Hasura-User-Id: '1'
+  response:
+    errors:
+    - extensions:
+        path: $.selectionSet.insert_article.args.on_conflict
+        code: validation-failed
+      message: erroneous column name
+  query:
+    query: |
+      mutation insert_article {
+        insert_article (
+          objects: [
+            {
+              id: 1
+              content: "Updated Article 1 content"
+              author_id: 1
+            }
+            ],
+          on_conflict: {
+            constraint: article_pkey
+            update_columns: [_PLACEHOLDER]
+          }
+        ) {
+          affected_rows
+          returning {
+            title
+            content
+            author_id
+            }
+          }
+        }

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" id="remove_circle_outline-24px" width="24" height="24" viewBox="0 0 24 24">
+    <defs>
+        <style>
+            .cls-1{fill:none}.cls-2{fill:#505050}
+        </style>
+    </defs>
+    <path id="Path_4162" d="M0 0h24v24H0z" class="cls-1" data-name="Path 4162"/>
+    <path id="Path_4163" d="M7 11v2h10v-2zm5-9a10 10 0 1 0 10 10A10.029 10.029 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8.024 8.024 0 0 1-8 8z" class="cls-2" data-name="Path 4163"/>
+</svg>

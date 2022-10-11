@@ -1,0 +1,108 @@
+- description: Simple GraphQL select of all types
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_all_types:
+      - string: STRING
+        bytes: AAECAwQF
+        integer: '1'
+        float: '1.0'
+        special_floats:
+          - '1.23E23'
+          - '-Infinity'
+          - 'NaN'
+        numeric: '1'
+        bignumeric: '1'
+        boolean: true
+        timestamp: '2008-12-25T07:30:00Z'
+        date: '2000-12-30'
+        time: 07:30:00
+        datetime: '1998-10-18T13:45:55'
+        geography: POINT(1 1)
+  query:
+    query: |
+      query {
+        hasura_all_types {
+          string
+          bytes
+          integer
+          float
+        special_floats
+          numeric
+          bignumeric
+          boolean
+          timestamp
+          date
+          time
+          datetime
+          geography
+        }
+      }
+
+- description: Simple GraphQL aggregate select (min/max) of all comparable types
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      hasura_all_types_aggregate:
+        aggregate:
+          max:
+            string: STRING
+            bytes: AAECAwQF
+            integer: '1'
+            float: '1.0'
+            numeric: '1'
+            bignumeric: '1'
+            boolean: true
+            timestamp: '2008-12-25T07:30:00Z'
+            date: '2000-12-30'
+            time: '07:30:00'
+            datetime: '1998-10-18T13:45:55'
+          min:
+            string: STRING
+            bytes: AAECAwQF
+            integer: '1'
+            float: '1.0'
+            numeric: '1'
+            bignumeric: '1'
+            boolean: true
+            timestamp: '2008-12-25T07:30:00Z'
+            date: '2000-12-30'
+            time: '07:30:00'
+            datetime: '1998-10-18T13:45:55'
+  query:
+    query: |
+      query {
+        hasura_all_types_aggregate {
+          aggregate {
+            max {
+              string
+              bytes
+              integer
+              float
+              numeric
+              bignumeric
+              boolean
+              timestamp
+              date
+              time
+              datetime
+            }
+            min {
+              string
+              bytes
+              integer
+              float
+              numeric
+              bignumeric
+              boolean
+              timestamp
+              date
+              time
+              datetime
+            }
+          }
+        }
+      }
+  

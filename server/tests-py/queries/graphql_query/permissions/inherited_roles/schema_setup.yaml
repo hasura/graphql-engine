@@ -1,0 +1,71 @@
+type: run_sql
+args:
+  sql: |
+      CREATE TABLE team (
+        id serial primary key,
+        name text
+      );
+
+      CREATE TABLE manager (
+        id serial primary key,
+        team_id int references team(id),
+        name text,
+        phone text,
+        address text
+      );
+
+      CREATE TABLE employee (
+        id SERIAL PRIMARY KEY,
+        name text not null,
+        salary int not null,
+        title text,
+        manager_id int references manager(id),
+        team_id int references team(id),
+        manager_remarks text,
+        hr_remarks text
+      );
+
+      insert into team (name) values ('sales'),('HR');
+
+      insert into manager (team_id, name, phone, address) values
+      (1, 'sales manager 1', '9988998822', 'basant bihar'),
+      (1, 'sales manager 2', '9977223344', 'buena vista'),
+      (2, 'HR manager 1',    '1122334455', 'MG Road');
+
+      insert into employee (name, salary, title, manager_id, team_id, manager_remarks, hr_remarks)
+      values
+      ('employee 1', 10000, 'Sales representative', 1, 1, 'good', 'good'),
+      ('employee 2', 14000, 'Sales representative', 1, 1, 'good', 'good'),
+      ('employee 3', 12400, 'HR trainee', 3, 2, 'hard working' , 'hard working'),
+      ('employee 4', 15430, 'Sales representative', 2, 1, 'hard working' , 'hard working');
+
+      CREATE FUNCTION employee_yearly_salary(employee_row employee)
+      RETURNS INT AS $$
+      SELECT employee_row.salary * 12
+      $$ LANGUAGE sql STABLE;
+
+      CREATE TABLE authors (
+        id serial primary key,
+        name text,
+        followers int
+      );
+
+      CREATE TABLE articles (
+        id serial primary key,
+        title text,
+        content text,
+        is_published boolean default false,
+        author_id int references authors(id)
+      );
+
+      insert into authors (name, followers) values
+      ('J.K.Rowling', 1232344),
+      ('Paulo Coelho', 21312332),
+      ('Murakami', 1232132);
+
+      insert into articles (title, content, is_published, author_id) values
+      ('title 1', 'content 1', false, 1),
+      ('title 2', 'content 2', true, 2),
+      ('title 3', 'content 3', true, 1),
+      ('title 4', 'content 4', true, 3),
+      ('title 5', 'content 5', true, 2);

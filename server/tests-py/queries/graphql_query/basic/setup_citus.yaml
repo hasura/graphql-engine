@@ -1,0 +1,89 @@
+type: bulk
+args:
+
+# track tables
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: test_types
+
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: author
+
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: article
+
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: user
+
+- type: citus_track_table
+  args:
+    source: citus
+    table:
+      name: person
+
+#Object relationship
+- type: citus_create_object_relationship
+  args:
+    source: citus
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: citus_create_array_relationship
+  args:
+    source: citus
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+#Author table
+- type: citus_track_table
+  args:
+    source: citus
+    schema: public
+    table:
+      name: author_multi
+
+#Article table
+- type: citus_track_table
+  args:
+    source: citus
+    schema: public
+    table:
+      name: article_multi
+
+#Object relationship
+- type: citus_create_object_relationship
+  args:
+    source: citus
+    table: article_multi
+    name: author
+    using:
+      foreign_key_constraint_on: ["author_id1", "author_id2"]
+
+#Array relationship
+- type: citus_create_array_relationship
+  args:
+    source: citus
+    table: author_multi
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article_multi
+        columns: ["author_id1", "author_id2"]

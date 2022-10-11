@@ -1,0 +1,63 @@
+type: bulk
+args:
+
+# To model this:
+
+# query {
+#   profiles {
+#     id
+#     message {
+#       id
+#       msg
+#     }
+#   }
+# }
+
+#Profile table
+- type: run_sql
+  args:
+    sql: |
+      create schema custom;
+      create table custom.profiles (
+          id serial primary key,
+          name text
+      );
+- type: run_sql
+  args:
+    sql: |
+      insert into custom.profiles (name) values
+      ( 'alice' ),
+      ( 'bob' ),
+      ( 'alice')
+- type: track_table
+  args:
+    schema: custom
+    name: profiles
+
+- type: set_table_customization
+  args:
+    table: {schema: custom, name: profiles}
+    configuration:
+      column_config:
+        name:
+          custom_name: profile_name
+
+- type: create_select_permission
+  args:
+    table:
+      schema: custom
+      name: profiles
+    role: user
+    permission:
+      columns: ["id", "name"]
+      filter:
+        id:
+          _eq: "X-Hasura-User-Id"
+      allow_aggregations: true
+
+- type: add_remote_schema
+  args:
+    name: my-remote-schema
+    definition:
+      url: "{{GRAPHQL_SERVICE_HANDLER}}"
+      forward_client_headers: false

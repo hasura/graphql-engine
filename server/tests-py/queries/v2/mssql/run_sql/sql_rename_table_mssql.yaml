@@ -1,0 +1,82 @@
+# Create a table
+- url: /v2/query
+  status: 200
+  query:
+    type: mssql_run_sql
+    args:
+      source: mssql
+      sql: |
+        CREATE TABLE test (
+          id INT NOT NULL IDENTITY PRIMARY KEY,
+          name TEXT
+        );
+
+        INSERT INTO test (name) VALUES ('Bob'), ('Alice');
+
+# Track table
+- url: /v1/metadata
+  status: 200
+  query:
+    type: mssql_track_table
+    args:
+      source: mssql
+      table:
+        name: test
+
+# GraphQL Query to fetch data from 'test' table
+- url: /v1/graphql
+  status: 200
+  response:
+    data:
+      test:
+      - id: 1
+        name: Bob
+      - id: 2
+        name: Alice
+  query:
+    query: |
+      query {
+        test{
+          id
+          name
+        }
+      }
+
+# Rename the table in SQL
+- url: /v2/query
+  status: 200
+  query:
+    type: mssql_run_sql
+    args:
+      source: mssql
+      sql: |
+        EXEC sp_rename 'dbo.test', 'test_new'
+
+# GraphQL Query to fetch data from renamed 'test_new' table
+- url: /v1/graphql
+  status: 200
+  response:
+    data:
+      test_new:
+      - id: 1
+        name: Bob
+      - id: 2
+        name: Alice
+  query:
+    query: |
+      query {
+        test_new{
+          id
+          name
+        }
+      }
+
+# Now drop the 'test_new' table
+- url: /v2/query
+  status: 200
+  query:
+    type: mssql_run_sql
+    args:
+      source: mssql
+      sql: |
+        DROP TABLE test_new;

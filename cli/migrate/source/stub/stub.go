@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/hasura/graphql-engine/cli/migrate/source"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/source"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -43,6 +43,9 @@ func (s *Stub) Close() error {
 
 func (s *Stub) Scan() error {
 	return nil
+}
+
+func (s *Stub) DefaultParser(p source.Parser) {
 }
 
 func (s *Stub) First() (version uint64, err error) {
@@ -107,4 +110,12 @@ func (s *Stub) ReadMetaDown(version uint64) (r io.ReadCloser, identifier string,
 		return ioutil.NopCloser(bytes.NewBufferString(m.Identifier)), fmt.Sprintf("%v.down.yaml.stub", version), fmt.Sprintf("%v.down.yaml.stub", version), nil
 	}
 	return nil, "", "", &os.PathError{Op: fmt.Sprintf("read down yaml version %v", version), Path: s.Url, Err: os.ErrNotExist}
+}
+
+func (f *Stub) ReadName(version uint64) (name string) {
+	return f.Migrations.ReadName(version)
+}
+
+func (f *Stub) WriteMetadata(files map[string][]byte) error {
+	return nil
 }

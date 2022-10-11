@@ -1,0 +1,261 @@
+{
+  "version": 2,
+  "tables": [
+    {
+      "table": {
+        "schema": "public",
+        "name": "post"
+      },
+      "select_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "columns": ["id", "created_at", "updated_at", "content"],
+            "filter": {
+              "_not": {
+                "_exists": {
+                  "_where": {
+                    "_and": [
+                      {
+                        "user_id": {
+                          "_eq": "X-Hasura-User-Id"
+                        }
+                      },
+                      {
+                        "table_name": {
+                          "_eq": "post"
+                        }
+                      },
+                      {
+                        "above_quota": {
+                          "_eq": true
+                        }
+                      }
+                    ]
+                  },
+                  "_table": {
+                    "schema": "public",
+                    "name": "user_tables_above_quota"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "table_daily_limits"
+      },
+      "array_relationships": [
+        {
+          "name": "table_operations_maps",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "table_name",
+              "table": {
+                "schema": "public",
+                "name": "table_operations_map"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "table_operations_map"
+      },
+      "object_relationships": [
+        {
+          "name": "table_daily_limit",
+          "using": {
+            "foreign_key_constraint_on": "table_name"
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "textsearch_user_demo"
+      }
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "user"
+      },
+      "array_relationships": [
+        {
+          "name": "user_daily_limits",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "user_id",
+              "table": {
+                "schema": "public",
+                "name": "user_daily_limits"
+              }
+            }
+          }
+        }
+      ],
+      "remote_relationships": [
+        {
+          "definition": {
+            "remote_field": {
+              "pokemon": {
+                "arguments": {
+                  "name": "$email"
+                }
+              }
+            },
+            "hasura_fields": ["email"],
+            "remote_schema": "pokemon"
+          },
+          "name": "test_remote_relationship"
+        }
+      ],
+      "event_triggers": [
+        {
+          "name": "my_event_trigger",
+          "definition": {
+            "enable_manual": true,
+            "insert": {
+              "columns": "*"
+            },
+            "delete": {
+              "columns": "*"
+            },
+            "update": {
+              "payload": [
+                "id",
+                "hasura_user_id",
+                "email",
+                "created_at",
+                "updated_at"
+              ],
+              "columns": [
+                "id",
+                "hasura_user_id",
+                "email",
+                "created_at",
+                "updated_at"
+              ]
+            }
+          },
+          "retry_conf": {
+            "num_retries": 2,
+            "interval_sec": 11,
+            "timeout_sec": 61
+          },
+          "webhook": "http://httpbin.org/post",
+          "headers": [
+            {
+              "value": "val",
+              "name": "aheader"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "user_daily_limits"
+      },
+      "object_relationships": [
+        {
+          "name": "user",
+          "using": {
+            "foreign_key_constraint_on": "user_id"
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "user_tables_above_quota"
+      }
+    }
+  ],
+  "remote_schemas": [
+    {
+      "name": "pokemon",
+      "definition": {
+        "url": "https://graphql-pokemon.now.sh/",
+        "timeout_seconds": 60
+      }
+    }
+  ],
+  "query_collections": [
+    {
+      "name": "allowed-queries",
+      "definition": {
+        "queries": [
+          {
+            "name": "LocationsIdAndName",
+            "query": "query LocationsIdAndName {\n  locations(where: {fast_pay_enabled: {_eq: true}}, order_by: {name: asc}) {\n    id\n    name\n    company_id\n  }\n}"
+          },
+          {
+            "name": "CreatePlayerForCompany",
+            "query": "mutation CreatePlayerForCompany($companyId: Int!, $firstName: String!, $lastName: String!, $phone: String!) {\n  insert_players_one(object: {company_id: $companyId, first_name: $firstName, last_name: $lastName, phone: $phone, created_at: \"now()\", updated_at: \"now()\"}) {\n    id\n  }\n}"
+          },
+          {
+            "name": "AddPlayerToGame",
+            "query": "mutation AddPlayerToGame($playerId: Int!, $reservationId: Int!) {\n  insert_player_reservations_one(object: {player_id: $playerId, reservation_id: $reservationId, state: \"pending\", team: 0, created_at: \"now()\", updated_at: \"now()\"}) {\n    id\n  }\n}"
+          },
+          {
+            "name": "DeleteEmptyPlayerReservationById",
+            "query": "mutation DeleteEmptyPlayerReservationById($playerReservationId: Int!) {\n  delete_player_reservations(where: {id: {_eq: $playerReservationId}, player_id: {_is_null: true}}) {\n    affected_rows\n    returning {\n      id\n      temporary_player_name\n    }\n  }\n}"
+          },
+          {
+            "name": "FindPlayerByPhone",
+            "query": "query FindPlayerByPhone($phone: String!) {\n  players(where: {phone: {_like: $phone}}) {\n    id\n    first_name\n    last_name\n    phone\n  }\n}"
+          },
+          {
+            "name": "ReservationsForLocationAndDateQuery",
+            "query": "query ReservationsForLocationAndDateQuery($locationId: Int!, $start: timestamp!, $end: timestamp!) {\n  reservations(where: {_and: [{date_with_time: {_gte: $start}}, {date_with_time: {_lte: $end}}], status: {_eq: \"pending\"}, type: {_neq: \"OpenReservation\"}, field_reservations: {field: {location: {id: {_eq: $locationId}, fast_pay_enabled: {_eq: true}}}}}) {\n    id\n    name\n    date_with_time\n    cost\n    count_of_player_reservations\n    field_reservations {\n      field {\n        location_id\n      }\n    }\n    player_reservations(order_by: {is_game_master: asc}) {\n      id\n      player_id\n      is_game_master\n      player {\n        first_name\n        last_name\n      }\n    }\n  }\n}"
+          }
+        ]
+      }
+    }
+  ],
+  "allowlist": [
+    {
+      "collection": "allowed-queries"
+    }
+  ],
+  "cron_triggers": [
+    {
+      "name": "cron-scheduled-trigger",
+      "webhook": "http://httpbin.org/post1",
+      "schedule": "* * * * *",
+      "include_in_metadata": true,
+      "payload": {
+        "test": "hello"
+      },
+      "retry_conf": {
+        "num_retries": 2,
+        "timeout_seconds": 61,
+        "tolerance_seconds": 21650,
+        "retry_interval_seconds": 11
+      },
+      "headers": [
+        {
+          "value": "avalue",
+          "name": "regular-val"
+        },
+        {
+          "name": "env-val",
+          "value_from_env": "HASURA_GRAPHQL_ENABLE_CONSOLE"
+        }
+      ],
+      "comment": "acomment"
+    }
+  ]
+}

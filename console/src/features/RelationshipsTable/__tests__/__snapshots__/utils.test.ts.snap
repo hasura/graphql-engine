@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getRemoteFieldPath should work with long remote field 1`] = `
+Array [
+  "country",
+  "continent",
+  "countries",
+  "states",
+]
+`;
+
+exports[`getRemoteFieldPath should work with simple remote field 1`] = `
+Array [
+  "continents",
+]
+`;
+
+exports[`getRemoteRelationType should work with current remote relationship definition 1`] = `
+Array [
+  "default",
+  "remote_schema_legacy",
+  "Remote Schema",
+]
+`;
+
+exports[`getRemoteRelationType should work with new remote schema relationship definition 1`] = `
+Array [
+  "default",
+  "to_remote_schema",
+  "Remote Schema",
+]
+`;
+
+exports[`getRemoteRelationType should work with new remote source relationship definition 1`] = `
+Array [
+  "name_of_the_remote_relationship_1",
+  "to_source",
+  "object",
+]
+`;

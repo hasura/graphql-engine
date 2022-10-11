@@ -1,0 +1,33 @@
+description: |
+  When a role has a permission defined in the metadata and is also an inherited one i.e. it defines parent roles, then the permission defined in the metadata takes precedence over the inherited permission. The
+  `non_paying_user` is an example of such a case, where the role defines a permission on the `authors` table but not on the `articles` table.
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: non_paying_user
+  X-Hasura-Author-Id: '1'
+  X-Hasura-Editor-Id: '1'
+query:
+  query: |
+    query {
+      authors (order_by: {followers: asc}) {
+        name
+        followers
+      }
+      articles (where: {title: {_eq: "title 2"}}) {
+        title
+        content
+      }
+    }
+response:
+  data:
+    authors:
+      - name: Murakami
+        followers: 1232132
+      - name: J.K.Rowling
+        followers: 1232344
+      - name: Paulo Coelho
+        followers: 21312332
+    articles:
+      - title: title 2
+        content: content 2

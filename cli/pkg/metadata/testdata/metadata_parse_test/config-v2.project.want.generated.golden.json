@@ -1,0 +1,34 @@
+{
+  "version": 2,
+  "tables": [
+    {
+      "table": {
+        "schema": "pub",
+        "name": "t3"
+      }
+    },
+    {
+      "table": {
+        "schema": "pub",
+        "name": "t4"
+      }
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "t1"
+      }
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "t2"
+      }
+    }
+  ],
+  "functions": [],
+  "remote_schemas": [],
+  "query_collections": [],
+  "allowlist": [],
+  "cron_triggers": []
+}

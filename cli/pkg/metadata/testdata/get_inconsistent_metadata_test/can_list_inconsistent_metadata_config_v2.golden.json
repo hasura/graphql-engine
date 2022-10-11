@@ -1,0 +1,14 @@
+{
+  "is_consistent": false,
+  "inconsistent_objects": [
+    {
+      "definition": {
+        "schema": "public",
+        "name": "t1"
+      },
+      "reason": "Inconsistent object: no such table/view exists in source: \"t1\"",
+      "name": "table t1 in source default",
+      "type": "table"
+    }
+  ]
+}

@@ -1,132 +1,99 @@
-import React from 'react';
-import { Mutation } from 'react-apollo';
-import gql from 'graphql-tag';
+import { useState } from 'react';
+import { gql, useMutation } from '@apollo/client';
 import TypingIndicator from './TypingIndicator';
 import '../App.css';
 
 const insertMessage = gql`
-  mutation insert_message ($message: message_insert_input! ){
-    insert_message (
-      objects: [$message]
-    ) {
-      returning {
-        id
-        timestamp
-        text
-        username
-      }
+  mutation insert_message($message: message_insert_input!) {
+    insert_message_one(object: $message) {
+      id
+      timestamp
+      text
+      username
     }
   }
 `;
 
-const emitTypingEvent = gql`
-  mutation ($userId: Int) {
-    update_user (
-      _set: {
-        last_typed: "now()"
-      }
-      where: {
-        id: {
-          _eq: $userId
-        }
-      }
+const emitTypingEventGql = gql`
+  mutation ($userId: Int!) {
+    update_user_by_pk(
+      pk_columns: { id: $userId }
+      _set: { last_typed: "now()" }
     ) {
-      affected_rows
+      id
     }
   }
 `;
 
-export default class Textbox extends React.Component {
+export default function Textbox(props) {
+  const [text, setText] = useState('');
 
-  constructor(props) {
-    super()
-    this.state = {
-      text: ""
-    }
-  }
+  const [insertMessageHandler, { client }] = useMutation(insertMessage, {
+    variables: {
+      message: {
+        username: props.username,
+        text: text,
+      },
+      update: (cache, { data: { insert_message_one } }) => {
+        props.mutationCallback({
+          id: insert_message_one.id,
+          timestamp: insert_message_one.timestamp,
+          username: insert_message_one.username,
+          text: insert_message_one.text,
+        });
+      },
+    },
+  });
 
-  handleTyping = (text, mutate) => {
+  const handleTyping = (text, mutate) => {
     const textLength = text.length;
     if ((textLength !== 0 && textLength % 5 === 0) || textLength === 1) {
-      this.emitTypingEvent(mutate);
+      emitTypingEvent(mutate);
     }
-    this.setState({ text });
-  }
+    setText(text);
+  };
 
-  emitTypingEvent = async (mutate) => {
-    if (this.props.userId) {
-      await mutate({
-        mutation: emitTypingEvent,
-        variables: {
-          userId: this.props.userId
-        }
-      });
-    }
-  }
-
-  render() {
-    // Mutation component. Add message to the state of <RenderMessages> after mutation.
-    return (
-      <Mutation
-        mutation={insertMessage}
-        variables={{
-          message: {
-            username: this.props.username,
-            text: this.state.text
-          }
-        }}
-        update={(cache, { data: { insert_message }}) => {
-          this.props.mutationCallback(
-            {
-              id: insert_message.returning[0].id,
-              timestamp: insert_message.returning[0].timestamp,
-              username: insert_message.returning[0].username,
-              text: insert_message.returning[0].text,
-            }
-          );
-        }}
-      >
-        {
-          (insert_message, { data, loading, error, client}) => {
-            const sendMessage = (e) => { 
-              e.preventDefault();
-              if (this.state.text === '') {
-                return;
-              }
-              insert_message();
-              this.setState({
-                text: ""
-              });
-            }
-            return this.form(sendMessage, client);
-          }
-        }
-
-      </Mutation>
-    )
-  }
-
-  form = (sendMessage, client) => {
+  const form = (sendMessage, client) => {
     return (
       <form onSubmit={sendMessage}>
         <div className="textboxWrapper">
-          <TypingIndicator userId={this.props.userId} />
+          <TypingIndicator userId={props.userId} />
           <input
             id="textbox"
             className="textbox typoTextbox"
-            value={this.state.text}
+            value={text}
             autoFocus={true}
             onChange={(e) => {
-              this.handleTyping(e.target.value, client.mutate);
+              handleTyping(e.target.value, client.mutate);
             }}
             autoComplete="off"
           />
-          <button
-            className="sendButton typoButton"
-            onClick={sendMessage}
-          > Send </button>
+          <button className="sendButton typoButton" onClick={sendMessage}>
+            {' '}
+            Send{' '}
+          </button>
         </div>
       </form>
     );
-  }
+  };
+
+  const emitTypingEvent = async (mutate) => {
+    if (props.userId) {
+      await mutate({
+        mutation: emitTypingEventGql,
+        variables: {
+          userId: props.userId,
+        },
+      });
+    }
+  };
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (text === '') {
+      return;
+    }
+    insertMessageHandler();
+    setText('');
+  };
+  return form(sendMessage, client);
 }

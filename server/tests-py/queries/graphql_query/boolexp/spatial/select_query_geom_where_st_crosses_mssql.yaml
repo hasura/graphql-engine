@@ -1,0 +1,20 @@
+description: Query data from spatial_types_geom table
+url: /v1/graphql
+status: 200
+response:
+  data:
+    spatial_types_geom:
+      - linestring: LINESTRING (1 1, 2 3, 4 8, -6 3)
+query:
+  query: |
+    query {
+      spatial_types_geom(
+        where: {
+          linestring: {
+              _st_crosses: "LINESTRING(1.5 1, 0 2.5)"
+            }
+          }
+        ) {
+          linestring
+        }
+    }

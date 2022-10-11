@@ -1,0 +1,18 @@
+description: Select cities not starting with new (case-sensitively)
+url: /v1/query
+status: 200
+response:
+  - name: Durham
+    country: USA 
+  - name: Framlingham
+    country: UK
+query:
+  type: select
+  args:
+    table: city
+    where:
+      name:
+       $niregex: 'new.*'
+    columns:
+    - name
+    - country

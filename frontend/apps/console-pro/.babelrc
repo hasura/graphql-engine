@@ -1,0 +1,13 @@
+{
+  "presets": [
+    [
+      "@nrwl/react/babel",
+      {
+        "runtime": "automatic"
+      }
+    ]
+  ],
+  "plugins": [
+    "@babel/plugin-proposal-export-default-from"
+  ]
+}

@@ -1,0 +1,17 @@
+description: Run get_user_by_email query action with invalid email
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      get_user_by_email(email: "random-email"){
+          id
+      }
+    }
+
+response:
+  errors:
+    - extensions:
+        path: $
+        code: invalid-email
+      message: Given email address is not valid

@@ -1,0 +1,1 @@
+export { useListAllRelationshipsFromMetadata } from './useListAllRelationshipsFromMetadata';

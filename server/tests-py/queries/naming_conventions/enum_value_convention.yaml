@@ -1,0 +1,257 @@
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries:
+      customization:
+        naming_convention: graphql-default
+
+- description: create enum table
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        CREATE TABLE days_of_the_week(
+            day_name text PRIMARY KEY
+        );
+        INSERT INTO days_of_the_week (day_name)
+          VALUES ('Monday'), ('Tuesday'), ('Wednesday'), ('Thursday'), ('Friday'), ('Saturday'), ('Sunday');
+
+        CREATE TABLE users(
+            id serial PRIMARY KEY,
+            favourite_day text NOT NULL REFERENCES days_of_the_week
+        );
+        INSERT INTO users (favourite_day)
+          VALUES ('Sunday');
+
+- description: Track tables
+  url: /v1/query
+  status: 200
+  response:
+    - message: success
+    - message: success
+  query:
+    type: bulk
+    args:
+      - type: track_table
+        args:
+          table: days_of_the_week
+          source: pg1
+          is_enum: true
+      - type: track_table
+        args:
+          source: pg1
+          table: users
+
+- description: Check the enum values (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type:
+        enumValues:
+          - name: FRIDAY
+          - name: MONDAY
+          - name: SATURDAY
+          - name: SUNDAY
+          - name: THURSDAY
+          - name: TUESDAY
+          - name: WEDNESDAY
+  query:
+    query: |
+      {
+        __type(name: "DaysOfTheWeekEnum") {
+          enumValues {
+            name
+          }
+        }
+      }
+
+- description: Insert users returning enum values (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insertUsers:
+        returning:
+          - id: 2
+            favouriteDay: SUNDAY
+          - id: 3
+            favouriteDay: FRIDAY
+          - id: 4
+            favouriteDay: MONDAY
+          - id: 5
+            favouriteDay: SATURDAY
+
+  query:
+    query: |
+      mutation {
+        insertUsers(objects: [{favouriteDay: SUNDAY},{favouriteDay: FRIDAY},{favouriteDay: MONDAY},{favouriteDay: SATURDAY}]) {
+          returning {
+            id
+            favouriteDay
+          }
+        }
+      }
+
+- description: Update users returning enum values (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      updateUsers:
+        returning:
+          - id: 1
+            favouriteDay: MONDAY
+          - id: 2
+            favouriteDay: MONDAY
+
+  query:
+    query: |
+      mutation {
+        updateUsers(where: {favouriteDay: {_eq: SUNDAY}}, _set: {favouriteDay: MONDAY}) {
+          returning {
+            id
+            favouriteDay
+          }
+        }
+      }
+
+- description: Delete users returning enum values (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      deleteUsers:
+        returning:
+          - id: 4
+            favouriteDay: MONDAY
+          - id: 1
+            favouriteDay: MONDAY
+          - id: 2
+            favouriteDay: MONDAY
+
+  query:
+    query: |
+      mutation MyMutation {
+        deleteUsers(where: {favouriteDay: {_eq: MONDAY}}) {
+          returning {
+            id
+            favouriteDay
+          }
+        }
+      }
+
+- description: Insert user by pk returning enum value (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      insertUsersOne:
+        id: 6
+        favouriteDay: SUNDAY
+
+  query:
+    query: |
+      mutation {
+        insertUsersOne(object: {favouriteDay: SUNDAY}) {
+          id
+          favouriteDay
+        }
+      }
+
+- description: Update user by pk returning enum value (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      updateUsersByPk:
+        id: 3
+        favouriteDay: WEDNESDAY
+
+  query:
+    query: |
+      mutation {
+        updateUsersByPk(pk_columns: {id: 3}, _set: {favouriteDay: WEDNESDAY}) {
+          id
+          favouriteDay
+        }
+      }
+
+- description: Delete user by pk returning enum value (should be uppercased)
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      deleteUsersByPk:
+        id: 5
+        favouriteDay: SATURDAY
+
+  query:
+    query: |
+      mutation MyMutation {
+        deleteUsersByPk(id: 5) {
+          id
+          favouriteDay
+        }
+      }
+
+- description: Untrack tables
+  url: /v1/metadata
+  status: 200
+  response:
+    - message: success
+    - message: success
+  query:
+    type: bulk
+    args:
+      - type: pg_untrack_table
+        args:
+          table: days_of_the_week
+          source: pg1
+      - type: pg_untrack_table
+        args:
+          source: pg1
+          table: users
+
+- description: drop table
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        drop table users;
+        drop table days_of_the_week;
+
+- description: PG Drop Source 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1

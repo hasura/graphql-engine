@@ -7,7 +7,7 @@ response:
     - name: New York
 query:
   query: |
-    {
+    query {
       geog_table(where: {
         geog_col: {
           _cast: {

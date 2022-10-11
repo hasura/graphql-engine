@@ -1,0 +1,220 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+
+        DROP TABLE IF EXISTS test_types;
+        DROP TABLE IF EXISTS article;
+        DROP TABLE IF EXISTS author;
+        DROP TABLE IF EXISTS person;
+        DROP TABLE IF EXISTS [user];
+        DROP TABLE IF EXISTS article_multi;
+        DROP TABLE IF EXISTS author_multi;
+
+        CREATE TABLE test_types
+        (
+            c1_smallint smallint,
+            c2_integer integer,
+            c3_bigint bigint,
+            c4_decimal decimal(5, 2),
+            c5_numeric numeric (4, 3),
+            c6_real real,
+            c7_double_precision double precision,
+            c11_varchar_3 varchar(3),
+            c12_char_4 char(4),
+            c13_text text,
+            c16_date date,
+            c17_time time,
+            c44_xml xml,
+            c45_money money,
+            c47_smallmoney smallmoney,
+            c48_bit bit,
+            c49_tinyint tinyint,
+            c50_float float,
+            c51_real real,
+            c52_datetime datetime,
+            c53_datetime2 datetime2,
+            c54_datetimeoffset datetimeoffset,
+            c55_smalldatetime smalldatetime,
+            c56_binary binary(4),
+            c57_varbinary varbinary(4),
+            c58_hierarchyid hierarchyid,
+            c59_uniqueidentifier uniqueidentifier
+        );
+
+        INSERT INTO
+                test_types
+            (
+            c1_smallint,
+            c2_integer,
+            c3_bigint,
+            c4_decimal,
+            c5_numeric,
+            c6_real,
+            c7_double_precision,
+            c11_varchar_3,
+            c12_char_4,
+            c13_text,
+            c16_date,
+            c17_time,
+            c44_xml,
+            c45_money,
+            c47_smallmoney,
+            c48_bit,
+            c49_tinyint,
+            c50_float,
+            c51_real,
+            c52_datetime,
+            c53_datetime2,
+            c54_datetimeoffset,
+            c55_smalldatetime,
+            c56_binary,
+            c57_varbinary,
+            c58_hierarchyid,
+            c59_uniqueidentifier
+            )
+        VALUES
+            (
+                3277 -- c1_smallint
+                    , 2147483647 -- c2_integer
+                    , 9223372036854775807 -- c3_bigint
+                    , 123.45 -- c4_decimal
+                    , 1.234 -- c5_numeric
+                    , 0.00390625 -- c6_real
+                    , 16.0001220703125 -- c7_double_precision
+                    , 'abc' -- c11_varchar_3
+                    , 'baaz' -- c12_char_4
+                    , 'foo bar baz' -- c13_text
+                    , '2014-09-14' -- c16_date
+                    , '11:09:23' -- c17_time
+                    , '<foo>bar</foo>' -- c44_xml
+                    , 123.45 -- c45_money
+                    , -123.45 -- c47_smallmoney
+                    , 0 -- c48_bit
+                    , 254 -- c49_tinyint
+                    , 2.23E -308 -- c50_float
+                    , 1.18E - 38 -- c51_real
+                    , '04-15-96 4am' -- c52_datetime
+                    , '04-15-9999 23:59:59.9999999' -- c53_datetime2
+                    , '2007-05-08 12:35:29.1234567 +12:15' -- c54_datetimeoffset
+                    , '1955-12-13 12:43:10' -- c55_smalldatetime
+                    , 0x0001e240 -- c56_binary
+                    , 0x0001e240 -- c57_varbinary
+                    , '/0.1/0.2/' -- c58_hierarchyid
+                    , '0E984725-C51C-4BF4-9960-E1C80E27ABA0' -- c59_uniqueidentifier
+                );
+
+        CREATE TABLE author
+        (
+            id int identity NOT NULL PRIMARY KEY,
+            name nvarchar(450) UNIQUE,
+            createdAt datetime
+        );
+
+        INSERT INTO
+                author
+            (name, createdAt)
+        VALUES
+            ('Author 1', '2017-09-21T09:39:44Z'),
+            ('Author 2', '2017-09-21T09:50:44Z');
+
+        CREATE TABLE article
+        (
+            id int identity NOT NULL PRIMARY KEY,
+            title TEXT,
+            content TEXT,
+            is_published BIT,
+            published_on TIMESTAMP,
+            author_id int,
+            co_author_id int,
+            FOREIGN KEY (author_id) REFERENCES author(id),
+            FOREIGN KEY (co_author_id) REFERENCES author(id),
+        );
+
+        INSERT INTO
+                article
+            (title, content, author_id, is_published)
+        VALUES
+            (
+                'Article 1',
+                'Sample article content 1',
+                1,
+                0
+                ),
+            (
+                'Article 2',
+                'Sample article content 2',
+                1,
+                1
+                ),
+            (
+                'Article 3',
+                'Sample article content 3',
+                2,
+                1
+                );
+
+        CREATE TABLE [user]
+        (
+            id bigint identity NOT NULL,
+            name TEXT NOT NULL,
+            number BIGINT,
+            CONSTRAINT users_pk PRIMARY KEY (id)
+        );
+
+        INSERT INTO
+                    [user]
+            (name, number)
+        VALUES
+            ('User 1', 123456789),
+            ('User 2', 123456780);
+
+        CREATE TABLE person
+        (
+            id int identity NOT NULL PRIMARY KEY,
+            name text
+        );
+
+        INSERT INTO
+                    person
+            (name)
+        VALUES
+            ('John\'),
+            (' Clarke '),
+            (' clarke '),
+            (NULL);
+
+        CREATE TABLE author_multi
+        (
+            id1 integer NOT NULL,
+            id2 integer NOT NULL,
+            name text,
+            PRIMARY KEY (id1, id2)
+        );
+
+        INSERT INTO author_multi
+            (id1, id2, name)
+        VALUES
+            (1, 1, 'Author 1'),
+            (2, 2, 'Author 2');
+
+        CREATE TABLE article_multi
+        (
+            id int IDENTITY NOT NULL PRIMARY KEY,
+            title text,
+            content text,
+            author_id1 integer,
+            author_id2 integer,
+            is_published bit,
+            FOREIGN KEY (author_id1, author_id2) REFERENCES author_multi (id1, id2)
+        );
+
+        INSERT INTO article_multi
+            (title, content, author_id1, author_id2, is_published)
+        VALUES
+            ('Article 1', 'Sample article content 1', 1, 1, 0),
+            ('Article 2', 'Sample article content 2', 1, 1, 1),
+            ('Article 3', 'Sample article content 3', 2, 2, 1);

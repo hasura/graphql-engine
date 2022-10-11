@@ -4,18 +4,18 @@ status: 200
 response:
   data:
     author:
-    - name: Author 2
-      id: 2
+    - id: 2
+      name: Author 2
       articles:
-      - content: Sample article content 3
-        id: 3
+      - id: 3
         title: Article 3
-    - name: Author 1
-      id: 1
+        content: Sample article content 3
+    - id: 1
+      name: Author 1
       articles:
-      - content: Sample article content 2
-        id: 2
+      - id: 2
         title: Article 2
+        content: Sample article content 2
 query:
   query: |
     query {

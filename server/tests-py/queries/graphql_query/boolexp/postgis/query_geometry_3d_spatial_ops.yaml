@@ -1,0 +1,26 @@
+description: Test PostGIS 3D spatial operators on a geometry column
+url: /v1/graphql
+status: 200
+response:
+  data:
+    within:
+      - type: raised point
+query:
+  query: |
+    query geometry($point: geometry!) {
+      within: geom_3d_table(
+        where: {
+          geom_col: {_st_3d_d_within: {distance: 5, from: $point}}
+          }
+      ) {
+        type
+      }
+    }
+  variables:
+    point:
+      coordinates: [ 1, 1, 13 ]
+      type: Point
+      crs:
+        type: name
+        properties:
+          name: urn:ogc:def:crs:EPSG::0

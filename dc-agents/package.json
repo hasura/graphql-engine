@@ -1,0 +1,25 @@
+{
+  "name": "@hasura/dc-agents",
+  "private": true,
+  "workspaces": [
+    "dc-api-types",
+    "reference",
+    "sqlite"
+  ],
+  "scripts": {
+    "generate-types": "./scripts/generate-types.sh",
+    "update-api-types-deps": "./scripts/update-api-types-deps.sh",
+    "derive-lockfiles": "ts-node ./scripts/derive-lockfile.ts -l package-lock.json -w reference -w sqlite"
+  },
+  "dependencies": {
+    "yargs": "^17.5.1"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.3",
+    "@types/node": "^16.11.49",
+    "@types/yargs": "^17.0.11",
+    "openapi-typescript-codegen": "^0.23.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.7.4"
+  }
+}

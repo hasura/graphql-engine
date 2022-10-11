@@ -1,5 +1,7 @@
 import React from 'react';
-import styles from '../Common.scss';
+import { FaEdit } from 'react-icons/fa';
+import styles from '../Common.module.scss';
+import { TryOperation } from './TryOperation';
 
 class Heading extends React.Component {
   state = {
@@ -31,12 +33,25 @@ class Heading extends React.Component {
   };
 
   render = () => {
-    const { editable, currentValue, save, loading, property } = this.props;
-
+    const {
+      editable,
+      currentValue,
+      save,
+      loading,
+      property,
+      table,
+      dispatch,
+      source,
+    } = this.props;
     const { text, isEditting } = this.state;
 
     if (!editable) {
-      return <h2 className={styles.heading_text}>{currentValue}</h2>;
+      return (
+        <div className={styles.editable_heading_text}>
+          <h2>{currentValue}</h2>
+          <TryOperation table={table} dispatch={dispatch} source={source} />
+        </div>
+      );
     }
 
     if (!save) {
@@ -47,12 +62,13 @@ class Heading extends React.Component {
       return (
         <div className={styles.editable_heading_text}>
           <h2>{currentValue}</h2>
+          <TryOperation table={table} dispatch={dispatch} source={source} />
           <div
             onClick={this.toggleEditting}
             className={styles.editable_heading_action}
             data-test={`heading-edit-${property}`}
           >
-            <i className="fa fa-edit" />
+            <FaEdit />
           </div>
         </div>
       );

@@ -1,0 +1,3 @@
+table:
+  dataset: london_cycles
+  name: cycle_stations

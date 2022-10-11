@@ -1,0 +1,40 @@
+description: Fetch data from locations table with distance from a point
+url: /v1/graphql
+status: 200
+response:
+  data:
+    locations:
+    - location:
+        type: Point
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
+        coordinates:
+        - 0
+        - 0
+      distance: 0
+    - location:
+        type: Point
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
+        coordinates:
+        - 1
+        - 0
+      distance: 111319
+query:
+  variables:
+    point:
+      type: Point
+      coordinates:
+      - 0
+      - 0
+  query: |
+    query ($point: json) {
+      locations{
+        location
+        distance(args: {from: $point})
+      }
+    }

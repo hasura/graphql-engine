@@ -1,0 +1,35 @@
+description: Run create_users sync action mutation with valid emails
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      create_users(users: [{email: "blake@hasura.io", name: "Blake"}, {email: "elsa@hasura.io", name: "Elsa"}]){
+        id
+        __typename
+        user {
+          __typename
+          name
+          email
+          is_admin
+        }
+      }
+    }
+
+response:
+  data:
+    create_users:
+    - id: 1
+      __typename: UserId
+      user:
+        __typename: user
+        name: Blake
+        email: blake@hasura.io
+        is_admin: false
+    - id: 2
+      __typename: UserId
+      user:
+        __typename: user
+        name: Elsa
+        email: elsa@hasura.io
+        is_admin: false

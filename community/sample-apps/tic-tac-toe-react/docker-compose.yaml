@@ -12,12 +12,12 @@ services:
       POSTGRES_CONNECTION_STRING: postgres://postgres:@postgres:5432/postgres
     build: ./remote-schema
   tic-tac-toe-react-hge:
-    image: hasura/graphql-engine:v1.0.0-alpha44.cli-migrations
+    image: hasura/graphql-engine:v1.3.3.cli-migrations
     depends_on:
     - tic-tac-toe-react-remote-schema
     restart: always
     environment:
-      HASURA_GRAPHQL_DATABASE_URL: postgres://postgres:@postgres:5432/postgres
+      SAMPLE_APPS_DATABASE_URL: postgres://postgres:@postgres:5432/postgres
       HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
       TIC_TAC_REMOTE_SCHEMA_URL: http://tic-tac-toe-react-remote-schema:4000
     volumes:

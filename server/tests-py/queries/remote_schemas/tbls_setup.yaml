@@ -1,5 +1,6 @@
 type: bulk
 args:
+
 - type: run_sql
   args:
     sql: |
@@ -8,16 +9,25 @@ args:
         code TEXT,
         name TEXT
       );
+      CREATE TABLE authors (
+        id SERIAL PRIMARY KEY,
+        name TEXT
+      );
 
 - type: track_table
   args:
     schema: public
     name: hello
 
+- type: track_table
+  args:
+    schema: public
+    name: authors
+
 - type: add_remote_schema
   args:
     name: simple2-graphql
     comment: testing
     definition:
-      url: http://localhost:5000/user-graphql
+      url: '{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/user-graphql'
       forward_client_headers: false

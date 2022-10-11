@@ -6,15 +6,14 @@ response:
     update_person:
       affected_rows: 1
       returning:
-      - details:
-          address: 
-            city: Sydney
-            country: Australia
+      - id: 1
+        details:
           name:
-            first: John
             last: Taylor
-        id: 1
-
+            first: John
+          address:
+            country: Australia
+            city: Sydney
 query:
   variables:
     value:

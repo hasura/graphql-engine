@@ -1,0 +1,29 @@
+.toc-list {
+  display: grid;
+  grid-template-columns: repeat(3, auto);
+  padding: 0;
+}
+
+.toc-list-head {
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 15px 5px 10px 0;
+  font-weight: bold;
+}
+
+.toc-list-content {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1300px) {
+  .toc-list {
+    grid-template-columns: repeat(2, auto);
+  }
+}
+
+@media (max-width: 660px) {
+  .toc-list {
+    grid-template-columns: auto;
+  }
+}

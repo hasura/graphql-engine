@@ -1,0 +1,4 @@
+type: pg_untrack_table
+args:
+  table: author
+  source: pg1

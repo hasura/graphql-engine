@@ -1,0 +1,21 @@
+description: Bulk query
+url: /v1/query
+status: 200
+response:
+  - []
+  - result_type: TuplesOk
+    result:
+      - ['count']
+      - ['0']
+query:
+  type: bulk
+  args:
+  - type: select
+    args:
+      table: author
+      columns:
+        - name
+  - type: run_sql
+    args:
+      sql: "select count(*) from author"
+      read_only: true

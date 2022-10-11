@@ -1,0 +1,18 @@
+{
+  "plugins": ["cypress", "chai-friendly"],
+  "env": {
+    "cypress/globals": true
+  },
+  "rules": {
+    "no-unused-expressions": "off",
+    "chai-friendly/no-unused-expressions": "error",
+    "no-underscore-dangle": "off",
+    "@typescript-eslint/no-unused-expressions": "off",
+    "no-plusplus": [
+      "error",
+      {
+        "allowForLoopAfterthoughts": true
+      }
+    ]
+  }
+}

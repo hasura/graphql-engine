@@ -1,22 +1,14 @@
-import React from "react"
-import AuthorList from "../components/AuthorList"
+import React from "react";
 
-const Index = ({ data }) => (
+import AddAuthor from "../components/AddAuthor";
+import AuthorList from "../components/AuthorList";
+
+const Index = () => (
   <div>
-    <h1>My Authors </h1>
-    <AuthorList authors={data.hasura.author} />
+    <h1>My Authors</h1>
+    <AddAuthor />
+    <AuthorList />
   </div>
-)
+);
 
 export default Index;
-
-export const query = graphql`
-  query AuthorQuery {
-    hasura {
-      author {
-        id
-        name
-      }
-    }
-  }
-`

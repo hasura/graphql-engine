@@ -1,0 +1,9 @@
+description: Successful call of an endpoint with an url encoded query arg
+url: /api/rest/with_arg?first_name=%46oo
+method: GET
+status: 200
+query:
+response:
+  test_table:
+    - first_name: Foo
+      last_name: Bar

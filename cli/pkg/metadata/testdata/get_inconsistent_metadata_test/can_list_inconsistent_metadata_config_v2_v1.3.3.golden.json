@@ -1,0 +1,13 @@
+{
+  "is_consistent": false,
+  "inconsistent_objects": [
+    {
+      "definition": {
+        "schema": "public",
+        "name": "t1"
+      },
+      "reason": "no such table/view exists in postgres: \"t1\"",
+      "type": "table"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries: 1
+
+- description: PG rename source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: rename_source
+    args:
+      name: pg1
+      new_name: pg_renamed_1
+
+- description: PG Drop Source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg_renamed_1

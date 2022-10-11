@@ -1,0 +1,20 @@
+- description: Select `ltree` paths matching an `lquery` regex
+  url: /v1/query
+  status: 200
+  response:
+    - path: "Tree.Science.Astronomy"
+    - path: "Tree.Science.Astronomy.Astrophysics"
+    - path: "Tree.Science.Astronomy.Cosmology"
+    - path: "Tree.Collections.Pictures.Astronomy"
+    - path: "Tree.Collections.Pictures.Astronomy.Stars"
+    - path: "Tree.Collections.Pictures.Astronomy.Galaxies"
+    - path: "Tree.Collections.Pictures.Astronomy.Astronauts"
+  query:
+    type: select
+    args:
+      table: tree
+      where:
+        path:
+          $matches: "*.Astronomy.*"
+      columns:
+        - path

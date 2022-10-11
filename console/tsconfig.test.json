@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "types": ["react", "jest"]
+  },
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*", "src/**/*.test.ts", "src/**/*.test.tsx"],
+  "exclude": ["node_modules", "cypress"]
+}

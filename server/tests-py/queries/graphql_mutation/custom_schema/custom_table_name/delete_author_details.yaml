@@ -1,0 +1,34 @@
+description: deletes from table "author details" with custom name "author_details"
+status: 200
+url: /v1/graphql
+response:
+  data:
+    delete_author_details:
+      affected_rows: 1
+      returning:
+        - id: 1
+          name: Author 1
+    delete_author_details_by_pk:
+      id: 2
+      name: Author 2
+query:
+  query: |
+    mutation {
+      delete_author_details(
+        where: {
+          id: {_eq: 1}
+        }
+      ) {
+        affected_rows
+        returning {
+          id
+          name
+        }
+      }
+      delete_author_details_by_pk(
+          id: 2
+      ) {
+          id
+          name
+      }
+    }

@@ -4,14 +4,6 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table author
-
-- type: run_sql
-  args:
-    sql: |
-      drop table address
-
-- type: run_sql
-  args:
-    sql: |
-      drop table resident
+      drop table author;
+      drop table address;
+      drop table resident;

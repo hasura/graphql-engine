@@ -9,8 +9,8 @@ response:
   data:
     insert_article:
       returning:
-      - content: Sample article content 4
-        title: Article 4
+      - title: Article 4
+        content: Sample article content 4
 query:
   query: |
     mutation insert_article {

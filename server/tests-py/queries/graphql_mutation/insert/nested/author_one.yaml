@@ -1,0 +1,21 @@
+description: Insert a single row in author table
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      insert_author_one(
+        object: {
+          name: "Author 3"
+          is_registered: true
+        }
+      ){
+        id
+        name
+      }
+    }
+response:
+  data:
+    insert_author_one:
+      id: 3
+      name: Author 3

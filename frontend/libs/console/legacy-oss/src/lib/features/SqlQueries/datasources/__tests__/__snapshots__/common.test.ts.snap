@@ -1,0 +1,109 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Generate Where Clauses generates where clause for multiple sql schemas 1`] = `"WHERE (nspm.relname in ('public','books') OR t.schema_name in ('public','books'))"`;
+
+exports[`Generate Where Clauses generates where clause for multiple sql schemas 2`] = `"AND (nspm.relname in ('public','books') OR t.schema_name in ('public','books'))"`;
+
+exports[`Generate Where Clauses generates where clause for multiple sql tables 1`] = `
+"WHERE ((
+        pgc.relname = 'users'
+          AND nspm.relname = 'public'
+        ) OR (
+        pgc.relname = 'debtors'
+          AND nspm.relname = 'finance'
+        ) OR (
+        pgc.relname = 'employees'
+          AND nspm.relname = 'human_resources'
+        ) OR (
+        t.table_name = 'users'
+          AND t.schema_name = 'public'
+        ) OR (
+        t.table_name = 'debtors'
+          AND t.schema_name = 'finance'
+        ) OR (
+        t.table_name = 'employees'
+          AND t.schema_name = 'human_resources'
+        ))"
+`;
+
+exports[`Generate Where Clauses generates where clause for multiple sql tables 2`] = `
+"AND ((
+        pgc.relname = 'users'
+          AND nspm.relname = 'public'
+        ) OR (
+        pgc.relname = 'debtors'
+          AND nspm.relname = 'finance'
+        ) OR (
+        pgc.relname = 'employees'
+          AND nspm.relname = 'human_resources'
+        ) OR (
+        t.table_name = 'users'
+          AND t.schema_name = 'public'
+        ) OR (
+        t.table_name = 'debtors'
+          AND t.schema_name = 'finance'
+        ) OR (
+        t.table_name = 'employees'
+          AND t.schema_name = 'human_resources'
+        ))"
+`;
+
+exports[`Generate Where Clauses generates where clause for schemas 1`] = `"WHERE (nspm.relname in ('public','books'))"`;
+
+exports[`Generate Where Clauses generates where clause for schemas 2`] = `"WHERE (t.schema_name in ('public','books'))"`;
+
+exports[`Generate Where Clauses generates where clause for schemas 3`] = `"AND (nspm.relname in ('public','books'))"`;
+
+exports[`Generate Where Clauses generates where clause for schemas 4`] = `"AND (t.schema_name in ('public','books'))"`;
+
+exports[`Generate Where Clauses generates where clause for tables 1`] = `
+"WHERE ((
+        pgc.relname = 'users'
+          AND nspm.relname = 'public'
+        ) OR (
+        pgc.relname = 'debtors'
+          AND nspm.relname = 'finance'
+        ) OR (
+        pgc.relname = 'employees'
+          AND nspm.relname = 'human_resources'
+        ))"
+`;
+
+exports[`Generate Where Clauses generates where clause for tables 2`] = `
+"WHERE ((
+        t.table_name = 'users'
+          AND t.schema_name = 'public'
+        ) OR (
+        t.table_name = 'debtors'
+          AND t.schema_name = 'finance'
+        ) OR (
+        t.table_name = 'employees'
+          AND t.schema_name = 'human_resources'
+        ))"
+`;
+
+exports[`Generate Where Clauses generates where clause for tables 3`] = `
+"AND ((
+        pgc.relname = 'users'
+          AND nspm.relname = 'public'
+        ) OR (
+        pgc.relname = 'debtors'
+          AND nspm.relname = 'finance'
+        ) OR (
+        pgc.relname = 'employees'
+          AND nspm.relname = 'human_resources'
+        ))"
+`;
+
+exports[`Generate Where Clauses generates where clause for tables 4`] = `
+"AND ((
+        t.table_name = 'users'
+          AND t.schema_name = 'public'
+        ) OR (
+        t.table_name = 'debtors'
+          AND t.schema_name = 'finance'
+        ) OR (
+        t.table_name = 'employees'
+          AND t.schema_name = 'human_resources'
+        ))"
+`;

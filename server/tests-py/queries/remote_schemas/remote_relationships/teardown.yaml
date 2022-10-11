@@ -1,0 +1,21 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    sql: |
+      drop table if exists custom.profiles;
+      drop table if exists custom.user_profiles;
+      drop schema custom cascade;
+      drop schema if exists custom;
+      drop table if exists authors;
+      drop table if exists employees;
+      drop function if exists total_marks(students);
+      drop function if exists total_marks_offset(students, integer);
+      drop function if exists total_marks_session(students, json);
+      drop table if exists students;
+      drop table if exists regression_7172;
+
+# also drops remote relationship as direct dep
+- type: remove_remote_schema
+  args:
+    name: my-remote-schema

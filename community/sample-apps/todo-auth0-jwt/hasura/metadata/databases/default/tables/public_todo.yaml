@@ -1,0 +1,40 @@
+delete_permissions:
+- permission:
+    filter:
+      user_id:
+        _eq: X-HASURA-USER-ID
+  role: user
+insert_permissions:
+- permission:
+    check:
+      user_id:
+        _eq: X-HASURA-USER-ID
+    columns:
+    - id
+    - task
+    - completed
+    - user_id
+  role: user
+select_permissions:
+- permission:
+    columns:
+    - task
+    - completed
+    - user_id
+    - id
+    filter:
+      user_id:
+        _eq: X-HASURA-USER-ID
+  role: user
+table:
+  name: todo
+  schema: public
+update_permissions:
+- permission:
+    check: null
+    columns:
+    - completed
+    filter:
+      user_id:
+        _eq: X-HASURA-USER-ID
+  role: user

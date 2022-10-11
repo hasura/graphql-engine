@@ -1,0 +1,7 @@
+query: |
+  subscription {
+    articles {
+      title
+      content
+    }
+  }

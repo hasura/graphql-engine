@@ -1,0 +1,60 @@
+description: Remote relationship GraphQL query with errors
+url: /v1/graphql
+status: 200
+# Since errorMsg in not non-null we should both return a valid result as well
+# as propogate the error the remote server raised.
+response:
+  # data:
+  #   profiles:
+  #     - id: 1
+  #       messageBasic:
+  #           msg: You win!
+  #           errorMsg: null
+  #     - id: 2
+  #       messageBasic:
+  #           msg: You lose!
+  #           errorMsg: null
+  #     - id: 3
+  #       messageBasic:
+  #           msg: Another alice
+  #           errorMsg: null
+  errors:
+  - extensions:
+      internal:
+        errors:
+        - path:
+          - f0
+          - errorMsg
+          message: intentional-error
+          locations:
+          - line: 1
+            column: 36
+        - path:
+          - f1
+          - errorMsg
+          message: intentional-error
+          locations:
+          - line: 1
+            column: 74
+        - path:
+          - f2
+          - errorMsg
+          message: intentional-error
+          locations:
+          - line: 1
+            column: 112
+      path: $
+      code: unexpected
+    message: Errors from remote server
+query:
+  query: |
+    query {
+      custom_profiles {
+        id
+        messageBasic {
+          msg
+          errorMsg
+        }
+      }
+
+    }

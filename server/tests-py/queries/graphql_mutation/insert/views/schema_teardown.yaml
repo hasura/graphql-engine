@@ -17,22 +17,11 @@ args:
       schema: public
       name: article
 
-#Drop views
+#Drop views and tables
 - type: run_sql
   args:
     sql: |
-      drop view author_simple
-- type: run_sql
-  args:
-    sql: |
-      drop view author_complex
-
-#Drop tables
-- type: run_sql
-  args:
-    sql: |
-      drop table article
-- type: run_sql
-  args:
-    sql: |
-      drop table author
+      drop view author_simple;
+      drop view author_complex;
+      drop table article;
+      drop table author;

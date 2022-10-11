@@ -1,0 +1,94 @@
+# Test case for bug reported at https://github.com/hasura/graphql-engine/issues/6631
+description: Action introspection to check return types
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      __schema {
+        mutationType {
+          fields {
+            name
+            type {
+              name
+              kind
+              fields {
+                name
+                type {
+                  kind
+                  ofType {
+                    name
+                    kind
+                    ofType {
+                      name
+                      kind
+                    }
+                  }
+                }
+              }
+              ofType {
+                name
+                kind
+                ofType {
+                  name
+                  kind
+                  fields {
+                    name
+                    type {
+                      kind
+                      ofType {
+                        name
+                        kind
+                        ofType {
+                          name
+                          kind
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+response:
+  data:
+    __schema:
+      mutationType:
+        fields:
+        - name: actionName
+          type:
+            name:
+            kind: LIST
+            fields:
+            ofType:
+              name:
+              kind: NON_NULL
+              ofType:
+                name: SampleOutput
+                kind: OBJECT
+                fields:
+                - name: id
+                  type:
+                    kind: LIST
+                    ofType:
+                      name:
+                      kind: NON_NULL
+                      ofType:
+                        name: String
+                        kind: SCALAR
+        - name: actionName2
+          type:
+            name: SampleOutput2
+            kind: OBJECT
+            fields:
+            - name: id
+              type:
+                kind: NON_NULL
+                ofType:
+                  name: String
+                  kind: SCALAR
+                  ofType:
+            ofType:

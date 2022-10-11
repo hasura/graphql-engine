@@ -1,0 +1,17 @@
+requests-cache
+ruamel.yaml
+docker
+psycopg2
+colorama
+inflection
+py-cpuinfo
+dash
+dash-renderer
+dash-html-components
+dash-bootstrap-components
+dash-core-components
+graphene==3.0b1
+matplotlib
+pandas
+boto3
+seaborn

@@ -1,20 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-table/react-table.css';
+import {
+  FaCaretDown,
+  FaCaretUp,
+  FaClone,
+  FaCompress,
+  FaEdit,
+  FaExpand,
+  FaRegCaretSquareRight,
+  FaSort,
+  FaTrash,
+} from 'react-icons/fa';
 import '../../../Common/TableCommon/ReactTableOverrides.css';
-import DragFoldTable from '../../../Common/TableCommon/DragFoldTable';
+import DragFoldTable, {
+  getColWidth,
+} from '../../../Common/TableCommon/DragFoldTable';
 
 import Dropdown from '../../../Common/Dropdown/Dropdown';
 
-import InvokeManualTrigger from '../../EventTrigger/Common/InvokeManualTrigger/InvokeManualTrigger';
+import InvokeManualTrigger from '../../Events/EventTriggers/InvokeManualTrigger/InvokeManualTrigger';
 
 import {
   vExpandRel,
   vCloseRel,
   V_SET_ACTIVE,
+  deleteItems,
   deleteItem,
   vExpandRow,
   vCollapseRow,
 } from './ViewActions'; // eslint-disable-line no-unused-vars
+
+import { Button } from '@/new-components/Button';
+
+import { LegacyRunQueryContainer } from '@/features/BrowseRows';
+import { PaginationWithOnlyNavContainer } from '@/new-components/PaginationWithOnlyNav/PaginationWithOnlyNavContainer';
 
 import {
   setOrderCol,
@@ -22,55 +41,88 @@ import {
   removeOrder,
   runQuery,
   setOffset,
-  setLimit,
   addOrder,
 } from './FilterActions';
 
 import _push from '../push';
-import { ordinalColSort, findTableFromRel } from '../utils';
-import FilterQuery from './FilterQuery';
+import { ordinalColSort } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
-import Button from '../../../Common/Button/Button';
 
 import { E_SET_EDITITEM } from './EditActions';
 import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
+import {
+  getTableInsertRowRoute,
+  getTableEditRowRoute,
+} from '../../../Common/utils/routesUtils';
+import {
+  findTable,
+  getRelationshipRefTable,
+  dataSource,
+  getTableCustomColumnName,
+  isFeatureSupported,
+  currentDriver,
+} from '../../../../dataSources';
+import { updateSchemaInfo } from '../DataActions';
+import {
+  persistColumnCollapseChange,
+  getPersistedCollapsedColumns,
+  persistColumnOrderChange,
+  getPersistedColumnsOrder,
+} from './tableUtils';
+import { compareRows, isTableWithPK } from './utils';
 
-const ViewRows = ({
-  curTableName,
-  currentSchema,
-  curQuery,
-  curFilter,
-  curRows,
-  curPath,
-  parentTableName,
-  curDepth,
-  activePath,
-  schemas,
-  dispatch,
-  ongoingRequest,
-  isProgressing,
-  lastError,
-  lastSuccess,
-  isView,
-  count,
-  expandedRow,
-  manualTriggers = [],
-  updateInvocationRow,
-  updateInvocationFunction,
-  triggeredRow,
-  triggeredFunction,
-}) => {
-  const styles = require('../../../Common/TableCommon/Table.scss');
+const ViewRows = props => {
+  const {
+    curTableName,
+    currentSchema,
+    curQuery,
+    curFilter,
+    curRows,
+    curPath = [],
+    parentTableName,
+    curDepth,
+    activePath,
+    schemas,
+    dispatch,
+    ongoingRequest,
+    isProgressing,
+    lastError,
+    lastSuccess,
+    isView,
+    count,
+    expandedRow,
+    manualTriggers = [],
+    readOnlyMode,
+    shouldHidePagination,
+    currentSource,
+    useCustomPagination,
+  } = props;
+  const [invokedRow, setInvokedRow] = useState(null);
+  const [invocationFunc, setInvocationFunc] = useState(null);
+  const [selectedRows, setSelectedRows] = useState([]);
+  useEffect(() => {
+    setSelectedRows([]);
+  }, [curTableName, currentSchema]);
+
+  const NO_PRIMARY_KEY_MSG = 'No primary key to identify row';
 
   // Invoke manual trigger status
   const invokeTrigger = (trigger, row) => {
-    updateInvocationRow(row);
-    updateInvocationFunction(trigger);
+    setInvokedRow(row);
+    setInvocationFunc(trigger);
   };
 
   const onCloseInvokeTrigger = () => {
-    updateInvocationRow(-1);
-    updateInvocationFunction(null);
+    setInvokedRow(null);
+    setInvokedRow(null);
+  };
+
+  const handleAllCheckboxChange = e => {
+    if (e.target.checked) {
+      setSelectedRows(curRows);
+    } else {
+      setSelectedRows([]);
+    }
   };
 
   const checkIfSingleRow = _curRelName => {
@@ -97,106 +149,66 @@ const ViewRows = ({
     return _isSingleRow;
   };
 
-  const checkIfHasPrimaryKey = _tableSchema => {
-    return (
-      _tableSchema.primary_key && _tableSchema.primary_key.columns.length > 0
-    );
-  };
-
-  const getGridHeadings = (_columns, _relationships) => {
+  const getGridHeadings = (_columns, _relationships, _disableBulkSelect) => {
     const _gridHeadings = [];
-
-    const getColWidth = (header, contentRows = []) => {
-      const MAX_WIDTH = 600;
-      const HEADER_PADDING = 42;
-      const CONTENT_PADDING = 18;
-      const HEADER_FONT = 'bold 16px Gudea';
-      const CONTENT_FONT = '14px Gudea';
-
-      const getTextWidth = (text, font) => {
-        // Doesn't work well with non-monospace fonts
-        // const CHAR_WIDTH = 8;
-        // return text.length * CHAR_WIDTH;
-
-        // if given, use cached canvas for better performance
-        // else, create new canvas
-        const canvas =
-          getTextWidth.canvas ||
-          (getTextWidth.canvas = document.createElement('canvas'));
-
-        const context = canvas.getContext('2d');
-        context.font = font;
-
-        const metrics = context.measureText(text);
-        return metrics.width;
-      };
-
-      let maxContentWidth = 0;
-      for (let i = 0; i < contentRows.length; i++) {
-        if (contentRows[i] !== undefined && contentRows[i][header] !== null) {
-          const content = contentRows[i][header];
-
-          let contentString;
-          if (content === null || content === undefined) {
-            contentString = 'NULL';
-          } else if (typeof content === 'object') {
-            contentString = JSON.stringify(content, null, 4);
-          } else {
-            contentString = content.toString();
-          }
-
-          const currLength = getTextWidth(contentString, CONTENT_FONT);
-
-          if (currLength > maxContentWidth) {
-            maxContentWidth = currLength;
-          }
-        }
-      }
-
-      const maxContentCellWidth = maxContentWidth + CONTENT_PADDING;
-
-      const headerCellWidth =
-        getTextWidth(header, HEADER_FONT) + HEADER_PADDING;
-
-      return Math.min(
-        MAX_WIDTH,
-        Math.max(maxContentCellWidth, headerCellWidth)
-      );
-    };
 
     _gridHeadings.push({
       Header: '',
       accessor: 'tableRowActionButtons',
       id: 'tableRowActionButtons',
-      width: 152,
+      width: 182,
+    });
+
+    _gridHeadings.push({
+      Header: (
+        <div className="flex w-full justify-center items-center">
+          <input
+            checked={
+              curRows.length > 0 && selectedRows.length === curRows.length
+            }
+            disabled={
+              _disableBulkSelect ||
+              !isFeatureSupported('tables.browse.bulkRowSelect')
+            }
+            title={
+              _disableBulkSelect
+                ? 'No primary key to identify row'
+                : 'feature not supported'
+            }
+            type="checkbox"
+            onChange={handleAllCheckboxChange}
+            data-test="select-all-rows"
+          />
+        </div>
+      ),
+      accessor: 'tableRowSelectAction',
+      id: 'tableRowSelectAction',
+      width: 60,
     });
 
     _columns.map(col => {
       const columnName = col.column_name;
 
-      let sortIcon = 'fa-sort';
+      let sortIcon = <FaSort />;
       if (curQuery.order_by && curQuery.order_by.length) {
-        sortIcon = '';
-
         curQuery.order_by.forEach(orderBy => {
-          if (orderBy.column === columnName) {
-            sortIcon = orderBy.type === 'asc' ? 'fa-caret-up' : 'fa-caret-down';
+          if (orderBy.column === col.id) {
+            sortIcon = orderBy.type === 'asc' ? <FaCaretUp /> : <FaCaretDown />;
           }
         });
       }
 
       _gridHeadings.push({
         Header: (
-          <div className="ellipsis" title="Click to sort">
-            <span className={styles.tableHeaderCell}>
-              {columnName} <i className={'fa ' + sortIcon} />
-            </span>
+          <div className="flex">
+            <div>{columnName}</div>
+            <div className="absolute right-2.5">{sortIcon}</div>
           </div>
         ),
         accessor: columnName,
-        id: columnName,
+        id: col.id,
         foldable: true,
-        width: getColWidth(columnName, curRows),
+        width: getColWidth(col.id, curRows),
       });
     });
 
@@ -205,8 +217,8 @@ const ViewRows = ({
 
       _gridHeadings.push({
         Header: (
-          <div className="ellipsis">
-            <span className={styles.tableHeaderCell}>{relName}</span>
+          <div>
+            <div>{relName}</div>
           </div>
         ),
         accessor: relName,
@@ -219,7 +231,54 @@ const ViewRows = ({
     return _gridHeadings;
   };
 
-  const getGridRows = (_tableSchema, _hasPrimaryKey, _isSingleRow) => {
+  const handleCheckboxChange = (row, e, tableSchema) => {
+    if (e.target.checked) {
+      setSelectedRows(prev => [...prev, row]);
+    } else {
+      setSelectedRows(prev =>
+        prev.filter(prevRow => !compareRows(prevRow, row, tableSchema, isView))
+      );
+    }
+  };
+
+  const getPKClause = (row, hasPrimaryKey, tableSchema) => {
+    const pkClause = {};
+
+    if (!isView && hasPrimaryKey) {
+      tableSchema.primary_key.columns.forEach(key => {
+        pkClause[key] = row[key];
+      });
+    } else if (tableSchema.unique_constraints?.length) {
+      tableSchema.unique_constraints[0].columns.forEach(key => {
+        pkClause[key] = row[key];
+      });
+    } else {
+      tableSchema.columns
+        .filter(c => !dataSource.isJsonColumn(c))
+        .forEach(key => {
+          pkClause[key.column_name] = row[key.column_name];
+        });
+    }
+
+    Object.keys(pkClause).forEach(key => {
+      if (Array.isArray(pkClause[key])) {
+        pkClause[key] = dataSource.arrayToPostgresArray(pkClause[key]);
+      }
+    });
+
+    return pkClause;
+  };
+
+  const tableSchema = schemas.find(
+    x => x.table_name === curTableName && x.table_schema === currentSchema
+  );
+
+  const getGridRows = (
+    _tableSchema,
+    _hasPrimaryKey,
+    _isSingleRow,
+    _disableBulkSelect
+  ) => {
     const _gridRows = [];
 
     curRows.forEach((row, rowIndex) => {
@@ -228,35 +287,19 @@ const ViewRows = ({
       const rowCellIndex = `${curTableName}-${rowIndex}`;
       const isExpanded = expandedRow === rowCellIndex;
 
-      const getPKClause = () => {
-        const pkClause = {};
-
-        if (!isView && _hasPrimaryKey) {
-          _tableSchema.primary_key.columns.map(pk => {
-            pkClause[pk] = row[pk];
-          });
-        } else {
-          _tableSchema.columns.map(k => {
-            pkClause[k.column_name] = row[k.column_name];
-          });
-        }
-
-        return pkClause;
-      };
-
       const getActionButtons = () => {
         let editButton;
         let cloneButton;
         let deleteButton;
         let expandButton;
-        let manualTriggersButton;
 
         const getActionButton = (
           type,
           icon,
           title,
           handleClick,
-          requirePK = false
+          requirePK = false,
+          featureSupported = true
         ) => {
           const disabled = requirePK && !_hasPrimaryKey;
 
@@ -265,18 +308,27 @@ const ViewRows = ({
             e.stopPropagation();
           };
 
+          const message = () => {
+            if (disabled) {
+              return 'No primary key to identify row';
+            } else if (!featureSupported) {
+              return 'feature not supported';
+            }
+            return title;
+          };
+
           return (
             <Button
-              className={styles.add_mar_right_small}
-              color="white"
-              size="xs"
-              onClick={disabled ? disabledOnClick : handleClick}
-              title={disabled ? 'No primary key to identify row' : title}
+              size="sm"
+              icon={icon}
+              className="mr-1"
+              title={message()}
+              disabled={disabled || !featureSupported}
+              onClick={
+                disabled || !featureSupported ? disabledOnClick : handleClick
+              }
               data-test={`row-${type}-button-${rowIndex}`}
-              disabled={disabled}
-            >
-              {icon}
-            </Button>
+            />
           );
         };
 
@@ -285,31 +337,40 @@ const ViewRows = ({
           let title;
           let handleClick;
 
-          const handleExpand = () => dispatch(vExpandRow(rowCellIndex));
-          const handleCollapse = () => dispatch(vCollapseRow());
+          const handleExpand = () => {
+            dispatch(vExpandRow(rowCellIndex));
+          };
+          const handleCollapse = () => {
+            dispatch(vCollapseRow());
+          };
 
           if (isExpanded) {
-            icon = 'fa-compress';
+            icon = <FaCompress />;
             title = 'Collapse row';
             handleClick = handleCollapse;
           } else {
-            icon = 'fa-expand';
+            icon = <FaExpand />;
             title = 'Expand row';
             handleClick = handleExpand;
           }
 
-          const expanderIcon = <i className={`fa ${icon}`} />;
-
-          return getActionButton('expand', expanderIcon, title, handleClick);
+          return getActionButton('expand', icon, title, handleClick);
         };
 
         const getEditButton = pkClause => {
-          const editIcon = <i className="fa fa-edit" />;
+          const editIcon = <FaEdit />;
 
           const handleEditClick = () => {
             dispatch({ type: E_SET_EDITITEM, oldItem: row, pkClause });
             dispatch(
-              _push(`/schema/${currentSchema}/tables/${curTableName}/edit`)
+              _push(
+                getTableEditRowRoute(
+                  currentSchema,
+                  currentSource,
+                  curTableName,
+                  true
+                )
+              )
             );
           };
 
@@ -320,15 +381,19 @@ const ViewRows = ({
             editIcon,
             editTitle,
             handleEditClick,
-            true
+            true,
+            isFeatureSupported('tables.browse.editRow')
           );
         };
 
         const getDeleteButton = pkClause => {
-          const deleteIcon = <i className="fa fa-trash" />;
+          const deleteIcon = <FaTrash />;
 
           const handleDeleteClick = () => {
-            dispatch(deleteItem(pkClause));
+            setSelectedRows(prev =>
+              prev.filter(r => !compareRows(r, pkClause, _tableSchema, isView))
+            );
+            dispatch(deleteItem(pkClause, curTableName, currentSchema));
           };
 
           const deleteTitle = 'Delete row';
@@ -338,17 +403,25 @@ const ViewRows = ({
             deleteIcon,
             deleteTitle,
             handleDeleteClick,
-            true
+            true,
+            isFeatureSupported('tables.browse.deleteRow')
           );
         };
 
         const getCloneButton = () => {
-          const cloneIcon = <i className="fa fa-clone" />;
+          const cloneIcon = <FaClone />;
 
           const handleCloneClick = () => {
             dispatch({ type: I_SET_CLONE, clone: row });
             dispatch(
-              _push(`/schema/${currentSchema}/tables/${curTableName}/insert`)
+              _push(
+                getTableInsertRowRoute(
+                  currentSchema,
+                  currentSource,
+                  curTableName,
+                  true
+                )
+              )
             );
           };
 
@@ -373,62 +446,51 @@ const ViewRows = ({
               content: (
                 <div>
                   <Button
-                    color="white"
-                    size="xs"
+                    size="sm"
+                    className="mr-1"
                     data-test={`run_manual_trigger_${m.name}`}
-                    onClick={() =>
-                      invokeTrigger.apply(undefined, [m.name, rowIndex])
-                    }
+                    onClick={() => invokeTrigger(m.name, rowIndex)}
                   >
                     Invoke
                   </Button>
-                  {`${m.name}`}
+                  {m.name}
                 </div>
               ),
             };
           });
 
-          const triggerIcon = <i className="fa fa-caret-square-o-right" />;
+          const triggerIcon = <FaRegCaretSquareRight />;
           const triggerTitle = 'Invoke event trigger';
 
-          const triggerBtn = getActionButton(
-            'trigger',
-            triggerIcon,
-            triggerTitle,
-            () => {}
-          );
-
-          const invokeManualTrigger = r =>
-            triggeredRow === rowIndex && (
-              <InvokeManualTrigger
-                args={r}
-                name={`${triggeredFunction}`}
-                onClose={onCloseInvokeTrigger}
-                key={`invoke_function_${triggeredFunction}`}
-                identifier={`invoke_function_${triggeredFunction}`}
-              />
-            );
-
           return (
-            <div className={styles.display_inline}>
+            <div className="inline">
               <Dropdown
                 testId={`data_browse_rows_trigger_${rowIndex}`}
                 options={triggerOptions}
                 position="right"
-                key={`invoke_data_dropdown_${rowIndex}`}
                 keyPrefix={`invoke_data_dropdown_${rowIndex}`}
               >
-                {triggerBtn}
+                {({ onClick }) =>
+                  getActionButton('trigger', triggerIcon, triggerTitle, onClick)
+                }
               </Dropdown>
-              {invokeManualTrigger(row)}
+              {invokedRow === rowIndex && (
+                <InvokeManualTrigger
+                  source={currentSource}
+                  args={row}
+                  name={`${invocationFunc}`}
+                  onClose={onCloseInvokeTrigger}
+                  identifier={`invoke_function_${invocationFunc}`}
+                />
+              )}
             </div>
           );
         };
 
-        const showActionBtns = !_isSingleRow && !isView;
+        const showActionBtns = !readOnlyMode && !_isSingleRow && !isView;
 
         if (showActionBtns) {
-          const pkClause = getPKClause();
+          const pkClause = getPKClause(row, _hasPrimaryKey, _tableSchema);
 
           editButton = getEditButton(pkClause);
           deleteButton = getDeleteButton(pkClause);
@@ -437,16 +499,17 @@ const ViewRows = ({
 
         // eslint-disable-next-line prefer-const
         expandButton = getExpandButton();
-        // eslint-disable-next-line prefer-const
-        manualTriggersButton = getManualTriggersButton();
 
         return (
-          <div key={rowIndex} className={styles.tableCellCenterAligned}>
+          <div
+            key={rowIndex}
+            className="flex w-full justify-center items-center !overflow-visible"
+          >
             {cloneButton}
             {editButton}
             {deleteButton}
             {expandButton}
-            {manualTriggersButton}
+            {getManualTriggersButton()}
           </div>
         );
       };
@@ -454,56 +517,96 @@ const ViewRows = ({
       // Insert Edit, Delete, Clone in a cell
       newRow.tableRowActionButtons = getActionButtons();
 
+      // Check for bulk actions
+      newRow.tableRowSelectAction = (
+        <div className="flex w-full justify-center items-center">
+          <input
+            type="checkbox"
+            disabled={
+              _disableBulkSelect ||
+              !isFeatureSupported('tables.browse.bulkRowSelect')
+            }
+            title={
+              _disableBulkSelect ? NO_PRIMARY_KEY_MSG : 'feature not supported'
+            }
+            checked={selectedRows.some(selectedRow =>
+              compareRows(selectedRow, row, _tableSchema, isView)
+            )}
+            onChange={e => handleCheckboxChange(row, e, _tableSchema, isView)}
+            data-test={`row-checkbox-${rowIndex}`}
+          />
+        </div>
+      );
+
       // Insert column cells
-      _tableSchema.columns.forEach(col => {
-        const columnName = col.column_name;
-
-        /* Row is a JSON object with `key` as the column name in the db
-         * and `value` as corresponding column value of the column in the database,
-         * Ex: author table with the following schema:
-         *  id int Primary key,
-         *  name text,
-         *  address json
-         *  `row`:
-         *    {
-         *      id: 1,
-         *      name: "Hasura",
-         *      address: {Hello: "World", Foo: "Bar"}
-         *    }
-         * */
-
-        const getColCellContent = () => {
-          const rowColumnValue = row[columnName];
-
-          let cellValue = '';
-          let cellTitle = '';
-
-          if (rowColumnValue === null) {
-            cellValue = <i>NULL</i>;
-            cellTitle = 'NULL';
-          } else if (rowColumnValue === undefined) {
-            cellValue = 'NULL';
-            cellTitle = cellValue;
-          } else if (typeof rowColumnValue === 'object') {
-            cellValue = JSON.stringify(rowColumnValue, null, 4);
-            cellTitle = cellValue;
-          } else {
-            cellValue = rowColumnValue.toString();
-            cellTitle = cellValue;
-          }
-
-          return (
-            <div
-              className={isExpanded ? styles.tableCellExpanded : ''}
-              title={cellTitle}
-            >
-              {cellValue}
-            </div>
+      _tableSchema.columns
+        .map(col => {
+          const customColumnName = getTableCustomColumnName(
+            tableSchema,
+            col.column_name
           );
-        };
+          if (customColumnName) {
+            return {
+              ...col,
+              column_name: customColumnName,
+              id: col?.column_name,
+            };
+          }
+          return { ...col, id: col.column_name };
+        })
+        .forEach(col => {
+          const columnName = col.column_name;
 
-        newRow[columnName] = getColCellContent();
-      });
+          /* Row is a JSON object with `key` as the column name in the db
+           * and `value` as corresponding column value of the column in the database,
+           * Ex: author table with the following schema:
+           *  id int Primary key,
+           *  name text,
+           *  address json
+           *  `row`:
+           *    {
+           *      id: 1,
+           *      name: "Hasura",
+           *      address: {Hello: "World", Foo: "Bar"}
+           *    }
+           * */
+
+          const getColCellContent = () => {
+            const rowColumnValue = row[col.id];
+
+            let cellValue = '';
+            let cellTitle = '';
+
+            if (rowColumnValue === null) {
+              cellValue = <i>NULL</i>;
+              cellTitle = 'NULL';
+            } else if (rowColumnValue === undefined) {
+              cellValue = 'NULL';
+              cellTitle = cellValue;
+            } else if (
+              col.data_type === 'json' ||
+              col.data_type === 'jsonb' ||
+              typeof rowColumnValue === 'object'
+            ) {
+              cellValue = JSON.stringify(rowColumnValue, null, 4);
+              cellTitle = cellValue;
+            } else {
+              cellValue = rowColumnValue.toString();
+              cellTitle = cellValue;
+            }
+
+            return (
+              <div
+                className={isExpanded ? 'whitespace-pre-wrap' : ''}
+                title={cellTitle}
+              >
+                {cellValue}
+              </div>
+            );
+          };
+
+          newRow[columnName] = getColCellContent();
+        });
 
       // Insert relationship cells
       _tableSchema.relationships.forEach(rel => {
@@ -531,7 +634,7 @@ const ViewRows = ({
 
             cellValue = getRelExpander(
               'Close',
-              styles.expanded,
+              'text-red-500',
               handleCloseClick
             );
           } else {
@@ -543,11 +646,24 @@ const ViewRows = ({
               cellValue = <i>NULL</i>;
             } else {
               // can be expanded
-              const pkClause = getPKClause();
+              const pkClause = getPKClause(row, _hasPrimaryKey, _tableSchema);
 
               const handleViewClick = e => {
                 e.preventDefault();
-                dispatch(vExpandRel(curPath, rel.rel_name, pkClause));
+
+                const childTableDef = getRelationshipRefTable(
+                  _tableSchema,
+                  rel
+                );
+                if (childTableDef.schema !== currentSchema) {
+                  dispatch(
+                    updateSchemaInfo({ schemas: [childTableDef.schema] })
+                  ).then(() => {
+                    dispatch(vExpandRel(curPath, rel.rel_name, pkClause));
+                  });
+                } else {
+                  dispatch(vExpandRel(curPath, rel.rel_name, pkClause));
+                }
               };
 
               cellValue = getRelExpander('View', '', handleViewClick);
@@ -562,62 +678,76 @@ const ViewRows = ({
 
       _gridRows.push(newRow);
     });
-
     return _gridRows;
   };
 
   const curRelName = curPath.length > 0 ? curPath.slice(-1)[0] : null;
-  const tableSchema = schemas.find(
-    x => x.table_name === curTableName && x.table_schema === currentSchema
-  );
+  const tableColumnsSorted = tableSchema.columns
+    .map(col => {
+      const customColumnName = getTableCustomColumnName(
+        tableSchema,
+        col.column_name
+      );
+      if (customColumnName) {
+        return {
+          ...col,
+          column_name: customColumnName,
+          id: col.column_name,
+        };
+      }
+      return { ...col, id: col.column_name };
+    })
+    .sort(ordinalColSort);
 
-  const tableColumnsSorted = tableSchema.columns.sort(ordinalColSort);
   const tableRelationships = tableSchema.relationships;
 
-  const hasPrimaryKey = checkIfHasPrimaryKey(tableSchema);
+  const hasPrimaryKey = isTableWithPK(tableSchema);
 
   const isSingleRow = checkIfSingleRow(curRelName);
 
-  const _gridHeadings = getGridHeadings(tableColumnsSorted, tableRelationships);
+  const disableBulkSelect = !hasPrimaryKey;
 
-  const _gridRows = getGridRows(tableSchema, hasPrimaryKey, isSingleRow);
+  const _gridHeadings = getGridHeadings(
+    tableColumnsSorted,
+    tableRelationships,
+    disableBulkSelect
+  );
 
-  const getFilterQuery = () => {
-    let _filterQuery = null;
+  const _gridRows = getGridRows(
+    tableSchema,
+    hasPrimaryKey,
+    isSingleRow,
+    disableBulkSelect
+  );
 
-    if (!isSingleRow) {
-      if (curRelName === activePath[curDepth] || curDepth === 0) {
-        // Rendering only if this is the activePath or this is the root
+  const getSelectedRowsSection = () => {
+    const handleDeleteItems = () => {
+      const pkClauses = selectedRows.map(row =>
+        getPKClause(row, hasPrimaryKey, tableSchema)
+      );
+      dispatch(deleteItems(pkClauses, curTableName, currentSchema));
+      setSelectedRows([]);
+    };
 
-        let wheres = [{ '': { '': '' } }];
-        if ('where' in curFilter && '$and' in curFilter.where) {
-          wheres = [...curFilter.where.$and];
-        }
+    let selectedRowsSection = null;
 
-        let orderBy = [{ column: '', type: 'asc', nulls: 'last' }];
-        if ('order_by' in curFilter) {
-          orderBy = [...curFilter.order_by];
-        }
-        const limit = 'limit' in curFilter ? curFilter.limit : 10;
-        const offset = 'offset' in curFilter ? curFilter.offset : 0;
-
-        _filterQuery = (
-          <FilterQuery
-            curQuery={curQuery}
-            whereAnd={wheres}
-            tableSchema={tableSchema}
-            orderBy={orderBy}
-            limit={limit}
-            dispatch={dispatch}
-            count={count}
-            tableName={curTableName}
-            offset={offset}
+    if (selectedRows.length > 0) {
+      selectedRowsSection = (
+        <div className="flex mb-sm">
+          <b className="pr-xs">Selected:</b>
+          {selectedRows.length}
+          <Button
+            icon={<FaTrash />}
+            title="Delete selected rows"
+            className="ml-xs text-base bg-white border rounded-sm border-gray-400 px-1"
+            data-test="bulk-delete"
+            onClick={handleDeleteItems}
           />
-        );
-      }
+        </div>
+      );
     }
 
-    return _filterQuery;
+    return selectedRowsSection;
   };
 
   // If query object has expanded columns
@@ -650,7 +780,7 @@ const ViewRows = ({
 
     const childViewRows = childQueries.map((cq, i) => {
       // Render child only if data is available
-      if (curRows[0][cq.name]) {
+      if (curRows[0] && curRows[0][cq.name]) {
         const rel = tableSchema.relationships.find(r => r.rel_name === cq.name);
 
         if (rel) {
@@ -660,15 +790,15 @@ const ViewRows = ({
           if (isObjectRel) {
             childRows = [childRows];
           }
+          const childTableDef = getRelationshipRefTable(tableSchema, rel);
 
-          // Find the name of this childTable using the rel
+          const childTable = findTable(schemas, childTableDef);
+
           return (
             <ViewRows
               key={i}
-              curTableName={
-                findTableFromRel(schemas, tableSchema, rel).table_name
-              }
-              currentSchema={currentSchema}
+              curTableName={childTable.table_name}
+              currentSchema={childTable.table_schema}
               curQuery={cq}
               curFilter={curFilter}
               curPath={[...curPath, rel.rel_name]}
@@ -682,6 +812,8 @@ const ViewRows = ({
               curDepth={curDepth + 1}
               dispatch={dispatch}
               expandedRow={expandedRow}
+              readOnlyMode={readOnlyMode}
+              currentSource={currentSource}
             />
           );
         }
@@ -693,7 +825,7 @@ const ViewRows = ({
     if (childQueries.length > 0) {
       _childComponent = (
         <div>
-          <ul className="nav nav-tabs">{childTabs}</ul>
+          <ul>{childTabs}</ul>
           {childViewRows}
         </div>
       );
@@ -701,6 +833,11 @@ const ViewRows = ({
 
     return _childComponent;
   };
+
+  const [userQuery, setUserQuery] = useState({
+    where: { $and: [] },
+    order_by: [],
+  });
 
   const renderTableBody = () => {
     if (isProgressing) {
@@ -712,10 +849,16 @@ const ViewRows = ({
       );
     }
 
+    const collapsedColumns = getPersistedCollapsedColumns(
+      curTableName,
+      currentSchema
+    );
+    const columnsOrder = getPersistedColumnsOrder(curTableName, currentSchema);
+
     let disableSortColumn = false;
 
     const sortByColumn = (col, clearExisting = true) => {
-      const columnNames = tableColumnsSorted.map(column => column.column_name);
+      const columnNames = tableColumnsSorted.map(column => column.id);
       if (!columnNames.includes(col)) {
         return;
       }
@@ -799,36 +942,62 @@ const ViewRows = ({
 
     const handlePageChange = page => {
       if (curFilter.offset !== page * curFilter.limit) {
-        dispatch(setOffset(page * curFilter.limit));
-        dispatch(runQuery(tableSchema));
+        setSelectedRows([]);
       }
     };
 
     const handlePageSizeChange = size => {
       if (curFilter.size !== size) {
-        dispatch(setLimit(size));
-        dispatch(setOffset(0));
-        dispatch(runQuery(tableSchema));
+        setSelectedRows([]);
       }
     };
 
+    const paginationProps = {};
+    if (useCustomPagination) {
+      paginationProps.PaginationComponent = () => (
+        <PaginationWithOnlyNavContainer
+          limit={curFilter.limit}
+          offset={curFilter.offset}
+          onChangePage={handlePageChange}
+          onChangePageSize={handlePageSizeChange}
+          pageSize={curFilter.size}
+          rows={curRows}
+          tableSchema={tableSchema}
+          userQuery={userQuery}
+        />
+      );
+    }
+
     return (
       <DragFoldTable
-        className="-highlight -fit-content"
         data={_gridRows}
         columns={_gridHeadings}
+        headerTitle={'Click to sort / Drag to rearrange'}
         resizable
         manual
         sortable={false}
         minRows={0}
         getTheadThProps={getTheadThProps}
         getResizerProps={getResizerProps}
-        showPagination={!isSingleRow}
         pageSize={curFilter.limit}
         pages={Math.ceil(count / curFilter.limit)}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         page={Math.floor(curFilter.offset / curFilter.limit)}
+        onCollapseChange={collapsedData =>
+          persistColumnCollapseChange(
+            curTableName,
+            currentSchema,
+            collapsedData
+          )
+        }
+        defaultCollapsed={collapsedColumns}
+        onOrderChange={reorderData =>
+          persistColumnOrderChange(curTableName, currentSchema, reorderData)
+        }
+        defaultReorders={columnsOrder}
+        showPagination={!shouldHidePagination || useCustomPagination}
+        {...paginationProps}
       />
     );
   };
@@ -839,12 +1008,29 @@ const ViewRows = ({
     isVisible = true;
   }
 
+  const isFilterSectionVisible =
+    !isSingleRow && (curRelName === activePath[curDepth] || curDepth === 0);
+
+  const schemaKey = currentDriver === 'bigquery' ? 'dataset' : 'schema';
+
   return (
     <div className={isVisible ? '' : 'hide '}>
-      {getFilterQuery()}
-      <div className={`row ${styles.add_mar_top}`}>
-        <div className="col-xs-12">
-          <div className={styles.tableContainer}>{renderTableBody()}</div>
+      {isFilterSectionVisible && (
+        <div className="mt-4">
+          <LegacyRunQueryContainer
+            dataSourceName={currentSource}
+            table={{
+              [schemaKey]: tableSchema.table_schema,
+              name: curTableName,
+            }}
+            onRunQuery={newUserQuery => setUserQuery(newUserQuery)}
+          />
+        </div>
+      )}
+      <div className="w-fit ml-0 mt-md">
+        {getSelectedRowsSection()}
+        <div>
+          <div>{renderTableBody()}</div>
           <br />
           <br />
           <div>{getChildComponent()}</div>

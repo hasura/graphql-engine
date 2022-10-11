@@ -1,0 +1,189 @@
+- description: PG add source 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries: 1
+
+- description: create table 1
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        create table author_s1(
+            id serial primary key,
+            name text unique
+        );
+        INSERT INTO author_s1 (name)
+          VALUES ('Author 1'), ('Author 2');
+    
+- description: track table 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_table
+    args:
+      table: author_s1
+      source: pg1
+
+- description: PG add source 2
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg2
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_2
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries: 1
+
+- description: create table 2
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg2
+      sql: |
+        create table author_s2(
+            id serial primary key,
+            name text unique
+        );
+        INSERT INTO author_s2 (name)
+          VALUES ('Author 3'), ('Author 4');
+    
+- description: track table 2
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_table
+    args:
+      table: author_s2
+      source: pg2
+
+- description: Simple GraphQL query to fetch items from tables from 2 different sources
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      author_s1:
+      - id: 1
+        name: 'Author 1'
+      - id: 2
+        name: 'Author 2'
+      author_s2:
+      - id: 1
+        name: 'Author 3'
+      - id: 2
+        name: 'Author 4'
+  query:
+    query: |
+      query {
+        author_s1 {
+          id
+          name
+        }
+        author_s2 {
+          id
+          name
+        }
+      }
+
+- description: untrack table 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_table
+    args:
+      table: author_s1
+      source: pg1
+
+- description: drop table 1
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        drop table author_s1;
+
+- description: PG Drop Source 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1
+
+- description: untrack table 2
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_table
+    args:
+      table: author_s2
+      source: pg2
+
+- description: drop table 2
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg2
+      sql: |
+        drop table author_s2;
+
+- description: PG Drop Source 2
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg2

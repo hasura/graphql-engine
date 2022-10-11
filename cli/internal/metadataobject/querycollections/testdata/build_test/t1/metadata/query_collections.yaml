@@ -1,0 +1,12 @@
+- name: allowed-queries
+  definition:
+    queries:
+      - name: getArticles
+        query: |
+          query getArticles {
+            articles {
+              title
+              id
+              content
+            }
+          }

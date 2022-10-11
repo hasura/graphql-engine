@@ -1,0 +1,5 @@
+- name: tic-tac-toe
+  definition:
+    url_from_env: TIC_TAC_REMOTE_SCHEMA_URL
+    timeout_seconds: 60
+    forward_client_headers: true

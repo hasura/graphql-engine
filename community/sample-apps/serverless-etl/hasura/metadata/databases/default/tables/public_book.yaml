@@ -1,0 +1,16 @@
+event_triggers:
+- definition:
+    insert:
+      columns:
+      - title
+      - author
+      - id
+      - created_at
+  name: book_event
+  retry_conf:
+    interval_sec: 10
+    num_retries: 0
+  webhook: https://us-central1-hasura-test.cloudfunctions.net/serverless-etl
+table:
+  name: book
+  schema: public

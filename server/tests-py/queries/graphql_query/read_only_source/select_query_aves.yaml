@@ -1,0 +1,19 @@
+description: Simple GraphQL query on a read-only source
+url: /v1/graphql
+status: 200
+response:
+  data:
+    aves:
+    - id: 1
+      name: Booted Eagle
+    - id: 2
+      name: Hooded Merganser
+query:
+  operationName: getBirds
+  query: |
+    query getBirds {
+      aves {
+        id
+        name
+      }
+    }

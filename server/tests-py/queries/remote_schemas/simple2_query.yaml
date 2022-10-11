@@ -4,8 +4,8 @@ status: 200
 response:
   data:
     user:
-      username: john
       id: 2
+      username: john
 query:
   query: |
     query {

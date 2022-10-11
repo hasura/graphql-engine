@@ -1,0 +1,38 @@
+description:
+  Check that we do not generate an invalid graphql name in remote relationships
+  when the table is in a custom schema.
+url: /v1/graphql
+status: 200
+response:
+  data:
+    __type:
+      name: custom_authors
+      fields:
+      - name: id
+        args: []
+      - name: name
+        args: []
+      - name: userInfo
+        args:
+        - name: includes
+          type:
+            name: IncludeInpObj
+        - name: where
+          type:
+            name: MessageWhereInpObj_remote_rel_custom_authorsuserInfo
+query:
+  query: |
+    query {
+      __type(name: "custom_authors") {
+        name
+        fields {
+          name
+          args {
+            name
+            type {
+              name
+            }
+          }
+        }
+      }
+    }

@@ -1,0 +1,7 @@
+type: mssql_create_array_relationship
+args:
+  source: mssql
+  table: author_multi
+  name: articles
+  using:
+    foreign_key_constraint_on: "I should have been an object"

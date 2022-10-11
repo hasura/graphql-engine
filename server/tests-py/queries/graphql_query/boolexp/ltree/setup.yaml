@@ -1,0 +1,31 @@
+type: bulk
+args:
+
+
+# Tree table
+- type: run_sql
+  args:
+    sql: |
+      CREATE EXTENSION IF NOT EXISTS ltree;
+      CREATE TABLE tree (path ltree);
+      INSERT INTO tree VALUES
+        ('Tree'),
+        ('Tree.Science'),
+        ('Tree.Science.Astronomy'),
+        ('Tree.Science.Astronomy.Astrophysics'),
+        ('Tree.Science.Astronomy.Cosmology'),
+        ('Tree.Hobbies'),
+        ('Tree.Hobbies.Amateurs_Astronomy'),
+        ('Tree.Collections'),
+        ('Tree.Collections.Pictures'),
+        ('Tree.Collections.Pictures.Astronomy'),
+        ('Tree.Collections.Pictures.Astronomy.Stars'),
+        ('Tree.Collections.Pictures.Astronomy.Galaxies'),
+        ('Tree.Collections.Pictures.Astronomy.Astronauts');
+      CREATE INDEX path_gist_idx ON tree USING GIST (path);
+      CREATE INDEX path_idx ON tree USING BTREE (path);
+
+- type: track_table
+  args:
+    schema: public
+    name: tree

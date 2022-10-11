@@ -11,16 +11,7 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table person
-- type: run_sql
-  args:
-    sql: |
-      drop table orders
-- type: run_sql
-  args:
-    sql: |
-      drop table article
-- type: run_sql
-  args:
-    sql: |
-      drop table author
+      drop table person;
+      drop table orders;
+      drop table article;
+      drop table author;

@@ -1,0 +1,4 @@
+with-compiler: ghc-8.10.7
+
+allow-newer:
+  weeder:optparse-applicative

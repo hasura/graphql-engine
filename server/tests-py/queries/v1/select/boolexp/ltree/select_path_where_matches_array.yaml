@@ -1,0 +1,20 @@
+- description: Select `ltree` paths matching any `lquery` regex in an array
+  url: /v1/query
+  status: 200
+  response:
+    - path: Tree.Hobbies
+    - path: Tree.Hobbies.Amateurs_Astronomy
+    - path: Tree.Collections.Pictures
+    - path: Tree.Collections.Pictures.Astronomy
+    - path: Tree.Collections.Pictures.Astronomy.Stars
+    - path: Tree.Collections.Pictures.Astronomy.Galaxies
+    - path: Tree.Collections.Pictures.Astronomy.Astronauts
+  query:
+    type: select
+    args:
+      table: tree
+      where:
+        path:
+          $matches_any: ["*.Pictures.*", "*.Hobbies.*"]
+      columns:
+        - path

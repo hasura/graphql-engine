@@ -1,0 +1,17 @@
+description: _in boolexp on column of type sql_identifier
+url: /v1/graphql
+status: 200
+response:
+  data:
+    table_with_sql_identifier:
+    - { id: 3, sql_id: two }
+    - { id: 5, sql_id: four }
+    - { id: 7, sql_id: two }
+query:
+  query: |
+    query {
+      table_with_sql_identifier(where: {sql_id: {_nin: ["one", "three"]}}) {
+        id
+        sql_id
+      }
+    }

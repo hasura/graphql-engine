@@ -1,0 +1,39 @@
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query myQuery {
+      author {
+        ...authorFragment
+        ... on author {
+          name
+        }
+      }
+    }
+
+    fragment authorFragment on author {
+      id
+      articles {
+        ...articleFragment
+      }
+    }
+
+    fragment articleFragment on article {
+      title
+      id
+    }
+response:
+  data:
+    author:
+    - id: 1
+      articles:
+      - title: Article 1
+        id: 1
+      - title: Article 2
+        id: 2
+      name: Author 1
+    - id: 2
+      articles:
+      - title: Article 3
+        id: 3
+      name: Author 2

@@ -1,0 +1,9 @@
+type: bulk
+args:
+
+- type: bigquery_run_sql
+  args:
+    source: bigquery
+    cascade: true
+    sql: |
+      drop table `hasura.table_to_customize`;

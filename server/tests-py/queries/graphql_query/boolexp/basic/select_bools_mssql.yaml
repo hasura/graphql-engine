@@ -1,0 +1,15 @@
+description: |
+  Check that bools are working properly. See <https://github.com/hasura/graphql-engine-mono/pull/1335>
+url: /v1/graphql
+status: 200
+response:
+  data:
+    author: []
+
+query:
+  query: |
+    query MyQuery {
+      author(where: {_and:[] _or: []}, order_by: {name: asc}) {
+        name
+      }
+    }

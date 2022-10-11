@@ -5,7 +5,7 @@ response:
   errors:
   - extensions:
       code: parse-failed
-      path: $.variableValues.areas[0].area.coordinates[0]
+      path: $.selectionSet.insert_area.args.objects[0].area
     message: A LinearRing needs at least 4 Positions
 query:
   variables:
@@ -18,6 +18,10 @@ query:
           - [43.80009, 11.03208]
           - [42.60009, 10.13248]
         type: Polygon
+        crs:
+          type: name
+          properties:
+            name: urn:ogc:def:crs:EPSG::4326
   query: |
     mutation insertArea($areas: [area_insert_input!]!) {
       insert_area(objects: $areas) {

@@ -1,0 +1,21 @@
+description: Fetch remote join involving a computed field
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      students{
+        id
+        name
+        grade
+      }
+    }
+response:
+  data:
+    students:
+    - id: 1
+      name: alice
+      grade: S
+    - id: 2
+      name: bob
+      grade: B

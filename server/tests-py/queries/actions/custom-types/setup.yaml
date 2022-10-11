@@ -1,0 +1,24 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      CREATE TABLE "user"(
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        name TEXT NOT NULL,
+        location geography
+      );
+
+- type: track_table
+  args:
+    name: user
+    schema: public
+
+- type: set_custom_types
+  args:
+    objects:
+    - name: User
+      fields:
+      - name: user_id
+        type: ID!

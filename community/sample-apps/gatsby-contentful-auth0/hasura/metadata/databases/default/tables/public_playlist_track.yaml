@@ -1,0 +1,10 @@
+table:
+  name: playlist_track
+  schema: public
+object_relationships:
+- name: playlist
+  using:
+    foreign_key_constraint_on: playlist_id
+- name: track
+  using:
+    foreign_key_constraint_on: track_id

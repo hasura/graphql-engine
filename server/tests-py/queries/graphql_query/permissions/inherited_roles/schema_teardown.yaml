@@ -1,0 +1,9 @@
+type: run_sql
+args:
+  cascade: true
+  sql: |
+    DROP TABLE employee CASCADE;
+    DROP TABLE manager;
+    DROP TABLE team;
+    DROP TABLE articles;
+    DROP TABLE authors;

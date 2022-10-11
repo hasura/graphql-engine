@@ -1,6 +1,6 @@
 export PATH := node_modules/.bin:$(PATH)
 DIST_PATH ?= ./static/dist
-BUCKET_NAME ?= hasura-graphql-engine
+BUCKET_NAME ?= graphql-engine-cdn.hasura.io
 VERSION ?= $(shell ../scripts/get-version.sh)
 
 all: deps build gzip-assets gcloud-cp-stable gcloud-set-metadata
@@ -13,6 +13,9 @@ ci-deps:
 
 build:
 	npm run build
+
+jest:
+	npm run jest -- --runInBand
 
 test:
 	npm run dev & npm run test
@@ -40,16 +43,17 @@ gcloud-set-metadata:
 	gsutil setmeta -h "Content-Type: text/css" gs://$(BUCKET_NAME)/console/$(VERSION)/*.css
 	gsutil setmeta -h "Content-Encoding: gzip" gs://$(BUCKET_NAME)/console/$(VERSION)/*
 
-
-server-build:
-	if [ ! -d "$(DIST_PATH)/common" ]; then \
-		mkdir -p $(DIST_PATH); \
-		gsutil -m cp -r gs://$(BUCKET_NAME)/console/assets/common "$(DIST_PATH)"; \
-		mv "$(DIST_PATH)/common/css/font-awesome.min.css.gz" "$(DIST_PATH)/common/css/font-awesome.min.css"; \
-		gzip "$(DIST_PATH)/common/css/font-awesome.min.css"; \
-	fi
+server-build: node_modules $(DIST_PATH)/common
 	rm -rf "$(DIST_PATH)/versioned"
 	npm run build
 	mkdir -p "$(DIST_PATH)/versioned"
 	cp "$(DIST_PATH)"/*.js "$(DIST_PATH)"/*.css "$(DIST_PATH)/versioned/"
 	gzip -r -f "$(DIST_PATH)/versioned"
+
+$(DIST_PATH)/common:
+	mkdir -p $(DIST_PATH)
+	gsutil -m cp -r gs://$(BUCKET_NAME)/console/assets/common "$(DIST_PATH)"
+	touch $@
+
+node_modules: package.json package-lock.json
+	npm ci

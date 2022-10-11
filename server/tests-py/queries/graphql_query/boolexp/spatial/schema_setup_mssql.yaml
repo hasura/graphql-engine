@@ -1,0 +1,100 @@
+type: bulk
+args:
+  - type: mssql_run_sql
+    args:
+      source: mssql
+      sql: |
+        CREATE TABLE spatial_types_geom (
+            point geometry,
+            linestring geometry,
+            circularstring geometry,
+            compoundcurve geometry,
+            polygon geometry,
+            curvepolygon geometry,
+            multipoint geometry,
+            multilinestring geometry,
+            multipolygon geometry,
+            geometrycollection geometry
+        );
+
+        INSERT INTO
+            spatial_types_geom(
+                point,
+                linestring,
+                circularstring,
+                compoundcurve,
+                polygon,
+                curvepolygon,
+                multipoint,
+                multilinestring,
+                multipolygon,
+                geometrycollection
+            )
+        VALUES
+            (
+                geometry :: Parse('POINT(3 4 7 2.5)').MakeValid(),
+                geometry :: Parse('LINESTRING(1 1,2 3,4 8, -6 3)').MakeValid(),
+                geometry :: Parse('CIRCULARSTRING(1 1, 2 0, 2 0, 2 0, 1 1)').MakeValid(),
+                geometry :: Parse(
+                    'COMPOUNDCURVE(CIRCULARSTRING(1 0, 0 1, -1 0), (-1 0, 2 0))'
+                ).MakeValid(),
+                geometry :: Parse('POLYGON((1 1, 1 1, 1 1, 1 1))').MakeValid(),
+                geometry :: Parse(
+                    'CURVEPOLYGON (COMPOUNDCURVE (CIRCULARSTRING (-122.200928 47.454094, -122.810669 47.00648, -122.942505 46.687131, -121.14624 45.786679, -119.119263 46.183634), (-119.119263 46.183634, -119.273071 47.107523), CIRCULARSTRING (-119.273071 47.107523, -120.640869 47.569114, -122.200928 47.454094)))'
+                ).MakeValid(),
+                geometry :: Parse('MULTIPOINT((2 3), (7 8 9.5))').MakeValid(),
+                geometry :: Parse(
+                    'MULTILINESTRING((1 1, 3 3, 5 5),(3 3, 5 5, 7 7))'
+                ).MakeValid(),
+                geometry :: Parse(
+                    'MULTIPOLYGON(((-120.533 46.566, -118.283 46.1, -122.3 47.45, -120.533 46.566)),((2 2, 2 -2, -2 -2, -2 2, 2 2)),((1 1, 3 1, 3 3, 1 3, 1 1)))'
+                ).MakeValid(),
+                geometry :: Parse(
+                    'GEOMETRYCOLLECTION(LINESTRING(1 1, 3 5),POLYGON((-1 -1, -1 -5, -5 -5, -5 -1, -1 -1)))'
+                ).MakeValid()
+            );
+
+        CREATE TABLE spatial_types_geog (
+            point geography,
+            linestring geography,
+            circularstring geography,
+            compoundcurve geography,
+            polygon geography,
+            curvepolygon geography,
+            multipoint geography,
+            multilinestring geography,
+            multipolygon geography
+        );
+
+        INSERT INTO
+            spatial_types_geog(
+                point,
+                linestring,
+                circularstring,
+                compoundcurve,
+                polygon,
+                curvepolygon,
+                multipoint,
+                multilinestring,
+                multipolygon
+            )
+        VALUES
+            (
+                geography :: Parse('POINT(3 4 7 2.5)').MakeValid(),
+                geography :: Parse('LINESTRING(1 1,2 3,4 8, -6 3)').MakeValid(),
+                geography :: Parse('CIRCULARSTRING(1 1, 2 0, 2 0, 2 0, 1 1)').MakeValid(),
+                geography :: Parse(
+                    'COMPOUNDCURVE(CIRCULARSTRING(1 0, 0 1, -1 0), (-1 0, 2 0))'
+                ).MakeValid(),
+                geography :: Parse('POLYGON((1 1, 1 1, 1 1, 1 1))').MakeValid(),
+                geography :: Parse(
+                    'CURVEPOLYGON (COMPOUNDCURVE (CIRCULARSTRING (-122.200928 47.454094, -122.810669 47.00648, -122.942505 46.687131, -121.14624 45.786679, -119.119263 46.183634), (-119.119263 46.183634, -119.273071 47.107523), CIRCULARSTRING (-119.273071 47.107523, -120.640869 47.569114, -122.200928 47.454094)))'
+                ).MakeValid(),
+                geography :: Parse('MULTIPOINT((2 3), (7 8 9.5))').MakeValid(),
+                geography :: Parse(
+                    'MULTILINESTRING((1 1, 3 3, 5 5),(3 3, 5 5, 7 7))'
+                ).MakeValid(),
+                geography :: Parse(
+                    'MULTIPOLYGON(((-120.533 46.566, -118.283 46.1, -122.3 47.45, -120.533 46.566)),((2 2, 2 -2, -2 -2, -2 2, 2 2)),((1 1, 3 1, 3 3, 1 3, 1 1)))'
+                ).MakeValid()
+            )

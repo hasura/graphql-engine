@@ -1,9 +1,0 @@
-*-debug.log
-*-error.log
-/.nyc_output
-/dist
-/tmp
-/yarn.lock
-/test-db.js
-test-db
-node_modules

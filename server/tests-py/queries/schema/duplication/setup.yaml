@@ -1,0 +1,13 @@
+type: run_sql
+args:
+  sql: |
+    CREATE TABLE "user" (
+      id serial primary key,
+      email text,
+      name text
+    );
+    CREATE TABLE users (
+       id serial primary key,
+       email text,
+       name text
+    );

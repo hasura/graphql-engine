@@ -1,0 +1,39 @@
+- description: Cannot see unpublished articles
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: published_only
+  response:
+    data:
+      hasura_article: []
+  query:
+    query: |
+      query {
+        hasura_article (
+          where: { is_published: {_eq: false}}
+        )  {
+          id
+          title
+          is_published
+        }
+      }
+- description: Can only see published articles
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: published_only
+  response:
+    data:
+      hasura_article:
+      - id: '2'
+        title: Title 2
+        is_published: true
+  query:
+    query: |
+      query {
+        hasura_article {
+          id
+          title
+          is_published
+        }
+      }

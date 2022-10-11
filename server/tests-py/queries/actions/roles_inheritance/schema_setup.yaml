@@ -1,0 +1,19 @@
+type: run_sql
+args:
+  sql: |
+    CREATE TABLE "user"(
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      is_admin BOOLEAN NOT NULL DEFAULT false
+    );
+    CREATE TABLE "article"(
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      user_id INTEGER
+    );
+    INSERT INTO "article" (name, user_id) VALUES
+      ('foo', 1),
+      ('bar', 1),
+      ('bar', 1),
+      ('baz', 2);

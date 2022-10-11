@@ -1,0 +1,202 @@
+cabal-version: 1.12
+
+-- This file is generated using hpack.
+-- Do not modify it directly. Instead, edit package.yaml and then run:
+--     make server/lib/schema-parsers/hasura-schema-parsers.cabal
+
+-- This file has been generated from package.yaml by hpack version 0.34.7.
+--
+-- see: https://github.com/sol/hpack
+
+name:           hasura-schema-parsers
+version:        1.0.0
+description:    Parsers built from GraphQL schemas.
+homepage:       https://github.com/hasura/github-engine#readme
+bug-reports:    https://github.com/hasura/github-engine/issues
+author:         Hasura, Inc.
+maintainer:     Hasura, Inc.
+build-type:     Simple
+extra-source-files:
+    ../../../LICENSE
+
+source-repository head
+  type: git
+  location: https://github.com/hasura/github-engine
+
+flag optimize-hasura
+  description: Compile hasura code with appropriate optimizations
+  manual: False
+  default: True
+
+flag profiling
+  description: Configures the project to be profiling-compatible
+  manual: True
+  default: False
+
+library
+  exposed-modules:
+      Data.GADT.Compare.Extended
+      Hasura.GraphQL.Parser
+      Hasura.GraphQL.Parser.Class
+      Hasura.GraphQL.Parser.Collect
+      Hasura.GraphQL.Parser.DirectiveName
+      Hasura.GraphQL.Parser.Directives
+      Hasura.GraphQL.Parser.ErrorCode
+      Hasura.GraphQL.Parser.Internal.Convert
+      Hasura.GraphQL.Parser.Internal.Input
+      Hasura.GraphQL.Parser.Internal.Parser
+      Hasura.GraphQL.Parser.Internal.Scalars
+      Hasura.GraphQL.Parser.Internal.TypeChecking
+      Hasura.GraphQL.Parser.Internal.Types
+      Hasura.GraphQL.Parser.Monad
+      Hasura.GraphQL.Parser.Name
+      Hasura.GraphQL.Parser.Name.Introspection
+      Hasura.GraphQL.Parser.Name.TypeSystem
+      Hasura.GraphQL.Parser.Names
+      Hasura.GraphQL.Parser.Schema
+      Hasura.GraphQL.Parser.Schema.Convert
+      Hasura.GraphQL.Parser.Variable
+  other-modules:
+      Paths_hasura_schema_parsers
+  hs-source-dirs:
+      src
+  default-extensions:
+      AllowAmbiguousTypes
+      ApplicativeDo
+      BangPatterns
+      BlockArguments
+      DataKinds
+      DeriveFoldable
+      DeriveFunctor
+      DeriveLift
+      DeriveGeneric
+      DeriveTraversable
+      DerivingStrategies
+      ExplicitNamespaces
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GADTs
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      KindSignatures
+      LambdaCase
+      MultiWayIf
+      MultiParamTypeClasses
+      NamedFieldPuns
+      OverloadedStrings
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StandaloneDeriving
+      StrictData
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+  ghc-options: -foptimal-applicative-do -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists
+  build-depends:
+      aeson
+    , base
+    , dependent-map
+    , dependent-sum
+    , graphql-parser
+    , hashable
+    , hasura-error-message
+    , insert-ordered-containers
+    , lens
+    , mtl
+    , scientific
+    , some
+    , template-haskell
+    , text
+    , th-lift
+    , unordered-containers
+    , uuid
+    , vector
+    , witherable
+  if flag(profiling)
+    cpp-options: -DPROFILING
+  if flag(optimize-hasura)
+    ghc-options: -fexpose-all-unfoldings -O2
+  else
+    ghc-options: -O0
+  default-language: Haskell2010
+
+test-suite tests
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+      Hasura.GraphQL.Parser.DirectivesTest
+      Hasura.GraphQL.Parser.MonadParseTest
+      Hasura.GraphQL.Parser.TestInstances
+      Hasura.GraphQL.Parser.TestUtils
+      Paths_hasura_schema_parsers
+  hs-source-dirs:
+      test
+  default-extensions:
+      AllowAmbiguousTypes
+      ApplicativeDo
+      BangPatterns
+      BlockArguments
+      DataKinds
+      DeriveFoldable
+      DeriveFunctor
+      DeriveLift
+      DeriveGeneric
+      DeriveTraversable
+      DerivingStrategies
+      ExplicitNamespaces
+      FlexibleContexts
+      FlexibleInstances
+      FunctionalDependencies
+      GADTs
+      GeneralizedNewtypeDeriving
+      ImportQualifiedPost
+      KindSignatures
+      LambdaCase
+      MultiWayIf
+      MultiParamTypeClasses
+      NamedFieldPuns
+      OverloadedStrings
+      RankNTypes
+      RecordWildCards
+      ScopedTypeVariables
+      StandaloneDeriving
+      StrictData
+      TupleSections
+      TypeApplications
+      TypeFamilies
+      TypeOperators
+  ghc-options: -foptimal-applicative-do -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists -main-is Main
+  build-depends:
+      hasura-schema-parsers
+    , hspec
+  if flag(profiling)
+    cpp-options: -DPROFILING
+  if flag(optimize-hasura)
+    ghc-options: -fexpose-all-unfoldings -O2
+  else
+    ghc-options: -O0
+  if true
+    build-depends:
+        aeson
+      , base
+      , dependent-map
+      , dependent-sum
+      , graphql-parser
+      , hashable
+      , hasura-error-message
+      , insert-ordered-containers
+      , lens
+      , mtl
+      , scientific
+      , some
+      , template-haskell
+      , text
+      , th-lift
+      , unordered-containers
+      , uuid
+      , vector
+      , witherable
+  default-language: Haskell2010

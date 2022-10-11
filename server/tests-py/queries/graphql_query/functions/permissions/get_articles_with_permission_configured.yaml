@@ -1,0 +1,23 @@
+- description: Query function as a role without permission being configured for the role
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  response:
+    data:
+      get_articles:
+        - title: Article 1
+          content: Sample article content 1
+        - title: Article 2
+          content: Sample article content 2
+        - title: Article 3
+          content: Sample article content 3
+  query:
+    query: |
+      query {
+        get_articles(args: {search: "art"}) {
+          title
+          content
+        }
+      }

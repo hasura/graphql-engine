@@ -2,23 +2,22 @@ type: bulk
 args:
 
 #Author table
+
 - type: run_sql
   args:
     sql: |
       create table author(
-          id serial primary key, 
+          id serial primary key,
           name text unique,
           is_registered boolean not null default false
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
 
-#Article table
-- type: run_sql
-  args:
-    sql: |
+      INSERT INTO author(name, is_registered)
+        VALUES
+        ('Author 1', true),
+        ('Author 2', true),
+        ('Author 3', false);
+
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -26,82 +25,28 @@ args:
         author_id INTEGER REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
-- type: track_table
-  args:
-    schema: public
-    name: article
+      );
 
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE city (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         country TEXT NOT NULL
-      )
-- type: track_table
-  args:
-    schema: public
-    name: city
+      );
 
-#Set timezone
-- type: run_sql
-  args:
-    sql: |
+      INSERT INTO city (name, country)
+        VALUES
+        ('Durham', 'USA'),
+        ('New York', 'USA'),
+        ('Framlingham', 'UK'),
+        ('New Orleans', 'USA');
+
       SET TIME ZONE 'UTC';
 
-#Article order
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE orders (
         id SERIAL PRIMARY KEY,
         received_at TIMESTAMP WITH TIME ZONE NOT NULL,
         delivered_at TIMESTAMP WITH TIME ZONE
-      )
-- type: track_table
-  args:
-    schema: public
-    name: orders
-
-#Object relationship
-- type: create_object_relationship
-  args:
-    table: article
-    name: author
-    using:
-      foreign_key_constraint_on: author_id
-
-#Array relationship
-- type: create_array_relationship
-  args:
-    table: author
-    name: articles
-    using:
-      foreign_key_constraint_on:
-        table: article
-        column: author_id
-
-
-#Insert Authors
-- type: insert
-  args:
-    table: author
-    objects:
-    - name: Author 1
-      is_registered: true
-    - name: Author 2
-      is_registered: true
-    - name: Author 3
-      is_registered: false
-
-
-- type: run_sql
-  args:
-    sql: |
+      );
       insert into article (title,content,author_id,is_published)
       values
       (
@@ -127,20 +72,50 @@ args:
         'Sample article content 4',
         3,
         true
-      )
+      );
 
-- type: insert
+- type: track_table
   args:
-    table: city
-    objects:
-    - name: Durham
-      country: USA 
-    - name:  New York
-      country: USA
-    - name: Framlingham
-      country: UK
-    - name: New Orleans 
-      country: USA
+    schema: public
+    name: author
+
+#Article table
+- type: track_table
+  args:
+    schema: public
+    name: article
+
+
+#Article table
+- type: track_table
+  args:
+    schema: public
+    name: city
+
+#Set timezone
+- type: track_table
+  args:
+    schema: public
+    name: orders
+
+#Object relationship
+- type: create_object_relationship
+  args:
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+#Array relationship
+- type: create_array_relationship
+  args:
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
 
 - type: insert
   args:

@@ -2,22 +2,17 @@ type: bulk
 args:
 
 #Author table
+
 - type: run_sql
   args:
     sql: |
       create table author(
           id serial primary key,
-          name text unique
+          name text unique,
+          emails text[] not null default '{}'::text[],
+          info jsonb,
+          location geography
       );
-- type: track_table
-  args:
-    schema: public
-    name: author
-
-#Article table
-- type: run_sql
-  args:
-    sql: |
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -25,7 +20,14 @@ args:
         author_id INTEGER NOT NULL REFERENCES author(id),
         is_published BOOLEAN,
         published_on TIMESTAMP
-      )
+      );
+
+- type: track_table
+  args:
+    schema: public
+    name: author
+
+#Article table
 - type: track_table
   args:
     schema: public
@@ -48,4 +50,3 @@ args:
       foreign_key_constraint_on:
         table: article
         column: author_id
-

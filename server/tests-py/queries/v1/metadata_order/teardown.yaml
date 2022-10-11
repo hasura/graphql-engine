@@ -1,0 +1,18 @@
+type: bulk
+args:
+- type: drop_query_collection
+  args:
+    collection: collection_1
+    cascade: true
+- type: drop_query_collection
+  args:
+    collection: collection_2
+    cascade: true
+- type: run_sql
+  args:
+    sql: |
+      DROP TABLE test1 cascade;
+      DROP TABLE test2 cascade;
+    cascade: true
+- type: clear_metadata
+  args: {}

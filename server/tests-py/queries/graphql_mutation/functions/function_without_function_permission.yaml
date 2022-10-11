@@ -1,0 +1,20 @@
+- description: Fails as anonymous role doesn't have access to the `add_to_score` function
+  headers:
+    X-Hasura-Role: anonymous
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        add_to_score(args: {search: "Black"}){
+          name
+          score
+          role_echo
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $
+        code: validation-failed
+      message: no mutations exist

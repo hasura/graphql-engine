@@ -1,0 +1,33 @@
+description: Insert author and it's articles via nested mutation with manual object relationship
+url: /v1/graphql
+status: 200
+query:
+  query: |-
+   mutation nested_author_insert {
+     insert_author_one (
+       object: {
+         name: "Author 3",
+         detail_manual: {
+           data: {
+             phone: "1234567890"
+           }
+         }
+       }
+     ) {
+       id
+       name
+       detail_manual {
+         id
+         phone
+       }
+     }
+   }
+
+response:
+  data:
+    insert_author_one:
+      id: 3
+      name: Author 3
+      detail_manual:
+        id: 3
+        phone: "1234567890"

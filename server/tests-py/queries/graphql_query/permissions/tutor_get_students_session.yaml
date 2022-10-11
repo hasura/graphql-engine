@@ -1,0 +1,24 @@
+description: Fetch student names with tutor role with an offset given via hasura session
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: tutor_session
+  X-Hasura-Offset-Marks: '10'
+query:
+  query: |
+    query {
+      student_marks{
+        name
+        total_marks
+        total_marks_offset
+      }
+    }
+response:
+  data:
+    student_marks:
+    - name: blake
+      total_marks: 233
+      total_marks_offset: 223
+    - name: leonel
+      total_marks: 268
+      total_marks_offset: 258

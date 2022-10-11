@@ -1,0 +1,19 @@
+description: Mutations are not exposed to an inherited role
+url: /v1/graphql
+headers:
+  X-Hasura-Role: inherited_user
+  X-Hasura-User-Id: '3'
+status: 200
+query:
+  query: |
+    mutation {
+      insert_authors(objects: {name: "J.K.Rowling", phone: "1122334455"}) {
+        affected_rows
+      }
+    }
+response:
+  errors:
+    - extensions:
+        path: $
+        code: validation-failed
+      message: no mutations exist

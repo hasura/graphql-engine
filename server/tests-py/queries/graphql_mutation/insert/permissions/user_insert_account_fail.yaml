@@ -7,9 +7,9 @@ headers:
 response:
   errors:
   - extensions:
-      path: "$.selectionSet.insert_account.args.objects"
+      path: $.selectionSet.insert_account.args.objects
       code: permission-error
-    message: Check constraint violation. insert check constraint failed
+    message: check constraint of an insert/update permission has failed
 query:
   query: |
     mutation{

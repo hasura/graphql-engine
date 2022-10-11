@@ -1,0 +1,1 @@
+CREATE TABLE "test" ("id" serial NOT NULL, PRIMARY KEY ("id") );

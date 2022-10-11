@@ -3,6 +3,7 @@ args:
 - type: run_sql
   args:
     sql: |
+      DROP TABLE table_with_sql_identifier;
       DROP TABLE article;
       DROP TABLE author;
       DROP TABLE city;

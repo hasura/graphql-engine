@@ -3,7 +3,7 @@ url: /v1/query
 status: 400
 response:
   path: $
-  error: expected Object, encountered String
+  error: parsing Object failed, expected Object, but encountered String
   code: parse-failed
 query: |
   type: count

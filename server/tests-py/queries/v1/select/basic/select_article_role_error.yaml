@@ -1,0 +1,15 @@
+url: /v1/query
+headers:
+  x-hasura-role: user
+status: 400
+response:
+ code: permission-denied
+ error: role "user" does not have permission to select column "id"
+ path: $.args.columns[0]
+query:
+  type: select
+  args:
+    table: author
+    columns:
+      - id
+      - name

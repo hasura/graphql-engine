@@ -1,0 +1,16 @@
+type: bulk
+args:
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: spatial_types_geom
+    cascade: true
+
+- type: mssql_untrack_table
+  args:
+    source: mssql
+    table:
+      name: spatial_types_geog
+    cascade: true

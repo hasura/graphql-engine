@@ -1,0 +1,17 @@
+bcrypt==3.2.0
+boto3==1.17.62
+botocore==1.20.62
+cffi==1.14.5
+cryptography==3.4.7
+fabric==2.6.0
+invoke==1.5.0
+jmespath==0.10.0
+paramiko==2.7.2
+patchwork==1.0.1
+pathlib2==2.3.5
+pycparser==2.20
+PyNaCl==1.4.0
+python-dateutil==2.8.1
+s3transfer==0.4.2
+six==1.15.0
+urllib3==1.26.4

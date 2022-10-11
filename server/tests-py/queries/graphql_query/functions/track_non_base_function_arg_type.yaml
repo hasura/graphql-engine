@@ -1,0 +1,57 @@
+- description: setup a custom SQL function
+  url: /v1/query
+  status: 200
+  query:
+    type: run_sql
+    args:
+      sql: |
+        create function search_post_by_test(t test)
+        returns setof post as $$
+            select *
+            from post
+            where
+            title ilike ('%' || t.name || '%')
+            $$ language sql stable;
+
+- description: Track function v2 with invalid session argument
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    version: 2
+    type: track_function
+    args:
+      function: search_post_by_test
+
+- description: Introspect the new composite table scalar type created
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      __type:
+        kind: SCALAR
+  query:
+    query: |
+      query {
+        __type (name: "test_scalar") {
+          kind
+        }
+      }
+
+- description: Execute the tracked function with a composite row type argument
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        search_post_by_test (args: {t: "(1, hasura,311cf381-71e7-449b-bac5-86cd6deafd5b)"}) {
+          title
+          content
+        }
+      }
+  response:
+    data:
+      search_post_by_test:
+        - title: post by hasura
+          content: content for post

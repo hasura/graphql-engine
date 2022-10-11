@@ -1,0 +1,32 @@
+description: Update mutation on article whose check constraint is not met. Trying to publish the article with user role.
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '1'
+query:
+  query: |
+    mutation {
+      update_article(
+        where: {id: {_eq: 1}}
+        _set: {is_published: true}
+      ){
+        affected_rows
+        returning{
+          id
+          title
+          content
+          is_published
+          author{
+            id
+            name
+          }
+        }
+      }
+    }
+response:
+  errors:
+  - extensions:
+      path: "$"
+      code: permission-error
+    message: check constraint of an update permission has failed

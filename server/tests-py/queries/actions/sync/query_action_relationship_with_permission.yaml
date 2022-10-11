@@ -1,0 +1,39 @@
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        insert_user_one(object: {email: "clarke@gmail.com", name: "Clarke"}) {
+          email
+        }
+      }
+  response:
+    data:
+      insert_user_one:
+        email: clarke@gmail.com
+
+- description: query action for a role with permissions defined on the relationship table
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '1'
+  query:
+    query: |
+      query {
+        get_user_by_email(email:"clarke@gmail.com") {
+          id
+          user {
+            name
+            email
+          }
+        }
+      }
+
+  response:
+    data:
+      get_user_by_email:
+        id: 1
+        user:
+          name: Clarke
+          email: clarke@gmail.com

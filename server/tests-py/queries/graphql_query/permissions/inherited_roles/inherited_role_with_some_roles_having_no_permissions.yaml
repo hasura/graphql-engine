@@ -1,0 +1,25 @@
+description: |
+  Suppose an inherited role `ir1` is created out of role1, role2 and role3. role1 and role2 have some select
+  permissions configured for a Table T and role3 doesn't have any select permissions configured for T. In such cases, the inherited role `ir1` should work as if the inherited role is created out of only role1 and role2 or the inherited role's permissions should be only constructed out of the permissions which exist for the underlying roles. In this case, the
+  `guest` role doesn't have select permissions configured for the table `author`
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: author_editor_guest_inherited_role
+  X-Hasura-Author-Id: '1'
+  X-Hasura-Editor-Id: '1'
+query:
+  query: |
+    query {
+      authors {
+        id
+        name
+        followers
+      }
+    }
+reponse:
+  data:
+    authors:
+      - id: 1
+        name: J.K.Rowling
+        followers: 1232344

@@ -1,0 +1,19 @@
+description: Query get_session_var custom SQL function
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Test: test value
+  X-Hasura-Role: admin
+response:
+  data:
+    get_session_var:
+    - result: test value
+query:
+  query: |
+    query a {
+      get_session_var(
+        args: {session_var: "x-hasura-test"}
+      ){
+        result
+      }
+    }

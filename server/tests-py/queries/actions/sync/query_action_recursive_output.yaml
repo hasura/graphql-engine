@@ -1,0 +1,64 @@
+- description: query action with recursive output
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        recursive_output {
+          direct {
+            id
+            this {
+              id
+              this {
+                id
+              }
+            }
+          }
+          list {
+            id
+            these {
+              id
+              these {
+                id
+              }
+            }
+          }
+          mutual {
+            id
+            that {
+              id
+              other {
+                id
+                that {
+                  id
+                }
+              }
+            }
+          }
+        }
+      }
+
+  response:
+    data:
+      recursive_output:
+        direct:
+          id: 1
+          this:
+            id: 2
+            this:
+              id: 3
+        list:
+          id: 1
+          these:
+          - id: 2
+            these:
+            - id: 3
+          - id: 4
+        mutual:
+          id: 1
+          that:
+            id: 2
+            other:
+              id: 3
+              that:
+                id: 4

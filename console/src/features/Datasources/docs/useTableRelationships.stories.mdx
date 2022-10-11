@@ -1,0 +1,86 @@
+import { Meta } from '@storybook/addon-docs';
+
+<Meta title="Hooks/useTableRelationships" />
+
+<h1 class="text-xl font-semibold mb-md">useTableRelationships</h1>
+
+<h2 class="text-lg font-semibold mb-xs">Overview</h2>
+
+```typescript
+import { useTableRelationships } from '@features/Datasources';
+```
+
+<p class="mb-md text-muted mb-sm">
+  Gets the list of FK relationships from a table and the ones that target the
+  table. This hooks searchs for relationships across schema and will list both
+  simple and composite FK constraints.
+</p>
+
+```typescript
+const query = useTableRelationships({
+  target: {
+    database: 'chinook',
+    schema: 'public',
+    table: 'Album',
+  },
+});
+```
+
+<p class="mb-md text-muted mb-sm">
+  This will return a <b>query</b> object that can used in your react component.
+  The <b>query</b> object contains the result, if the API call is successful.
+  The output format will be -
+</p>
+
+```javascript
+[
+  {
+    from: { table: '"Track"', column: ['"AlbumId"'] },
+    to: { table: '"Album"', column: ['"AlbumId"'] },
+  },
+  {
+    from: { table: '"Album"', column: ['"ArtistId"'] },
+    to: { table: '"Artist"', column: ['"ArtistId"'] },
+  },
+];
+```
+
+<h2 class="text-lg font-semibold mb-xs">Properties</h2>
+
+<br />
+
+<div class="overflow-x-auto border border-gray-300 rounded mb-md">
+  <table class="min-w-full divide-y divide-gray-200 text-left">
+    <thead>
+      <tr>
+        <th
+          scope="col"
+          class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+        >
+          Property
+        </th>
+        <th
+          scope="col"
+          class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+        >
+          Type
+        </th>
+        <th
+          scope="col"
+          class="bg-gray-50 px-sm py-sm text-sm font-semibold text-muted uppercase tracking-wider"
+        >
+          Description
+        </th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <tr class="group">
+        <td class="p-sm whitespace-nowrap text-muted">Target </td>
+        <td class="p-sm whitespace-nowrap text-muted">DataTarget</td>
+        <td class="p-sm whitespace-nowrap text-muted">
+          Data path for the table (should be one of the supported driver format)
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

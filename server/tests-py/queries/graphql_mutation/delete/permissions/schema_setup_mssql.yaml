@@ -1,0 +1,78 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      create table author(
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        name NVARCHAR(450) UNIQUE,
+        payments_done BIT NOT NULL DEFAULT 0,
+        user_id INT
+      );
+      CREATE TABLE article (
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        author_id INTEGER NOT NULL REFERENCES author(id),
+        is_published BIT,
+        published_on TIMESTAMP
+      );
+      CREATE TABLE resident (
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        name TEXT NOT NULL,
+        age INTEGER NOT NULL
+      );
+      create table "user" (
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        name NVARCHAR(450) UNIQUE,
+        is_admin BIT DEFAULT 0
+      );
+
+      create table account (
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        account_no INTEGER NOT NULL
+      );
+
+      insert into resident (name, age)
+        values
+          ('Griffin', 25),
+          ('Clarke', 26);
+
+      insert into author (name, payments_done)
+        values
+          ('Author 1', 0),
+          ('Author 2', 0),
+          ('Author 3', 1),
+          ('Author 4', 1),
+          ('Author 5', 1);
+
+      insert into article (content, title, author_id)
+        values
+          ( 'Sample article content 1',
+            'Article 1',
+            1
+          ),
+          ( 'Sample article content 2',
+            'Article 2',
+            1
+          ),
+          ( 'Sample article content 3',
+            'Article 3',
+            1
+          ),
+          ( 'Sample article content 4',
+            'Article 4',
+            2
+          ),
+          ( 'Sample article content 5',
+            'Article 5',
+            2
+          );
+
+      insert into "user" (name, is_admin)
+        values ('user_1', 0), ('user_2', 1)
+      ;
+
+      insert into account (account_no) values (1), (2) ;

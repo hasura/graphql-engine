@@ -1,0 +1,10 @@
+type: bulk
+args:
+
+- type: drop_inherited_role
+  args:
+    role_name: author_editor_publisher
+
+- type: drop_inherited_role
+  args:
+    role_name: author_editor

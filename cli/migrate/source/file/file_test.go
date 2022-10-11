@@ -1,14 +1,13 @@
 package file
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
 	"testing"
 
-	st "github.com/hasura/graphql-engine/cli/migrate/source/testing"
+	st "github.com/hasura/graphql-engine/cli/v2/migrate/source/testing"
 	"github.com/sirupsen/logrus/hooks/test"
 )
 
@@ -54,7 +53,10 @@ func Test(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
+	err = d.Scan()
+	if err != nil {
+		t.Fatal(err)
+	}
 	st.Test(t, d)
 }
 
@@ -91,7 +93,12 @@ func TestOpenWithRelativePath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Chdir(wd) // rescue working dir after we are done
+	defer func() {
+		err = os.Chdir(wd) // rescue working dir after we are done
+		if err != nil {
+			t.Fatal(err)
+		}
+	}()
 
 	if err := os.Chdir(tmpDir); err != nil {
 		t.Fatal(err)
@@ -111,6 +118,10 @@ func TestOpenWithRelativePath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	err = d.Scan()
+	if err != nil {
+		t.Fatal(err)
+	}
 	_, err = d.First()
 	if err != nil {
 		t.Fatalf("expected first file in working dir %v for foo", tmpDir)
@@ -118,6 +129,10 @@ func TestOpenWithRelativePath(t *testing.T) {
 
 	// dir: ./foo
 	d, err = f.Open("file://./foo", logger)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = d.Scan()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,9 +172,13 @@ func TestOpenWithDuplicateVersion(t *testing.T) {
 
 	logger, _ := test.NewNullLogger()
 	f := &File{}
-	_, err = f.Open("file://"+tmpDir, logger)
+	d, err := f.Open("file://"+tmpDir, logger)
+	if err != nil {
+		t.Fatal("expected err not to be nil")
+	}
+	err = d.Scan()
 	if err == nil {
-		t.Fatal("expected err")
+		t.Fatal("expected err not to be nil")
 	}
 }
 
@@ -194,8 +213,12 @@ func TestWithInvalidDirectory(t *testing.T) {
 	logger, _ := test.NewNullLogger()
 	s := &File{}
 	_, err := s.Open("file://invalidir", logger)
+	if err != nil {
+		t.Fatal("exepected err to be nil")
+	}
+	err = s.Scan()
 	if err == nil {
-		t.Fatal("exepected err to be not nil")
+		t.Fatal("exepected err not to be nil")
 	}
 }
 
@@ -216,48 +239,6 @@ func TestClose(t *testing.T) {
 	if d.Close() != nil {
 		t.Fatal("expected nil")
 	}
-}
-
-func mustCreateBenchmarkDir(t *testing.B) (dir string) {
-	tmpDir, err := ioutil.TempDir("", "Benchmark")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	for i := 0; i < 1000; i++ {
-		mustWriteFile(t, tmpDir, fmt.Sprintf("%v_foobar.up.sql", i), "")
-		mustWriteFile(t, tmpDir, fmt.Sprintf("%v_foobar.down.sql", i), "")
-	}
-
-	return tmpDir
-}
-
-func BenchmarkOpen(b *testing.B) {
-	logger, _ := test.NewNullLogger()
-	dir := mustCreateBenchmarkDir(b)
-	defer os.RemoveAll(dir)
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		f := &File{}
-		f.Open("file://"+dir, logger)
-	}
-	b.StopTimer()
-}
-
-func BenchmarkNext(b *testing.B) {
-	logger, _ := test.NewNullLogger()
-	dir := mustCreateBenchmarkDir(b)
-	defer os.RemoveAll(dir)
-	f := &File{}
-	d, _ := f.Open("file://"+dir, logger)
-	b.ResetTimer()
-	v, err := d.First()
-	for n := 0; n < b.N; n++ {
-		for !os.IsNotExist(err) {
-			v, err = d.Next(v)
-		}
-	}
-	b.StopTimer()
 }
 
 func mustWriteFile(t testing.TB, dir, file string, body string) {

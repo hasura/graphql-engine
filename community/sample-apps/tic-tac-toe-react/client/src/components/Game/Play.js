@@ -89,9 +89,9 @@ const Play = ({boardId, client}) => {
             status= <h2 style={{color: isSelfWinner ? 'green' : 'red'}}>{winner}</h2>
           } else {
             if (board.turn === 'x') {
-              status = <h2 style={{color: isSelfUser1 ? 'green' : '#565656'}}>{isSelfUser1 ? 'Your' : `${board.user1.name}'s`} turn</h2>
+              status = <h2 style={{color: isSelfUser1 ? 'green' : '#565656'}}>{isSelfUser1 ? 'Your' : `${board.user2.name}'s`} turn</h2>
             } else {
-              status = <h2 style={{color: !isSelfUser1 ? 'green' : '#565656'}}>{!isSelfUser1 ? 'Your' : `${board.user2.name}'s`} turn</h2>
+              status = <h2 style={{color: !isSelfUser1 ? 'green' : '#565656'}}>{!isSelfUser1 ? 'Your' : `${board.user1.name}'s`} turn</h2>
             }
           }
 

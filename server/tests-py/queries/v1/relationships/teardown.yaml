@@ -1,12 +1,12 @@
 type: bulk
 args:
-    
 - type: run_sql
   args:
     sql: |
       DROP VIEW article_view;
       DROP TABLE article;
       DROP VIEW author_view;
+      DROP TABLE author_details;
       DROP TABLE author;
       DROP VIEW hge_tests.address_view;
       DROP TABLE hge_tests.address;

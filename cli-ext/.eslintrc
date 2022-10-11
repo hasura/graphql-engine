@@ -1,0 +1,34 @@
+{
+  "env": {
+    "node": true
+  },
+  "extends": ["airbnb-base", "plugin:@typescript-eslint/recommended"],
+  "plugins": ["promise", "@typescript-eslint/eslint-plugin"],
+  "parser": "@typescript-eslint/parser",
+  "rules": {
+    "no-console": "off",
+    "consistent-return": "off",
+    "no-case-declarations": "off",
+    "no-useless-catch": "off",
+    "no-unused-vars": "off",
+    "no-eval": "off",
+    "no-new": "off",
+    "max-len": "off",
+    "no-plusplus": "off",
+    "import/no-unresolved": "off",
+    "promise/always-return": "off",
+    "promise/no-return-wrap": "error",
+    "promise/param-names": "error",
+    "promise/catch-or-return": "error",
+    "promise/no-native": "off",
+    "promise/no-nesting": "error",
+    "promise/no-promise-in-callback": "error",
+    "promise/no-callback-in-promise": "error",
+    "promise/no-return-in-finally": "error",
+    "prefer-arrow-callback": "error",
+    "@typescript-eslint/no-var-requires": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/camelcase": "off"
+  }
+}

@@ -1,0 +1,124 @@
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        insert_hello (objects: [{name: "Some text"}, {name: "More text"}]) {
+          affected_rows
+          returning {
+            id
+            name
+          }
+        }
+        createUser(id: 123, username: "foobar") {
+          user {
+            id
+            username
+          }
+        }
+      }
+  response:
+    data:
+      insert_hello:
+        affected_rows: 2
+        returning:
+        - id: 1
+          name: Some text
+        - id: 2
+          name: More text
+      createUser:
+        user:
+          id: 123
+          username: foobar
+
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        search(episode: 2) {
+          ... on Human {
+            homePlanet
+          }
+        }
+        hello {
+          id
+          name
+        }
+        user_alias : user(id: 2) {
+          id
+          username
+        }
+      }
+  response:
+    data:
+      search:
+        homePlanet: Tatooine
+      hello:
+      - id: 1
+        name: Some text
+      - id: 2
+        name: More text
+      user_alias:
+        id: 2
+        username: john
+
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query {
+        search(episode: 2) {
+          ... on Human {
+            homePlanet
+          }
+        }
+        hello {
+          id
+          name
+        }
+        user_alias : user(id: 2) {
+          generateError
+        }
+      }
+  response:
+    data:
+    errors:
+    - message: Cannot query field "generateError" on type "User".
+      path:
+        - user_alias
+        - generateError
+      locations:
+      - line: 1
+        column: 36
+
+- url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      mutation {
+        createUser(id: 321, username: "barfoo") {
+          user {
+            id
+            username
+          }
+        }
+        insert_hello (objects: [{name: "Some text"}]) {
+          affected_rows
+          returning {
+            id
+            name
+          }
+        }
+      }
+  response:
+    data:
+      createUser:
+        user:
+          id: 321
+          username: barfoo
+      insert_hello:
+        affected_rows: 1
+        returning:
+        - id: 3
+          name: Some text

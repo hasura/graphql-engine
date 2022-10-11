@@ -1,0 +1,50 @@
+{
+  "version": 3,
+  "sources": [
+    {
+      "name": "default",
+      "kind": "postgres",
+      "tables": [
+        {
+          "table": {
+            "schema": "pub",
+            "name": "t3"
+          }
+        },
+        {
+          "table": {
+            "schema": "pub",
+            "name": "t4"
+          }
+        },
+        {
+          "table": {
+            "schema": "public",
+            "name": "t1"
+          }
+        },
+        {
+          "table": {
+            "schema": "public",
+            "name": "t2"
+          }
+        }
+      ],
+      "configuration": {
+        "connection_info": {
+          "use_prepared_statements": true,
+          "database_url": {
+            "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+          },
+          "isolation_level": "read-committed",
+          "pool_settings": {
+            "connection_lifetime": 600,
+            "retries": 1,
+            "idle_timeout": 180,
+            "max_connections": 50
+          }
+        }
+      }
+    }
+  ]
+}

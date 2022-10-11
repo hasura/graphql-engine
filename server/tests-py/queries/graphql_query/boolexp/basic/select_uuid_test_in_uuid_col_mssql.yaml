@@ -1,0 +1,28 @@
+description: Fetch data from uuid_test table using _in operator in where filter. MSSQL UUIDs are uppercase by default.
+url: /v1/graphql
+status: 200
+response:
+  data:
+    uuid_test:
+    - id: 1
+      uuid_col: 28D6D683-1317-49F7-B1CF-7D195242E4E5
+    - id: 2
+      uuid_col: 28D6D683-1317-49F7-B1CF-7D195242E4E6
+
+query:
+  query: |
+    query {
+      uuid_test(
+        where: {
+          uuid_col: {
+            _in: [ "28D6D683-1317-49F7-B1CF-7D195242E4E5"
+                 , "28D6D683-1317-49F7-B1CF-7D195242E4E6"
+                 , "28D6D683-1317-49F7-B1CF-7D195242E4E8"
+                 ]
+          }
+        }
+      ) {
+        id
+        uuid_col
+      }
+    }

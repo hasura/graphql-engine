@@ -10,16 +10,10 @@ args:
       columns: ["c1", "c3"]
     delete:
       columns: "*"
-    webhook: http://127.0.0.1:5592/new
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}/new"
     retry_conf:
       num_retries: 5
       interval_sec: 5
     replace: true
-- type: select
-  args:
-    table:
-      schema: hdb_catalog
-      name: event_triggers
-    columns: ["configuration"]
-    where:
-      name: t1_cols
+- type: export_metadata
+  args: {}

@@ -1,0 +1,15 @@
+- name: bar-trigger
+  webhook: https://httpbin.org/post
+  schedule: '* * * * *'
+  include_in_metadata: true
+  payload:
+    bar: done
+  retry_conf:
+    num_retries: 5
+    timeout_seconds: 90
+    tolerance_seconds: 21600
+    retry_interval_seconds: 100
+  headers:
+  - value: foo
+    name: stuff
+  comment: bar-trigger

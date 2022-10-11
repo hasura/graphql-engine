@@ -1,0 +1,16 @@
+type: bulk
+args:
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      schema: hge_tests
+      name: test_t1
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      schema: hge_tests
+      name: User

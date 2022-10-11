@@ -1,0 +1,15 @@
+type: bulk
+args:
+- type: bigquery_run_sql
+  args:
+    source: bigquery
+    sql: |
+      CREATE TABLE `hasura.city` (
+        `name` STRING,
+        `country` STRING
+      ) AS SELECT * FROM UNNEST([
+        STRUCT('Durham' AS `name`, 'USA' AS `country`),
+        STRUCT('New York' AS `name`, 'USA' AS `country`),
+        STRUCT('Framlingham' AS `name`, 'UK' AS `country`),
+        STRUCT('New Orleans' AS `name`, 'USA' AS `country`)
+      ]);

@@ -1,0 +1,337 @@
+{
+  "version": 2,
+  "tables": [
+    {
+      "table": {
+        "schema": "public",
+        "name": "albums"
+      },
+      "object_relationships": [
+        {
+          "name": "artist",
+          "using": {
+            "foreign_key_constraint_on": "artist_id"
+          }
+        }
+      ],
+      "array_relationships": [
+        {
+          "name": "tracks",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "album_id",
+              "table": {
+                "schema": "public",
+                "name": "tracks"
+              }
+            }
+          }
+        }
+      ],
+      "insert_permissions": [
+        {
+          "role": "user",
+          "permission": {
+            "check": {
+              "id": {
+                "_eq": "X-Hasura-User-Id"
+              }
+            },
+            "columns": [],
+            "backend_only": false
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "artists"
+      },
+      "array_relationships": [
+        {
+          "name": "albums",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "artist_id",
+              "table": {
+                "schema": "public",
+                "name": "albums"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "genres"
+      },
+      "array_relationships": [
+        {
+          "name": "tracks",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "genre_id",
+              "table": {
+                "schema": "public",
+                "name": "tracks"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "media_types"
+      },
+      "array_relationships": [
+        {
+          "name": "tracks",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "media_type_id",
+              "table": {
+                "schema": "public",
+                "name": "tracks"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "playlist_track"
+      },
+      "object_relationships": [
+        {
+          "name": "playlist",
+          "using": {
+            "foreign_key_constraint_on": "playlist_id"
+          }
+        },
+        {
+          "name": "track",
+          "using": {
+            "foreign_key_constraint_on": "track_id"
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "playlists"
+      },
+      "array_relationships": [
+        {
+          "name": "playlist_tracks",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "playlist_id",
+              "table": {
+                "schema": "public",
+                "name": "playlist_track"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "table": {
+        "schema": "public",
+        "name": "tracks"
+      },
+      "object_relationships": [
+        {
+          "name": "album",
+          "using": {
+            "foreign_key_constraint_on": "album_id"
+          }
+        },
+        {
+          "name": "genre",
+          "using": {
+            "foreign_key_constraint_on": "genre_id"
+          }
+        },
+        {
+          "name": "media_type",
+          "using": {
+            "foreign_key_constraint_on": "media_type_id"
+          }
+        }
+      ],
+      "array_relationships": [
+        {
+          "name": "playlist_tracks",
+          "using": {
+            "foreign_key_constraint_on": {
+              "column": "track_id",
+              "table": {
+                "schema": "public",
+                "name": "playlist_track"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "function": {
+        "schema": "public",
+        "name": "search_albums"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "name": "foo",
+      "definition": {
+        "kind": "synchronous",
+        "type": "mutation",
+        "handler": "http://localhost:3000",
+        "arguments": [
+          {
+            "name": "arg1",
+            "type": "FooInput!",
+            "description": null
+          }
+        ],
+        "output_type": "FooOutput",
+        "request_transform": {
+          "body": "{\n  \"users\": {\n    \"name-foo\": {{$body.input.arg1.username}},\n    \"password-bar\": {{$body.input.arg1.password}}\n  }\n}",
+          "content_type": "application/json",
+          "method": "POST",
+          "query_params": {
+            "baz": "1"
+          },
+          "template_engine": "Kriti"
+        }
+      }
+    }
+  ],
+  "custom_types": {
+    "enums": [],
+    "input_objects": [
+      {
+        "name": "FooInput",
+        "fields": [
+          {
+            "name": "username",
+            "type": "String!",
+            "description": null
+          },
+          {
+            "name": "password",
+            "type": "String!",
+            "description": null
+          }
+        ]
+      }
+    ],
+    "objects": [
+      {
+        "name": "FooOutput",
+        "fields": [
+          {
+            "name": "accessToken",
+            "type": "String!",
+            "description": null
+          }
+        ]
+      }
+    ],
+    "scalars": []
+  },
+  "remote_schemas": [
+    {
+      "name": "countries",
+      "definition": {
+        "url_from_env": "RS_ENV",
+        "timeout_seconds": 11,
+        "headers": [
+          {
+            "value": "countries-bar",
+            "name": "countries-foo"
+          }
+        ],
+        "forward_client_headers": true
+      },
+      "comment": "foo countries",
+      "permissions": [
+        {
+          "role": "user",
+          "definition": {
+            "schema": "schema  { query: Query }\n\ntype Continent { code: ID!\n  countries: [Country!]!\n  name: String!\n}\n\ntype Country { capital: String\n  code: ID!\n  continent: Continent!\n  currency: String\n  emoji: String!\n  emojiU: String!\n  languages: [Language!]!\n  name: String!\n  native: String!\n  phone: String!\n  states: [State!]!\n}\n\ntype Language { code: ID!\n  name: String\n  native: String\n  rtl: Boolean!\n}\n\ntype Query { continent(code: ID!): Continent\n  countries(filter: CountryFilterInput): [Country!]!\n  languages(filter: LanguageFilterInput): [Language!]!\n}\n\ntype State { code: String\n  country: Country!\n  name: String!\n}\n\ninput CountryFilterInput {code: StringQueryOperatorInput\n  continent: StringQueryOperatorInput\n  currency: StringQueryOperatorInput\n}\n\ninput LanguageFilterInput {code: StringQueryOperatorInput\n}\n\ninput StringQueryOperatorInput {eq: String\n  glob: String\n  in: [String]\n  ne: String\n  nin: [String]\n  regex: String\n}"
+          }
+        }
+      ]
+    }
+  ],
+  "query_collections": [
+    {
+      "name": "allowed-queries",
+      "definition": {
+        "queries": [
+          {
+            "name": "getAlbums",
+            "query": "query getAlbums {\n  albums {\n    id\n    title\n  }\n}\n"
+          },
+          {
+            "name": "getArtists",
+            "query": "query getArtists {\n  artists {\n    id\n    name\n  }\n}\n"
+          }
+        ]
+      }
+    }
+  ],
+  "allowlist": [
+    {
+      "collection": "allowed-queries"
+    }
+  ],
+  "cron_triggers": [
+    {
+      "name": "bar-trigger",
+      "webhook": "https://httpbin.org/post",
+      "schedule": "* * * * *",
+      "include_in_metadata": true,
+      "payload": {
+        "bar": "done"
+      },
+      "retry_conf": {
+        "num_retries": 5,
+        "timeout_seconds": 90,
+        "tolerance_seconds": 21600,
+        "retry_interval_seconds": 100
+      },
+      "headers": [
+        {
+          "value": "foo",
+          "name": "stuff"
+        }
+      ],
+      "comment": "bar-trigger"
+    }
+  ],
+  "network": {
+    "tls_allowlist": [
+      {
+        "suffix": null,
+        "permissions": [
+          "self-signed"
+        ],
+        "host": "scriptonist.dev"
+      }
+    ]
+  }
+}

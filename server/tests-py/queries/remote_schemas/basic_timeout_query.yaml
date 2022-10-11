@@ -1,10 +1,6 @@
 description: Simple GraphQL query (takes 10s to respond)
 url: /v1/graphql
 status: 200
-response:
-  errors:
-    - message: ResponseTimeout
-      extensions: {'path': '$', 'code': 'unexpected'}
 query:
   query: |
     query {

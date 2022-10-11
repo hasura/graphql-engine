@@ -1,0 +1,107 @@
+---
+sidebar_label: Migrations & Metadata
+description: Manage Hasura Migrations and Metadata
+keywords:
+  - hasura
+  - migration
+  - metadata
+  - CI/CD
+  - ci
+  - cd
+slug: index
+---
+
+# Migrations & Metadata Introduction
+
+Hasura needs two pieces of information which work together to describe your Hasura setup
+
+- **Migrations** - Representing the underlying database schema.
+- **Metadata** - Describing the exposed Hasura GraphQL API and all other configuration.
+
+---
+
+## Hasura Migrations
+
+**Keep track of your database schema over time.**
+
+Hasura Migrations are a SQL representation of the state of your database schema which can be used to keep track of,
+update, roll-back or move your schema using the [Hasura CLI](/hasura-cli/index.mdx).
+
+They are automatically generated in a series of Unix nanosecond timestamped directories consisting of `up.sql` and
+`down.sql` files in pure SQL syntax, which describe to Hasura Server both how to create, (`up.sql`) and how to
+roll back (`down.sql`) each of your database changes step-by-step.
+
+When these files are committed to version control, your database schema state can be kept in-sync with your codebase.
+
+When used in combination with CI/CD, changes to your database schema can automatically and elegantly be applied to
+your app's development, staging or production versions.
+
+Example `migrations` directory created with the Hasura CLI:
+```text
+📂 migrations
+└─ 📂 default
+   └─ 📂 1654696186008_init
+      └─ 📄 up.sql
+   └─ 📂 1654698227514_create_table_public_address
+      ├─ 📄 down.sql
+      └─ 📄 up.sql
+```
+
+---
+
+## Hasura Metadata
+
+**The configuration of your Hasura Server**
+
+Hasura Metadata is a representation of the configuration of the Hasura Server. From actions to databases and their
+tables, to permissions, event triggers and API limits, everything regarding the config of the Hasura Server is
+represented in Metadata.
+
+Metadata can also be tracked with version control, allowing your Hasura Metadata to be kept in-sync with your code
+and database schema changes.
+
+The state of Hasura Metadata is managed via snapshots of the state of the Hasura Server Metadata configuration. These
+snapshots can be applied as a whole, using the [Hasura CLI](/hasura-cli/index.mdx) to the Hasura Server.
+
+Example `metadata` directory created with the Hasura CLI:
+```text
+📂 metadata
+├─ 📂 databases
+│  ├─ 📂 default
+│  │  └─ 📂 tables
+│  │     ├─ 📄 public_address.yaml
+│  │     ├─ 📄 public_author.yaml
+│  │     ├─ 📄 public_article.yaml
+│  │     └─ 📄 tables.yaml
+│  └── 📄 databases.yaml
+├─ 📄 actions.graphql
+├─ 📄 actions.yaml
+├─ 📄 allow_list.yaml
+├─ 📄 api_limits.yaml
+├─ 📄 cron_triggers.yaml
+├─ 📄 graphql_schema_introspection.yaml
+├─ 📄 inherited_roles.yaml
+├─ 📄 network.yaml
+├─ 📄 query_collections.yaml
+├─ 📄 remote_schemas.yaml
+├─ 📄 rest_endpoints.yaml
+└─ 📄 version.yaml
+```
+
+---
+
+### Config versions
+
+Migrations and Metadata follow their own versioning scheme separate to the that of the Hasura Server and
+CLI. This documentation is for the latest Hasura Migrations `config v3`, supported from `v2.0.0-alpha.1`. (See
+[upgrade guide](/migrations-metadata-seeds/legacy-configs/upgrade-v3.mdx)).
+
+For `config v2`, see [Migrations (config v2)](/migrations-metadata-seeds/legacy-configs/config-v2/index.mdx).
+For `config v1`, see [Migrations (config v1)](/migrations-metadata-seeds/legacy-configs/config-v1/index.mdx).
+
+---
+
+## Setting up migrations
+
+See [Setting up Hasura Migrations](/migrations-metadata-seeds/migrations-metadata-setup.mdx).
+

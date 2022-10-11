@@ -1,0 +1,7 @@
+object_relationships:
+- name: user
+  using:
+    foreign_key_constraint_on: user_id
+table:
+  name: move
+  schema: public

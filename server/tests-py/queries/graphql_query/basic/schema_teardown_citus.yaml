@@ -1,0 +1,16 @@
+type: bulk
+args:
+
+- type: citus_run_sql
+  args:
+    source: citus
+    sql: |
+      drop table test_types;
+      drop table article;
+      drop table author;
+      drop table article_multi;
+      drop table author_multi;
+      drop table "user";
+      drop table person;
+      drop type complex;
+      drop type inventory_item;

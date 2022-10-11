@@ -1,0 +1,19 @@
+# Test for https://github.com/hasura/graphql-engine/issues/2818
+description: Query data using citext column in where clause
+url: /v1/graphql
+status: 200
+response:
+  data:
+    person:
+    - id: 2
+      name: Clarke
+    - id: 3
+      name: clarke
+query:
+  query: |
+    query {
+      person(where: {name: {_eq: "clarke"}}){
+        id
+        name
+      }
+    }

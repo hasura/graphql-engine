@@ -1,60 +1,101 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Hasura.Server.Version
-  ( currentVersion
-  , consoleVersion
-  , isDevVersion
+  ( Version (..),
+    currentVersion,
+    consoleAssetsVersion,
+    versionToAssetsVersion,
   )
 where
 
-import           Control.Lens        ((^.), (^?))
-import           Data.Either         (isLeft)
+import Control.Exception
+import Control.Lens ((^.), (^?))
+import Data.Aeson (FromJSON (..), ToJSON (..))
+import Data.FileEmbed (makeRelativeToProject)
+import Data.SemVer qualified as V
+import Data.Text qualified as T
+import Data.Text.Conversions (FromText (..), ToText (..))
+import Hasura.Prelude
+import Language.Haskell.TH
+import Language.Haskell.TH.Syntax
+import Text.Regex.TDFA ((=~~))
 
-import qualified Data.SemVer         as V
-import qualified Data.Text           as T
+data Version
+  = VersionDev Text
+  | VersionRelease V.Version
+  | VersionCE Text
+  deriving (Show, Eq)
 
-import           Hasura.Prelude
-import           Hasura.Server.Utils (getValFromEnvOrScript)
+instance ToText Version where
+  toText = \case
+    VersionDev txt -> txt
+    VersionRelease version -> "v" <> V.toText version
+    VersionCE txt -> txt
 
-version :: T.Text
-version = T.dropWhileEnd (== '\n')
-  $(getValFromEnvOrScript "VERSION" "../scripts/get-version.sh")
+instance FromText Version where
+  -- Ensure that a -ce suffix is *not* interpreted as the release type of a
+  -- Data.SemVer-style semantic version
+  fromText txt | T.takeEnd 3 txt == "-ce" = VersionCE txt
+  fromText txt = case V.fromText $ T.dropWhile (== 'v') txt of
+    Left _ -> VersionDev txt
+    Right version -> VersionRelease version
 
-parsedVersion :: Either String V.Version
-parsedVersion = V.fromText $ T.dropWhile (== 'v') version
+instance ToJSON Version where
+  toJSON = toJSON . toText
 
-currentVersion :: T.Text
-currentVersion = version
+instance FromJSON Version where
+  parseJSON = fmap fromText . parseJSON
 
-isDevVersion :: Bool
-isDevVersion = isLeft parsedVersion
+currentVersion :: Version
+currentVersion =
+  fromText $
+    T.dropWhileEnd (== '\n') $
+      T.pack $
+        -- NOTE: This must work correctly in the presence of a caching! See
+        -- graphql-engine.cabal (search for “CURRENT_VERSION”) for details
+        -- about our approach here. We could use embedFile but want a nice
+        -- error message
+        $( do
+             versionFileName <- makeRelativeToProject "CURRENT_VERSION"
+             addDependentFile versionFileName
+             let noFileErr =
+                   "\n==========================================================================="
+                     <> "\n>>> DEAR HASURIAN: The way we bake versions into the server has "
+                     <> "\n>>> changed; You'll need to run the following once in your repo to proceed: "
+                     <> "\n>>>  $ echo 12345 > \"$(git rev-parse --show-toplevel)/server/CURRENT_VERSION\""
+                     <> "\n===========================================================================\n"
+             runIO (readFile versionFileName `onException` error noFileErr) >>= stringE
+         )
 
-rawVersion :: T.Text
-rawVersion = "versioned/" <> version
-
-consoleVersion :: T.Text
-consoleVersion = case parsedVersion of
-  Left _  -> rawVersion
-  Right v -> mkConsoleV v
-
-mkConsoleV :: V.Version -> T.Text
-mkConsoleV v = case getReleaseChannel v of
-  Nothing -> rawVersion
-  Just c  -> T.pack $ "channel/" <> c <> "/" <> vMajMin
+versionToAssetsVersion :: Version -> Text
+versionToAssetsVersion = \case
+  VersionDev txt -> "versioned/" <> txt
+  VersionRelease v -> case getReleaseChannel v of
+    Nothing -> "versioned/" <> vMajMin
+    Just c -> "channel/" <> c <> "/" <> vMajMin
+    where
+      vMajMin = T.pack ("v" <> show (v ^. V.major) <> "." <> show (v ^. V.minor))
+  VersionCE txt -> "channel/versioned/" <> txt
   where
-    vMajMin = "v" <> show (v ^. V.major) <> "." <> show (v ^. V.minor)
+    getReleaseChannel :: V.Version -> Maybe Text
+    getReleaseChannel sv = case sv ^. V.release of
+      [] -> Just "stable"
+      (mr : _) -> case getTextFromId mr of
+        Nothing -> Nothing
+        Just r ->
+          if
+              | T.null r -> Nothing
+              | otherwise -> T.pack <$> getChannelFromPreRelease (T.unpack r)
 
-getReleaseChannel :: V.Version -> Maybe String
-getReleaseChannel sv = case sv ^. V.release of
-  []     -> Just "stable"
-  (mr:_) -> case getTextFromId mr of
-    Nothing -> Nothing
-    Just r  -> if
-      | "alpha" `T.isPrefixOf` r -> Just "alpha"
-      | "beta" `T.isPrefixOf` r  -> Just "beta"
-      | "rc" `T.isPrefixOf` r    -> Just "rc"
-      | otherwise                -> Nothing
+    getChannelFromPreRelease :: String -> Maybe String
+    getChannelFromPreRelease sv = sv =~~ ("^([a-z]+)" :: String)
 
-getTextFromId :: V.Identifier -> Maybe T.Text
-getTextFromId i = Just i ^? (toTextualM . V._Textual)
-  where
-    toTextualM _ Nothing  = pure Nothing
-    toTextualM f (Just a) = f a
+    getTextFromId :: V.Identifier -> Maybe Text
+    getTextFromId i = Just i ^? (toTextualM . V._Textual)
+      where
+        toTextualM _ Nothing = pure Nothing
+        toTextualM f (Just a) = f a
+
+-- | A version-based string used to form the CDN URL for fetching console assets.
+consoleAssetsVersion :: Text
+consoleAssetsVersion = versionToAssetsVersion currentVersion

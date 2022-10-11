@@ -1,0 +1,16 @@
+type: bulk
+args:
+
+- type: run_sql
+  args:
+    sql: |
+      create table hge_tests.test_t1(
+          id int,
+          first_name text,
+          last_name text
+      );
+
+- type: track_table
+  args:
+    schema: hge_tests
+    name: test_t1

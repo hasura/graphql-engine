@@ -1,0 +1,79 @@
+- description: call the simple endpoint to write to the cache
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query @cached(ttl: 300) {
+        test_table {
+          first_name
+          last_name
+        }
+      }
+  resp_headers:
+    Cache-Control: max-age=300
+    X-Hasura-Query-Cache-Key: 29c20d58ac50d0934e6708b4752ca5b122c09e3a
+    X-Hasura-Query-Family-Cache-Key: 05e354afeca0828bbe6c1e77c25e4ae948f45f80
+  response:
+    data:
+      test_table:
+        - first_name: Foo
+          last_name: Bar
+        - first_name: Baz
+          last_name: Qux
+        - first_name: X%20Y
+          last_name: Test
+
+- description: call the simple endpoint to write to the cache
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query ($name: String!) @cached(ttl: 300) {
+        test_table(where: {first_name: {_eq: $name}}) {
+          first_name
+          last_name
+        }
+      }
+    variables:
+      name: Baz
+  resp_headers:
+    Cache-Control: max-age=300
+    X-Hasura-Query-Cache-Key: 9b73b0e24aa2ea370775815d4aaea711c5f14642
+    X-Hasura-Query-Family-Cache-Key: 84e1f3f29c75859c2cffe4c6c52f738a46ce8fd3
+  response:
+    data:
+      test_table:
+        - first_name: Baz
+          last_name: Qux
+
+- description: call the simple endpoint to write to the cache
+  url: /v1/graphql
+  status: 200
+  query:
+    query: |
+      query ($name: String!) @cached(ttl: 300) {
+        test_table(where: {first_name: {_eq: $name}}) {
+          first_name
+          last_name
+        }
+      }
+    variables:
+      name: Foo
+  resp_headers:
+    Cache-Control: max-age=300
+    X-Hasura-Query-Cache-Key: 8e0d6cc0760cc90abe942ca3ea0930b587166f42
+    X-Hasura-Query-Family-Cache-Key: 84e1f3f29c75859c2cffe4c6c52f738a46ce8fd3
+  response:
+    data:
+      test_table:
+        - first_name: Foo
+          last_name: Bar
+
+- description: call the cache clear endpoint
+  url: /pro/cache/clear?family=84e1f3f29c75859c2cffe4c6c52f738a46ce8fd3
+  method: POST
+  status: 200
+  query:
+  response:
+    message: success
+    clearedItemCount: '2'

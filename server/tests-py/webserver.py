@@ -5,11 +5,10 @@
 """
 
 from abc import ABC, abstractmethod
-import socket
 import http.server as http
 from http import HTTPStatus
-from urllib.parse import parse_qs, urlparse
 import json
+from urllib.parse import parse_qs, urlparse
 
 
 class Response():
@@ -19,8 +18,8 @@ class Response():
             raise TypeError('status has to be of type http.HTTPStatus')
         if body and not isinstance(body, (str, dict)):
             raise TypeError('body has to be of type str or dict')
-        if headers and not isinstance(headers, dict):
-            raise TypeError('headers has to be of type dict')
+        if headers and not (isinstance(headers, (list, dict))):
+            raise TypeError('headers has to be of type list or dict')
         self.status = status
         self.body = body
         self.headers = headers
@@ -66,8 +65,13 @@ def MkHandlers(handlers):
             return urlparse(self.path)
 
         def append_headers(self, headers):
-            for k, v in headers.items():
-                self.send_header(k, v)
+            if isinstance(headers, dict):
+                for k, v in headers.items():
+                    self.send_header(k, v)
+            # Duplicate headers can be sent as a list of pairs
+            if isinstance(headers, list):
+                for (k, v) in headers:
+                    self.send_header(k, v)
 
         def do_GET(self):
             try:
@@ -126,14 +130,3 @@ def MkHandlers(handlers):
             return
 
     return HTTPHandler
-
-
-class WebServer(http.HTTPServer):
-    def __init__(self, server_address, handler):
-        super().__init__(server_address, handler)
-
-    def server_bind(self):
-        print('Running http server on {0}:{1}'.format(self.server_address[0],
-                                                      self.server_address[1]))
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.server_address)

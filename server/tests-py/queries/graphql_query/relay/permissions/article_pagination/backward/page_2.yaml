@@ -1,0 +1,54 @@
+description: Get last page of articles with 2 items before 'Article 4'
+url: /v1beta1/relay
+status: 200
+headers:
+  X-Hasura-Role: user
+  X-Hasura-User-Id: '2'
+query:
+  query: |
+    query {
+      article_connection(
+        last: 3
+        before: "eyJpZCIgOiA0fQ=="
+      ){
+        pageInfo{
+          startCursor
+          endCursor
+          hasPreviousPage
+          hasNextPage
+        }
+        edges{
+          cursor
+          node{
+            id
+            title
+            content
+            is_published
+            author_id
+          }
+        }
+      }
+    }
+response:
+  data:
+    article_connection:
+      pageInfo:
+        startCursor: eyJpZCIgOiAxfQ==
+        endCursor: eyJpZCIgOiAyfQ==
+        hasPreviousPage: false
+        hasNextPage: true
+      edges:
+      - cursor: eyJpZCIgOiAxfQ==
+        node:
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDFd
+          title: Article 1
+          content: Sample article content 1
+          is_published: true
+          author_id: 1
+      - cursor: eyJpZCIgOiAyfQ==
+        node:
+          id: WzEsICJwdWJsaWMiLCAiYXJ0aWNsZSIsIDJd
+          title: Article 2
+          content: Sample article content 2
+          is_published: true
+          author_id: 1

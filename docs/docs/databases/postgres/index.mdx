@@ -1,0 +1,48 @@
+---
+description: Hasura Postgres database support
+keywords:
+  - hasura
+  - docs
+  - databases
+  - postgres
+slug: index
+---
+
+# Postgres
+
+## Introduction
+
+Hasura enables connecting to a Postgres and Postgres compatible databases to automatically build an rich GraphQL API
+based on the schema.
+
+:::tip Supported Postgres versions
+
+Hasura GraphQL engine supports **Postgres 9.5 and above**
+
+:::
+
+## Postgres compatibility & flavors {#postgres-compatible-flavors}
+
+Hasura supports most databases with full Postgres compatibility such as:
+- [Yugabyte](https://www.yugabyte.com/)
+- [Timescale](https://www.timescale.com/)
+- [Citus](https://www.citusdata.com/)
+- [Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.AuroraPostgreSQL.html)
+- [RDS](https://aws.amazon.com/rds/postgresql/)
+- [Crunchy](https://www.crunchydata.com/)
+- [AlloyDB](https://cloud.google.com/alloydb)
+- [Neon](https://neon.tech/)
+
+We have more distributed flavours like CockroachDB coming soon. See
+[GitHub issue](https://github.com/hasura/graphql-engine/issues/678).
+
+Curious about any other Postgres flavours? Any other questions? Ask us on
+[GitHub discussions](https://github.com/hasura/graphql-engine/discussions)
+
+## Know more
+
+- [Schema](/schema/postgres/index.mdx)
+- [Queries](/queries/postgres/index.mdx)
+- [Mutations](/mutations/postgres/index.mdx)
+- [Subscriptions](/subscriptions/postgres/index.mdx)
+- [Supported Postgres types](/schema/postgres/postgresql-types.mdx)

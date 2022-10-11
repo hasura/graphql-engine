@@ -1,0 +1,53 @@
+- description: Create custom object type for action return type
+  url: /v1/query
+  status: 200
+  query:
+    type: set_custom_types
+    args:
+      objects:
+        - name: UserId
+          fields:
+            - name: id
+              type: Int!
+
+- description: Create an action
+  url: /v1/query
+  status: 200
+  query:
+    type: create_action
+    args:
+      name: insert_user
+      definition:
+        kind: synchronous
+        arguments:
+          - name: email
+            type: Int!
+          - name: name
+            type: String!
+        output_type: UserId!
+        handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
+
+- description: Track the table
+  url: /v1/query
+  status: 500
+  response:
+    code: unexpected
+    error: >-
+      Encountered conflicting definitions in the selection set for
+      'mutation_root' for field 'insert_user' defined in [action insert_user,
+      table user in source default]. Fields must not be defined more than once
+      across all sources.
+    path: $.args
+  query:
+    type: track_table
+    args:
+      table: user
+
+- description: Drop the custom types and action
+  url: /v1/query
+  status: 200
+  query:
+    type: drop_action
+    args:
+      name: insert_user
+      clear_data: true

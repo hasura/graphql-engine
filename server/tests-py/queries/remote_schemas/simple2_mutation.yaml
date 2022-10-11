@@ -5,8 +5,8 @@ response:
   data:
     createUser:
       user:
-        username: foobar
         id: 123
+        username: foobar
 query:
   query: |
     mutation {

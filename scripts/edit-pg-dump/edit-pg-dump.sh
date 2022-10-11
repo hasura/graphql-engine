@@ -46,7 +46,7 @@ done <<< $lines
 
 # delete notify triggers
 
-sed -i -E '/^CREATE TRIGGER "?notify_hasura_.+"? AFTER \w+ ON .+ FOR EACH ROW EXECUTE PROCEDURE "?hdb_views"?\."?notify_hasura_.+"?\(\);$/d' $filename
+sed -i -E '/^CREATE TRIGGER "?notify_hasura_.+"? AFTER \w+ ON .+ FOR EACH ROW EXECUTE PROCEDURE "?hdb_catalog"?\."?notify_hasura_.+"?\(\);$/d' $filename
 
 # delete empty lines
 

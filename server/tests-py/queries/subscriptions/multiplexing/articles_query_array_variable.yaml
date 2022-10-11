@@ -1,0 +1,12 @@
+query: |
+  subscription ($ids: [Int!]) {
+    articles (where: {id: {_in: $ids}}) {
+      title
+      content
+    }
+  }
+variables:
+  ids:
+    - 1
+    - 2
+    - 3

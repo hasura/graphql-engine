@@ -1,0 +1,5 @@
+- args:
+    cascade: false
+    read_only: false
+    sql: DROP TABLE "public"."t3";
+  type: run_sql

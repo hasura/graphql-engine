@@ -1,0 +1,12 @@
+description: custom scalar response should be allowed
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      custom_scalar_response
+    }
+response:
+  data:
+    custom_scalar_response:
+      foo: bar

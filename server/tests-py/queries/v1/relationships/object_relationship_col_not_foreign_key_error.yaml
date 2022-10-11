@@ -1,10 +1,27 @@
 description: Create object relationship using foreign key
 url: /v1/query
-status: 400  
+status: 400
 response:
-  error: no foreign constraint exists on the given column 
+  internal:
+    - definition:
+        using:
+          foreign_key_constraint_on: published_on
+        name: author
+        source: default
+        comment:
+        table:
+          schema: public
+          name: article
+      reason:
+        'Inconsistent object: in table "article": in relationship "author": no
+        foreign constraint exists on the given column(s)'
+      name: object_relation author in table article in source default
+      type: object_relation
   path: $.args
-  code: constraint-error
+  error:
+    'Inconsistent object: in table "article": in relationship "author": no foreign
+    constraint exists on the given column(s)'
+  code: invalid-configuration
 query:
   type: create_object_relationship
   args:

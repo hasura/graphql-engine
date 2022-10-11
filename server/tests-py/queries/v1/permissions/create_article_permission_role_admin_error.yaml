@@ -3,8 +3,7 @@ url: /v1/query
 status: 400
 response:
   path: $.args
-  error: >-
-    'select' permission on "author" for role "admin" already exists
+  error: select permission already defined on table "author" with role "admin"
   code: already-exists
 query:
   type: create_select_permission
