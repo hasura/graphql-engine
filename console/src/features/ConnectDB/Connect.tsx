@@ -1,11 +1,12 @@
-import React from 'react';
+import { CustomizationForm } from '@/features/ConnectDB';
 import { Button } from '@/new-components/Button';
-import { Form, InputField } from '@/new-components/Form';
+import { Forms, InputField } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
+import React from 'react';
 import { Configuration } from './components/Configuration';
-import { useLoadSchema, useSubmit } from './hooks';
 import { Driver } from './components/Driver';
 import { EditConnection } from './EditConnection';
+import { useLoadSchema, useSubmit } from './hooks';
 
 interface Props {
   name: string;
@@ -50,7 +51,7 @@ const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
   }
 
   return (
-    <Form
+    <Forms.New
       key={`${defaultValues.name}-${defaultValues.driver}` || 'new-connection'}
       schema={schema}
       onSubmit={submit}
@@ -69,7 +70,15 @@ const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
             <div className="max-w-xl">
               <Configuration name="configuration" />
             </div>
-            <Button type="submit" mode="primary" isLoading={submitIsLoading}>
+            <div className="mt-4">
+              <CustomizationForm />
+            </div>
+            <Button
+              type="submit"
+              className="mt-4"
+              mode="primary"
+              isLoading={submitIsLoading}
+            >
               Connect Database
             </Button>
             {!!Object(options.formState.errors)?.keys?.length && (
@@ -82,7 +91,7 @@ const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
           </div>
         );
       }}
-    </Form>
+    </Forms.New>
   );
 };
 

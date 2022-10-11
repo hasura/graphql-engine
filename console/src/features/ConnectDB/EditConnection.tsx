@@ -1,3 +1,4 @@
+import { CustomizationForm } from '@/features/ConnectDB';
 import { Button } from '@/new-components/Button';
 import { Form, InputField, Select } from '@/new-components/Form';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
@@ -85,6 +86,9 @@ export const EditConnection = () => {
 
             <div className="max-w-xl">
               <Configuration name="configuration" />
+            </div>
+            <div className="mt-4">
+              <CustomizationForm />
             </div>
             <Button type="submit" mode="primary" isLoading={submitIsLoading}>
               Edit Connection

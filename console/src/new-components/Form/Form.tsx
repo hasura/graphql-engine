@@ -137,3 +137,8 @@ UpdatedForm.defaultProps = {
   autoFocus: undefined,
   trigger: false,
 };
+
+export const Forms = {
+  Old: Form,
+  New: UpdatedForm,
+};

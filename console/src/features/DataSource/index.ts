@@ -183,6 +183,19 @@ export const DataSource = (httpClient: AxiosInstance) => ({
           schema.configSchema,
           schema.otherSchemas
         ),
+        customization: z
+          .object({
+            root_fields: z.object({
+              namespace: z.string(),
+              prefix: z.string(),
+              suffix: z.string(),
+            }),
+            type_names: z.object({
+              prefix: z.string(),
+              suffix: z.string(),
+            }),
+          })
+          .deepPartial(),
       });
     },
   },
