@@ -247,7 +247,7 @@ case "$SERVER_TEST_TO_RUN" in
 haskell-tests)
 	echo -e "\n$(time_elapsed): <########## RUN GRAPHQL-ENGINE HASKELL TESTS ###########################################>\n"
   SKIP_TEST_LIST=""
-  if [ "${PG_VERSION}" -eq "14" ] || [ "${PG_VERSION}" -eq "15" ]; then
+  if [ "${PG_VERSION}" -eq "15" ]; then
     # https://packages.ubuntu.com/search?suite=jammy&section=all&arch=any&keywords=postgresql-client-15&searchon=names
     echo -e "Skipping Hasura.Server.Migrate tests until postgresql-client version 15 is available to fix pg_dump errors"
     SKIP_TEST_LIST="Hasura.Server.Migrate"
