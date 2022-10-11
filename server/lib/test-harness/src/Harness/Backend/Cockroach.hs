@@ -11,6 +11,7 @@ module Harness.Backend.Cockroach
     insertTable,
     trackTable,
     dropTable,
+    dropTableIfExists,
     untrackTable,
     setup,
     teardown,
@@ -226,6 +227,15 @@ dropTable Schema.Table {tableName} = do
         [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
           T.pack Constants.cockroachDb <> "." <> tableName,
           ";"
+        ]
+
+dropTableIfExists :: Schema.Table -> IO ()
+dropTableIfExists Schema.Table {tableName} = do
+  run_ $
+    T.unpack $
+      T.unwords
+        [ "DROP TABLE IF EXISTS",
+          T.pack Constants.cockroachDb <> "." <> tableName
         ]
 
 -- | Post an http request to start tracking the table

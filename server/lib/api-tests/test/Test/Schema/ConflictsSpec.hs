@@ -6,6 +6,7 @@ module Test.Schema.ConflictsSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
@@ -31,6 +32,18 @@ spec =
                   Fixture.defaultOptions
                     { Fixture.skipTests =
                         Just "Disabled until we can dynamically change server settings per test. To test, add EFHideUpdateManyFields to soSubscriptions in Harness.Constants -> serveOptions"
+                    }
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Cockroach.setupTablesAction schema testEnv
+                ],
+              Fixture.customOptions =
+                Just $
+                  Fixture.defaultOptions
+                    { Fixture.skipTests =
+                        Just "Disabled until we can dynamically change server settings per test. To test, add EFHideUpdateManyFields to soSubscriptions in Harness.Constants -> serveOptions",
+                      Fixture.stringifyNumbers = True
                     }
             }
         ]
