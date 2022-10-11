@@ -1,0 +1,131 @@
+---
+description: Using Hasura with a Neon Postgres database
+title: "Cloud: Using Hasura Cloud with a Neon Serverless Postgres"
+keywords:
+  - hasura
+  - docs
+  - existing database
+  - guide
+  - neon
+  - integration
+  - serverless
+sidebar_label: Neon Postgres
+sidebar_position: 14
+---
+
+import Thumbnail from "@site/src/components/Thumbnail";
+
+# Using Hasura Cloud with a Neon Serverless Postgres Database
+
+## Introduction
+
+This guide explains how to connect a new [Neon](https://neon.tech/) serverless Postgres database to a Hasura Cloud
+project.
+
+## Creating a New Neon Database
+
+### Step 1: Sign up or log in to Hasura Cloud
+
+Navigate to [Hasura Cloud](https://cloud.hasura.io/signup/?pg=docs&plcmt=body&cta=navigate-to-hasura-cloud&tech=default)
+and sign up or log in.
+
+### Step 2: Create a Hasura Cloud project
+
+On the Hasura Cloud dashboard, create a new project:
+
+<Thumbnail
+  src="/img/cloud-dbs/create-hasura-cloud-project.png"
+  alt="Create Hasura Cloud project"
+/>
+
+After the project is initialized successfully, click on `Launch Console` to open the Hasura Console in your browser.
+
+On the Hasura Console, navigate to `Data -> Manage -> Connect Database -> Create New Database`:
+
+Click on `Connect Neon Database` to create and connect a new Postgres database to your Hasura project.
+
+<Thumbnail
+  src="/img/cloud-dbs/neon/connect_neon_database.png"
+  alt="Connect Neon database"
+  widht="700px"
+/>
+
+On the next step, you'll be prompted to Login/Sign up for Neon. We recommend `Continue with Hasura` for a seamless
+experience.
+
+<Thumbnail
+  src="/img/cloud-dbs/neon/neon_authentication.png"
+  alt="Neon Authentication"
+  widht="700px"
+/>
+
+After successful authorization, a new Neon Postgres database will be created and connected to your Hasura project with
+the connection string associated with the environment variable `PG_DATABASE_URL`.
+
+### Step 3 (optional): Load a template
+
+Once the database is successfully connected, you can explore Hasura's GraphQL API by loading any of the templates from
+the template gallery instantly.
+
+For example: to get started, you could try the `Welcome to Hasura` template:
+
+<Thumbnail
+  src="/img/cloud-dbs/neon/hasura_hello_world_template.png"
+  alt="Hello World Template"
+  widht="700px"
+/>
+
+This installs a schema with data that you can now query using your Hasura GraphQL API from the `API` tab.
+
+Voilà! You are ready to start developing.
+
+<Thumbnail src="/img/cloud-dbs/hasura-console.png" alt="Hasura Console" />
+
+:::info Note
+
+You can visit the Neon console from the `Data` tab to manage your created database.
+
+<Thumbnail
+  src="/img/cloud-dbs/neon/neon_console_link_page.png"
+  alt="Neon Console Link"
+  widht="700px"
+/>
+
+:::
+
+## Migrating an existing database to Neon
+
+If you want to migrate your existing database to Neon, you must use Postgres's `pg_dump` utility to copy over your
+database.
+
+```bash
+pg_dump -h <host> -U <username> <dbname> | psql -h pg.neon.tech
+```
+
+For more info, follow
+[Neon's detailed guide for importing a database](https://neon.tech/docs/how-to-guides/import-an-existing-database/).
+
+## Neon Free Tier
+
+With Neon's Free Tier, you can create up to three projects with the following limits:
+
+- Project data size is limited to 10GB
+- The Point in Time Reset (PITR) window is limited to 7 days of reasonable usage
+- The compute node is limited to 1 vCPU and 256MB of RAM
+
+For more info, check out Neon's
+[Technical Preview Free Tier](https://neon.tech/docs/reference/technical-preview-free-tier/).
+
+:::info Note
+
+If you've already reached the free-tier limit of three databases, please head to your
+[Neon console](https://console.neon.tech/) and delete an unused database to be able to create and connect a new one
+from the Hasura Console.
+
+<Thumbnail
+  src="/img/cloud-dbs/neon/free_tier_exceeded_neon.png"
+  alt="Neon Free Tier Warning"
+  widht="700px"
+/>
+
+:::
