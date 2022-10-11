@@ -235,17 +235,14 @@ eventTriggerLogCleanupSpec sourceConfig = do
       -- run the setup
       liftIO setup
       -- we have 5 logs which are past the retention period
-      -- try deleting 2 event logs and invocation logs
-      liftIO (runExceptQErr $ deleteEventTriggerLogs sourceConfig (triggerLogCleanupConfig True))
-        `shouldReturn` (DeletedEventLogStats 2 2)
-      -- we have 3 logs which are past the retention period
-      -- try deleting 2 event logs and no invocation logs
-      liftIO (runExceptQErr $ deleteEventTriggerLogs sourceConfig (triggerLogCleanupConfig False))
-        `shouldReturn` (DeletedEventLogStats 2 0)
-      -- we have 1 event log which is past the retention period
-      -- try deleting 2 event logs and invocation logs (should delete only 1)
-      liftIO (runExceptQErr $ deleteEventTriggerLogs sourceConfig (triggerLogCleanupConfig True))
-        `shouldReturn` (DeletedEventLogStats 1 1)
+      -- try deleting in batch of 2
+      liftIO (runExceptQErr $ deleteEventTriggerLogs sourceConfig (triggerLogCleanupConfig True) (pure Nothing))
+        `shouldReturn` (DeletedEventLogStats 5 5)
+      -- we have 0 logs which are past the retention period now
+      -- try deleting in batch of 2
+      liftIO (runExceptQErr $ deleteEventTriggerLogs sourceConfig (triggerLogCleanupConfig False) (pure Nothing))
+        `shouldReturn` (DeletedEventLogStats 0 0)
+
       -- finally teardown
       liftIO teardown
 
