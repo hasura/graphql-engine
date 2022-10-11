@@ -14,18 +14,6 @@ use_mutation_fixtures = usefixtures(
     'per_method_db_data_for_mutation_tests'
 )
 
-@pytest.mark.parametrize("transport", ['http', 'websocket'])
-@use_mutation_fixtures
-class TestGraphQLInsertWithTransport:
-
-    def test_inserts_author_article(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/author_article.yaml", transport)
-
-    @classmethod
-    def dir(cls):
-        return "queries/graphql_mutation/insert/basic"
-
-
 @use_mutation_fixtures
 class TestGraphQLInsert:
 

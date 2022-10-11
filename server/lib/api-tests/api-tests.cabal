@@ -91,6 +91,8 @@ executable api-tests
     Test.HelloWorldSpec
     Test.LongIdentifiersSpec
     Test.Metadata.InconsistentSpec
+    Test.Mutations.Insert.MultipleSpec
+    Test.Mutations.Insert.SingleSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.Postgres.BackendOnlyPermissionsSpec
     Test.Postgres.DataValidation.PermissionSpec
