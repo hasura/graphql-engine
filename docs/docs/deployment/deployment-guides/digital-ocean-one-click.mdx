@@ -157,7 +157,7 @@ HASURA_GRAPHQL_ADMIN_SECRET: <myadminsecretkey>
 ### Step 4: Update the container
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 That's it. Visit the console at `http://<your_droplet_ip>/console` and it should prompt for the admin secret key.
@@ -212,7 +212,7 @@ vim Caddyfile
 ### Step 5: Restart the container
 
 ```bash
-docker-compose restart caddy
+docker compose restart caddy
 ```
 
 Go to `https://<your_domain>/console` to visit the Hasura console.
@@ -251,7 +251,7 @@ graphql-engine:
 ### Step 4: Restart the container
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Using DigitalOcean Managed Postgres Database {#do-managed-pg-db}
@@ -355,7 +355,7 @@ cd /etc/hasura
 To checks logs for any container, use the following command:
 
 ```bash
-docker-compose logs <container_name>
+docker compose logs <container_name>
 ```
 
 Where `<container_name>` is one of `graphql-engine`, `postgres` or `caddy`.
