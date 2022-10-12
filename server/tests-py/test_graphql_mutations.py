@@ -567,12 +567,6 @@ class TestGraphqlDeleteBasic:
     def test_author_returning_empty_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_returning_empty_articles.yaml", transport)
 
-    def test_article_by_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk.yaml", transport)
-
-    def test_article_by_pk_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk_null.yaml", transport)
-
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/delete/basic"
@@ -594,15 +588,8 @@ class TestGraphqlDeleteBasicMSSQL:
     def test_author_returning_empty_articles(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/author_returning_empty_articles_mssql.yaml", transport)
 
-    def test_article_by_pk(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk.yaml", transport)
-
-    def test_article_by_pk_null(self, hge_ctx, transport):
-        check_query_f(hge_ctx, self.dir() + "/article_by_pk_null.yaml", transport)
-
     def test_test_types_delete(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + "/test_types_mssql.yaml", transport)
-
 
     @classmethod
     def dir(cls):
