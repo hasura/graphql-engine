@@ -345,6 +345,8 @@ enum article_select_column {
   <code>
     {`where: `}
     <a href='#boolexp'>BoolExp</a>
+    {` | `}
+      {`{ relation-name | computed-field-name: `}
   </code>
 </pre>
 
@@ -359,6 +361,15 @@ query {
     articles {
       title
     }
+  }
+}
+
+# And with relationships or computed fields:
+
+query {
+  author(where: { articles: { rating: { _gte: 4 } } }) {
+    id
+    name
   }
 }
 ```
@@ -385,7 +396,7 @@ query {
 
 </div>
 
-###### AndExp {#andexp}
+###### AndExp
 
 <div className="parsed-literal">
 
@@ -460,7 +471,7 @@ rating: {
 
 :::
 
-###### OrExp {#orexp}
+###### OrExp
 
 <div className="parsed-literal">
 
@@ -583,10 +594,12 @@ query {
 
 <pre>
   <code>
-    {`{
-  field-name: { `}
-    <a href='#operator'>Operator</a>
-    {`: Value }
+    {`
+    { computed-field-name | relation-name: }{`
+     {` | `}
+      `field-name: { `}
+        <a href='#operator'>Operator</a>
+        {`: Value }
 }`}
   </code>
 </pre>
@@ -602,6 +615,15 @@ query {
     content
   }
 }
+
+# can also use relationships and computed fields:
+
+query {
+  articles(where: {author: {hometown: {_eq:"Amsterdam"}}}) {
+    title
+  }
+}
+
 ```
 
 ###### Operator {#operator}
