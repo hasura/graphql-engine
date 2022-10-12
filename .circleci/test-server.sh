@@ -36,7 +36,12 @@ time_elapsed() {
 fail_if_port_busy() {
 	local PORT="$1"
 	if nc -z localhost "$PORT"; then
-		echo "Port $PORT is busy. Exiting"
+		echo "ERROR:"
+		echo "Port $PORT is busy."
+		echo "Output of \`lsof -i :$PORT\`:"
+		lsof -i ":$PORT"
+		echo
+		echo 'Exiting immediately.'
 		exit 1
 	fi
 }
