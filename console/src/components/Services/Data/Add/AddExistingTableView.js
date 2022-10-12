@@ -6,6 +6,7 @@ import {
   setDefaults,
   addExistingTableSql,
 } from './AddExistingTableViewActions';
+import styles from '../../../Common/TableCommon/Table.module.scss';
 
 class AddExistingTableView extends Component {
   constructor(props) {
@@ -15,7 +16,6 @@ class AddExistingTableView extends Component {
 
   render() {
     const { dispatch, ongoingRequest, lastError, lastSuccess } = this.props;
-    const styles = require('../../../Common/TableCommon/Table.module.scss');
 
     let alert = null;
     if (ongoingRequest) {

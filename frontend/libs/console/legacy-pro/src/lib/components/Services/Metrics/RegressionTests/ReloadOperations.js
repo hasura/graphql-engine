@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tooltip } from '@hasura/console-oss';
 
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 import syncOperationsIcon from '../images/sync.svg';
 
 import LoadingSpinner from '../Common/LoadingSpinner';
@@ -14,7 +14,7 @@ import LoadingSpinner from '../Common/LoadingSpinner';
  *
  * @param {Props} props
  */
-export const ReloadOperations = props => {
+export const ReloadOperations = (props) => {
   const { networkStatus, projectName, refetch } = props;
   return (
     <Tooltip

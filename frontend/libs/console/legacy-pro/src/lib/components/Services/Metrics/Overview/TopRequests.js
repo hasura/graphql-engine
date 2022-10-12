@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import moment from 'moment';
 import { useQuery } from 'react-apollo';
 import { Link } from 'react-router';
-import styles from '../MetricsV1.scss';
+import styles from '../MetricsV1.module.scss';
 import LoadingIcon from '../../../Common/LoadingIcon';
 import Placeholder from '../../../Placeholder/Placeholder';
 
@@ -56,8 +56,8 @@ const TopRequests = ({
   const filteredErrorRateList =
     dataKey === 'error_rate'
       ? data?.search_operation_name_summaries.filter(
-        errorObj => errorObj.error_rate !== 0
-      )
+          (errorObj) => errorObj.error_rate !== 0
+        )
       : [];
   const dataList =
     dataKey === 'error_rate'
@@ -109,18 +109,18 @@ const TopRequests = ({
             dataKey === 'error_rate' &&
             dataList?.length === 0 &&
             data?.search_operation_name_summaries?.length > 0 && (
-            <tr>
-              <td className={styles.descriptionText}>No errors</td>
-            </tr>
-          )}
+              <tr>
+                <td className={styles.descriptionText}>No errors</td>
+              </tr>
+            )}
           {!loading &&
             data?.search_operation_name_summaries &&
             Array.isArray(data?.search_operation_name_summaries) &&
             data?.search_operation_name_summaries?.length === 0 && (
-            <tr>
-              <td className={styles.descriptionText}>No results found!</td>
-            </tr>
-          )}
+              <tr>
+                <td className={styles.descriptionText}>No results found!</td>
+              </tr>
+            )}
           {error && (
             <tr>
               <td className={styles.descriptionText}>Something went wrong!</td>

@@ -7,7 +7,8 @@ import { hasOAuthLoggedIn } from '../OAuthCallback/utils';
 import { parseQueryString } from '../../helpers/parseQueryString';
 import { clearAdminSecretState } from '../AppState';
 
-const whiteLamda = require('./white-lamda.svg');
+import whiteLamda from './white-lamda.svg';
+import styles from './Login.module.scss';
 
 const initiateOAuthRequest = (location, shouldRedirectBack) => {
   const parsed = parseQueryString(location.search);
@@ -29,7 +30,7 @@ const initiateOAuthRequest = (location, shouldRedirectBack) => {
   window.location.href = authUrl;
 };
 
-const LoginWith = props => {
+const LoginWith = (props) => {
   const { location, children, shouldRedirectBack } = props;
 
   const onClick = () => {
@@ -37,7 +38,6 @@ const LoginWith = props => {
     initiateOAuthRequest(location, shouldRedirectBack);
   };
 
-  const styles = require('./Login.scss');
   if (children) {
     return (
       <a onClick={onClick} className={styles.cursorPointer}>

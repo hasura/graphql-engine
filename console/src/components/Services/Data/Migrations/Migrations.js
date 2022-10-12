@@ -4,10 +4,9 @@ import Helmet from 'react-helmet';
 import Toggle from '../../../Common/Toggle/Toggle';
 import { updateMigrationModeStatus } from '../../../Main/Actions';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
+import styles from './Migrations.module.scss';
 
 const Migrations = ({ dispatch, migrationMode }) => {
-  const styles = require('./Migrations.module.scss');
-
   const handleMigrationModeToggle = () => {
     const isOk = getConfirmation();
     if (isOk) {

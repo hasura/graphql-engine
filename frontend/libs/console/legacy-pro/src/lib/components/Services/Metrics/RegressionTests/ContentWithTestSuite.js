@@ -4,7 +4,7 @@ import { useQuery } from '@apollo/react-hooks';
 import { fetchTestSuites } from './graphql.queries';
 import { CreateNewTestSuite } from './CreateNewTestSuite';
 
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 
 export const ContentWithTestSuite = ({
   projectName,
@@ -55,7 +55,10 @@ export const ContentWithTestSuite = ({
       return <Spanned isError>* No test suite found on this project!</Spanned>;
     }
 
-    return children({ testSuiteId: data.test_suites[0].id, testProjectId: projectId });
+    return children({
+      testSuiteId: data.test_suites[0].id,
+      testProjectId: projectId,
+    });
   };
   return renderBody();
 };

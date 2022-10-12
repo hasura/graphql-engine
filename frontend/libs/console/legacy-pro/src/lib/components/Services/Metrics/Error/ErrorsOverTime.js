@@ -16,9 +16,9 @@ import { getWhereClause, removeSecondsMiliseconds } from './utils';
 
 import { getTimeInterval } from '../Usage/utils';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 
-const ErrorsOverTime = props => {
+const ErrorsOverTime = (props) => {
   /* Get the list of filter types by filtering the type key of the filters list itself */
   const { filters: appliedFilters, projectId } = props;
 
@@ -30,7 +30,7 @@ const ErrorsOverTime = props => {
 
   const timeRangeFilter = filterByType(appliedFilters, TIME_RANGE_SYMBOL);
 
-  timeRangeFilter.forEach(e => {
+  timeRangeFilter.forEach((e) => {
     if (typeof e.value === 'string') {
       fromTime = getTimeRangeValue(e.value);
       timeInterval = getTimeInterval(e.value);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaPlug, FaSearch } from 'react-icons/fa';
 
-import styles from '../MetricsV1.scss';
+import styles from '../MetricsV1.module.scss';
 import HealthStatus from './HealthStatus';
 
 const RemoteSchemaItem = ({ source, inconsistentObjects }) => {
@@ -9,7 +9,7 @@ const RemoteSchemaItem = ({ source, inconsistentObjects }) => {
   const sourceName = name || definition || '';
   const isInconsistent =
     inconsistentObjects.find(
-      i => i.type === 'remote_schema' && i?.definition?.name === sourceName
+      (i) => i.type === 'remote_schema' && i?.definition?.name === sourceName
     ) !== undefined;
 
   return (

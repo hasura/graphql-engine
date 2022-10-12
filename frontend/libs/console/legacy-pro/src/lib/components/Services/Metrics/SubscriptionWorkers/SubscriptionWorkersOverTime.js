@@ -18,9 +18,9 @@ import { TIME_RANGE_SYMBOL } from '../constants';
 import { getTimeIntervalFromRange } from '../utils';
 import moment from 'moment';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 
-const SubscriptionWorkersOverTime = props => {
+const SubscriptionWorkersOverTime = (props) => {
   const defaultState = {
     now: new Date().toISOString(),
   };
@@ -44,16 +44,16 @@ const SubscriptionWorkersOverTime = props => {
   const timeRangeFilter =
     rowData && rowData.start && rowData.end
       ? [
-        {
-          value: {
-            start: rowData.start,
-            end: moment(rowData.end).add(1, 'minute'), // exclude case start = end
+          {
+            value: {
+              start: rowData.start,
+              end: moment(rowData.end).add(1, 'minute'), // exclude case start = end
+            },
           },
-        },
-      ]
+        ]
       : rawTimeRangeFilter;
 
-  timeRangeFilter.forEach(e => {
+  timeRangeFilter.forEach((e) => {
     if (typeof e.value === 'string') {
       args.from_time = getTimeRangeValue(e.value);
       args.time_interval = getTimeInterval(e.value);

@@ -3,7 +3,7 @@ import { useSubscription } from '@apollo/react-hooks';
 
 import { tableScss } from '@hasura/console-oss';
 import { subscribeTestRunDetails } from './graphql.queries';
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 import { ActionsPanel } from '../Common/ActionsPanel';
 
 import { BrowseTests } from './BrowseTests';
@@ -24,7 +24,7 @@ import { IN_PROCESS_ENUM } from './constants';
  * @param {Props} props
  */
 
-export const BrowseRunTests = props => {
+export const BrowseRunTests = (props) => {
   const { testRunId } = props;
 
   const { loading, error, data } = useSubscription(subscribeTestRunDetails, {
@@ -33,7 +33,7 @@ export const BrowseRunTests = props => {
     },
   });
 
-  const getRunningTimeText = createdAt => {
+  const getRunningTimeText = (createdAt) => {
     return `Started ${moment(new Date(createdAt)).fromNow()}`;
   };
 

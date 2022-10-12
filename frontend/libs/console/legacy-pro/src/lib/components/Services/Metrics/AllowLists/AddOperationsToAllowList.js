@@ -12,7 +12,7 @@ import { waitBtnsBeforeReload } from './constants';
 
 import { createCollectionIfNotExist } from './Actions';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 
 const defaultState = {
   loading: false,
@@ -35,7 +35,7 @@ const AddOperationToAllowList = ({
   const { btnLoading, btnSuccessful, btnInit } = btnStates;
 
   const updateKey = ({ key, value }) => {
-    update(s => {
+    update((s) => {
       return {
         ...s,
         [key]: value,
@@ -43,7 +43,7 @@ const AddOperationToAllowList = ({
     });
   };
 
-  const onError = err => {
+  const onError = (err) => {
     updateKey({
       key: 'loading',
       value: false,
@@ -61,7 +61,7 @@ const AddOperationToAllowList = ({
     }, waitBtnsBeforeReload);
     onErrorCb(err);
   };
-  const onSuccess = data => {
+  const onSuccess = (data) => {
     // Do something
     updateKey({
       key: 'success',
@@ -90,7 +90,7 @@ const AddOperationToAllowList = ({
     run: false,
   });
   const getOperationObjs = () => {
-    return operations.map(operation => {
+    return operations.map((operation) => {
       return {
         operation_group_name: collectionName,
         operation_name: operation.name,
@@ -103,11 +103,11 @@ const AddOperationToAllowList = ({
   const variables = {
     insertObj: getOperationObjs(),
   };
-  const onCompleted = data => {
+  const onCompleted = (data) => {
     if (data.insert_operation_groups_operations.returning.length >= 1) {
       /* Call the metadata insert api */
-      const bulkAllowListInserts = data.insert_operation_groups_operations.returning.map(
-        i => {
+      const bulkAllowListInserts =
+        data.insert_operation_groups_operations.returning.map((i) => {
           return {
             type: 'add_query_to_collection',
             args: {
@@ -116,15 +116,14 @@ const AddOperationToAllowList = ({
               query: i.query,
             },
           };
-        }
-      );
+        });
       const bulkQuery = getBulkQuery(bulkAllowListInserts);
       runQuery(bulkQuery);
       return;
     }
     alert('Something went wrong! please refresh to continue');
   };
-  const onErrorAdding = err => {
+  const onErrorAdding = (err) => {
     updateKey({
       key: 'loading',
       value: false,
@@ -152,14 +151,14 @@ const AddOperationToAllowList = ({
     });
     /* Create the collection if it doesn't exist */
     dispatch(createCollectionIfNotExist(collectionName))
-      .then(data => {
+      .then((data) => {
         if (data.length === 2) {
           addToOperationGroupMutation();
           return;
         }
         onError(new Error('Unexpected error, please report this issue to us'));
       })
-      .catch(err => {
+      .catch((err) => {
         if (
           err &&
           typeof err === 'object' &&

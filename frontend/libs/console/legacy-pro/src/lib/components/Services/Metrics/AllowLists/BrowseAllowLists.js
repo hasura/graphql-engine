@@ -40,7 +40,10 @@ import { OPERATION_NAME_SYMBOL, relativeModulePath } from '../constants';
 
 import { DragFoldTable, tableScss } from '@hasura/console-oss';
 
-const inspectRow = require('../images/usage.svg');
+import inspectRow from '../images/usage.svg';
+import styles from '../Metrics.module.scss';
+import failure from '../images/failure.svg';
+import success from '../images/success.svg';
 
 const LIMIT = 5;
 
@@ -49,11 +52,8 @@ const defaultState = {
   offset: 0,
   order_by: '',
 };
-const styles = require('../Metrics.scss');
-const failure = require('../images/failure.svg');
-const success = require('../images/success.svg');
 
-const BrowseAllowLists = props => {
+const BrowseAllowLists = (props) => {
   const [browseState] = useState(defaultState);
   const [selectData, update] = useSelectable();
   const {
@@ -213,7 +213,7 @@ const BrowseAllowLists = props => {
       };
       const columns = info[0];
       const headerRows = Object.keys(columns)
-        .filter(c1 => excludedColumns.indexOf(c1) === -1)
+        .filter((c1) => excludedColumns.indexOf(c1) === -1)
         .map((c, key) => {
           const unitIfThereIs = () => {
             return '';
@@ -253,7 +253,7 @@ const BrowseAllowLists = props => {
       };
       const onChangeAllSelection = () => {
         const getOperationNames = () => {
-          return info.map(o => o.name);
+          return info.map((o) => o.name);
         };
         const names = (info.length > 0 && getOperationNames()) || [];
         if (selectData.length !== info.length) {
@@ -286,7 +286,7 @@ const BrowseAllowLists = props => {
     return [];
   };
 
-  const renderIcon = name => {
+  const renderIcon = (name) => {
     const getOperationUrl = () => {
       const filters = [createFilter(OPERATION_NAME_SYMBOL, name)];
       return {
@@ -338,7 +338,7 @@ const BrowseAllowLists = props => {
   };
   */
 
-  const renderActionButtonForGroups = name => {
+  const renderActionButtonForGroups = (name) => {
     return (
       <FilterCheckboxComponent
         title={''}
@@ -352,7 +352,7 @@ const BrowseAllowLists = props => {
 
   const getRows = () => {
     if (info.length > 0) {
-      return info.map(d => {
+      return info.map((d) => {
         const newRow = {};
         newRow.tableRowActionButtons = (
           <div className={styles.textCenter}>{renderIcon(d.name)}</div>
@@ -363,7 +363,7 @@ const BrowseAllowLists = props => {
           </div>
         );
         Object.keys(d)
-          .filter(c1 => excludedColumns.indexOf(c1) === -1)
+          .filter((c1) => excludedColumns.indexOf(c1) === -1)
           .forEach((elem, key) => {
             const renderElement = () => {
               if (elem === 'success') {

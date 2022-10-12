@@ -5,7 +5,7 @@ import { useQuery } from '@apollo/react-hooks';
 import CustomCopy from '../Common/CustomCopy';
 // import editIcon from '../images/edit.svg';
 import lensIcon from '../images/usage.svg';
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 import { fetchTestRunDetailsByName } from './graphql.queries';
 
 import { IN_PROCESS_ENUM } from './constants';
@@ -86,9 +86,7 @@ const TestRunDetailsModal = ({ onHide, show, operationName, testRunId }) => {
         {data && data.test_run_details && data.test_run_details.length && (
           <Fragment>
             <div
-              className={`col-md-6 ${styles.noPadd} ${styles.borderRight} ${
-                styles.halfWidth
-              }`}
+              className={`col-md-6 ${styles.noPadd} ${styles.borderRight} ${styles.halfWidth}`}
             >
               <CustomCopy
                 key="graphql-query"
@@ -115,9 +113,7 @@ const TestRunDetailsModal = ({ onHide, show, operationName, testRunId }) => {
               />
             </div>
             <div
-              className={`col-md-6 ${styles.noPadd} ${styles.halfWidth} ${
-                styles.longCopy
-              }`}
+              className={`col-md-6 ${styles.noPadd} ${styles.halfWidth} ${styles.longCopy}`}
             >
               <CustomCopy
                 key="response"

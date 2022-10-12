@@ -191,11 +191,11 @@ class Schema extends Component {
     this.setState({ createSchemaOpen: true });
   };
 
-  setCustomizedTableName = tableName => {
+  setCustomizedTableName = (tableName) => {
     this.setState({ customizedTableName: tableName });
   };
 
-  onChangeSchemaName = e => {
+  onChangeSchemaName = (e) => {
     this.setState({ schemaNameEdit: e.target.value });
   };
 
@@ -264,7 +264,7 @@ class Schema extends Component {
       let createBtn = null;
 
       if (migrationMode && isFeatureSupported('tables.create.enabled')) {
-        const handleClick = e => {
+        const handleClick = (e) => {
           e.preventDefault();
 
           dispatch(
@@ -332,7 +332,7 @@ class Schema extends Component {
 
         let trackAllBtn = null;
 
-        const trackAllTables = e => {
+        const trackAllTables = (e) => {
           e.stopPropagation();
           e.preventDefault();
 
@@ -378,7 +378,7 @@ class Schema extends Component {
                 return null;
               }
 
-              const handleTrackTable = e => {
+              const handleTrackTable = (e) => {
                 e.preventDefault();
 
                 this.setCustomizedTableName(tableName);
@@ -461,7 +461,7 @@ class Schema extends Component {
 
         let trackAllBtn = null;
 
-        const trackAllRelations = e => {
+        const trackAllRelations = (e) => {
           e.stopPropagation();
           e.preventDefault();
 
@@ -507,7 +507,7 @@ class Schema extends Component {
                 return null;
               }
 
-              const handleTrackRel = e => {
+              const handleTrackRel = (e) => {
                 e.preventDefault();
 
                 dispatch(autoAddRelName(rel));
@@ -575,7 +575,7 @@ class Schema extends Component {
       );
     };
 
-    const getUntrackedFunctionsSection = isSupported => {
+    const getUntrackedFunctionsSection = (isSupported) => {
       const heading = getSectionHeading(
         'Untracked custom functions',
         'Custom functions that are not exposed over the GraphQL API',
@@ -731,14 +731,14 @@ Schema.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   showTableTrackingModal: () =>
     dispatch(showModal(TableTrackingCustomizationModalKey)),
   hideTableTrackingModal: () => dispatch(hideModal()),
   dispatch: dispatch,
 });
 
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   schema: state.tables.allSchemas,
   schemaList: state.tables.schemaList,
   migrationMode: state.main.migrationMode,
@@ -754,7 +754,7 @@ const mapStateToProps = state => ({
   modalKey: modalKeySelector(state),
 });
 
-const schemaConnector = connect =>
+const schemaConnector = (connect) =>
   connect(mapStateToProps, mapDispatchToProps)(Schema);
 
 export default schemaConnector;
