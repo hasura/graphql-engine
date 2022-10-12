@@ -231,10 +231,7 @@ sendCloseWithMsg ::
   Maybe Word16 ->
   m ()
 sendCloseWithMsg logger wsConn errCode mErrServerMsg mCode = do
-  case mErrServerMsg of
-    Just errServerMsg ->
-      sendMsg wsConn errServerMsg
-    Nothing -> pure ()
+  forM_ mErrServerMsg (sendMsg wsConn)
   logWSEvent logger wsConn EClosed
   liftIO $ WS.sendCloseCode wsc errCloseCode errMsg
   where
