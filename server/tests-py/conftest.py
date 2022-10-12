@@ -428,19 +428,15 @@ def evts_webhook(hge_fixture_env: dict[str, str]):
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
-def actions_fixture(pg_version: int, hge_url: str, hge_key: Optional[str], hge_fixture_env: dict[str, str]):
-    if pg_version < 10:
-        pytest.skip('Actions are not supported on Postgres version < 10')
-
-    # Start actions' webhook server
-    webhook_httpd = ActionsWebhookServer(hge_url, hge_key, server_address=('localhost', 5593))
-    web_server = threading.Thread(target=webhook_httpd.serve_forever)
-    web_server.start()
-    hge_fixture_env['ACTION_WEBHOOK_HANDLER'] = webhook_httpd.url
-    yield webhook_httpd
-    webhook_httpd.shutdown()
-    webhook_httpd.server_close()
-    web_server.join()
+def actions_fixture(hge_url: str, hge_key: Optional[str], hge_fixture_env: dict[str, str]):
+    server = ActionsWebhookServer(hge_url, hge_key, server_address=('localhost', 5593))
+    thread = threading.Thread(target=server.serve_forever)
+    thread.start()
+    hge_fixture_env['ACTION_WEBHOOK_HANDLER'] = server.url
+    yield server
+    server.shutdown()
+    server.server_close()
+    thread.join()
 
 use_action_fixtures = pytest.mark.usefixtures(
     'actions_fixture',

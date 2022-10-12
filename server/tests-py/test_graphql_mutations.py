@@ -59,10 +59,7 @@ class TestGraphQLInsert:
 class TestGraphQLInsertIdentityColumn:
 
     @pytest.fixture(autouse=True)
-    def transact(self, pg_version, hge_ctx):
-        if pg_version < 10:
-            pytest.skip("Identity columns are not supported in Postgres version < 10")
-
+    def transact(self, hge_ctx):
         setup_q = {
             'type': 'bulk',
             'args': [
