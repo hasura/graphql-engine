@@ -969,6 +969,7 @@ test-suite graphql-engine-tests
     Discover
     Hasura.AppSpec
     Hasura.Base.Error.TestInstances
+    Hasura.Backends.BigQuery.SourceSpec
     Hasura.Backends.DataConnector.API.V0.AggregateSpec
     Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec
     Hasura.Backends.DataConnector.API.V0.ColumnSpec

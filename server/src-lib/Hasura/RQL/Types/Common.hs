@@ -43,7 +43,8 @@ module Hasura.RQL.Types.Common
   )
 where
 
-import Autodocodec (HasCodec (codec), dimapCodec)
+import Autodocodec (HasCodec (codec), bimapCodec, dimapCodec, disjointEitherCodec, optionalFieldOrNull', requiredField')
+import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing
@@ -63,6 +64,7 @@ import Hasura.Base.ToErrorValue
 import Hasura.EncJSON
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Incremental (Cacheable (..))
+import Hasura.Metadata.DTO.Utils (fromEnvCodec)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -284,6 +286,15 @@ instance Cacheable InputWebhook
 
 instance Hashable InputWebhook
 
+instance HasCodec InputWebhook where
+  codec = dimapCodec InputWebhook unInputWebhook urlTemplateCodec
+    where
+      urlTemplateCodec =
+        bimapCodec
+          (mapLeft ("Parsing URL template failed: " ++) . parseURLTemplate)
+          printURLTemplate
+          codec
+
 instance ToJSON InputWebhook where
   toJSON = String . printURLTemplate . unInputWebhook
 
@@ -336,6 +347,16 @@ instance Cacheable PGConnectionParams
 
 instance Hashable PGConnectionParams
 
+instance HasCodec PGConnectionParams where
+  codec =
+    AC.object "PGConnectionParams" $
+      PGConnectionParams
+        <$> requiredField' "host" AC..= _pgcpHost
+        <*> requiredField' "username" AC..= _pgcpUsername
+        <*> optionalFieldOrNull' "password" AC..= _pgcpPassword
+        <*> requiredField' "port" AC..= _pgcpPort
+        <*> requiredField' "database" AC..= _pgcpDatabase
+
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''PGConnectionParams)
 
 instance FromJSON PGConnectionParams where
@@ -361,6 +382,22 @@ instance NFData UrlConf
 instance Cacheable UrlConf
 
 instance Hashable UrlConf
+
+instance HasCodec UrlConf where
+  codec =
+    dimapCodec dec enc $
+      disjointEitherCodec valCodec $ disjointEitherCodec fromEnvCodec fromParamsCodec
+    where
+      valCodec = codec
+      fromParamsCodec = AC.object "UrlConfFromParams" $ requiredField' "connection_parameters"
+
+      dec (Left w) = UrlValue w
+      dec (Right (Left wEnv)) = UrlFromEnv wEnv
+      dec (Right (Right wParams)) = UrlFromParams wParams
+
+      enc (UrlValue w) = Left w
+      enc (UrlFromEnv wEnv) = Right $ Left wEnv
+      enc (UrlFromParams wParams) = Right $ Right wParams
 
 instance ToJSON UrlConf where
   toJSON (UrlValue w) = toJSON w
