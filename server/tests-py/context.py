@@ -19,7 +19,7 @@ import string
 import subprocess
 import threading
 import time
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 from urllib.parse import urlparse
 import websocket
 
@@ -769,14 +769,16 @@ class EvtsWebhookServer(ThreadedHTTPServer):
         return f'http://{self.server_address[0]}:{self.server_address[1]}'
 
 class HGECtxGQLServer:
-    def __init__(self, port: int):
+    def __init__(self, port: int, tls_configuration: Optional[Tuple[str, str]] = None, hge_urls: list[str] = []):
         # start the graphql server
         self.port = port
+        self.tls_configuration = tls_configuration
+        self.hge_urls = hge_urls
         self.is_running: bool = False
 
     def start_server(self):
         if not self.is_running:
-            self.server = graphql_server.create_server('localhost', self.port)
+            self.server = graphql_server.create_server('localhost', self.port, self.tls_configuration, self.hge_urls)
             self.thread = threading.Thread(target=self.server.serve_forever)
             self.thread.start()
         self.is_running = True
@@ -789,7 +791,12 @@ class HGECtxGQLServer:
 
     @property
     def url(self):
-        return f'http://{self.server.server_address[0]}:{self.server.server_address[1]}'
+        scheme = 'https' if self.tls_configuration else 'http'
+        # We must use 'localhost' and not `self.server.server_address[0]`
+        # because when using TLS, we need a domain name, not an IP address.
+        host = 'localhost'
+        port = self.server.server_address[1]
+        return f'{scheme}://{host}:{port}'
 
 class HGECtx:
 

@@ -2,11 +2,13 @@ import collections
 import os
 import pytest
 import re
+import socket
 import sqlalchemy
 import sys
 import threading
 import time
-from typing import Optional
+from typing import Optional, Tuple
+import urllib.parse
 import uuid
 
 import auth_webhook_server
@@ -35,6 +37,10 @@ def pytest_addoption(parser):
         required=False,
         nargs='+'
     )
+
+    parser.addoption('--tls-cert', help='The TLS certificate used for helper services', required=False)
+    parser.addoption('--tls-key', help='The TLS key used for helper services', required=False)
+
     parser.addoption(
         "--hge-webhook", metavar="HGE_WEBHOOK", help="url for graphql-engine's access control webhook", required=False
     )
@@ -81,14 +87,6 @@ def pytest_addoption(parser):
         default=False,
         required=False,
         help="Run testcases for startup database calls"
-    )
-
-    parser.addoption(
-        "--test-jwk-url",
-        action="store_true",
-        default=False,
-        required=False,
-        help="Run testcases for JWK url behaviour"
     )
 
     parser.addoption(
@@ -297,23 +295,33 @@ def pg_version(request) -> int:
 def pg_url(request) -> str:
     return request.config.workerinput["pg-url"]
 
+@pytest.fixture(scope='session')
+def tls_configuration(request: pytest.FixtureRequest) -> Optional[Tuple[str, str]]:
+    tls_cert: Optional[str] = request.config.getoption('--tls-cert')  # type: ignore
+    tls_key: Optional[str] = request.config.getoption('--tls-key')  # type: ignore
+    if tls_cert and tls_key:
+        return (tls_cert, tls_key)
+    else:
+        return None
+
 # Any test caught by this would also be caught by `hge_skip_function`, but
 # this is faster.
 @pytest.fixture(scope='class', autouse=True)
-def hge_skip_class(request: pytest.FixtureRequest, hge_server: Optional[str]):
-    hge_skip(request, hge_server)
+def hge_skip_class(request: pytest.FixtureRequest, hge_server: Optional[str], hge_fixture_env: dict[str, str]):
+    hge_skip(request, hge_server, hge_fixture_env)
 
 @pytest.fixture(scope='function', autouse=True)
-def hge_skip_function(request: pytest.FixtureRequest, hge_server: Optional[str]):
-    hge_skip(request, hge_server)
+def hge_skip_function(request: pytest.FixtureRequest, hge_server: Optional[str], hge_fixture_env: dict[str, str]):
+    hge_skip(request, hge_server, hge_fixture_env)
 
-def hge_skip(request: pytest.FixtureRequest, hge_server: Optional[str]):
+def hge_skip(request: pytest.FixtureRequest, hge_server: Optional[str], hge_fixture_env: dict[str, str]):
     # Let `hge_server` manage this stuff.
     if hge_server:
         return
     # Ensure that the correct environment variables have been set for the given test.
     hge_marker_env: dict[str, str] = {marker.args[0]: marker.args[1] for marker in request.node.iter_markers('hge_env')}
-    incorrect_env = {name: value for name, value in hge_marker_env.items() if os.getenv(name) != value}
+    hge_env = {**hge_marker_env, **hge_fixture_env}
+    incorrect_env = {name: value for name, value in hge_env.items() if os.getenv(name) != value}
     if len(incorrect_env) > 0:
         pytest.skip(
             'This test expects the following environment variables: '
@@ -473,18 +481,39 @@ def scheduled_triggers_evts_webhook(hge_fixture_env: dict[str, str]):
     webhook_httpd.server_close()
     web_server.join()
 
-@pytest.fixture(scope='class')
+@pytest.fixture(scope='class', params=[False, True])
 @pytest.mark.early
-def gql_server(request, hge_fixture_env: dict[str, str]):
+def gql_server(request: pytest.FixtureRequest, hge_bin: Optional[str], hge_url: str, hge_fixture_env: dict[str, str], tls_configuration: Optional[Tuple[str, str]]):
     port = 5000
-    hge_urls: list[str] = request.config.getoption('--hge-urls')
-    graphql_server.set_hge_urls(hge_urls)
-    server = HGECtxGQLServer(port=port)
+    if socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect_ex(('127.0.0.1', port)) == 0:
+        # The server is already running. This might be the case if we're running the server upgrade/downgrade tests.
+        # In this case, skip starting it and rely on the external service.
+        url = f'http://127.0.0.1:{port}'
+        hge_fixture_env['REMOTE_SCHEMAS_WEBHOOK_DOMAIN'] = url
+        # Create an object with a field named "url", set to `url`.
+        return collections.namedtuple('ExternalGraphQLServer', ['url'])(url)
+
+    hge_urls: list[str] = request.config.getoption('--hge-urls') or [hge_url]  # type: ignore
+
+    use_tls: bool = request.param  # type: ignore
+    scheme = None
+    if not hge_bin:
+        scheme = str(urllib.parse.urlparse(os.getenv('REMOTE_SCHEMAS_WEBHOOK_DOMAIN')).scheme)
+    if use_tls:
+        if scheme is not None and scheme != 'https':
+            pytest.skip(f'Cannot run the remote schema server with TLS; HGE is configured to talk to it over "{scheme}".')
+        if not tls_configuration:
+            pytest.skip('Cannot run the remote schema server with TLS; no certificate and key provided.')
+        server = HGECtxGQLServer(port=port, tls_configuration=tls_configuration, hge_urls=hge_urls)
+    else:
+        if scheme is not None and scheme != 'http':
+            pytest.skip(f'Cannot run the remote schema server without TLS; HGE is configured to talk to it over "{scheme}".')
+        server = HGECtxGQLServer(port=port, hge_urls=hge_urls)
     server.start_server()
     hge_fixture_env['REMOTE_SCHEMAS_WEBHOOK_DOMAIN'] = server.url
+    request.addfinalizer(server.stop_server)
     ports.wait_for_port(port)
-    yield server
-    server.stop_server()
+    return server
 
 @pytest.fixture(scope='class')
 def ws_client(request, hge_ctx):

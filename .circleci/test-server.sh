@@ -22,11 +22,9 @@ stop_services() {
 
 	[[ -n "${HGE_PIDS[*]}" ]] && kill -s INT "${HGE_PIDS[@]}" || true
 	[[ -n "$WH_PID" ]] && kill "$WH_PID" || true
-	[[ -n "$GQL_SERVER_PID" ]] && kill "$GQL_SERVER_PID" || true
 
 	[[ -n "${HGE_PIDS[*]}" ]] && wait "${HGE_PIDS[@]}" || true
 	[[ -n "$WH_PID" ]] && wait "$WH_PID" || true
-	[[ -n "$GQL_SERVER_PID" ]] && wait "$GQL_SERVER_PID" || true
 }
 
 time_elapsed() {
@@ -229,7 +227,6 @@ PYTEST_PARALLEL_ARGS=(
 
 HGE_PIDS=()
 WH_PID=""
-GQL_SERVER_PID=""
 
 trap stop_services ERR
 trap stop_services INT
@@ -970,23 +967,18 @@ remote-schema-https)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH SECURE REMOTE SCHEMA #########################>\n"
 
 	OLD_REMOTE_SCHEMAS_WEBHOOK_DOMAIN="${REMOTE_SCHEMAS_WEBHOOK_DOMAIN}"
-	export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="https://localhost:5001"
+	export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="https://localhost:5000"
 	init_ssl
 
 	run_hge_with_args serve
-
 	wait_for_port 8080
 
-	python3 graphql_server.py 5001 "$OUTPUT_FOLDER/ssl/webhook.pem" "$OUTPUT_FOLDER/ssl/webhook-key.pem" >"$OUTPUT_FOLDER/remote_gql_server.log" 2>&1 &
-	GQL_SERVER_PID=$!
-
-	wait_for_port 5001
-
-	pytest "${PYTEST_COMMON_ARGS[@]}" test_schema_stitching.py::TestRemoteSchemaBasic
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--tls-cert="$OUTPUT_FOLDER/ssl/webhook.pem" --tls-key="$OUTPUT_FOLDER/ssl/webhook-key.pem" \
+		test_schema_stitching.py::TestRemoteSchemaBasic
 
 	export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="${OLD_REMOTE_SCHEMAS_WEBHOOK_DOMAIN}"
 	kill_hge_servers
-	kill "$GQL_SERVER_PID"
 	;;
 
 
@@ -1165,79 +1157,77 @@ jwk-url)
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH JWK URL ########> \n"
 
-	# start the JWK server
+	export JWK_SERVER_URL='http://localhost:5001'
+
+	# Start the JWK server.
+	# There is a fixture to do this, but when running in this fashion, we need to
+	# start the JWK server first so the HGE server can communicate with it.
 	python3 jwk_server.py >"$OUTPUT_FOLDER/jwk_server.log" 2>&1 &
 	JWKS_PID=$!
 	wait_for_port 5001
 
 	echo "Test: Cache-Control with max-age=3"
-	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?max-age=3"}'
+	export HASURA_GRAPHQL_JWT_SECRET="{\"jwk_url\": \"${JWK_SERVER_URL}/jwk-cache-control?max-age=3\"}"
 	run_hge_with_args serve
 	wait_for_port 8080
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--test-jwk-url \
-		-k 'test_cache_control_header_max_age'
+		-- 'test_jwk.py::test_cache_control_header_max_age'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
 	echo "Test: Cache-Control with must-revalidate, max-age=3"
-	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?must-revalidate=true&must-revalidate=true"}'
+	export HASURA_GRAPHQL_JWT_SECRET="{\"jwk_url\": \"${JWK_SERVER_URL}/jwk-cache-control?max-age=3&must-revalidate=true\"}"
 	run_hge_with_args serve
 	wait_for_port 8080
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--test-jwk-url \
-		-k 'test_cache_control_header_max_age'
+		-- 'test_jwk.py::test_cache_control_header_max_age_must_revalidate'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
 	echo "Test: Cache-Control with must-revalidate"
-	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?must-revalidate=true"}'
+	export HASURA_GRAPHQL_JWT_SECRET="{\"jwk_url\": \"${JWK_SERVER_URL}/jwk-cache-control?must-revalidate=true\"}"
 	run_hge_with_args serve
 	wait_for_port 8080
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--test-jwk-url \
-		-k 'test_cache_control_header_no_caching'
+		-- 'test_jwk.py::test_cache_control_header_must_revalidate'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
 	echo "Test: Cache-Control with no-cache, public"
-	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?no-cache=true&public=true"}'
+	export HASURA_GRAPHQL_JWT_SECRET="{\"jwk_url\": \"${JWK_SERVER_URL}/jwk-cache-control?no-cache=true&public=true\"}"
 	run_hge_with_args serve
 	wait_for_port 8080
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--test-jwk-url \
-		-k 'test_cache_control_header_no_caching'
+		-- 'test_jwk.py::test_cache_control_header_no_cache_public'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
 	echo "Test: Cache-Control with no-store, max-age=3"
-	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-cache-control?no-store=true&max-age=3"}'
+	export HASURA_GRAPHQL_JWT_SECRET="{\"jwk_url\": \"${JWK_SERVER_URL}/jwk-cache-control?no-store=true&max-age=3\"}"
 	run_hge_with_args serve
 	wait_for_port 8080
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--test-jwk-url \
-		-k 'test_cache_control_header_no_caching'
+		-- 'test_jwk.py::test_cache_control_header_no_store_max_age'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
 
 	echo "Test: Expires with three second expiry"
-	export HASURA_GRAPHQL_JWT_SECRET='{"jwk_url": "http://localhost:5001/jwk-expires?seconds=3"}'
+	export HASURA_GRAPHQL_JWT_SECRET="{\"jwk_url\": \"${JWK_SERVER_URL}/jwk-expires?seconds=3\"}"
 	run_hge_with_args serve
 	wait_for_port 8080
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--test-jwk-url \
-		-k 'test_expires_header'
+		-- 'test_jwk.py::test_expires_header'
 
 	kill_hge_servers
 	unset HASURA_GRAPHQL_JWT_SECRET
