@@ -4,6 +4,7 @@ module Hasura.Metadata.DTO.Utils
     fromEnvCodec,
     versionField,
     optionalVersionField,
+    typeableName,
   )
 where
 
@@ -18,9 +19,11 @@ import Autodocodec
     scientificCodec,
     (.=),
   )
+import Data.Char (isAlphaNum)
 import Data.Scientific (Scientific)
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
+import Data.Typeable (Proxy (Proxy), Typeable, typeRep)
 import Hasura.Prelude
 import Hasura.SQL.Tag (HasTag (backendTag), reify)
 
@@ -47,6 +50,13 @@ optionalVersionField v =
 -- database kind from type context.
 codecNamePrefix :: forall b. (HasTag b) => Text
 codecNamePrefix = T.toTitle $ T.toTxt $ reify $ backendTag @b
+
+-- | Provides a string based on the given type to use to uniquely name
+-- instantiations of polymorphic codecs.
+typeableName :: forall a. (Typeable a) => Text
+typeableName = T.map toValidChar $ tshow $ typeRep (Proxy @a)
+  where
+    toValidChar c = if isAlphaNum c then c else '_'
 
 -- | Represents a text field wrapped in an object with a single property
 -- named @from_env@.

@@ -156,9 +156,17 @@ deriving instance (Backend b) => Eq (ComputedFieldMetadata b)
 
 instance (Backend b) => Cacheable (ComputedFieldMetadata b)
 
+instance Backend b => HasCodec (ComputedFieldMetadata b) where
+  codec =
+    AC.object (codecNamePrefix @b <> "ComputedFieldMetadata") $
+      ComputedFieldMetadata
+        <$> requiredField' "name" AC..= _cfmName
+        <*> requiredFieldWith' "definition" placeholderCodecViaJSON AC..= _cfmDefinition
+        <*> optionalFieldWithOmittedDefault' "comment" Automatic AC..= _cfmComment
+
 instance (Backend b) => ToJSON (ComputedFieldMetadata b) where
   toJSON ComputedFieldMetadata {..} =
-    object
+    object $
       [ "name" .= _cfmName,
         "definition" .= _cfmDefinition,
         "comment" .= _cfmComment
@@ -284,9 +292,9 @@ instance (Backend b) => HasCodec (TableMetadata b) where
           <$> requiredFieldWith' "table" placeholderCodecViaJSON .== _tmTable
           <*> optionalFieldWithOmittedDefault' "is_enum" False .== _tmIsEnum
           <*> optionalFieldWithOmittedDefaultWith "configuration" placeholderCodecViaJSON emptyTableConfig configDoc .== _tmConfiguration
-          <*> optSortedListViaJSON "object_relationships" _rdName .== _tmObjectRelationships
-          <*> optSortedListViaJSON "array_relationships" _rdName .== _tmArrayRelationships
-          <*> optSortedListViaJSON "computed_fields" _cfmName .== _tmComputedFields
+          <*> optSortedList "object_relationships" _rdName .== _tmObjectRelationships
+          <*> optSortedList "array_relationships" _rdName .== _tmArrayRelationships
+          <*> optSortedList "computed_fields" _cfmName .== _tmComputedFields
           <*> optSortedListViaJSON "remote_relationships" _rrName .== _tmRemoteRelationships
           <*> optSortedList "insert_permissions" _pdRole .== _tmInsertPermissions
           <*> optSortedList "select_permissions" _pdRole .== _tmSelectPermissions
@@ -436,9 +444,9 @@ instance (Backend b) => HasCodec (FunctionMetadata b) where
       $ AC.object (codecNamePrefix @b <> "FunctionMetadata") $
         FunctionMetadata
           <$> requiredFieldWith "function" placeholderCodecViaJSON nameDoc .== _fmFunction
-          <*> optionalFieldOrNullWithOmittedDefaultWith "configuration" placeholderCodecViaJSON emptyFunctionConfig configDoc .== _fmConfiguration
-          <*> optionalFieldOrNullWithOmittedDefaultWith' "permissions" (listCodec placeholderCodecViaJSON) [] .== _fmPermissions
-          <*> optionalFieldOrNull' "comment" .== _fmComment
+          <*> optionalFieldWithOmittedDefaultWith "configuration" placeholderCodecViaJSON emptyFunctionConfig configDoc .== _fmConfiguration
+          <*> optionalFieldWithOmittedDefaultWith' "permissions" (listCodec placeholderCodecViaJSON) [] .== _fmPermissions
+          <*> optionalField' "comment" .== _fmComment
     where
       nameDoc = "Name of the SQL function"
       configDoc = "Configuration for the SQL function"
@@ -540,8 +548,8 @@ instance Backend b => HasCodec (SourceMetadata b) where
         <*> requiredFieldWith' "tables" (sortedElemsCodec _tmTable) .== _smTables
         <*> optionalFieldOrNullWithOmittedDefaultWith' "functions" (sortedElemsCodec _fmFunction) mempty .== _smFunctions
         <*> requiredField' "configuration" .== _smConfiguration
-        <*> optionalFieldOrNullWith' "query_tags" placeholderCodecViaJSON .== _smQueryTags -- TODO: replace placeholder
-        <*> optionalFieldOrNullWithOmittedDefault' "customization" emptySourceCustomization .== _smCustomization
+        <*> optionalFieldOrNull' "query_tags" .== _smQueryTags
+        <*> optionalFieldWithOmittedDefault' "customization" emptySourceCustomization .== _smCustomization
         <*> healthCheckField
     where
       healthCheckField = case healthCheckImplementation @b of

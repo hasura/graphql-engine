@@ -1003,6 +1003,7 @@ test-suite graphql-engine-tests
     , hspec >=2.8.3 && <3
     , hspec-core >=2.8.3 && <3
     , hspec-expectations
+    , hspec-expectations-json
     , hspec-expectations-lifted
     , hspec-hedgehog
     , http-client

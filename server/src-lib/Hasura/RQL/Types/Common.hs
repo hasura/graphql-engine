@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Hasura.RQL.Types.Common
@@ -43,7 +44,15 @@ module Hasura.RQL.Types.Common
   )
 where
 
-import Autodocodec (HasCodec (codec), bimapCodec, dimapCodec, disjointEitherCodec, optionalFieldOrNull', requiredField')
+import Autodocodec
+  ( HasCodec (codec),
+    bimapCodec,
+    dimapCodec,
+    disjointEitherCodec,
+    optionalFieldOrNull',
+    requiredField',
+    stringConstCodec,
+  )
 import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Aeson qualified as J
@@ -91,6 +100,9 @@ newtype RelName = RelName {getRelTxt :: NonEmptyText}
 
 instance ToTxt RelName where
   toTxt = relNameToTxt
+
+instance HasCodec RelName where
+  codec = dimapCodec RelName getRelTxt codec
 
 relNameToTxt :: RelName -> Text
 relNameToTxt = unNonEmptyText . getRelTxt
@@ -148,6 +160,13 @@ instance NFData InsertOrder
 instance Hashable InsertOrder
 
 instance Cacheable InsertOrder
+
+instance HasCodec InsertOrder where
+  codec =
+    stringConstCodec
+      [ (BeforeParent, "before_parent"),
+        (AfterParent, "after_parent")
+      ]
 
 instance FromJSON InsertOrder where
   parseJSON (String t)
@@ -351,22 +370,32 @@ instance HasCodec PGConnectionParams where
   codec =
     AC.object "PGConnectionParams" $
       PGConnectionParams
-        <$> requiredField' "host" AC..= _pgcpHost
-        <*> requiredField' "username" AC..= _pgcpUsername
-        <*> optionalFieldOrNull' "password" AC..= _pgcpPassword
-        <*> requiredField' "port" AC..= _pgcpPort
-        <*> requiredField' "database" AC..= _pgcpDatabase
+        <$> requiredField' "host"
+        AC..= _pgcpHost
+        <*> requiredField' "username"
+        AC..= _pgcpUsername
+        <*> optionalFieldOrNull' "password"
+        AC..= _pgcpPassword
+        <*> requiredField' "port"
+        AC..= _pgcpPort
+        <*> requiredField' "database"
+        AC..= _pgcpDatabase
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''PGConnectionParams)
 
 instance FromJSON PGConnectionParams where
   parseJSON = withObject "PGConnectionParams" $ \o ->
     PGConnectionParams
-      <$> o .: "host"
-      <*> o .: "username"
-      <*> o .:? "password"
-      <*> o .: "port"
-      <*> o .: "database"
+      <$> o
+      .: "host"
+      <*> o
+      .: "username"
+      <*> o
+      .:? "password"
+      <*> o
+      .: "port"
+      <*> o
+      .: "database"
 
 data UrlConf
   = -- | the database connection string
@@ -386,7 +415,8 @@ instance Hashable UrlConf
 instance HasCodec UrlConf where
   codec =
     dimapCodec dec enc $
-      disjointEitherCodec valCodec $ disjointEitherCodec fromEnvCodec fromParamsCodec
+      disjointEitherCodec valCodec $
+        disjointEitherCodec fromEnvCodec fromParamsCodec
     where
       valCodec = codec
       fromParamsCodec = AC.object "UrlConfFromParams" $ requiredField' "connection_parameters"
@@ -422,7 +452,9 @@ instance FromJSON UrlConf where
       -- helper for formatting error messages within this instance
       commonJSONParseErrorMessage :: String -> String
       commonJSONParseErrorMessage strToBePrepended =
-        strToBePrepended <> dquoteStr "from_env" <> " or "
+        strToBePrepended
+          <> dquoteStr "from_env"
+          <> " or "
           <> dquoteStr "connection_parameters"
           <> " should be provided"
   parseJSON t@(String _) =
@@ -519,6 +551,16 @@ instance NFData Comment
 instance Cacheable Comment
 
 instance Hashable Comment
+
+instance HasCodec Comment where
+  codec = dimapCodec dec enc (codec @(Maybe Text))
+    where
+      dec Nothing = Automatic
+      dec (Just text) = Explicit $ mkNonEmptyText text
+
+      enc Automatic = Nothing
+      enc (Explicit (Just text)) = Just (toTxt text)
+      enc (Explicit Nothing) = Just ""
 
 instance FromJSON Comment where
   parseJSON = \case

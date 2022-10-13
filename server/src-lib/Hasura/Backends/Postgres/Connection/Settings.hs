@@ -329,8 +329,8 @@ instance HasCodec PostgresSourceConnInfo where
         PostgresSourceConnInfo
           <$> requiredField "database_url" databaseUrlDoc .== _psciDatabaseUrl
           <*> optionalFieldOrNull "pool_settings" poolSettingsDoc .== _psciPoolSettings
-          <*> optionalFieldWithOmittedDefault "use_prepared_statements" False usePreparedStatementsDoc .== _psciUsePreparedStatements
-          <*> optionalFieldWithOmittedDefault "isolation_level" PG.ReadCommitted isolationLevelDoc .== _psciIsolationLevel
+          <*> optionalFieldWithDefault "use_prepared_statements" False usePreparedStatementsDoc .== _psciUsePreparedStatements
+          <*> optionalFieldWithDefault "isolation_level" PG.ReadCommitted isolationLevelDoc .== _psciIsolationLevel
           <*> optionalFieldOrNull "ssl_configuration" sslConfigurationDoc .== _psciSslConfiguration
     where
       databaseUrlDoc = "The database connection URL as a string, as an environment variable, or as connection parameters."
