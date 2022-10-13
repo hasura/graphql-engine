@@ -1,4 +1,4 @@
-This note is in [Hasura.Backends.Postgres.SQL.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/SQL/Types.hs#L88).
+This note is in [Hasura.Backends.Postgres.SQL.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Backends/Postgres/SQL/Types.hs#L92).
 
 # About identifier types
 
