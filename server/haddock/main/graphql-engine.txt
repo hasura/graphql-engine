@@ -25338,6 +25338,7 @@ getRawWebSocketConnection :: WSConn a -> Connection
 getData :: WSConn a -> a
 getWSId :: WSConn a -> WSId
 closeConn :: WSConn a -> ByteString -> IO ()
+sendMsgAndCloseConn :: WSConn a -> Word16 -> ByteString -> ServerMsg -> IO ()
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
 data WSServer a
 createWSServer :: Logger Hasura -> STM (WSServer a)
@@ -25349,7 +25350,7 @@ AcceptWith :: !a -> !AcceptRequest -> !WSConn a -> IO () -> !WSConn a -> IO () -
 --   case when the messages being sent to the client are different for each
 --   of the sub-protocol(s) supported by the server.
 type WSKeepAliveMessageAction a = WSConn a -> IO ()
-type WSOnErrorMessageAction a = WSConn a -> ConnErrMsg -> Maybe String -> IO ()
+type WSOnErrorMessageAction a = WSConn a -> ConnErrMsg -> WSErrorMessage -> IO ()
 
 -- | Used for specific actions within the <tt>onConn</tt> and
 --   <tt>onMessage</tt> handlers
@@ -25366,12 +25367,10 @@ WSActions :: !WSPostExecErrMessageAction a -> !WSOnErrorMessageAction a -> !WSCl
 [_wsaGetDataMessageType] :: WSActions a -> !DataMsg -> ServerMsg
 [_wsaAcceptRequest] :: WSActions a -> !AcceptRequest
 [_wsaErrorMsgFormat] :: WSActions a -> ![Value] -> Value
-
--- | to be used with <a>WSOnErrorMessageAction</a>
-onClientMessageParseErrorText :: Maybe String
-
--- | to be used with <a>WSOnErrorMessageAction</a>
-onConnInitErrorText :: Maybe String
+data WSErrorMessage
+ClientMessageParseFailed :: WSErrorMessage
+ConnInitFailed :: WSErrorMessage
+mkWSServerErrorCode :: WSErrorMessage -> ConnErrMsg -> ServerErrorCode
 type OnConnH m a = WSId -> RequestHead -> IpAddress -> WSActions a -> m (Either RejectRequest (AcceptWith a))
 
 -- | aka generalized <a>ServerApp</a> over <tt>m</tt>, which takes an
