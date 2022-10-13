@@ -69,7 +69,13 @@ export const DataGrid = (props: DataGridProps) => {
     return <IndicatorCard status="info" headline="Feature Not Implemented" />;
 
   if (isError)
-    return <IndicatorCard status="negative" headline="Something went wrong" />;
+    return (
+      <div className="my-4">
+        <IndicatorCard status="negative" headline="Something went wrong">
+          Unable to fetch GraphQL response for table
+        </IndicatorCard>
+      </div>
+    );
 
   const columns = rows?.length ? Object.keys(rows[0]) : [];
 
