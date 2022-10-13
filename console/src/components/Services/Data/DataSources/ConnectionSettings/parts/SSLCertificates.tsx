@@ -21,7 +21,7 @@ export const SSLCertificates: React.VFC<ConnectionSettingsFormProps> = ({
         onClick={handleCertificateSettingsClick}
         className={styles.connection_settings_header}
       >
-        (showCertSettings ? <FaCaretDown /> : <FaCaretRight />
+        {showCertSettings ? <FaCaretDown /> : <FaCaretRight />}
         {`  SSL Certificates Settings`}
       </div>
       <div className={styles.text_muted}>

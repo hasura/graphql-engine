@@ -78,6 +78,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     enabled: false,
     namingConvention: false,
     extensions_schema: false,
+    ssl_certificates: true,
   },
   driver: {
     name: 'cockroach',
