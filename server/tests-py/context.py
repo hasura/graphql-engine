@@ -156,6 +156,9 @@ class GQLWsClient():
     def _on_close(self):
         self.remote_closed = True
         self.init_done = False
+    
+    def get_conn_close_state(self):
+        return self.remote_closed or self.is_closing
 
     def teardown(self):
         self.is_closing = True

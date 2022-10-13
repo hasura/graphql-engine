@@ -825,20 +825,24 @@ naming-conventions)
 streaming-subscriptions)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH STREAMING SUBSCRIPTIONS #########################>\n"
 
-  export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+  	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 
-  run_hge_with_args serve
-  wait_for_port 8080
+	run_hge_with_args serve
+	wait_for_port 8080
 
-  # run all the subscriptions tests with streaming subscriptions enabled
+  	# run all the subscriptions tests with streaming subscriptions enabled
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
 		test_subscriptions.py
 
-  unset HASURA_GRAPHQL_ADMIN_SECRET
-  unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
+  	# run test `TestSubscriptionBasicNoAuth` in case of no authentication for Apollo-ws protocol
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		test_subscriptions.py::TestSubscriptionBasicNoAuth
+	
+	unset HASURA_GRAPHQL_ADMIN_SECRET
+	unset HASURA_GRAPHQL_EXPERIMENTAL_FEATURES
 
-  kill_hge_servers
-  ;;
+	kill_hge_servers
+	;;
 
 query-caching)
 	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE QUERY CACHING #####################################>\n"

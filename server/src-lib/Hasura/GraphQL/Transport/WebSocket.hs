@@ -231,9 +231,13 @@ sendCloseWithMsg ::
   Maybe Word16 ->
   m ()
 sendCloseWithMsg logger wsConn errCode mErrServerMsg mCode = do
-  forM_ mErrServerMsg (sendMsg wsConn)
-  logWSEvent logger wsConn EClosed
-  liftIO $ WS.sendCloseCode wsc errCloseCode errMsg
+  case mErrServerMsg of
+    Just errServerMsg -> do
+      logWSEvent logger wsConn EClosed
+      liftIO $ WS.sendMsgAndCloseConn wsConn errCloseCode errMsg errServerMsg
+    Nothing -> do
+      logWSEvent logger wsConn EClosed
+      liftIO $ WS.sendCloseCode wsc errCloseCode errMsg
   where
     wsc = WS.getRawWebSocketConnection wsConn
     errMsg = encodeServerErrorMsg errCode
@@ -985,7 +989,7 @@ onMessage env enabledLogTypes authMode serverEnv wsConn msgRaw onMessageActions 
     Left e -> do
       let err = ConnErrMsg $ "parsing ClientMessage failed: " <> T.pack e
       logWSEvent logger wsConn $ EConnErr err
-      liftIO $ onErrAction wsConn err WS.onClientMessageParseErrorText
+      liftIO $ onErrAction wsConn err WS.ClientMessageParseFailed
     Right msg -> case msg of
       -- common to both protocols
       CMConnInit params ->
@@ -1087,7 +1091,7 @@ onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAl
 
           let connErr = ConnErrMsg $ qeError e
           logWSEvent logger wsConn $ EConnErr connErr
-          liftIO $ onConnInitErrAction wsConn connErr WS.onConnInitErrorText
+          liftIO $ onConnInitErrAction wsConn connErr WS.ConnInitFailed
         -- we're ignoring the auth headers as headers are irrelevant in websockets
         Right (userInfo, expTimeM, _authHeaders) -> do
           let !csInit = CSInitialised $ WsClientState userInfo expTimeM paramHeaders ipAddress
@@ -1101,7 +1105,7 @@ onConnInit logger manager wsConn authMode connParamsM onConnInitErrAction keepAl
     unexpectedInitError e = do
       let connErr = ConnErrMsg e
       logWSEvent logger wsConn $ EConnErr connErr
-      liftIO $ onConnInitErrAction wsConn connErr WS.onConnInitErrorText
+      liftIO $ onConnInitErrAction wsConn connErr WS.ConnInitFailed
 
     getIpAddress = \case
       CSNotInitialised _ ip -> return ip
