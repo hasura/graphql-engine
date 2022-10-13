@@ -13,29 +13,24 @@ type TableInfoInternal = {
   sql: string
 }
 
-/**
- *
- * @param ColumnInfoInternalype as per HGE DataConnector IR
- * @returns SQLite's corresponding column type
- *
- * Note: This defaults to "string" when a type is not anticipated
- *       in order to be as permissive as possible but logs when
- *       this happens.
- */
-function columnCast(ColumnInfoInternalype: string): ScalarType {
-  switch(ColumnInfoInternalype) {
-    case "string":
-    case "number":
-    case "bool":     return ColumnInfoInternalype as ScalarType;
-    case "boolean":  return "bool";
-    case "numeric":  return "number";
-    case "integer":  return "number";
-    case "double":   return "number";
-    case "float":    return "number";
-    case "text":     return "string";
-    case "datetime": return "DateTime"; // NOTE: Tests are currently case-sensitive for this value
+type Datatype = {
+  affinity: string, // Sqlite affinity, lowercased
+  variant: string, // Declared type, lowercased
+}
+
+function determineScalarType(datatype: Datatype): ScalarType {
+  switch (datatype.variant) {
+    case "bool": return "bool";
+    case "boolean": return "bool";
+    case "datetime": return "DateTime";
+  }
+  switch (datatype.affinity) {
+    case "integer": return "number";
+    case "real": return "number";
+    case "numeric": return "number";
+    case "text": return "string";
     default:
-      console.log(`Unknown SQLite column type: ${ColumnInfoInternalype}. Interpreting as string.`)
+      console.log(`Unknown SQLite column type: ${datatype.variant} (affinity: ${datatype.affinity}). Interpreting as string.`);
       return "string";
   }
 }
@@ -44,18 +39,10 @@ function getColumns(ast : Array<any>) : Array<ColumnInfo> {
   return ast.map(c => {
     return ({
       name: c.name,
-      type: columnCast(datatypeCast(c.datatype)),
+      type: determineScalarType(c.datatype),
       nullable: nullableCast(c.definition)
     })
   })
-}
-
-// Interpret the sqlite-parser datatype as a schema column response type.
-function datatypeCast(d: any): any {
-  switch(d.variant) {
-    case "datetime": return d.variant;
-    default: return d.affinity;
-  }
 }
 
 function nullableCast(ds: Array<any>): boolean {
