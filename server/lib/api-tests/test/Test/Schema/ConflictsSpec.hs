@@ -42,8 +42,7 @@ spec =
                 Just $
                   Fixture.defaultOptions
                     { Fixture.skipTests =
-                        Just "Disabled until we can dynamically change server settings per test. To test, add EFHideUpdateManyFields to soSubscriptions in Harness.Constants -> serveOptions",
-                      Fixture.stringifyNumbers = True
+                        Just "Disabled until we can dynamically change server settings per test. To test, add EFHideUpdateManyFields to soSubscriptions in Harness.Constants -> serveOptions"
                     }
             }
         ]

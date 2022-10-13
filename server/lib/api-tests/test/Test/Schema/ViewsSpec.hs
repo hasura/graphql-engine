@@ -42,12 +42,7 @@ spec =
                 [ Cockroach.setupTablesAction schema testEnvironment,
                   setupCockroach,
                   setupMetadata Fixture.Cockroach testEnvironment
-                ],
-              Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.stringifyNumbers = True
-                    }
+                ]
             }
         ]
     )

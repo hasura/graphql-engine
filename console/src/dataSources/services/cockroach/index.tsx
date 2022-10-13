@@ -78,6 +78,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     enabled: false,
     namingConvention: false,
     extensions_schema: false,
+    ssl_certificates: true,
   },
   driver: {
     name: 'cockroach',
@@ -98,8 +99,8 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     modify: {
       ...(PgSupportedFeatures?.tables?.modify ?? {}),
       enabled: true,
-      computedFields: true,
-      triggers: true,
+      computedFields: false,
+      triggers: false,
       customGqlRoot: true,
       setAsEnum: true,
       untrack: true,
@@ -112,8 +113,8 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   },
   events: {
     triggers: {
-      enabled: true,
       add: false,
+      enabled: true,
     },
   },
   actions: {
@@ -121,18 +122,18 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     relationships: false,
   },
   functions: {
-    enabled: true,
+    enabled: false,
     track: {
-      enabled: true,
+      enabled: false,
     },
     nonTrackableFunctions: {
       enabled: true,
     },
     modify: {
-      enabled: true,
+      enabled: false,
       comments: {
-        view: true,
-        edit: true,
+        view: false,
+        edit: false,
       },
     },
   },

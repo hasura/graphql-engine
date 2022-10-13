@@ -25,6 +25,9 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { resetRelationshipForm, resetManualRelationshipForm } from './Actions';
 import { RemoteDbRelationships } from './RemoteDbRelationships/RemoteDbRelationships';
 
+import styles from '../TableModify/ModifyTable.module.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.module.scss';
+
 const RelationshipsView = ({
   tableName,
   allSchemas,
@@ -53,11 +56,8 @@ const RelationshipsView = ({
     });
   }, [tableName, currentSchema, dispatch]);
 
-  const styles = require('../TableModify/ModifyTable.module.scss');
-  const tableStyles = require('../../../Common/TableCommon/TableStyles.module.scss');
-
   const tableSchema = allSchemas.find(
-    t => t.table_name === tableName && t.table_schema === currentSchema
+    (t) => t.table_name === tableName && t.table_schema === currentSchema
   );
 
   const { data: featureFlagsData, isLoading: isFeatureFlagsLoading } =
@@ -68,7 +68,7 @@ const RelationshipsView = ({
     featureFlagsData &&
     featureFlagsData?.length > 0 &&
     featureFlagsData.find(
-      featureFlag =>
+      (featureFlag) =>
         featureFlag.id === availableFeatureFlagIds.relationshipTabTablesId
     )?.state?.enabled;
 
@@ -132,7 +132,7 @@ const RelationshipsView = ({
             </tr>
           </thead>
           <tbody>
-            {objArrRelList.map(rel => {
+            {objArrRelList.map((rel) => {
               const column1 = rel.objRel ? (
                 <RelationshipEditor
                   dispatch={dispatch}
@@ -167,7 +167,7 @@ const RelationshipsView = ({
   const remoteRelationshipsSection = () => {
     const existingRemoteRelationships =
       tableSchema?.remote_relationships?.filter(
-        field =>
+        (field) =>
           'remote_schema' in field.definition ||
           'to_remote_schema' in field.definition
       ) ?? [];
@@ -278,13 +278,13 @@ const mapStateToProps = (state, ownProps) => {
     serverVersion: state.main.serverVersion,
     allFunctions: nonTrackableFns?.concat(trackedFns ?? []) ?? [],
     schemaList: state.tables.schemaList,
-    remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
+    remoteSchemas: getRemoteSchemasSelector(state).map((schema) => schema.name),
     currentSource: state.tables.currentDataSource,
     ...state.tables.modify,
   };
 };
 
-const relationshipsViewConnector = connect =>
+const relationshipsViewConnector = (connect) =>
   connect(mapStateToProps)(RelationshipsView);
 
 export default relationshipsViewConnector;

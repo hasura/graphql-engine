@@ -5,8 +5,7 @@ import FilterSection from './FilterSection';
 import FilterBadge from './FilterBadge';
 import filter from '../../images/filter.svg';
 
-const styles = require('../../Metrics.scss');
-
+import styles from '../../Metrics.module.scss';
 const Filters = ({
   projectId,
   query,
@@ -37,10 +36,10 @@ const Filters = ({
   const renderSelectedFilters = () => {
     if (values.length > 0) {
       return values.map((f, i) => {
-        const composeFilterObj = o => {
+        const composeFilterObj = (o) => {
           const keyElements = Object.keys(o);
           if (keyElements.length > 0) {
-            return keyElements.map(k => `${k}: ${o[k]}`).join(', ');
+            return keyElements.map((k) => `${k}: ${o[k]}`).join(', ');
           }
           return 'N/A';
         };

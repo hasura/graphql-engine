@@ -2,10 +2,9 @@ import React from 'react';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import tabInfo from './customTypesTabs';
 import { appPrefix } from '../constants';
+import styles from '../Actions.module.scss';
 
 const CustomTypesContainer = ({ children, tabName }) => {
-  const styles = require('../Actions.module.scss');
-
   const breadCrumbs = [
     {
       title: 'Actions',

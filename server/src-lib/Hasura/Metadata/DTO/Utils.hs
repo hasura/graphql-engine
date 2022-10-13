@@ -1,10 +1,19 @@
 -- | Utility functions for use defining autodocodec codecs.
-module Hasura.Metadata.DTO.Utils (codecNamePrefix, versionField, optionalVersionField) where
+module Hasura.Metadata.DTO.Utils
+  ( codecNamePrefix,
+    fromEnvCodec,
+    versionField,
+    optionalVersionField,
+  )
+where
 
 import Autodocodec
   ( Codec (EqCodec),
+    JSONCodec,
     ObjectCodec,
+    object,
     optionalFieldWith',
+    requiredField',
     requiredFieldWith',
     scientificCodec,
     (.=),
@@ -38,3 +47,13 @@ optionalVersionField v =
 -- database kind from type context.
 codecNamePrefix :: forall b. (HasTag b) => Text
 codecNamePrefix = T.toTitle $ T.toTxt $ reify $ backendTag @b
+
+-- | Represents a text field wrapped in an object with a single property
+-- named @from_env@.
+--
+-- Objects of this form appear in many places in the Metadata API. If we
+-- reproduced this codec in each use case the OpenAPI document would have many
+-- identical object definitions. Using a shared codec allows a single shared
+-- reference.
+fromEnvCodec :: JSONCodec Text
+fromEnvCodec = object "FromEnv" $ requiredField' "from_env"

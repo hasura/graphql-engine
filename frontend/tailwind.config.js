@@ -2,6 +2,9 @@ const colors = require('tailwindcss/colors');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  safelist: {
+    standard: /background$/,
+  },
   darkMode: 'class',
   theme: {
     fontFamily: {
@@ -61,7 +64,47 @@ module.exports = {
       width: {
         inherit: 'inherit',
       },
+      keyframes: {
+        onboardingWizardFadeIn: {
+          '0%': {
+            opacity: '0',
+            scale: '.9',
+          },
+          '50%': {
+            opacity: '.5',
+            scale: '.95',
+          },
+          '100%': {
+            opacity: '1',
+            scale: '1',
+          },
+        },
+        collapsibleContentOpen: {
+          from: {
+            height: '0',
+          },
+          to: {
+            height: 'var(--radix-collapsible-content-height)',
+          },
+        },
+        collapsibleContentClose: {
+          from: {
+            height: 'var(--radix-collapsible-content-height)',
+          },
+          to: {
+            height: '0',
+          },
+        },
+      },
+      animation: {
+        collapsibleContentOpen: 'collapsibleContentOpen 300ms ease-out',
+        collapsibleContentClose: 'collapsibleContentClose 300ms ease-out',
+      },
     },
   },
-  plugins: [require('@tailwindcss/typography'), require('@tailwindcss/forms')],
+  plugins: [
+    require('@tailwindcss/typography'),
+    require('@tailwindcss/forms'),
+    require('tailwindcss-radix')(),
+  ],
 };

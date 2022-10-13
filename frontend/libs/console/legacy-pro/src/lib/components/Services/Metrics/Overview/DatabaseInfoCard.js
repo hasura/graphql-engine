@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useQuery } from 'react-apollo';
 import { FaDatabase } from 'react-icons/fa';
 import { addNumbersSafely, isEmptyObject } from '../../../../utils/validation';
-import styles from '../MetricsV1.scss';
+import styles from '../MetricsV1.module.scss';
 import {
   fetchDbMetrics,
   fetchDbReplicaMetrics,

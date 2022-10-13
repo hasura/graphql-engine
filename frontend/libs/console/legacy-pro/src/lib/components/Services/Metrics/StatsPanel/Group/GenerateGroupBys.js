@@ -1,9 +1,10 @@
 import React from 'react';
 
 import CheckBox from '../CheckBox';
+import styles from '../../Metrics.module.scss';
 
 const GenerateGroupBy = ({ id, title, value, onChange, checked }) => {
-  const onCheckBoxClick = e => {
+  const onCheckBoxClick = (e) => {
     const val = e.target.getAttribute('data-field-value');
     onChange(val);
   };
@@ -18,7 +19,6 @@ const GenerateGroupBy = ({ id, title, value, onChange, checked }) => {
   );
 };
 const GenerateGroupBys = ({ getTitle, values, selected, onChange }) => {
-  const styles = require('../../Metrics.scss');
   const groupBy = values.map((v, i) => (
     <GenerateGroupBy
       key={i}

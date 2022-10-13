@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tooltip } from '@hasura/console-oss';
 
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 import downloadList from '../images/download_bottom.svg';
 
 import LoadingSpinner from './LoadingSpinner';

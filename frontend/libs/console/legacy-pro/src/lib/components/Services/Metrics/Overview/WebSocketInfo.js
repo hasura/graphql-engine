@@ -2,7 +2,7 @@ import React from 'react';
 import { isEmpty } from '../../../../utils/validation';
 import Placeholder from '../../../Placeholder/Placeholder';
 
-import styles from '../MetricsV1.scss';
+import styles from '../MetricsV1.module.scss';
 
 const parseDataToString = (data, loading, error, errorLabel = 'data') => {
   if (loading) return <Placeholder width={5} />;

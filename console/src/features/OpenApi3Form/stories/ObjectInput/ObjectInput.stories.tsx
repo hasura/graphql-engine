@@ -29,57 +29,72 @@ export const ObjectInputWithFields: ComponentStory<typeof RenderOpenApi3Form> =
       <RenderOpenApi3Form
         getSchema={() => [
           {
-            title: 'Connection Parameters',
-            type: 'object',
             nullable: false,
             properties: {
-              username: {
-                title: 'Text Input (nullable explicitly set to false)',
-                type: 'string',
+              jdbc_url: {
                 nullable: false,
-              },
-              database: {
-                title: 'Text Input (nullable explicitly set to true)',
-                type: 'string',
-                nullable: true,
-              },
-              host: {
-                title: 'Text Input',
                 type: 'string',
               },
-              port: {
-                title: 'Text Input',
-                type: 'number',
-                nullable: false,
-              },
-              socket: {
-                title: 'Text Input',
-                type: 'number',
+              primary_keys: {
+                items: {
+                  nullable: false,
+                  properties: {
+                    columns: {
+                      items: {
+                        nullable: false,
+                        type: 'string',
+                      },
+                      nullable: false,
+                      type: 'array',
+                    },
+                    table: {
+                      items: {
+                        nullable: false,
+                        type: 'string',
+                      },
+                      nullable: false,
+                      type: 'array',
+                    },
+                  },
+                  type: 'object',
+                },
                 nullable: true,
+                type: 'array',
               },
-              uuid: {
-                title: 'Text Input',
-                type: 'number',
-              },
-              disable_telemetry: {
-                title: 'Text Input',
-                type: 'boolean',
-                nullable: false,
-              },
-              disable_auto_update: {
-                title: 'Text Input',
-                type: 'boolean',
+              schema: {
                 nullable: true,
+                type: 'string',
               },
-              enable_log: {
-                title: 'Text Input',
-                type: 'boolean',
+              tables: {
+                items: {
+                  nullable: false,
+                  type: 'string',
+                },
+                nullable: true,
+                type: 'array',
               },
             },
+            type: 'object',
           },
           {},
         ]}
-        defaultValues={{}}
+        defaultValues={{
+          ObjectProperty: {
+            jdbc_url: 'asdasd',
+            primary_keys: [
+              {
+                columns: ['test'],
+                table: ['test'],
+              },
+              {
+                columns: ['test'],
+                table: ['test'],
+              },
+            ],
+            schema: 'asdasd',
+            tables: ['asd', ' value'],
+          },
+        }}
         name="ObjectProperty"
       />
     );

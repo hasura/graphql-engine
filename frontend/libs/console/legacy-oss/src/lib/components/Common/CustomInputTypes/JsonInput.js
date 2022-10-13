@@ -5,7 +5,7 @@ import { FaCompressAlt, FaExpandAlt } from 'react-icons/fa';
 import 'brace/mode/markdown';
 import 'brace/theme/github';
 
-const styles = require('./CustomInput.module.scss');
+import styles from './CustomInput.module.scss';
 
 const NORMALKEY = 'normal';
 const JSONKEY = 'json';
@@ -20,7 +20,7 @@ const parseJSONData = (data, editorType) => {
   }
 };
 
-const createInitialState = data => {
+const createInitialState = (data) => {
   const initialState = {
     editorType: NORMALKEY,
     data: parseJSONData(data, NORMALKEY),
@@ -28,7 +28,7 @@ const createInitialState = data => {
   return initialState;
 };
 
-const JsonInput = props => {
+const JsonInput = (props) => {
   const { standardProps, placeholderProp } = props;
   const { defaultValue, onChange } = standardProps;
   const allProps = { ...standardProps };
@@ -43,7 +43,7 @@ const JsonInput = props => {
     };
   };
 
-  const toggleEditorType = currentState => {
+  const toggleEditorType = (currentState) => {
     const nextEditorType =
       currentState.editorType === JSONKEY ? NORMALKEY : JSONKEY;
 
@@ -54,7 +54,7 @@ const JsonInput = props => {
     };
   };
 
-  const handleKeyUpEvent = e => {
+  const handleKeyUpEvent = (e) => {
     if ((e.ctrlKey || e.metaKey) && e.which === 32) {
       updateState(toggleEditorType);
     }
@@ -64,9 +64,9 @@ const JsonInput = props => {
     updateState(toggleEditorType);
   };
 
-  const handleInputChangeAndPropagate = e => {
+  const handleInputChangeAndPropagate = (e) => {
     const val = e.target.value;
-    updateState(currentState => updateData(val, currentState));
+    updateState((currentState) => updateData(val, currentState));
     if (onChange) {
       onChange(e);
     }
@@ -74,7 +74,7 @@ const JsonInput = props => {
 
   const handleTextAreaChangeAndPropagate = (value, e) => {
     const val = value;
-    updateState(currentState => updateData(val, currentState));
+    updateState((currentState) => updateData(val, currentState));
     if (onChange) {
       onChange(e, value);
     }

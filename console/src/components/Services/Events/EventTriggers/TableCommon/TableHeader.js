@@ -9,9 +9,9 @@ import {
   getDataEventsLandingRoute,
 } from '../../../../Common/utils/routesUtils';
 import { EVENTS_SERVICE_HEADING } from '../../constants';
+import styles from './EventTable.module.scss';
 
 const TableHeader = ({ triggerName, tabName, count, readOnlyMode }) => {
-  const styles = require('./EventTable.module.scss');
   let showCount = '';
   if (!(count === null || count === undefined)) {
     showCount = '(' + count + ')';

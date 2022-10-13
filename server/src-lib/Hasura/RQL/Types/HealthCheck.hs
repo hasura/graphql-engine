@@ -27,6 +27,12 @@ newtype HealthCheckTestSql = HealthCheckTestSql
   }
   deriving (Eq, Generic, Show, Cacheable, Hashable, NFData)
 
+instance HasCodec HealthCheckTestSql where
+  codec =
+    AC.object "HealthCheckTestSql" $
+      HealthCheckTestSql
+        <$> optionalFieldWithDefault' "sql" defaultTestSql AC..= _hctSql
+
 instance ToJSON HealthCheckTestSql where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
 

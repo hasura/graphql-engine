@@ -91,6 +91,10 @@ executable api-tests
     Test.HelloWorldSpec
     Test.LongIdentifiersSpec
     Test.Metadata.InconsistentSpec
+    Test.Mutations.Delete.AllSpec
+    Test.Mutations.Delete.FieldSpec
+    Test.Mutations.Delete.NestedFieldSpec
+    Test.Mutations.Delete.PrimaryKeySpec
     Test.Mutations.Insert.MultipleSpec
     Test.Mutations.Insert.SingleSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec

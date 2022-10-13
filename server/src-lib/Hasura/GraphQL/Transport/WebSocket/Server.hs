@@ -9,6 +9,7 @@ module Hasura.GraphQL.Transport.WebSocket.Server
     OnConnH,
     WSActions (..),
     WSConn,
+    WSErrorMessage (..),
     WSEvent (EMessageSent),
     WSEventInfo (WSEventInfo, _wseiEventType, _wseiOperationId, _wseiOperationName, _wseiParameterizedQueryHash, _wseiQueryExecutionTime, _wseiResponseSize),
     WSHandlers (WSHandlers),
@@ -19,13 +20,13 @@ module Hasura.GraphQL.Transport.WebSocket.Server
     WSQueueResponse (WSQueueResponse),
     WSServer,
     closeConn,
+    sendMsgAndCloseConn,
     createServerApp,
     createWSServer,
     getData,
     getRawWebSocketConnection,
     getWSId,
-    onClientMessageParseErrorText,
-    onConnInitErrorText,
+    mkWSServerErrorCode,
     sendMsg,
     shutdown,
 
@@ -47,6 +48,7 @@ import Data.ByteString.Lazy qualified as BL
 import Data.CaseInsensitive qualified as CI
 import Data.SerializableBlob qualified as SB
 import Data.String
+import Data.Text qualified as T
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
 import Data.Word (Word16)
@@ -191,6 +193,11 @@ closeConnWithCode wsConn code bs = do
     WSLog (_wcConnId wsConn) (ECloseSent $ SB.fromLBS bs) Nothing
   WS.sendCloseCode (_wcConnRaw wsConn) code bs
 
+sendMsgAndCloseConn :: WSConn a -> Word16 -> BL.ByteString -> ServerMsg -> IO ()
+sendMsgAndCloseConn wsConn errCode bs serverErr = do
+  WS.sendTextData (_wcConnRaw wsConn) (encodeServerMsg serverErr)
+  WS.sendCloseCode (_wcConnRaw wsConn) errCode bs
+
 -- writes to a queue instead of the raw connection
 -- so that sendMsg doesn't block
 sendMsg :: WSConn a -> WSQueueResponse -> IO ()
@@ -252,7 +259,7 @@ type WSKeepAliveMessageAction a = WSConn a -> IO ()
 
 type WSPostExecErrMessageAction a = WSConn a -> OperationId -> GQExecError -> IO ()
 
-type WSOnErrorMessageAction a = WSConn a -> ConnErrMsg -> Maybe String -> IO ()
+type WSOnErrorMessageAction a = WSConn a -> ConnErrMsg -> WSErrorMessage -> IO ()
 
 type WSCloseConnAction a = WSConn a -> OperationId -> String -> IO ()
 
@@ -269,13 +276,12 @@ data WSActions a = WSActions
     _wsaErrorMsgFormat :: !([J.Value] -> J.Value)
   }
 
--- | to be used with `WSOnErrorMessageAction`
-onClientMessageParseErrorText :: Maybe String
-onClientMessageParseErrorText = Just "Parsing client message failed: "
+data WSErrorMessage = ClientMessageParseFailed | ConnInitFailed
 
--- | to be used with `WSOnErrorMessageAction`
-onConnInitErrorText :: Maybe String
-onConnInitErrorText = Just "Connection initialization failed: "
+mkWSServerErrorCode :: WSErrorMessage -> ConnErrMsg -> ServerErrorCode
+mkWSServerErrorCode errorMessage connErrMsg = case errorMessage of
+  ClientMessageParseFailed -> (GenericError4400 $ ("Parsing client message failed: ") <> (T.unpack . unConnErrMsg $ connErrMsg))
+  ConnInitFailed -> (GenericError4400 $ ("Connection initialization failed: ") <> (T.unpack . unConnErrMsg $ connErrMsg))
 
 type OnConnH m a = WSId -> WS.RequestHead -> IpAddress -> WSActions a -> m (Either WS.RejectRequest (AcceptWith a))
 

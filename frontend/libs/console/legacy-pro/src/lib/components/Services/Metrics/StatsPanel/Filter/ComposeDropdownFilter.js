@@ -17,7 +17,7 @@ import {
   SELECT_ALL_NAME_DISPLAY,
 } from '../../constants';
 
-const styles = require('../../Metrics.scss');
+import styles from '../../Metrics.module.scss';
 
 const ComposeDropdownFilter = ({
   query,
@@ -58,13 +58,13 @@ const ComposeDropdownFilter = ({
   const dropdownFilters = filters.map((filter, key) => {
     /* Here value denotes type of the filter */
     const { value } = filter;
-    const transports = transportFilters.map(v => ({
+    const transports = transportFilters.map((v) => ({
       [TRANSPORT_SYMBOL]: v,
     }));
-    const subscriptionWorkerStatus = subscriptionWorkerFilters.map(v => ({
+    const subscriptionWorkerStatus = subscriptionWorkerFilters.map((v) => ({
       [SUBSCRIPTION_STATUS_SYMBOL]: v,
     }));
-    const websocketStatus = websocketStatusFilters.map(p => ({
+    const websocketStatus = websocketStatusFilters.map((p) => ({
       [WEBSOCKET_STATUS_SYMBOL]: p,
     }));
     const d = retrieveFilterData(
@@ -76,7 +76,7 @@ const ComposeDropdownFilter = ({
       },
       filter
     );
-    const selectedFilters = values.filter(v => v.type === value);
+    const selectedFilters = values.filter((v) => v.type === value);
 
     const selectedValues = getJson(selectedFilters, 'value');
     const emptyTitle = getEmptyTitle(value);

@@ -95,7 +95,7 @@ handlers = MkHandlers({
     '/reset-state': ResetStateHandler
 })
 
-def create_server(host='127.0.0.1', port=5001):
+def create_server(host, port):
     return http.server.HTTPServer((host, port), handlers)
 
 def stop_server(server):
@@ -104,6 +104,6 @@ def stop_server(server):
 
 # if you want to run this module to emulate a JWK server during development
 if __name__ == '__main__':
-    s = create_server(port=5001)
+    s = create_server(host='localhost', port=5001)
     s.serve_forever()
     stop_server(s)

@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/react-hooks';
 
 import { tableScss } from '@hasura/console-oss';
 import { fetchRunTestPreview } from './graphql.queries';
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 
 import { BrowseTests } from './BrowseTests';
 
@@ -15,7 +15,7 @@ import { BrowseTests } from './BrowseTests';
  * @param {Props} props
  */
 
-export const BrowseRunTestsPreview = props => {
+export const BrowseRunTestsPreview = (props) => {
   const { testSuiteId, testRunId, projectId } = props;
 
   const { loading, error, data } = useQuery(fetchRunTestPreview, {
@@ -23,7 +23,7 @@ export const BrowseRunTestsPreview = props => {
       testSuiteId,
       projectId,
     },
-    fetchPolicy: 'network-only'
+    fetchPolicy: 'network-only',
   });
 
   if (loading) {
@@ -45,11 +45,11 @@ export const BrowseRunTestsPreview = props => {
 
   const rows = data.results
     ? data.results.map(({ name, role }) => ({
-      status: null,
-      name,
-      role,
-      message: undefined,
-    }))
+        status: null,
+        name,
+        role,
+        message: undefined,
+      }))
     : [];
 
   return (

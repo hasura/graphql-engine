@@ -190,17 +190,22 @@ export const DataSource = (httpClient: AxiosInstance) => ({
         ),
         customization: z
           .object({
-            root_fields: z.object({
-              namespace: z.string(),
-              prefix: z.string(),
-              suffix: z.string(),
-            }),
-            type_names: z.object({
-              prefix: z.string(),
-              suffix: z.string(),
-            }),
+            root_fields: z
+              .object({
+                namespace: z.string().optional(),
+                prefix: z.string().optional(),
+                suffix: z.string().optional(),
+              })
+              .optional(),
+            type_names: z
+              .object({
+                prefix: z.string().optional(),
+                suffix: z.string().optional(),
+              })
+              .optional(),
           })
-          .deepPartial(),
+          .deepPartial()
+          .optional(),
       });
     },
   },

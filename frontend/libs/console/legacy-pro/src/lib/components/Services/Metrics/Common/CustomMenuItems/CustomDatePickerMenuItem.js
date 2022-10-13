@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import DatePickerModal from '../DatePickerModal';
 import MenuItem from 'react-bootstrap/lib/MenuItem';
+import styles from '../../Metrics.module.scss';
 
 const defaultState = {
   isDatePicker: false,
 };
 
 const CustomDatePickerMenuItem = ({ onApply, title, value }) => {
-  const styles = require('../../Metrics.scss');
   const [customDate, modalToggle] = useState(defaultState);
   const { isDatePicker } = customDate;
   const modalOpen = () => {
@@ -16,7 +16,7 @@ const CustomDatePickerMenuItem = ({ onApply, title, value }) => {
   const onClose = () => {
     modalToggle({ isDatePicker: false });
   };
-  const onApplyClick = data => {
+  const onApplyClick = (data) => {
     onClose();
     onApply(data);
   };

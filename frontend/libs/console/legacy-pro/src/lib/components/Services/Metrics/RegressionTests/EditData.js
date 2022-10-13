@@ -3,20 +3,20 @@ import AceEditor from 'react-ace';
 import { Button } from '@hasura/console-oss';
 import { Tooltip } from '@hasura/console-oss';
 
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 
 /** Workaround for https://github.com/ajaxorg/ace/issues/3320 */
 window.ace.require = window.ace.acequire;
-/* eslint-disable no-unused-expressions */
-import('ace-builds/src-noconflict/mode-json');
-import('ace-builds/src-noconflict/theme-github');
-/* eslint-enable no-unused-expressions */
+/* eslint-disable import/first */
+import 'ace-builds/src-noconflict/mode-json';
+import 'ace-builds/src-noconflict/theme-github';
+/* eslint-enable import/first */
 
 export const EditData = ({ label, data, onSave, onCancel }) => {
   const [value, setValue] = useState(data);
   const [validJSON, setValidJSON] = useState(true);
 
-  const handleChange = v => {
+  const handleChange = (v) => {
     setValue(v);
     try {
       JSON.parse(v);

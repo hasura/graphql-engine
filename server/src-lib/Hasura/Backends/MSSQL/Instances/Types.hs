@@ -5,6 +5,7 @@
 -- Defines a 'Hasura.RQL.Types.Backend.Backend' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Types () where
 
+import Autodocodec (codec)
 import Data.Aeson
 import Data.Text.Casing (GQLNameIdentifier)
 import Database.ODBC.SQLServer qualified as ODBC
@@ -14,7 +15,6 @@ import Hasura.Backends.MSSQL.Types.Insert qualified as MSSQL (BackendInsert)
 import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
 import Hasura.Backends.MSSQL.Types.Update qualified as MSSQL (BackendUpdate)
 import Hasura.Base.Error
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.HealthCheck
@@ -66,7 +66,7 @@ instance Backend 'MSSQL where
     Just $
       HealthCheckImplementation
         { _hciDefaultTest = defaultHealthCheckTestSql,
-          _hciTestCodec = placeholderCodecViaJSON
+          _hciTestCodec = codec
         }
 
   isComparableType :: ScalarType 'MSSQL -> Bool

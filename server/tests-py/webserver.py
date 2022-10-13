@@ -33,12 +33,13 @@ class Response():
 
 class Request():
     """ Represents a HTTP `Request` object """
-    def __init__(self, path, qs=None, body=None, json=None, headers=None):
+    def __init__(self, path, qs=None, body=None, json=None, headers=None, context=None):
         self.path = path
         self.qs = qs
         self.body = body
         self.json = json
         self.headers = headers
+        self.context = context
 
 
 class RequestHandler(ABC):
@@ -54,7 +55,7 @@ class RequestHandler(ABC):
         pass
 
 
-def MkHandlers(handlers):
+def MkHandlers(handlers, context = None):
     class HTTPHandler(http.BaseHTTPRequestHandler):
         def not_found(self):
             self.send_response(HTTPStatus.NOT_FOUND)
@@ -79,7 +80,7 @@ def MkHandlers(handlers):
                 path = raw_path.path
                 handler = handlers[path]()
                 qs = parse_qs(raw_path.query)
-                req = Request(path, qs, None, None, self.headers)
+                req = Request(path, qs, None, None, self.headers, context)
                 resp = handler.get(req)
                 self.send_response(resp.status)
                 if resp.headers:
@@ -100,7 +101,7 @@ def MkHandlers(handlers):
                 req_json = None
                 if self.headers.get('Content-Type') == 'application/json':
                     req_json = json.loads(req_body)
-                req = Request(self.path, qs, req_body, req_json, self.headers)
+                req = Request(self.path, qs, req_body, req_json, self.headers, context)
                 resp = handler.post(req)
                 self.send_response(resp.status)
                 if resp.headers:

@@ -7,7 +7,7 @@ import 'brace/mode/markdown';
 import 'brace/theme/github';
 import 'brace/theme/chrome';
 
-const styles = require('./CustomInput.module.scss');
+import styles from './CustomInput.module.scss';
 
 // editorType is what sort of editor. All are ACE Editor
 // modes except 0, which is text input
@@ -35,7 +35,7 @@ const EDITORTYPES = [
 const NORMAL_KEY = 0;
 const MULTILINE_KEY = 1;
 
-const createInitialState = data => {
+const createInitialState = (data) => {
   const initialState = {
     editorType: NORMAL_KEY,
     data: data,
@@ -43,7 +43,7 @@ const createInitialState = data => {
   return initialState;
 };
 
-const TextInput = props => {
+const TextInput = (props) => {
   const { standardProps, placeholderProp } = props;
   const { defaultValue, onChange } = standardProps;
   const allProps = { ...standardProps };
@@ -58,7 +58,7 @@ const TextInput = props => {
     };
   };
 
-  const cycleEditorType = currentState => {
+  const cycleEditorType = (currentState) => {
     // const nextEditorType = (currentState.editorType + 1) % EDITORTYPES.length;
     const nextEditorType =
       currentState.editorType === NORMAL_KEY ? MULTILINE_KEY : NORMAL_KEY;
@@ -69,7 +69,7 @@ const TextInput = props => {
     };
   };
 
-  const handleKeyUpEvent = e => {
+  const handleKeyUpEvent = (e) => {
     if ((e.ctrlKey || event.metaKey) && e.which === 32) {
       updateState(cycleEditorType);
     }
@@ -79,9 +79,9 @@ const TextInput = props => {
     updateState(cycleEditorType);
   };
 
-  const handleInputChangeAndPropagate = e => {
+  const handleInputChangeAndPropagate = (e) => {
     const val = e.target.value;
-    updateState(currentState => updateData(val, currentState));
+    updateState((currentState) => updateData(val, currentState));
     if (onChange) {
       onChange(e);
     }
@@ -89,13 +89,13 @@ const TextInput = props => {
 
   const handleTextAreaChangeAndPropagate = (value, e) => {
     const val = value;
-    updateState(currentState => updateData(val, currentState));
+    updateState((currentState) => updateData(val, currentState));
     if (onChange) {
       onChange(e, value);
     }
   };
 
-  const getAceEditor = curmode => {
+  const getAceEditor = (curmode) => {
     return (
       <AceEditor
         key="ace_text_editor"

@@ -47,12 +47,22 @@ class Monad m => MonadGQLExecutionCheck m where
     SetGraphqlIntrospectionOptions ->
     m (Either QErr ExecutionStep)
 
+  checkGQLBatchedReqs ::
+    UserInfo ->
+    RequestId ->
+    [GQLReq GQLQueryText] ->
+    SchemaCache ->
+    m (Either QErr ())
+
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ExceptT e m) where
   checkGQLExecution ui det enableAL sc req requestId =
     lift $ checkGQLExecution ui det enableAL sc req requestId
 
   executeIntrospection userInfo introspectionQuery rolesDisabled =
     lift $ executeIntrospection userInfo introspectionQuery rolesDisabled
+
+  checkGQLBatchedReqs userInfo requestId reqs sc =
+    lift $ checkGQLBatchedReqs userInfo requestId reqs sc
 
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
   checkGQLExecution ui det enableAL sc req requestId =
@@ -61,6 +71,9 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (ReaderT r m) where
   executeIntrospection userInfo introspectionQuery rolesDisabled =
     lift $ executeIntrospection userInfo introspectionQuery rolesDisabled
 
+  checkGQLBatchedReqs userInfo requestId reqs sc =
+    lift $ checkGQLBatchedReqs userInfo requestId reqs sc
+
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) where
   checkGQLExecution ui det enableAL sc req requestId =
     lift $ checkGQLExecution ui det enableAL sc req requestId
@@ -68,9 +81,15 @@ instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (Tracing.TraceT m) w
   executeIntrospection userInfo introspectionQuery rolesDisabled =
     lift $ executeIntrospection userInfo introspectionQuery rolesDisabled
 
+  checkGQLBatchedReqs userInfo requestId reqs sc =
+    lift $ checkGQLBatchedReqs userInfo requestId reqs sc
+
 instance MonadGQLExecutionCheck m => MonadGQLExecutionCheck (MetadataStorageT m) where
   checkGQLExecution ui det enableAL sc req requestId =
     lift $ checkGQLExecution ui det enableAL sc req requestId
 
   executeIntrospection userInfo introspectionQuery rolesDisabled =
     lift $ executeIntrospection userInfo introspectionQuery rolesDisabled
+
+  checkGQLBatchedReqs userInfo requestId reqs sc =
+    lift $ checkGQLBatchedReqs userInfo requestId reqs sc

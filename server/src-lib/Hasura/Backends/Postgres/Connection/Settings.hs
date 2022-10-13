@@ -48,7 +48,6 @@ import Data.Time.Clock.Compat ()
 import Database.PG.Query qualified as PG
 import Hasura.Base.Instances ()
 import Hasura.Incremental (Cacheable (..))
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (UrlConf (..))
 import Hasura.SQL.Types (ExtensionsSchema (..))
@@ -328,7 +327,7 @@ instance HasCodec PostgresSourceConnInfo where
     CommentCodec "https://hasura.io/docs/latest/graphql/core/api-reference/syntax-defs.html#pgsourceconnectioninfo" $
       AC.object "PostgresSourceConnInfo" $
         PostgresSourceConnInfo
-          <$> requiredFieldWith "database_url" placeholderCodecViaJSON databaseUrlDoc .== _psciDatabaseUrl
+          <$> requiredField "database_url" databaseUrlDoc .== _psciDatabaseUrl
           <*> optionalFieldOrNull "pool_settings" poolSettingsDoc .== _psciPoolSettings
           <*> optionalFieldWithOmittedDefault "use_prepared_statements" False usePreparedStatementsDoc .== _psciUsePreparedStatements
           <*> optionalFieldWithOmittedDefault "isolation_level" PG.ReadCommitted isolationLevelDoc .== _psciIsolationLevel
