@@ -67,19 +67,20 @@ function nullableCast(ds: Array<any>): boolean {
   return true;
 }
 
-function formatTableInfo(info : TableInfoInternal): TableInfo {
+const formatTableInfo = (config: Config) => (info: TableInfoInternal): TableInfo => {
   const ast = sqliteParser(info.sql);
   const ddl = ddlColumns(ast);
-  const pks = ddlPKs(ast);
-  const fks = ddlFKs(ast);
-  const pk  = pks.length > 0 ? { primary_key: pks } : {};
-  const fk  = fks.length > 0 ? { foreign_keys: Object.fromEntries(fks) } : {};
+  const primaryKeys = ddlPKs(ast);
+  const foreignKeys = ddlFKs(config, ast);
+  const primaryKey = primaryKeys.length > 0 ? { primary_key: primaryKeys } : {};
+  const foreignKey = foreignKeys.length > 0 ? { foreign_keys: Object.fromEntries(foreignKeys) } : {};
+  const tableName = config.explicit_main_schema ? ["main", info.name] : [info.name];
 
   // TODO: Should we include something for the description here?
   return {
-    name: [info.name],
-    ...pk,
-    ...fk,
+    name: tableName,
+    ...primaryKey,
+    ...foreignKey,
     description: info.sql,
     columns: getColumns(ddl)
   }
@@ -148,7 +149,7 @@ function ddlColumns(ddl: any): Array<any> {
  * @param ddl
  * @returns Array<[name, FK constraint definition]>
  */
-function ddlFKs(ddl: any): Array<[string, Constraint]>  {
+function ddlFKs(config: Config, ddl: any): Array<[string, Constraint]>  {
   if(ddl.type != 'statement' || ddl.variant != 'list') {
     throw new Error("Encountered a non-statement or non-list DDL for table.");
   }
@@ -177,10 +178,10 @@ function ddlFKs(ddl: any): Array<[string, Constraint]>  {
       }
 
       const destinationColumn = definition.references.columns[0];
-
+      const foreignTable = config.explicit_main_schema ? ["main", definition.references.name] : [definition.references.name];
       return [[
         `${sourceColumn.name}->${definition.references.name}.${destinationColumn.name}`,
-        { foreign_table: [definition.references.name],
+        { foreign_table: foreignTable,
           column_mapping: {
             [sourceColumn.name]: destinationColumn.name
           }
@@ -219,7 +220,7 @@ export async function getSchema(config: Config, sqlLogger: SqlLogger): Promise<S
   const [results, metadata]                       = await db.query("SELECT * from sqlite_schema");
   const resultsT: Array<TableInfoInternal>        = results as Array<TableInfoInternal>;
   const filtered: Array<TableInfoInternal>        = resultsT.filter(table => includeTable(config,table));
-  const result:   Array<TableInfo>                = filtered.map(formatTableInfo);
+  const result:   Array<TableInfo>                = filtered.map(formatTableInfo(config));
 
   return {
     tables: result

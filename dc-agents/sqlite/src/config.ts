@@ -3,6 +3,7 @@ import { ConfigSchemaResponse } from "@hasura/dc-api-types"
 
 export type Config = {
   db: string,
+  explicit_main_schema: Boolean,
   tables: String[] | null,
   meta: Boolean
 }
@@ -26,6 +27,7 @@ export const tryGetConfig = (request: FastifyRequest): Config | null => {
 
   return {
     db: config.db,
+    explicit_main_schema: config.explicit_main_schema ?? false,
     tables: config.tables ?? null,
     meta: config.include_sqlite_meta_tables ?? false
   }
@@ -40,6 +42,12 @@ export const configSchema: ConfigSchemaResponse = {
       db: {
         description: "The SQLite database file to use.",
         type: "string"
+      },
+      explicit_main_schema: {
+        description: "Prefix all tables with the 'main' schema",
+        type: "boolean",
+        nullable: true,
+        default: false
       },
       tables: {
         description: "List of tables to make available in the schema and for querying",
