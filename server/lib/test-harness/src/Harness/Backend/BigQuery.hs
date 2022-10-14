@@ -271,11 +271,11 @@ setupPermissionsAction permissions env =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup "bq" permissions env
+setupPermissions permissions env = Permissions.setup BigQuery permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown "bq" permissions env
+teardownPermissions permissions env = Permissions.teardown BigQuery permissions env
 
 -- | We get @jobRateLimitExceeded@ errors from BigQuery if we run too many DML operations in short intervals.
 --   This functions tries to fix that by retrying after a few seconds if there's an error.

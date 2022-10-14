@@ -273,8 +273,8 @@ teardown (reverse -> tables) (testEnvironment, _) = do
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup "citus" permissions env
+setupPermissions permissions env = Permissions.setup Citus permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown "citus" permissions env
+teardownPermissions permissions env = Permissions.teardown Citus permissions env
