@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import { ContentWithTestSuite } from './ContentWithTestSuite';
 import RunTests from './RunTests';
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 import SelectProject from '../AllowLists/SelectProject';
 import { currentProjectPlaceholder } from '../AllowLists/constants';
 import { createOptionEntry } from '../AllowLists/utils';
@@ -12,18 +12,16 @@ import { createOptionEntry } from '../AllowLists/utils';
  *  If the project has a testSuiteId, show the button, else show an error saying
  * */
 
-export const RunTestsWrapper = props => {
-  const {
-    projectId: currentProjectId,
-    projectName: currentProjectName,
-  } = props;
+export const RunTestsWrapper = (props) => {
+  const { projectId: currentProjectId, projectName: currentProjectName } =
+    props;
 
   const [project, setProject] = useState({
     projectName: currentProjectName,
     projectId: currentProjectId,
   });
 
-  const handleProjectChange = selected => {
+  const handleProjectChange = (selected) => {
     setProject({
       projectId: selected.value,
       projectName: selected.label,
@@ -58,7 +56,11 @@ export const RunTestsWrapper = props => {
           currentProjectId={currentProjectId}
         >
           {({ testSuiteId, testProjectId }) => (
-            <RunTests {...props} testSuiteId={testSuiteId} testProjectId={testProjectId} />
+            <RunTests
+              {...props}
+              testSuiteId={testSuiteId}
+              testProjectId={testProjectId}
+            />
           )}
         </ContentWithTestSuite>
       </span>

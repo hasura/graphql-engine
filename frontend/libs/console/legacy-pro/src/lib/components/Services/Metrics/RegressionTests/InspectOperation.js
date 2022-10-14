@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 import { createFilter } from '../Error/utils';
 import { OPERATION_NAME_SYMBOL, relativeModulePath } from '../constants';
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 import inspectRow from '../images/usage.svg';
 
 /**
@@ -13,7 +13,7 @@ import inspectRow from '../images/usage.svg';
  *
  * @param {Props} props
  */
-export const InspectOperation = props => {
+export const InspectOperation = (props) => {
   const { name } = props;
 
   const getOperationUrl = () => {

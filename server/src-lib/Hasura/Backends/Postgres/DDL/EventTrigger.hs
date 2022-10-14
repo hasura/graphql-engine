@@ -1124,6 +1124,8 @@ deleteEventTriggerLogs ::
   (MonadIO m, MonadError QErr m) =>
   PGSourceConfig ->
   TriggerLogCleanupConfig ->
+  IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)) ->
   m DeletedEventLogStats
-deleteEventTriggerLogs sourceConfig cleanupConfig =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig
+deleteEventTriggerLogs sourceConfig oldCleanupConfig getLatestCleanupConfig = do
+  deleteEventTriggerLogsInBatchesWith getLatestCleanupConfig oldCleanupConfig $ \cleanupConfig -> do
+    runPgSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig

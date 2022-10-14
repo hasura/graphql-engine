@@ -4,11 +4,10 @@ import React from 'react';
  * and clears the current input
  */
 
-const styles = require('../../Metrics.scss');
-
-const FilterCheckboxComponent = props => {
+import styles from '../../Metrics.module.scss';
+const FilterCheckboxComponent = (props) => {
   const { onChange, id, title, checked, bsClass } = props;
-  const customOnChange = e => {
+  const customOnChange = (e) => {
     const val = e.target.getAttribute('data-field-value');
     onChange(val);
   };

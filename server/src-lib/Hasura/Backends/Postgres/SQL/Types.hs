@@ -56,6 +56,8 @@ module Hasura.Backends.Postgres.SQL.Types
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec, optionalFieldWithDefault', parseAlternative, requiredField')
+import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Aeson.Encoding (text)
 import Data.Aeson.Key qualified as K
@@ -67,6 +69,7 @@ import Data.String
 import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
+import Data.Typeable (Typeable)
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Database.PostgreSQL.LibPQ qualified as PQ
@@ -75,6 +78,7 @@ import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
@@ -179,6 +183,9 @@ newtype TableName = TableName {getTableTxt :: Text}
       IsString
     )
 
+instance HasCodec TableName where
+  codec = dimapCodec TableName getTableTxt codec
+
 instance IsIdentifier TableName where
   toIdentifier (TableName t) = Identifier t
 
@@ -223,6 +230,9 @@ instance ToErrorValue ConstraintName where
 newtype FunctionName = FunctionName {getFunctionTxt :: Text}
   deriving (Show, Eq, Ord, FromJSON, ToJSON, PG.ToPrepArg, PG.FromCol, Hashable, Data, Generic, NFData, Cacheable)
 
+instance HasCodec FunctionName where
+  codec = dimapCodec FunctionName getFunctionTxt codec
+
 instance IsIdentifier FunctionName where
   toIdentifier (FunctionName t) = Identifier t
 
@@ -252,6 +262,9 @@ newtype SchemaName = SchemaName {getSchemaTxt :: Text}
       IsString
     )
 
+instance HasCodec SchemaName where
+  codec = dimapCodec SchemaName getSchemaTxt codec
+
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
 
@@ -273,6 +286,16 @@ data QualifiedObject a = QualifiedObject
 instance (NFData a) => NFData (QualifiedObject a)
 
 instance (Cacheable a) => Cacheable (QualifiedObject a)
+
+instance (HasCodec a, Typeable a) => HasCodec (QualifiedObject a) where
+  codec = parseAlternative objCodec strCodec
+    where
+      objCodec =
+        AC.object ("PostgresQualified_" <> typeableName @a) $
+          QualifiedObject
+            <$> optionalFieldWithDefault' "schema" publicSchema AC..= qSchema
+            <*> requiredField' "name" AC..= qName
+      strCodec = QualifiedObject publicSchema <$> codec @a
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -371,6 +394,9 @@ newtype PGCol = PGCol {getPGColTxt :: Text}
       Cacheable,
       IsString
     )
+
+instance HasCodec PGCol where
+  codec = dimapCodec PGCol getPGColTxt codec
 
 instance IsIdentifier PGCol where
   toIdentifier (PGCol t) = Identifier t

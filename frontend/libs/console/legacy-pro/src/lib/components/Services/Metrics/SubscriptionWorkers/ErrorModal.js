@@ -1,7 +1,7 @@
 import React from 'react';
 import BootstrapModal from 'react-bootstrap/lib/Modal';
 
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 
 import { decodeError } from './utils';
 

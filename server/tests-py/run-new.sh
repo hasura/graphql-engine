@@ -39,7 +39,7 @@ docker compose pull citus mssql postgres
 
 echo
 echo '*** Starting databases ***'
-docker compose rm -svf citus mssql postgres # tear down databases beforehand
+docker compose rm -svf citus mssql mssql-healthcheck postgres # tear down databases beforehand
 docker compose up -d --wait citus mssql-healthcheck postgres
 
 HASURA_GRAPHQL_CITUS_SOURCE_URL="postgresql://postgres:hasura@localhost:$(docker compose port citus 5432 | sed -E 's/.*://')/postgres"

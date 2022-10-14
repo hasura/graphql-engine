@@ -31,19 +31,23 @@ export const useRows = ({
       JSON.stringify(options),
     ],
     queryFn: async () => {
-      const tableColumns = await DataSource(httpClient).getTableColumns({
-        dataSourceName,
-        table,
-      });
+      try {
+        const tableColumns = await DataSource(httpClient).getTableColumns({
+          dataSourceName,
+          table,
+        });
 
-      const result = await DataSource(httpClient).getTableRows({
-        dataSourceName,
-        table,
-        columns: columns ?? tableColumns.map(column => column.name),
-        options,
-      });
+        const result = await DataSource(httpClient).getTableRows({
+          dataSourceName,
+          table,
+          columns: columns ?? tableColumns.map(column => column.name),
+          options,
+        });
 
-      return result;
+        return result;
+      } catch (err: any) {
+        throw new Error(err);
+      }
     },
     refetchOnWindowFocus: false,
   });

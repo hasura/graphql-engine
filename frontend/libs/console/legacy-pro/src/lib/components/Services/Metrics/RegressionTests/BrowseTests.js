@@ -3,11 +3,11 @@ import { DragFoldTable, tableScss } from '@hasura/console-oss';
 
 import { getTitle, getColWidth, transformMessage, StatusIcon } from './utils';
 
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 
 import { TestRunDetails } from './TestRunDetails';
 
-export const BrowseTests = props => {
+export const BrowseTests = (props) => {
   const { testRunId, data } = props;
   const getHeaders = () => {
     if (data.test_run_details.length > 0) {
@@ -86,8 +86,9 @@ export const BrowseTests = props => {
           newRow[elem] = (
             <div
               key={key}
-              className={`${styles.columnRow} ${elem === 'status' &&
-                styles.textCenter}`}
+              className={`${styles.columnRow} ${
+                elem === 'status' && styles.textCenter
+              }`}
               title={
                 (elem === 'status' && elem in row && row[elem]) ||
                 renderElement()

@@ -54,8 +54,6 @@ let
     pkgs.haskell.compiler.${pkgs.ghcName}
 
     # We use the default versions of these packages.
-    (versions.ensureVersion pkgs.haskellPackages.hlint)
-    (versions.ensureVersion pkgs.haskellPackages.hpack)
     (versions.ensureVersion pkgs.haskellPackages.ormolu)
 
     # We build these packages using our custom GHC.
@@ -65,6 +63,8 @@ let
     pkgs.haskell.packages.${pkgs.ghcName}.ghcid
     pkgs.haskell.packages.${pkgs.ghcName}.happy
     pkgs.haskell.packages.${pkgs.ghcName}.haskell-language-server
+    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hlint)
+    (versions.ensureVersion pkgs.haskell.packages.${pkgs.ghcName}.hpack)
     pkgs.haskell.packages.${pkgs.ghcName}.hoogle
     pkgs.haskell.packages.${pkgs.ghcName}.hspec-discover
   ];

@@ -1,7 +1,7 @@
 import React from 'react';
 import HealthStatus from './HealthStatus';
 
-import styles from '../MetricsV1.scss';
+import styles from '../MetricsV1.module.scss';
 import DBEvents from './DBEvents';
 import { FaClone, FaDatabase, FaHome, FaSearch } from 'react-icons/fa';
 
@@ -29,7 +29,7 @@ const ReadReplicasGroup = ({
   selectedSource,
 }) => {
   const replicas = source?.configuration?.read_replicas || [];
-  const setSelected = (i, ix) => e => {
+  const setSelected = (i, ix) => (e) => {
     e.stopPropagation();
     if (ix === 0) {
       setSelectedSource({

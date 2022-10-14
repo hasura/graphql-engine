@@ -5,10 +5,12 @@ module Hasura.RQL.Types.ApiLimit
     MaxDepth (..),
     MaxNodes (..),
     MaxTime (..),
+    MaxBatchSize (..),
     NodeLimit,
     RateLimit,
     RateLimitConfig (..),
     TimeLimit,
+    BatchLimit,
     UniqueParamConfig (..),
     emptyApiLimit,
   )
@@ -28,6 +30,7 @@ data ApiLimit = ApiLimit
     _alDepthLimit :: Maybe DepthLimit,
     _alNodeLimit :: Maybe NodeLimit,
     _alTimeLimit :: Maybe TimeLimit,
+    _alBatchLimit :: Maybe BatchLimit,
     _alDisabled :: Bool
   }
   deriving (Show, Eq, Generic)
@@ -39,6 +42,7 @@ instance FromJSON ApiLimit where
       <*> o .:? "depth_limit"
       <*> o .:? "node_limit"
       <*> o .:? "time_limit"
+      <*> o .:? "batch_limit"
       <*> o .:? "disabled" .!= False
 
 instance ToJSON ApiLimit where
@@ -46,7 +50,7 @@ instance ToJSON ApiLimit where
     genericToJSON (Casing.aesonPrefix Casing.snakeCase) {omitNothingFields = True}
 
 emptyApiLimit :: ApiLimit
-emptyApiLimit = ApiLimit Nothing Nothing Nothing Nothing False
+emptyApiLimit = ApiLimit Nothing Nothing Nothing Nothing Nothing False
 
 data Limit a = Limit
   { _lGlobal :: a,
@@ -69,6 +73,8 @@ type DepthLimit = Limit MaxDepth
 type NodeLimit = Limit MaxNodes
 
 type TimeLimit = Limit MaxTime
+
+type BatchLimit = Limit MaxBatchSize
 
 data RateLimitConfig = RateLimitConfig
   { _rlcMaxReqsPerMin :: Int,
@@ -121,6 +127,10 @@ newtype MaxNodes = MaxNodes {unMaxNodes :: Int}
   deriving newtype (ToJSON, FromJSON)
 
 newtype MaxTime = MaxTime {unMaxTime :: Seconds}
+  deriving stock (Show, Eq, Ord, Generic)
+  deriving newtype (ToJSON, FromJSON)
+
+newtype MaxBatchSize = MaxBatchSize {unMaxBatchSize :: Int}
   deriving stock (Show, Eq, Ord, Generic)
   deriving newtype (ToJSON, FromJSON)
 

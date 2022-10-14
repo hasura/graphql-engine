@@ -71,14 +71,23 @@ Note: Boolean flags `{FLAG}` can be provided as `1`, `true`, `yes`, or omitted a
 
 ## Agent usage
 
-The agent is configured as per the configuration schema.
+The agent is configured as per the configuration schema. The valid configuration properties are:
 
-The only required field is `db` which specifies a local sqlite database to use.
+| Property | Type | Default |
+| -------- | ---- | ------- |
+| `db` | `string` | |
+| `tables` | `string[]` | `null` |
+| `include_sqlite_meta_tables` | `boolean` | `false` |
+| `explicit_main_schema` | `boolean` | `false `
+
+The only required property is `db` which specifies a local sqlite database to use.
 
 The schema is exposed via introspection, but you can limit which tables are referenced by
 
-* Explicitly enumerating them via the `tables` field, or
+* Explicitly enumerating them via the `tables` property, or
 * Toggling the `include_sqlite_meta_tables` to include or exclude sqlite meta tables.
+
+The `explicit_main_schema` field can be set to opt into exposing tables by their fully qualified names (ie `["main", "MyTable"]` instead of just `["MyTable"]`).
 
 ## Dataset
 

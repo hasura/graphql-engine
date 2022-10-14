@@ -8,9 +8,9 @@ import { PastRuns } from './PastRuns';
 import { loadPATState } from '../../../AppState';
 import { getMetricsUrl } from '../utils';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 
-export const RegressionTests = props => {
+export const RegressionTests = (props) => {
   const { metricsFQDN } = props;
   const [tabIndex, setTabIndex] = useState(0);
   const personalAccessToken = loadPATState();
@@ -25,31 +25,35 @@ export const RegressionTests = props => {
     <div className="infoWrapper">
       <Tabs
         selectedIndex={tabIndex}
-        onSelect={i => setTabIndex(i)}
+        onSelect={(i) => setTabIndex(i)}
         className={styles.tabWrapper}
       >
         <TabList className={styles.tabListWrapper}>
           <Tab
-            className={`${styles.tabList} ${tabIndex === 0 &&
-              styles.tabListActive}`}
+            className={`${styles.tabList} ${
+              tabIndex === 0 && styles.tabListActive
+            }`}
           >
             Test suite
           </Tab>
           <Tab
-            className={`${styles.tabList} ${tabIndex === 1 &&
-              styles.tabListActive}`}
+            className={`${styles.tabList} ${
+              tabIndex === 1 && styles.tabListActive
+            }`}
           >
             New operations
           </Tab>
           <Tab
-            className={`${styles.tabList} ${tabIndex === 2 &&
-              styles.tabListActive}`}
+            className={`${styles.tabList} ${
+              tabIndex === 2 && styles.tabListActive
+            }`}
           >
             Run tests
           </Tab>
           <Tab
-            className={`${styles.tabList} ${tabIndex === 3 &&
-              styles.tabListActive}`}
+            className={`${styles.tabList} ${
+              tabIndex === 3 && styles.tabListActive
+            }`}
           >
             Past runs
           </Tab>
@@ -102,5 +106,5 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-export const regressionTestsConnector = connect =>
+export const regressionTestsConnector = (connect) =>
   connect(mapStateToProps)(RegressionTests);

@@ -19,6 +19,7 @@ import {
 } from '../../../Common/utils/routesUtils';
 import { getReadableNumber } from '../../../Common/utils/jsUtils';
 import { FaDatabase, FaFolder, FaTable } from 'react-icons/fa';
+import styles from '../../../Common/TableCommon/Table.module.scss';
 
 const TableHeader = ({
   tabName,
@@ -30,8 +31,6 @@ const TableHeader = ({
   source,
   dispatch,
 }) => {
-  const styles = require('../../../Common/TableCommon/Table.module.scss');
-
   const tableName = table.table_name;
   const tableSchema = table.table_schema;
   const isTableType = dataSource.isTable(table);

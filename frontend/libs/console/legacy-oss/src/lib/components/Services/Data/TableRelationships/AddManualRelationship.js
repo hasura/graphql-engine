@@ -8,6 +8,7 @@ import {
   getTableColumnNames,
   getTrackedTables,
 } from '../../../../dataSources';
+import styles from '../TableModify/ModifyTable.module.scss';
 
 const AddManualRelationship = ({
   tableSchema,
@@ -16,8 +17,6 @@ const AddManualRelationship = ({
   relAdd,
   dispatch,
 }) => {
-  const styles = require('../TableModify/ModifyTable.module.scss');
-
   const columns = tableSchema.columns.sort(ordinalColSort);
 
   // columns in the right order with their indices
@@ -32,7 +31,7 @@ const AddManualRelationship = ({
     getSchemaTables(allSchemas, relAdd.rSchema)
   );
   trackedSchemaTables.forEach(
-    ts => (refTables[ts.table_name] = getTableColumnNames(ts))
+    (ts) => (refTables[ts.table_name] = getTableColumnNames(ts))
   );
 
   const orderedSchemaList = schemaList.sort();
@@ -41,7 +40,7 @@ const AddManualRelationship = ({
     dispatch(resetManualRelationshipForm());
   };
 
-  const saveFk = toggleEditor => {
+  const saveFk = (toggleEditor) => {
     dispatch(addRelViewMigrate(tableSchema, toggleEditor));
   };
 

@@ -25,16 +25,16 @@ import BrowserRows from './BrowseRows';
 
 import UsageOverTime from './UsageOverTime';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 
-const Usage = props => {
+const Usage = (props) => {
   const { queryParams, projectId, RenderLink } = props;
 
-  const getTitle = value => {
+  const getTitle = (value) => {
     return TITLE_MAP[value];
   };
 
-  const getEmptyTitle = value => {
+  const getEmptyTitle = (value) => {
     return NO_TITLE_MAP[value];
   };
 
@@ -113,7 +113,7 @@ const mapStateToProps = (state, ownProps) => {
     projectId: project.id,
   };
 };
-const usageConnector = connect => connect(mapStateToProps)(Usage);
+const usageConnector = (connect) => connect(mapStateToProps)(Usage);
 
 export { Usage };
 

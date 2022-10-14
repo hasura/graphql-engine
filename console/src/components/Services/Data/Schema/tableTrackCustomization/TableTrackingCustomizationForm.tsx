@@ -57,9 +57,7 @@ export const TableTrackingCustomizationForm: React.FC<TableTrackingCustomization
       formState: { errors },
     } = formMethods;
 
-    const customNameFormMethods = formMethods.register('custom_name', {
-      required: true,
-    });
+    const customNameFormMethods = formMethods.register('custom_name');
     const selectFormMethods = formMethods.register('select');
     const selectByPkFormMethods = formMethods.register('select_by_pk');
     const selectAggregateFormMethods = formMethods.register('select_aggregate');

@@ -5,7 +5,7 @@ import { useMutation } from '@apollo/react-hooks';
 
 import CustomCopy from '../Common/CustomCopy';
 import editIcon from '../images/edit.svg';
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 import { EditData } from './EditData';
 import { useQuery } from 'react-apollo';
 import {
@@ -69,7 +69,7 @@ const EditRowModal = ({ onHide, show, name, testSuiteId }) => {
 
   const [updateOperationVariables] = useMutation(updateVariables);
 
-  const handleSave = newVariables => {
+  const handleSave = (newVariables) => {
     updateOperationVariables({
       variables: {
         testSuiteId,
@@ -81,7 +81,7 @@ const EditRowModal = ({ onHide, show, name, testSuiteId }) => {
         setIsEditing(false);
         refetch();
       },
-      err => alert(err.toString())
+      (err) => alert(err.toString())
     );
   };
 
@@ -107,7 +107,7 @@ const EditRowModal = ({ onHide, show, name, testSuiteId }) => {
               <EditData
                 label="Variables"
                 data={JSON.stringify(variables, null, 2)}
-                onSave={values => {
+                onSave={(values) => {
                   handleSave(values);
                   setIsEditing(false);
                 }}

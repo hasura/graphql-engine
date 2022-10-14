@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaArrowRight, FaCogs, FaSearch } from 'react-icons/fa';
 import { Link } from 'react-router';
-import styles from '../MetricsV1.scss';
+import styles from '../MetricsV1.module.scss';
 
 const ActionNameItem = ({ action }) => {
   return (
@@ -29,10 +29,7 @@ const ActionsItem = ({ actions = [] }) => {
       <div className={`${styles.dagCard} action`}>
         <div className={`${styles.dagHeaderOnly} ${styles.flexMiddle} `}>
           <p className={`${styles.strong} ${styles.mr_xs}`}>
-            <FaCogs
-              className={styles.mr_xxs}
-              aria-hidden="true"
-            />
+            <FaCogs className={styles.mr_xxs} aria-hidden="true" />
             {count === 1 ? `${count} Action` : `${count} Actions`}
           </p>
           <FaSearch
@@ -40,7 +37,7 @@ const ActionsItem = ({ actions = [] }) => {
             aria-hidden="true"
           />
         </div>
-        {actions.map(action => (
+        {actions.map((action) => (
           <ActionNameItem action={action} key={action.name} />
         ))}
       </div>

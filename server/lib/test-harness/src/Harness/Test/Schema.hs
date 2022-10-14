@@ -28,6 +28,7 @@ module Harness.Test.Schema
     parseUTCTimeOrError,
     trackTable,
     untrackTable,
+    mkTableField,
     trackObjectRelationships,
     trackArrayRelationships,
     untrackRelationships,
@@ -42,14 +43,12 @@ module Harness.Test.Schema
   )
 where
 
-import Data.Aeson
-  ( Value (..),
-    object,
-    (.=),
-  )
+import Data.Aeson ((.=))
+import Data.Aeson qualified as Aeson
 import Data.Aeson.Key qualified as K
 import Data.Time (UTCTime, defaultTimeLocale)
 import Data.Time.Format (parseTimeOrError)
+import Data.Vector qualified as V
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
@@ -398,17 +397,31 @@ mkObjectRelationshipName :: Reference -> Text
 mkObjectRelationshipName Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
   referenceTargetTable <> "_by_" <> referenceLocalColumn <> "_to_" <> referenceTargetColumn
 
+-- | Build an 'Aeson.Value' representing a 'BackendType' specific @TableName@.
+mkTableField :: BackendType -> SchemaName -> Text -> Aeson.Value
+mkTableField backend schemaName tableName =
+  let dcFieldName = Aeson.Array $ V.fromList [Aeson.String (unSchemaName schemaName), Aeson.String tableName]
+      nativeFieldName = Aeson.object [schemaKeyword backend .= Aeson.String (unSchemaName schemaName), "name" .= Aeson.String tableName]
+   in case backend of
+        Postgres -> nativeFieldName
+        MySQL -> nativeFieldName
+        SQLServer -> nativeFieldName
+        BigQuery -> nativeFieldName
+        Citus -> nativeFieldName
+        Cockroach -> nativeFieldName
+        DataConnectorMock -> dcFieldName
+        DataConnectorReference -> dcFieldName
+        DataConnectorSqlite -> dcFieldName
+
 -- | Unified track object relationships
 trackObjectRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
 trackObjectRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
   let schema = getSchemaName testEnvironment
-  let source = defaultSource backend
-      tableObj =
-        object
-          [ schemaKeyword backend .= String (unSchemaName schema),
-            "name" .= String tableName
-          ]
-      requestType = source <> "_create_object_relationship"
+      backendType = defaultBackendTypeString backend
+      source = defaultSource backend
+      tableField = mkTableField backend schema tableName
+      requestType = backendType <> "_create_object_relationship"
+
   for_ tableReferences $ \ref@Reference {referenceLocalColumn} -> do
     let relationshipName = mkObjectRelationshipName ref
     GraphqlEngine.postMetadata_
@@ -417,31 +430,28 @@ trackObjectRelationships backend Table {tableName, tableReferences, tableManualR
 type: *requestType
 args:
   source: *source
-  table: *tableObj
+  table: *tableField
   name: *relationshipName
   using:
     foreign_key_constraint_on: *referenceLocalColumn
 |]
+
   for_ tableManualRelationships $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
     let relationshipName = mkObjectRelationshipName ref
-        targetTableObj =
-          object
-            [ schemaKeyword backend .= String (unSchemaName schema),
-              "name" .= String referenceTargetTable
-            ]
-        manualConfiguration :: Value
+        targetTableField = mkTableField backend schema referenceTargetTable
+        manualConfiguration :: Aeson.Value
         manualConfiguration =
-          object
-            [ "remote_table" .= targetTableObj,
+          Aeson.object
+            [ "remote_table" .= targetTableField,
               "column_mapping"
-                .= object [K.fromText referenceLocalColumn .= referenceTargetColumn]
+                .= Aeson.object [K.fromText referenceLocalColumn .= referenceTargetColumn]
             ]
         payload =
           [yaml|
 type: *requestType
 args:
   source: *source
-  table: *tableObj
+  table: *tableField
   name: *relationshipName
   using:
     manual_configuration: *manualConfiguration
@@ -458,54 +468,45 @@ mkArrayRelationshipName tableName referenceLocalColumn referenceTargetColumn =
 trackArrayRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
 trackArrayRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
   let schema = getSchemaName testEnvironment
-  let source = defaultSource backend
-      tableObj =
-        object
-          [ schemaKeyword backend .= String (unSchemaName schema),
-            "name" .= String tableName
-          ]
-      requestType = source <> "_create_array_relationship"
+      backendType = defaultBackendTypeString backend
+      source = defaultSource backend
+      tableField = mkTableField backend schema tableName
+      requestType = backendType <> "_create_array_relationship"
+
   for_ tableReferences $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
     let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
-        targetTableObj =
-          object
-            [ schemaKeyword backend .= String (unSchemaName schema),
-              "name" .= String referenceTargetTable
-            ]
+        targetTableField = mkTableField backend schema referenceTargetTable
     GraphqlEngine.postMetadata_
       testEnvironment
       [yaml|
 type: *requestType
 args:
   source: *source
-  table: *targetTableObj
+  table: *targetTableField
   name: *relationshipName
   using:
     foreign_key_constraint_on:
-      table: *tableObj
+      table: *tableField
       column: *referenceLocalColumn
 |]
+
   for_ tableManualRelationships $ \Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
     let relationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
-        targetTableObj =
-          object
-            [ schemaKeyword backend .= String (unSchemaName schema),
-              "name" .= String referenceTargetTable
-            ]
-        manualConfiguration :: Value
+        targetTableField = mkTableField backend schema referenceTargetTable
+        manualConfiguration :: Aeson.Value
         manualConfiguration =
-          object
+          Aeson.object
             [ "remote_table"
-                .= tableObj,
+                .= tableField,
               "column_mapping"
-                .= object [K.fromText referenceTargetColumn .= referenceLocalColumn]
+                .= Aeson.object [K.fromText referenceTargetColumn .= referenceLocalColumn]
             ]
         payload =
           [yaml|
 type: *requestType
 args:
   source: *source
-  table: *targetTableObj
+  table: *targetTableField
   name: *relationshipName
   using:
     manual_configuration: *manualConfiguration
@@ -517,21 +518,14 @@ args:
 untrackRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment -> IO ()
 untrackRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
   let schema = getSchemaName testEnvironment
-  let source = defaultSource backend
-      tableObj =
-        object
-          [ schemaKeyword backend .= String (unSchemaName schema),
-            "name" .= String tableName
-          ]
+      source = defaultSource backend
+      tableField = mkTableField backend schema tableName
       requestType = source <> "_drop_relationship"
+
   forFinally_ (tableManualRelationships <> tableReferences) $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
     let arrayRelationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn
         objectRelationshipName = mkObjectRelationshipName ref
-        targetTableObj =
-          object
-            [ schemaKeyword backend .= String (unSchemaName schema),
-              "name" .= String referenceTargetTable
-            ]
+        targetTableField = mkTableField backend schema referenceTargetTable
     finally
       ( -- drop array relationship
         GraphqlEngine.postMetadata_
@@ -540,7 +534,7 @@ untrackRelationships backend Table {tableName, tableReferences, tableManualRelat
     type: *requestType
     args:
       source: *source
-      table: *targetTableObj
+      table: *targetTableField
       relationship: *arrayRelationshipName
     |]
       )
@@ -551,7 +545,7 @@ untrackRelationships backend Table {tableName, tableReferences, tableManualRelat
     type: *requestType
     args:
       source: *source
-      table: *tableObj
+      table: *tableField
       relationship: *objectRelationshipName
     |]
       )

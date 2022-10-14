@@ -1089,6 +1089,8 @@ instance (Monad m) => MonadGQLExecutionCheck (PGMetadataStorageAppT m) where
   executeIntrospection _ introspectionQuery _ =
     pure $ Right $ ExecStepRaw introspectionQuery
 
+  checkGQLBatchedReqs _ _ _ _ = runExceptT $ pure ()
+
 instance (MonadIO m, MonadBaseControl IO m) => MonadConfigApiHandler (PGMetadataStorageAppT m) where
   runConfigApiHandler = configApiGetHandler
 

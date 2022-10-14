@@ -8,7 +8,7 @@ import { allowListOperationGroupName } from './constants';
 import SyncWithAllowList from './SyncWithAllowList';
 */
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 
 const CreateSyncAllowList = ({
   projectName,

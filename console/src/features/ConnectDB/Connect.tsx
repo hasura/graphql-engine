@@ -70,7 +70,7 @@ const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
             <div className="max-w-xl">
               <Configuration name="configuration" />
             </div>
-            <div className="mt-4">
+            <div className="my-4">
               <CustomizationForm />
             </div>
             <Button

@@ -37,7 +37,10 @@ server.setErrorHandler(function (error, _request, reply) {
   const errorResponse: ErrorResponse = {
     type: "uncaught-error",
     message: "SQLite Agent: Uncaught Exception",
-    details: error
+    details: {
+      name: error.name,
+      message: error.message
+    }
   };
 
   // Send error response
@@ -103,10 +106,10 @@ const sqlLogger = (sql: string): void => {
 };
 
 // NOTE:
-// 
+//
 // While an ErrorResponse is available it is not currently used as there are no errors anticipated.
 // It is included here for illustrative purposes.
-// 
+//
 server.get<{ Reply: CapabilitiesResponse | ErrorResponse }>("/capabilities", async (request, _response) => {
   server.log.info({ headers: request.headers, query: request.body, }, "capabilities.request");
   return capabilitiesResponse;

@@ -68,7 +68,7 @@ const SERVER_CONFIG_FETCH_SUCCESS = 'Main/SERVER_CONFIG_FETCH_SUCCESS';
 const SERVER_CONFIG_FETCH_FAIL = 'Main/SERVER_CONFIG_FETCH_FAIL';
 /* End */
 const SET_FEATURES_COMPATIBILITY = 'Main/SET_FEATURES_COMPATIBILITY';
-const setFeaturesCompatibility = data => ({
+const setFeaturesCompatibility = (data) => ({
   type: SET_FEATURES_COMPATIBILITY,
   data,
 });
@@ -87,7 +87,7 @@ const featureCompatibilityInit = () => {
   };
 };
 
-const loadMigrationStatus = () => dispatch => {
+const loadMigrationStatus = () => (dispatch) => {
   const url = Endpoints.hasuractlMigrateSettings;
   const options = {
     method: 'GET',
@@ -117,7 +117,7 @@ const refetchMetadata = () => (dispatch, getState) => {
     data: true,
   });
   return dispatch(requestAction(url, options)).then(
-    data =>
+    (data) =>
       dispatch({
         type: SET_METADATA,
         data: { ...data, loading: false },
@@ -140,23 +140,24 @@ export const getMetricConfigPayload = ({
   return payload;
 };
 
-export const setMetricConfigAction = (
-  analyze_query_variables,
-  analyze_response_body
-) => (dispatch, getState) => {
-  const url = Endpoints.metadata;
-  const options = {
-    method: 'POST',
-    credentials: globalCookiePolicy,
-    headers: getState().tables.dataHeaders,
-    body: JSON.stringify(
-      getMetricConfigPayload({ analyze_query_variables, analyze_response_body })
-    ),
+export const setMetricConfigAction =
+  (analyze_query_variables, analyze_response_body) => (dispatch, getState) => {
+    const url = Endpoints.metadata;
+    const options = {
+      method: 'POST',
+      credentials: globalCookiePolicy,
+      headers: getState().tables.dataHeaders,
+      body: JSON.stringify(
+        getMetricConfigPayload({
+          analyze_query_variables,
+          analyze_response_body,
+        })
+      ),
+    };
+    return dispatch(requestAction(url, options));
   };
-  return dispatch(requestAction(url, options));
-};
 
-const setApiLimits = payload => (dispatch, getState) => {
+const setApiLimits = (payload) => (dispatch, getState) => {
   const url = Endpoints.metadata;
   const options = {
     method: 'POST',
@@ -167,7 +168,7 @@ const setApiLimits = payload => (dispatch, getState) => {
   return dispatch(requestAction(url, options));
 };
 
-const loadServerVersion = () => dispatch => {
+const loadServerVersion = () => (dispatch) => {
   const url = Endpoints.version;
   const options = {
     method: 'GET',
@@ -175,7 +176,7 @@ const loadServerVersion = () => dispatch => {
     headers: { 'content-type': 'application/json' },
   };
   return dispatch(requestActionPlain(url, options)).then(
-    data => {
+    (data) => {
       let parsedVersion;
       try {
         parsedVersion = JSON.parse(data);
@@ -187,7 +188,7 @@ const loadServerVersion = () => dispatch => {
         console.error(e);
       }
     },
-    error => {
+    (error) => {
       console.error(error);
       dispatch({ type: SET_SERVER_VERSION_ERROR, data: null });
     }
@@ -205,13 +206,13 @@ const fetchServerConfig = () => (dispatch, getState) => {
     type: FETCHING_SERVER_CONFIG,
   });
   return dispatch(requestAction(url, options)).then(
-    data => {
+    (data) => {
       return dispatch({
         type: SERVER_CONFIG_FETCH_SUCCESS,
         data: data,
       });
     },
-    error => {
+    (error) => {
       return dispatch({
         type: SERVER_CONFIG_FETCH_FAIL,
         data: error,
@@ -231,7 +232,7 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
     headers: { 'content-type': 'application/json' },
   };
   return dispatch(requestActionPlain(url, options)).then(
-    data => {
+    (data) => {
       let parsedVersion;
       try {
         parsedVersion = JSON.parse(data);
@@ -243,7 +244,7 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
         console.error(e);
       }
     },
-    error => {
+    (error) => {
       console.error(error);
       dispatch({ type: SET_LATEST_SERVER_VERSION_ERROR, data: null });
     }
@@ -251,10 +252,11 @@ const loadLatestServerVersion = () => (dispatch, getState) => {
 };
 
 const getHeaders = (header, token, defaultValue = null) => {
+  let headers = {};
   switch (header) {
     case 'pat':
       const personalAccessToken = loadPATState();
-      let headers = {
+      headers = {
         ...CONSTANT_HEADERS,
         [globals.patLabel]: `pat ${personalAccessToken}`,
       };
@@ -279,6 +281,7 @@ const getHeaders = (header, token, defaultValue = null) => {
           adminSecret = globals.adminSecret;
         }
       }
+
       headers = {
         ...CONSTANT_HEADERS,
         [`x-hasura-${globals.adminSecretLabel}`]: adminSecret,
@@ -289,7 +292,7 @@ const getHeaders = (header, token, defaultValue = null) => {
   }
 };
 
-const validateLogin = isInitialLoad => (dispatch, getState) => {
+const validateLogin = (isInitialLoad) => (dispatch, getState) => {
   const url = Endpoints.metadata;
   const { search } = getState().routing.locationBeforeTransitions;
   const options = {
@@ -299,7 +302,7 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
     body: JSON.stringify({ type: 'export_metadata', args: {} }),
   };
   if (isInitialLoad) {
-    return dispatch(requestAction(url, options)).then(data =>
+    return dispatch(requestAction(url, options)).then((data) =>
       dispatch({
         type: SET_METADATA,
         data: { ...data, loading: false },
@@ -307,7 +310,7 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
     );
   }
   return dispatch(requestAction(url, options)).then(
-    data => {
+    (data) => {
       dispatch({ type: LOGIN_IN_PROGRESS, data: false });
       dispatch({ type: LOGIN_ERROR, data: false });
       const parseQueryString = parseQueryParams(search);
@@ -325,7 +328,7 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
         data: { ...data, loading: false },
       });
     },
-    error => {
+    (error) => {
       dispatch({ type: LOGIN_IN_PROGRESS, data: false });
       dispatch({ type: LOGIN_ERROR, data: true });
       dispatch(showErrorNotification('Login Failed', '', error));
@@ -341,12 +344,12 @@ const validateLogin = isInitialLoad => (dispatch, getState) => {
   );
 };
 
-const getTimeDifference = exp => {
+const getTimeDifference = (exp) => {
   /* Refreshing 30 secs back */
   return (exp - 30) * 1000;
 };
 
-const getExpiryDate = exp => {
+const getExpiryDate = (exp) => {
   const cD = new Date();
   const futureTime = cD.getTime() + exp;
   return new Date(futureTime);
@@ -386,10 +389,10 @@ const clearCollaboratorSignInState = () => {
       const dispatcherChains = [];
       if (headers && headers.length !== 0) {
         const headerIndex = headers.findIndex(
-          element => element.key === globals.collabLabel
+          (element) => element.key === globals.collabLabel
         );
         const patIndex = headers.findIndex(
-          element => element.key === globals.patLabel
+          (element) => element.key === globals.patLabel
         );
         if (headerIndex !== -1) {
           dispatcherChains.push(dispatch(removeRequestHeader(headerIndex)));
@@ -416,7 +419,7 @@ const clearCollaboratorSignInState = () => {
           initLS();
           dispatch(push(`${globals.urlPrefix}/login`));
         })
-        .catch(e => {
+        .catch((e) => {
           throw e;
         });
     } catch (e) {
@@ -425,122 +428,123 @@ const clearCollaboratorSignInState = () => {
   };
 };
 
-const idTokenReceived = (data, shouldRedirect = true) => (
-  dispatch,
-  getState
-) => {
-  // set localstorage
-  const { id_token: idToken } = data;
-  const bearerToken = `IDToken ${idToken}`;
-  const updatedDataHeaders = getHeaders('collabToken', bearerToken);
-  /* Remove admin-secret if applicable and add new data headers into the LS */
-  /* Implement some sort of a timeout which refetches the token
-   * from refresh token
-   * */
-  const { expires_in: expiresIn } = data;
-  if (expiresIn > 0) {
-    const timeDiff = getTimeDifference(expiresIn);
-    const expiryDate = getExpiryDate(timeDiff);
-    console.info('Token will be refreshed at', expiryDate);
-    const pollId = handleSystemSuspendWakeUp(dispatch, expiryDate);
-    setTimeout(() => {
-      // This variable should be used to determine whether to redirect the user in the case of fresh OAuthCallback flow
-      // Clear the interval before invoking the function again
-      clearInterval(pollId);
-      dispatch(retrieveByRefreshToken(data.refresh_token))
-        .then(resp => {
-          dispatch(idTokenReceived(resp, false));
-        })
-        .catch(err => {
-          console.error(err);
-          const { routing } = getState();
-          const { locationBeforeTransitions } = routing;
-          const { pathname, search } = locationBeforeTransitions;
-          const redirectUrl = constructRedirectUrl(pathname, search);
-          if (redirectUrl) {
-            dispatch(
-              push({
-                pathname: '/login',
-                search: `?redirect_url=${window.encodeURIComponent(
-                  redirectUrl
-                )}`,
-              })
-            );
+const idTokenReceived =
+  (data, shouldRedirect = true) =>
+  (dispatch, getState) => {
+    // set localstorage
+    const { id_token: idToken } = data;
+    const bearerToken = `IDToken ${idToken}`;
+    const updatedDataHeaders = getHeaders('collabToken', bearerToken);
+    /* Remove admin-secret if applicable and add new data headers into the LS */
+    /* Implement some sort of a timeout which refetches the token
+     * from refresh token
+     * */
+    const { expires_in: expiresIn } = data;
+    if (expiresIn > 0) {
+      const timeDiff = getTimeDifference(expiresIn);
+      const expiryDate = getExpiryDate(timeDiff);
+      console.info('Token will be refreshed at', expiryDate);
+      const pollId = handleSystemSuspendWakeUp(dispatch, expiryDate);
+      setTimeout(() => {
+        // This variable should be used to determine whether to redirect the user in the case of fresh OAuthCallback flow
+        // Clear the interval before invoking the function again
+        clearInterval(pollId);
+        dispatch(retrieveByRefreshToken(data.refresh_token))
+          .then((resp) => {
+            dispatch(idTokenReceived(resp, false));
+          })
+          .catch((err) => {
+            console.error(err);
+            const { routing } = getState();
+            const { locationBeforeTransitions } = routing;
+            const { pathname, search } = locationBeforeTransitions;
+            const redirectUrl = constructRedirectUrl(pathname, search);
+            if (redirectUrl) {
+              dispatch(
+                push({
+                  pathname: '/login',
+                  search: `?redirect_url=${window.encodeURIComponent(
+                    redirectUrl
+                  )}`,
+                })
+              );
+              return;
+            }
+            dispatch(push(`${globals.urlPrefix}/login`));
             return;
-          }
-          dispatch(push(`${globals.urlPrefix}/login`));
-          return;
-        });
-    }, timeDiff);
-  } else {
-    console.error('Unexpected error');
-    dispatch(push('/'));
-  }
-
-  const decodedToken = decodeToken(idToken) || {};
-  const currentHeaders = getState().apiexplorer.displayedApi.request.headers;
-  let collabIndex = 1;
-  if (currentHeaders) {
-    const index = currentHeaders.findIndex(f => f.key === globals.collabLabel);
-    if (index !== -1) {
-      collabIndex = index;
-    }
-  }
-
-  Promise.all([
-    dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
-    ...(globals.isAdminSecretSet
-      ? [
-        dispatch(
-          changeRequestHeader(collabIndex, 'key', globals.collabLabel, true)
-        ),
-        dispatch(
-          changeRequestHeader(collabIndex, 'value', bearerToken, true)
-        ),
-      ]
-      : []),
-    dispatch({
-      type: UPDATE_HASURA_DOT_COM_ACCESS,
-      data: { ...data, tokenInfo: { ...decodedToken } },
-    }),
-    // dispatch(push('/'))
-  ]).then(() => {
-    const project = decodedToken.payload?.project;
-    dispatch({
-      type: FETCHED_LUX_PROJECT_INFO,
-      data: {
-        id: project.id,
-        name: project.name,
-        privileges: decodedToken.payload.collaborator_privileges || [],
-        metricsFQDN: decodedToken.payload.metrics_fqdn,
-      },
-    });
-    /* Flush to the local storage */
-    if (globals.isAdminSecretSet) {
-      upsertToLS(globals.collabLabel, bearerToken);
+          });
+      }, timeDiff);
     } else {
-      // Set the client name header if doesn't exist
-      upsertToLS(CLIENT_NAME_HEADER, CLIENT_NAME_HEADER_VALUE);
-      // Remove collaborator token header if exists
-      removeHeaderFromLS(globals.collabLabel);
+      console.error('Unexpected error');
+      dispatch(push('/'));
     }
-    let redirectFromLS = '';
-    if (shouldRedirect) {
-      try {
-        redirectFromLS = getKeyFromLS('redirectUrl');
-      } catch (e) {
-        redirectFromLS = '';
+
+    const decodedToken = decodeToken(idToken) || {};
+    const currentHeaders = getState().apiexplorer.displayedApi.request.headers;
+    let collabIndex = 1;
+    if (currentHeaders) {
+      const index = currentHeaders.findIndex(
+        (f) => f.key === globals.collabLabel
+      );
+      if (index !== -1) {
+        collabIndex = index;
       }
-      if (redirectFromLS) {
-        dispatch(push(`${globals.urlPrefix}${redirectFromLS}`));
+    }
+
+    Promise.all([
+      dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
+      ...(globals.isAdminSecretSet
+        ? [
+            dispatch(
+              changeRequestHeader(collabIndex, 'key', globals.collabLabel, true)
+            ),
+            dispatch(
+              changeRequestHeader(collabIndex, 'value', bearerToken, true)
+            ),
+          ]
+        : []),
+      dispatch({
+        type: UPDATE_HASURA_DOT_COM_ACCESS,
+        data: { ...data, tokenInfo: { ...decodedToken } },
+      }),
+      // dispatch(push('/'))
+    ]).then(() => {
+      const project = decodedToken.payload?.project;
+      dispatch({
+        type: FETCHED_LUX_PROJECT_INFO,
+        data: {
+          id: project.id,
+          name: project.name,
+          privileges: decodedToken.payload.collaborator_privileges || [],
+          metricsFQDN: decodedToken.payload.metrics_fqdn,
+        },
+      });
+      /* Flush to the local storage */
+      if (globals.isAdminSecretSet) {
+        upsertToLS(globals.collabLabel, bearerToken);
       } else {
-        dispatch(push(globals.urlPrefix));
+        // Set the client name header if doesn't exist
+        upsertToLS(CLIENT_NAME_HEADER, CLIENT_NAME_HEADER_VALUE);
+        // Remove collaborator token header if exists
+        removeHeaderFromLS(globals.collabLabel);
       }
-      // Not required as the OAUTH key received is assumed to be valid
-      // dispatch(validateLogin(false));
-    }
-  });
-};
+      let redirectFromLS = '';
+      if (shouldRedirect) {
+        try {
+          redirectFromLS = getKeyFromLS('redirectUrl');
+        } catch (e) {
+          redirectFromLS = '';
+        }
+        if (redirectFromLS) {
+          dispatch(push(`${globals.urlPrefix}${redirectFromLS}`));
+        } else {
+          dispatch(push(globals.urlPrefix));
+        }
+        // Not required as the OAUTH key received is assumed to be valid
+        // dispatch(validateLogin(false));
+      }
+    });
+  };
 
 const loginClicked = () => (dispatch, getState) => {
   // set localstorage
@@ -582,11 +586,11 @@ const patLoginClicked = () => (dispatch, getState) => {
     dispatch({ type: UPDATE_DATA_HEADERS, data: updatedDataHeaders }),
     ...(globals.isAdminSecretSet
       ? [
-        dispatch(changeRequestHeader(1, 'key', globals.patLabel, true)),
-        dispatch(
-          changeRequestHeader(1, 'value', `pat ${personalAccessToken}`, true)
-        ),
-      ]
+          dispatch(changeRequestHeader(1, 'key', globals.patLabel, true)),
+          dispatch(
+            changeRequestHeader(1, 'value', `pat ${personalAccessToken}`, true)
+          ),
+        ]
       : []),
     // dispatch(push('/'))
   ]).then(() => {
@@ -662,7 +666,7 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
   });
 
   dispatch(requestAction(url, reqOptions))
-    .then(resp => {
+    .then((resp) => {
       dispatch({
         type: FETCHING_LUX_PROJECT_INFO,
         data: false,
@@ -679,9 +683,9 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
         privileges: isOwner
           ? ['admin', 'graphql_admin', 'view_metrics']
           : (
-              project.collaborators.find(c => c.collaborator.id === user.id)
+              project.collaborators.find((c) => c.collaborator.id === user.id)
                 ?.project_collaborator_privileges || []
-          ).map(p => p.privilege_slug),
+            ).map((p) => p.privilege_slug),
         metricsFQDN: project.tenant?.region_info?.metrics_fqdn || '',
       };
 
@@ -690,7 +694,7 @@ export const loadLuxProjectInfo = () => (dispatch, getState) => {
         data: projectInfo,
       });
     })
-    .catch(e => {
+    .catch((e) => {
       console.error(e);
       dispatch({
         type: ERROR_FETCHING_LUX_PROJECT_INFO,

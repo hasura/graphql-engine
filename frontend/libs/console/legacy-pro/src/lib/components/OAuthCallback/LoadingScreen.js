@@ -1,7 +1,8 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const hasuraLogo = require('./images/logo.svg');
+import hasuraLogo from './images/logo.svg';
+import styles from './OAuthCallback.module.scss';
 
 import Lottie from 'react-lottie';
 import animationData from './loader-logo.json';
@@ -12,8 +13,8 @@ const defaultOptions = {
   animationData: animationData,
   renderer: 'svg',
   rendererSettings: {
-    preserveAspectRatio: 'xMidYMid slice'
-  }
+    preserveAspectRatio: 'xMidYMid slice',
+  },
 };
 const LottieScreen = () => {
   return (
@@ -26,19 +27,15 @@ const LottieScreen = () => {
   );
 };
 const LoadingScreen = ({ children, isError }) => {
-  const styles = require('./OAuthCallback.scss');
   return (
     <div className={styles.oauth_wrapper}>
       <div className={styles.oauth}>
         <div className={styles.logo}>
-          {
-            (isError) ? (
-              <img src={hasuraLogo} alt={'Hasura Logo'} />
-            ) : (
-              <LottieScreen />
-            )
-          }
-
+          {isError ? (
+            <img src={hasuraLogo} alt={'Hasura Logo'} />
+          ) : (
+            <LottieScreen />
+          )}
         </div>
         {children}
       </div>
