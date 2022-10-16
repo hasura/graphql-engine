@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { createOperationGroup } from './graphql.queries';
 import { useMutation } from '@apollo/react-hooks';
 
-// const styles = require('../Metrics.scss');
+// const styles = require('../Metrics.module.scss');
 
 /*
 const Button = props => {

@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-redundant-constraints #-}
-
 -- | This module defines the monads required to run parser tests.
 --
 -- Warning: a lot of the implementations are currently 'undefined'. As we write

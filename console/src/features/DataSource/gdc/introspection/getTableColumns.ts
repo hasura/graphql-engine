@@ -1,5 +1,13 @@
+/* eslint-disable no-underscore-dangle */
+import { getScalarType, getTypeName } from '@/features/GraphQLUtils';
+import { areTablesEqual } from '@/features/RelationshipsTable';
+import { GraphQLType } from 'graphql';
 import { GDCTable } from '..';
-import { runMetadataQuery } from '../../api';
+import {
+  exportMetadata,
+  runIntrospectionQuery,
+  runMetadataQuery,
+} from '../../api';
 import { GetTableColumnsProps, TableColumn } from '../../types';
 
 /**
@@ -23,6 +31,42 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
   const { httpClient, dataSourceName, table } = props;
 
   try {
+    const introspectionResult = await runIntrospectionQuery({ httpClient });
+    const { metadata } = await exportMetadata({ httpClient });
+
+    const metadataSource = metadata.sources.find(
+      s => s.name === dataSourceName
+    );
+
+    const metadataTable = metadataSource?.tables.find(t =>
+      areTablesEqual(t.table, table)
+    );
+
+    if (!metadataTable) throw Error('No table found in metadata');
+
+    const queryRoot = getTypeName({
+      defaultQueryRoot: (table as GDCTable).join('_'),
+      operation: 'select',
+      sourceCustomization: metadataSource?.customization,
+      configuration: metadataTable.configuration,
+    });
+
+    // eslint-disable-next-line no-underscore-dangle
+    const graphQLFields =
+      introspectionResult.data.__schema.types.find(
+        (t: any) => t.name === queryRoot
+      )?.fields ?? [];
+
+    const scalarTypes = graphQLFields
+      .map(({ name, type }: { name: string; type: GraphQLType }) => {
+        try {
+          return { name, type: getScalarType(type) };
+        } catch {
+          return null;
+        }
+      })
+      .filter(Boolean);
+
     const result = await runMetadataQuery<TableInfoResponseType>({
       httpClient,
       body: {
@@ -34,11 +78,25 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
       },
     });
 
-    return result.columns.map<TableColumn>(column => ({
-      name: column.name,
-      dataType: column.type,
-    }));
+    return result.columns.map<TableColumn>(column => {
+      const graphqlFieldName =
+        metadataTable.configuration?.column_config?.[column.name]
+          ?.custom_name ?? column.name;
+      const scalarType =
+        scalarTypes.find(
+          ({ name }: { name: string }) => name === graphqlFieldName
+        ) ?? null;
+      return {
+        name: column.name,
+        dataType: column.type,
+        graphQLProperties: {
+          name: graphqlFieldName,
+          scalarType: scalarType?.type ?? null,
+        },
+      };
+    });
   } catch (error) {
+    console.error(error);
     throw new Error('Error fetching GDC columns');
   }
 };

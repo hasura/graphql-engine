@@ -23,17 +23,20 @@ module Test.Data
     _ColumnFieldNumber,
     _ColumnFieldString,
     _ColumnFieldBoolean,
-    columnField,
-    queryComparisonColumn,
-    currentComparisonColumn,
     orderByColumn,
+    guardQueryResponse,
+    guardedQuery,
+    guardErrorResponse,
+    guardedCapabilities,
+    guardCapabilitiesResponse,
+    errorQuery,
   )
 where
 
 import Codec.Compression.GZip qualified as GZip
-import Command (TestConfig (..))
+import Command (NameCasing (..), TestConfig (..))
 import Control.Arrow (first, (>>>))
-import Control.Lens (Index, IxValue, Ixed, Traversal', ix, (%~), (&), (^.), (^..), (^?))
+import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?))
 import Data.Aeson (eitherDecodeStrict)
 import Data.Aeson qualified as J
 import Data.Aeson.Lens (_Bool, _Number, _String)
@@ -53,7 +56,11 @@ import Data.Scientific (Scientific)
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
+import Hasura.Backends.DataConnector.API (capabilitiesCase, queryCase)
 import Hasura.Backends.DataConnector.API qualified as API
+import Servant.API qualified as Servant
+import Servant.Client ((//))
+import Servant.Client qualified as Servant
 import Text.XML qualified as XML
 import Text.XML.Lens qualified as XML
 import Prelude
@@ -314,61 +321,98 @@ data TestData = TestData
     -- = Genres table
     _tdGenresTableName :: API.TableName,
     _tdGenresRows :: [HashMap API.FieldName API.FieldValue],
-    _tdGenresTableRelationships :: API.TableRelationships
+    _tdGenresTableRelationships :: API.TableRelationships,
+    -- = Utility functions
+    _tdColumnName :: Text -> API.ColumnName,
+    _tdColumnField :: Text -> API.Field,
+    _tdQueryComparisonColumn :: Text -> API.ComparisonColumn,
+    _tdCurrentComparisonColumn :: Text -> API.ComparisonColumn,
+    _tdOrderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
   }
 
 mkTestData :: TestConfig -> TestData
 mkTestData TestConfig {..} =
   TestData
-    { _tdSchemaTables = (API.tiName %~ applyTableNamePrefix _tcTableNamePrefix) <$> schemaTables,
-      _tdArtistsTableName = applyTableNamePrefix _tcTableNamePrefix artistsTableName,
+    { _tdSchemaTables = formatTableInfo <$> schemaTables,
+      _tdArtistsTableName = formatTableName artistsTableName,
       _tdArtistsRows = artistsRows,
       _tdArtistsRowsById = artistsRowsById,
-      _tdArtistsTableRelationships = prefixTableRelationships artistsTableRelationships,
+      _tdArtistsTableRelationships = formatTableRelationships artistsTableRelationships,
       _tdAlbumsRelationshipName = albumsRelationshipName,
-      _tdAlbumsTableName = applyTableNamePrefix _tcTableNamePrefix albumsTableName,
+      _tdAlbumsTableName = formatTableName albumsTableName,
       _tdAlbumsRows = albumsRows,
       _tdAlbumsRowsById = albumsRowsById,
-      _tdAlbumsTableRelationships = prefixTableRelationships albumsTableRelationships,
+      _tdAlbumsTableRelationships = formatTableRelationships albumsTableRelationships,
       _tdArtistRelationshipName = artistRelationshipName,
       _tdTracksRelationshipName = tracksRelationshipName,
-      _tdCustomersTableName = applyTableNamePrefix _tcTableNamePrefix customersTableName,
+      _tdCustomersTableName = formatTableName customersTableName,
       _tdCustomersRows = customersRows,
-      _tdCustomersTableRelationships = prefixTableRelationships customersTableRelationships,
+      _tdCustomersTableRelationships = formatTableRelationships customersTableRelationships,
       _tdSupportRepRelationshipName = supportRepRelationshipName,
-      _tdEmployeesTableName = applyTableNamePrefix _tcTableNamePrefix employeesTableName,
+      _tdEmployeesTableName = formatTableName employeesTableName,
       _tdEmployeesRows = employeesRows,
       _tdEmployeesRowsById = employeesRowsById,
-      _tdEmployeesTableRelationships = prefixTableRelationships employeesTableRelationships,
+      _tdEmployeesTableRelationships = formatTableRelationships employeesTableRelationships,
       _tdSupportRepForCustomersRelationshipName = supportRepForCustomersRelationshipName,
-      _tdInvoicesTableName = applyTableNamePrefix _tcTableNamePrefix invoicesTableName,
+      _tdInvoicesTableName = formatTableName invoicesTableName,
       _tdInvoicesRows = invoicesRows,
-      _tdInvoiceLinesTableName = applyTableNamePrefix _tcTableNamePrefix invoiceLinesTableName,
+      _tdInvoiceLinesTableName = formatTableName invoiceLinesTableName,
       _tdInvoiceLinesRows = invoiceLinesRows,
-      _tdMediaTypesTableName = applyTableNamePrefix _tcTableNamePrefix mediaTypesTableName,
+      _tdMediaTypesTableName = formatTableName mediaTypesTableName,
       _tdMediaTypesRows = mediaTypesRows,
-      _tdTracksTableName = applyTableNamePrefix _tcTableNamePrefix tracksTableName,
+      _tdTracksTableName = formatTableName tracksTableName,
       _tdTracksRows = tracksRows,
-      _tdTracksTableRelationships = prefixTableRelationships tracksTableRelationships,
+      _tdTracksTableRelationships = formatTableRelationships tracksTableRelationships,
       _tdInvoiceLinesRelationshipName = invoiceLinesRelationshipName,
       _tdMediaTypeRelationshipName = mediaTypeRelationshipName,
       _tdAlbumRelationshipName = albumRelationshipName,
       _tdGenreRelationshipName = genreRelationshipName,
-      _tdGenresTableName = applyTableNamePrefix _tcTableNamePrefix genresTableName,
+      _tdGenresTableName = formatTableName genresTableName,
       _tdGenresRows = genresRows,
-      _tdGenresTableRelationships = prefixTableRelationships genresTableRelationships
+      _tdGenresTableRelationships = formatTableRelationships genresTableRelationships,
+      _tdColumnName = API.ColumnName . applyNameCasing _tcColumnNameCasing,
+      _tdColumnField = columnField . applyNameCasing _tcColumnNameCasing,
+      _tdQueryComparisonColumn = queryComparisonColumn . applyNameCasing _tcColumnNameCasing,
+      _tdCurrentComparisonColumn = currentComparisonColumn . applyNameCasing _tcColumnNameCasing,
+      _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (applyNameCasing _tcColumnNameCasing name)
     }
   where
+    formatTableName :: API.TableName -> API.TableName
+    formatTableName = applyTableNamePrefix _tcTableNamePrefix . API.TableName . fmap (applyNameCasing _tcTableNameCasing) . API.unTableName
+
+    formatTableRelationships :: API.TableRelationships -> API.TableRelationships
+    formatTableRelationships =
+      prefixTableRelationships
+        >>> API.trRelationships . traverse . API.rColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
+
+    formatColumnName :: API.ColumnName -> API.ColumnName
+    formatColumnName = API.ColumnName . applyNameCasing _tcColumnNameCasing . API.unColumnName
+
     prefixTableRelationships :: API.TableRelationships -> API.TableRelationships
     prefixTableRelationships =
-      API.trSourceTable %~ applyTableNamePrefix _tcTableNamePrefix
-        >>> API.trRelationships . traverse . API.rTargetTable %~ applyTableNamePrefix _tcTableNamePrefix
+      API.trSourceTable %~ formatTableName
+        >>> API.trRelationships . traverse . API.rTargetTable %~ formatTableName
+
+    formatTableInfo :: API.TableInfo -> API.TableInfo
+    formatTableInfo =
+      API.tiName %~ formatTableName
+        >>> API.tiColumns . traverse . API.ciName %~ formatColumnName
+        >>> API.tiPrimaryKey . traverse %~ formatColumnName
+        >>> API.tiForeignKeys . lens API.unForeignKeys (const API.ForeignKeys) . traverse
+          %~ ( API.cForeignTable %~ formatTableName
+                 >>> API.cColumnMapping %~ (HashMap.toList >>> fmap (bimap formatColumnName formatColumnName) >>> HashMap.fromList)
+             )
 
 applyTableNamePrefix :: [Text] -> API.TableName -> API.TableName
 applyTableNamePrefix prefix tableName@(API.TableName rawTableName) =
   case NonEmpty.nonEmpty prefix of
     Just prefix' -> API.TableName (prefix' <> rawTableName)
     Nothing -> tableName
+
+applyNameCasing :: NameCasing -> Text -> Text
+applyNameCasing casing text = case casing of
+  PascalCase -> text
+  Lowercase -> Text.toLower text
 
 emptyQuery :: API.Query
 emptyQuery = API.Query Nothing Nothing Nothing Nothing Nothing Nothing
@@ -447,3 +491,33 @@ currentComparisonColumn columnName = API.ComparisonColumn API.CurrentTable $ API
 orderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =
   API.OrderByElement targetPath (API.OrderByColumn $ API.ColumnName columnName) orderDirection
+
+guardQueryResponse :: Servant.Union API.QueryResponses -> IO API.QueryResponse
+guardQueryResponse = queryCase defaultAction successAction errorAction
+  where
+    defaultAction = fail "Expected QueryResponse"
+    successAction q = pure q
+    errorAction e = fail $ "Expected QueryResponse, got " <> show e
+
+guardedQuery :: Servant.Client IO (Servant.NamedRoutes API.Routes) -> API.SourceName -> API.Config -> API.QueryRequest -> IO API.QueryResponse
+guardedQuery api sourceName config queryRequest = guardQueryResponse =<< (api // API._query) sourceName config queryRequest
+
+guardedCapabilities :: Servant.Client IO (Servant.NamedRoutes API.Routes) -> IO API.CapabilitiesResponse
+guardedCapabilities api = guardCapabilitiesResponse =<< (api // API._capabilities)
+
+guardCapabilitiesResponse :: Servant.Union API.CapabilitiesResponses -> IO API.CapabilitiesResponse
+guardCapabilitiesResponse = capabilitiesCase defaultAction successAction errorAction
+  where
+    defaultAction = fail "Expected QueryResponse"
+    successAction c = pure c
+    errorAction e = fail $ "Expected QueryResponse, got " <> show e
+
+guardErrorResponse :: Servant.Union API.QueryResponses -> IO API.ErrorResponse
+guardErrorResponse = queryCase defaultAction successAction errorAction
+  where
+    defaultAction = fail "Expected ErrorResponse"
+    successAction q = fail $ "Expected ErrorResponse, got " <> show q
+    errorAction e = pure e
+
+errorQuery :: Servant.Client IO (Servant.NamedRoutes API.Routes) -> API.SourceName -> API.Config -> API.QueryRequest -> IO API.ErrorResponse
+errorQuery api sourceName config queryRequest = guardErrorResponse =<< (api // API._query) sourceName config queryRequest

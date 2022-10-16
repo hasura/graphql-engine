@@ -23,7 +23,7 @@ import Hasura.RQL.Types.Common
 import Hasura.SQL.Backend
 
 aggregateFieldsToExtractorExps ::
-  Identifier -> AggregateFields ('Postgres pgKind) -> [(S.ColumnAlias, S.SQLExp)]
+  TableIdentifier -> AggregateFields ('Postgres pgKind) -> [(S.ColumnAlias, S.SQLExp)]
 aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
   flip concatMap aggregateFields $ \(_, field) ->
     case field of
@@ -42,7 +42,7 @@ aggregateFieldsToExtractorExps sourcePrefix aggregateFields =
       _ -> Nothing
 
     mkColExp c =
-      let qualCol = S.mkQIdenExp (mkBaseTableAlias sourcePrefix) (toIdentifier c)
+      let qualCol = S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) (toIdentifier c)
           colAls = toIdentifier c
        in (S.toColumnAlias colAls, qualCol)
 
@@ -85,8 +85,10 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
   where
     simpleJsonAgg = mkSimpleJsonAgg rowIdenExp ordBy
     rowIdenExp = S.SEIdentifier $ toIdentifier alias
-    subSelAls = Identifier "sub_query"
-    unnestTable = Identifier "unnest_table"
+    subSelAls = S.mkTableAlias "sub_query"
+    subSelIdentifier = S.tableAliasToIdentifier subSelAls
+    unnestTable = S.mkTableAlias "unnest_table"
+    unnestTableIdentifier = S.tableAliasToIdentifier unnestTable
 
     mkSimpleJsonAgg rowExp ob =
       let jsonAggExp = S.SEFnApp "json_agg" [rowExp] ob
@@ -94,7 +96,7 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
 
     withPermLimit limit =
       let subSelect = mkSubSelect limit
-          rowIdentifier = S.mkQIdenExp subSelAls alias
+          rowIdentifier = S.mkQIdenExp subSelIdentifier alias
           extr = S.Extractor (mkSimpleJsonAgg rowIdentifier newOrderBy) Nothing
           fromExp =
             S.FromExp $
@@ -109,9 +111,9 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
     mkSubSelect limit =
       let jsonRowExtr =
             flip S.Extractor (Just alias) $
-              S.mkQIdenExp unnestTable alias
+              S.mkQIdenExp unnestTableIdentifier alias
           obExtrs = flip map newOBAliases $ \a ->
-            S.Extractor (S.mkQIdenExp unnestTable a) $ Just $ S.toColumnAlias a
+            S.Extractor (S.mkQIdenExp unnestTableIdentifier a) $ Just $ S.toColumnAlias a
        in S.mkSelect
             { S.selExtr = jsonRowExtr : obExtrs,
               S.selFrom = Just $ S.FromExp $ pure unnestFromItem,

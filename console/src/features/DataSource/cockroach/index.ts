@@ -6,6 +6,7 @@ import {
   getTableColumns,
   getFKRelationships,
   getTablesListAsTree,
+  getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -58,6 +59,7 @@ export const cockroach: Database = {
     getTableColumns,
     getFKRelationships,
     getTablesListAsTree,
+    getSupportedOperators,
   },
   query: {
     getTableRows,

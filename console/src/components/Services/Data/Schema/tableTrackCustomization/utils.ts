@@ -21,6 +21,7 @@ export const getTrackingTableFormPlaceholders = (
     update_by_pk: `update_by_pk_${tableName} (default)`,
     delete: `delete_${tableName} (default)`,
     delete_by_pk: `delete_by_pk_${tableName} (default)`,
+    update_many: `update_many_${tableName} (default)`,
   };
 };
 

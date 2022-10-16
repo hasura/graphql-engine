@@ -790,24 +790,27 @@ export const getCreatePkSql = ({
 }) => `alter table "${schemaName}"."${tableName}"
     add constraint "${constraintName}"
     primary key (${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')});`;
+
+type GetAlterPkSql = {
+  schemaName: string;
+  tableName: string;
+  selectedPkColumns: string[];
+  constraintName: string;
+};
 export const getAlterPkSql = ({
   schemaName,
   tableName,
   selectedPkColumns,
   constraintName,
-}: {
-  schemaName: string;
-  tableName: string;
-  selectedPkColumns: string[];
-  constraintName: string; // compulsory for PG
-}) => `BEGIN TRANSACTION;
-ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
+}: GetAlterPkSql) => {
+  const underscoreColumnNames = selectedPkColumns.join('_');
+  const newPkConstraintName = `${tableName}_pkey_${underscoreColumnNames}`;
+  const columnsSqlList = selectedPkColumns.map(pkc => `"${pkc}"`).join(', ');
 
-ALTER TABLE "${schemaName}"."${tableName}"
-    ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
-  .map(pkc => `"${pkc}"`)
-  .join(', ')});
-COMMIT TRANSACTION;`;
+  return `
+ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
+ALTER TABLE "${schemaName}"."${tableName}" ADD CONSTRAINT "${newPkConstraintName}" PRIMARY KEY (${columnsSqlList});`;
+};
 
 const trackableFunctionsWhere = `
 AND has_variadic = FALSE
@@ -1317,10 +1320,11 @@ export const getDataTriggerLogsCountQuery = (
 
     case triggerTypes.invocation:
       logsCountQuery = `SELECT
-        COUNT(*)
-        FROM ${eventInvTable} original_table JOIN ${eventRelTable} data_table
-        ON original_table.event_id = data_table.id
-        WHERE data_table.trigger_name = '${triggerName}' `;
+      COUNT(*)
+      FROM ${eventInvTable} original_table 
+      LEFT JOIN ${eventRelTable} data_table
+      ON original_table.event_id = data_table.id
+      WHERE data_table.trigger_name = '${triggerName}' OR original_table.trigger_name = '${triggerName}'`;
       break;
     default:
       break;
@@ -1359,9 +1363,11 @@ export const getDataTriggerLogsQuery = (
       break;
 
     case triggerTypes.invocation:
-      sql = `SELECT original_table.*, data_table.*
-      FROM ${eventInvTable} original_table JOIN ${eventRelTable} data_table ON original_table.event_id = data_table.id
-      WHERE data_table.trigger_name = '${triggerName}' 
+      sql = `
+      SELECT original_table.*, data_table 
+      FROM ${eventInvTable} original_table 
+      LEFT JOIN ${eventRelTable} data_table ON original_table.event_id = data_table.id    
+      WHERE data_table.trigger_name = '${triggerName}' OR original_table.trigger_name = '${triggerName}'
       ORDER BY original_table.created_at DESC NULLS LAST`;
       break;
     default:

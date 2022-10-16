@@ -31,6 +31,7 @@ common common-all
     RankNTypes
     RecordWildCards
     ScopedTypeVariables
+    StrictData
     TupleSections
     TypeApplications
     TypeFamilies
@@ -75,6 +76,7 @@ library
     Hasura.Backends.DataConnector.API.V0.Capabilities
     Hasura.Backends.DataConnector.API.V0.Column
     Hasura.Backends.DataConnector.API.V0.ConfigSchema
+    Hasura.Backends.DataConnector.API.V0.ErrorResponse
     Hasura.Backends.DataConnector.API.V0.Expression
     Hasura.Backends.DataConnector.API.V0.OrderBy
     Hasura.Backends.DataConnector.API.V0.Query
@@ -138,6 +140,7 @@ test-suite tests-dc-api
     Test.MetricsSpec
     Test.ExplainSpec
     Test.QuerySpec
+    Test.ErrorSpec
     Test.QuerySpec.AggregatesSpec
     Test.QuerySpec.BasicSpec
     Test.QuerySpec.FilteringSpec

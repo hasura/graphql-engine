@@ -12,7 +12,7 @@ import Data.Aeson
   )
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.Aeson.Types (parseEither)
-import Data.Either (isLeft)
+import Data.Either (isLeft, isRight)
 import Data.Either.Combinators (fromRight')
 import Data.FileEmbed (makeRelativeToProject, strToExp)
 import Hasura.Metadata.DTO.Metadata (MetadataDTO (..))
@@ -23,6 +23,7 @@ import Hasura.Metadata.DTO.Placeholder (PlaceholderArray (PlaceholderArray))
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata (Metadata, metadataToDTO)
 import Test.Hspec
+import Test.Hspec.Expectations.Json (shouldBeJson)
 
 spec :: Spec
 spec = describe "MetadataDTO" $ do
@@ -70,22 +71,19 @@ spec = describe "MetadataDTO" $ do
       let actual = eitherDecode input :: Either String MetadataDTO
       actual `shouldSatisfy` isLeft
 
-  beforeAll getMetadataFixture $ do
-    describe "v3" $ do
-      -- TODO: There are some cases where DTO serialization emits @null@ where
-      -- Metadata serialization omits the field instead. So this test doesn't
-      -- quite pass yet. This is expected to be re-enabled in an upcoming PR.
-      -- it "deserializes and re-serializes equivalently to Metadata" $ \(MetadataFixture {..}) -> do
-      --   let dto = parseEither (parseJSON @MetadataDTO) _mfJSON
-      --   let fromDto = toJSON <$> dto
-      --   fromDto `shouldSatisfy` isRight
-      --   (fromRight' fromDto) `shouldBeJson` _mfJSON
+    beforeAll getMetadataFixture $ do
+      describe "v3" $ do
+        it "deserializes and re-serializes equivalently to Metadata" $ \(MetadataFixture {..}) -> do
+          let dto = parseEither (parseJSON @MetadataDTO) _mfJSON
+          let fromDto = toJSON <$> dto
+          fromDto `shouldSatisfy` isRight
+          (fromRight' fromDto) `shouldBeJson` _mfJSON
 
-      it "converts metadata to DTO to JSON to metadata" $ \(MetadataFixture {..}) -> do
-        let dto = metadataToDTO $ _mfMetadata
-        let json = toJSON dto
-        let metadata = parseEither (parseJSON @Metadata) json
-        metadata `shouldBe` (Right _mfMetadata)
+        it "converts metadata to DTO to JSON to metadata" $ \(MetadataFixture {..}) -> do
+          let dto = metadataToDTO $ _mfMetadata
+          let json = toJSON dto
+          let metadata = parseEither (parseJSON @Metadata) json
+          metadata `shouldBe` (Right _mfMetadata)
 
 emptyMetadataV3 :: MetadataV3
 emptyMetadataV3 =

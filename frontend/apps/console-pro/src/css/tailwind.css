@@ -31,13 +31,13 @@
 .checkbox input[type="checkbox"],
 .form-group input[type="radio"],
 .radio input[type="radio"],
-/* escape hatch if we need to add a reset on a input */
+  /* escape hatch if we need to add a reset on a input */
 .legacy-input-fix,
-/* .form-group select, */
-/* Nullable + checkbox select in create table */
+  /* .form-group select, */
+  /* Nullable + checkbox select in create table */
 input[data-test^="nullable-"],
 input[data-test^="unique-"],
-/* Browse row checkbox */
+  /* Browse row checkbox */
 input[type="checkbox"][data-test^="row-checkbox"],
 input[type="checkbox"][data-test="select-all-rows"] {
   appearance: revert;
@@ -89,18 +89,18 @@ input[id*='react-select'][id$='-input']:focus {
   border-radius: 4px;
   border: 1px solid rgb(203, 213, 225) !important;
   box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-    rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 }
 .graphiql-container input:focus,
 .graphiql-container select:focus {
   border: 1px solid rgb(251, 191, 36) !important;
   box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
-    rgb(253, 230, 138) 0px 0px 0px 2px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  rgb(253, 230, 138) 0px 0px 0px 2px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 }
 
 .graphiql-explorer-actions > select {
   font-family: system, -apple-system, 'San Francisco', '.SFNSDisplay-Regular',
-    'Helvetica Neue', helvetica, 'Lucida Grande', arial, sans-serif;
+  'Helvetica Neue', helvetica, 'Lucida Grande', arial, sans-serif;
   font-variant-caps: normal;
   font-weight: 400;
   border: 1px solid #cbd5e1;
@@ -111,12 +111,12 @@ input[id*='react-select'][id$='-input']:focus {
   margin-right: 8px;
   height: 32px;
   box-shadow: rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px,
-    rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 }
 .graphiql-explorer-actions > select:focus {
   border: 1px solid rgb(251, 191, 36) !important;
   box-shadow: rgb(255, 255, 255) 0px 0px 0px 0px,
-    rgb(253, 230, 138) 0px 0px 0px 2px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
+  rgb(253, 230, 138) 0px 0px 0px 2px, rgba(0, 0, 0, 0.05) 0px 1px 2px 0px;
 }
 
 /* While we're fixing the inputs maybe the Explorer header + footer */
@@ -147,7 +147,7 @@ input[id*='react-select'][id$='-input']:focus {
 /* Fixes footer spacing */
 .graphiql-explorer-actions > span {
   font-family: system, -apple-system, 'San Francisco', '.SFNSDisplay-Regular',
-    'Helvetica Neue', helvetica, 'Lucida Grande', arial, sans-serif;
+  'Helvetica Neue', helvetica, 'Lucida Grande', arial, sans-serif;
   font-variant-caps: normal;
   font-weight: 500;
   font-size: 12px;
@@ -162,6 +162,6 @@ input[id*='react-select'][id$='-input']:focus {
 
 /* Fix bug due to the removal of a label style in ApiExplorer.scss which was impacting the whole UI */
 label {
-    font-weight: normal;
-    margin-bottom: 0;
+  font-weight: normal;
+  margin-bottom: 0;
 }

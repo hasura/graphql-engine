@@ -17,10 +17,10 @@ import {
 import { getActualIfAliased, transformToTwoPlaces } from '../Usage/utils';
 
 import { SHOW_ONLY_ERRORS_SYMBOL, relativeModulePath } from '../constants';
+import styles from '../Metrics.module.scss';
 
-const Modal = props => {
+const Modal = (props) => {
   const { onHide, data: d, groupBys, RenderLink } = props;
-  const styles = require('../Metrics.scss');
   const {
     operation_id: id,
     operation_name: operationName,
@@ -34,7 +34,7 @@ const Modal = props => {
   const getLinkToOperationsPage = (withError = false) => {
     /* Get the groupBys */
     if (groupBys.length > 0) {
-      const filters = groupBys.map(n => {
+      const filters = groupBys.map((n) => {
         const getValue = () => {
           const valLen = d[getActualIfAliased(n)].length;
           /* Return appropriate

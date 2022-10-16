@@ -46,12 +46,7 @@ spec =
                         Cockroach.run_ teardown
                     },
                   Cockroach.setupTablesAction schema testEnvironment
-                ],
-              Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.stringifyNumbers = True
-                    }
+                ]
             },
           (Fixture.fixture $ Fixture.Backend Fixture.Citus)
             { Fixture.setupTeardown = \(testEnvironment, _) ->

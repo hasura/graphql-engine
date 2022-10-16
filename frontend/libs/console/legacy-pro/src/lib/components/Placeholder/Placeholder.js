@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import styles from '../Common/Common.scss';
+import styles from '../Common/Common.module.scss';
 
 const PlaceHolder = ({ width = 5 }) => {
   return (

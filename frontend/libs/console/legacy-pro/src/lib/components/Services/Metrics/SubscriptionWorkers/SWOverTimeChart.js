@@ -3,7 +3,7 @@ import { Line } from 'react-chartjs-2';
 import moment from 'moment';
 import { roundToTwo } from './utils';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 
 export default function SWOverTimeChart({
   executionTimeData,
@@ -27,7 +27,7 @@ export default function SWOverTimeChart({
   const postgresQueries = postgresData.map(({ value }) => value);
   const subscribers = subscribersData.map(({ value }) => value);
 
-  const getMaxMin = values => {
+  const getMaxMin = (values) => {
     const max = Math.max(...values);
     const min = Math.min(...values);
     const diff = max - min;

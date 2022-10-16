@@ -4,7 +4,7 @@ import { FaChevronDown } from 'react-icons/fa';
 import { FiRefreshCw } from 'react-icons/fi';
 import { Button } from '@hasura/console-oss';
 
-import styles from '../MetricsV1.scss';
+import styles from '../MetricsV1.module.scss';
 
 const BucketTypes = [
   { name: 'Last 10 Minutes', subtractFactor: [10, 'minutes'] },
@@ -47,14 +47,14 @@ const Header = ({ setFromTime }) => {
             icon={<FaChevronDown />}
             iconPosition="end"
             className={`${styles.mr_xs}`}
-            onClick={() => setDropDownOpen(b => !b)}
+            onClick={() => setDropDownOpen((b) => !b)}
           >
             {currentBucket?.name}
           </Button>
           <div
             className={`${styles.menu} ${dropDownOpen ? styles.active : ''}`}
           >
-            {BucketTypes.map(bucket => (
+            {BucketTypes.map((bucket) => (
               <li
                 key={bucket?.name}
                 className={`${styles.link} ${styles.single_line} ${

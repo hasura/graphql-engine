@@ -159,6 +159,12 @@ export type RequestTransformState = {
   templatingEngine: RequestTransformTemplateEngine;
 };
 
+export type ResponseTransformState = {
+  version: 1 | 2;
+  requestBody: RequestTransformStateBody;
+  templatingEngine: RequestTransformTemplateEngine;
+};
+
 export type RequestTransformStateBody = Omit<
   RequestTransformBody,
   'form_template'

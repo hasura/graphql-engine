@@ -15,13 +15,13 @@ import 'react-tabs/style/react-tabs.css';
 import { refetchMetadata as refetchMetadataAction } from '../../../Main/Actions';
 import { isAdmin as _isAdmin } from '../utils';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 /*
  * Lists
  * */
 
 /*
-const styles = require('../Metrics.scss');
+const styles = require('../Metrics.module.scss');
 const AllowListsInstructions = () => {
   return (
     <div>
@@ -95,7 +95,7 @@ const defaultMetadata = {
   newListCount: null,
 };
 
-const AllowLists = props => {
+const AllowLists = (props) => {
   const [tabIndex, updateTabIndex] = useState(0);
   const [metadataState, updateMetadata] = useState(defaultMetadata);
 
@@ -142,7 +142,7 @@ const AllowLists = props => {
     <div className="infoWrapper">
       <Tabs
         selectedIndex={tabIndex}
-        onSelect={t => updateTabIndex(t)}
+        onSelect={(t) => updateTabIndex(t)}
         className={styles.tabWrapper}
       >
         <TabList className={styles.tabListWrapper}>
@@ -176,8 +176,8 @@ const AllowLists = props => {
             RenderLink={RenderLink}
             {...refetchMeta}
             {...changeTabs}
-            updateMetadata={d =>
-              updateMetadata(s => {
+            updateMetadata={(d) =>
+              updateMetadata((s) => {
                 return { ...s, allowedListCount: d };
               })
             }
@@ -192,8 +192,8 @@ const AllowLists = props => {
             {...props}
             {...refetchMeta}
             {...changeTabs}
-            updateMetadata={d =>
-              updateMetadata(s => {
+            updateMetadata={(d) =>
+              updateMetadata((s) => {
                 return { ...s, newListCount: d };
               })
             }
@@ -220,12 +220,12 @@ const mapStateToProps = (state, ownProps) => {
     metadata,
   };
 };
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   refetchMetadata: () => dispatch(refetchMetadataAction()),
   dispatch,
 });
 
-const allowListsConnector = connect =>
+const allowListsConnector = (connect) =>
   connect(mapStateToProps, mapDispatchToProps)(AllowLists);
 
 export default allowListsConnector;

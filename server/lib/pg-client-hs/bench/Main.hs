@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Main where
+module Main
+  ( main,
+  )
+where
 
 -------------------------------------------------------------------------------
 
@@ -13,7 +16,6 @@ import Data.ByteString.Char8 qualified as BC
 import Data.FileEmbed qualified as FE
 import Data.Functor.Identity (Identity (..), runIdentity)
 import Data.Int (Int64)
-import Data.Kind (Type)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Database.PG.Query qualified as PG
@@ -41,10 +43,8 @@ runHTx :: HP.Pool -> HT.Transaction a -> IO a
 runHTx pool tx =
   withEx $ HP.use pool $ HT.transaction HT.Serializable HT.Write tx
 
-type CTx :: Type -> Type
 type CTx a = PG.TxE PG.PGExecErr a
 
-type HTx :: Type -> Type
 type HTx = HT.Transaction
 
 benchQ ::

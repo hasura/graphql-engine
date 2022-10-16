@@ -5,6 +5,7 @@ import {
   getTableColumns,
   getFKRelationships,
   getTablesListAsTree,
+  getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -25,6 +26,7 @@ export const postgres: Database = {
     getTableColumns,
     getFKRelationships,
     getTablesListAsTree,
+    getSupportedOperators,
   },
   query: {
     getTableRows,

@@ -26,7 +26,7 @@ echo "ldd is $(ldd --version)"
 
 # start graphql-engine
 /build/_server_output/graphql-engine \
-    --database-url postgres://gql_test@localhost:5432/gql_test serve --enable-remote-schema-permissions > /build/_console_output/server.log 2>&1 &
+    --database-url postgres://gql_test:gql_test@localhost:5432/gql_test serve --enable-remote-schema-permissions > /build/_console_output/server.log 2>&1 &
 
 wait_for_port 8080
 

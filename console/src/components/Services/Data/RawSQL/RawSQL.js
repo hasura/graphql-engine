@@ -189,7 +189,7 @@ const RawSQL = ({
       const isMigration = checkboxElem ? checkboxElem.checked : false;
       const textboxElem = document.getElementById('migration-name');
       let migrationName = textboxElem ? textboxElem.value : '';
-      if (isMigration && migrationName.length === 0) {
+      if (isMigration && migrationName?.length === 0) {
         migrationName = 'run_sql_migration';
       }
       if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
@@ -261,7 +261,7 @@ const RawSQL = ({
       // set track this checkbox true if tracking is supported for the driver
       if (isFeatureSupported('rawSQL.tracking')) {
         const objects = parseCreateSQL(cleanSql, selectedDriver);
-        if (objects.length) {
+        if (objects?.length) {
           let allObjectsTrackable = true;
 
           const trackedObjectNames = allSchemas.map(schema => {
@@ -507,8 +507,7 @@ const RawSQL = ({
           />
         </div>
         <div className={`${styles.padd_left_remove} col-xs-10`}>
-          {!unsupportedRawSQLDrivers.includes(selectedDriver) &&
-            getSQLSection()}
+          {getSQLSection()}
         </div>
 
         <div
@@ -539,7 +538,10 @@ const RawSQL = ({
             onClick={submitSQL}
             mode="primary"
             data-test="run-sql"
-            disabled={!sqlText.length}
+            disabled={
+              !sqlText?.length ||
+              unsupportedRawSQLDrivers.includes(selectedDriver)
+            }
             isLoading={isLoading}
           >
             Run!
@@ -573,7 +575,7 @@ const RawSQL = ({
         </div>
       ) : (
         <div className={styles.add_mar_bottom}>
-          {data && data.result.length > 0 && (
+          {data && data.result?.length > 0 && (
             <ResultTable rows={data.result.slice(1)} headers={data.result[0]} />
           )}
         </div>

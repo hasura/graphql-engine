@@ -28,23 +28,26 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text.Extended (ToTxt (toTxt))
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
-  ( Identifier,
-    IsIdentifier (toIdentifier),
+  ( IsIdentifier (toIdentifier),
     PGCol (..),
     QualifiedObject (QualifiedObject),
     QualifiedTable,
     SchemaName (getSchemaTxt),
+    TableIdentifier (..),
+    identifierToTableIdentifier,
+    qualifiedObjectToText,
+    tableIdentifierToIdentifier,
   )
 import Hasura.Backends.Postgres.Translate.BoolExp (toSQLBoolExp)
 import Hasura.Backends.Postgres.Translate.Column (toJSONableExp)
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases
-  ( mkAnnOrderByAlias,
+  ( contextualizeBaseTableColumn,
+    mkAnnOrderByAlias,
     mkArrayRelationAlias,
     mkArrayRelationSourcePrefix,
-    mkBaseTableAlias,
-    mkBaseTableColumnAlias,
-    mkComputedFieldTableAlias,
+    mkBaseTableIdentifier,
+    mkComputedFieldTableIdentifier,
     mkObjectRelationTableAlias,
     mkOrderByFieldName,
   )
@@ -59,7 +62,6 @@ import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
     encodeBase64,
     endCursorIdentifier,
     fromTableRowArgs,
-    functionToIdentifier,
     hasNextPageIdentifier,
     hasPreviousPageIdentifier,
     pageInfoSelectAliasIdentifier,
@@ -115,8 +117,8 @@ processSelectParams
   tablePermissions
   tableArgs = do
     (additionalExtrs, selectSorting, cursorExp) <-
-      processOrderByItems thisSourcePrefix fieldAlias similarArrFields distM orderByM
-    let fromItem = selectFromToFromItem (_pfBase sourcePrefixes) selectFrom
+      processOrderByItems (identifierToTableIdentifier thisSourcePrefix) fieldAlias similarArrFields distM orderByM
+    let fromItem = selectFromToFromItem (identifierToTableIdentifier $ _pfBase sourcePrefixes) selectFrom
         finalWhere =
           toSQLBoolExp (selectFromToQual selectFrom) $
             maybe permFilter (andAnnBoolExps permFilter) whereM
@@ -161,8 +163,8 @@ processSelectParams
       selectFromToQual :: SelectFrom ('Postgres pgKind) -> S.Qual
       selectFromToQual = \case
         FromTable table -> S.QualTable table
-        FromIdentifier i -> S.QualifiedIdentifier (toIdentifier i) Nothing
-        FromFunction qf _ _ -> S.QualifiedIdentifier (functionToIdentifier qf) Nothing
+        FromIdentifier i -> S.QualifiedIdentifier (TableIdentifier $ unFIIdentifier i) Nothing
+        FromFunction qf _ _ -> S.QualifiedIdentifier (TableIdentifier $ qualifiedObjectToText qf) Nothing
 
 processAnnAggregateSelect ::
   forall pgKind m.
@@ -189,7 +191,7 @@ processAnnAggregateSelect sourcePrefixes fieldAlias annAggSel = do
       permLimitSubQuery
       tablePermissions
       tableArgs
-  let thisSourcePrefix = _pfThis sourcePrefixes
+  let thisSourcePrefix = identifierToTableIdentifier $ _pfThis sourcePrefixes
   processedFields <- forM aggSelFields $ \(fieldName, field) ->
     (fieldName,)
       <$> case field of
@@ -265,7 +267,7 @@ processAnnFields ::
     Backend ('Postgres pgKind),
     PostgresAnnotatedFieldJSON pgKind
   ) =>
-  Identifier ->
+  TableIdentifier ->
   FieldName ->
   SimilarArrayFields ->
   AnnFields ('Postgres pgKind) ->
@@ -283,7 +285,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
               AnnObjectSelectG objAnnFields tableFrom tableFilter = annObjSel
               objRelSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName
               sourcePrefixes = mkSourcePrefixes objRelSourcePrefix
-          annFieldsExtr <- processAnnFields (_pfThis sourcePrefixes) fieldName HM.empty objAnnFields tCase
+          annFieldsExtr <- processAnnFields (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldName HM.empty objAnnFields tCase
           let selectSource =
                 ObjectSelectSource
                   (_pfThis sourcePrefixes)
@@ -317,7 +319,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
                in pure $ S.SECond boolExp computedFieldSQLExp S.SENull
         AFComputedField _ _ (CFSTable selectTy sel) -> withWriteComputedFieldTableSet $ do
           let computedFieldSourcePrefix =
-                mkComputedFieldTableAlias sourcePrefix fieldName
+                mkComputedFieldTableIdentifier sourcePrefix fieldName
           (selectSource, nodeExtractors) <-
             processAnnSimpleSelect
               (mkSourcePrefixes computedFieldSourcePrefix)
@@ -337,9 +339,9 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
 
   pure $ annRowToJson @pgKind fieldAlias fieldExps
   where
-    mkSourcePrefixes newPrefix = SourcePrefixes newPrefix sourcePrefix
+    mkSourcePrefixes newPrefix = SourcePrefixes (tableIdentifierToIdentifier newPrefix) (tableIdentifierToIdentifier sourcePrefix)
 
-    baseTableIdentifier = toIdentifier $ mkBaseTableAlias sourcePrefix
+    baseTableIdentifier = mkBaseTableIdentifier sourcePrefix
 
     toSQLCol :: AnnColumnField ('Postgres pgKind) S.SQLExp -> m S.SQLExp
     toSQLCol (AnnColumnField col typ asText colOpM caseBoolExpMaybe) = do
@@ -378,7 +380,7 @@ processAnnFields sourcePrefix fieldAlias similarArrFields annFields tCase = do
     mkNodeId _sourceName (QualifiedObject tableSchema tableName) pkeyColumns =
       let columnInfoToSQLExp pgColumnInfo =
             toJSONableExp Options.Don'tStringifyNumbers (ciType pgColumnInfo) False Nothing $
-              S.mkQIdenExp (mkBaseTableAlias sourcePrefix) $ ciColumn pgColumnInfo
+              S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) $ ciColumn pgColumnInfo
        in -- See Note [Relay Node id].
           encodeBase64 $
             flip S.SETyAnn S.textTypeAnn $
@@ -538,7 +540,7 @@ processAnnSimpleSelect sourcePrefixes fieldAlias permLimitSubQuery annSimpleSel 
       permLimitSubQuery
       tablePermissions
       tableArgs
-  annFieldsExtr <- processAnnFields (_pfThis sourcePrefixes) fieldAlias similarArrayFields annSelFields tCase
+  annFieldsExtr <- processAnnFields (identifierToTableIdentifier $ _pfThis sourcePrefixes) fieldAlias similarArrayFields annSelFields tCase
   let allExtractors = HM.fromList $ annFieldsExtr : orderByAndDistinctExtrs
   pure (selectSource, allExtractors)
   where
@@ -600,7 +602,7 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
     ConnectionSelect _ primaryKeyColumns maybeSplit maybeSlice select = connectionSelect
     AnnSelectG fields selectFrom tablePermissions tableArgs _ tCase = select
     fieldIdentifier = toIdentifier fieldAlias
-    thisPrefix = _pfThis sourcePrefixes
+    thisPrefix = identifierToTableIdentifier $ _pfThis sourcePrefixes
     permLimitSubQuery = PLSQNotRequired
 
     primaryKeyColumnsObjectExp =
@@ -609,15 +611,15 @@ processConnectionSelect sourcePrefixes fieldAlias relAlias colMapping connection
           \pgColumnInfo ->
             [ S.SELit $ getPGColTxt $ ciColumn pgColumnInfo,
               toJSONableExp Options.Don'tStringifyNumbers (ciType pgColumnInfo) False tCase $
-                S.mkQIdenExp (mkBaseTableAlias thisPrefix) $ ciColumn pgColumnInfo
+                S.mkQIdenExp (mkBaseTableIdentifier thisPrefix) $ ciColumn pgColumnInfo
             ]
 
     primaryKeyColumnExtractors =
       flip map (toList primaryKeyColumns) $
         \pgColumnInfo ->
           let pgColumn = ciColumn pgColumnInfo
-           in ( mkBaseTableColumnAlias thisPrefix pgColumn,
-                S.mkQIdenExp (mkBaseTableAlias thisPrefix) pgColumn
+           in ( contextualizeBaseTableColumn thisPrefix pgColumn,
+                S.mkQIdenExp (mkBaseTableIdentifier thisPrefix) pgColumn
               )
 
     mkSplitBoolExp (firstSplit NE.:| rest) =

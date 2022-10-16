@@ -34,6 +34,7 @@ import { services } from '../../../../dataSources/services';
 import CollapsibleToggle from './CollapsibleToggle';
 import VPCBanner from '../../../Common/VPCBanner/VPCBanner';
 import { useVPCBannerVisibility } from './utils';
+import { NeonDashboardLink } from '../DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
 
 type DatabaseListItemProps = {
   dataSource: DataSource;
@@ -370,6 +371,8 @@ const ManageDatabase: React.FC<ManageDatabaseProps> = ({
             <ManageAgents />
           </div>
         ) : null}
+
+        <NeonDashboardLink className="mt-lg" />
       </div>
     </RightContainer>
   );

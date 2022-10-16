@@ -375,7 +375,7 @@ instance Postgres.IsIdentifier FIIdentifier where
 
 data SelectFromG (b :: BackendType) v
   = FromTable (TableName b)
-  | FromIdentifier FIIdentifier
+  | FromIdentifier FIIdentifier -- TODO: Make this into TableIdentifier?
   | FromFunction
       (FunctionName b)
       (FunctionArgsExp b v)
@@ -831,15 +831,13 @@ data AnnColumnField (b :: BackendType) v = AnnColumnField
 
 deriving stock instance
   ( Backend b,
-    Eq (AnnColumnCaseBoolExp b v),
-    Eq (ScalarSelectionArguments b)
+    Eq (AnnColumnCaseBoolExp b v)
   ) =>
   Eq (AnnColumnField b v)
 
 deriving stock instance
   ( Backend b,
-    Show (AnnColumnCaseBoolExp b v),
-    Show (ScalarSelectionArguments b)
+    Show (AnnColumnCaseBoolExp b v)
   ) =>
   Show (AnnColumnField b v)
 

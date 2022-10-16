@@ -19,7 +19,7 @@ import Hasura.Backends.Postgres.SQL.RenameIdentifiers (renameIdentifiers)
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Backends.Postgres.SQL.Value (withConstructorFn)
 import Hasura.Backends.Postgres.Translate.Select.AnnotatedFieldJSON
-import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases (mkBaseTableColumnAlias)
+import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases (contextualizeBaseTableColumn)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Extractor (asJsonAggExtr)
 import Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect (generateSQLSelectFromArrayNode)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Process (processAnnSimpleSelect)
@@ -48,6 +48,7 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
   ( FieldName (FieldName),
     JsonAggSelect (JASMultipleRows),
+    getFieldNameTxt,
   )
 import Hasura.RQL.Types.Subscription
   ( CursorOrdering (CODescending),
@@ -121,7 +122,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
                 S.SETyAnn
                   ( mkMaxOrMinSQLExp maxOrMinTxt $
                       toIdentifier $
-                        mkBaseTableColumnAlias rootFldIdentifier pgColumn
+                        contextualizeBaseTableColumn rootFldIdentifier pgColumn
                   )
                   S.textTypeAnn
               ]
@@ -133,8 +134,8 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
    in renameIdentifiers $
         generateSQLSelectFromArrayNode selectSource arrayNode $ S.BELit True
   where
-    rootFldIdentifier = toIdentifier rootFldName
-    sourcePrefixes = SourcePrefixes rootFldIdentifier rootFldIdentifier
+    rootFldIdentifier = TableIdentifier $ getFieldNameTxt rootFldName
+    sourcePrefixes = SourcePrefixes (tableIdentifierToIdentifier rootFldIdentifier) (tableIdentifierToIdentifier rootFldIdentifier)
     rootFldName = FieldName "root"
     rootFldAls = S.toColumnAlias $ toIdentifier rootFldName
 
@@ -143,7 +144,7 @@ mkStreamSQLSelect (AnnSelectStreamG () fields from perm args strfyNum) =
       addTypeAnnotation pgType $
         S.SEOpApp
           (S.SQLOp "#>>")
-          [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (Identifier "_subs") Nothing) (Identifier "result_vars"),
+          [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (TableIdentifier "_subs") Nothing) (Identifier "result_vars"),
             S.SEArray $ map S.SELit jPath
           ]
     addTypeAnnotation pgType =

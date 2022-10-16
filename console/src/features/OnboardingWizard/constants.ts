@@ -114,3 +114,8 @@ export const getNeonOnboardingErrorVariables = (code: string) => {
 
 // A stale time of 5 minutes for use in useQuery hook
 export const staleTime = 5 * 60 * 1000;
+
+export const dialogHeader = 'Welcome to your new Hasura project!';
+
+export const familiaritySurveySubHeader =
+  "We'd love to get to know you before you get started with your first API.";

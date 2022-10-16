@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { Source, SupportedDrivers, Table } from '@/features/MetadataAPI';
-import { postgres } from './postgres';
+import { postgres, PostgresTable } from './postgres';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
 import { mssql } from './mssql';
@@ -24,6 +24,8 @@ import type {
   GetTableRowsProps,
   WhereClause,
   OrderBy,
+  Operator,
+  GetSupportedOperatorsProps,
 } from './types';
 
 import {
@@ -82,6 +84,9 @@ export type Database = {
     getTablesListAsTree: (
       props: GetTablesListAsTreeProps
     ) => Promise<DataNode | Feature.NotImplemented>;
+    getSupportedOperators: (
+      props: GetSupportedOperatorsProps
+    ) => Promise<Operator[] | Feature.NotImplemented>;
   };
   query?: {
     getTableRows: (
@@ -183,6 +188,24 @@ export const DataSource = (httpClient: AxiosInstance) => ({
           schema.configSchema,
           schema.otherSchemas
         ),
+        customization: z
+          .object({
+            root_fields: z
+              .object({
+                namespace: z.string().optional(),
+                prefix: z.string().optional(),
+                suffix: z.string().optional(),
+              })
+              .optional(),
+            type_names: z
+              .object({
+                prefix: z.string().optional(),
+                suffix: z.string().optional(),
+              })
+              .optional(),
+          })
+          .deepPartial()
+          .optional(),
       });
     },
   },
@@ -324,7 +347,7 @@ export const DataSource = (httpClient: AxiosInstance) => ({
     table: Table;
     columns: string[];
     options?: {
-      where?: WhereClause;
+      where?: WhereClause[];
       offset?: number;
       limit?: number;
       order_by?: OrderBy[];
@@ -348,9 +371,32 @@ export const DataSource = (httpClient: AxiosInstance) => ({
 
     return tableRows;
   },
+  getSupportedOperators: async ({
+    dataSourceName,
+  }: {
+    dataSourceName: string;
+  }) => {
+    const database = await getDatabaseMethods({ dataSourceName, httpClient });
+
+    if (!database) throw Error('Database not found!');
+
+    const introspection = database.introspection;
+
+    if (!introspection) return Feature.NotImplemented;
+
+    const operators = await introspection.getSupportedOperators({ httpClient });
+
+    return operators;
+  },
 });
 
-export { exportMetadata, utils, RunSQLResponse, getDriverPrefix };
+export {
+  exportMetadata,
+  utils,
+  RunSQLResponse,
+  getDriverPrefix,
+  PostgresTable,
+};
 
 export * from './types';
 export * from './guards';

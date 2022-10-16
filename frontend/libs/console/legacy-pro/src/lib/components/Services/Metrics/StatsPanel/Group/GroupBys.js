@@ -2,7 +2,7 @@ import React from 'react';
 import GenerateGroupBys from './GenerateGroupBys';
 import { Button } from '@hasura/console-oss';
 
-const styles = require('../../Metrics.scss');
+import styles from '../../Metrics.module.scss';
 
 const GroupBys = ({ getTitle, reset, selected, values, onChange }) => {
   const renderSelectedGroupCount = () => {

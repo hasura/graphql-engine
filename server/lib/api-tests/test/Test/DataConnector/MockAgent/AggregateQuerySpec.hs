@@ -97,7 +97,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                             )
                           ]
                         ]
-                   in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse response},
+                   in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse response)},
                 _whenRequestRequired =
                   [graphql|
                     query getArtist {
@@ -216,7 +216,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                             )
                           ]
                         ]
-                   in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> aggregatesAndRowsResponse aggregates rows},
+                   in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (aggregatesAndRowsResponse aggregates rows)},
                 _whenRequestRequired =
                   [graphql|
                     query getInvoices {

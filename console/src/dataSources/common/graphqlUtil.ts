@@ -74,13 +74,6 @@ export const operators = [
   { name: '<=', value: '$lte', graphqlOp: '_lte' },
 ];
 
-export const RqlToGraphQlOp = (op: string) => {
-  if (!op || !op?.startsWith('$')) return 'none';
-  return (
-    operators.find(_op => _op.value === op)?.graphqlOp ?? op.replace('$', '_')
-  );
-};
-
 export const generateWhereClauseQueryString = (
   wheres: WhereClauseRecord[],
   columnTypeInfo: BaseTableColumn[],
@@ -101,7 +94,7 @@ export const generateWhereClauseQueryString = (
       currentColumnInfo?.data_type_name || currentColumnInfo?.data_type;
 
     const queryColumnName = columnConfig[columnName]?.custom_name ?? columnName;
-    const operator = RqlToGraphQlOp(rqlOperator);
+    const operator = rqlOperator;
     const formattedValue = getFormattedValue(columnType || 'varchar', value);
 
     return `${queryColumnName}: {${operator}: ${formattedValue} }`;

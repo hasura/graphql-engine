@@ -79,6 +79,8 @@ describe('getTrackingTableFormPlaceholders', () => {
 
       delete: 'delete_customizeTableName (default)',
       delete_by_pk: 'delete_by_pk_customizeTableName (default)',
+
+      update_many: 'update_many_customizeTableName (default)',
     };
 
     const result = getTrackingTableFormPlaceholders('customizeTableName');

@@ -19,6 +19,7 @@ module Hasura.RQL.Types.ComputedField
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Control.Lens hiding ((.=))
 import Data.Aeson
 import Data.Sequence qualified as Seq
@@ -35,6 +36,9 @@ import Language.GraphQL.Draft.Syntax (Name)
 
 newtype ComputedFieldName = ComputedFieldName {unComputedFieldName :: NonEmptyText}
   deriving (Show, Eq, Ord, NFData, FromJSON, ToJSON, ToJSONKey, PG.ToPrepArg, ToTxt, Hashable, PG.FromCol, Generic, Cacheable)
+
+instance HasCodec ComputedFieldName where
+  codec = dimapCodec ComputedFieldName unComputedFieldName codec
 
 computedFieldNameToText :: ComputedFieldName -> Text
 computedFieldNameToText = unNonEmptyText . unComputedFieldName

@@ -4,7 +4,7 @@ import moment from 'moment';
 import { Tooltip } from '@hasura/console-oss';
 
 import TopRequests from './TopRequests';
-import styles from '../MetricsV1.scss';
+import styles from '../MetricsV1.module.scss';
 import LoadingIcon from '../../../Common/LoadingIcon';
 import LoaderCard from '../../../Common/LoaderCard';
 import Placeholder from '../../../Placeholder/Placeholder';
@@ -19,7 +19,7 @@ const formatters = {
   hour: 'H:mm',
 };
 
-const getOptions = dataSize => {
+const getOptions = (dataSize) => {
   return {
     legend: {
       display: false,

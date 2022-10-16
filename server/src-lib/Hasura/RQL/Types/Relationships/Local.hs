@@ -21,12 +21,17 @@ module Hasura.RQL.Types.Relationships.Local
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec, disjointEitherCodec, optionalField', requiredField')
+import Autodocodec qualified as AC
+import Autodocodec.Extended (optionalFieldOrIncludedNull')
 import Control.Lens (makeLenses)
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.TH
 import Data.Aeson.Types
 import Data.Text qualified as T
+import Data.Typeable (Typeable)
 import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Utils (codecNamePrefix, typeableName)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
@@ -40,6 +45,14 @@ data RelDef a = RelDef
   deriving (Show, Eq, Generic)
 
 instance (Cacheable a) => Cacheable (RelDef a)
+
+instance (HasCodec a, Typeable a) => HasCodec (RelDef a) where
+  codec =
+    AC.object ("RelDef_" <> typeableName @a) $
+      RelDef
+        <$> requiredField' "name" AC..= _rdName
+        <*> requiredField' "using" AC..= _rdUsing
+        <*> optionalField' "comment" AC..= _rdComment
 
 $(deriveFromJSON hasuraJSON {omitNothingFields = True} ''RelDef)
 $(makeLenses ''RelDef)
@@ -67,6 +80,14 @@ deriving instance Backend b => Show (RelManualConfig b)
 
 instance (Backend b) => Cacheable (RelManualConfig b)
 
+instance (Backend b) => HasCodec (RelManualConfig b) where
+  codec =
+    AC.object (codecNamePrefix @b <> "RelManualConfig") $
+      RelManualConfig
+        <$> requiredField' "remote_table" AC..= rmTable
+        <*> requiredField' "column_mapping" AC..= rmColumns
+        <*> optionalFieldOrIncludedNull' "insertion_order" AC..= rmInsertOrder
+
 instance (Backend b) => FromJSON (RelManualConfig b) where
   parseJSON (Object v) =
     RelManualConfig
@@ -90,6 +111,21 @@ data RelUsing (b :: BackendType) a
   deriving (Show, Eq, Generic)
 
 instance (Backend b, Cacheable a) => Cacheable (RelUsing b a)
+
+instance (Backend b, HasCodec a, Typeable a) => HasCodec (RelUsing b a) where
+  codec = dimapCodec dec enc $ disjointEitherCodec fkCodec manualCodec
+    where
+      fkCodec =
+        AC.object ("RUFKeyOn_" <> typeableName @a) $
+          requiredField' "foreign_key_constraint_on"
+
+      manualCodec =
+        AC.object (codecNamePrefix @b <> "RUManual") $
+          requiredField' "manual_configuration"
+
+      dec = either RUFKeyOn RUManual
+      enc (RUFKeyOn fkey) = Left fkey
+      enc (RUManual manual) = Right manual
 
 instance (Backend b, ToJSON a) => ToJSON (RelUsing b a) where
   toJSON (RUFKeyOn fkey) =
@@ -157,6 +193,51 @@ deriving instance Backend b => Show (ObjRelUsingChoice b)
 
 instance (Backend b) => Cacheable (ObjRelUsingChoice b)
 
+instance (Backend b) => HasCodec (ObjRelUsingChoice b) where
+  codec = dimapCodec dec enc $ disjointEitherCodec sameTableCodec remoteTableCodec
+    where
+      sameTableCodec :: AC.JSONCodec (Either (Column b) (NonEmpty (Column b)))
+      sameTableCodec = disjointEitherCodec codec codec
+
+      remoteTableCodec :: AC.JSONCodec (Either (TableName b, Column b) (TableName b, NonEmpty (Column b)))
+      remoteTableCodec =
+        singleOrMultipleRelColumnsCodec @b $
+          codecNamePrefix @b <> "ObjRelRemoteTable"
+
+      dec = \case
+        Left (Left col) -> SameTable $ pure col
+        Left (Right cols) -> SameTable $ cols
+        Right (Left (qt, col)) -> RemoteTable qt $ pure col
+        Right (Right (qt, cols)) -> RemoteTable qt $ cols
+
+      enc = \case
+        SameTable (col :| []) -> Left $ Left col
+        SameTable cols -> Left $ Right cols
+        RemoteTable qt (col :| []) -> Right $ Left (qt, col)
+        RemoteTable qt cols -> Right $ Right (qt, cols)
+
+singleOrMultipleRelColumnsCodec ::
+  forall b.
+  Backend b =>
+  Text ->
+  AC.JSONCodec
+    ( Either
+        (TableName b, Column b)
+        (TableName b, NonEmpty (Column b))
+    )
+singleOrMultipleRelColumnsCodec codecName =
+  disjointEitherCodec
+    ( AC.object (codecName <> "SingleColumn") $
+        (,)
+          <$> requiredField' "table" AC..= fst
+          <*> requiredField' "column" AC..= snd
+    )
+    ( AC.object (codecName <> "MultipleColumns") $
+        (,)
+          <$> requiredField' "table" AC..= fst
+          <*> requiredField' "columns" AC..= snd
+    )
+
 instance (Backend b) => ToJSON (ObjRelUsingChoice b) where
   toJSON = \case
     SameTable (col :| []) -> toJSON col
@@ -190,6 +271,21 @@ instance (Backend b) => FromJSON (ObjRelUsingChoice b) where
         v@(String _) -> pure <$> parseJSON v
         v@(Array _) -> parseJSON v
         _ -> fail "Expected string or array"
+
+instance Backend b => HasCodec (ArrRelUsingFKeyOn b) where
+  codec =
+    dimapCodec dec enc $
+      singleOrMultipleRelColumnsCodec @b (codecNamePrefix @b <> "ArrRelUsingFKeyOn")
+    where
+      dec :: (Either (TableName b, Column b) (TableName b, NonEmpty (Column b))) -> ArrRelUsingFKeyOn b
+      dec = \case
+        Left (qt, col) -> ArrRelUsingFKeyOn qt (pure col)
+        Right (qt, cols) -> ArrRelUsingFKeyOn qt cols
+
+      enc :: ArrRelUsingFKeyOn b -> (Either (TableName b, Column b) (TableName b, NonEmpty (Column b)))
+      enc = \case
+        ArrRelUsingFKeyOn qt (col :| []) -> Left (qt, col)
+        ArrRelUsingFKeyOn qt cols -> Right (qt, cols)
 
 instance (Backend b) => ToJSON (ArrRelUsingFKeyOn b) where
   toJSON ArrRelUsingFKeyOn {arufTable = _arufTable, arufColumns = _arufColumns} =

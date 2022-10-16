@@ -9,6 +9,7 @@ module Test.Schema.DefaultValuesSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql, postGraphqlWithHeaders, postMetadata_)
@@ -36,6 +37,12 @@ spec =
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlserver.setupTablesAction schema testEnvironment,
                   setupMetadata Fixture.SQLServer testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Cockroach.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.Cockroach testEnvironment
                 ]
             }
         ]

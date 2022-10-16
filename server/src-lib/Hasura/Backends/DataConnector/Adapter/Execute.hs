@@ -10,12 +10,14 @@ where
 import Data.Aeson qualified as J
 import Data.Environment qualified as Env
 import Data.Text.Extended (toTxt)
+import Hasura.Backends.DataConnector.API (errorResponseSummary, queryCase)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.API.V0.ErrorResponse (ErrorResponse (..))
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types (SourceConfig (..))
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientT)
 import Hasura.Backends.DataConnector.Plan qualified as DC
-import Hasura.Base.Error (Code (..), QErr, throw400, throw500)
+import Hasura.Base.Error (Code (..), QErr, throw400, throw400WithDetail, throw500)
 import Hasura.EncJSON (EncJSON, encJFromBuilder, encJFromJValue)
 import Hasura.GraphQL.Execute.Backend (BackendExecute (..), DBStepInfo (..), ExplainPlan (..))
 import Hasura.GraphQL.Namespace qualified as GQL
@@ -76,9 +78,14 @@ buildQueryAction sourceName SourceConfig {..} DC.QueryPlan {..} = do
   when (DC.queryHasRelations _qpRequest && isNothing (API._cRelationships _scCapabilities)) $
     throw400 NotSupported "Agents must provide their own dataloader."
   let apiQueryRequest = Witch.into @API.QueryRequest _qpRequest
-  queryResponse <- (genericClient // API._query) (toTxt sourceName) _scConfig apiQueryRequest
+
+  queryResponse <- queryGuard =<< (genericClient // API._query) (toTxt sourceName) _scConfig apiQueryRequest
   reshapedResponse <- _qpResponseReshaper queryResponse
   pure . encJFromBuilder $ J.fromEncoding reshapedResponse
+  where
+    errorAction e = throw400WithDetail DataConnectorError (errorResponseSummary e) (_crDetails e)
+    defaultAction = throw400 DataConnectorError "Unexpected data connector capabilities response - Unexpected Type"
+    queryGuard = queryCase defaultAction pure errorAction
 
 -- Delegates the generation to the Agent's /explain endpoint if it has that capability,
 -- otherwise, returns the IR sent to the agent.

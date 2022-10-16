@@ -4,7 +4,7 @@ import { Tooltip } from '@hasura/console-oss';
 import { useQuery, useMutation } from '@apollo/react-hooks';
 import { tableScss } from '@hasura/console-oss';
 
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 import { ContentWithTestSuite } from './ContentWithTestSuite';
 import { fetchAllTestRuns } from './graphql.queries';
 import { ActionsPanel } from '../Common/ActionsPanel';
@@ -15,7 +15,7 @@ import { getTestRunStatusText, StatusIcon } from './utils';
 import { IN_PROCESS_ENUM, QUEUED_ENUM } from './constants';
 import { cancelTestRun } from './graphql.queries';
 
-export const PastRuns = props => {
+export const PastRuns = (props) => {
   return (
     <div className={styles.padding_top_20}>
       <ContentWithTestSuite {...props}>
@@ -81,7 +81,7 @@ const ExpandableRow = ({ runData, shouldExpand = false, refetch }) => {
     variables: {
       testRunId: runData.id,
     },
-    onError: err => {
+    onError: (err) => {
       alert(err.toString());
     },
     onCompleted: () => {
@@ -93,7 +93,7 @@ const ExpandableRow = ({ runData, shouldExpand = false, refetch }) => {
     (runData.status === IN_PROCESS_ENUM || runData.status === QUEUED_ENUM) && (
       <Button
         className={`${styles.placementRight}`}
-        onClick={e => {
+        onClick={(e) => {
           e.stopPropagation();
           cancelTest();
         }}
@@ -105,7 +105,7 @@ const ExpandableRow = ({ runData, shouldExpand = false, refetch }) => {
   return (
     <div className={styles.pastRunsContainer}>
       <ActionsPanel
-        onClick={() => setExpanded(prev => !prev)}
+        onClick={() => setExpanded((prev) => !prev)}
         className={`${styles.pastRunsActionsPanel} ${styles.cursorPointer}`}
       >
         <div

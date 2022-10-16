@@ -12,7 +12,7 @@ import { currentProjectPlaceholder } from './constants';
 
 import { createOptionEntry } from './utils';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 
 // Type info
 // addToAllowList is a list of objects of the type:
@@ -26,19 +26,19 @@ const defaultState = {
   addToAllowList: [],
 };
 
-const AddOperations = props => {
+const AddOperations = (props) => {
   const [addOperationS, update] = useState(defaultState);
 
   const [projectState, updateProjectState] = useState({});
 
   const { addToAllowList } = addOperationS;
 
-  const updateAllowList = operation => {
-    const elementPos = addToAllowList.findIndex(o => {
+  const updateAllowList = (operation) => {
+    const elementPos = addToAllowList.findIndex((o) => {
       return o.name === operation.name;
     });
     if (elementPos !== -1) {
-      update(s => {
+      update((s) => {
         return {
           ...s,
           addToAllowList: [
@@ -49,7 +49,7 @@ const AddOperations = props => {
       });
       return;
     }
-    update(s => {
+    update((s) => {
       return {
         ...s,
         addToAllowList: [...s.addToAllowList, operation],
@@ -57,8 +57,8 @@ const AddOperations = props => {
     });
   };
 
-  const toggleAddClearAllowList = operations => {
-    update(s => {
+  const toggleAddClearAllowList = (operations) => {
+    update((s) => {
       return {
         ...s,
         addToAllowList: [...operations],
@@ -75,7 +75,7 @@ const AddOperations = props => {
     });
   };
 
-  const updateProjectStateCb = selectedOption => {
+  const updateProjectStateCb = (selectedOption) => {
     updateProjectState({
       projectName: selectedOption.label,
       projectId: selectedOption.value,

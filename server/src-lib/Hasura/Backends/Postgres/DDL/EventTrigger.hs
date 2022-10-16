@@ -415,7 +415,7 @@ getMaintenanceModeVersionTx = liftTx $ do
 fetchEvents :: SourceName -> [TriggerName] -> FetchBatchSize -> PG.TxE QErr [Event ('Postgres pgKind)]
 fetchEvents source triggerNames (FetchBatchSize fetchBatchSize) =
   map uncurryEvent
-    <$> PG.listQE
+    <$> PG.withQE
       defaultTxErrorHandler
       [PG.sql|
       UPDATE hdb_catalog.event_log
@@ -455,7 +455,7 @@ fetchEventsMaintenanceMode :: SourceName -> [TriggerName] -> FetchBatchSize -> M
 fetchEventsMaintenanceMode sourceName triggerNames fetchBatchSize = \case
   PreviousMMVersion ->
     map uncurryEvent
-      <$> PG.listQE
+      <$> PG.withQE
         defaultTxErrorHandler
         [PG.sql|
         UPDATE hdb_catalog.event_log
@@ -587,7 +587,7 @@ dropTriggerOp triggerName triggerOp =
 checkEvent :: EventId -> PG.TxE QErr ()
 checkEvent eid = do
   events <-
-    PG.listQE
+    PG.withQE
       defaultTxErrorHandler
       [PG.sql|
               SELECT l.locked IS NOT NULL AND l.locked >= (NOW() - interval '30 minute')
@@ -878,7 +878,7 @@ insertEventTriggerCleanupLogsTx triggersWithschedules = do
 -- | Get the last scheduled timestamp for a given event trigger name
 selectLastCleanupScheduledTimestamp :: [TriggerName] -> PG.TxET QErr IO [(TriggerName, Int, Time.UTCTime)]
 selectLastCleanupScheduledTimestamp triggerNames =
-  PG.listQE
+  PG.withQE
     defaultTxErrorHandler
     [PG.sql|
       SELECT trigger_name, count(1), max(scheduled_at)
@@ -911,7 +911,7 @@ deleteAllScheduledCleanups sourceConfig triggerName =
 
 getCleanupEventsForDeletionTx :: PG.TxE QErr ([(Text, TriggerName)])
 getCleanupEventsForDeletionTx =
-  PG.listQE
+  PG.withQE
     defaultTxErrorHandler
     [PG.sql|
           WITH latest_events as (
@@ -1031,7 +1031,7 @@ deleteEventTriggerLogsTx TriggerLogCleanupConfig {..} = do
   -- Select all the dead events based on criteria set in the cleanup config.
   deadEventIDs <-
     map runIdentity
-      <$> PG.listQE
+      <$> PG.withQE
         defaultTxErrorHandler
         ( PG.fromText
             [ST.st|
@@ -1124,6 +1124,8 @@ deleteEventTriggerLogs ::
   (MonadIO m, MonadError QErr m) =>
   PGSourceConfig ->
   TriggerLogCleanupConfig ->
+  IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)) ->
   m DeletedEventLogStats
-deleteEventTriggerLogs sourceConfig cleanupConfig =
-  liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig
+deleteEventTriggerLogs sourceConfig oldCleanupConfig getLatestCleanupConfig = do
+  deleteEventTriggerLogsInBatchesWith getLatestCleanupConfig oldCleanupConfig $ \cleanupConfig -> do
+    runPgSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig

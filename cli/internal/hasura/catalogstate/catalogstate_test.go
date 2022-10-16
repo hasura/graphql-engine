@@ -2,8 +2,10 @@ package catalogstate
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 
@@ -11,6 +13,8 @@ import (
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	errorstestutil "github.com/hasura/graphql-engine/cli/v2/internal/errors/testutil"
 	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
@@ -31,7 +35,7 @@ func TestClientCatalogState_Set(t *testing.T) {
 		fields  fields
 		args    args
 		want    io.Reader
-		wantErr bool
+		wantErr *errors.Error
 	}{
 		{
 			"can set catalog state",
@@ -48,7 +52,7 @@ func TestClientCatalogState_Set(t *testing.T) {
 			strings.NewReader(`{
   "message": "success"
 }`),
-			false,
+			nil,
 		},
 		{
 			"throws an eror on an invalid state type",
@@ -63,7 +67,15 @@ func TestClientCatalogState_Set(t *testing.T) {
 				},
 			},
 			nil,
-			true,
+			&errors.Error{
+				Op:   "catalogstate.ClientCatalogState.Set",
+				Kind: errors.KindHasuraAPI,
+				Err: fmt.Errorf(`{
+  "code": "parse-failed",
+  "error": "When parsing Hasura.RQL.Types.Metadata.Common.CatalogStateType expected a String with the tag of a constructor but got some_state.",
+  "path": "$.args.type"
+}`),
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -73,7 +85,7 @@ func TestClientCatalogState_Set(t *testing.T) {
 				path:   tt.fields.path,
 			}
 			got, err := c.Set(tt.args.key, tt.args.state)
-			if !tt.wantErr {
+			if tt.wantErr == nil {
 				assert.NoError(t, err)
 				gotb, err := ioutil.ReadAll(got)
 				assert.NoError(t, err)
@@ -81,9 +93,8 @@ func TestClientCatalogState_Set(t *testing.T) {
 				assert.NoError(t, err)
 				assert.JSONEq(t, string(wantb), string(gotb))
 			} else {
-				assert.Error(t, err)
+				errorstestutil.Match(t, os.Stdout, tt.wantErr, err)
 			}
-
 		})
 	}
 }
@@ -104,7 +115,7 @@ func TestClientCatalogState_Get(t *testing.T) {
 		name    string
 		fields  fields
 		want    state
-		wantErr bool
+		wantErr *errors.Error
 	}{
 		{
 			"can get catalog state",
@@ -119,7 +130,7 @@ func TestClientCatalogState_Get(t *testing.T) {
 				}
 				return s
 			}(),
-			false,
+			nil,
 		},
 	}
 	for _, tt := range tests {
@@ -129,8 +140,8 @@ func TestClientCatalogState_Get(t *testing.T) {
 				path:   tt.fields.path,
 			}
 			got, err := c.Get()
-			if tt.wantErr {
-				assert.Error(t, err)
+			if tt.wantErr != nil {
+				errorstestutil.Match(t, os.Stdout, tt.wantErr, err)
 			} else {
 				assert.NoError(t, err)
 				var gotState state

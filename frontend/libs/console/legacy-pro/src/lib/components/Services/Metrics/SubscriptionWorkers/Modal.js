@@ -6,10 +6,11 @@ import CustomCopy from '../Common/CustomCopy';
 import { REFETCH_DELAY, EXECUTION_TIME_DIVIDER_CONSTANT } from './constants';
 import { hideVariableValues } from '../utils';
 
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 import { formatRoundNumber } from '../../../../utils/math';
+import inspectRow from '../images/warningNew.svg';
 
-const Modal = props => {
+const Modal = (props) => {
   const { onHide, data } = props;
 
   const websocketData =
@@ -34,8 +35,6 @@ const Modal = props => {
     operation_string: operationString,
     variables,
   } = websocketData;
-
-  const inspectRow = require('../images/warningNew.svg');
 
   const renderWarningSymbol = () => {
     if (

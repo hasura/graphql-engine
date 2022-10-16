@@ -12,3 +12,9 @@ export type OrderBy = {
   type: OrderByType;
   nulls?: OrderByNulls;
 };
+
+export type GraphQLType = {
+  name: string;
+  kind: string;
+  ofType: GraphQLType;
+};

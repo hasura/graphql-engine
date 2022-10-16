@@ -14,13 +14,6 @@ export function HasuraFamiliaritySurvey(props: HasuraFamiliaritySurveyProps) {
 
   return (
     <>
-      <h1 className="text-xl font-semibold text-cloud-darkest">
-        Welcome to your new Hasura project!
-      </h1>
-      <p>
-        We&apos;d love to get to know you before you get started with your first
-        API.
-      </p>
       <div className="mt-lg">
         <div className="font-bold text-gray-600 mb-xs">{data.question}</div>
         <div className="flex justify-center">

@@ -1,11 +1,11 @@
 import { SchemaResponse, TableName } from "@hasura/dc-api-types"
-import { Config } from "../config";
+import { Casing, Config } from "../config";
 import xml2js from "xml2js"
 import fs from "fs"
 import stream from "stream"
 import zlib from "zlib"
 import { parseNumbers } from "xml2js/lib/processors";
-import { tableNameEquals } from "../util";
+import { mapObject, mapObjectValues, tableNameEquals, unreachable } from "../util";
 
 export type StaticData = {
   [tableName: string]: Record<string, string | number | boolean | null>[]
@@ -47,16 +47,53 @@ export const filterAvailableTables = (staticData: StaticData, config: Config): S
   );
 }
 
-export const getTable = (staticData: StaticData, config: Config) => (tableName: TableName): Record<string, string | number | boolean | null>[] | undefined => {
-  if (config.schema) {
-    return tableName.length === 2 && tableName[0] === config.schema
-      ? staticData[tableName[1]]
-      : undefined;
-  } else {
-    return tableName.length === 1
-      ? staticData[tableName[0]]
-      : undefined;
-  }
+export const getTable = (staticData: StaticData, config: Config): ((tableName: TableName) => Record<string, string | number | boolean | null>[] | undefined) => {
+  const cachedTransformedData: StaticData = {};
+
+  const lookupOriginalTable = (tableName: string): Record<string, string | number | boolean | null>[] => {
+    switch (config.table_name_casing) {
+      case "pascal_case":
+        return staticData[tableName];
+      case "lowercase":
+        const name = Object.keys(staticData).find(originalTableName => originalTableName.toLowerCase() === tableName);
+        if (name == undefined) throw new Error(`Unknown table name: ${tableName}`);
+        return staticData[name];
+      default:
+        return unreachable(config.table_name_casing);
+    }
+  };
+
+  const transformData = (tableData: Record<string, string | number | boolean | null>[]): Record<string, string | number | boolean | null>[] => {
+    switch (config.column_name_casing) {
+      case "pascal_case":
+        return tableData;
+      case "lowercase":
+        return tableData.map(row => mapObject(row, ([column, value]) => [column.toLowerCase(), value]));
+      default:
+        return unreachable(config.column_name_casing);
+    }
+  };
+
+  const lookupTable = (tableName: string): Record<string, string | number | boolean | null>[] => {
+    const cachedData = cachedTransformedData[tableName];
+    if (cachedData !== undefined)
+      return cachedData;
+
+    cachedTransformedData[tableName] = transformData(lookupOriginalTable(tableName));
+    return cachedTransformedData[tableName];
+  };
+
+  return (tableName) => {
+    if (config.schema) {
+      return tableName.length === 2 && tableName[0] === config.schema
+        ? lookupTable(tableName[1])
+        : undefined;
+    } else {
+      return tableName.length === 1
+        ? lookupTable(tableName[0])
+        : undefined;
+    }
+  };
 }
 
 const schema: SchemaResponse = {
@@ -605,7 +642,18 @@ const schema: SchemaResponse = {
   ]
 };
 
+const applyCasing = (casing: Casing) => (str: string): string => {
+  switch (casing) {
+    case "pascal_case": return str;
+    case "lowercase": return str.toLowerCase();
+    default: return unreachable(casing);
+  }
+}
+
 export const getSchema = (config: Config): SchemaResponse => {
+  const applyTableNameCasing = applyCasing(config.table_name_casing);
+  const applyColumnNameCasing = applyCasing(config.column_name_casing);
+
   const prefixSchemaToTableName = (tableName: TableName) =>
     config.schema
       ? [config.schema, ...tableName]
@@ -617,7 +665,19 @@ export const getSchema = (config: Config): SchemaResponse => {
 
   const prefixedTables = filteredTables.map(table => ({
     ...table,
-    name: prefixSchemaToTableName(table.name),
+    name: prefixSchemaToTableName(table.name.map(applyTableNameCasing)),
+    primary_key: table.primary_key?.map(applyColumnNameCasing),
+    foreign_keys: table.foreign_keys
+      ? mapObjectValues(table.foreign_keys, constraint => ({
+        ...constraint,
+        foreign_table: prefixSchemaToTableName(constraint.foreign_table.map(applyTableNameCasing)),
+        column_mapping: mapObject(constraint.column_mapping, ([outer, inner]) => [applyColumnNameCasing(outer), applyColumnNameCasing(inner)])
+      }))
+      : table.foreign_keys,
+    columns: table.columns.map(column => ({
+      ...column,
+      name: applyColumnNameCasing(column.name),
+    }))
   }));
 
   return {

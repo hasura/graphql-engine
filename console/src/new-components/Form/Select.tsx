@@ -65,6 +65,7 @@ export const Select: React.VFC<SelectProps> = ({
         disabled={disabled}
         value={val}
         data-test={dataTest}
+        data-testid={name}
         {...register(name)}
       >
         {placeholder ? (

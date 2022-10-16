@@ -23,7 +23,8 @@ module Hasura.Backends.MSSQL.Connection
   )
 where
 
-import Autodocodec (HasCodec (codec), named)
+import Autodocodec (HasCodec (codec), dimapCodec, disjointEitherCodec, optionalFieldOrNull', optionalFieldWithDefault', requiredField')
+import Autodocodec qualified as AC
 import Control.Monad.Morph (hoist)
 import Control.Monad.Trans.Control
 import Data.Aeson
@@ -38,7 +39,7 @@ import Database.ODBC.SQLServer qualified as ODBC
 import Hasura.Backends.MSSQL.SQL.Error
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
-import Hasura.Metadata.DTO.Placeholder (placeholderCodecViaJSON)
+import Hasura.Metadata.DTO.Utils (fromEnvCodec)
 import Hasura.Prelude
 
 class MonadError QErr m => MonadMSSQLTx m where
@@ -79,6 +80,13 @@ instance Hashable InputConnectionString
 
 instance NFData InputConnectionString
 
+instance HasCodec InputConnectionString where
+  codec =
+    dimapCodec
+      (either RawString FromEnvironment)
+      (\case RawString m -> Left m; FromEnvironment wEnv -> Right wEnv)
+      $ disjointEitherCodec codec fromEnvCodec
+
 instance ToJSON InputConnectionString where
   toJSON =
     \case
@@ -112,6 +120,13 @@ instance FromJSON MSSQLPoolSettings where
       <$> o .:? "max_connections" .!= _mpsMaxConnections defaultMSSQLPoolSettings
       <*> o .:? "idle_timeout" .!= _mpsIdleTimeout defaultMSSQLPoolSettings
 
+instance HasCodec MSSQLPoolSettings where
+  codec =
+    AC.object "MSSQLPoolSettings" $
+      MSSQLPoolSettings
+        <$> optionalFieldWithDefault' "max_connections" (_mpsMaxConnections defaultMSSQLPoolSettings) AC..= _mpsMaxConnections
+        <*> optionalFieldWithDefault' "idle_timeout" (_mpsMaxConnections defaultMSSQLPoolSettings) AC..= _mpsIdleTimeout
+
 defaultMSSQLPoolSettings :: MSSQLPoolSettings
 defaultMSSQLPoolSettings =
   MSSQLPoolSettings
@@ -130,6 +145,13 @@ instance Cacheable MSSQLConnectionInfo
 instance Hashable MSSQLConnectionInfo
 
 instance NFData MSSQLConnectionInfo
+
+instance HasCodec MSSQLConnectionInfo where
+  codec =
+    AC.object "MSSQLConnectionInfo" $
+      MSSQLConnectionInfo
+        <$> requiredField' "connection_string" AC..= _mciConnectionString
+        <*> requiredField' "pool_settings" AC..= _mciPoolSettings
 
 $(deriveToJSON hasuraJSON ''MSSQLConnectionInfo)
 
@@ -151,12 +173,14 @@ instance Hashable MSSQLConnConfiguration
 
 instance NFData MSSQLConnConfiguration
 
-$(deriveJSON hasuraJSON {omitNothingFields = True} ''MSSQLConnConfiguration)
-
--- TODO: Write a proper codec, and use it to derive FromJSON and ToJSON
--- instances.
 instance HasCodec MSSQLConnConfiguration where
-  codec = named "MSSQLConnConfiguration" $ placeholderCodecViaJSON
+  codec =
+    AC.object "MSSQLConnConfiguration" $
+      MSSQLConnConfiguration
+        <$> requiredField' "connection_info" AC..= _mccConnectionInfo
+        <*> optionalFieldOrNull' "read_replicas" AC..= _mccReadReplicas
+
+$(deriveJSON hasuraJSON {omitNothingFields = True} ''MSSQLConnConfiguration)
 
 createMSSQLPool ::
   MonadIO m =>

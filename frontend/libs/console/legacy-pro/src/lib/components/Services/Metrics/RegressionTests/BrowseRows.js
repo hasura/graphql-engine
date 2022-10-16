@@ -7,7 +7,7 @@ import useSelectable from '../AllowLists/useSelectable';
 import { ActionsPanel } from '../Common/ActionsPanel';
 import { DeleteOperationsFromTests } from './DeleteOperationFromTests';
 import { fetchOperationsForTestSuite } from './graphql.queries';
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 import { PAGE_LIMIT, getTitle, getColWidth, DataNotAvaliable } from './utils';
 import { InspectOperation } from './InspectOperation';
 import { EditRow } from './EditRow';
@@ -19,7 +19,7 @@ import { EditRow } from './EditRow';
  *
  * @param {Props} props
  */
-export const BrowseRows = props => {
+export const BrowseRows = (props) => {
   const { projectId, testSuiteId, changeToNewTab } = props;
   const [selectedNames, setSelectedNames] = useSelectable();
   const [offset, setOffset] = useState(0);
@@ -65,7 +65,7 @@ export const BrowseRows = props => {
       });
 
       const onChangeAllSelection = () => {
-        const operationNames = data.results.map(o => o.name) || [];
+        const operationNames = data.results.map((o) => o.name) || [];
         if (selectedNames.length !== data.results.length) {
           setSelectedNames(operationNames);
         } else {
@@ -110,7 +110,7 @@ export const BrowseRows = props => {
 
   const getRows = () => {
     if (data.results.length > 0) {
-      return data.results.map(row => {
+      return data.results.map((row) => {
         const newRow = {
           tableRowSelectAction: (
             <div className={styles.textCenter}>
@@ -210,7 +210,7 @@ export const BrowseRows = props => {
             minRows={0}
             pageSize={pageLimit}
             pages={Math.ceil(getCount() / pageLimit)}
-            onPageChange={page => setOffset(page * pageLimit)}
+            onPageChange={(page) => setOffset(page * pageLimit)}
             onPageSizeChange={setPageLimit}
             page={Math.floor(offset / pageLimit)}
           />

@@ -4,6 +4,7 @@ import { FaTimes } from 'react-icons/fa';
 
 import { generateHeaderSyms } from './HeaderReducer';
 import DropdownButton from '../../DropdownButton/DropdownButton';
+import styles from './Header.module.scss';
 
 class Header extends React.Component {
   constructor(props) {
@@ -100,7 +101,6 @@ class Header extends React.Component {
   }
 
   render() {
-    const styles = require('./Header.module.scss');
     const { isDisabled } = this.props;
     const generateHeaderHtml = this.props.headers.map((h, i) => {
       const getTitle = this.getTitle(this.props.typeOptions, h.type);

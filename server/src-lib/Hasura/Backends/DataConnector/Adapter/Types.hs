@@ -200,6 +200,9 @@ newtype TableName = TableName {unTableName :: NonEmpty Text}
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving newtype (Cacheable, Hashable, NFData, ToJSON)
 
+instance HasCodec TableName where
+  codec = dimapCodec TableName unTableName codec
+
 instance FromJSON TableName where
   parseJSON value =
     TableName <$> J.parseJSON value
@@ -244,6 +247,9 @@ instance ToErrorValue ConstraintName where
 newtype ColumnName = ColumnName {unColumnName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving newtype (NFData, Hashable, Cacheable, FromJSON, ToJSON, ToJSONKey, FromJSONKey)
+
+instance HasCodec ColumnName where
+  codec = dimapCodec ColumnName unColumnName codec
 
 instance Witch.From API.ColumnName ColumnName where
   from (API.ColumnName n) = ColumnName n

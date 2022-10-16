@@ -18,11 +18,11 @@ export type TableInfo = {
   /**
    * Foreign key constraints
    */
-  foreign_keys?: Record<string, Constraint> | null;
+  foreign_keys?: Record<string, Constraint>;
   name: TableName;
   /**
    * The primary key of the table
    */
-  primary_key?: Array<string> | null;
+  primary_key?: Array<string>;
 };
 

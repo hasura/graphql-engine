@@ -1,8 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-{-# OPTIONS -Wno-redundant-constraints #-}
-
 -- | Cockroach helpers.
 module Harness.Backend.Cockroach
   ( livenessCheck,
@@ -13,6 +11,7 @@ module Harness.Backend.Cockroach
     insertTable,
     trackTable,
     dropTable,
+    dropTableIfExists,
     untrackTable,
     setup,
     teardown,
@@ -230,6 +229,15 @@ dropTable Schema.Table {tableName} = do
           ";"
         ]
 
+dropTableIfExists :: Schema.Table -> IO ()
+dropTableIfExists Schema.Table {tableName} = do
+  run_ $
+    T.unpack $
+      T.unwords
+        [ "DROP TABLE IF EXISTS",
+          T.pack Constants.cockroachDb <> "." <> tableName
+        ]
+
 -- | Post an http request to start tracking the table
 trackTable :: TestEnvironment -> Schema.Table -> IO ()
 trackTable testEnvironment table =
@@ -286,8 +294,8 @@ setupPermissionsAction permissions env =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup "pg" permissions env
+setupPermissions permissions env = Permissions.setup Cockroach permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown "pg" permissions env
+teardownPermissions permissions env = Permissions.teardown Cockroach permissions env

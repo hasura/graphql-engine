@@ -47,8 +47,11 @@ export const getTableRows = async ({
     httpClient,
   });
 
+  if ('errors' in graphqlResponse)
+    throw new Error('Unable to fetch GraphQL response');
+
   const result = transformGraphqlResponse({
-    data: get(graphqlResponse.data, resultPath) ?? [],
+    data: get(graphqlResponse.data, resultPath),
     tableCustomization: trackedTable.configuration,
     sourceCustomization: source.customization,
     columns,

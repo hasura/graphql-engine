@@ -123,7 +123,7 @@ export const UpdatedForm = <FormSchema extends Schema>(
     <FormProvider {...methods}>
       <form
         id={id}
-        className={`space-y-md bg-legacybg p-4 ${className || ''}`}
+        className={`space-y-md bg-legacybg ${className || ''}`}
         onSubmit={methods.handleSubmit(onSubmit)}
         {...rest}
       >
@@ -136,4 +136,9 @@ export const UpdatedForm = <FormSchema extends Schema>(
 UpdatedForm.defaultProps = {
   autoFocus: undefined,
   trigger: false,
+};
+
+export const Forms = {
+  Old: Form,
+  New: UpdatedForm,
 };

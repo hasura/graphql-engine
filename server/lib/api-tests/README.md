@@ -176,7 +176,7 @@ An example session:
 
 ```
 $ cabal repl api-tests
-GHCi, version 8.10.7: https://www.haskell.org/ghc/  :? for help
+GHCi, version 9.2.4: https://www.haskell.org/ghc/  :? for help
 [ 1 of 59] Compiling Harness.Constants ( lib/api-tests/Harness/Constants.hs, interpreted )
 ...
 [59 of 59] Compiling Main             ( lib/api-tests/Spec.hs, interpreted )
@@ -289,19 +289,7 @@ or M2.
 
 We have a few problems with Microsoft SQL Server on Apple aarch64:
 
-1.  Due to compiler bugs in GHC 8.10.7, we need to use patched Haskell ODBC
-    bindings as a workaround for aarch64 systems.
-
-    Add the following to `cabal.project.local`:
-
-    ```
-    source-repository-package
-      type: git
-      location: https://github.com/soupi/odbc.git
-      tag: a6acf6b4eca31022babbf8045f31a0f7f26c5923
-    ```
-
-2.  Microsoft has not yet released SQL Server for aarch64. We need to use Azure
+1.  Microsoft has not yet released SQL Server for aarch64. We need to use Azure
     SQL Edge instead.
 
     You don't need to do anything if you're using the `make` commands; they
@@ -316,7 +304,7 @@ We have a few problems with Microsoft SQL Server on Apple aarch64:
 
     You can add this to your _.envrc.local_ file if you like.
 
-3.  Azure SQL Edge for aarch64 does not ship with the `sqlcmd` utility with
+2.  Azure SQL Edge for aarch64 does not ship with the `sqlcmd` utility with
     which we use to setup the SQL Server schema.
 
     If you need it, you can instead use the `mssql-tools` Docker image, for

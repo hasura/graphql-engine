@@ -73,7 +73,7 @@ anyParser =
       _ -> P.parseError $ toErrorMessage "representations is expecting a list of objects only"
 
 convertToApolloFedParserFunc ::
-  (Monad n, MonadParse n, Backend b) =>
+  (MonadParse n, Backend b) =>
   SourceInfo b ->
   TableInfo b ->
   TablePermG b (UnpreparedValue b) ->

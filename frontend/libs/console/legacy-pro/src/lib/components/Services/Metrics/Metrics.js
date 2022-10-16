@@ -16,6 +16,7 @@ import {
 import { isProloginWithPAT } from '../../../utils/utils';
 import { isAdmin as _isAdmin } from './utils';
 import extendedGlobals from '../../../Globals';
+import styles from './Metrics.module.scss';
 /*
  * useClient hook will be called for every change in the accessToken and when it changes,
  * a new apollo client instance is created and returned to the required component
@@ -62,8 +63,7 @@ const useClient = ({ tokenType, token, metricsFQDN }) => {
   return c;
 };
 
-const Metrics = props => {
-  const styles = require('./Metrics.scss');
+const Metrics = (props) => {
   const {
     projectId,
     privileges,
@@ -266,10 +266,10 @@ const mapStateToProps = (state, ownProps) => {
   };
 };
 
-const mapDispatchToProps = dispatch => ({
+const mapDispatchToProps = (dispatch) => ({
   refetchMetadata: () => dispatch(refetchMetadataAction()),
   dispatch,
 });
-const metricsConnector = connect =>
+const metricsConnector = (connect) =>
   connect(mapStateToProps, mapDispatchToProps)(Metrics);
 export default metricsConnector;

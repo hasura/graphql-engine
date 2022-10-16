@@ -278,7 +278,7 @@ mkPlan session (SourceConfig {}) ir = do
       CPS.WriterT TableRelationships m FieldsAndAggregates
     translateAnnFields fieldNamePrefix sourceTableName fields = do
       translatedFields <- traverse (traverse (translateAnnField sourceTableName)) fields
-      let translatedFields' = HashMap.fromList . catMaybes $ (\(fieldName, field) -> (applyPrefix fieldNamePrefix fieldName,) <$> field) <$> translatedFields
+      let translatedFields' = HashMap.fromList (mapMaybe (\(fieldName, field) -> (applyPrefix fieldNamePrefix fieldName,) <$> field) translatedFields)
       pure $
         FieldsAndAggregates
           translatedFields'

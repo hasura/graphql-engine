@@ -27,7 +27,7 @@ if [[ "$(uname -m)" == 'arm64' ]]; then
   MSSQL_CONTAINER_IMAGE=mcr.microsoft.com/azure-sql-edge
 else
   MSSQL_PLATFORM=linux/amd64
-  MSSQL_CONTAINER_IMAGE=hasura/mssql-server-2019-cu10-ubuntu-20.04:latest
+  MSSQL_CONTAINER_IMAGE=mcr.microsoft.com/mssql/server:2019-latest
 fi
 
 ######################

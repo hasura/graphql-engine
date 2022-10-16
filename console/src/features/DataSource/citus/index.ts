@@ -6,6 +6,7 @@ import {
   getTableColumns,
   getFKRelationships,
   getTablesListAsTree,
+  getSupportedOperators,
 } from './introspection';
 import { getTableRows } from './query';
 
@@ -60,6 +61,7 @@ export const citus: Database = {
     getTableColumns,
     getFKRelationships,
     getTablesListAsTree,
+    getSupportedOperators,
   },
   query: {
     getTableRows,

@@ -71,7 +71,7 @@ export interface TableRowProps {
     node: HTMLInputElement | null
   ) => void;
   enumOptions: Record<string, any>;
-  index: number;
+  index: string;
   clone?: Record<string, any>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>, val: unknown) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;

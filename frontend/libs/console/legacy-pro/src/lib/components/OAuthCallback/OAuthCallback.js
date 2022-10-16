@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { Button } from '@hasura/console-oss';
 import { Link } from 'react-router';
 import { FaExclamationCircle } from 'react-icons/fa';
+import styles from './OAuthCallback.module.scss';
 
 import { idTokenReceived } from '../Main/Actions';
 
@@ -33,7 +34,7 @@ class OAuthCallback extends React.Component {
     if (code && validateOauthResponseState(state)) {
       this.props
         .dispatch(retrieveIdToken(code))
-        .then(data => {
+        .then((data) => {
           /* Once the refresh/token is received, keep a state
            * in LS to capture the fact that user has already
            * performed oauth once and can continue to do silent
@@ -42,7 +43,7 @@ class OAuthCallback extends React.Component {
           hasOAuthLoggedIn(true);
           this.props.dispatch(idTokenReceived(data));
         })
-        .catch(err => {
+        .catch((err) => {
           this.verificationError(err);
         });
     } else {
@@ -75,7 +76,6 @@ class OAuthCallback extends React.Component {
     });
   }
   render() {
-    const styles = require('./OAuthCallback.scss');
     const { error: err, error_description: description } = this.state.errorMsg;
     const getErrorElement = () => {
       const getErrorCode = err ? (
@@ -127,7 +127,7 @@ OAuthCallback.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const generatedCallbackConnector = connect => {
+const generatedCallbackConnector = (connect) => {
   return connect()(OAuthCallback);
 };
 

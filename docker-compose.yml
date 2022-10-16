@@ -44,7 +44,7 @@ services:
       - mariadb-data:/var/lib/mysql
 
   postgres:
-    image: postgres:15beta4
+    image: postgis/postgis:15beta4-3.3-alpine
     command:
       - -F # turn fsync off for speed
       - -N 1000 # increase max connections from 100 so we can run more HGEs
@@ -59,7 +59,7 @@ services:
       - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   sqlserver:
-    image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest@sha256:a098c9ff6fbb8e1c9608ad7511fa42dba8d22e0d50b48302761717840ccc26af}
+    image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest}
     ports:
       - "65003:1433"
     environment:
@@ -94,7 +94,7 @@ services:
       - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   cockroach:
-    image: us-docker.pkg.dev/cockroach-cloud-images/cockroachdb/cockroach:v22.2.0-alpha.4-203-g492c3c88c3
+    image: us-docker.pkg.dev/cockroach-cloud-images/cockroachdb/cockroach:v22.2.0-beta.2-218-ga7ecaa82cf
     command:
       - start-single-node
       - --insecure

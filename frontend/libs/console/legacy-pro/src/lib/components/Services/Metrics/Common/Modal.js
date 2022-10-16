@@ -4,17 +4,17 @@ import BootstrapModal from 'react-bootstrap/lib/Modal';
 import CustomCopy from './CustomCopy';
 
 import { transformedVals } from '../Operations/utils';
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 
 import { FlameGraph } from 'react-flame-graph';
 
-const TraceGraph = props => {
+const TraceGraph = (props) => {
   const { trace } = props;
 
   const nodes = {};
   const roots = [];
 
-  trace.forEach(t => {
+  trace.forEach((t) => {
     if (t) {
       nodes[t.span_id] = {
         name: t.name,
@@ -24,7 +24,7 @@ const TraceGraph = props => {
     }
   });
 
-  trace.forEach(t => {
+  trace.forEach((t) => {
     if (t) {
       const parentId = t?.parent_id;
       const node = nodes[t?.span_id];
@@ -37,8 +37,8 @@ const TraceGraph = props => {
         const parentTime = parent?.value / 1000000;
         const parentPercent = Math.round((nodeTime / parentTime) * 100);
 
-        const metaKeys = Object.keys(t.meta).filter(k => k !== 'request_id');
-        const metadata = metaKeys.map(k => `${k}: ${t.meta[k]}`).join('\n');
+        const metaKeys = Object.keys(t.meta).filter((k) => k !== 'request_id');
+        const metadata = metaKeys.map((k) => `${k}: ${t.meta[k]}`).join('\n');
         node.tooltip = `${nodeTime}ms (${parentPercent}%)${
           metaKeys?.length > 0 ? '\n\n' + metadata : ''
         }`;
@@ -48,7 +48,7 @@ const TraceGraph = props => {
     }
   });
 
-  Object.keys(nodes).forEach(k => {
+  Object.keys(nodes).forEach((k) => {
     nodes[k].backgroundColor = nodes[k].depth % 2 === 0 ? '#ddd' : '#eee';
   });
 
@@ -57,7 +57,7 @@ const TraceGraph = props => {
   return root ? <FlameGraph data={root} height={200} width={375} /> : null;
 };
 
-const Modal = props => {
+const Modal = (props) => {
   const { onHide, data, nullData, configData } = props;
 
   let analyzeResponseBody = true;
@@ -73,7 +73,7 @@ const Modal = props => {
     const userVarKeys = Object.keys(userVars);
     const sessionVariables = {};
     if (userVars && userVarKeys.length > 0) {
-      userVarKeys.map(u => {
+      userVarKeys.map((u) => {
         sessionVariables[u] = userVars[u];
       });
     }

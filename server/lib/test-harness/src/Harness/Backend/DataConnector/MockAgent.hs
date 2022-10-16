@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+
 module Harness.Backend.DataConnector.MockAgent
   ( MockConfig (..),
     chinookMock,
@@ -11,6 +13,7 @@ import Data.HashMap.Strict.InsOrd qualified as HMap
 import Data.IORef qualified as I
 import Data.OpenApi qualified as OpenApi
 import Data.Proxy
+import Data.SOP.BasicFunctors qualified as SOP
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Network.Wai.Handler.Warp qualified as Warp
@@ -18,10 +21,13 @@ import Servant
 
 --------------------------------------------------------------------------------
 
+-- Note: Only the _queryResponse field allows mock errors at present.
+-- This can be extended at a later point if required.
+--
 data MockConfig = MockConfig
   { _capabilitiesResponse :: API.CapabilitiesResponse,
     _schemaResponse :: API.SchemaResponse,
-    _queryResponse :: API.QueryRequest -> API.QueryResponse
+    _queryResponse :: API.QueryRequest -> Either API.ErrorResponse API.QueryResponse
   }
 
 mkTableName :: Text -> API.TableName
@@ -33,7 +39,8 @@ capabilities =
   API.CapabilitiesResponse
     { _crCapabilities =
         API.Capabilities
-          { API._cQueries = Just API.QueryCapabilities {API._qcSupportsPrimaryKeys = True},
+          { API._cDataSchema = API.defaultDataSchemaCapabilities,
+            API._cQueries = Just API.QueryCapabilities,
             API._cMutations = Nothing,
             API._cSubscriptions = Nothing,
             API._cScalarTypes = Nothing,
@@ -90,9 +97,9 @@ schema =
                       API._ciDescription = Just "The name of the artist"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "ArtistId"],
+              API._tiPrimaryKey = [API.ColumnName "ArtistId"],
               API._tiDescription = Just "Collection of artists of music",
-              API._tiForeignKeys = Nothing
+              API._tiForeignKeys = API.ForeignKeys mempty
             },
           API.TableInfo
             { API._tiName = mkTableName "Album",
@@ -116,12 +123,11 @@ schema =
                       API._ciDescription = Just "The ID of the artist that created the album"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "AlbumId"],
+              API._tiPrimaryKey = [API.ColumnName "AlbumId"],
               API._tiDescription = Just "Collection of music albums created by artists",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.singleton (API.ConstraintName "Artist") (API.Constraint (mkTableName "Artist") (HashMap.singleton "ArtistId" "ArtistId"))
+                API.ForeignKeys $
+                  HashMap.singleton (API.ConstraintName "Artist") (API.Constraint (mkTableName "Artist") (HashMap.singleton (API.ColumnName "ArtistId") (API.ColumnName "ArtistId")))
             },
           API.TableInfo
             { API._tiName = mkTableName "Customer",
@@ -205,12 +211,11 @@ schema =
                       API._ciDescription = Just "The ID of the Employee who is this customer's support representative"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "CustomerId"],
+              API._tiPrimaryKey = [API.ColumnName "CustomerId"],
               API._tiDescription = Just "Collection of customers who can buy tracks",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.singleton (API.ConstraintName "CustomerSupportRep") (API.Constraint (mkTableName "Employee") (HashMap.singleton "SupportRepId" "EmployeeId"))
+                API.ForeignKeys $
+                  HashMap.singleton (API.ConstraintName "CustomerSupportRep") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "SupportRepId") (API.ColumnName "EmployeeId")))
             },
           API.TableInfo
             { API._tiName = mkTableName "Employee",
@@ -306,12 +311,11 @@ schema =
                       API._ciDescription = Just "The employee's email address"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "EmployeeId"],
+              API._tiPrimaryKey = [API.ColumnName "EmployeeId"],
               API._tiDescription = Just "Collection of employees who work for the business",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.singleton (API.ConstraintName "EmployeeReportsTo") (API.Constraint (mkTableName "Employee") (HashMap.singleton "ReportsTo" "EmployeeId"))
+                API.ForeignKeys $
+                  HashMap.singleton (API.ConstraintName "EmployeeReportsTo") (API.Constraint (mkTableName "Employee") (HashMap.singleton (API.ColumnName "ReportsTo") (API.ColumnName "EmployeeId")))
             },
           API.TableInfo
             { API._tiName = mkTableName "Genre",
@@ -329,9 +333,9 @@ schema =
                       API._ciDescription = Just "The name of the genre"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "GenreId"],
+              API._tiPrimaryKey = [API.ColumnName "GenreId"],
               API._tiDescription = Just "Genres of music",
-              API._tiForeignKeys = Nothing
+              API._tiForeignKeys = API.ForeignKeys mempty
             },
           API.TableInfo
             { API._tiName = mkTableName "Invoice",
@@ -391,13 +395,12 @@ schema =
                       API._ciDescription = Just "The total amount due on the invoice"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "InvoiceId"],
+              API._tiPrimaryKey = [API.ColumnName "InvoiceId"],
               API._tiDescription = Just "Collection of invoices of music purchases by a customer",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.singleton (API.ConstraintName "InvoiceCustomer") $
-                      API.Constraint (mkTableName "Customer") (HashMap.singleton "CustomerId" "CustomerId")
+                API.ForeignKeys $
+                  HashMap.singleton (API.ConstraintName "InvoiceCustomer") $
+                    API.Constraint (mkTableName "Customer") (HashMap.singleton (API.ColumnName "CustomerId") (API.ColumnName "CustomerId"))
             },
           API.TableInfo
             { API._tiName = mkTableName "InvoiceLine",
@@ -433,15 +436,14 @@ schema =
                       API._ciDescription = Just "Quantity of the track purchased"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "InvoiceLineId"],
+              API._tiPrimaryKey = [API.ColumnName "InvoiceLineId"],
               API._tiDescription = Just "Collection of track purchasing line items of invoices",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.fromList
-                      [ (API.ConstraintName "Invoice", API.Constraint (mkTableName "Invoice") (HashMap.singleton "InvoiceId" "InvoiceId")),
-                        (API.ConstraintName "Track", API.Constraint (mkTableName "Track") (HashMap.singleton "TrackId" "TrackId"))
-                      ]
+                API.ForeignKeys $
+                  HashMap.fromList
+                    [ (API.ConstraintName "Invoice", API.Constraint (mkTableName "Invoice") (HashMap.singleton (API.ColumnName "InvoiceId") (API.ColumnName "InvoiceId"))),
+                      (API.ConstraintName "Track", API.Constraint (mkTableName "Track") (HashMap.singleton (API.ColumnName "TrackId") (API.ColumnName "TrackId")))
+                    ]
             },
           API.TableInfo
             { API._tiName = mkTableName "MediaType",
@@ -459,9 +461,9 @@ schema =
                       API._ciDescription = Just "The name of the media type format"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "MediaTypeId"],
+              API._tiPrimaryKey = [API.ColumnName "MediaTypeId"],
               API._tiDescription = Just "Collection of media types that tracks can be encoded in",
-              API._tiForeignKeys = Nothing
+              API._tiForeignKeys = API.ForeignKeys mempty
             },
           API.TableInfo
             { API._tiName = mkTableName "Track",
@@ -521,16 +523,15 @@ schema =
                       API._ciDescription = Just "The price of the track"
                     }
                 ],
-              API._tiPrimaryKey = Just [API.ColumnName "TrackId"],
+              API._tiPrimaryKey = [API.ColumnName "TrackId"],
               API._tiDescription = Just "Collection of music tracks",
               API._tiForeignKeys =
-                Just $
-                  API.ForeignKeys $
-                    HashMap.fromList
-                      [ (API.ConstraintName "Album", API.Constraint (mkTableName "Album") (HashMap.singleton "AlbumId" "AlbumId")),
-                        (API.ConstraintName "Genre", API.Constraint (mkTableName "Genre") (HashMap.singleton "GenreId" "GenreId")),
-                        (API.ConstraintName "MediaType", API.Constraint (mkTableName "MediaType") (HashMap.singleton "MediaTypeId" "MediaTypeId"))
-                      ]
+                API.ForeignKeys $
+                  HashMap.fromList
+                    [ (API.ConstraintName "Album", API.Constraint (mkTableName "Album") (HashMap.singleton (API.ColumnName "AlbumId") (API.ColumnName "AlbumId"))),
+                      (API.ConstraintName "Genre", API.Constraint (mkTableName "Genre") (HashMap.singleton (API.ColumnName "GenreId") (API.ColumnName "GenreId"))),
+                      (API.ConstraintName "MediaType", API.Constraint (mkTableName "MediaType") (HashMap.singleton (API.ColumnName "MediaTypeId") (API.ColumnName "MediaTypeId")))
+                    ]
             }
         ]
     }
@@ -541,28 +542,30 @@ chinookMock =
   MockConfig
     { _capabilitiesResponse = capabilities,
       _schemaResponse = schema,
-      _queryResponse = \_ -> API.QueryResponse (Just []) Nothing
+      _queryResponse = \_ -> Right $ API.QueryResponse (Just []) Nothing
     }
 
 --------------------------------------------------------------------------------
 
-mockCapabilitiesHandler :: I.IORef MockConfig -> Handler API.CapabilitiesResponse
+mockCapabilitiesHandler :: I.IORef MockConfig -> Handler (Union API.CapabilitiesResponses)
 mockCapabilitiesHandler mcfg = liftIO $ do
   cfg <- I.readIORef mcfg
-  pure $ _capabilitiesResponse cfg
+  pure $ inject $ SOP.I $ _capabilitiesResponse cfg
 
-mockSchemaHandler :: I.IORef MockConfig -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> Handler API.SchemaResponse
+mockSchemaHandler :: I.IORef MockConfig -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> Handler (Union API.SchemaResponses)
 mockSchemaHandler mcfg mQueryConfig _sourceName queryConfig = liftIO $ do
   cfg <- I.readIORef mcfg
   I.writeIORef mQueryConfig (Just queryConfig)
-  pure $ _schemaResponse cfg
+  pure $ inject $ SOP.I $ _schemaResponse cfg
 
-mockQueryHandler :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> API.QueryRequest -> Handler API.QueryResponse
+mockQueryHandler :: I.IORef MockConfig -> I.IORef (Maybe API.QueryRequest) -> I.IORef (Maybe API.Config) -> API.SourceName -> API.Config -> API.QueryRequest -> Handler (Union API.QueryResponses)
 mockQueryHandler mcfg mquery mQueryCfg _sourceName queryConfig query = liftIO $ do
   handler <- fmap _queryResponse $ I.readIORef mcfg
   I.writeIORef mquery (Just query)
   I.writeIORef mQueryCfg (Just queryConfig)
-  pure $ handler query
+  case handler query of
+    Left e -> pure $ inject $ SOP.I e
+    Right r -> pure $ inject $ SOP.I r
 
 -- Returns an empty explain response for now
 explainHandler :: API.SourceName -> API.Config -> API.QueryRequest -> Handler API.ExplainResponse

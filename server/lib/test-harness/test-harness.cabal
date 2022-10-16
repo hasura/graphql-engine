@@ -37,6 +37,7 @@ library
     , resourcet
     , safe-exceptions
     , servant-server
+    , sop-core
     , template-haskell
     , text
     , th-lift

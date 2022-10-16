@@ -112,7 +112,7 @@ tests opts = do
                               (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                             ]
                           ]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
+                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse albums)},
                   _whenRequestRequired =
                     [graphql|
                       query getAlbum {

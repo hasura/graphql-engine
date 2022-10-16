@@ -3,9 +3,9 @@ import LoadInspector from './LoadInspector';
 import { Tooltip } from '@hasura/console-oss';
 import LoadingSpinner from '../Common/LoadingSpinner';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 
-const inspectRow = require('../images/usage.svg');
+import inspectRow from '../images/usage.svg';
 
 const defaultState = {
   isInspecting: false,

@@ -37,9 +37,11 @@ import { checkObjectValidity } from './utils';
 
 import { ActionsPanel } from '../Common/ActionsPanel';
 
-const syncOperationsIcon = require('../images/sync.svg');
-
-const inspectRow = require('../images/usage.svg');
+import syncOperationsIcon from '../images/sync.svg';
+import inspectRow from '../images/usage.svg';
+import styles from '../Metrics.module.scss';
+import failure from '../images/failure.svg';
+import success from '../images/success.svg';
 
 const LIMIT = 5;
 
@@ -50,11 +52,8 @@ const defaultState = {
     created_at: 'desc',
   },
 };
-const styles = require('../Metrics.scss');
-const failure = require('../images/failure.svg');
-const success = require('../images/success.svg');
 
-const BrowserRows = props => {
+const BrowserRows = (props) => {
   const [browseState, setState] = useState(defaultState);
   const {
     dispatch,
@@ -74,7 +73,7 @@ const BrowserRows = props => {
 
   const { limit, offset, order_by } = browseState;
 
-  const updateLimit = l => {
+  const updateLimit = (l) => {
     setState({
       ...browseState,
       limit: l,
@@ -91,7 +90,7 @@ const BrowserRows = props => {
     });
   };
 
-  const updateOffset = o => {
+  const updateOffset = (o) => {
     setState({
       ...browseState,
       offset: o,
@@ -116,7 +115,7 @@ const BrowserRows = props => {
     variables.remoteProjectId = remoteProjectId;
   }
 
-  const onCompleted = data => {
+  const onCompleted = (data) => {
     const { results_aggregate } = data;
     if (results_aggregate && typeof results_aggregate === 'object') {
       try {
@@ -170,7 +169,7 @@ const BrowserRows = props => {
 
   const getSaveFunc = () => {
     if (allowlist.length > 0) {
-      const onError = err => console.error(err);
+      const onError = (err) => console.error(err);
       const onSuccess = () => {
         toggleAddClearAllowList([]);
         changeToAllowedOperations();
@@ -328,7 +327,7 @@ const BrowserRows = props => {
       };
       const columns = data.results[0];
       const headerRows = Object.keys(columns)
-        .filter(c1 => excludedColumns.indexOf(c1) === -1)
+        .filter((c1) => excludedColumns.indexOf(c1) === -1)
         .map((c, key) => {
           let sortIcon = <FaSort />;
           if (order_by && Object.keys(order_by).length) {
@@ -366,7 +365,7 @@ const BrowserRows = props => {
         });
       const onChangeAllSelection = () => {
         const getOperations = () => {
-          return data.results.map(o => {
+          return data.results.map((o) => {
             return {
               name: o.name,
               query: o.query,
@@ -418,7 +417,7 @@ const BrowserRows = props => {
     return [];
   };
 
-  const renderIcon = name => {
+  const renderIcon = (name) => {
     const getOperationUrl = () => {
       const filters = [createFilter(OPERATION_NAME_SYMBOL, name)];
       return {
@@ -456,8 +455,8 @@ const BrowserRows = props => {
     );
   };
 
-  const renderActionButtonForGroups = operation => {
-    const parseCheckboxResponse = stringifiedObj => {
+  const renderActionButtonForGroups = (operation) => {
+    const parseCheckboxResponse = (stringifiedObj) => {
       try {
         const parsed = JSON.parse(stringifiedObj);
         updateAllowList(parsed);
@@ -470,7 +469,7 @@ const BrowserRows = props => {
         title={''}
         id={JSON.stringify(operation)}
         onChange={parseCheckboxResponse}
-        checked={allowlist.findIndex(o => o.name === operation.name) !== -1}
+        checked={allowlist.findIndex((o) => o.name === operation.name) !== -1}
         bsClass={styles.bsCheckBoxClass}
       />
     );
@@ -478,7 +477,7 @@ const BrowserRows = props => {
 
   const getRows = () => {
     if (data.results.length > 0) {
-      return data.results.map(d => {
+      return data.results.map((d) => {
         const newRow = {};
         newRow.tableRowActionButtons = (
           <div className={styles.textCenter}>{renderIcon(d.name)}</div>
@@ -489,7 +488,7 @@ const BrowserRows = props => {
           </div>
         );
         Object.keys(d)
-          .filter(c1 => excludedColumns.indexOf(c1) === -1)
+          .filter((c1) => excludedColumns.indexOf(c1) === -1)
           .forEach((elem, key) => {
             const renderElement = () => {
               if (elem === 'success') {
@@ -536,14 +535,14 @@ const BrowserRows = props => {
   const _rows = getRows();
   const _columns = getHeaders();
 
-  const handlePageChange = page => {
+  const handlePageChange = (page) => {
     if (offset !== page * limit) {
       updateOffset(page * limit);
       toggleAddClearAllowList([]);
     }
   };
 
-  const handlePageSizeChange = size => {
+  const handlePageSizeChange = (size) => {
     if (limit !== size) {
       updateLimit(size);
       toggleAddClearAllowList([]);
@@ -552,13 +551,13 @@ const BrowserRows = props => {
 
   let disableSortColumn = false;
 
-  const sortByColumn = currColumn => {
+  const sortByColumn = (currColumn) => {
     if (data.results.length === 0) {
       console.error('Minimum one row required to sort');
       return;
     }
     const rowEntry = data.results[0];
-    const columnNames = Object.keys(rowEntry).map(column => column);
+    const columnNames = Object.keys(rowEntry).map((column) => column);
 
     if (!columnNames.includes(currColumn)) {
       return;
@@ -601,7 +600,7 @@ const BrowserRows = props => {
   });
 
   const getResizerProps = (finalState, none, column, ctx) => ({
-    onMouseDown: e => {
+    onMouseDown: (e) => {
       disableSortColumn = true;
       ctx.resizeColumnStart(e, column, false);
     },

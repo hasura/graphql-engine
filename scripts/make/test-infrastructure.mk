@@ -155,5 +155,4 @@ stop-everything:
 
 .PHONY: remove-tix-file
 remove-tix-file:
-	@ rm -f api-tests.tix
-	@ rm -f graphql-engine-tests.tix
+	@ find . -name '*.tix' -delete

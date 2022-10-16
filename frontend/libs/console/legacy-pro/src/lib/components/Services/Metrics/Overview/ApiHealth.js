@@ -3,7 +3,7 @@ import { useQuery } from 'react-apollo';
 import { Col, Row } from 'react-bootstrap';
 import { Tooltip } from '@hasura/console-oss';
 import ApiHealthChart from './ApiHealthChart';
-import styles from '../MetricsV1.scss';
+import styles from '../MetricsV1.module.scss';
 import {
   fetchApiHealthData,
   fetchTop5Requests,
@@ -20,10 +20,10 @@ const roundOff = 2;
 let chartHeight;
 
 const parseChartData = (datasource, x, y) =>
-  datasource?.map(i => ({ x: i[x], y: Number(i[y]).toFixed(roundOff) }));
+  datasource?.map((i) => ({ x: i[x], y: Number(i[y]).toFixed(roundOff) }));
 
-const parseErrorRate = datasource =>
-  datasource?.map(i => {
+const parseErrorRate = (datasource) =>
+  datasource?.map((i) => {
     const diff = i?.request_count - i?.success_count || 0;
     const average = Number((diff / i.request_count) * 100).toFixed(roundOff);
     const y = Number.isNaN(average) ? 0 : average;
@@ -36,7 +36,7 @@ const parseErrorRate = datasource =>
 const getAverageRPM = (data = []) => {
   let requestsSUM = 0;
   let totalbucketsWithData = 0;
-  data.forEach(c => {
+  data.forEach((c) => {
     if ('requests_per_minute' in c && c.requests_per_minute !== null) {
       requestsSUM = addNumbersSafely(requestsSUM, c.requests_per_minute);
       totalbucketsWithData++;
@@ -69,7 +69,7 @@ const getAverageErrorRate = (data = []) => {
 const getAverageExecutionRate = (data = []) => {
   let requestsSUM = 0;
   let totalbucketsWithData = 0;
-  data.forEach(c => {
+  data.forEach((c) => {
     if ('average_execution_time' in c && c.average_execution_time !== null) {
       requestsSUM = addNumbersSafely(requestsSUM + c.average_execution_time);
       totalbucketsWithData++;
