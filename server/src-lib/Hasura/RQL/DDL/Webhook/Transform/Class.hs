@@ -12,53 +12,30 @@ module Hasura.RQL.DDL.Webhook.Transform.Class
     TransformErrorBundle (..),
     throwErrorBundle,
 
-    -- ** Request Transformation Context
-    RequestTransformCtx (..),
-    ResponseTransformCtx (..),
-    mkReqTransformCtx,
-
     -- * Templating
     TemplatingEngine (..),
     Template (..),
-    Version (..),
-    runRequestTemplateTransform,
-    validateRequestTemplateTransform,
-    validateRequestTemplateTransform',
 
     -- * Unescaped
     UnescapedTemplate (..),
     wrapUnescapedTemplate,
-    runUnescapedRequestTemplateTransform,
-    runUnescapedRequestTemplateTransform',
-    runUnescapedResponseTemplateTransform,
-    runUnescapedResponseTemplateTransform',
-    validateRequestUnescapedTemplateTransform,
-    validateRequestUnescapedTemplateTransform',
+    encodeScalar,
   )
 where
 
 -------------------------------------------------------------------------------
 
-import Control.Arrow (left)
-import Control.Lens (bimap, view)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Aeson qualified as J
-import Data.Aeson.Kriti.Functions as KFunc
 import Data.ByteString (ByteString)
 import Data.ByteString.Builder (toLazyByteString)
 import Data.ByteString.Builder.Scientific (scientificBuilder)
 import Data.ByteString.Lazy qualified as LBS
-import Data.HashMap.Strict qualified as M
 import Data.Kind (Constraint, Type)
 import Data.Text.Encoding (encodeUtf8)
-import Data.Text.Encoding qualified as TE
-import Data.Validation (Validation, fromEither)
+import Data.Validation (Validation)
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
-import Hasura.Session (SessionVariables)
-import Kriti.Error qualified as Kriti (CustomFunctionError (..), serialize)
-import Kriti.Parser qualified as Kriti (parser)
-import Network.HTTP.Client.Transformable qualified as HTTP
 
 -------------------------------------------------------------------------------
 
@@ -73,6 +50,8 @@ class Transform a where
   -- the transformation.
   data TransformFn a :: Type
 
+  data TransformCtx a :: Type
+
   -- | 'transform' is a function which takes 'TransformFn' of @a@ and reifies
   -- it into a function of the form:
   --
@@ -82,7 +61,7 @@ class Transform a where
   transform ::
     MonadError TransformErrorBundle m =>
     TransformFn a ->
-    RequestTransformCtx ->
+    TransformCtx a ->
     a ->
     m a
 
@@ -118,69 +97,6 @@ throwErrorBundle msg val = do
         ]
       err = J.object (requiredCtx <> catMaybes optionalCtx)
   throwError $ TransformErrorBundle [err]
-
--------------------------------------------------------------------------------
-
--- | Common context that is made available to all request transformations.
-data RequestTransformCtx = RequestTransformCtx
-  { rtcBaseUrl :: Maybe J.Value,
-    rtcBody :: J.Value,
-    rtcSessionVariables :: J.Value,
-    rtcQueryParams :: Maybe J.Value,
-    rtcEngine :: TemplatingEngine,
-    rtcFunctions :: M.HashMap Text (J.Value -> Either Kriti.CustomFunctionError J.Value)
-  }
-
-instance ToJSON RequestTransformCtx where
-  toJSON RequestTransformCtx {..} =
-    let required =
-          [ "body" J..= rtcBody,
-            "session_variables" J..= rtcSessionVariables
-          ]
-        optional =
-          [ ("base_url" J..=) <$> rtcBaseUrl,
-            ("query_params" J..=) <$> rtcQueryParams
-          ]
-     in J.object (required <> catMaybes optional)
-
--- | A smart constructor for constructing the 'RequestTransformCtx'
---
--- XXX: This function makes internal usage of 'TE.decodeUtf8', which throws an
--- impure exception when the supplied 'ByteString' cannot be decoded into valid
--- UTF8 text!
-mkReqTransformCtx ::
-  Text ->
-  Maybe SessionVariables ->
-  TemplatingEngine ->
-  HTTP.Request ->
-  RequestTransformCtx
-mkReqTransformCtx url sessionVars rtcEngine reqData =
-  let rtcBaseUrl = Just $ J.toJSON url
-      rtcBody =
-        let mBody = view HTTP.body reqData >>= J.decode @J.Value
-         in fromMaybe J.Null mBody
-      rtcSessionVariables = J.toJSON sessionVars
-      rtcQueryParams =
-        let queryParams =
-              view HTTP.queryParams reqData & fmap \(key, val) ->
-                (TE.decodeUtf8 key, fmap TE.decodeUtf8 val)
-         in Just $ J.toJSON queryParams
-   in RequestTransformCtx
-        { rtcBaseUrl,
-          rtcBody,
-          rtcSessionVariables,
-          rtcQueryParams,
-          rtcEngine,
-          rtcFunctions = KFunc.sessionFunctions sessionVars
-        }
-
--- | Common context that is made available to all response transformations.
-data ResponseTransformCtx = ResponseTransformCtx
-  { responseTransformBody :: J.Value,
-    responseTransformReqCtx :: J.Value,
-    responseTransformFunctions :: M.HashMap Text (J.Value -> Either Kriti.CustomFunctionError J.Value),
-    responseTransformEngine :: TemplatingEngine
-  }
 
 -------------------------------------------------------------------------------
 
@@ -226,86 +142,6 @@ instance J.FromJSON Template where
 instance J.ToJSON Template where
   toJSON = J.String . coerce
 
--- | A helper function for executing transformations from a 'Template'
--- and a 'RequestTransformCtx'.
---
--- NOTE: This and all related funtions are hard-coded to Kriti at the
--- moment. When we add additional template engines this function will
--- need to take a 'TemplatingEngine' parameter.
-runRequestTemplateTransform ::
-  Template ->
-  RequestTransformCtx ->
-  Either TransformErrorBundle J.Value
-runRequestTemplateTransform template RequestTransformCtx {rtcEngine = Kriti, ..} =
-  let context =
-        [ ("$body", rtcBody),
-          ("$session_variables", rtcSessionVariables)
-        ]
-          <> catMaybes
-            [ ("$query_params",) <$> rtcQueryParams,
-              ("$base_url",) <$> rtcBaseUrl
-            ]
-      eResult = KFunc.runKritiWith (unTemplate $ template) context rtcFunctions
-   in eResult & left \kritiErr ->
-        let renderedErr = J.toJSON kritiErr
-         in TransformErrorBundle [renderedErr]
-
--- TODO: Should this live in 'Hasura.RQL.DDL.Webhook.Transform.Validation'?
-validateRequestTemplateTransform ::
-  TemplatingEngine ->
-  Template ->
-  Either TransformErrorBundle ()
-validateRequestTemplateTransform Kriti (Template template) =
-  bimap packBundle (const ()) $ Kriti.parser $ TE.encodeUtf8 template
-  where
-    packBundle = TransformErrorBundle . pure . J.toJSON . Kriti.serialize
-
-validateRequestTemplateTransform' ::
-  TemplatingEngine ->
-  Template ->
-  Validation TransformErrorBundle ()
-validateRequestTemplateTransform' engine =
-  fromEither . validateRequestTemplateTransform engine
-
--- | A helper function for executing transformations from a 'Template'
--- and a 'ResponseTransformCtx'.
---
--- NOTE: This and all related funtions are hard-coded to Kriti at the
--- moment. When we add additional template engines this function will
--- need to take a 'TemplatingEngine' parameter.
-runResponseTemplateTransform ::
-  Template ->
-  ResponseTransformCtx ->
-  Either TransformErrorBundle J.Value
-runResponseTemplateTransform template ResponseTransformCtx {responseTransformEngine = Kriti, ..} =
-  let context = [("$body", responseTransformBody), ("$request", responseTransformReqCtx)]
-      eResult = KFunc.runKritiWith (unTemplate $ template) context responseTransformFunctions
-   in eResult & left \kritiErr ->
-        let renderedErr = J.toJSON kritiErr
-         in TransformErrorBundle [renderedErr]
-
--------------------------------------------------------------------------------
-
--- | 'RequestTransform' Versioning
-data Version
-  = V1
-  | V2
-  deriving stock (Eq, Generic, Show)
-  deriving anyclass (Cacheable, Hashable, NFData)
-
-instance J.FromJSON Version where
-  parseJSON v = do
-    version :: Int <- J.parseJSON v
-    case version of
-      1 -> pure V1
-      2 -> pure V2
-      i -> fail $ "expected 1 or 2, encountered " ++ show i
-
-instance J.ToJSON Version where
-  toJSON = \case
-    V1 -> J.toJSON @Int 1
-    V2 -> J.toJSON @Int 2
-
 -------------------------------------------------------------------------------
 
 -- | Validated textual transformation template /for string
@@ -329,66 +165,6 @@ instance J.ToJSON UnescapedTemplate where
 -- | Wrap an 'UnescapedTemplate' with escaped double quotes.
 wrapUnescapedTemplate :: UnescapedTemplate -> Template
 wrapUnescapedTemplate (UnescapedTemplate txt) = Template $ "\"" <> txt <> "\""
-
--- | A helper function for executing Kriti transformations from a
--- 'UnescapedTemplate' and a 'RequestTrasformCtx'.
---
--- The difference from 'runRequestTemplateTransform' is that this
--- function will wrap the template text in double quotes before
--- running Kriti.
-runUnescapedRequestTemplateTransform ::
-  RequestTransformCtx ->
-  UnescapedTemplate ->
-  Either TransformErrorBundle ByteString
-runUnescapedRequestTemplateTransform context unescapedTemplate = do
-  result <-
-    runRequestTemplateTransform
-      (wrapUnescapedTemplate unescapedTemplate)
-      context
-  encodeScalar result
-
--- | Run a Kriti transformation with an unescaped template in
--- 'Validation' instead of 'Either'.
-runUnescapedRequestTemplateTransform' ::
-  RequestTransformCtx ->
-  UnescapedTemplate ->
-  Validation TransformErrorBundle ByteString
-runUnescapedRequestTemplateTransform' context unescapedTemplate =
-  fromEither $
-    runUnescapedRequestTemplateTransform context unescapedTemplate
-
--- TODO: Should this live in 'Hasura.RQL.DDL.Webhook.Transform.Validation'?
-validateRequestUnescapedTemplateTransform ::
-  TemplatingEngine ->
-  UnescapedTemplate ->
-  Either TransformErrorBundle ()
-validateRequestUnescapedTemplateTransform engine =
-  validateRequestTemplateTransform engine . wrapUnescapedTemplate
-
-validateRequestUnescapedTemplateTransform' ::
-  TemplatingEngine ->
-  UnescapedTemplate ->
-  Validation TransformErrorBundle ()
-validateRequestUnescapedTemplateTransform' engine =
-  fromEither . validateRequestUnescapedTemplateTransform engine
-
--- | Run an 'UnescapedTemplate' with a 'ResponseTransformCtx'.
-runUnescapedResponseTemplateTransform ::
-  ResponseTransformCtx ->
-  UnescapedTemplate ->
-  Either TransformErrorBundle ByteString
-runUnescapedResponseTemplateTransform context unescapedTemplate = do
-  result <- runResponseTemplateTransform (wrapUnescapedTemplate unescapedTemplate) context
-  encodeScalar result
-
--- | Run an 'UnescapedTemplate' with a 'ResponseTransformCtx' in 'Validation'.
-runUnescapedResponseTemplateTransform' ::
-  ResponseTransformCtx ->
-  UnescapedTemplate ->
-  Validation TransformErrorBundle ByteString
-runUnescapedResponseTemplateTransform' context unescapedTemplate =
-  fromEither $
-    runUnescapedResponseTemplateTransform context unescapedTemplate
 
 -------------------------------------------------------------------------------
 -- Utility functions.

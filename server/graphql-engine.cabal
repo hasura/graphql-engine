@@ -784,8 +784,11 @@ library
                      , Hasura.RQL.DDL.Webhook.Transform.Headers
                      , Hasura.RQL.DDL.Webhook.Transform.Method
                      , Hasura.RQL.DDL.Webhook.Transform.QueryParams
+                     , Hasura.RQL.DDL.Webhook.Transform.Response
+                     , Hasura.RQL.DDL.Webhook.Transform.Request
                      , Hasura.RQL.DDL.Webhook.Transform.Validation
                      , Hasura.RQL.DDL.Webhook.Transform.Url
+                     , Hasura.RQL.DDL.Webhook.Transform.WithOptional
                      , Hasura.RQL.DDL.SourceKinds
                      , Hasura.RQL.DDL.Schema
                      , Hasura.RQL.DDL.Schema.Cache

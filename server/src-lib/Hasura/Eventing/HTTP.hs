@@ -63,8 +63,7 @@ import Hasura.HTTP (HttpException (..), addDefaultHeaders)
 import Hasura.Logging
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
-import Hasura.RQL.DDL.Webhook.Transform
-import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
+import Hasura.RQL.DDL.Webhook.Transform qualified as Transform
 import Hasura.RQL.Types.Common (ResolvedWebhook (..))
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing
@@ -143,7 +142,7 @@ data RequestDetails = RequestDetails
     _rdOriginalSize :: Int64,
     _rdTransformedRequest :: Maybe HTTP.Request,
     _rdTransformedSize :: Maybe Int64,
-    _rdReqTransformCtx :: Maybe RequestTransformCtx,
+    _rdReqTransformCtx :: Maybe Transform.RequestContext,
     _rdSessionVars :: Maybe SessionVariables
   }
 
@@ -276,7 +275,7 @@ runHTTP manager req = do
 
 data TransformableRequestError a
   = HTTPError J.Value (HTTPErr a)
-  | TransformationError J.Value TransformErrorBundle
+  | TransformationError J.Value Transform.TransformErrorBundle
   deriving (Show)
 
 mkRequest ::
@@ -287,7 +286,7 @@ mkRequest ::
   -- log the request size. As the logging happens outside the function, we pass
   -- it the final request body, instead of 'Value'
   LBS.ByteString ->
-  Maybe RequestTransform ->
+  Maybe Transform.RequestTransform ->
   ResolvedWebhook ->
   m RequestDetails
 mkRequest headers timeout payload mRequestTransform (ResolvedWebhook webhook) =
@@ -309,13 +308,14 @@ mkRequest headers timeout payload mRequestTransform (ResolvedWebhook webhook) =
            in case mRequestTransform of
                 Nothing ->
                   pure $ RequestDetails req (LBS.length payload) Nothing Nothing Nothing sessionVars
-                Just RequestTransform {..} ->
-                  let reqTransformCtx = mkReqTransformCtx webhook sessionVars templateEngine
-                   in case applyRequestTransform reqTransformCtx requestFields req of
+                Just Transform.RequestTransform {..} ->
+                  let reqTransformCtx = Transform.mkReqTransformCtx webhook sessionVars templateEngine
+                      requestContext = fmap Transform.mkRequestContext reqTransformCtx
+                   in case Transform.applyRequestTransform requestContext requestFields req of
                         Left err -> throwError $ TransformationError body err
                         Right transformedReq ->
                           let transformedReqSize = HTTP.getReqSize transformedReq
-                           in pure $ RequestDetails req (LBS.length payload) (Just transformedReq) (Just transformedReqSize) (Just $ reqTransformCtx req) sessionVars
+                           in pure $ RequestDetails req (LBS.length payload) (Just transformedReq) (Just transformedReqSize) (Just $ requestContext req) sessionVars
 
 invokeRequest ::
   ( MonadReader r m,
@@ -326,7 +326,7 @@ invokeRequest ::
     MonadTrace m
   ) =>
   RequestDetails ->
-  Maybe ResponseTransform ->
+  Maybe Transform.ResponseTransform ->
   Maybe SessionVariables ->
   ((Either (HTTPErr a) (HTTPResp a)) -> RequestDetails -> m ()) ->
   m (HTTPResp a)
@@ -343,9 +343,9 @@ invokeRequest reqDetails@RequestDetails {..} respTransform' sessionVars logger =
     Nothing -> pure resp
     Just respTransform -> do
       let respBody = SB.toLBS $ hrsBody resp
-          engine = respTransformTemplateEngine respTransform
-          respTransformCtx = buildRespTransformCtx _rdReqTransformCtx sessionVars engine respBody
-       in case applyResponseTransform respTransform respTransformCtx of
+          engine = Transform.respTransformTemplateEngine respTransform
+          respTransformCtx = Transform.buildRespTransformCtx _rdReqTransformCtx sessionVars engine respBody
+       in case Transform.applyResponseTransform respTransform respTransformCtx of
             Left err -> do
               -- Log The Response Transformation Error
               logger' :: Logger Hasura <- asks getter
