@@ -1,38 +1,37 @@
-## Reporting Vulnerabilities
+## Informar vulnerabilidades
 
-We’re extremely grateful for security researchers and users that report vulnerabilities to the Hasura Community. All reports are thoroughly investigated by a set of community volunteers and the Hasura team.
+Estamos muy agradecidos con los investigadores y usuarios de seguridad que informan sobre vulnerabilidades a la comunidad Hasura. Todos los informes son investigados a fondo por un grupo de voluntarios de la comunidad y el equipo de Hasura.
 
-To report a security issue, please email us at [build@hasura.io](mailto:build@hasura.io) with all the details, attaching all necessary information.
+Para reportar un problema de seguridad, envíenos un correo electrónico a [build@hasura.io] (mailto: build@hasura.io) con todos los detalles, adjuntando toda la información necesaria.
 
-### When Should I Report a Vulnerability?
+### ¿Cuándo debo informar una vulnerabilidad?
 
-- You think you have discovered a potential security vulnerability in the Hasura GraphQL Engine or related components.
-- You are unsure how a vulnerability affects the Hasura GraphQL Engine.
-- You think you discovered a vulnerability in another project that Hasura GraphQL Engine depends on (e.g. Heroku, Docker, etc).
-- You want to report any other security risk that could potentially harm Hasura GraphQL Engine users.
+- Cree que ha descubierto una vulnerabilidad de seguridad potencial en Hasura GraphQL Engine o componentes relacionados.
+- No está seguro de cómo afecta una vulnerabilidad al motor Hasura GraphQL.
+- Cree que descubrió una vulnerabilidad en otro proyecto del que depende Hasura GraphQL Engine (por ejemplo, Heroku, Docker, etc.).
+- Quiere informar sobre cualquier otro riesgo de seguridad que pueda dañar a los usuarios de Hasura GraphQL Engine.
 
-### When Should I NOT Report a Vulnerability?
+### ¿Cuándo NO debo informar de una vulnerabilidad?
 
-- You need help tuning Hasura GraphQL Engine components for security.
-- You need help applying security related updates.
-- Your issue is not security related.
+- Necesita ayuda para ajustar los componentes de Hasura GraphQL Engine para la seguridad.
+- Necesita ayuda para aplicar actualizaciones relacionadas con la seguridad.
+- Su problema no está relacionado con la seguridad.
 
-## Security Vulnerability Response
+## Respuesta de vulnerabilidad de seguridad
 
-Each report is acknowledged and analyzed by the project's maintainers and the security team within 3 working days. 
+Los encargados del mantenimiento del proyecto y el equipo de seguridad reconocen y analizan cada informe en un plazo de 3 días hábiles.
 
-The reporter will be kept updated at every stage of the issue's analysis and resolution (triage -> fix -> release).
+El informante se mantendrá actualizado en cada etapa del análisis y la resolución del problema (clasificación -> corregir -> liberación).
 
-## Public Disclosure Timing
+## Plazo de divulgación pública
 
-A public disclosure date is negotiated by the Hasura product security team and the bug submitter. We prefer to fully disclose the bug as soon as possible once a user mitigation is available. It is reasonable to delay disclosure when the bug or the fix is not yet fully understood, the solution is not well-tested, or for vendor coordination. The timeframe for disclosure is from immediate (especially if it's already publicly known) to a few weeks. We expect the time-frame between a report to a public disclosure to typically be in the order of 7 days. The Hasura GraphQL Engine maintainers and the security team will take the final call on setting a disclosure date.
+El equipo de seguridad del producto Hasura y el remitente del error negocian una fecha de divulgación pública. Preferimos revelar completamente el error lo antes posible una vez que esté disponible una mitigación para el usuario. Es razonable retrasar la divulgación cuando el error o la solución aún no se comprenden completamente, la solución no está bien probada o para la coordinación del proveedor. El plazo para la divulgación es desde inmediato (especialmente si ya se conoce públicamente) hasta algunas semanas. Esperamos que el período de tiempo entre un informe y una divulgación pública sea normalmente del orden de 7 días. Los encargados de mantenimiento del motor Hasura GraphQL y el equipo de seguridad tomarán la última llamada para establecer una fecha de divulgación.
 
 
-(Some sections have been inspired and adapted from [https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md](https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md)).
+(Algunas secciones se han inspirado y adaptado de [https://github.com/kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md](https://github.com /kubernetes/website/blob/master/content/en/docs/reference/issues-security/security.md)).
 
-## Translations
+## Traducciones
 
-This document is available in the following translations:
+Este documento está disponible en las siguientes traducciones:
 
-- [French :fr:](translations/SECURITY.french.md)
-- [Hindi :india:](translations/SECURITY.hindi.md)
+- [Francés: fr:] (traducciones / SECURITY.french.md)
