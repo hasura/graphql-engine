@@ -32,7 +32,7 @@ version: "3.6"
 
 services:
   mariadb:
-    image: mariadb:10.6.4-focal@sha256:c014ba1efc5dbd711d0520c7762d57807f35549de3414eb31e942a420c8a2ed2
+    image: mariadb:10.9.3
     ports:
       - "65001:3306"
     environment:
@@ -40,8 +40,19 @@ services:
       MARIADB_PASSWORD: "hasura"
       MARIADB_DATABASE: "hasura"
       MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "true"
+      MARIADB_MYSQL_LOCALHOST_USER: "1"
     volumes:
       - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD
+        - /usr/local/bin/healthcheck.sh
+        - --connect
+        - --innodb_initialized
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
   postgres:
     image: postgis/postgis:15beta4-3.3-alpine
@@ -57,8 +68,20 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - psql -U hasura < /dev/null && sleep 5 && psql -U hasura < /dev/null
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
   sqlserver:
+    # We cannot use this image on arm64, as it's not available.
+    # Instead, we use `mcr.microsoft.com/azure-sql-edge`.
+    # This uses an environment variable so it can be overridden by scripts to
+    # provide that image instead.
     image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest}
     ports:
       - "65003:1433"
@@ -69,8 +92,36 @@ services:
     volumes:
       - mssql-data:/var/opt/mssql
 
-  # Separated from the `sqlserver` container so we can use the `mssql-tools` image to run `sqlcmd`.
-  # `sqlcmd` is not available in the `azure-sql-edge` image on arm64, which we use for testing on macOS.
+  # We would prefer to attach the healthcheck directly to the `sqlserver` container.
+  # However, while we can do this in the `mcr.microsoft.com/mssql/server` image,
+  # it's not possible when running on macOS, as we don't use that image, but
+  # instead `mcr.microsoft.com/azure-sql-edge`.
+  # The `mcr.microsoft.com/azure-sql-edge` image does not provide `sqlcmd`.
+  # We therefore need to run it in a separate container.
+  # We can reconsider this once the MSSQL Server image can run on arm64.
+  sqlserver-healthcheck:
+    image: mcr.microsoft.com/mssql-tools
+    command:
+      - sleep
+      - inf
+    init: true # handle signals correctly
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          /opt/mssql-tools/bin/sqlcmd -S 'sqlserver,1433' -U SA -P "DockerComposePassword!"
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    # This is commented out because this file can be extended, and dependencies don't work for extensions.
+    # Instead, ensure you also run this one.
+    # depends_on:
+    #   sqlserver:
+    #     condition: service_started
+
+    # Separated from the `sqlserver` container so we can use the `mssql-tools` image to run `sqlcmd`.
+    # `sqlcmd` is not available in the `azure-sql-edge` image on arm64, which we use for testing on macOS.
   sqlserver-init:
     image: mcr.microsoft.com/mssql-tools
     command:
@@ -80,6 +131,11 @@ services:
     volumes:
       - ./docker-compose/sqlserver-init/init.sh:/init.sh
       - ./docker-compose/sqlserver-init/init.sql:/init.sql
+    # This is commented out because this file can be extended, and dependencies don't work for extensions.
+    # Instead, ensure you also run this one.
+    # depends_on:
+    #   sqlserver:
+    #     condition: service_started
 
   citus:
     image: citusdata/citus:10.1@sha256:7e497e5ca18d7f2ae2a66c1d5d676b548e9221b7e6294adfb03006adad85502c
@@ -92,6 +148,14 @@ services:
     volumes:
       - citus-data:/var/lib/postgresql/data
       - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - psql -U hasura < /dev/null && sleep 5 && psql -U hasura < /dev/null
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
   cockroach:
     image: us-docker.pkg.dev/cockroach-cloud-images/cockroachdb/cockroach:v22.2.0-beta.2-218-ga7ecaa82cf
@@ -107,6 +171,14 @@ services:
     volumes:
       - cockroach-data:/cockroach/cockroach-data
       - ./docker-compose/cockroach/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - cockroach sql --insecure --database "hasura" --execute "SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'hasura';" | grep -q -F 'hasura'
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
   dc-reference-agent:
     build:
@@ -114,6 +186,17 @@ services:
       dockerfile: ./Dockerfile-reference
     ports:
       - "65005:8100"
+    healthcheck:
+      test:
+        - CMD
+        - nc
+        - -z
+        - localhost
+        - "8100"
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
   dc-sqlite-agent:
     build:
@@ -127,6 +210,17 @@ services:
       METRICS: y
       PRETTY_PRINT_LOGS: y
       LOG_LEVEL: debug
+    healthcheck:
+      test:
+        - CMD
+        - nc
+        - -z
+        - localhost
+        - "8100"
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
 
 volumes:
   citus-data:
