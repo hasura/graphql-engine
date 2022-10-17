@@ -40,9 +40,6 @@ export function NeonBanner(props: Props) {
         <span className="ml-xs font-semibold flex items-center text-sm py-0.5 px-1.5 text-indigo-600 bg-indigo-100 rounded">
           Free
         </span>
-        <span className="ml-xs font-semibold flex items-center text-sm py-0.5 px-1.5 text-indigo-600 bg-indigo-100 rounded">
-          Preview
-        </span>
       </div>
       <img
         src="https://storage.googleapis.com/graphql-engine-cdn.hasura.io/cloud-console/assets/common/img/neon.jpg"
@@ -54,8 +51,9 @@ export function NeonBanner(props: Props) {
       </div>
       <div className="flex justify-between items-center mb-sm">
         <div className="w-[70%] text-md text-gray-700">
-          Fully managed Postgres with separate storage and compute, that scales
-          to zero on inactivity and provides seamless scaling and branching.
+          Modern, developer-friendly Postgres built for the cloud. Neon
+          separates storage and compute to offer scale to zero and support
+          database branching.
         </div>
         <div>
           <Button
