@@ -11,6 +11,7 @@ import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
@@ -47,7 +48,15 @@ spec =
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlserver.setupTablesAction schema testEnvironment
                 ]
-            }
+            },
+          ( \(DataConnector.TestSourceConfig {..}) ->
+              (Fixture.fixture $ Fixture.Backend typeConfig)
+                { Fixture.setupTeardown = \(testEnvironment, _) ->
+                    [ DataConnector.setupTablesAction schema testEnvironment
+                    ]
+                }
+          )
+            DataConnector.sqliteGenericConfig
         ]
     )
     tests

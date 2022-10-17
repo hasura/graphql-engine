@@ -1,6 +1,7 @@
 {-# LANGUAGE DataKinds #-}
 
-module Harness.Backend.DataConnector.MockAgent
+--
+module Harness.Backend.DataConnector.Mock.Agent
   ( MockConfig (..),
     chinookMock,
     mockAgentPort,

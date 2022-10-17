@@ -134,7 +134,8 @@ data BackendScalarType = BackendScalarType
     bstCockroach :: Maybe Text,
     bstPostgres :: Maybe Text,
     bstBigQuery :: Maybe Text,
-    bstMssql :: Maybe Text
+    bstMssql :: Maybe Text,
+    bstSqlite :: Maybe Text
   }
   deriving (Show, Eq)
 
@@ -148,7 +149,8 @@ defaultBackendScalarType =
       bstCockroach = Nothing,
       bstMssql = Nothing,
       bstPostgres = Nothing,
-      bstBigQuery = Nothing
+      bstBigQuery = Nothing,
+      bstSqlite = Nothing
     }
 
 -- | Access specific backend scalar type out of 'BackendScalarType'
@@ -198,7 +200,8 @@ data BackendScalarValue = BackendScalarValue
     bsvCockroach :: Maybe BackendScalarValueType,
     bsvPostgres :: Maybe BackendScalarValueType,
     bsvBigQuery :: Maybe BackendScalarValueType,
-    bsvMssql :: Maybe BackendScalarValueType
+    bsvMssql :: Maybe BackendScalarValueType,
+    bsvSqlite :: Maybe BackendScalarValueType
   }
   deriving (Show, Eq)
 
@@ -212,7 +215,8 @@ defaultBackendScalarValue =
       bsvCockroach = Nothing,
       bsvPostgres = Nothing,
       bsvBigQuery = Nothing,
-      bsvMssql = Nothing
+      bsvMssql = Nothing,
+      bsvSqlite = Nothing
     }
 
 -- | Generic scalar type for all backends, for simplicity.
@@ -275,7 +279,9 @@ columnNull name typ = Column name typ True Nothing
 parseUTCTimeOrError :: String -> ScalarValue
 parseUTCTimeOrError = VUTCTime . parseTimeOrError True defaultTimeLocale "%F %T"
 
--- | Unified track table
+-- | Native Backend track table
+--
+-- Data Connector backends expect an @[String]@ for the table name.
 trackTable :: HasCallStack => BackendType -> String -> Table -> TestEnvironment -> IO ()
 trackTable backend source Table {tableName} testEnvironment = do
   let backendType = defaultBackendTypeString backend
@@ -292,7 +298,9 @@ args:
     name: *tableName
 |]
 
--- | Unified untrack table
+-- | Native Backend track table
+--
+-- Data Connector backends expect an @[String]@ for the table name.
 untrackTable :: HasCallStack => BackendType -> String -> Table -> TestEnvironment -> IO ()
 untrackTable backend source Table {tableName} testEnvironment = do
   let backendType = defaultBackendTypeString backend

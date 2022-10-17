@@ -34,6 +34,7 @@ module Harness.Constants
     cockroachDb,
     serveOptions,
     dataConnectorDb,
+    sqliteSchemaName,
     maxRetriesRateLimitExceeded,
   )
 where
@@ -158,7 +159,10 @@ cockroachConnectionString =
 -- * DataConnector
 
 dataConnectorDb :: String
-dataConnectorDb = "data-connector"
+dataConnectorDb = "hasura"
+
+sqliteSchemaName :: Text
+sqliteSchemaName = "main"
 
 -- * Liveness
 

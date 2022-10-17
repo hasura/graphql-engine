@@ -35,7 +35,7 @@ spec =
                 ]
             }
       )
-        <$> DataConnector.backendConfigs
+        <$> DataConnector.chinookConfigs
     )
     tests
 

@@ -91,7 +91,9 @@ library
     Harness.Backend.Citus
     Harness.Backend.Cockroach
     Harness.Backend.DataConnector
-    Harness.Backend.DataConnector.MockAgent
+    Harness.Backend.DataConnector.Mock.Agent
+    Harness.Backend.DataConnector.Mock
+    Harness.Backend.DataConnector.Sqlite
     Harness.Backend.Mysql
     Harness.Backend.Postgres
     Harness.Backend.Sqlserver

@@ -15,6 +15,7 @@ module Harness.GraphqlEngine
     postMetadataWithStatus,
     postExplain,
     exportMetadata,
+    reloadMetadata,
     postGraphqlYaml,
     postGraphqlYamlWithHeaders,
     postGraphql,
@@ -197,6 +198,16 @@ clearMetadata s = withFrozenCallStack $ postMetadata_ s [yaml|{type: clear_metad
 
 exportMetadata :: HasCallStack => TestEnvironment -> IO Value
 exportMetadata s = withFrozenCallStack $ postMetadata s [yaml|{type: export_metadata, args: {}}|]
+
+-- | Reload metadata
+reloadMetadata :: TestEnvironment -> IO ()
+reloadMetadata testEnvironment =
+  postMetadata_
+    testEnvironment
+    [yaml|
+type: reload_metadata
+args: {}
+  |]
 
 -- | Same as 'postWithHeadersStatus', but defaults to the @"/v2/query"@ endpoint
 --
