@@ -2,28 +2,30 @@ import React, { useRef } from 'react';
 import { TableColumn } from '@/dataSources';
 import { isEmpty } from '@/components/Common/utils/jsUtils';
 import { TableRow } from '../Common/Components/TableRow';
-import { RowValues } from './InsertItem.types';
+import { RowValues } from './DataTableRowItem.types';
 
-export type TableInsertRowItemProps = {
+export type DataTableRowItemProps = {
   column: TableColumn;
   onColumnUpdate: (columnName: string, rowValues: RowValues) => void;
   enumOptions: any;
   baseCopyRow: Record<string, unknown>;
   index: string;
+  defaultValue?: any;
 };
 
-export const TableInsertRowItem = ({
+export const DataTableRowItem = ({
   column,
   onColumnUpdate,
   enumOptions,
   baseCopyRow,
   index,
-}: TableInsertRowItemProps) => {
+  defaultValue = undefined,
+}: DataTableRowItemProps) => {
   const refs = useRef<RowValues>({
     valueNode: null,
     nullNode: null,
     defaultNode: null,
-    insertRadioNode: null,
+    radioNode: null,
   });
 
   const {
@@ -42,8 +44,8 @@ export const TableInsertRowItem = ({
         ? refs?.current?.defaultNode
         : refs?.current?.nullNode;
 
-    if (refs?.current?.insertRadioNode) {
-      refs.current.insertRadioNode.checked = !!textValue.length;
+    if (refs?.current?.radioNode) {
+      refs.current.radioNode.checked = !!textValue.length;
     }
 
     if (radioToSelectWhenEmpty) {
@@ -66,8 +68,8 @@ export const TableInsertRowItem = ({
         ? refs?.current.defaultNode
         : refs?.current.nullNode;
 
-      if (refs?.current?.insertRadioNode) {
-        refs.current.insertRadioNode.checked = false;
+      if (refs?.current?.radioNode) {
+        refs.current.radioNode.checked = false;
       }
 
       if (radioToSelectWhenEmpty) {
@@ -84,6 +86,7 @@ export const TableInsertRowItem = ({
           refs.current[key] = node;
         }
       }}
+      prevValue={defaultValue}
       enumOptions={enumOptions}
       clone={baseCopyRow}
       onChange={onChange}

@@ -4,26 +4,17 @@ import { Button } from '@/new-components/Button';
 import { RightContainer } from '@/components/Common/Layout/RightContainer';
 import { ordinalColSort } from '../utils';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import {
-  findTable,
-  isFeatureSupported,
-  generateTableDef,
-  Table,
-} from '../../../../dataSources';
-import globals from '../../../../Globals';
-import { CLI_CONSOLE_MODE } from '../../../../constants';
-import FeatureDisabled from '../FeatureDisabled';
+import { findTable, generateTableDef, Table } from '../../../../dataSources';
 import {
   DataTableRowItem,
   DataTableRowItemProps,
 } from '../TableCommon/DataTableRowItem';
-import MigrationCheckbox from './MigrationCheckbox';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import TableHeader from '../TableCommon/TableHeader';
 
 type AlertProps = {
-  lastError: TableInsertItemsProps['lastError'];
-  lastSuccess: TableInsertItemsProps['lastSuccess'];
+  lastError: TableEditItemsProps['lastError'];
+  lastSuccess: TableEditItemsProps['lastSuccess'];
 };
 
 const Alert = ({ lastError, lastSuccess }: AlertProps) => {
@@ -37,14 +28,16 @@ const Alert = ({ lastError, lastSuccess }: AlertProps) => {
   if (lastSuccess) {
     return (
       <div className="hidden alert alert-success" role="alert">
-        Inserted! <br /> {JSON.stringify(lastSuccess)}
+        Updated! <br /> {JSON.stringify(lastSuccess)}
       </div>
     );
   }
   return null;
 };
 
-type TableInsertItemsProps = {
+type TableEditItemsProps = {
+  oldItem: Record<string, string>;
+  ongoingRequest: boolean;
   tableName: string;
   currentSchema: string;
   clone: Record<string, unknown>;
@@ -55,9 +48,6 @@ type TableInsertItemsProps = {
   enumOptions: any;
   currentSource: string;
   onClickSave: (e: any) => void;
-  onClickClear: () => void;
-  toggleMigrationCheckBox: () => void;
-  isMigration: boolean;
   onColumnUpdate: DataTableRowItemProps['onColumnUpdate'];
   dispatch: AppDispatch;
   lastError: Record<any, any>;
@@ -65,7 +55,7 @@ type TableInsertItemsProps = {
   buttonText: string;
 };
 
-export const TableInsertItems = ({
+export const TableEditItems = ({
   tableName,
   currentSchema,
   clone,
@@ -76,25 +66,13 @@ export const TableInsertItems = ({
   enumOptions,
   currentSource,
   onClickSave,
-  onClickClear,
-  toggleMigrationCheckBox,
-  isMigration,
   onColumnUpdate,
   dispatch,
   lastError,
   lastSuccess,
   buttonText,
-}: TableInsertItemsProps) => {
-  if (!isFeatureSupported('tables.insert.enabled')) {
-    return (
-      <FeatureDisabled
-        tab="insert"
-        tableName={tableName}
-        schemaName={currentSchema}
-      />
-    );
-  }
-
+  oldItem,
+}: TableEditItemsProps) => {
   const currentTable = findTable(
     schemas,
     generateTableDef(tableName, currentSchema)
@@ -103,8 +81,6 @@ export const TableInsertItems = ({
   if (!currentTable) {
     throw new NotFoundError();
   }
-
-  const isCLIMode = globals.consoleMode === CLI_CONSOLE_MODE;
 
   const columns = currentTable?.columns.sort(ordinalColSort) || [];
 
@@ -117,7 +93,7 @@ export const TableInsertItems = ({
             dispatch={dispatch}
             table={currentTable}
             source={currentSource}
-            tabName="insert"
+            tabName="edit"
             migrationMode={migrationMode}
             readOnlyMode={readOnlyMode}
             isCountEstimated={false}
@@ -125,10 +101,13 @@ export const TableInsertItems = ({
           <br />
           <div>
             <div className="justify-center w-9/12 pl-md">
-              <form id="insertForm">
+              <form id="updateForm">
                 <div className="flex flex-col pt-sm">
                   {columns.map((column, index) => (
                     <DataTableRowItem
+                      defaultValue={
+                        oldItem ? oldItem[column?.column_name] : undefined
+                      }
                       key={column?.column_name}
                       column={column}
                       onColumnUpdate={onColumnUpdate}
@@ -138,27 +117,15 @@ export const TableInsertItems = ({
                     />
                   ))}
                 </div>
-                <div className="my-sm">
-                  <MigrationCheckbox
-                    onChange={toggleMigrationCheckBox}
-                    isChecked={isMigration}
-                    isCLIMode={isCLIMode}
-                  />
-                </div>
-                <div className="flex items-center">
+                <div className="flex items-center my-sm">
                   <div className="mr-md">
                     <Button
                       type="submit"
                       mode="primary"
                       onClick={onClickSave}
-                      data-test="insert-save-button"
+                      data-test="edit-save-button"
                     >
                       {buttonText}
-                    </Button>
-                  </div>
-                  <div className="mr-md">
-                    <Button onClick={onClickClear} data-test="clear-button">
-                      Clear
                     </Button>
                   </div>
                   {currentTable.is_enum ? (

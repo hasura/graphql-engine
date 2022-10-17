@@ -1,29 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setTable } from '../DataActions';
-import { fetchEnumOptions, I_RESET, insertItem } from './InsertActions';
+import { fetchEnumOptions, editItem, E_ONGOING_REQ } from './EditActions';
 import { ColumnName, RowValues } from '../TableCommon/DataTableRowItem.types';
 import { DataTableRowItemProps } from '../TableCommon/DataTableRowItem';
-import { TableInsertItems } from './TableInsertItems';
+import { TableEditItems } from './TableEditItems';
 
 type GetButtonTextArgs = {
-  insertedRows: number;
   ongoingRequest: boolean;
 };
 
-const getButtonText = ({ insertedRows, ongoingRequest }: GetButtonTextArgs) => {
+const getButtonText = ({ ongoingRequest }: GetButtonTextArgs) => {
   if (ongoingRequest) {
     return 'Saving...';
-  }
-
-  if (insertedRows > 0) {
-    return 'Insert Again';
   }
 
   return 'Save';
 };
 
-type TableInsertItemContainerContainer = {
+type TableEditItemContainerContainer = {
   params: {
     schema: string;
     source: string;
@@ -31,15 +26,13 @@ type TableInsertItemContainerContainer = {
   };
 };
 
-export const TableInsertItemContainer = (
-  props: TableInsertItemContainerContainer
+export const TableEditItemContainer = (
+  props: TableEditItemContainerContainer
 ) => {
   const { table: tableName } = props.params;
 
   const dispatch = useAppDispatch();
 
-  const [isMigration, setIsMigration] = useState(false);
-  const [insertedRows, setInsertedRows] = useState(0);
   const [values, setValues] = useState<Record<ColumnName, RowValues>>({});
 
   const onColumnUpdate: DataTableRowItemProps['onColumnUpdate'] = (
@@ -62,19 +55,9 @@ export const TableInsertItemContainer = (
   useEffect(() => {
     dispatch(setTable(tableName));
     dispatch(fetchEnumOptions());
-
-    return () => {
-      dispatch({ type: I_RESET });
-    };
   }, [tableName]);
 
-  const nextInsert = () =>
-    setInsertedRows(prevInsertedRows => prevInsertedRows + 1);
-
-  const toggleMigrationCheckBox = () =>
-    setIsMigration(prevIsMigration => !prevIsMigration);
-
-  const insert = useAppSelector(store => store.tables.insert);
+  const update = useAppSelector(store => store.tables.update);
   const allSchemas = useAppSelector(store => store.tables.allSchemas);
   const tablesView = useAppSelector(store => store.tables.view);
   const currentSchema = useAppSelector(store => store.tables.currentSchema);
@@ -85,34 +68,21 @@ export const TableInsertItemContainer = (
   const readOnlyMode = useAppSelector(store => store.main.readOnlyMode);
 
   const { count } = tablesView;
-  const { ongoingRequest, lastError, lastSuccess, clone, enumOptions } = insert;
+  const {
+    ongoingRequest,
+    lastError,
+    lastSuccess,
+    clone,
+    enumOptions,
+    oldItem,
+  } = update;
   const buttonText = getButtonText({
-    insertedRows,
     ongoingRequest,
   });
 
-  const onClickClear = () => {
-    const form = document.getElementById('insertForm');
-    if (!form) {
-      return;
-    }
-
-    const inputs = form.getElementsByTagName('input');
-    Array.from(inputs).forEach(input => {
-      switch (input.type) {
-        case 'text':
-          input.value = '';
-          break;
-        case 'radio':
-        case 'checkbox':
-          break;
-        default:
-      }
-    });
-  };
-
   const onClickSave: React.MouseEventHandler = e => {
     e.preventDefault();
+
     const inputValues = Object.keys(values).reduce<
       Record<ColumnName, string | null | undefined>
     >((acc, colName) => {
@@ -130,16 +100,16 @@ export const TableInsertItemContainer = (
       return acc;
     }, {});
 
-    dispatch(insertItem(tableName, inputValues, isMigration)).then(() => {
-      nextInsert();
-    });
+    dispatch({ type: E_ONGOING_REQ });
+
+    dispatch(editItem(tableName, inputValues));
   };
 
   return (
-    <TableInsertItems
-      toggleMigrationCheckBox={toggleMigrationCheckBox}
+    <TableEditItems
+      ongoingRequest={ongoingRequest}
+      oldItem={oldItem}
       onColumnUpdate={onColumnUpdate}
-      isMigration={isMigration}
       dispatch={dispatch}
       tableName={tableName}
       currentSchema={currentSchema}
@@ -151,7 +121,6 @@ export const TableInsertItemContainer = (
       enumOptions={enumOptions}
       currentSource={currentDataSource}
       onClickSave={onClickSave}
-      onClickClear={onClickClear}
       lastError={lastError}
       lastSuccess={lastSuccess}
       buttonText={buttonText}

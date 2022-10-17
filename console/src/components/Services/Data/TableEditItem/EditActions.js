@@ -15,7 +15,7 @@ import {
 import { getEnumOptionsQuery } from '../../../Common/utils/v1QueryUtils';
 import { isStringArray } from '../../../Common/utils/jsUtils';
 import { generateTableDef } from '../../../../dataSources';
-import { getTableConfiguration } from './utils';
+import { getTableConfiguration } from '../TableBrowseRows/utils';
 
 const E_SET_EDITITEM = 'EditItem/E_SET_EDITITEM';
 const E_ONGOING_REQ = 'EditItem/E_ONGOING_REQ';

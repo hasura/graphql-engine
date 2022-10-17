@@ -48,7 +48,7 @@ import _push from '../push';
 import { ordinalColSort } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 
-import { E_SET_EDITITEM } from './EditActions';
+import { E_SET_EDITITEM } from '../TableEditItem/EditActions';
 import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
 import {
   getTableInsertRowRoute,
