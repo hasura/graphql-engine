@@ -9,6 +9,11 @@ const initialState = {
     state: RoleState.disabled,
     per_role: {} as Record<string, number>,
   },
+  batch_limit: {
+    global: -1,
+    state: RoleState.disabled,
+    per_role: {} as Record<string, number>,
+  },
   node_limit: {
     global: -1,
     state: RoleState.disabled,
@@ -49,6 +54,15 @@ const formStateSLice = createSlice({
     },
     updateDepthLimitState(state, action: PayloadAction<RoleState>) {
       state.depth_limit.state = action.payload;
+    },
+    updateGlobalBatchLimit(state, action: PayloadAction<number>) {
+      state.batch_limit.global = action.payload;
+    },
+    updateBatchLimitRole(state, action: PayloadAction<LimitPayload>) {
+      state.batch_limit.per_role[action.payload.role] = action.payload.limit;
+    },
+    updateBatchLimitState(state, action: PayloadAction<RoleState>) {
+      state.batch_limit.state = action.payload;
     },
     updateGlobalNodeLimit(state, action: PayloadAction<number>) {
       state.node_limit.global = action.payload;
@@ -110,6 +124,7 @@ const formStateSLice = createSlice({
       state.node_limit = action.payload.node_limit;
       state.rate_limit = action.payload.rate_limit;
       state.time_limit = action.payload.time_limit;
+      state.batch_limit = action.payload.batch_limit;
     },
     setDisable(state, action: PayloadAction<boolean>) {
       state.disabled = action.payload;

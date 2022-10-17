@@ -1,5 +1,6 @@
 import { makeConnectionStringFromConnectionParams } from '@/components/Services/Data/DataSources/ManageDBUtils';
 import { Driver } from '@/dataSources';
+import { isEmpty } from '@/components/Common/utils/jsUtils';
 import { Nullable } from './../components/Common/utils/tsUtils';
 import {
   inconsistentObjectsQuery,
@@ -199,6 +200,7 @@ export const updateAPILimitsQuery = ({
   newAPILimits: {
     disabled: boolean;
     depth_limit?: APILimitInputType<number>;
+    batch_limit?: APILimitInputType<number>;
     node_limit?: APILimitInputType<number>;
     time_limit?: APILimitInputType<number>;
     rate_limit?: APILimitInputType<{
@@ -217,12 +219,14 @@ export const updateAPILimitsQuery = ({
     'node_limit',
     'rate_limit',
     'time_limit',
+    'batch_limit',
   ] as const;
 
   api_limits.forEach(key => {
-    const role = newAPILimits[key]?.per_role
-      ? Object.keys(newAPILimits[key]?.per_role ?? {})[0]
-      : 'global';
+    const role =
+      newAPILimits[key]?.per_role && !isEmpty(newAPILimits[key]?.per_role)
+        ? Object.keys(newAPILimits[key]?.per_role ?? {})[0]
+        : 'global';
     switch (
       `${newAPILimits[key]?.state ?? 'default'}-${
         role === 'global' ? 'global' : 'per_role'
@@ -299,6 +303,7 @@ export const removeAPILimitsQuery = ({
     'node_limit',
     'rate_limit',
     'time_limit',
+    'batch_limit',
   ] as const;
 
   api_limits.forEach(key => {

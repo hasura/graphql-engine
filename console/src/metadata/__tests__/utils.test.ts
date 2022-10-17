@@ -22,6 +22,14 @@ describe('Testing API limits', () => {
     expect(res).toMatchSnapshot();
   });
 
+  it('only batch limit', () => {
+    const res = updateAPILimitsQuery({
+      existingAPILimits: api_limits.only_batch_limit.old_state,
+      newAPILimits: api_limits.only_batch_limit.new_state,
+    });
+    expect(res).toMatchSnapshot();
+  });
+
   it('only depth limit with per role', () => {
     const res = updateAPILimitsQuery({
       existingAPILimits: api_limits.only_depth_limit_with_per_role.old_state,
@@ -38,10 +46,18 @@ describe('Testing API limits', () => {
     expect(res).toMatchSnapshot();
   });
 
-  it('node limit and depth limits', () => {
+  it('only batch limit with per role', () => {
     const res = updateAPILimitsQuery({
-      existingAPILimits: api_limits.node_and_depth_limits.old_state,
-      newAPILimits: api_limits.node_and_depth_limits.new_state,
+      existingAPILimits: api_limits.only_batch_limit_with_per_role.old_state,
+      newAPILimits: api_limits.only_batch_limit_with_per_role.new_state,
+    });
+    expect(res).toMatchSnapshot();
+  });
+
+  it('node limit, batch limit and depth limit', () => {
+    const res = updateAPILimitsQuery({
+      existingAPILimits: api_limits.node_depth_and_batch_limits?.old_state,
+      newAPILimits: api_limits.node_depth_and_batch_limits.new_state,
     });
     expect(res).toMatchSnapshot();
   });
@@ -50,7 +66,7 @@ describe('Testing API limits', () => {
 describe('Testing Remove API Settings', () => {
   it('removes settings for a role', () => {
     const res = removeAPILimitsQuery({
-      existingAPILimits: api_limits.node_and_depth_limits.new_state,
+      existingAPILimits: api_limits.node_depth_and_batch_limits.new_state,
       role: 'role1',
     });
     expect(res).toMatchSnapshot();

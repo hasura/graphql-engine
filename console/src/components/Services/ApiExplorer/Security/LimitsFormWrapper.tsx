@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { ReactElement, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Button } from '@/new-components/Button';
 import { TableFormProps } from '../../../Common/Table';
@@ -10,25 +10,51 @@ import { isEmpty } from '../../../Common/utils/jsUtils';
 import { Dispatch } from '../../../../types';
 import { LimitsForm } from './LimitsForm';
 
-export const labels: Record<keyof RoleLimits, { title: string; info: string }> =
-  {
-    depth_limit: {
-      title: 'Depth Limit',
-      info: 'Set the maximum relation depth a request can traverse.',
-    },
-    node_limit: {
-      title: 'Node Limit',
-      info: 'Set the maximum number of nodes which can be requested in a request.',
-    },
-    rate_limit: {
-      title: 'Request Rate Limit (Requests Per Minute)',
-      info: 'Set a request rate limit for this role. You can also combine additional unique parameters for more granularity.',
-    },
-    time_limit: {
-      title: 'Operation time limit',
-      info: 'Global timeout for GraphQL operations.',
-    },
-  };
+export const labels: Record<
+  keyof RoleLimits,
+  { title: string; info: ReactElement }
+> = {
+  depth_limit: {
+    title: 'Depth Limit',
+    info: <div>Set the maximum relation depth a request can traverse.</div>,
+  },
+  node_limit: {
+    title: 'Node Limit',
+    info: (
+      <div>
+        Set the maximum number of nodes which can be requested in a request.
+      </div>
+    ),
+  },
+  batch_limit: {
+    title: 'Batch Request Limit',
+    info: (
+      <div>
+        Set the maximum number of operations that can be sent in a{' '}
+        <a
+          href="https://hasura.io/docs/latest/api-reference/graphql-api/index/#batching-requests"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          batch request.
+        </a>
+      </div>
+    ),
+  },
+  rate_limit: {
+    title: 'Request Rate Limit (Requests Per Minute)',
+    info: (
+      <div>
+        Set a request rate limit for this role. You can also combine additional
+        unique parameters for more granularity.
+      </div>
+    ),
+  },
+  time_limit: {
+    title: 'Operation time limit',
+    info: <div>Global timeout for GraphQL operations.</div>,
+  },
+};
 
 interface LimitsFormWrapperProps extends TableFormProps<RoleLimits> {
   disabled: boolean;
@@ -47,6 +73,9 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
   const api_limits = useSelector((state: ApiLimitsFormSate) => state);
   const rateLimit = useSelector((state: ApiLimitsFormSate) => state.rate_limit);
   const nodeLimit = useSelector((state: ApiLimitsFormSate) => state.node_limit);
+  const batchLimit = useSelector(
+    (state: ApiLimitsFormSate) => state.batch_limit
+  );
   const timeLimit = useSelector((state: ApiLimitsFormSate) => state.time_limit);
   const depthLimit = useSelector(
     (state: ApiLimitsFormSate) => state.depth_limit
@@ -82,6 +111,7 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
     const disabled_for_role =
       isEmpty(depthLimit?.global) &&
       isEmpty(nodeLimit?.global) &&
+      isEmpty(batchLimit?.global) &&
       isEmpty(timeLimit?.global) &&
       isEmpty(rateLimit?.global);
     return currentRole !== 'global' && disabled_for_role;
@@ -101,6 +131,8 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
         return dispatch(apiLimitActions.updateDepthLimitState(state));
       case 'node_limit':
         return dispatch(apiLimitActions.updateNodeLimitState(state));
+      case 'batch_limit':
+        return dispatch(apiLimitActions.updateBatchLimitState(state));
       case 'time_limit':
         return dispatch(apiLimitActions.updateTimeLimitState(state));
       default:
@@ -121,6 +153,10 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
             return dispatch(
               apiLimitActions.updateNodeLimitRole({ role, limit: value })
             );
+          case 'batch_limit':
+            return dispatch(
+              apiLimitActions.updateBatchLimitRole({ role, limit: value })
+            );
           case 'time_limit':
             return dispatch(
               apiLimitActions.updateTimeLimitRole({ role, limit: value })
@@ -136,6 +172,8 @@ const LimitsFormWrapper: React.FC<LimitsFormWrapperProps> = ({
           return dispatch(apiLimitActions.updateGlobalDepthLimit(value));
         case 'node_limit':
           return dispatch(apiLimitActions.updateGlobalNodeLimit(value));
+        case 'batch_limit':
+          return dispatch(apiLimitActions.updateGlobalBatchLimit(value));
         case 'time_limit':
           return dispatch(apiLimitActions.updateGlobalTimeLimit(value));
         default:
