@@ -345,8 +345,6 @@ enum article_select_column {
   <code>
     {`where: `}
     <a href='#boolexp'>BoolExp</a>
-    {` | `}
-      {`{ relation-name | computed-field-name: `}
   </code>
 </pre>
 
@@ -361,15 +359,6 @@ query {
     articles {
       title
     }
-  }
-}
-
-# And with relationships or computed fields:
-
-query {
-  author(where: { articles: { rating: { _gte: 4 } } }) {
-    id
-    name
   }
 }
 ```
@@ -594,12 +583,10 @@ query {
 
 <pre>
   <code>
-    {`
-    { computed-field-name | relation-name: }{`
-     {` | `}
-      `field-name: { `}
-        <a href='#operator'>Operator</a>
-        {`: Value }
+    {`{
+  field-name: { `}
+    <a href='#operator'>Operator</a>
+    {`: Value }
 }`}
   </code>
 </pre>
@@ -615,16 +602,32 @@ query {
     content
   }
 }
+```
 
-# can also use relationships and computed fields:
+:::info Note
 
+ColumnExp applies to more than just the column or the `field-name` but also apply to relationships and computed fields as well.
+
+:::
+
+**More examples:**
+
+```graphql
 query {
   articles(where: {author: {hometown: {_eq:"Amsterdam"}}}) {
     title
   }
 }
 
+# And also:
+
+query {
+  articles(where: {_not: {articles: {rating: {_gte: 4}}}}) {
+    title
+  }
+}
 ```
+
 
 ###### Operator {#operator}
 
