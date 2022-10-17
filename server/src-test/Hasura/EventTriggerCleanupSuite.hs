@@ -19,6 +19,7 @@ import Hasura.RQL.Types.Common (defaultSource)
 import Hasura.RQL.Types.EventTrigger
 import Hasura.SQL.Backend
 import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
+import Hasura.Server.Types
 import System.Cron (everyMinute)
 import System.Environment (getEnvironment)
 import System.Exit (exitFailure)
@@ -40,7 +41,7 @@ buildEventTriggerCleanupSuite = do
 
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams print
 
-  let pgContext = mkPGExecCtx PG.ReadCommitted pgPool
+  let pgContext = mkPGExecCtx PG.ReadCommitted pgPool NeverResizePool
       dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema
 
   pure $ do

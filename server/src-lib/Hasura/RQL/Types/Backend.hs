@@ -27,6 +27,7 @@ import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.SQL.Types
+import Hasura.Server.Types (ServerReplicas)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)
@@ -327,6 +328,9 @@ class
 
   -- Global naming convention
   namingConventionSupport :: SupportedNamingCase
+
+  -- Resize source pools based on the count of server replicas
+  resizeSourcePools :: SourceConfig b -> ServerReplicas -> IO ()
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

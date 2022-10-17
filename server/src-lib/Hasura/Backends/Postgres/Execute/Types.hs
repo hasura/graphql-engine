@@ -8,6 +8,7 @@ module Hasura.Backends.Postgres.Execute.Types
     mkTxErrorHandler,
     defaultTxErrorHandler,
     dmlTxErrorHandler,
+    resizePostgresPool,
 
     -- * Execution in a Postgres Source
     PGSourceConfig (..),
@@ -26,6 +27,7 @@ import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
 import Hasura.SQL.Types (ExtensionsSchema)
+import Hasura.Server.Types (ResizePoolStrategy (..), ServerReplicas, getServerReplicasInt)
 
 -- See Note [Existentially Quantified Types]
 type RunTx =
@@ -39,18 +41,31 @@ data PGExecCtx = PGExecCtx
     -- | Run a PG.ReadWrite transaction
     _pecRunReadWrite :: RunTx,
     -- | Destroys connection pools
-    _pecDestroyConn :: (IO ())
+    _pecDestroyConn :: (IO ()),
+    -- | Resize pools based on number of server instances
+    _pecResizePools :: ServerReplicas -> IO ()
   }
 
 -- | Creates a Postgres execution context for a single Postgres master pool
-mkPGExecCtx :: PG.TxIsolation -> PG.PGPool -> PGExecCtx
-mkPGExecCtx isoLevel pool =
+mkPGExecCtx :: PG.TxIsolation -> PG.PGPool -> ResizePoolStrategy -> PGExecCtx
+mkPGExecCtx isoLevel pool resizeStrategy =
   PGExecCtx
     { _pecRunReadOnly = (PG.runTx pool (isoLevel, Just PG.ReadOnly)),
       _pecRunReadNoTx = (PG.runTx' pool),
       _pecRunReadWrite = (PG.runTx pool (isoLevel, Just PG.ReadWrite)),
-      _pecDestroyConn = PG.destroyPGPool pool
+      _pecDestroyConn = PG.destroyPGPool pool,
+      _pecResizePools =
+        case resizeStrategy of
+          NeverResizePool -> const $ pure ()
+          ResizePool maxConnections -> resizePostgresPool pool maxConnections
     }
+
+-- | Resize Postgres pool by setting the number of connections equal to
+-- allowed maximum connections across all server instances divided by
+-- number of instances
+resizePostgresPool :: PG.PGPool -> Int -> ServerReplicas -> IO ()
+resizePostgresPool pool maxConnections serverReplicas =
+  PG.resizePGPool pool (maxConnections `div` getServerReplicasInt serverReplicas)
 
 defaultTxErrorHandler :: PG.PGTxErr -> QErr
 defaultTxErrorHandler = mkTxErrorHandler $ \case

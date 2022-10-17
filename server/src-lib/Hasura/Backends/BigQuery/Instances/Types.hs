@@ -13,6 +13,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.SQL.Backend
+import Hasura.Server.Types (ServerReplicas)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'BigQuery where
@@ -106,3 +107,8 @@ instance Backend 'BigQuery where
     -- As of now, computed fields are not supported in boolean and order by expressions.
     -- We don't have to generate arguments expression from implicit arguments.
     []
+
+  resizeSourcePools :: SourceConfig 'BigQuery -> ServerReplicas -> IO ()
+  resizeSourcePools _sourceConfig _serverReplicas =
+    -- BigQuery does not posses connection pooling
+    pure ()

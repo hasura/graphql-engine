@@ -72,7 +72,9 @@ import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock qualified as Clock
 import Data.Yaml qualified as Y
+import Database.MSSQL.Pool qualified as MSPool
 import Database.PG.Query qualified as PG
+import Database.PG.Query qualified as Q
 import GHC.AssertNF.CPP
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.Postgres.Connection
@@ -355,8 +357,9 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
         fst _gcDefaultPostgresConnInfo <&> \(dbUrlConf, _) ->
           let connSettings =
                 PostgresPoolSettings
-                  { _ppsMaxConnections = Just $ PG.cpConns soConnParams,
-                    _ppsIdleTimeout = Just $ PG.cpIdleTime soConnParams,
+                  { _ppsMaxConnections = Just $ Q.cpConns soConnParams,
+                    _ppsTotalMaxConnections = Nothing,
+                    _ppsIdleTimeout = Just $ Q.cpIdleTime soConnParams,
                     _ppsRetries = snd _gcDefaultPostgresConnInfo <|> Just 1,
                     _ppsPoolTimeout = PG.cpTimeout soConnParams,
                     _ppsConnectionLifetime = PG.cpMbLifetime soConnParams
@@ -1256,13 +1259,20 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
             PG.cpMbLifetime = _ppsConnectionLifetime =<< poolSettings,
             PG.cpTimeout = _ppsPoolTimeout =<< poolSettings
           }
-  pgPool <- liftIO $ PG.initPGPool connInfo connParams pgLogger
-  let pgExecCtx = mkPGExecCtx isoLevel pgPool
+  pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
+  let pgExecCtx = mkPGExecCtx isoLevel pgPool NeverResizePool
   pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty $ _pccExtensionsSchema config
 
 mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
 mkMSSQLSourceResolver _name (MSSQLConnConfiguration connInfo _) = runExceptT do
   env <- lift Env.getEnvironment
-  (connString, mssqlPool) <- createMSSQLPool connInfo env
-  let mssqlExecCtx = mkMSSQLExecCtx mssqlPool
+  let MSSQLConnectionInfo iConnString MSSQLPoolSettings {..} = connInfo
+      connOptions =
+        MSPool.ConnectionOptions
+          { _coConnections = fromMaybe defaultMSSQLMaxConnections _mpsMaxConnections,
+            _coStripes = 1,
+            _coIdleTime = _mpsIdleTimeout
+          }
+  (connString, mssqlPool) <- createMSSQLPool iConnString connOptions env
+  let mssqlExecCtx = mkMSSQLExecCtx mssqlPool NeverResizePool
   pure $ MSSQLSourceConfig connString mssqlExecCtx

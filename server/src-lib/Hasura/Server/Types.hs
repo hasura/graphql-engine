@@ -1,3 +1,5 @@
+{-# LANGUAGE MagicHash #-}
+
 module Hasura.Server.Types
   ( ExperimentalFeature (..),
     InstanceId (..),
@@ -15,12 +17,20 @@ module Hasura.Server.Types
     ServerConfigCtx (..),
     HasServerConfigCtx (..),
     getRequestId,
+    ServerReplicas,
+    -- exported only for tests
+    unsafeServerReplicas,
+    oneServerReplica,
+    getServerReplicasInt,
+    safeServerReplicas,
+    ResizePoolStrategy (..),
   )
 where
 
 import Data.Aeson
 import Data.HashSet qualified as Set
 import Database.PG.Query qualified as PG
+import GHC.Exts (Int (I#), Word (W#), int2Word#)
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
@@ -147,3 +157,31 @@ instance HasServerConfigCtx m => HasServerConfigCtx (ExceptT e m) where
 
 instance HasServerConfigCtx m => HasServerConfigCtx (StateT s m) where
   askServerConfigCtx = lift askServerConfigCtx
+
+-- | Number of server instances. A wrapper over @'Word' type, a non-negative integer
+-- with the same size as @'Int'.
+newtype ServerReplicas = ServerReplicas {serverReplicaNumber :: Word}
+  deriving (Show, Eq)
+
+unsafeServerReplicas :: Word -> ServerReplicas
+unsafeServerReplicas = ServerReplicas
+
+oneServerReplica :: ServerReplicas
+oneServerReplica = ServerReplicas 1
+
+-- | Safely build @'ServerReplicas' from non-negative and non-zero @'Int' value.
+safeServerReplicas :: Int -> Either Text ServerReplicas
+safeServerReplicas i@(I# i#)
+  | i <= 0 = Left $ "Expecting a non-zero and non-negative integer for ServerReplicas but got " <> tshow i
+  | otherwise = Right $ ServerReplicas $ W# (int2Word# i#)
+
+-- | Get server replic count in @'Int'
+getServerReplicasInt :: ServerReplicas -> Int
+getServerReplicasInt (ServerReplicas replicaNumber) = fromIntegral replicaNumber
+
+-- | A strategy for resizing a pool
+data ResizePoolStrategy
+  = -- | Never resize the pool
+    NeverResizePool
+  | -- | Resize the pool by using provided total maximum connections setting value
+    ResizePool Int

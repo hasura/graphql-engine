@@ -20,6 +20,7 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.HealthCheck
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (..))
 import Hasura.SQL.Backend
+import Hasura.Server.Types (ServerReplicas)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'MSSQL where
@@ -114,3 +115,7 @@ instance Backend 'MSSQL where
 
   fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments 'MSSQL -> [FunctionArgumentExp 'MSSQL v]
   fromComputedFieldImplicitArguments _ = absurd
+
+  resizeSourcePools :: SourceConfig 'MSSQL -> ServerReplicas -> IO ()
+  resizeSourcePools sourceConfig =
+    MSSQL.mssqlResizePools (MSSQL._mscExecCtx sourceConfig)
