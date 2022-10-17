@@ -35,6 +35,7 @@ import {
   getDriverPrefix,
 } from './api';
 import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
+import { getAllSourceKinds } from './common/getAllSourceKinds';
 
 export enum Feature {
   NotImplemented = 'Not Implemented',
@@ -126,29 +127,38 @@ const getDatabaseMethods = async ({
   return drivers.gdc;
 };
 
+const getDriverMethods = (driver: SupportedDrivers) => {
+  if (driver === 'pg') return drivers.postgres;
+
+  if (nativeDrivers.includes(driver)) return drivers[driver];
+
+  return drivers.gdc;
+};
+
 export const DataSource = (httpClient: AxiosInstance) => ({
   driver: {
     getAllSourceKinds: async () => {
-      const { metadata } = await exportMetadata({ httpClient });
-      const gdcDrivers = Object.keys(
-        metadata.backend_configs?.dataconnector ?? {}
-      );
-      const allDrivers = (
-        [...gdcDrivers, ...nativeDrivers] as SupportedDrivers[]
-      ).map(async driver => {
-        const driverName = nativeDrivers.includes(driver) ? driver : 'gdc';
-        const driverInfo = await drivers[
-          driverName
-        ].introspection?.getDriverInfo();
+      const serverSupportedDrivers = await getAllSourceKinds({ httpClient });
+      const allDrivers = serverSupportedDrivers.map(async driver => {
+        const driverInfo = await getDriverMethods(
+          driver.kind
+        ).introspection?.getDriverInfo();
+        console.log(driver, driverInfo);
 
-        if (!driverInfo || driverInfo === Feature.NotImplemented)
+        if (driverInfo && driverInfo !== Feature.NotImplemented)
           return {
-            name: driver,
-            displayName: driver,
-            release: 'GA',
-            native: driverName !== 'gdc',
+            name: driverInfo.name,
+            displayName: driverInfo.displayName,
+            release: driverInfo.release,
+            native: driver.builtin,
           };
-        return { ...driverInfo, native: driverName !== 'gdc' };
+
+        return {
+          name: driver.kind,
+          displayName: driver.kind,
+          release: 'Beta',
+          native: driver.builtin,
+        };
       });
       return Promise.all(allDrivers);
     },
