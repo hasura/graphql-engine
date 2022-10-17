@@ -1069,7 +1069,7 @@ export interface SSLConfigOptions {
 
 export interface ConnectionPoolSettings {
   max_connections?: number;
-  cumulative_max_connections?: number;
+  total_max_connections?: number;
   idle_timeout?: number;
   retries?: number;
   pool_timeout?: number;

@@ -9,7 +9,7 @@ export const MaxConnections: React.VFC<ConnectionSettingsFormProps> = ({
 }) => (
   <div className={styles.connection_settings_input_layout}>
     <LabeledInput
-      label="Max Connections"
+      label="Max Connections Per Instance"
       tooltipText="Maximum number of database connections per instance"
       type="number"
       className={`form-control ${styles.connnection_settings_form_input}`}

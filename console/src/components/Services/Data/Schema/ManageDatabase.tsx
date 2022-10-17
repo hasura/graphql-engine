@@ -1,3 +1,4 @@
+/* eslint-disable no-underscore-dangle */
 import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
@@ -9,6 +10,7 @@ import {
   useIsFeatureFlagEnabled,
 } from '@/features/FeatureFlags';
 import { nativeDrivers } from '@/features/DataSource';
+import { isProConsole } from '@/utils/proConsole';
 import styles from './styles.module.scss';
 import { Dispatch, ReduxState } from '../../../../types';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
@@ -61,7 +63,6 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
   const [removing, setRemoving] = useState(false);
   const [showUrl, setShowUrl] = useState(false);
   const [dbVersion, setDbVersion] = useState('');
-
   const fetchDBVersion = () => {
     const query = services[dataSource.driver].getDatabaseVersionSql ?? '';
 
@@ -103,6 +104,7 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
     dataSource.name,
     inconsistentObjects
   );
+
   return (
     <tr data-test={dataSource.name}>
       <td className="px-sm py-xs align-top w-0 whitespace-nowrap">
@@ -128,29 +130,14 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
         >
           Reload
         </Button>
-        <Button
-          size="sm"
-          className="mr-xs"
-          onClick={() => {
-            onEdit(dataSource.name);
-          }}
-        >
-          Edit
-        </Button>
-        <Button
-          size="sm"
-          isLoading={removing}
-          loadingText="Removing..."
-          className="text-red-600"
-          onClick={() => {
-            setRemoving(true);
-            onRemove(dataSource.name, dataSource.driver, () =>
-              setRemoving(false)
-            );
-          }}
-        >
-          Remove
-        </Button>
+        {isProConsole(window.__env)
+          ? !dataSource?.connection_pool_settings?.total_max_connections && (
+              <span className="bg-blue-100 font-bold rounded-lg pr-xs">
+                <FaExclamationTriangle className="mr-0.5 pb-1 pl-1.5 text-lg" />
+                Set Total Max Connections
+              </span>
+            )
+          : null}
       </td>
       <td className="px-sm py-xs max-w-xs align-top">
         <CollapsibleToggle dataSource={dataSource} dbVersion={dbVersion} />
@@ -180,7 +167,30 @@ const DatabaseListItem: React.FC<DatabaseListItemProps> = ({
             onClick={() => setShowUrl(true)}
           >
             <FaEye aria-hidden="true" />
-            <div className="ml-xs">Show Connection String</div>
+            <div className="ml-xs mr-4">Show Connection String</div>
+            <Button
+              size="sm"
+              className="mr-xs"
+              onClick={() => {
+                onEdit(dataSource.name);
+              }}
+            >
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              isLoading={removing}
+              loadingText="Removing..."
+              className="text-red-600"
+              onClick={() => {
+                setRemoving(true);
+                onRemove(dataSource.name, dataSource.driver, () =>
+                  setRemoving(false)
+                );
+              }}
+            >
+              Remove
+            </Button>
           </span>
         )}
         {showUrl && (
