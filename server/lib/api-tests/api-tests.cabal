@@ -124,6 +124,7 @@ executable api-tests
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
+    Test.Queries.VariablesSpec
     Test.Quoter.YamlSpec
     Test.Regression.ArrayLiteralTextEncodingSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
