@@ -406,7 +406,7 @@ PrepArgMap -&gt; QueryDB ('Postgres pgKind) Void SQLExp -&gt; PreparedSql
 </span><span id="line-157"></span><span>      </span><span class="hs-comment">-- query, maybe resulting in privilege escalation:</span><span>
 </span><span id="line-158"></span><span>      </span><span id="local-6989586621690602248"><span class="annot"><span class="annottext">withExplain :: Text
 </span><a href="#local-6989586621690602248"><span class="hs-identifier hs-var hs-var">withExplain</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;EXPLAIN (FORMAT TEXT) &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-string">&quot;EXPLAIN &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690602250"><span class="hs-identifier hs-var">textSQL</span></a></span><span>
 </span><span id="line-159"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690602247"><span class="annot"><span class="annottext">action :: TraceT (TxET QErr IO) EncJSON
@@ -502,7 +502,7 @@ ParameterizedSubscriptionQueryPlan b q -&gt; q
 </span><a href="#local-6989586621690602209"><span class="hs-identifier hs-var hs-var">explainQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Query
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.fromText</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;EXPLAIN (FORMAT TEXT) &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-string">&quot;EXPLAIN &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690602213"><span class="hs-identifier hs-var">queryText</span></a></span><span>
 </span><span id="line-181"></span><span>  </span><span id="local-6989586621690602208"><span class="annot"><span class="annottext">CohortId
