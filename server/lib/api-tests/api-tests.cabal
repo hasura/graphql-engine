@@ -47,6 +47,7 @@ executable api-tests
     TypeFamilies
 
   hs-source-dirs: test
+  default-language: Haskell2010
 
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
