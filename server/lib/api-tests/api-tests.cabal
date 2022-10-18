@@ -108,6 +108,7 @@ executable api-tests
     Test.Postgres.UniqueConstraintsSpec
     Test.Queries.AggregationPredicatesSpec
     Test.Queries.AggregationSpec
+    Test.Queries.AliasesSpec
     Test.Queries.Directives.IncludeAndSkipSpec
     Test.Queries.Directives.IncludeSpec
     Test.Queries.Directives.SkipSpec
