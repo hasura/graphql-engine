@@ -21,7 +21,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/doc
 
 -------------------
 
-## Features
+## FEATURES
 
 * **Make powerful queries**: Built-in filtering, pagination, pattern search, bulk insert, update, delete mutations
 * **Works with existing, live databases**: Point it to an existing database to instantly get a ready-to-use GraphQL API
@@ -150,36 +150,36 @@ Check out all the example applications in the [community/sample-apps](community/
   - [Try it out](https://realtime-poll.demo.hasura.io/)
   - [Tutorial](community/sample-apps/realtime-poll)
 
-### Videos
+### RELATED VIDEOS
 
 * [Add GraphQL to a self-hosted GitLab instance](https://www.youtube.com/watch?v=a2AhxKqd82Q) (*3:44 mins*)
 * [Todo app with Auth0 and GraphQL backend](https://www.youtube.com/watch?v=15ITBYnccgc) (*4:00 mins*)
 * [GraphQL on GitLab integrated with GitLab auth](https://www.youtube.com/watch?v=m1ChRhRLq7o) (*4:05 mins*)
 * [Dashboard for 10million rides with geo-location (PostGIS, Timescale)](https://www.youtube.com/watch?v=tsY573yyGWA) (*3:06 mins*)
 
-## Support & Troubleshooting
+## SUPPORT & WAYS TO TROUBLESHOOT
 
-The documentation and community will help you troubleshoot most issues. If you have encountered a bug or need to get in touch with us, you can contact us using one of the following channels:
+The documentation and community will help you troubleshoot most of the issues generally faced. If you have encountered a bug or need to get in touch with us, you can contact us via the following:
 
 * Support & feedback: [Discord](https://discord.gg/hasura)
 * Issue & bug tracking: [GitHub issues](https://github.com/hasura/graphql-engine/issues)
 * Follow product updates: [@HasuraHQ](https://twitter.com/hasurahq)
 * Talk to us on our [website chat](https://hasura.io)
 
-We are committed to fostering an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md).
+We are committed to cherish an open and welcoming environment in the community. Please see the [Code of Conduct](code-of-conduct.md).
 
 If you want to report a security issue, please [read this](SECURITY.md).
 
-## Stay up to date
+## STAY UP 2 DATE :)
 
 We release new features every month. Sign up for our newsletter by using the link below. We send newsletters only once a month.
 [https://hasura.io/newsletter/](https://hasura.io/newsletter/)
 
-## Contributing
+## HOW TO CONTRIBUTE?
 
 Check out our [contributing guide](CONTRIBUTING.md) for more details.
 
-## Brand assets
+## BRAND ASSEST:
 
 Hasura brand assets (logos, the Hasura mascot, powered by badges etc.) can be
 found in the [assets/brand](assets/brand) folder. Feel free to use them in your
@@ -203,7 +203,7 @@ badge to your applications built using Hasura. ❤️
 </a>
 ```
 
-## License
+## LICENSE
 
 The core GraphQL Engine is available under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0) (Apache-2.0).
 
@@ -212,9 +212,9 @@ All **other contents** (except those in [`server`](server), [`cli`](cli) and
 This includes everything in the [`docs`](docs) and [`community`](community)
 directories.
 
-## Translations
+## TRANSLATIONS
 
-This readme is available in the following translations:
+This readme file is available in the following languages as well:
 
 - [Japanese :jp:](translations/README.japanese.md) (:pray: [@moksahero](https://github.com/moksahero))
 - [French :fr:](translations/README.french.md) (:pray: [@l0ck3](https://github.com/l0ck3))
