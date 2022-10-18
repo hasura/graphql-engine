@@ -52,7 +52,7 @@ export function NeonOnboarding(props: {
   const neonIntegrationStatus = useNeonIntegration(
     'default',
     () => {
-      // on success, refetch queries to show neon onboarding link in connect database page,
+      // on success, refetch queries to show neon dashboard link in connect database page,
       // overriding the stale time
       reactQueryClient.refetchQueries(
         FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY
