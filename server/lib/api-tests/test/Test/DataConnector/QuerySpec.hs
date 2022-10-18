@@ -8,7 +8,10 @@ where
 
 --------------------------------------------------------------------------------
 
-import Harness.Backend.DataConnector qualified as DataConnector
+import Data.List.NonEmpty qualified as NE
+import Harness.Backend.DataConnector.Chinook qualified as Chinook
+import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
+import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
@@ -25,17 +28,16 @@ import Test.Hspec (SpecWith, describe, it, pendingWith)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
-    ( ( \(DataConnector.TestSourceConfig backendType backendConfig _sourceConfig md) ->
-          (Fixture.fixture $ Fixture.Backend backendType)
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
             { Fixture.setupTeardown = \(testEnv, _) ->
-                [ DataConnector.setupFixtureAction
-                    md
-                    backendConfig
-                    testEnv
-                ]
+                [Chinook.setupAction Chinook.referenceSourceConfig Reference.agentConfig testEnv]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [Chinook.setupAction Chinook.sqliteSourceConfig Sqlite.agentConfig testEnv]
             }
-      )
-        <$> DataConnector.chinookConfigs
+        ]
     )
     tests
 

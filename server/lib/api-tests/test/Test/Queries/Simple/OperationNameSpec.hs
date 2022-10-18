@@ -11,7 +11,7 @@ import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
-import Harness.Backend.DataConnector qualified as DataConnector
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
@@ -66,7 +66,7 @@ spec = do
             },
           (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ DataConnector.setupTablesAction schema testEnvironment
+                [ Sqlite.setupTablesAction schema testEnvironment
                 ]
             }
         ]

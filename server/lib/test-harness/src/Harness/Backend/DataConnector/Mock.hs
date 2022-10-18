@@ -1,18 +1,23 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 -- | GDC Mock Agent Fixture and test helpers
 module Harness.Backend.DataConnector.Mock
-  ( -- * Mock Agent
+  ( -- * Mock Fixture
+    setupAction,
+    setup,
+    teardown,
+    agentConfig,
+    mkLocalTestEnvironment,
+
+    -- * Mock Test Construction
     MockConfig (..),
-    mockAgentPort,
     MockAgentEnvironment (..),
     TestCase (..),
     TestCaseRequired (..),
+    runTest,
+    mockAgentPort,
     defaultTestCase,
     chinookMock,
-    runMockedTest,
-    mkLocalTestEnvironmentMock,
-    setupMock,
-    teardownMock,
-    setupMockAction,
   )
 where
 
@@ -22,15 +27,49 @@ import Control.Concurrent.Async (Async)
 import Control.Concurrent.Async qualified as Async
 import Data.Aeson qualified as Aeson
 import Data.IORef qualified as I
-import Harness.Backend.DataConnector.Mock.Agent
+import Harness.Backend.DataConnector.Mock.Server
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Http (RequestHeaders, healthCheck)
-import Harness.Test.Fixture (Options, SetupAction (..))
+import Harness.Quoter.Yaml (yaml)
+import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment (..))
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Test.Hspec (shouldBe)
+
+--------------------------------------------------------------------------------
+
+setupAction :: Aeson.Value -> Aeson.Value -> (TestEnvironment, MockAgentEnvironment) -> Fixture.SetupAction
+setupAction sourceMetadata backendConfig testEnv =
+  Fixture.SetupAction
+    (setup sourceMetadata backendConfig testEnv)
+    (const $ teardown testEnv)
+
+-- | Load the agent schema into HGE.
+setup :: Aeson.Value -> Aeson.Value -> (TestEnvironment, MockAgentEnvironment) -> IO ()
+setup sourceMetadata backendConfig (testEnvironment, _mockAgentEnvironment) = do
+  -- Clear and reconfigure the metadata
+  GraphqlEngine.setSource testEnvironment sourceMetadata (Just backendConfig)
+
+-- | Teardown the schema and kill the servant mock agent.
+teardown :: (TestEnvironment, MockAgentEnvironment) -> IO ()
+teardown (testEnvironment, MockAgentEnvironment {..}) = do
+  GraphqlEngine.clearMetadata testEnvironment
+  Async.cancel maeThread
+
+--------------------------------------------------------------------------------
+
+-- | Mock Agent @backend_configs@ field
+agentConfig :: Aeson.Value
+agentConfig =
+  let backendType = Fixture.defaultBackendTypeString $ Fixture.DataConnectorMock
+      agentUri = "http://127.0.0.1:" <> show mockAgentPort <> "/"
+   in [yaml|
+dataconnector:
+  *backendType:
+    uri: *agentUri
+|]
 
 --------------------------------------------------------------------------------
 -- Mock Agent
@@ -74,32 +113,14 @@ data MockAgentEnvironment = MockAgentEnvironment
   }
 
 -- | Create the 'I.IORef's and launch the servant mock agent.
-mkLocalTestEnvironmentMock :: TestEnvironment -> IO MockAgentEnvironment
-mkLocalTestEnvironmentMock _ = do
+mkLocalTestEnvironment :: TestEnvironment -> IO MockAgentEnvironment
+mkLocalTestEnvironment _ = do
   maeConfig <- I.newIORef chinookMock
   maeQuery <- I.newIORef Nothing
   maeQueryConfig <- I.newIORef Nothing
   maeThread <- Async.async $ runMockServer maeConfig maeQuery maeQueryConfig
   healthCheck $ "http://127.0.0.1:" <> show mockAgentPort <> "/health"
   pure $ MockAgentEnvironment {..}
-
-setupMockAction :: Aeson.Value -> Aeson.Value -> (TestEnvironment, MockAgentEnvironment) -> SetupAction
-setupMockAction sourceMetadata backendConfig testEnv =
-  SetupAction
-    (setupMock sourceMetadata backendConfig testEnv)
-    (const $ teardownMock testEnv)
-
--- | Load the agent schema into HGE.
-setupMock :: Aeson.Value -> Aeson.Value -> (TestEnvironment, MockAgentEnvironment) -> IO ()
-setupMock sourceMetadata backendConfig (testEnvironment, _mockAgentEnvironment) = do
-  -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment sourceMetadata (Just backendConfig)
-
--- | Teardown the schema and kill the servant mock agent.
-teardownMock :: (TestEnvironment, MockAgentEnvironment) -> IO ()
-teardownMock (testEnvironment, MockAgentEnvironment {..}) = do
-  GraphqlEngine.clearMetadata testEnvironment
-  Async.cancel maeThread
 
 -- | Mock Agent test case input.
 data TestCase = TestCase
@@ -142,8 +163,8 @@ defaultTestCase TestCaseRequired {..} =
 -- | Test runner for the Mock Agent. 'runMockedTest' sets the mocked
 -- value in the agent, fires a GQL request, then asserts on the
 -- expected response and 'API.Query' value.
-runMockedTest :: Options -> TestCase -> (TestEnvironment, MockAgentEnvironment) -> IO ()
-runMockedTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = do
+runTest :: Fixture.Options -> TestCase -> (TestEnvironment, MockAgentEnvironment) -> IO ()
+runTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = do
   -- Set the Agent with the 'MockConfig'
   I.writeIORef maeConfig _given
 
@@ -166,5 +187,5 @@ runMockedTest opts TestCase {..} (testEnvironment, MockAgentEnvironment {..}) = 
   I.writeIORef maeQueryConfig Nothing
 
   -- Assert that the 'API.QueryRequest' was constructed how we expected.
-  onJust _whenQuery ((query `shouldBe`) . Just)
-  onJust _whenConfig ((queryConfig `shouldBe`) . Just)
+  for_ _whenQuery ((query `shouldBe`) . Just)
+  for_ _whenConfig ((queryConfig `shouldBe`) . Just)

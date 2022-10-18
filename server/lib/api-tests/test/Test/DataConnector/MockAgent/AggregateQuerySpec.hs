@@ -5,19 +5,22 @@ module Test.DataConnector.MockAgent.AggregateQuerySpec
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector (TestCase (..))
-import Harness.Backend.DataConnector qualified as DataConnector
+import Harness.Backend.DataConnector.Mock (TestCase (..))
+import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
+
+--------------------------------------------------------------------------------
 
 spec :: SpecWith TestEnvironment
 spec =
@@ -25,18 +28,20 @@ spec =
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorMock)
             { Fixture.mkLocalTestEnvironment =
-                DataConnector.mkLocalTestEnvironmentMock,
+                Mock.mkLocalTestEnvironment,
               Fixture.setupTeardown = \(testEnv, mockEnv) ->
-                [DataConnector.setupMockAction sourceMetadata DataConnector.mockBackendConfig (testEnv, mockEnv)]
+                [Mock.setupAction sourceMetadata Mock.agentConfig (testEnv, mockEnv)]
             }
         ]
     )
     tests
 
+--------------------------------------------------------------------------------
+
 sourceMetadata :: Aeson.Value
 sourceMetadata =
-  let source = defaultSource DataConnectorMock
-      backendType = defaultBackendTypeString DataConnectorMock
+  let source = Fixture.defaultSource Fixture.DataConnectorMock
+      backendType = Fixture.defaultBackendTypeString Fixture.DataConnectorMock
    in [yaml|
         name : *source
         kind: *backendType
@@ -78,12 +83,12 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, DataConnector.MockAgentEnvironment)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests opts = describe "Aggregate Query Tests" $ do
   it "works with multiple nodes fields and through array relations" $
-    DataConnector.runMockedTest opts $
+    Mock.runTest opts $
       let required =
-            DataConnector.TestCaseRequired
+            Mock.TestCaseRequired
               { _givenRequired =
                   let response =
                         [ [ (API.FieldName "ArtistIds_Id", API.mkColumnFieldValue $ Aeson.Number 1),
@@ -97,7 +102,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                             )
                           ]
                         ]
-                   in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse response)},
+                   in Mock.chinookMock {Mock._queryResponse = \_ -> Right (rowsResponse response)},
                 _whenRequestRequired =
                   [graphql|
                     query getArtist {
@@ -133,7 +138,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                                 - Title: Let There Be Rock
                     |]
               }
-       in (DataConnector.defaultTestCase required)
+       in (Mock.defaultTestCase required)
             { _whenQuery =
                 Just
                   ( API.QueryRequest
@@ -190,9 +195,9 @@ tests opts = describe "Aggregate Query Tests" $ do
             }
 
   it "works with multiple aggregate fields and through array relations" $
-    DataConnector.runMockedTest opts $
+    Mock.runTest opts $
       let required =
-            DataConnector.TestCaseRequired
+            Mock.TestCaseRequired
               { _givenRequired =
                   let aggregates =
                         [ (API.FieldName "counts_count", Aeson.Number 2),
@@ -216,7 +221,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                             )
                           ]
                         ]
-                   in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (aggregatesAndRowsResponse aggregates rows)},
+                   in Mock.chinookMock {Mock._queryResponse = \_ -> Right (aggregatesAndRowsResponse aggregates rows)},
                 _whenRequestRequired =
                   [graphql|
                     query getInvoices {
@@ -264,7 +269,7 @@ tests opts = describe "Aggregate Query Tests" $ do
                                 count: 4
                     |]
               }
-       in (DataConnector.defaultTestCase required)
+       in (Mock.defaultTestCase required)
             { _whenQuery =
                 Just
                   ( API.QueryRequest

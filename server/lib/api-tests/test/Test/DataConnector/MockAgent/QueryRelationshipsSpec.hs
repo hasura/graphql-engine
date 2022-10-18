@@ -6,12 +6,14 @@ module Test.DataConnector.MockAgent.QueryRelationshipsSpec
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Data.Aeson qualified as Aeson
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector (TestCase (..))
-import Harness.Backend.DataConnector qualified as DataConnector
+import Harness.Backend.DataConnector.Mock (TestCase (..))
+import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
@@ -21,18 +23,22 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
+--------------------------------------------------------------------------------
+
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorMock)
-            { Fixture.mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
+            { Fixture.mkLocalTestEnvironment = Mock.mkLocalTestEnvironment,
               Fixture.setupTeardown = \(testEnv, mockEnv) ->
-                [DataConnector.setupMockAction sourceMetadata DataConnector.mockBackendConfig (testEnv, mockEnv)]
+                [Mock.setupAction sourceMetadata Mock.agentConfig (testEnv, mockEnv)]
             }
         ]
     )
     tests
+
+--------------------------------------------------------------------------------
 
 testRoleName :: ByteString
 testRoleName = "test-role"
@@ -122,13 +128,13 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, DataConnector.MockAgentEnvironment)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests opts = do
   describe "Object Relationships Tests" $ do
     it "works with multiple object relationships" $
-      DataConnector.runMockedTest opts $
+      Mock.runTest opts $
         let required =
-              DataConnector.TestCaseRequired
+              Mock.TestCaseRequired
                 { _givenRequired =
                     let albums =
                           [ [ (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock (We Salute You)"),
@@ -146,7 +152,7 @@ tests opts = do
                               )
                             ]
                           ]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse albums)},
+                     in Mock.chinookMock {Mock._queryResponse = \_ -> Right (rowsResponse albums)},
                   _whenRequestRequired =
                     [graphql|
                       query getTrack {
@@ -172,7 +178,7 @@ tests opts = do
                             Name: "For Those About To Rock (We Salute You)"
                     |]
                 }
-         in (DataConnector.defaultTestCase required)
+         in (Mock.defaultTestCase required)
               { _whenQuery =
                   Just
                     ( API.QueryRequest
@@ -255,9 +261,9 @@ tests opts = do
               }
 
     it "works with an order by that navigates relationships" $
-      DataConnector.runMockedTest opts $
+      Mock.runTest opts $
         let required =
-              DataConnector.TestCaseRequired
+              Mock.TestCaseRequired
                 { _givenRequired =
                     let albums =
                           [ [ ( API.FieldName "Album",
@@ -274,7 +280,7 @@ tests opts = do
                               (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Camarão que Dorme e Onda Leva")
                             ]
                           ]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse albums)},
+                     in Mock.chinookMock {Mock._queryResponse = \_ -> Right (rowsResponse albums)},
                   _whenRequestRequired =
                     [graphql|
                       query getTrack {
@@ -298,7 +304,7 @@ tests opts = do
                             Name: Camarão que Dorme e Onda Leva
                     |]
                 }
-         in (DataConnector.defaultTestCase required)
+         in (Mock.defaultTestCase required)
               { _whenQuery =
                   Just
                     ( API.QueryRequest
@@ -406,15 +412,15 @@ tests opts = do
               }
 
     it "works with an order by that navigates a relationship with table permissions" $
-      DataConnector.runMockedTest opts $
+      Mock.runTest opts $
         let required =
-              DataConnector.TestCaseRequired
+              Mock.TestCaseRequired
                 { _givenRequired =
                     let albums =
                           [ [ (API.FieldName "EmployeeId", API.mkColumnFieldValue $ Aeson.Number 3)
                             ]
                           ]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse albums)},
+                     in Mock.chinookMock {Mock._queryResponse = \_ -> Right (rowsResponse albums)},
                   _whenRequestRequired =
                     [graphql|
                       query getEmployee {
@@ -430,7 +436,7 @@ tests opts = do
                           - EmployeeId: 3
                     |]
                 }
-         in (DataConnector.defaultTestCase required)
+         in (Mock.defaultTestCase required)
               { _whenRequestHeaders = [("X-Hasura-Role", testRoleName)],
                 _whenQuery =
                   Just

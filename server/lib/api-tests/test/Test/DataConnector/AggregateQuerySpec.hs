@@ -6,7 +6,10 @@ module Test.DataConnector.AggregateQuerySpec
 where
 
 import Data.Aeson qualified as Aeson
-import Harness.Backend.DataConnector qualified as DataConnector
+import Data.List.NonEmpty qualified as NE
+import Harness.Backend.DataConnector.Chinook qualified as Chinook
+import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
+import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
@@ -21,13 +24,18 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
-    ( ( \(DataConnector.TestSourceConfig backendType backendConfig sourceConfig _md) ->
-          (Fixture.fixture $ Fixture.Backend backendType)
-            { Fixture.setupTeardown =
-                \(testEnv, _) -> [DataConnector.setupFixtureAction (sourceMetadata backendType sourceConfig) backendConfig testEnv]
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Chinook.setupAction (sourceMetadata Fixture.DataConnectorReference Reference.sourceConfiguration) Reference.agentConfig testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Chinook.setupAction (sourceMetadata Fixture.DataConnectorSqlite Sqlite.sourceConfiguration) Sqlite.agentConfig testEnvironment
+                ]
             }
-      )
-        <$> DataConnector.chinookConfigs
+        ]
     )
     tests
 

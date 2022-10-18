@@ -90,9 +90,11 @@ library
     Harness.Backend.BigQuery
     Harness.Backend.Citus
     Harness.Backend.Cockroach
-    Harness.Backend.DataConnector
-    Harness.Backend.DataConnector.Mock.Agent
     Harness.Backend.DataConnector.Mock
+    Harness.Backend.DataConnector.Mock.Server
+    Harness.Backend.DataConnector.Chinook
+    Harness.Backend.DataConnector.Chinook.Reference
+    Harness.Backend.DataConnector.Chinook.Sqlite
     Harness.Backend.DataConnector.Sqlite
     Harness.Backend.Mysql
     Harness.Backend.Postgres

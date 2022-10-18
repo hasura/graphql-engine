@@ -8,7 +8,10 @@ where
 
 import Data.Aeson (Value)
 import Data.ByteString (ByteString)
-import Harness.Backend.DataConnector qualified as DataConnector
+import Data.List.NonEmpty qualified as NE
+import Harness.Backend.DataConnector.Chinook qualified as Chinook
+import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
+import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
@@ -21,26 +24,30 @@ import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it, pendingWith)
 
 --------------------------------------------------------------------------------
--- Preamble
 
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.runWithLocalTestEnvironment
-    ( ( \(DataConnector.TestSourceConfig backendType backendConfig sourceConfig _md) ->
-          (Fixture.fixture $ Fixture.Backend backendType)
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
             { Fixture.setupTeardown = \(testEnv, _) ->
-                [DataConnector.setupFixtureAction (sourceMetadata backendType sourceConfig) backendConfig testEnv]
+                [Chinook.setupAction (sourceConfig Fixture.DataConnectorReference Reference.sourceConfiguration) Reference.agentConfig testEnv]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [Chinook.setupAction (sourceConfig Fixture.DataConnectorSqlite Sqlite.sourceConfiguration) Sqlite.agentConfig testEnv]
             }
-      )
-        <$> DataConnector.chinookConfigs
+        ]
     )
     tests
+
+--------------------------------------------------------------------------------
 
 testRoleName :: ByteString
 testRoleName = "test-role"
 
-sourceMetadata :: BackendType -> Value -> Value
-sourceMetadata backendType config =
+sourceConfig :: BackendType -> Value -> Value
+sourceConfig backendType config =
   let source = defaultSource backendType
       backendTypeString = defaultBackendTypeString backendType
    in [yaml|
@@ -104,6 +111,8 @@ sourceMetadata backendType config =
                           _eq: X-Hasura-CustomerId
         configuration: *config
 |]
+
+--------------------------------------------------------------------------------
 
 tests :: Fixture.Options -> SpecWith (TestEnvironment, a)
 tests opts = describe "SelectPermissionsSpec" $ do

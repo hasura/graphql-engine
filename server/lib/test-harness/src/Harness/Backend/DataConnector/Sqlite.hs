@@ -1,6 +1,9 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
+-- | General Purpose Sqlite GDC Fixture.
+--
+-- NOTE: This module is intended to be imported qualified.
 module Harness.Backend.DataConnector.Sqlite
   ( setupTablesAction,
     setupPermissionsAction,
@@ -11,17 +14,12 @@ where
 
 import Data.Aeson qualified as Aeson
 import Data.Text qualified as Text
-import Data.Text.Extended (commaSeparated)
-import Data.Time (defaultTimeLocale, formatTime)
+import Data.Text.Extended qualified as Text (commaSeparated)
+import Data.Time qualified as Time
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
-import Harness.Test.Fixture
-  ( BackendType (..),
-    SetupAction (..),
-    defaultBackendTypeString,
-    defaultSource,
-  )
+import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (SchemaName)
 import Harness.Test.Schema qualified as Schema
@@ -32,31 +30,31 @@ import Hasura.Prelude
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup DataConnectorSqlite permissions env
+setupPermissions permissions env = Permissions.setup Fixture.DataConnectorSqlite permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown DataConnectorSqlite permissions env
+teardownPermissions permissions env = Permissions.teardown Fixture.DataConnectorSqlite permissions env
 
-setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
+setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> Fixture.SetupAction
 setupPermissionsAction permissions env =
-  SetupAction
+  Fixture.SetupAction
     (setupPermissions permissions env)
     (const $ teardownPermissions permissions env)
 
 --------------------------------------------------------------------------------
 
-setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
+setupTablesAction :: [Schema.Table] -> TestEnvironment -> Fixture.SetupAction
 setupTablesAction ts env =
-  SetupAction
+  Fixture.SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
 
 -- | Metadata source information for the default Sqlite instance.
 sourceMetadata :: Aeson.Value
 sourceMetadata =
-  let source = defaultSource DataConnectorSqlite
-      backendType = defaultBackendTypeString DataConnectorSqlite
+  let source = Fixture.defaultSource Fixture.DataConnectorSqlite
+      backendType = Fixture.defaultBackendTypeString Fixture.DataConnectorSqlite
    in [yaml|
 name: *source
 kind: *backendType
@@ -68,7 +66,7 @@ configuration:
 
 backendConfig :: Aeson.Value
 backendConfig =
-  let backendType = defaultBackendTypeString DataConnectorSqlite
+  let backendType = Fixture.defaultBackendTypeString Fixture.DataConnectorSqlite
    in [yaml|
 dataconnector:
   *backendType:
@@ -88,15 +86,15 @@ setup tables (testEnvironment, _) = do
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
-    Schema.trackObjectRelationships DataConnectorSqlite table testEnvironment
-    Schema.trackArrayRelationships DataConnectorSqlite table testEnvironment
+    Schema.trackObjectRelationships Fixture.DataConnectorSqlite table testEnvironment
+    Schema.trackArrayRelationships Fixture.DataConnectorSqlite table testEnvironment
 
 -- | Post an http request to start tracking the table
 trackTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 trackTable testEnvironment Schema.Table {tableName} = do
-  let backendType = defaultBackendTypeString DataConnectorSqlite
+  let backendType = Fixture.defaultBackendTypeString Fixture.DataConnectorSqlite
       requestType = backendType <> "_track_table"
-      source = defaultSource DataConnectorSqlite
+      source = Fixture.defaultSource Fixture.DataConnectorSqlite
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -111,8 +109,8 @@ args:
 -- | Post an http request to stop tracking the table
 untrackTable :: TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment Schema.Table {tableName} = do
-  let backendType = defaultBackendTypeString DataConnectorSqlite
-      source = defaultSource DataConnectorSqlite
+  let backendType = Fixture.defaultBackendTypeString Fixture.DataConnectorSqlite
+      source = Fixture.defaultSource Fixture.DataConnectorSqlite
       requestType = backendType <> "_untrack_table"
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -132,7 +130,7 @@ teardown (reverse -> tables) (testEnvironment, _) = do
   finally
     -- Teardown relationships first
     ( forFinally_ tables $ \table ->
-        Schema.untrackRelationships Postgres table testEnvironment
+        Schema.untrackRelationships Fixture.DataConnectorSqlite table testEnvironment
     )
     -- Then teardown tables
     ( forFinally_ tables $ \table ->
@@ -145,7 +143,7 @@ teardown (reverse -> tables) (testEnvironment, _) = do
 -- SQLite Agent.
 runSql :: TestEnvironment -> String -> String -> IO ()
 runSql testEnvironment source sql = do
-  Schema.runSQL DataConnectorSqlite source sql testEnvironment
+  Schema.runSQL Fixture.DataConnectorSqlite source sql testEnvironment
   GraphqlEngine.reloadMetadata testEnvironment
 
 -- | Serialize Table into a SQLite statement, as needed, and execute it on the SQLite backend
@@ -160,13 +158,13 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
             [ "CREATE TABLE",
               wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
               "(",
-              commaSeparated $
+              Text.commaSeparated $
                 (mkColumn <$> tableColumns)
                   <> (bool [mkPrimaryKey pk] [] (null pk))
                   <> (mkReference schemaName <$> tableReferences),
               ");"
             ]
-  runSql testEnv (defaultSource DataConnectorSqlite) expr
+  runSql testEnv (Fixture.defaultSource Fixture.DataConnectorSqlite) expr
   for_ tableUniqueConstraints (createUniqueConstraint testEnv tableName)
 
 indexName :: Text -> [Text] -> Text
@@ -177,11 +175,11 @@ createUniqueConstraint testEnv tableName = \case
   Schema.UniqueConstraintColumns cols -> do
     let schemaName = Schema.getSchemaName testEnv
         tableIdentifier = wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName
-    runSql testEnv (defaultSource DataConnectorSqlite) $ Text.unpack $ Text.unwords $ ["CREATE UNIQUE INDEX", indexName tableIdentifier cols, " ON ", tableName, "("] ++ [commaSeparated cols] ++ [")"]
+    runSql testEnv (Fixture.defaultSource Fixture.DataConnectorSqlite) $ Text.unpack $ Text.unwords $ ["CREATE UNIQUE INDEX", indexName tableIdentifier cols, " ON ", tableName, "("] ++ [Text.commaSeparated cols] ++ [")"]
   Schema.UniqueConstraintExpression ex -> do
     let schemaName = Schema.getSchemaName testEnv
         tableIdentifier = wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName
-    runSql testEnv (defaultSource DataConnectorSqlite) $ Text.unpack $ Text.unwords $ ["CREATE UNIQUE INDEX", indexName tableIdentifier [ex], " ON ", tableName, "((", ex, "))"]
+    runSql testEnv (Fixture.defaultSource Fixture.DataConnectorSqlite) $ Text.unpack $ Text.unwords $ ["CREATE UNIQUE INDEX", indexName tableIdentifier [ex], " ON ", tableName, "((", ex, "))"]
 
 mkColumn :: Schema.Column -> Text
 mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
@@ -197,7 +195,7 @@ mkPrimaryKey key =
   Text.unwords
     [ "PRIMARY KEY",
       "(",
-      commaSeparated $ map wrapIdentifier key,
+      Text.commaSeparated $ map wrapIdentifier key,
       ")"
     ]
 
@@ -233,7 +231,7 @@ serialize :: Schema.ScalarValue -> Text
 serialize = \case
   Schema.VInt i -> tshow i
   Schema.VStr s -> "'" <> Text.replace "'" "\'" s <> "'"
-  Schema.VUTCTime t -> Text.pack $ formatTime defaultTimeLocale "'%F %T'" t
+  Schema.VUTCTime t -> Text.pack $ Time.formatTime Time.defaultTimeLocale "'%F %T'" t
   Schema.VBool b -> if b then "1" else "0"
   Schema.VGeography (Schema.WKT wkt) -> Text.concat ["st_geogfromtext(\'", wkt, "\')"]
   Schema.VNull -> "NULL"
@@ -245,16 +243,16 @@ insertTable testEnv Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
     let schemaName = Schema.getSchemaName testEnv
-    runSql testEnv (defaultSource DataConnectorSqlite) $
+    runSql testEnv (Fixture.defaultSource Fixture.DataConnectorSqlite) $
       Text.unpack $
         Text.unwords
           [ "INSERT INTO",
             wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
             "(",
-            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+            Text.commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
             ")",
             "VALUES",
-            commaSeparated $ mkRow <$> tableData,
+            Text.commaSeparated $ mkRow <$> tableData,
             ";"
           ]
 
@@ -262,7 +260,7 @@ mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =
   Text.unwords
     [ "(",
-      commaSeparated $ serialize <$> row,
+      Text.commaSeparated $ serialize <$> row,
       ")"
     ]
 
@@ -270,7 +268,7 @@ mkRow row =
 dropTable :: TestEnvironment -> Schema.Table -> IO ()
 dropTable testEnv Schema.Table {tableName} = do
   let schemaName = Schema.getSchemaName testEnv
-  runSql testEnv (defaultSource DataConnectorSqlite) $
+  runSql testEnv (Fixture.defaultSource Fixture.DataConnectorSqlite) $
     Text.unpack $
       Text.unwords
         [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
