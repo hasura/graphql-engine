@@ -111,12 +111,12 @@ import Control.Arrow.Extended (ArrowChoice)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Kind (Constraint, Type)
-import Data.Text.NonEmpty (mkNonEmptyText)
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..))
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
+import Language.GraphQL.Draft.Syntax qualified as GQL
 
 --------------------------------------------------------------------------------
 
@@ -478,7 +478,7 @@ backendSourceKindFromText text =
     <|> BigQueryValue <$> staticKindFromText BigQueryKind
     <|> MySQLValue <$> staticKindFromText MySQLKind
     -- IMPORTANT: This must be the last thing here, since it will accept (almost) any string
-    <|> DataConnectorValue . DataConnectorKind . DataConnectorName <$> mkNonEmptyText text
+    <|> DataConnectorValue . DataConnectorKind . DataConnectorName <$> GQL.mkName text
   where
     staticKindFromText :: BackendSourceKind b -> Maybe (BackendSourceKind b)
     staticKindFromText kind =
