@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { APIError } from '@/hooks/error';
 import { IconCardGroupItem } from '@/new-components/IconCardGroup';
@@ -40,13 +40,18 @@ export function useFamiliaritySurveyData(): {
     },
   });
 
-  if (isLoading || isError) {
-    return emptySurveyResponseData;
-  }
-
   const surveyQuestionData = data?.data?.survey?.find(
     surveyInfo => surveyInfo.survey_name === surveyName
   )?.survey_questions?.[0];
+
+  const surveyOptions = useMemo(
+    () => mapOptionLabelToDetails(surveyQuestionData),
+    [surveyQuestionData]
+  );
+
+  if (isLoading || isError) {
+    return emptySurveyResponseData;
+  }
 
   // skip showing the survey form if survey has no questions
   if (!surveyQuestionData) {
@@ -92,7 +97,7 @@ export function useFamiliaritySurveyData(): {
     showFamiliaritySurvey,
     data: {
       question: surveyQuestionData.question,
-      options: mapOptionLabelToDetails(surveyQuestionData),
+      options: surveyOptions,
     },
     onSkip,
     onOptionClick,
