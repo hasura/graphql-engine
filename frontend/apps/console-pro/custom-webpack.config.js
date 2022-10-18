@@ -19,7 +19,6 @@ module.exports = (config, context) => {
         __DEVELOPMENT__: true,
         __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
         CONSOLE_ASSET_VERSION: Date.now().toString(),
-        'process.hrtime': () => null,
       }),
     ],
     module: {
@@ -69,16 +68,5 @@ module.exports = (config, context) => {
       },
     },
   });
-  /*
-  // Kept there while we setup everything
-  console.log('----------------NX-CONTEXT-------------------');
-  log(context);
-  console.log('----------------ORIGINAL-WEBPACK-CONFIG------');
-  log(config);
-  console.log('----------------MODIFIED-WEBPACK-CONFIG------');
-  log(output);
-  console.log('---------------------------------------------');
-
-   */
   return output;
 };

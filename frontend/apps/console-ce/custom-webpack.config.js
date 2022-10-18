@@ -19,7 +19,6 @@ module.exports = (config, context) => {
         __DEVELOPMENT__: true,
         __DEVTOOLS__: true, // <-------- DISABLE redux-devtools HERE
         CONSOLE_ASSET_VERSION: Date.now().toString(),
-        'process.hrtime': () => null,
       }),
     ],
     module: {

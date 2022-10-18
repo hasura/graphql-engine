@@ -5,4 +5,7 @@
  */
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
+// Needed for action codegen
+import 'browser-hrtime';
+
 (window as any).global = window;
