@@ -30,8 +30,8 @@ export const NEON_ONBOARDING_QUERY_KEY = 'neonOnboarding';
 export const experimentId = growthExperimentsIds.onboardingWizardV1;
 
 export const graphQlMutation = `
-mutation trackExperimentsCohortActivity ($projectId: uuid!, $experimentId: String!, $kind: String!) {
-  trackExperimentsCohortActivity(experiment: $experimentId, payload: {kind: $kind, project_id: $projectId}) {
+mutation trackExperimentsCohortActivity ($projectId: uuid!, $experimentId: String!, $kind: String! $error_code: String) {
+  trackExperimentsCohortActivity(experiment: $experimentId, payload: {kind: $kind, project_id: $projectId, error_code: $error_code}) {
     status
   }
 }
