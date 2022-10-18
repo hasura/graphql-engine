@@ -5,9 +5,9 @@ import { isEmpty } from '../../../Common/utils/jsUtils';
 import { ApiLimitsFormSate } from './state';
 
 const getApiLimits = (metadata: HasuraMetadataV3) => {
-  const { node_limit, depth_limit, rate_limit, time_limit } =
+  const { node_limit, depth_limit, rate_limit, time_limit, batch_limit } =
     metadata.api_limits ?? {};
-  return { depth_limit, node_limit, rate_limit, time_limit };
+  return { depth_limit, node_limit, rate_limit, time_limit, batch_limit };
 };
 
 export enum RoleState {
@@ -50,6 +50,12 @@ const prepareApiLimits = (
     global: apiLimits?.time_limit?.global ?? -1,
     state: RoleState.disabled,
     per_role: apiLimits?.time_limit?.per_role ?? {},
+  };
+
+  res.batch_limit = {
+    global: apiLimits?.batch_limit?.global ?? -1,
+    state: RoleState.disabled,
+    per_role: apiLimits?.batch_limit?.per_role ?? {},
   };
 
   return res;

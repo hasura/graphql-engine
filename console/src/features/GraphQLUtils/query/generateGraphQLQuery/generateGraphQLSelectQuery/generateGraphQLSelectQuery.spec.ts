@@ -22,8 +22,8 @@ describe('GraphQL utils for browse rows - ', () => {
 
       expect(query).toMatchInlineSnapshot(`
         "query MyQuery {
-            sales_stores  {
-              store_id 
+              sales_stores  {
+                store_id 
         ,store_name 
         ,phone 
         ,email 
@@ -32,8 +32,8 @@ describe('GraphQL utils for browse rows - ', () => {
         ,state 
         ,zip_code 
 
-            }
-          }"
+              }
+            }"
       `);
     });
   });
@@ -65,8 +65,8 @@ describe('GraphQL utils for browse rows - ', () => {
 
       expect(query).toMatchInlineSnapshot(`
         "query MyQuery {
-            CustomNameForTable  {
-              store_id 
+              CustomNameForTable  {
+                store_id 
         ,store_name 
         ,phone 
         ,email 
@@ -75,8 +75,8 @@ describe('GraphQL utils for browse rows - ', () => {
         ,state 
         ,zip_code 
 
-            }
-          }"
+              }
+            }"
       `);
     });
   });
@@ -106,8 +106,8 @@ describe('GraphQL utils for browse rows - ', () => {
 
       expect(query).toMatchInlineSnapshot(`
         "query MyQuery {
-            CustomSelectQueryName  {
-              store_id 
+              CustomSelectQueryName  {
+                store_id 
         ,store_name 
         ,phone 
         ,email 
@@ -116,8 +116,8 @@ describe('GraphQL utils for browse rows - ', () => {
         ,state 
         ,zip_code 
 
-            }
-          }"
+              }
+            }"
       `);
     });
   });
@@ -161,8 +161,8 @@ describe('GraphQL utils for browse rows - ', () => {
 
       expect(query).toMatchInlineSnapshot(`
         "query MyQuery {
-            sales_stores  {
-              store_id 
+              sales_stores  {
+                store_id 
         ,store_name 
         ,customNameForPhone 
         ,customNameForEmail 
@@ -171,8 +171,8 @@ describe('GraphQL utils for browse rows - ', () => {
         ,state 
         ,zip_code 
 
-            }
-          }"
+              }
+            }"
       `);
     });
   });
@@ -204,9 +204,9 @@ describe('GraphQL utils for browse rows - ', () => {
 
       expect(query).toMatchInlineSnapshot(`
         "query MyQuery  {
-            SourceNamespace_  {
-              TablePrefix_sales_stores_TableSuffix {
-                store_id 
+                SourceNamespace_  {
+                  TablePrefix_sales_stores_TableSuffix  {
+                    store_id 
         ,store_name 
         ,phone 
         ,email 
@@ -215,9 +215,9 @@ describe('GraphQL utils for browse rows - ', () => {
         ,state 
         ,zip_code 
 
-              }
-            }
-          }"
+                  }
+                }
+              }"
       `);
     });
   });
@@ -270,9 +270,9 @@ describe('GraphQL utils for browse rows - ', () => {
 
       expect(query).toMatchInlineSnapshot(`
         "query MyQuery  {
-            SourceNamespace_  {
-              TablePrefix_CustomNameForTable_TableSuffix {
-                store_id 
+                SourceNamespace_  {
+                  TablePrefix_CustomNameForTable_TableSuffix  {
+                    store_id 
         ,store_name 
         ,customNameForPhone 
         ,customNameForEmail 
@@ -281,9 +281,9 @@ describe('GraphQL utils for browse rows - ', () => {
         ,state 
         ,zip_code 
 
-              }
-            }
-          }"
+                  }
+                }
+              }"
       `);
     });
   });
@@ -337,9 +337,9 @@ describe('GraphQL utils for browse rows - ', () => {
 
       expect(query).toMatchInlineSnapshot(`
         "query MyQuery  {
-            SourceNamespace_  {
-              TablePrefix_CustomSelectQueryName_TableSuffix {
-                store_id 
+                SourceNamespace_  {
+                  TablePrefix_CustomSelectQueryName_TableSuffix  {
+                    store_id 
         ,store_name 
         ,customNameForPhone 
         ,customNameForEmail 
@@ -348,9 +348,9 @@ describe('GraphQL utils for browse rows - ', () => {
         ,state 
         ,zip_code 
 
-              }
-            }
-          }"
+                  }
+                }
+              }"
       `);
     });
   });
@@ -413,9 +413,9 @@ describe('GraphQL utils for browse rows - ', () => {
 
       expect(query).toMatchInlineSnapshot(`
         "query MyQuery  {
-            SourceNamespace_ (where: {store_id: { _eq: 4},customNameForStreet: { _eq: \\"some street name\\"}},order_by: {customNameForStreet: desc},limit: 10,offset: 15) {
-              TablePrefix_CustomSelectQueryName_TableSuffix {
-                store_id 
+                SourceNamespace_  {
+                  TablePrefix_CustomSelectQueryName_TableSuffix (where: {store_id: { _eq: 4},customNameForStreet: { _eq: \\"some street name\\"}},order_by: {customNameForStreet: desc},limit: 10,offset: 15) {
+                    store_id 
         ,store_name 
         ,customNameForPhone 
         ,customNameForEmail 
@@ -424,9 +424,9 @@ describe('GraphQL utils for browse rows - ', () => {
         ,state 
         ,zip_code 
 
-              }
-            }
-          }"
+                  }
+                }
+              }"
       `);
     });
   });

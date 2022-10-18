@@ -110,7 +110,7 @@ buildPostgresSpecs = do
       sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
 
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams {PG.cpConns = 1} print
-  let pgContext = mkPGExecCtx PG.Serializable pgPool
+  let pgContext = mkPGExecCtx PG.Serializable pgPool NeverResizePool
 
       logger :: Logger Hasura = Logger $ \l -> do
         let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l

@@ -56,6 +56,8 @@ module Hasura.Backends.Postgres.SQL.Types
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec, optionalFieldWithDefault', parseAlternative, requiredField')
+import Autodocodec qualified as AC
 import Data.Aeson
 import Data.Aeson.Encoding (text)
 import Data.Aeson.Key qualified as K
@@ -63,9 +65,11 @@ import Data.Aeson.TH
 import Data.Aeson.Types (toJSONKeyText)
 import Data.Int
 import Data.List (uncons)
+import Data.String
 import Data.Text qualified as T
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
+import Data.Typeable (Typeable)
 import Database.PG.Query qualified as PG
 import Database.PG.Query.PTI qualified as PTI
 import Database.PostgreSQL.LibPQ qualified as PQ
@@ -74,6 +78,7 @@ import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue
 import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Utils (typeableName)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend (SupportedNamingCase (..))
@@ -83,6 +88,26 @@ import Hasura.SQL.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 import PostgreSQL.Binary.Decoding qualified as PD
 import Text.Builder qualified as TB
+
+{- Note [About identifier types]
+
+In order to better be able to reason about values representing SQL binders and
+variables we are in the process of retiring the generic 'Identifier' type in
+favor of the more specific types 'TableIdentifier' and 'ColumnIdentifier'.
+
+Likewise, we distinguish binders of names from uses of names: The types
+'TableAlias' and `ColumnAlias` are used to for binders, whereas
+`TableIdentifier` and `ColumnIdentifier` represent usages or references of
+previously bound names.
+
+We want to ensure these are handled in an hygenic way:
+* 'TableAlias'es and 'ColumnAlias'es can be constructed freely, but
+* 'TableIdentifier' can only be constructed from a 'TableAlias' via
+  'tableAliasToIdentifier', and
+* 'ColumnIdentifier's can only be constructed from a 'ColumnAlias', and
+  potentially be qualified with a 'TableIdentifier'.
+
+-}
 
 newtype Identifier = Identifier {getIdenTxt :: Text}
   deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
@@ -97,7 +122,9 @@ class IsIdentifier a where
 instance IsIdentifier Identifier where
   toIdentifier = id
 
--- | The type of identifiers representing tabular values
+-- | The type of identifiers representing tabular values.
+-- While we are transitioning away from 'Identifier' we provisionally export
+-- the value constructor.
 newtype TableIdentifier = TableIdentifier {unTableIdentifier :: Text}
   deriving (Show, Eq, NFData, FromJSON, ToJSON, Hashable, Semigroup, Data, Cacheable)
 
@@ -156,6 +183,9 @@ newtype TableName = TableName {getTableTxt :: Text}
       IsString
     )
 
+instance HasCodec TableName where
+  codec = dimapCodec TableName getTableTxt codec
+
 instance IsIdentifier TableName where
   toIdentifier (TableName t) = Identifier t
 
@@ -200,6 +230,9 @@ instance ToErrorValue ConstraintName where
 newtype FunctionName = FunctionName {getFunctionTxt :: Text}
   deriving (Show, Eq, Ord, FromJSON, ToJSON, PG.ToPrepArg, PG.FromCol, Hashable, Data, Generic, NFData, Cacheable)
 
+instance HasCodec FunctionName where
+  codec = dimapCodec FunctionName getFunctionTxt codec
+
 instance IsIdentifier FunctionName where
   toIdentifier (FunctionName t) = Identifier t
 
@@ -229,6 +262,9 @@ newtype SchemaName = SchemaName {getSchemaTxt :: Text}
       IsString
     )
 
+instance HasCodec SchemaName where
+  codec = dimapCodec SchemaName getSchemaTxt codec
+
 publicSchema :: SchemaName
 publicSchema = SchemaName "public"
 
@@ -250,6 +286,16 @@ data QualifiedObject a = QualifiedObject
 instance (NFData a) => NFData (QualifiedObject a)
 
 instance (Cacheable a) => Cacheable (QualifiedObject a)
+
+instance (HasCodec a, Typeable a) => HasCodec (QualifiedObject a) where
+  codec = parseAlternative objCodec strCodec
+    where
+      objCodec =
+        AC.object ("PostgresQualified_" <> typeableName @a) $
+          QualifiedObject
+            <$> optionalFieldWithDefault' "schema" publicSchema AC..= qSchema
+            <*> requiredField' "name" AC..= qName
+      strCodec = QualifiedObject publicSchema <$> codec @a
 
 instance (FromJSON a) => FromJSON (QualifiedObject a) where
   parseJSON v@(String _) =
@@ -348,6 +394,9 @@ newtype PGCol = PGCol {getPGColTxt :: Text}
       Cacheable,
       IsString
     )
+
+instance HasCodec PGCol where
+  codec = dimapCodec PGCol getPGColTxt codec
 
 instance IsIdentifier PGCol where
   toIdentifier (PGCol t) = Identifier t

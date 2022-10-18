@@ -47,12 +47,7 @@ spec = do
                 (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
                   { Fixture.setupTeardown = \(testEnv, _) ->
                       [ Cockroach.setupTablesAction tables testEnv
-                      ],
-                    Fixture.customOptions =
-                      Just $
-                        Fixture.defaultOptions
-                          { Fixture.stringifyNumbers = True
-                          }
+                      ]
                   },
                 (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
                   { Fixture.setupTeardown = \(testEnvironment, _) ->

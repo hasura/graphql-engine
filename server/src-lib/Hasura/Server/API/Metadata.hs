@@ -92,8 +92,7 @@ data RQLMetadataV1
   | RMUntrackTable !(AnyBackend UntrackTable)
   | RMSetTableCustomization !(AnyBackend SetTableCustomization)
   | RMSetApolloFederationConfig (AnyBackend SetApolloFederationConfig)
-  | -- Tables (PG-specific)
-    RMPgSetTableIsEnum !SetTableIsEnum
+  | RMPgSetTableIsEnum !(AnyBackend SetTableIsEnum)
   | -- Tables permissions
     RMCreateInsertPermission !(AnyBackend (CreatePerm InsPerm))
   | RMCreateSelectPermission !(AnyBackend (CreatePerm SelPerm))
@@ -581,7 +580,7 @@ runMetadataQueryV1M env currentResourceVersion = \case
   RMSetFunctionCustomization q -> dispatchMetadata runSetFunctionCustomization q
   RMSetTableCustomization q -> dispatchMetadata runSetTableCustomization q
   RMSetApolloFederationConfig q -> dispatchMetadata runSetApolloFederationConfig q
-  RMPgSetTableIsEnum q -> runSetExistingTableIsEnumQ q
+  RMPgSetTableIsEnum q -> dispatchMetadata runSetExistingTableIsEnumQ q
   RMCreateInsertPermission q -> dispatchMetadata runCreatePerm q
   RMCreateSelectPermission q -> dispatchMetadata runCreatePerm q
   RMCreateUpdatePermission q -> dispatchMetadata runCreatePerm q

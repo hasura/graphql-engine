@@ -13,6 +13,7 @@ export type updateSecurityFeaturesActionType = {
   api_limits: {
     disabled: boolean;
     depth_limit?: APILimitInputType<number>;
+    batch_limit?: APILimitInputType<number>;
     node_limit?: APILimitInputType<number>;
     time_limit?: APILimitInputType<number>;
     rate_limit?: APILimitInputType<{
@@ -31,7 +32,6 @@ export const updateAPILimits = ({
 }: updateSecurityFeaturesActionType): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
     const existingAPILimits = getState().metadata?.metadataObject?.api_limits;
-
     const upQuery = updateAPILimitsQuery({
       existingAPILimits,
       newAPILimits: api_limits,

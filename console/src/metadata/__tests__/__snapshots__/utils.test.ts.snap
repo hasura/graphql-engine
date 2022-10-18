@@ -1,8 +1,14 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Testing API limits node limit and depth limits 1`] = `
+exports[`Testing API limits node limit, batch limit and depth limit 1`] = `
 Object {
   "args": Object {
+    "batch_limit": Object {
+      "global": 10,
+      "per_role": Object {
+        "role1": 3,
+      },
+    },
     "depth_limit": Object {
       "global": 10,
       "per_role": Object {
@@ -16,6 +22,33 @@ Object {
         "role1": 3,
       },
     },
+  },
+  "type": "set_api_limits",
+}
+`;
+
+exports[`Testing API limits only batch limit 1`] = `
+Object {
+  "args": Object {
+    "batch_limit": Object {
+      "global": 10,
+    },
+    "disabled": false,
+  },
+  "type": "set_api_limits",
+}
+`;
+
+exports[`Testing API limits only batch limit with per role 1`] = `
+Object {
+  "args": Object {
+    "batch_limit": Object {
+      "global": 10,
+      "per_role": Object {
+        "role1": 3,
+      },
+    },
+    "disabled": false,
   },
   "type": "set_api_limits",
 }
@@ -78,6 +111,10 @@ Object {
 exports[`Testing Remove API Settings remains the same when role doesn't exist 1`] = `
 Object {
   "args": Object {
+    "batch_limit": Object {
+      "global": 10,
+      "state": "disabled",
+    },
     "depth_limit": Object {
       "global": 10,
       "state": "enabled",
@@ -104,6 +141,11 @@ Object {
 exports[`Testing Remove API Settings removes settings for a role 1`] = `
 Object {
   "args": Object {
+    "batch_limit": Object {
+      "global": 10,
+      "per_role": Object {},
+      "state": "enabled",
+    },
     "depth_limit": Object {
       "global": 10,
       "per_role": Object {},

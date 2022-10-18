@@ -13,6 +13,7 @@ import Data.Hashable (Hashable)
 import Data.OpenApi (ToSchema)
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.Table qualified as API.V0
+import Servant.API qualified as Servant
 import Prelude
 
 --------------------------------------------------------------------------------
@@ -31,3 +32,6 @@ instance HasCodec SchemaResponse where
   codec =
     object "SchemaResponse" $
       SchemaResponse <$> requiredField "tables" "Available tables" .= _srTables
+
+instance Servant.HasStatus SchemaResponse where
+  type StatusOf SchemaResponse = 200

@@ -24,10 +24,10 @@ import { defaultColumns, FILTER_MAP, DEFAULT_ORDER_BY } from './constants';
 import moment from 'moment';
 import { FaCaretDown, FaCaretUp, FaSort } from 'react-icons/fa';
 
-const styles = require('../Metrics.scss');
-const eye = require('../images/usage.svg');
-const failure = require('../images/failure.svg');
-const success = require('../images/success.svg');
+import styles from '../Metrics.module.scss';
+import eye from '../images/usage.svg';
+import failure from '../images/failure.svg';
+import success from '../images/success.svg';
 
 const LIMIT = 10;
 
@@ -37,13 +37,13 @@ const defaultState = {
   order_by: { ...DEFAULT_ORDER_BY },
 };
 
-const BrowseRows = props => {
+const BrowseRows = (props) => {
   const [browseState, setState] = useState(defaultState);
   const { filters: appliedFilters, label, projectId } = props;
 
   const { limit, offset, order_by } = browseState;
 
-  const updateLimit = l => {
+  const updateLimit = (l) => {
     setState({
       ...browseState,
       limit: l,
@@ -60,7 +60,7 @@ const BrowseRows = props => {
     });
   };
 
-  const updateOffset = o => {
+  const updateOffset = (o) => {
     setState({
       ...browseState,
       offset: o,
@@ -123,7 +123,7 @@ const BrowseRows = props => {
         ...data.websocket_status[0],
       };
       const headerRows = Object.keys(columns)
-        .filter(f => validColumns.indexOf(getIfAliased(f)) !== -1)
+        .filter((f) => validColumns.indexOf(getIfAliased(f)) !== -1)
         .map((c, key) => {
           let sortIcon = <FaSort />;
           if (order_by && Object.keys(order_by).length) {
@@ -175,7 +175,7 @@ const BrowseRows = props => {
 
   const getRows = () => {
     if (data && data.websocket_status.length > 0) {
-      return data.websocket_status.map(d => {
+      return data.websocket_status.map((d) => {
         const newRow = {};
         const getLinkToOperationsPage = () => {
           /* Get the groupBys */
@@ -257,13 +257,13 @@ const BrowseRows = props => {
   const _rows = getRows();
   const _columns = getHeaders();
 
-  const handlePageChange = page => {
+  const handlePageChange = (page) => {
     if (offset !== page * limit) {
       updateOffset(page * limit);
     }
   };
 
-  const handlePageSizeChange = size => {
+  const handlePageSizeChange = (size) => {
     if (limit !== size) {
       updateLimit(size);
     }
@@ -271,13 +271,13 @@ const BrowseRows = props => {
 
   let disableSortColumn = false;
 
-  const sortByColumn = currColumn => {
+  const sortByColumn = (currColumn) => {
     if (data && data.websocket_status.length === 0) {
       console.error('Minimum one row required to sort');
       return;
     }
     const rowEntry = data.websocket_status[0];
-    const columnNames = Object.keys(rowEntry).map(column => column);
+    const columnNames = Object.keys(rowEntry).map((column) => column);
 
     if (!columnNames.includes(currColumn)) {
       return;
@@ -319,7 +319,7 @@ const BrowseRows = props => {
   });
 
   const getResizerProps = (finalState, none, column, ctx) => ({
-    onMouseDown: e => {
+    onMouseDown: (e) => {
       disableSortColumn = true;
       ctx.resizeColumnStart(e, column, false);
     },

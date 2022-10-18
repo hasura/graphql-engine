@@ -37,7 +37,7 @@ spec = do
                 [emptySetupAction testEnv]
             }
       )
-        <$> DataConnector.backendConfigs
+        <$> DataConnector.chinookConfigs
     )
     schemaCrudTests
 
@@ -52,7 +52,7 @@ spec = do
                 ]
             }
       )
-        <$> DataConnector.backendConfigs
+        <$> DataConnector.chinookConfigs
     )
     schemaInspectionTests
 

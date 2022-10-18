@@ -21,6 +21,7 @@ const ApiLimitsComponent: React.FC<securitySettingsComponentProps> = ({
     'Node Limit',
     'Rate Limit (RPM)',
     'Timeout (Seconds)',
+    'Batch Request Limit',
   ];
   const keys = [
     'role',
@@ -28,6 +29,7 @@ const ApiLimitsComponent: React.FC<securitySettingsComponentProps> = ({
     'node_limit',
     'rate_limit',
     'time_limit',
+    'batch_limit',
   ];
   const roles = allRoles;
   return (

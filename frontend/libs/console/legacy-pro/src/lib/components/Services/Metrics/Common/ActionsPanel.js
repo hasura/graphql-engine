@@ -1,6 +1,6 @@
 import React from 'react';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 
 /**
  * @typedef Props
@@ -15,12 +15,10 @@ const styles = require('../Metrics.scss');
  *  </ActionsPanel>
  * )
  */
-export const ActionsPanel = props => {
+export const ActionsPanel = (props) => {
   const { children, className, ...rest } = props;
 
-  let classNames = `${styles.boxShadow} ${styles.lightGrayBgColor} ${
-    styles.selectSection
-  }`;
+  let classNames = `${styles.boxShadow} ${styles.lightGrayBgColor} ${styles.selectSection}`;
   if (className) {
     classNames = `${classNames} ${className}`;
   }

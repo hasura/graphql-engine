@@ -10,10 +10,10 @@ class TestPGDump:
     def test_pg_dump_for_public_schema(self, hge_ctx):
         query_file = self.dir() + '/pg_dump_public.yaml'
         PG_VERSION = os.getenv('PG_VERSION', 'latest')
-        if PG_VERSION == "14" or PG_VERSION == "15":
-            # we do not have a working version of pg_dump for Postgres 14/15
+        if PG_VERSION == "15":
+            # we do not have a working version of pg_dump for Postgres 15
             # yet, skip these tests
-            assert True == True
+            pytest.skip('pg_dump does not yet support PostgreSQL 15')
         else:
             with open(query_file, 'r') as stream:
                 q = yaml.load(stream)
@@ -29,10 +29,10 @@ class TestPGDump:
 
     def test_pg_dump_for_public_schema_for_user_role(self, hge_ctx):
         PG_VERSION = os.getenv('PG_VERSION', 'latest')
-        if PG_VERSION == 14 or PG_VERSION == "15":
-            # we do not have a working version of pg_dump for Postgres 14/15
+        if PG_VERSION == "15":
+            # we do not have a working version of pg_dump for Postgres 15
             # yet, skip these tests
-            assert True == True
+            pytest.skip('pg_dump does not yet support PostgreSQL 15')
         else:
             query_file = self.dir() + '/pg_dump_public.yaml'
             with open(query_file, 'r') as stream:

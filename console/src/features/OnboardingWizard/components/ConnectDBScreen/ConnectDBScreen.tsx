@@ -1,8 +1,8 @@
 import React from 'react';
 import { Dispatch } from '@/types';
 import { Button } from '@/new-components/Button';
-import { OnboardingAnimation, OnboardingAnimationNavbar } from './components';
-import { NeonOnboarding } from './NeonOnboarding';
+import { OnboardingAnimation } from './components/OnboardingAnimation';
+import { NeonOnboarding } from './components/NeonOnboarding';
 import _push from '../../../../components/Services/Data/push';
 import {
   persistSkippedOnboarding,
@@ -14,10 +14,17 @@ type ConnectDBScreenProps = {
   dismissOnboarding: VoidFunction;
   hasNeonAccess: boolean;
   dispatch: Dispatch;
+  setStepperIndex: (index: number) => void;
 };
 
 export function ConnectDBScreen(props: ConnectDBScreenProps) {
-  const { proceed, dismissOnboarding, hasNeonAccess, dispatch } = props;
+  const {
+    proceed,
+    dismissOnboarding,
+    hasNeonAccess,
+    dispatch,
+    setStepperIndex,
+  } = props;
 
   const pushToConnectDBPage = () => {
     // TODO: Due to routing being slow on prod, but wizard closing instantaneously, this causes
@@ -38,15 +45,7 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
 
   return (
     <>
-      <h1 className="text-xl font-semibold text-cloud-darkest">
-        Welcome to your new Hasura project!
-      </h1>
-      <p>Let&apos;s get started by connecting your first database</p>
-
-      <div className="mt-5">
-        <OnboardingAnimationNavbar />
-        <OnboardingAnimation />
-      </div>
+      <OnboardingAnimation />
 
       <div className="flex items-center justify-between">
         {hasNeonAccess ? (
@@ -54,6 +53,7 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
             dispatch={dispatch}
             dismiss={dismissOnboarding}
             proceed={proceed}
+            setStepperIndex={setStepperIndex}
           />
         ) : (
           <>

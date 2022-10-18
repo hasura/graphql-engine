@@ -14,6 +14,11 @@ import {
   FaChartLine,
 } from 'react-icons/fa';
 
+import styles from './Main.module.scss';
+import logo from './images/white-logo.svg';
+import logoutIcon from './images/log-out.svg';
+import projectImg from './images/project.svg';
+
 import Dropdown from 'react-bootstrap/lib/Dropdown';
 import MenuItem from 'react-bootstrap/lib/MenuItem';
 
@@ -147,7 +152,7 @@ class Main extends React.Component {
 
     if (
       prevHeaders.length !== currHeaders.length ||
-      prevHeaders.filter(hdr => !currHeaders.includes(hdr)).length
+      prevHeaders.filter((hdr) => !currHeaders.includes(hdr)).length
     ) {
       updateRequestHeaders(this.props);
     }
@@ -175,12 +180,10 @@ class Main extends React.Component {
     }
   }
   componentWillReceiveProps(nextProps) {
-    const {
-      [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility,
-    } = this.props.featuresCompatibility;
-    const {
-      [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility,
-    } = nextProps.featuresCompatibility;
+    const { [FT_JWT_ANALYZER]: currJwtAnalyzerCompatibility } =
+      this.props.featuresCompatibility;
+    const { [FT_JWT_ANALYZER]: nextJwtAnalyzerCompatibility } =
+      nextProps.featuresCompatibility;
 
     const { accessState } = nextProps;
 
@@ -247,7 +250,7 @@ class Main extends React.Component {
   };
 
   toggleDropDown = () => {
-    this.setState(prevState => ({
+    this.setState((prevState) => ({
       isDropdownOpen: !prevState.isDropdownOpen,
     }));
   };
@@ -280,11 +283,7 @@ class Main extends React.Component {
       accessState,
     } = this.props;
 
-    const styles = require('./Main.scss');
-
     const appPrefix = '';
-
-    const logo = require('./images/white-logo.svg');
 
     const currentLocation = location.pathname;
     const currentActiveBlock = currentLocation.split('/')[1];
@@ -448,7 +447,6 @@ class Main extends React.Component {
       );
     };
     const renderLogout = () => {
-      const logoutIcon = require('./images/log-out.svg');
       // userRole is only being set for team console
       return extendedGlobals.consoleType !== 'cloud' ? (
         <Dropdown
@@ -472,7 +470,6 @@ class Main extends React.Component {
       ) : null;
     };
     const renderProjectInfo = () => {
-      const projectImg = require('./images/project.svg');
       const detailsPath = `${window.location.protocol}//${window.location.host}/project/${globals.hasuraCloudProjectId}/details`;
       return window.__env.consoleType === 'cloud' ? (
         <span className={styles.projectInfo}>
@@ -579,7 +576,7 @@ class Main extends React.Component {
     };
 
     const isOnboardingWizardEnabled =
-      growthExperimentsClient.getAllExperimentConfig().find(e => {
+      growthExperimentsClient.getAllExperimentConfig().find((e) => {
         return e.experiment === 'console_onboarding_wizard_v1';
       })?.status === 'enabled';
 
@@ -665,7 +662,7 @@ class Main extends React.Component {
   }
 }
 
-export const decodeJWT = oAuthResponse => {
+export const decodeJWT = (oAuthResponse) => {
   if ('id_token' in oAuthResponse) {
     const decoded = decodeToken(oAuthResponse.id_token);
     if (!decoded) {

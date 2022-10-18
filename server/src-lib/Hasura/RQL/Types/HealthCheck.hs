@@ -14,18 +14,22 @@ import Autodocodec hiding (object, (.=))
 import Autodocodec qualified as AC
 import Data.Aeson.Extended
 import Data.Aeson.Types (parseFail)
-import Data.Text qualified as T
-import Data.Text.Extended qualified as T
 import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation (HealthCheckImplementation, _hciDefaultTest, _hciTestCodec))
-import Hasura.SQL.Tag (HasTag (backendTag), reify)
 
 newtype HealthCheckTestSql = HealthCheckTestSql
   { _hctSql :: Text
   }
   deriving (Eq, Generic, Show, Cacheable, Hashable, NFData)
+
+instance HasCodec HealthCheckTestSql where
+  codec =
+    AC.object "HealthCheckTestSql" $
+      HealthCheckTestSql
+        <$> optionalFieldWithDefault' "sql" defaultTestSql AC..= _hctSql
 
 instance ToJSON HealthCheckTestSql where
   toJSON = genericToJSON hasuraJSON {omitNothingFields = True}
@@ -118,6 +122,3 @@ defaultRetryInterval = HealthCheckRetryInterval 10
 
 defaultTimeout :: HealthCheckTimeout
 defaultTimeout = HealthCheckTimeout 10
-
-codecNamePrefix :: forall b. (HasTag b) => Text
-codecNamePrefix = T.toTitle $ T.toTxt $ reify $ backendTag @b

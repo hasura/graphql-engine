@@ -26,6 +26,7 @@ interface RootFieldEditorProps {
   updateByPkOnChange: ChangeHandler;
   deleteOnChange: ChangeHandler;
   deleteByPkOnChange: ChangeHandler;
+  updateManyOnChange: ChangeHandler;
 }
 
 interface ChangeHandler {
@@ -44,6 +45,7 @@ export const rootFieldLabels: Record<keyof CustomRootFields, string> = {
   update_by_pk: 'Update by PK',
   delete: 'Delete',
   delete_by_pk: 'Delete by PK',
+  update_many: 'Update many',
 };
 
 const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
@@ -60,6 +62,7 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
   updateByPkOnChange,
   deleteOnChange,
   deleteByPkOnChange,
+  updateManyOnChange,
   tableName,
   customName,
   tableSchema,
@@ -77,6 +80,7 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
     update_by_pk: `update single row of the table: ${qualifiedTableName}`,
     delete: `delete data from the table: ${qualifiedTableName}`,
     delete_by_pk: `delete single row from the table: ${qualifiedTableName}`,
+    update_many: `update data for "many" operations of the table: ${qualifiedTableName}`,
   };
 
   const getRootField = () => {
@@ -181,6 +185,7 @@ const RootFieldEditor: React.FC<RootFieldEditorProps> = ({
               {getRootFieldRow('update_by_pk', updateByPkOnChange)}
               {getRootFieldRow('delete', deleteOnChange)}
               {getRootFieldRow('delete_by_pk', deleteByPkOnChange)}
+              {getRootFieldRow('update_many', updateManyOnChange)}
             </div>
           )}
         </CollapsibleToggle>

@@ -3,8 +3,8 @@ import { CopyToClipboard } from 'react-copy-to-clipboard';
 
 import { EditIcon } from './EditIcon';
 
-const styles = require('../Metrics.scss');
-const copyImg = require('../images/copy.svg');
+import styles from '../Metrics.module.scss';
+import copyImg from '../images/copy.svg';
 
 const CustomCopy = ({ label, copy, onEdit }) => {
   const [isCopied, toggle] = useState(false);

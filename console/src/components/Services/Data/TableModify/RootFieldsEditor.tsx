@@ -126,6 +126,7 @@ const RootFieldsEditor = ({
       updateByPkOnChange={onRootFieldChange('update_by_pk')}
       deleteOnChange={onRootFieldChange('delete')}
       deleteByPkOnChange={onRootFieldChange('delete_by_pk')}
+      updateManyOnChange={onRootFieldChange('update_many')}
     />
   );
 

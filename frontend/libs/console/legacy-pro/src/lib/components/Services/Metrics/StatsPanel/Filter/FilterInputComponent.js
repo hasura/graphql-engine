@@ -4,12 +4,11 @@ import React, { useState } from 'react';
  * and clears the current input
  */
 
-const styles = require('../../Metrics.scss');
-
-const FilterInputComponent = props => {
+import styles from '../../Metrics.module.scss';
+const FilterInputComponent = (props) => {
   const [value, updateInput] = useState('');
   const { onChange, placeholder, id, filterTitle } = props;
-  const handleEnterKeyPress = e => {
+  const handleEnterKeyPress = (e) => {
     if (e.keyCode === 13) {
       const val = e.target.value;
       if (val && val.length > 0) {
@@ -27,7 +26,7 @@ const FilterInputComponent = props => {
         placeholder={placeholder}
         onKeyDown={handleEnterKeyPress}
         value={value}
-        onChange={e => updateInput(e.target.value)}
+        onChange={(e) => updateInput(e.target.value)}
       />
     </div>
   );

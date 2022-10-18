@@ -94,3 +94,9 @@ export const getOffsetClause = (offset?: number) => {
 
   return `offset: ${offset}`;
 };
+
+export const getScalarType = (type: any): string => {
+  if (type.kind === 'SCALAR') return type.name;
+
+  return getScalarType(type.ofType);
+};

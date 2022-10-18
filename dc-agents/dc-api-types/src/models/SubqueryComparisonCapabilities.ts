@@ -6,6 +6,6 @@ export type SubqueryComparisonCapabilities = {
   /**
    * Does the agent support comparisons that involve related tables (ie. joins)?
    */
-  supports_relations: boolean;
+  supports_relations?: boolean;
 };
 

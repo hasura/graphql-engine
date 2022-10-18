@@ -32,7 +32,10 @@ import {
 } from './utils';
 import { FaCaretDown, FaCaretUp, FaSort } from 'react-icons/fa';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
+
+import inspectRow from '../images/warningNew.svg';
+import graphIcon from '../images/graph.svg';
 
 const LIMIT = 10;
 
@@ -43,7 +46,7 @@ const defaultState = {
 };
 
 // deserialize poller_log data to subscription worker
-const deserializeSubscriptionWorker = worker => {
+const deserializeSubscriptionWorker = (worker) => {
   const operationLog =
     worker?.operation_logs?.length === 0 ? {} : worker.operation_logs[0];
 
@@ -53,7 +56,7 @@ const deserializeSubscriptionWorker = worker => {
   };
 };
 
-const BrowseRows = props => {
+const BrowseRows = (props) => {
   const [browseState, setState] = useState(defaultState);
   const [config, setConfig] = useState(null);
   const [selectedRow, updateSelectedRow] = useState(null);
@@ -76,14 +79,14 @@ const BrowseRows = props => {
         .then(({ live_queries }) => {
           setConfig(live_queries);
         })
-        .catch(err => {
+        .catch((err) => {
           setConfigError(JSON.stringify(err, null, 4));
           updateModal(true);
         });
     }
   }, []);
 
-  const onRowClick = row => {
+  const onRowClick = (row) => {
     if (selectedRow) {
       if (selectedRow.workerId === row.worker_id) {
         updateSelectedRow(null);
@@ -118,9 +121,6 @@ const BrowseRows = props => {
 
   const { limit, offset, order_by } = browseState;
 
-  const inspectRow = require('../images/warningNew.svg');
-  const graphIcon = require('../images/graph.svg');
-
   const argsClause = {
     project_ids: projectId ? `{${projectId}}` : '{}',
     poller_ids: arrayToPostgresArray(getFilterObj.poller_ids),
@@ -133,13 +133,13 @@ const BrowseRows = props => {
     !getFilterObj.operation_name || !getFilterObj.operation_name.length
       ? {}
       : {
-        operation_logs: {
-          operation_name: {
-            _in: [...getFilterObj.operation_name],
+          operation_logs: {
+            operation_name: {
+              _in: [...getFilterObj.operation_name],
+            },
           },
-        },
-      };
-  const updateLimit = l => {
+        };
+  const updateLimit = (l) => {
     setState({
       ...browseState,
       limit: l,
@@ -156,7 +156,7 @@ const BrowseRows = props => {
     });
   };
 
-  const updateOffset = o => {
+  const updateOffset = (o) => {
     setState({
       ...browseState,
       offset: o,
@@ -206,8 +206,8 @@ const BrowseRows = props => {
     subscriptionWorkers.length <= 0
       ? []
       : Object.keys(subscriptionWorkers[0]).filter(
-        f => defaultColumns.indexOf(getIfAliased(f)) !== -1
-      );
+          (f) => defaultColumns.indexOf(getIfAliased(f)) !== -1
+        );
 
   const getHeaders = () => {
     if (subscriptionWorkers.length > 0) {
@@ -262,7 +262,7 @@ const BrowseRows = props => {
     return [];
   };
 
-  const renderActionButtons = r => {
+  const renderActionButtons = (r) => {
     return (
       <div className={styles.textCenter}>
         <Inspect projectId={projectId} pollerId={r.worker_id} />
@@ -278,7 +278,7 @@ const BrowseRows = props => {
     );
   };
 
-  const renderWarningSymbol = execTime => {
+  const renderWarningSymbol = (execTime) => {
     if (
       getRefetchDelay() &&
       execTime >= getRefetchDelay() / EXECUTION_TIME_DIVIDER_CONSTANT
@@ -425,7 +425,7 @@ const BrowseRows = props => {
   const _rows = getRows();
   const _columns = getHeaders();
 
-  const handlePageChange = page => {
+  const handlePageChange = (page) => {
     if (offset !== page * limit) {
       updateOffset(page * limit);
       updateSelectedRow(null);
@@ -433,7 +433,7 @@ const BrowseRows = props => {
     }
   };
 
-  const handlePageSizeChange = size => {
+  const handlePageSizeChange = (size) => {
     if (limit !== size) {
       updateLimit(size);
     }
@@ -441,13 +441,13 @@ const BrowseRows = props => {
 
   let disableSortColumn = false;
 
-  const sortByColumn = currColumn => {
+  const sortByColumn = (currColumn) => {
     if (subscriptionWorkers.length === 0) {
       console.error('Minimum one row required to sort');
       return;
     }
     const rowEntry = subscriptionWorkers[0];
-    const columnNames = Object.keys(rowEntry).map(column => column);
+    const columnNames = Object.keys(rowEntry).map((column) => column);
 
     if (!columnNames.includes(currColumn)) {
       return;
@@ -489,7 +489,7 @@ const BrowseRows = props => {
   });
 
   const getResizerProps = (finalState, none, column, ctx) => ({
-    onMouseDown: e => {
+    onMouseDown: (e) => {
       disableSortColumn = true;
       ctx.resizeColumnStart(e, column, false);
     },

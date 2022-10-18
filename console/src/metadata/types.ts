@@ -1069,7 +1069,7 @@ export interface SSLConfigOptions {
 
 export interface ConnectionPoolSettings {
   max_connections?: number;
-  cumulative_max_connections?: number;
+  total_max_connections?: number;
   idle_timeout?: number;
   retries?: number;
   pool_timeout?: number;
@@ -1198,6 +1198,7 @@ export interface HasuraMetadataV3 {
     disabled?: boolean;
     depth_limit?: APILimit<number>;
     node_limit?: APILimit<number>;
+    batch_limit?: APILimit<number>;
     time_limit?: APILimit<number>;
     rate_limit?: APILimit<{
       unique_params: Nullable<'IP' | string[]>;

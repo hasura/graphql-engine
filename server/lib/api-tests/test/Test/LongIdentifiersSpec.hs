@@ -7,6 +7,7 @@ module Test.LongIdentifiersSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -48,6 +49,11 @@ spec = do
           --       [ Citus.setupTablesAction schema testEnv
           --       ]
           --   },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Cockroach.setupTablesAction schema testEnv
+                ]
+            },
           (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Sqlserver.setupTablesAction schema testEnv
@@ -75,7 +81,17 @@ spec = do
             }
         ]
     )
-    testInsert
+    (testInsert "Int")
+  Fixture.run
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Cockroach.setupTablesAction schema testEnv
+                ]
+            }
+        ]
+    )
+    (testInsert "bigint")
 
 --------------------------------------------------------------------------------
 -- Schema
@@ -249,8 +265,8 @@ data:
         i_need_a_column_with_a_long_name_but_is_different: 2
 |]
 
-testInsert :: Fixture.Options -> SpecWith TestEnvironment
-testInsert opts = do
+testInsert :: String -> Fixture.Options -> SpecWith TestEnvironment
+testInsert typ opts = do
   it "insert to regular table" $ \testEnvironment -> do
     let schemaName = Schema.getSchemaName testEnvironment
 
@@ -261,7 +277,7 @@ testInsert opts = do
           [interpolateYaml|
           query: |
             mutation MyMutation(
-                $x: Int
+                $x: #{typ}
               ) {
               insert_#{schemaName}_regular_table_with_a_long_name_to_test_rename_identifiers
                 ( objects:
@@ -299,7 +315,7 @@ testInsert opts = do
           [interpolateYaml|
           query: |
             mutation MyMutation(
-                $x: Int
+                $x: #{typ}
               ) {
               insert_#{schemaName}_regular_table_with_a_long_name_to_test_rename_identifiers
                 ( objects:
@@ -344,7 +360,7 @@ testInsert opts = do
           [interpolateYaml|
           query: |
             mutation MyMutation(
-                $x: Int
+                $x: #{typ}
               ) {
               insert_#{schemaName}_table_with_multiple_relationships_and_long_name_2_test_rewrite
                 ( objects:

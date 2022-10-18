@@ -42,7 +42,9 @@ import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.Text.Extended
 import Data.Text.Extended qualified as Text.E
+import Hasura.Backends.DataConnector.API (errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
 import Hasura.Backends.DataConnector.Agent.Client qualified as Agent.Client
 import Hasura.Base.Error
@@ -74,6 +76,7 @@ import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Logging (MetadataLog (..))
 import Hasura.Tracing qualified as Tracing
 import Network.HTTP.Client.Manager qualified as HTTP.Manager
+import Servant.API (Union)
 import Servant.Client ((//))
 import Servant.Client.Generic qualified as Servant.Client
 
@@ -364,7 +367,7 @@ runGetSourceTables GetSourceTables {..} = do
         schemaResponse <-
           Tracing.runTraceTWithReporter Tracing.noReporter "resolve source"
             . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
-            $ (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gstSourceName) apiConfig
+            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gstSourceName) apiConfig
 
         let fullyQualifiedTableNames = fmap API._tiName $ API._srTables schemaResponse
         pure $ EncJSON.encJFromJValue fullyQualifiedTableNames
@@ -422,8 +425,14 @@ runGetTableInfo GetTableInfo {..} = do
         schemaResponse <-
           Tracing.runTraceTWithReporter Tracing.noReporter "resolve source"
             . flip Agent.Client.runAgentClientT (Agent.Client.AgentClientContext logger _dcoUri manager (DC.Types.sourceTimeoutMicroseconds <$> timeout))
-            $ (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gtiSourceName) apiConfig
+            $ schemaGuard =<< (Servant.Client.genericClient // API._schema) (Text.E.toTxt _gtiSourceName) apiConfig
 
         let table = find ((== _gtiTableName) . API._tiName) $ API._srTables schemaResponse
         pure $ EncJSON.encJFromJValue table
       backend -> Error.throw500 ("Schema fetching is not supported for '" <> Text.E.toTxt backend <> "'")
+
+schemaGuard :: MonadError QErr m => Union '[API.SchemaResponse, API.ErrorResponse] -> m API.SchemaResponse
+schemaGuard = schemaCase defaultAction pure errorAction
+  where
+    defaultAction = throw400 DataConnectorError "Error resolving source schema"
+    errorAction e = throw400WithDetail DataConnectorError ("Error resolving source schema: " <> errorResponseSummary e) (_crDetails e)

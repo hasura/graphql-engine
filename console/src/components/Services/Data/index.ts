@@ -12,7 +12,6 @@ import addExistingTableViewConnector from './Add/AddExistingTableView';
 import addTableConnector from './Add/AddTable';
 import rawSQLConnector from './RawSQL/RawSQL';
 import permissionsSummaryConnector from './PermissionsSummary/PermissionsSummary';
-import editItemConnector from './TableBrowseRows/EditItem';
 import modifyTableConnector from './TableModify/ModifyTable';
 import modifyViewConnector from './TableModify/ModifyView';
 import relationshipsConnector from './TableRelationships/Relationships';
@@ -37,7 +36,6 @@ export {
   addTableConnector,
   rawSQLConnector,
   permissionsSummaryConnector,
-  editItemConnector,
   modifyTableConnector,
   modifyViewConnector,
   relationshipsConnector,

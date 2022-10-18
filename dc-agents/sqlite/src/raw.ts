@@ -7,6 +7,6 @@ export async function runRawOperation(config: Config, sqlLogger: SqlLogger, quer
   const [results, metadata] = await db.query(query.query);
 
   return {
-    rows: results as Array<Record<string, any>>
+    rows: (results || []) as Array<Record<string, any>>
   };
 };

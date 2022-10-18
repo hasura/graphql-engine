@@ -27,7 +27,7 @@ spec =
                 \(testEnv, _) -> [DataConnector.setupFixtureAction (sourceMetadata backendType sourceConfig) backendConfig testEnv]
             }
       )
-        <$> DataConnector.backendConfigs
+        <$> DataConnector.chinookConfigs
     )
     tests
 

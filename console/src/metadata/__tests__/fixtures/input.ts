@@ -113,6 +113,7 @@ type apiLimitsType = {
   new_state: {
     disabled: boolean;
     depth_limit: APILimitInputType<number>;
+    batch_limit: APILimitInputType<number>;
     node_limit: APILimitInputType<number>;
     rate_limit: APILimitInputType<{
       unique_params: 'IP' | string[];
@@ -128,6 +129,7 @@ const api_limits: Record<string, apiLimitsType> = {
       disabled: false,
       depth_limit: { global: 10, state: 'enabled' },
       node_limit: { global: 10, state: 'disabled' },
+      batch_limit: { global: 10, state: 'disabled' },
       rate_limit: {
         global: { unique_params: ['x-hasura-id'], max_reqs_per_min: 100 },
         state: 'disabled',
@@ -146,6 +148,7 @@ const api_limits: Record<string, apiLimitsType> = {
         },
       },
       node_limit: { global: 10, state: 'disabled' },
+      batch_limit: { global: 10, state: 'disabled' },
       rate_limit: {
         global: { unique_params: ['x-hasura-id'], max_reqs_per_min: 100 },
         state: 'disabled',
@@ -158,6 +161,7 @@ const api_limits: Record<string, apiLimitsType> = {
       disabled: false,
       depth_limit: { global: 10, state: 'disabled' },
       node_limit: { global: 10, state: 'enabled' },
+      batch_limit: { global: 10, state: 'disabled' },
       rate_limit: {
         global: { unique_params: ['x-hasura-id'], max_reqs_per_min: 100 },
         state: 'disabled',
@@ -169,6 +173,7 @@ const api_limits: Record<string, apiLimitsType> = {
     new_state: {
       disabled: false,
       depth_limit: { global: 10, state: 'disabled' },
+      batch_limit: { global: 10, state: 'disabled' },
       node_limit: {
         global: 10,
         state: 'enabled',
@@ -182,7 +187,41 @@ const api_limits: Record<string, apiLimitsType> = {
       },
     },
   },
-  node_and_depth_limits: {
+
+  only_batch_limit: {
+    old_state: undefined,
+    new_state: {
+      disabled: false,
+      depth_limit: { global: 10, state: 'disabled' },
+      node_limit: { global: 10, state: 'disabled' },
+      batch_limit: { global: 10, state: 'enabled' },
+      rate_limit: {
+        global: { unique_params: ['x-hasura-id'], max_reqs_per_min: 100 },
+        state: 'disabled',
+      },
+    },
+  },
+  only_batch_limit_with_per_role: {
+    old_state: undefined,
+    new_state: {
+      disabled: false,
+      depth_limit: { global: 10, state: 'disabled' },
+      node_limit: { global: 10, state: 'disabled' },
+      batch_limit: {
+        global: 10,
+        state: 'enabled',
+        per_role: {
+          role1: 3,
+        },
+      },
+      rate_limit: {
+        global: { unique_params: ['x-hasura-id'], max_reqs_per_min: 100 },
+        state: 'disabled',
+      },
+    },
+  },
+
+  node_depth_and_batch_limits: {
     old_state: undefined,
     new_state: {
       disabled: false,
@@ -194,6 +233,13 @@ const api_limits: Record<string, apiLimitsType> = {
         },
       },
       node_limit: {
+        global: 10,
+        state: 'enabled',
+        per_role: {
+          role1: 3,
+        },
+      },
+      batch_limit: {
         global: 10,
         state: 'enabled',
         per_role: {

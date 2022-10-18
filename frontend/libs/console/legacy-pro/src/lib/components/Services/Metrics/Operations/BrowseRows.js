@@ -25,6 +25,9 @@ import {
   excludeRenderingColumns,
 } from './constants';
 import { FaCaretDown, FaCaretUp, FaSort } from 'react-icons/fa';
+import styles from '../Metrics.module.scss';
+import failure from '../images/failure.svg';
+import success from '../images/success.svg';
 
 const LIMIT = 10;
 
@@ -35,11 +38,8 @@ const defaultState = {
     time: 'desc',
   },
 };
-const styles = require('../Metrics.scss');
-const failure = require('../images/failure.svg');
-const success = require('../images/success.svg');
 
-const BrowserRows = props => {
+const BrowserRows = (props) => {
   const [browseState, setState] = useState(defaultState);
   const [page, setPage] = useState(1);
   const { filters, label, projectId, projectConfig } = props;
@@ -80,7 +80,7 @@ const BrowserRows = props => {
 
   const { limit, offset, order_by } = browseState;
 
-  const updateLimit = l => {
+  const updateLimit = (l) => {
     setState({
       ...browseState,
       limit: l,
@@ -97,7 +97,7 @@ const BrowserRows = props => {
     });
   };
 
-  const updateOffset = o => {
+  const updateOffset = (o) => {
     setState({
       ...browseState,
       offset: o,
@@ -208,7 +208,7 @@ const BrowserRows = props => {
       };
       const columns = data.operation_logs[0];
       const headerRows = Object.keys(columns)
-        .filter(c => excludeRenderingColumns.indexOf(c) === -1)
+        .filter((c) => excludeRenderingColumns.indexOf(c) === -1)
         .map((c, key) => {
           let sortIcon = <FaSort />;
           if (order_by && Object.keys(order_by).length) {
@@ -265,7 +265,7 @@ const BrowserRows = props => {
     return [];
   };
 
-  const renderActionButtons = r => {
+  const renderActionButtons = (r) => {
     /*
     const renderActionButtonForGroups = () => {
       if (groups.length > 0 && r.operation) {
@@ -307,11 +307,11 @@ const BrowserRows = props => {
 
   const getRows = () => {
     if (data.operation_logs.length > 0) {
-      return data.operation_logs.map(d => {
+      return data.operation_logs.map((d) => {
         const newRow = {};
         newRow.tableRowActionButtons = renderActionButtons(d);
         Object.keys(d)
-          .filter(cl => excludeRenderingColumns.indexOf(cl) === -1)
+          .filter((cl) => excludeRenderingColumns.indexOf(cl) === -1)
           .forEach((elem, key) => {
             const renderElement = () => {
               if (elem === 'success') {
@@ -339,8 +339,9 @@ const BrowserRows = props => {
             newRow[elem] = (
               <div
                 key={key}
-                className={`${styles.columnRow} ${elem === 'success' &&
-                  styles.textCenter}`}
+                className={`${styles.columnRow} ${
+                  elem === 'success' && styles.textCenter
+                }`}
                 title={getTitle()}
               >
                 {renderElement()}
@@ -376,7 +377,7 @@ const BrowserRows = props => {
   //   }
   // };
 
-  const handlePageSizeChange = size => {
+  const handlePageSizeChange = (size) => {
     if (limit !== size) {
       updateLimit(size);
     }
@@ -384,13 +385,13 @@ const BrowserRows = props => {
 
   let disableSortColumn = false;
 
-  const sortByColumn = currColumn => {
+  const sortByColumn = (currColumn) => {
     if (data.operation_logs.length === 0) {
       console.error('Minimum one row required to sort');
       return;
     }
     const rowEntry = data.operation_logs[0];
-    const columnNames = Object.keys(rowEntry).map(column => column);
+    const columnNames = Object.keys(rowEntry).map((column) => column);
 
     if (!columnNames.includes(currColumn)) {
       return;
@@ -433,7 +434,7 @@ const BrowserRows = props => {
   });
 
   const getResizerProps = (finalState, none, column, ctx) => ({
-    onMouseDown: e => {
+    onMouseDown: (e) => {
       disableSortColumn = true;
       ctx.resizeColumnStart(e, column, false);
     },

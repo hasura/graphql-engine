@@ -32,7 +32,7 @@ import {
 
 import { Button } from '@/new-components/Button';
 
-import { FilterSectionContainer } from '@/features/BrowseRows/FiltersSection/FiltersSectionContainer';
+import { LegacyRunQueryContainer } from '@/features/BrowseRows';
 import { PaginationWithOnlyNavContainer } from '@/new-components/PaginationWithOnlyNav/PaginationWithOnlyNavContainer';
 
 import {
@@ -48,7 +48,7 @@ import _push from '../push';
 import { ordinalColSort } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 
-import { E_SET_EDITITEM } from './EditActions';
+import { E_SET_EDITITEM } from '../TableEditItem/EditActions';
 import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
 import {
   getTableInsertRowRoute,
@@ -60,6 +60,7 @@ import {
   dataSource,
   getTableCustomColumnName,
   isFeatureSupported,
+  currentDriver,
 } from '../../../../dataSources';
 import { updateSchemaInfo } from '../DataActions';
 import {
@@ -1010,13 +1011,18 @@ const ViewRows = props => {
   const isFilterSectionVisible =
     !isSingleRow && (curRelName === activePath[curDepth] || curDepth === 0);
 
+  const schemaKey = currentDriver === 'bigquery' ? 'dataset' : 'schema';
+
   return (
     <div className={isVisible ? '' : 'hide '}>
       {isFilterSectionVisible && (
         <div className="mt-4">
-          <FilterSectionContainer
+          <LegacyRunQueryContainer
             dataSourceName={currentSource}
-            table={{ schema: tableSchema.table_schema, name: curTableName }}
+            table={{
+              [schemaKey]: tableSchema.table_schema,
+              name: curTableName,
+            }}
             onRunQuery={newUserQuery => setUserQuery(newUserQuery)}
           />
         </div>

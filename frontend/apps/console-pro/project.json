@@ -19,17 +19,19 @@
           "apps/console-pro/src/favicon.ico",
           "apps/console-pro/src/assets"
         ],
-        "styles": ["apps/console-pro/src/styles.css"],
+        "styles": ["apps/console-pro/src/css/tailwind.css", "apps/console-pro/src/css/legacy-boostrap.css"],
         "scripts": [],
-        "webpackConfig": "apps/console-ce/custom-webpack.config.js",
-        "postcssConfig": "apps/console-ce/postcss.config.js"
+        "webpackConfig": "apps/console-pro/custom-webpack.config.js",
+        "postcssConfig": "apps/console-pro/postcss.config.js"
       },
       "configurations": {
         "development": {
+          "outputHashing": "none",
+          "extractCss": false,
           "extractLicenses": false,
           "optimization": false,
           "sourceMap": true,
-          "vendorChunk": true
+          "vendorChunk": false
         },
         "production": {
           "fileReplacements": [
@@ -54,7 +56,9 @@
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "console-pro:build",
-        "hmr": true
+        "hmr": true,
+        "port": 5500,
+        "allowedHosts": "all"
       },
       "configurations": {
         "development": {

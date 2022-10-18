@@ -20,6 +20,9 @@ where
 import Data.Aeson qualified as Aeson
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
+import Harness.Test.BackendType (BackendType)
+import Harness.Test.BackendType qualified as BackendType
+import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment
 import Hasura.Prelude
 
@@ -84,14 +87,12 @@ insertPermission =
 -- | Send a JSON payload of the common `*_create_*_permission` form.
 -- Backends where the format of this api call deviates significantly from this
 -- should implement their own variation in its harness module.
-createPermission :: Text -> TestEnvironment -> Permission -> IO ()
-createPermission backendPrefix env InsertPermission {..} = do
-  let requestType = backendPrefix <> "_create_insert_permission"
-      qualifiedTable =
-        [yaml|
-          schema: "hasura"
-          name: *permissionTable
-        |]
+createPermission :: BackendType -> TestEnvironment -> Permission -> IO ()
+createPermission backend env InsertPermission {..} = do
+  let schemaName = Schema.getSchemaName env
+      backendType = BackendType.defaultBackendTypeString backend
+      requestType = backendType <> "_create_insert_permission"
+      qualifiedTable = Schema.mkTableField backend schemaName permissionTable
   GraphqlEngine.postMetadata_
     env
     [yaml|
@@ -106,13 +107,11 @@ createPermission backendPrefix env InsertPermission {..} = do
           check: {}
           set: {}
     |]
-createPermission backendPrefix env UpdatePermission {..} = do
-  let requestType = backendPrefix <> "_create_update_permission"
-      qualifiedTable =
-        [yaml|
-          schema: "hasura"
-          name: *permissionTable
-        |]
+createPermission backend env UpdatePermission {..} = do
+  let schemaName = Schema.getSchemaName env
+      backendType = BackendType.defaultBackendTypeString backend
+      requestType = backendType <> "_create_update_permission"
+      qualifiedTable = Schema.mkTableField backend schemaName permissionTable
   GraphqlEngine.postMetadata_
     env
     [yaml|
@@ -127,13 +126,11 @@ createPermission backendPrefix env UpdatePermission {..} = do
           check: {}
           set: {}
     |]
-createPermission backendPrefix env SelectPermission {..} = do
-  let requestType = backendPrefix <> "_create_select_permission"
-      qualifiedTable =
-        [yaml|
-          schema: "hasura"
-          name: *permissionTable
-        |]
+createPermission backend env SelectPermission {..} = do
+  let schemaName = Schema.getSchemaName env
+      backendType = BackendType.defaultBackendTypeString backend
+      requestType = backendType <> "_create_select_permission"
+      qualifiedTable = Schema.mkTableField backend schemaName permissionTable
   GraphqlEngine.postMetadata_
     env
     [yaml|
@@ -148,14 +145,12 @@ createPermission backendPrefix env SelectPermission {..} = do
           allow_aggregations: *permissionAllowAggregations
     |]
 
-dropPermission :: Text -> TestEnvironment -> Permission -> IO ()
-dropPermission backendPrefix env InsertPermission {..} = do
-  let requestType = backendPrefix <> "_drop_insert_permission"
-      qualifiedTable =
-        [yaml|
-          schema: "hasura"
-          name: *permissionTable
-        |]
+dropPermission :: BackendType -> TestEnvironment -> Permission -> IO ()
+dropPermission backend env InsertPermission {..} = do
+  let schemaName = Schema.getSchemaName env
+      backendType = BackendType.defaultBackendTypeString backend
+      requestType = backendType <> "_drop_insert_permission"
+      qualifiedTable = Schema.mkTableField backend schemaName permissionTable
   GraphqlEngine.postMetadata_
     env
     [yaml|
@@ -165,13 +160,11 @@ dropPermission backendPrefix env InsertPermission {..} = do
         source: *permissionSource
         role:  *permissionRole
     |]
-dropPermission backendPrefix env SelectPermission {..} = do
-  let requestType = backendPrefix <> "_drop_select_permission"
-      qualifiedTable =
-        [yaml|
-          schema: "hasura"
-          name: *permissionTable
-        |]
+dropPermission backend env SelectPermission {..} = do
+  let schemaName = Schema.getSchemaName env
+      backendType = BackendType.defaultBackendTypeString backend
+      requestType = backendType <> "_drop_select_permission"
+      qualifiedTable = Schema.mkTableField backend schemaName permissionTable
   GraphqlEngine.postMetadata_
     env
     [yaml|
@@ -181,13 +174,11 @@ dropPermission backendPrefix env SelectPermission {..} = do
         source: *permissionSource
         role:  *permissionRole
     |]
-dropPermission backendPrefix env UpdatePermission {..} = do
-  let requestType = backendPrefix <> "_drop_update_permission"
-      qualifiedTable =
-        [yaml|
-          schema: "hasura"
-          name: *permissionTable
-        |]
+dropPermission backend env UpdatePermission {..} = do
+  let schemaName = Schema.getSchemaName env
+      backendType = BackendType.defaultBackendTypeString backend
+      requestType = backendType <> "_drop_update_permission"
+      qualifiedTable = Schema.mkTableField backend schemaName permissionTable
   GraphqlEngine.postMetadata_
     env
     [yaml|
@@ -199,11 +190,11 @@ dropPermission backendPrefix env UpdatePermission {..} = do
     |]
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
-setup :: Text -> [Permission] -> TestEnvironment -> IO ()
-setup backendPrefix permissions testEnvironment =
-  mapM_ (createPermission backendPrefix testEnvironment) permissions
+setup :: BackendType -> [Permission] -> TestEnvironment -> IO ()
+setup backend permissions testEnvironment =
+  mapM_ (createPermission backend testEnvironment) permissions
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
-teardown :: Text -> [Permission] -> TestEnvironment -> IO ()
-teardown backendPrefix permissions testEnvironment =
-  mapM_ (dropPermission backendPrefix testEnvironment) permissions
+teardown :: BackendType -> [Permission] -> TestEnvironment -> IO ()
+teardown backend permissions testEnvironment =
+  mapM_ (dropPermission backend testEnvironment) permissions

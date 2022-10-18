@@ -127,6 +127,11 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 ```json
 {
   "capabilities": {
+    "data_schema": {
+      "supports_primary_keys": true,
+      "supports_foreign_keys": true,
+      "column_nullability": "nullable_and_non_nullable"
+    },
     "relationships": {},
     "graphql_schema": "scalar DateTime\n\ninput DateTimeComparisons {\n  in_year: Number\n}",
     "scalar_types": {
@@ -158,6 +163,7 @@ The `GET /capabilities` endpoint is used by `graphql-engine` to discover the cap
 ```
 
 The `capabilities` section describes the _capabilities_ of the service. This includes
+- `data_schema`: What sorts of features the agent supports when describing its data schema
 - `relationships`: whether or not the agent supports relationships
 - `scalar_types`: custom scalar types and the operations they support. See [Scalar types capabilities](#scalar-type-capabilities).
 - `graphql_schema`: a GraphQL schema document containing type definitions referenced by the `scalar_types` capabilities.
@@ -165,6 +171,11 @@ The `capabilities` section describes the _capabilities_ of the service. This inc
 The `config_schema` property contains an [OpenAPI 3 Schema](https://swagger.io/specification/#schema-object) object that represents the schema of the configuration object. It can use references (`$ref`) to refer to other schemas defined in the `other_schemas` object by name.
 
 `graphql-engine` will use the `config_schema` OpenAPI 3 Schema to validate the user's configuration JSON before putting it into the `X-Hasura-DataConnector-Config` header.
+
+#### Data schema capabilities
+The agent can declare whether or not it supports primary keys or foreign keys by setting the `supports_primary_keys` and `supports_foreign_keys` properties under the `data_schema` object on capabilities. If it does not declare support, it is expected that it will not return any such primary/foreign keys in the schema it exposes on the `/schema` endpoint.
+
+If the agent only supports table columns that are always nullable, then it should set `column_nullability` to `"only_nullable"`. However, if it supports both nullable and non-nullable columns, then it should set `"nullable_and_non_nullable"`.
 
 #### Scalar type capabilities
 
@@ -1446,6 +1457,19 @@ For example, here's a query that retrieves artists ordered descending by the cou
 The `QueryRequest` TypeScript type in the [reference implementation](./reference/src/types/index.ts) describes the valid request body payloads which may be passed to the `POST /query` endpoint. The response body structure is captured by the `QueryResponse` type.
 
 ### Health endpoint
+
 Agents must expose a `/health` endpoint which must return a 204 No Content HTTP response code if the agent is up and running. This does not mean that the agent is able to connect to any data source it performs queries against, only that the agent is running and can accept requests, even if some of those requests might fail because a dependant service is unavailable.
 
 However, this endpoint can also be used to check whether the ability of the agent to talk to a particular data source is healthy. If the endpoint is sent the `X-Hasura-DataConnector-Config` and `X-Hasura-DataConnector-SourceName` headers, then the agent is expected to check that it can successfully talk to whatever data source is being specified by those headers. If it can do so, then it must return a 204 No Content response code.
+
+### Reporting Errors
+
+Any non-200 response code from an Agent (except for the `/health` endpoint) will be interpreted as an error. These should be handled gracefully by `graphql-engine` but provide limited details to users. If you wish to return structured error information to users you can return a status of `500` from the `/capabilities`, `/schema`, and `/query` endpoints with the following JSON format:
+
+```
+{
+  "type": "uncaught-error",      // This may be extended to more types in future
+  "message": String,             // A plain-text message for display purposes
+  "details": Value               // An arbitrary JSON Value containing error details
+}
+```

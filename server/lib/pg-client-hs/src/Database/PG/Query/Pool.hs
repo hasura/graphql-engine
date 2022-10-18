@@ -6,7 +6,6 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# OPTIONS_GHC -fno-warn-missing-fields #-}
 
 module Database.PG.Query.Pool
   ( ConnParams (..),
@@ -50,7 +49,6 @@ import Data.Aeson (ToJSON (toJSON))
 import Data.ByteString qualified as BS
 import Data.HashTable.IO qualified as HIO
 import Data.IORef (newIORef)
-import Data.Kind (Constraint, Type)
 import Data.Pool qualified as RP
 import Data.String (fromString)
 import Data.Text qualified as Text
@@ -67,7 +65,6 @@ import Prelude
 
 -------------------------------------------------------------------------------
 
-type PGPool :: Type
 data PGPool = PGPool
   { -- | the underlying connection pool
     _pool :: !(RP.Pool PGConn),
@@ -80,7 +77,6 @@ pgPoolStats = _stats
 
 -- | Actual ekg gauges and other metrics are not created here, since those depend on
 -- a store and it's much simpler to perform the sampling of the distribution from within graphql-engine.
-type PGPoolStats :: Type
 data PGPoolStats = PGPoolStats
   { -- | time taken to acquire new connections from postgres
     _dbConnAcquireLatency :: !Distribution,
@@ -90,7 +86,6 @@ data PGPoolStats = PGPoolStats
 getInUseConnections :: PGPool -> IO Int
 getInUseConnections = RP.getInUseResourceCount . _pool
 
-type ConnParams :: Type
 data ConnParams = ConnParams
   { cpStripes :: !Int,
     cpConns :: !Int,
@@ -153,7 +148,6 @@ resizePGPool PGPool {..} size = do
 destroyPGPool :: PGPool -> IO ()
 destroyPGPool = RP.destroyAllResources . _pool
 
-type PGExecErr :: Type
 data PGExecErr
   = PGExecErrConn !PGConnErr
   | PGExecErrTx !PGTxErr
@@ -189,11 +183,9 @@ abortTx :: (MonadIO m) => TxT m ()
 abortTx =
   unitQ "ABORT" () True
 
-type FromPGTxErr :: Type -> Constraint
 class FromPGTxErr e where
   fromPGTxErr :: PGTxErr -> e
 
-type FromPGConnErr :: Type -> Constraint
 class FromPGConnErr e where
   fromPGConnErr :: PGConnErr -> e
 
@@ -341,7 +333,6 @@ withExpiringPGconn pool f = do
 -- | Used internally (see 'withExpiringPGconn'), but exported in case we need
 -- to allow callback to signal that the connection should be destroyed and we
 -- should retry.
-type PGConnectionStale :: Type
 data PGConnectionStale = PGConnectionStale
   deriving stock (Show)
   deriving anyclass (Exception)

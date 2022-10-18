@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { ReactElement, useEffect, useState } from 'react';
 import { RoleLimits, RoleState } from './utils';
 import styles from './Security.module.scss';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
@@ -16,7 +16,7 @@ interface LimitFormProps {
   limit: keyof RoleLimits;
   label: {
     title: string;
-    info: string;
+    info: ReactElement;
   };
   state: RoleState;
   roleLimit: Limit;

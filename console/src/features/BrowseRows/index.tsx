@@ -1,4 +1,4 @@
-export { runFilterQuery } from './FiltersSection/FiltersSectionContainer.utils';
-export type { UserQuery } from './FiltersSection/types';
-export { getTableSchemaName } from './FiltersSection/hooks/useTableSchema.utils';
-export type { BrowseRowsTable } from './FiltersSection/hooks/useTableSchema.utils';
+export { BrowseRowsContainer } from './components/BrowseRowsContainer';
+export { LegacyRunQueryContainer } from './components/RunQuery/LegacyRunQueryContainer';
+export { runFilterQuery } from './components/RunQuery/LegacyRunQueryContainer/LegacyRunQueryContainer.utils';
+export { UserQuery } from './components/RunQuery/types';

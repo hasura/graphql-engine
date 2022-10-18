@@ -96,10 +96,12 @@ module Hasura.Backends.Postgres.SQL.DML
     simplifyBoolExp,
     textArrTypeAnn,
     textTypeAnn,
+    mkColumnAlias,
     mkTableAlias,
     toTableAlias,
     tableAliasToIdentifier,
     toColumnAlias,
+    tableIdentifierToColumnAlias,
   )
 where
 
@@ -108,6 +110,7 @@ import Data.Aeson.Casing qualified as J
 import Data.HashMap.Strict qualified as HM
 import Data.Int (Int64)
 import Data.String (fromString)
+import Data.Text (pack)
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Incremental (Cacheable)
@@ -326,11 +329,11 @@ instance ToSQL Select where
 mkSIdenExp :: (IsIdentifier a) => a -> SQLExp
 mkSIdenExp = SEIdentifier . toIdentifier
 
-mkQIdenExp :: (IsIdentifier a, IsIdentifier b) => a -> b -> SQLExp
+mkQIdenExp :: (IsIdentifier b) => TableIdentifier -> b -> SQLExp
 mkQIdenExp q t = SEQIdentifier $ mkQIdentifier q t
 
 data Qual
-  = QualifiedIdentifier Identifier (Maybe TypeAnn)
+  = QualifiedIdentifier TableIdentifier (Maybe TypeAnn)
   | QualTable QualifiedTable
   | QualVar Text
   deriving (Show, Eq, Generic, Data)
@@ -350,8 +353,8 @@ instance ToSQL Qual where
   toSQL (QualTable qt) = toSQL qt
   toSQL (QualVar v) = TB.text v
 
-mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
-mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (toIdentifier t)
+mkQIdentifier :: (IsIdentifier b) => TableIdentifier -> b -> QIdentifier
+mkQIdentifier q t = QIdentifier (QualifiedIdentifier q Nothing) (toIdentifier t)
 
 mkQIdentifierTable :: (IsIdentifier a) => QualifiedTable -> a -> QIdentifier
 mkQIdentifierTable q = QIdentifier (mkQual q) . toIdentifier
@@ -505,8 +508,20 @@ instance J.ToJSON SQLExp where
 newtype ColumnAlias = ColumnAlias {getColumnAlias :: Identifier}
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
+instance IsString ColumnAlias where
+  fromString = mkColumnAlias . pack
+
+instance Semigroup ColumnAlias where
+  (ColumnAlias ca1) <> (ColumnAlias ca2) = ColumnAlias (ca1 <> ca2)
+
+mkColumnAlias :: Text -> ColumnAlias
+mkColumnAlias = ColumnAlias . Identifier
+
 instance IsIdentifier ColumnAlias where
   toIdentifier (ColumnAlias identifier) = identifier
+
+tableIdentifierToColumnAlias :: TableIdentifier -> ColumnAlias
+tableIdentifierToColumnAlias = mkColumnAlias . unTableIdentifier
 
 toColumnAlias :: (IsIdentifier a) => a -> ColumnAlias
 toColumnAlias = ColumnAlias . toIdentifier
@@ -522,6 +537,12 @@ columnAliasToSqlWithoutAs alias = toSQL (toIdentifier alias)
 -- | Represents an alias assignment for a table, relation or row
 newtype TableAlias = TableAlias {getTableAlias :: Identifier}
   deriving (Show, Eq, NFData, Data, Generic, Cacheable, Hashable)
+
+instance IsString TableAlias where
+  fromString = mkTableAlias . pack
+
+instance Semigroup TableAlias where
+  (TableAlias ta1) <> (TableAlias ta2) = TableAlias (ta1 <> ta2)
 
 -- | Create a table alias.
 mkTableAlias :: Text -> TableAlias

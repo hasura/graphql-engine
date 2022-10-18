@@ -24,6 +24,8 @@ import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { resetRelationshipForm, resetManualRelationshipForm } from './Actions';
 import { RemoteDbRelationships } from './RemoteDbRelationships/RemoteDbRelationships';
+import styles from '../TableModify/ModifyTable.module.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.module.scss';
 
 const RelationshipsView = ({
   tableName,
@@ -52,9 +54,6 @@ const RelationshipsView = ({
       data: currentSchema,
     });
   }, [tableName, currentSchema, dispatch]);
-
-  const styles = require('../TableModify/ModifyTable.module.scss');
-  const tableStyles = require('../../../Common/TableCommon/TableStyles.module.scss');
 
   const tableSchema = allSchemas.find(
     t => t.table_name === tableName && t.table_schema === currentSchema

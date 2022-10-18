@@ -752,6 +752,8 @@ runGQBatched env logger reqId responseErrorsConfig userInfo ipAddress reqHdrs qu
       -- It's unclear what we should do if we receive multiple
       -- responses with distinct headers, so just do the simplest thing
       -- in this case, and don't forward any.
+      executionCtx <- ask
+      E.checkGQLBatchedReqs userInfo reqId reqs (E._ecxSchemaCache executionCtx) >>= flip onLeft throwError
       let includeInternal = shouldIncludeInternal (_uiRole userInfo) responseErrorsConfig
           removeHeaders =
             flip HttpResponse []

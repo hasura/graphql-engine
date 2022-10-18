@@ -51,9 +51,9 @@ export function NeonBanner(props: Props) {
       </div>
       <div className="flex justify-between items-center mb-sm">
         <div className="w-[70%] text-md text-gray-700">
-          The multi-cloud fully managed Postgres with a generous free tier. We
-          separated storage and compute to offer autoscaling, branching, and
-          bottomless storage.
+          Modern, developer-friendly Postgres built for the cloud. Neon
+          separates storage and compute to offer scale to zero and support
+          database branching.
         </div>
         <div>
           <Button

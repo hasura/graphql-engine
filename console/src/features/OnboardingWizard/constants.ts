@@ -30,8 +30,8 @@ export const NEON_ONBOARDING_QUERY_KEY = 'neonOnboarding';
 export const experimentId = growthExperimentsIds.onboardingWizardV1;
 
 export const graphQlMutation = `
-mutation trackExperimentsCohortActivity ($projectId: uuid!, $experimentId: String!, $kind: String!) {
-  trackExperimentsCohortActivity(experiment: $experimentId, payload: {kind: $kind, project_id: $projectId}) {
+mutation trackExperimentsCohortActivity ($projectId: uuid!, $experimentId: String!, $kind: String! $error_code: String) {
+  trackExperimentsCohortActivity(experiment: $experimentId, payload: {kind: $kind, project_id: $projectId, error_code: $error_code}) {
     status
   }
 }
@@ -114,3 +114,8 @@ export const getNeonOnboardingErrorVariables = (code: string) => {
 
 // A stale time of 5 minutes for use in useQuery hook
 export const staleTime = 5 * 60 * 1000;
+
+export const dialogHeader = 'Welcome to your new Hasura project!';
+
+export const familiaritySurveySubHeader =
+  "We'd love to get to know you before you get started with your first API.";

@@ -15,7 +15,7 @@ import {
 
 import LoadingSpinner from '../Common/LoadingSpinner';
 
-const styles = require('../Metrics.scss');
+import styles from '../Metrics.module.scss';
 
 /* Custom style object for searchable select box */
 const customSelectBoxStyles = {
@@ -62,12 +62,12 @@ const FetchProjects = ({ projectId, groupName, children }) => {
   return children(data);
 };
 
-const SelectProjectAndImport = props => {
+const SelectProjectAndImport = (props) => {
   const [projectState, updateProjectState] = useState({});
 
   const { projectId } = projectState;
 
-  const updateProjectStateCb = selectedOption => {
+  const updateProjectStateCb = (selectedOption) => {
     updateProjectState({
       projectName: selectedOption.label,
       projectId: selectedOption.value,
@@ -81,7 +81,7 @@ const SelectProjectAndImport = props => {
   const getOptions = () => {
     if (data && data.privilegedProjects && data.privilegedProjects.length > 0) {
       const validRemoteProjects = data.privilegedProjects.filter(
-        f => f.id !== currentProjectId
+        (f) => f.id !== currentProjectId
       );
       if (validRemoteProjects.length > 0) {
         return validRemoteProjects.map((d, i) => {
@@ -108,7 +108,7 @@ const SelectProjectAndImport = props => {
     if (projectId) {
       return (
         <FetchProjects groupName={groupName} projectId={projectId}>
-          {operations => {
+          {(operations) => {
             if (operations.results.length > 0) {
               return (
                 <div className={styles.displayInline + ' ' + styles.addBtn}>

@@ -5,6 +5,7 @@ module Test.HelloWorldSpec (spec) where
 
 import Data.Aeson (Value (Null))
 import Data.List.NonEmpty qualified as NE
+import Harness.Backend.DataConnector qualified as DataConnector
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
@@ -17,12 +18,21 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
-    ( (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-        { Fixture.setupTeardown = \(testEnvironment, _) ->
-            [ Postgres.setupTablesAction schema testEnvironment
-            ]
-        }
-        NE.:| []
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Postgres.setupTablesAction schema testEnvironment
+                ]
+            },
+          ( \(DataConnector.TestSourceConfig {..}) ->
+              (Fixture.fixture $ Fixture.Backend typeConfig)
+                { Fixture.setupTeardown = \(testEnvironment, _) ->
+                    [ DataConnector.setupTablesAction schema testEnvironment
+                    ]
+                }
+          )
+            DataConnector.sqliteGenericConfig
+        ]
     )
     tests
 

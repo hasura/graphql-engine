@@ -92,6 +92,7 @@
     "@reduxjs/toolkit": "^1.5.1",
     "@sentry/react": "7.11.1",
     "@sentry/tracing": "7.11.1",
+    "@tanstack/react-table": "8.5.13",
     "@types/lodash.get": "^4.4.6",
     "@walmartlabs/json-to-simple-graphql-schema": "^3.0.1",
     "@xstate/react": "^2.0.0",

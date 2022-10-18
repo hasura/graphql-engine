@@ -55,6 +55,22 @@ import Language.GraphQL.Draft.Syntax qualified as G
 ----------------------------------------------------------------------------------------------------
 -- Variables
 
+subsAlias :: S.TableAlias
+subsAlias = S.mkTableAlias "_subs"
+
+subsIdentifier :: TableIdentifier
+subsIdentifier = S.tableAliasToIdentifier subsAlias
+
+resultIdAlias, resultVarsAlias :: S.ColumnAlias
+resultIdAlias = S.mkColumnAlias "result_id"
+resultVarsAlias = S.mkColumnAlias "result_vars"
+
+fldRespAlias :: S.TableAlias
+fldRespAlias = S.mkTableAlias "_fld_resp"
+
+fldRespIdentifier :: TableIdentifier
+fldRespIdentifier = S.tableAliasToIdentifier fldRespAlias
+
 -- | Internal: Used to collect information about various parameters
 -- of a subscription field's AST as we resolve them to SQL expressions.
 data QueryParametersInfo (b :: BackendType) = QueryParametersInfo
@@ -131,8 +147,8 @@ mkMultiplexedQuery rootFields =
     S.mkSelect
       { S.selExtr =
           -- SELECT _subs.result_id, _fld_resp.root AS result
-          [ S.Extractor (mkQualifiedIdentifier (Identifier "_subs") (Identifier "result_id")) Nothing,
-            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result")
+          [ S.Extractor (mkQualifiedIdentifier subsIdentifier (Identifier "result_id")) Nothing,
+            S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result")
           ],
         S.selFrom =
           Just $
@@ -150,14 +166,14 @@ mkMultiplexedQuery rootFields =
         [S.toColumnAlias $ Identifier "result_id", S.toColumnAlias $ Identifier "result_vars"]
 
     -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
-    responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.toTableAlias $ Identifier "_fld_resp")
+    responseLateralFromItem = S.mkLateralFromItem selectRootFields fldRespAlias
     selectRootFields =
       S.mkSelect
         { S.selExtr = [S.Extractor rootFieldsJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")],
           S.selFrom =
             Just . S.FromExp $
               OMap.toList rootFields <&> \(fieldAlias, resolvedAST) ->
-                toSQLFromItem (S.toTableAlias $ aliasToIdentifier fieldAlias) resolvedAST
+                toSQLFromItem (S.mkTableAlias $ G.unName fieldAlias) resolvedAST
         }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
@@ -168,7 +184,7 @@ mkMultiplexedQuery rootFields =
       ]
 
     mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing)
-    aliasToIdentifier = Identifier . G.unName
+    aliasToIdentifier = TableIdentifier . G.unName
 
 mkStreamingMultiplexedQuery ::
   ( Backend ('Postgres pgKind),
@@ -181,9 +197,9 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
     S.mkSelect
       { S.selExtr =
           -- SELECT _subs.result_id, _fld_resp.root, _fld_resp.cursor AS result
-          [ S.Extractor (mkQualifiedIdentifier (Identifier "_subs") (Identifier "result_id")) Nothing,
-            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result"),
-            S.Extractor (mkQualifiedIdentifier (Identifier "_fld_resp") (Identifier "cursor")) (Just $ S.toColumnAlias $ Identifier "cursor")
+          [ S.Extractor (mkQualifiedIdentifier subsIdentifier (Identifier "result_id")) Nothing,
+            S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "root")) (Just $ S.toColumnAlias $ Identifier "result"),
+            S.Extractor (mkQualifiedIdentifier fldRespIdentifier (Identifier "cursor")) (Just $ S.toColumnAlias $ Identifier "cursor")
           ],
         S.selFrom =
           Just $
@@ -197,8 +213,8 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
     subsInputFromItem =
       S.FIUnnest
         [S.SEPrep 1 `S.SETyAnn` S.TypeAnn "uuid[]", S.SEPrep 2 `S.SETyAnn` S.TypeAnn "json[]"]
-        (S.toTableAlias $ Identifier "_subs")
-        [S.toColumnAlias $ Identifier "result_id", S.toColumnAlias $ Identifier "result_vars"]
+        subsAlias
+        [resultIdAlias, resultVarsAlias]
 
     -- LEFT OUTER JOIN LATERAL ( ... ) _fld_resp
     responseLateralFromItem = S.mkLateralFromItem selectRootFields (S.toTableAlias $ Identifier "_fld_resp")
@@ -207,7 +223,7 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
         { S.selExtr = [(S.Extractor rootFieldJsonAggregate (Just $ S.toColumnAlias $ Identifier "root")), cursorExtractor],
           S.selFrom =
             Just . S.FromExp $
-              pure $ toSQLFromItem (S.toTableAlias $ aliasToIdentifier fieldAlias) resolvedAST
+              pure $ toSQLFromItem (S.mkTableAlias $ G.unName fieldAlias) resolvedAST
         }
 
     -- json_build_object('field1', field1.root, 'field2', field2.root, ...)
@@ -221,7 +237,7 @@ mkStreamingMultiplexedQuery (fieldAlias, resolvedAST) =
     cursorSQLExp = S.SEFnApp "to_json" [mkQualifiedIdentifier (aliasToIdentifier fieldAlias) (Identifier "cursor")] Nothing
     cursorExtractor = S.Extractor cursorSQLExp (Just $ S.toColumnAlias $ Identifier "cursor")
     mkQualifiedIdentifier prefix = S.SEQIdentifier . S.QIdentifier (S.QualifiedIdentifier prefix Nothing)
-    aliasToIdentifier = Identifier . G.unName
+    aliasToIdentifier = TableIdentifier . G.unName
 
 -- | Resolves an 'GR.UnresolvedVal' by converting 'GR.UVPG' values to SQL
 -- expressions that refer to the @result_vars@ input object, collecting information
@@ -262,7 +278,7 @@ resolveMultiplexedValue allSessionVars = \case
       addTypeAnnotation pgType $
         S.SEOpApp
           (S.SQLOp "#>>")
-          [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier (Identifier "_subs") Nothing) (Identifier "result_vars"),
+          [ S.SEQIdentifier $ S.QIdentifier (S.QualifiedIdentifier subsIdentifier Nothing) (Identifier "result_vars"),
             S.SEArray $ map S.SELit jPath
           ]
     addTypeAnnotation pgType =
@@ -299,4 +315,4 @@ executeQuery ::
 executeQuery query cohorts =
   let (cohortIds, cohortVars) = unzip cohorts
       preparedArgs = (CohortIdArray cohortIds, CohortVariablesArray cohortVars)
-   in liftTx $ PG.listQE defaultTxErrorHandler query preparedArgs True
+   in liftTx $ PG.withQE defaultTxErrorHandler query preparedArgs True

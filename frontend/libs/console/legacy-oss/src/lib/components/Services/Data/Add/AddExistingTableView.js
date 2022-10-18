@@ -6,6 +6,7 @@ import {
   setDefaults,
   addExistingTableSql,
 } from './AddExistingTableViewActions';
+import styles from '../../../Common/TableCommon/Table.module.scss';
 
 class AddExistingTableView extends Component {
   constructor(props) {
@@ -15,7 +16,6 @@ class AddExistingTableView extends Component {
 
   render() {
     const { dispatch, ongoingRequest, lastError, lastSuccess } = this.props;
-    const styles = require('../../../Common/TableCommon/Table.module.scss');
 
     let alert = null;
     if (ongoingRequest) {
@@ -64,7 +64,7 @@ class AddExistingTableView extends Component {
           >
             <h4 className={styles.subheading_text}>Table/View name:</h4>
             <form
-              onSubmit={e => {
+              onSubmit={(e) => {
                 e.preventDefault();
                 dispatch(addExistingTableSql());
               }}
@@ -72,7 +72,7 @@ class AddExistingTableView extends Component {
               <input
                 type="text"
                 className={styles.tableNameInput + ' form-control'}
-                onChange={e => {
+                onChange={(e) => {
                   dispatch(setTableName(e.target.value));
                 }}
                 data-test="existing-table"
@@ -100,13 +100,13 @@ AddExistingTableView.propTypes = {
   dispatch: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return {
     ...state.addTable.existingTableView,
   };
 };
 
-const addExistingTableViewConnector = connect =>
+const addExistingTableViewConnector = (connect) =>
   connect(mapStateToProps)(AddExistingTableView);
 
 export default addExistingTableViewConnector;

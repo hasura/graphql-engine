@@ -21,6 +21,7 @@ import Data.List.Split (dropBlanks, keepDelimsL, split, whenElt)
 import Data.Morpheus.Document (gqlDocument)
 import Data.Morpheus.Types qualified as Morpheus
 import Data.Typeable (Typeable)
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as SQLServer
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -41,8 +42,8 @@ import Test.Hspec (SpecWith, describe, it)
 spec :: SpecWith TestEnvironment
 spec = Fixture.runWithLocalTestEnvironment contexts tests
   where
-    lhsFixtures = [lhsPostgres, lhsSQLServer, lhsRemoteServer]
-    rhsFixtures = [rhsPostgres, rhsSQLServer]
+    lhsFixtures = [lhsPostgres, lhsCockroach, lhsSQLServer, lhsRemoteServer]
+    rhsFixtures = [rhsPostgres, rhsCockroach, rhsSQLServer]
     contexts = NE.fromList $ combine <$> lhsFixtures <*> rhsFixtures
 
 -- | Combines a lhs and a rhs.
@@ -104,6 +105,23 @@ lhsPostgres tableName =
         ]
     }
 
+lhsCockroach :: LHSFixture
+lhsCockroach tableName =
+  (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+    { Fixture.mkLocalTestEnvironment = lhsCockroachMkLocalTestEnvironment,
+      Fixture.setupTeardown = \testEnv ->
+        [ Fixture.SetupAction
+            { Fixture.setupAction = lhsCockroachSetup tableName testEnv,
+              Fixture.teardownAction = \_ -> lhsCockroachTeardown testEnv
+            }
+        ],
+      Fixture.customOptions =
+        Just
+          Fixture.defaultOptions
+            { Fixture.skipTests = Just "NDAT-47"
+            }
+    }
+
 lhsSQLServer :: LHSFixture
 lhsSQLServer tableName =
   (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
@@ -151,6 +169,29 @@ rhsPostgres =
                     Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnv
                   }
               ]
+          }
+   in (table, context)
+
+rhsCockroach :: RHSFixture
+rhsCockroach =
+  let table =
+        [yaml|
+      schema: hasura
+      name: album
+    |]
+      context =
+        (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+          { Fixture.setupTeardown = \testEnv ->
+              [ Fixture.SetupAction
+                  { Fixture.setupAction = rhsCockroachSetup testEnv,
+                    Fixture.teardownAction = \_ -> rhsCockroachTeardown testEnv
+                  }
+              ],
+            Fixture.customOptions =
+              Just
+                Fixture.defaultOptions
+                  { Fixture.skipTests = Just "NDAT-47"
+                  }
           }
    in (table, context)
 
@@ -241,46 +282,114 @@ args:
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
-type: bulk
-args:
-- type: pg_create_select_permission
-  args:
-    source: *sourceName
-    role: role1
-    table:
-      schema: *schemaName
-      name: track
-    permission:
-      columns: '*'
-      filter: {}
-- type: pg_create_select_permission
-  args:
-    source: *sourceName
-    role: role2
-    table:
-      schema: *schemaName
-      name: track
-    permission:
-      columns: '*'
-      filter: {}
-- type: pg_create_remote_relationship
-  args:
-    source: *sourceName
-    table:
-      schema: *schemaName
-      name: track
-    name: album
-    definition:
-      to_source:
-        source: target
-        table: *rhsTableName
-        relationship_type: object
-        field_mapping:
-          album_id: id
-  |]
+      type: bulk
+      args:
+      - type: pg_create_select_permission
+        args:
+          source: *sourceName
+          role: role1
+          table:
+            schema: *schemaName
+            name: track
+          permission:
+            columns: '*'
+            filter: {}
+      - type: pg_create_select_permission
+        args:
+          source: *sourceName
+          role: role2
+          table:
+            schema: *schemaName
+            name: track
+          permission:
+            columns: '*'
+            filter: {}
+      - type: pg_create_remote_relationship
+        args:
+          source: *sourceName
+          table:
+            schema: *schemaName
+            name: track
+          name: album
+          definition:
+            to_source:
+              source: target
+              table: *rhsTableName
+              relationship_type: object
+              field_mapping:
+                album_id: id
+    |]
 
 lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresTeardown _ = Postgres.dropTable track
+
+--------------------------------------------------------------------------------
+-- LHS Cockroach
+
+lhsCockroachMkLocalTestEnvironment :: TestEnvironment -> IO (Maybe Server)
+lhsCockroachMkLocalTestEnvironment _ = pure Nothing
+
+lhsCockroachSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
+lhsCockroachSetup rhsTableName (testEnvironment, _) = do
+  let sourceName = "source"
+      sourceConfig = Cockroach.defaultSourceConfiguration
+      schemaName = Schema.getSchemaName testEnvironment
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+      type: cockroach_add_source
+      args:
+        name: *sourceName
+        configuration: *sourceConfig
+    |]
+  -- setup tables only
+  Cockroach.createTable testEnvironment track
+  Cockroach.insertTable track
+  Schema.trackTable Fixture.Cockroach sourceName track testEnvironment
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+      type: bulk
+      args:
+      - type: cockroach_create_select_permission
+        args:
+          source: *sourceName
+          role: role1
+          table:
+            schema: *schemaName
+            name: track
+          permission:
+            columns: '*'
+            filter: {}
+      - type: cockroach_create_select_permission
+        args:
+          source: *sourceName
+          role: role2
+          table:
+            schema: *schemaName
+            name: track
+          permission:
+            columns: '*'
+            filter: {}
+      - type: cockroach_create_remote_relationship
+        args:
+          source: *sourceName
+          table:
+            schema: *schemaName
+            name: track
+          name: album
+          definition:
+            to_source:
+              source: target
+              table: *rhsTableName
+              relationship_type: object
+              field_mapping:
+                album_id: id
+    |]
+
+lhsCockroachTeardown :: (TestEnvironment, Maybe Server) -> IO ()
+lhsCockroachTeardown _ = Cockroach.dropTable track
 
 --------------------------------------------------------------------------------
 -- LHS SQLServer
@@ -612,6 +721,67 @@ args:
 
 rhsPostgresTeardown :: (TestEnvironment, ()) -> IO ()
 rhsPostgresTeardown _ = Postgres.dropTable album
+
+--------------------------------------------------------------------------------
+-- RHS Cockroach
+
+rhsCockroachSetup :: (TestEnvironment, ()) -> IO ()
+rhsCockroachSetup (testEnvironment, _) = do
+  let sourceName = "target"
+      sourceConfig = Cockroach.defaultSourceConfiguration
+      schemaName = Schema.getSchemaName testEnvironment
+
+  -- Add remote source
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+      type: cockroach_add_source
+      args:
+        name: *sourceName
+        configuration: *sourceConfig
+    |]
+  -- setup tables only
+  Cockroach.createTable testEnvironment album
+  Cockroach.insertTable album
+  Schema.trackTable Fixture.Cockroach sourceName album testEnvironment
+
+  GraphqlEngine.postMetadata_
+    testEnvironment
+    [yaml|
+      type: bulk
+      args:
+      - type: cockroach_create_select_permission
+        args:
+          source: *sourceName
+          role: role1
+          table:
+            schema: *schemaName
+            name: album
+          permission:
+            columns:
+              - title
+              - artist_id
+            filter:
+              artist_id:
+                _eq: x-hasura-artist-id
+      - type: cockroach_create_select_permission
+        args:
+          source: *sourceName
+          role: role2
+          table:
+            schema: *schemaName
+            name: album
+          permission:
+            columns: [id, title, artist_id]
+            filter:
+              artist_id:
+                _eq: x-hasura-artist-id
+            limit: 1
+            allow_aggregations: true
+    |]
+
+rhsCockroachTeardown :: (TestEnvironment, ()) -> IO ()
+rhsCockroachTeardown _ = Cockroach.dropTable album
 
 --------------------------------------------------------------------------------
 -- RHS SQLServer

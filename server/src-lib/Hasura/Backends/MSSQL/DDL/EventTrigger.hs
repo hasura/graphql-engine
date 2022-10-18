@@ -1156,6 +1156,8 @@ deleteEventTriggerLogs ::
   (MonadIO m, MonadError QErr m) =>
   MSSQLSourceConfig ->
   TriggerLogCleanupConfig ->
+  IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)) ->
   m DeletedEventLogStats
-deleteEventTriggerLogs sourceConfig cleanupConfig =
-  liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig
+deleteEventTriggerLogs sourceConfig oldCleanupConfig getLatestCleanupConfig = do
+  deleteEventTriggerLogsInBatchesWith getLatestCleanupConfig oldCleanupConfig $ \cleanupConfig -> do
+    runMSSQLSourceWriteTx sourceConfig $ deleteEventTriggerLogsTx cleanupConfig

@@ -14,9 +14,9 @@ import globals from '../../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import FeatureDisabled from '../FeatureDisabled';
 import {
-  TableInsertRowItem,
-  TableInsertRowItemProps,
-} from './TableInsertRowItem';
+  DataTableRowItem,
+  DataTableRowItemProps,
+} from '../TableCommon/DataTableRowItem';
 import MigrationCheckbox from './MigrationCheckbox';
 import ReloadEnumValuesButton from '../Common/Components/ReloadEnumValuesButton';
 import TableHeader from '../TableCommon/TableHeader';
@@ -58,7 +58,7 @@ type TableInsertItemsProps = {
   onClickClear: () => void;
   toggleMigrationCheckBox: () => void;
   isMigration: boolean;
-  onColumnUpdate: TableInsertRowItemProps['onColumnUpdate'];
+  onColumnUpdate: DataTableRowItemProps['onColumnUpdate'];
   dispatch: AppDispatch;
   lastError: Record<any, any>;
   lastSuccess: Record<any, any>;
@@ -128,7 +128,7 @@ export const TableInsertItems = ({
               <form id="insertForm">
                 <div className="flex flex-col pt-sm">
                   {columns.map((column, index) => (
-                    <TableInsertRowItem
+                    <DataTableRowItem
                       key={column?.column_name}
                       column={column}
                       onColumnUpdate={onColumnUpdate}

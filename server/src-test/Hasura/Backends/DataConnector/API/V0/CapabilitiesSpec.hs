@@ -21,11 +21,11 @@ import Test.Hspec
 spec :: Spec
 spec = do
   describe "Capabilities" $ do
-    testToFromJSONToSchema emptyCapabilities [aesonQQ|{}|]
+    testToFromJSONToSchema defaultCapabilities [aesonQQ|{}|]
     jsonOpenApiProperties genCapabilities
   describe "CapabilitiesResponse" $ do
     testToFromJSON
-      (CapabilitiesResponse (emptyCapabilities {_cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse)
+      (CapabilitiesResponse (defaultCapabilities {_cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse)
       [aesonQQ|{"capabilities": {"relationships": {}}, "config_schemas": {"config_schema": {}, "other_schemas": {}}}|]
   describe "ScalarTypeCapabilities" $ do
     testToFromJSONToSchema (ScalarTypeCapabilities $ Just [G.name|DateTimeComparisons|]) [aesonQQ|{"comparison_type": "DateTimeComparisons"}|]
@@ -56,8 +56,19 @@ input DateTimeComparisons {after: DateTime
   in_year: Int
 }|]
 
+genDataSchemaCapabilities :: MonadGen m => m DataSchemaCapabilities
+genDataSchemaCapabilities =
+  DataSchemaCapabilities
+    <$> Gen.bool
+    <*> Gen.bool
+    <*> genColumnNullability
+
+genColumnNullability :: MonadGen m => m ColumnNullability
+genColumnNullability =
+  Gen.element [NullableAndNonNullableColumns, OnlyNullableColumns]
+
 genQueryCapabilities :: MonadGen m => m QueryCapabilities
-genQueryCapabilities = QueryCapabilities <$> Gen.bool
+genQueryCapabilities = pure QueryCapabilities
 
 genMutationCapabilities :: MonadGen m => m MutationCapabilities
 genMutationCapabilities = pure MutationCapabilities {}
@@ -139,7 +150,8 @@ genRawCapabilities = pure RawCapabilities {}
 genCapabilities :: Gen Capabilities
 genCapabilities =
   Capabilities
-    <$> Gen.maybe genQueryCapabilities
+    <$> genDataSchemaCapabilities
+    <*> Gen.maybe genQueryCapabilities
     <*> Gen.maybe genMutationCapabilities
     <*> Gen.maybe genSubscriptionCapabilities
     <*> Gen.maybe genScalarTypesCapabilities

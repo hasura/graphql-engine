@@ -1,7 +1,7 @@
 import React from 'react';
 import { Tooltip } from '@hasura/console-oss';
 
-import styles from '../Metrics.scss';
+import styles from '../Metrics.module.scss';
 import deleteIcon from '../images/delete.svg';
 
 import LoadingSpinner from '../Common/LoadingSpinner';
@@ -47,8 +47,8 @@ export const DeleteOperations = ({
   <div
     className={`
       ${styles.displayFlex} ${styles.minHeightIconWrapper} ${
-    styles.deleteImgMr
-  } ${operations.length ? styles.deleteImg : styles.disabledBtn}
+      styles.deleteImgMr
+    } ${operations.length ? styles.deleteImg : styles.disabledBtn}
       `}
   >
     <DeleteIcon

@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-const styles = require('./QueryBuilderJson.module.scss');
+import styles from './QueryBuilderJson.module.scss';
 
 class QueryBuilderJson extends React.Component {
   static propTypes = {
@@ -13,7 +13,7 @@ class QueryBuilderJson extends React.Component {
     const oBrace = '{ ';
     const cBrace = '}';
 
-    const wrapBraces = value => {
+    const wrapBraces = (value) => {
       return (
         <span>
           {oBrace}
@@ -23,7 +23,7 @@ class QueryBuilderJson extends React.Component {
       );
     };
 
-    const wrapSquareBrackets = value => {
+    const wrapSquareBrackets = (value) => {
       return (
         <span>
           [<div className={styles.qb_nested}>{value}</div>]
@@ -35,7 +35,7 @@ class QueryBuilderJson extends React.Component {
       return show ? ' ,' : '';
     };
 
-    const isCustomJsonObject = object => {
+    const isCustomJsonObject = (object) => {
       // check if it is an array
       if (object instanceof Array) {
         // check if is an empty array
@@ -72,7 +72,7 @@ class QueryBuilderJson extends React.Component {
       return object instanceof Object && !React.isValidElement(object);
     };
 
-    const isCustomJsonArray = array => {
+    const isCustomJsonArray = (array) => {
       return array instanceof Array && !isCustomJsonObject(array);
     };
 
@@ -154,7 +154,7 @@ class QueryBuilderJson extends React.Component {
       return wrapSquareBrackets(_jsonArray);
     };
 
-    const displayJsonValue = value => {
+    const displayJsonValue = (value) => {
       return value;
     };
 

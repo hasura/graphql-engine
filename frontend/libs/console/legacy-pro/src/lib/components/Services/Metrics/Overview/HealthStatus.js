@@ -1,9 +1,9 @@
 import React from 'react';
 import { FaCheckCircle, FaExclamationTriangle, FaInfo } from 'react-icons/fa';
 
-import styles from '../MetricsV1.scss';
+import styles from '../MetricsV1.module.scss';
 
-const getHealthStyle = status => {
+const getHealthStyle = (status) => {
   switch (status) {
     case 'Healthy':
       return <FaCheckCircle className={styles.green} aria-hidden="true" />;

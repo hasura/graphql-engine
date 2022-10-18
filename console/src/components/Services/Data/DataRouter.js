@@ -8,7 +8,6 @@ import {
   schemaConnector,
   viewTableConnector,
   rawSQLConnector,
-  editItemConnector,
   addExistingTableViewConnector,
   addTableConnector,
   modifyTableConnector,
@@ -35,6 +34,7 @@ import { getSourcesFromMetadata } from '../../../metadata/selector';
 import { ManageContainer } from '@/features/Data';
 import { Connect } from '@/features/ConnectDB';
 import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemContainer';
+import { TableEditItemContainer } from './TableEditItem/TableEditItemContainer';
 
 const makeDataRouter = (
   connect,
@@ -87,7 +87,7 @@ const makeDataRouter = (
           </Route>
           <Route
             path=":schema/tables/:table/edit"
-            component={editItemConnector(connect)}
+            component={TableEditItemContainer}
           />
           <Route
             path=":schema/tables/:table/insert"

@@ -9,16 +9,11 @@ import AllowListHeader from './AllowLists/AllowListHeader';
 import { strippedCurrUrl } from './helpers';
 import { ApiLimitsHeader } from './ApiLimits/ApiLimitsHeader';
 import OperationsHeader from './Operations/OperationsHeader';
+import styles from './Metrics.module.scss';
 
-const RightPanel = props => {
-  const styles = require('./Metrics.scss');
-  const {
-    location,
-    dispatch,
-    projectConfig,
-    metadata,
-    refetchMetadata,
-  } = props;
+const RightPanel = (props) => {
+  const { location, dispatch, projectConfig, metadata, refetchMetadata } =
+    props;
   const { pathname } = location;
 
   const strippedUrl = strippedCurrUrl(pathname);

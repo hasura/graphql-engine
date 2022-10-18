@@ -11,17 +11,17 @@ const downArrow = require('./images/down-arrow.svg');
 import { strippedCurrUrl } from './helpers';
 import stop from './images/stop.svg';
 
-const overview = require('./images/overviewNew.svg');
-const errors = require('./images/errorsNew.svg');
-const operation = require('./images/operation.svg');
-const allowList = require('./images/allowlist.svg');
-const usage = require('./images/usageNew.svg');
-const refreshArrows = require('./images/refresh-arrows.svg');
-const transfer = require('./images/transfer.svg');
-const regressionTest = require('./images/check-circle.svg');
+import overview from './images/overviewNew.svg';
+import errors from './images/errorsNew.svg';
+import operation from './images/operation.svg';
+import allowList from './images/allowlist.svg';
+import usage from './images/usageNew.svg';
+import refreshArrows from './images/refresh-arrows.svg';
+import transfer from './images/transfer.svg';
+import regressionTest from './images/check-circle.svg';
+import styles from './Metrics.module.scss';
 
-const LeftPanel = props => {
-  const styles = require('./Metrics.scss');
+const LeftPanel = (props) => {
   const { location } = props;
   const { pathname } = location;
   const strippedUrl = strippedCurrUrl(pathname);

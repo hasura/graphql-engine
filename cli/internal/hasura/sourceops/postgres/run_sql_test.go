@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
@@ -22,11 +23,12 @@ func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
 		input hasura.PGRunSQLInput
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *hasura.PGRunSQLOutput
-		wantErr bool
+		name      string
+		fields    fields
+		args      args
+		want      *hasura.PGRunSQLOutput
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"can send a run_sql request",
@@ -44,6 +46,7 @@ func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
 				Result:     nil,
 			},
 			false,
+			require.NoError,
 		},
 		{
 			"can send a run_sql request",
@@ -62,6 +65,7 @@ func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
 				Result:     nil,
 			},
 			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -72,11 +76,10 @@ func TestHasuraDatabaseOperations_RunSQL(t *testing.T) {
 					path:   tt.fields.path,
 				}
 				got, err := h.PGRunSQL(tt.args.input)
-				if (err != nil) != tt.wantErr {
-					t.Errorf("RunSQL() error = %v, wantErr %v", err, tt.wantErr)
-					return
+				tt.assertErr(t, err)
+				if !tt.wantErr {
+					assert.Equal(t, tt.want, got)
 				}
-				assert.Equal(t, tt.want, got)
 			}
 			test()
 		})

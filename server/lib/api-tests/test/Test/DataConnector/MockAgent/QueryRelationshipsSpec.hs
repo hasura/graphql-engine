@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
 module Test.DataConnector.MockAgent.QueryRelationshipsSpec
@@ -145,7 +146,7 @@ tests opts = do
                               )
                             ]
                           ]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
+                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse albums)},
                   _whenRequestRequired =
                     [graphql|
                       query getTrack {
@@ -273,7 +274,7 @@ tests opts = do
                               (API.FieldName "Name", API.mkColumnFieldValue $ Aeson.String "Camarão que Dorme e Onda Leva")
                             ]
                           ]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
+                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse albums)},
                   _whenRequestRequired =
                     [graphql|
                       query getTrack {
@@ -413,7 +414,7 @@ tests opts = do
                           [ [ (API.FieldName "EmployeeId", API.mkColumnFieldValue $ Aeson.Number 3)
                             ]
                           ]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> rowsResponse albums},
+                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse albums)},
                   _whenRequestRequired =
                     [graphql|
                       query getEmployee {

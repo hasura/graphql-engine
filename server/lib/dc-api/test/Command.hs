@@ -1,23 +1,14 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Command
   ( Command (..),
     TestConfig (..),
     NameCasing (..),
     TestOptions (..),
-    AgentCapabilities (..),
     parseCommandLine,
   )
 where
 
 import Control.Arrow (left)
-import Control.Lens (contains, modifying, use, (^.), _2)
-import Control.Lens.TH (makeLenses)
-import Control.Monad (when)
-import Control.Monad.State (State, runState)
 import Data.Aeson (FromJSON (..), eitherDecodeStrict')
-import Data.HashSet (HashSet)
-import Data.HashSet qualified as HashSet
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
@@ -46,7 +37,6 @@ data NameCasing
 data TestOptions = TestOptions
   { _toAgentBaseUrl :: BaseUrl,
     _toAgentConfig :: API.Config,
-    _toAgentCapabilities :: AgentCapabilities,
     _toTestConfig :: TestConfig,
     _toParallelDegree :: Maybe Int,
     _toMatch :: Maybe String,
@@ -54,17 +44,6 @@ data TestOptions = TestOptions
     _toDryRun :: Bool,
     _toExportMatchStrings :: Bool
   }
-
-data AgentCapabilities
-  = AutoDetect
-  | Explicit API.Capabilities
-
-data CapabilitiesState = CapabilitiesState
-  { _csRemainingCapabilities :: HashSet Text,
-    _csCapabilitiesEnquired :: HashSet Text
-  }
-
-$(makeLenses ''CapabilitiesState)
 
 parseCommandLine :: IO Command
 parseCommandLine =
@@ -150,7 +129,6 @@ testOptionsParser =
           <> metavar "JSON"
           <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header"
       )
-    <*> agentCapabilitiesParser
     <*> testConfigParser
     <*> optional
       ( option
@@ -202,61 +180,3 @@ configValue = fmap API.Config jsonValue
 
 jsonValue :: FromJSON v => ReadM v
 jsonValue = eitherReader (eitherDecodeStrict' . Text.encodeUtf8 . Text.pack)
-
-agentCapabilitiesParser :: Parser AgentCapabilities
-agentCapabilitiesParser =
-  option
-    agentCapabilities
-    ( long "capabilities"
-        <> short 'c'
-        <> metavar "CAPABILITIES"
-        <> value AutoDetect
-        <> help (Text.unpack helpText)
-    )
-  where
-    helpText =
-      "The capabilities that the agent has, to determine what tests to run. By default, they will be autodetected. The valid capabilities are: " <> allCapabilitiesText
-    allCapabilitiesText =
-      "[autodetect | none | " <> Text.intercalate "," (HashSet.toList allPossibleCapabilities) <> "]"
-
-agentCapabilities :: ReadM AgentCapabilities
-agentCapabilities =
-  str >>= \text -> do
-    let capabilities = HashSet.fromList $ Text.strip <$> Text.split (== ',') text
-    if HashSet.member "autodetect" capabilities
-      then
-        if HashSet.size capabilities == 1
-          then pure AutoDetect
-          else readerError "You can either autodetect capabilities or specify them manually, not both"
-      else
-        if HashSet.member "none" capabilities
-          then
-            if HashSet.size capabilities == 1
-              then pure . Explicit . fst $ readCapabilities mempty
-              else readerError "You cannot specify other capabilities when specifying none"
-          else Explicit <$> readExplicitCapabilities capabilities
-  where
-    readExplicitCapabilities :: HashSet Text -> ReadM API.Capabilities
-    readExplicitCapabilities providedCapabilities =
-      let (capabilities, CapabilitiesState {..}) = readCapabilities providedCapabilities
-       in if _csRemainingCapabilities /= mempty
-            then readerError . Text.unpack $ "Unknown capabilities: " <> Text.intercalate "," (HashSet.toList _csRemainingCapabilities)
-            else pure capabilities
-
-readCapabilities :: HashSet Text -> (API.Capabilities, CapabilitiesState)
-readCapabilities providedCapabilities =
-  flip runState (CapabilitiesState providedCapabilities mempty) $ do
-    supportsRelationships <- readCapability "relationships"
-    pure $ API.emptyCapabilities {API._cRelationships = if supportsRelationships then Just API.RelationshipCapabilities {} else Nothing}
-
-readCapability :: Text -> State CapabilitiesState Bool
-readCapability capability = do
-  modifying csCapabilitiesEnquired $ HashSet.insert capability
-  hasCapability <- use $ csRemainingCapabilities . contains capability
-  when hasCapability $
-    modifying csRemainingCapabilities $ HashSet.delete capability
-  pure hasCapability
-
-allPossibleCapabilities :: HashSet Text
-allPossibleCapabilities =
-  readCapabilities mempty ^. _2 . csCapabilitiesEnquired

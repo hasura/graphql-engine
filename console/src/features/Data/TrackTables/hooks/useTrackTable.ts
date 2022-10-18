@@ -68,7 +68,11 @@ export const useTrackTable = (dataSourceName: string) => {
           // all these return promises so there's no chance of unintentionally getting thrown into the catch block
           queryClient.invalidateQueries(tablesQueryKey(dataSourceName));
           queryClient.invalidateQueries('treeview');
-          queryClient.invalidateQueries(['trackTables', 'metadataSource']);
+          queryClient.invalidateQueries([
+            'export_metadata',
+            'trackTables',
+            'metadataSource',
+          ]);
 
           fireNotification({
             title: 'Success',

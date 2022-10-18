@@ -1,13 +1,23 @@
-import React, { ReactNode } from 'react';
+import React, { CSSProperties, ReactNode } from 'react';
 import clsx from 'clsx';
 
 interface ChildrenProps {
   children?: ReactNode;
+
+  className?: string;
+
+  style?: CSSProperties;
 }
 
-const Table = ({ children, ...rest }: ChildrenProps) => {
+const Table = ({ children, className, style, ...rest }: ChildrenProps) => {
   return (
-    <div className="overflow-x-auto border border-gray-300 rounded mb-md">
+    <div
+      className={clsx(
+        'overflow-x-auto border border-gray-300 rounded mb-md',
+        className ?? ''
+      )}
+      style={style}
+    >
       <table
         className="min-w-full divide-y divide-gray-200 text-left"
         {...rest}

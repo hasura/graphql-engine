@@ -69,6 +69,7 @@ module.exports = (config, context) => {
       },
     },
   });
+  /*
   // Kept there while we setup everything
   console.log('----------------NX-CONTEXT-------------------');
   log(context);
@@ -77,5 +78,7 @@ module.exports = (config, context) => {
   console.log('----------------MODIFIED-WEBPACK-CONFIG------');
   log(output);
   console.log('---------------------------------------------');
+
+   */
   return output;
 };

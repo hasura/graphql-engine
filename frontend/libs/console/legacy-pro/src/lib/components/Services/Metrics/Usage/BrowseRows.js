@@ -26,14 +26,13 @@ import { TIME_RANGE_SYMBOL } from '../constants';
 
 import { aliasedNames, headerTitleLabel, defaultColumns } from './constants';
 import { FaCaretDown, FaCaretUp, FaSort } from 'react-icons/fa';
+import styles from '../Metrics.module.scss';
+import failure from '../images/failure.svg';
+import success from '../images/success.svg';
 
 const LIMIT = 10;
 
-const styles = require('../Metrics.scss');
-const failure = require('../images/failure.svg');
-const success = require('../images/success.svg');
-
-const BrowserRows = props => {
+const BrowserRows = (props) => {
   const defaultState = {
     limit: LIMIT,
     offset: 0,
@@ -51,7 +50,7 @@ const BrowserRows = props => {
   const getFilterObj = getWhereClauseEx(FILTER_MAP, filters);
 
   const getGroupBys = () => {
-    const groupBy = groupBys.map(i => {
+    const groupBy = groupBys.map((i) => {
       return i;
     });
     return groupBy;
@@ -64,7 +63,7 @@ const BrowserRows = props => {
   };
   const timeRangeFilter = filterByType(filters, TIME_RANGE_SYMBOL);
 
-  timeRangeFilter.forEach(e => {
+  timeRangeFilter.forEach((e) => {
     if (typeof e.value === 'string') {
       whereClause.fromTime = getTimeRangeValue(e.value);
     } else {
@@ -77,7 +76,7 @@ const BrowserRows = props => {
 
   const { limit, offset, order_by } = browseState;
 
-  const updateLimit = l => {
+  const updateLimit = (l) => {
     setState({
       ...browseState,
       limit: l,
@@ -94,7 +93,7 @@ const BrowserRows = props => {
     });
   };
 
-  const updateOffset = o => {
+  const updateOffset = (o) => {
     setState({
       ...browseState,
       offset: o,
@@ -189,7 +188,7 @@ const BrowserRows = props => {
 
         const maxContentCellWidth = maxContentWidth + CONTENT_PADDING + 12;
 
-        const headerWithUnit = h => {
+        const headerWithUnit = (h) => {
           if (h in transformedHeaderVal) {
             return transformedHeaderVal[h](h);
           }
@@ -210,7 +209,7 @@ const BrowserRows = props => {
       }
       const columns = data.searchUsageMetrics[0];
       const headerRows = Object.keys(columns)
-        .filter(f => validColumns.indexOf(getIfAliased(f)) !== -1)
+        .filter((f) => validColumns.indexOf(getIfAliased(f)) !== -1)
         .map((c, key) => {
           let sortIcon = <FaSort />;
           if (order_by && Object.keys(order_by).length) {
@@ -269,7 +268,7 @@ const BrowserRows = props => {
 
   const getRows = () => {
     if (data.searchUsageMetrics.length > 0) {
-      return data.searchUsageMetrics.map(d => {
+      return data.searchUsageMetrics.map((d) => {
         const newRow = {};
         newRow.tableRowActionButtons =
           whereClause.groupBys.length > 0 ? (
@@ -326,13 +325,13 @@ const BrowserRows = props => {
   const _rows = getRows();
   const _columns = getHeaders();
 
-  const handlePageChange = page => {
+  const handlePageChange = (page) => {
     if (offset !== page * limit) {
       updateOffset(page * limit);
     }
   };
 
-  const handlePageSizeChange = size => {
+  const handlePageSizeChange = (size) => {
     if (limit !== size) {
       updateLimit(size);
     }
@@ -340,13 +339,13 @@ const BrowserRows = props => {
 
   let disableSortColumn = false;
 
-  const sortByColumn = currColumn => {
+  const sortByColumn = (currColumn) => {
     if (data.searchUsageMetrics.length === 0) {
       console.error('Minimum one row required to sort');
       return;
     }
     const rowEntry = data.searchUsageMetrics[0];
-    const columnNames = Object.keys(rowEntry).map(column => column);
+    const columnNames = Object.keys(rowEntry).map((column) => column);
 
     if (!columnNames.includes(currColumn)) {
       return;
@@ -389,7 +388,7 @@ const BrowserRows = props => {
   });
 
   const getResizerProps = (finalState, none, column, ctx) => ({
-    onMouseDown: e => {
+    onMouseDown: (e) => {
       disableSortColumn = true;
       ctx.resizeColumnStart(e, column, false);
     },

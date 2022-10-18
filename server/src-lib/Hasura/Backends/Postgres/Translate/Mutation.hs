@@ -38,15 +38,16 @@ mkSelectExpFromColumnValues qt allCols = \case
   [] -> return selNoRows
   colVals -> do
     tuples <- mapM mkTupsFromColVal colVals
-    let fromItem = S.FIValues (S.ValuesExp tuples) (S.toTableAlias rowAlias) Nothing
+    let fromItem = S.FIValues (S.ValuesExp tuples) rowAlias Nothing
     return
       S.mkSelect
         { S.selExtr = [extractor],
           S.selFrom = Just $ S.FromExp [fromItem]
         }
   where
-    rowAlias = Identifier "row"
-    extractor = S.selectStar' $ S.QualifiedIdentifier rowAlias $ Just $ S.TypeAnn $ toSQLTxt qt
+    rowAlias = S.mkTableAlias "row"
+    rowIdentifier = S.tableAliasToIdentifier rowAlias
+    extractor = S.selectStar' $ S.QualifiedIdentifier rowIdentifier $ Just $ S.TypeAnn $ toSQLTxt qt
     sortedCols = sortCols allCols
     mkTupsFromColVal colVal =
       fmap S.TupleExp $

@@ -1,3 +1,4 @@
+import { BrowseRowsContainer } from '@/features/BrowseRows';
 import { Table } from '@/features/MetadataAPI';
 import { Badge } from '@/new-components/Badge';
 import { DropdownMenu } from '@/new-components/DropdownMenu';
@@ -23,11 +24,13 @@ const FeatureNotImplemented = () => {
   );
 };
 
-const availableTabs = [
+const availableTabs = (table: Table, dataSourceName: string) => [
   {
     value: 'Browse',
     label: 'Browse',
-    content: <FeatureNotImplemented />,
+    content: (
+      <BrowseRowsContainer table={table} dataSourceName={dataSourceName} />
+    ),
   },
   {
     value: 'Modify',
@@ -113,7 +116,11 @@ export const ManageTable = (props: ManageTableProps) => {
           </div>
         </div>
 
-        <Tabs value={tab} onValueChange={setTab} items={availableTabs} />
+        <Tabs
+          value={tab}
+          onValueChange={setTab}
+          items={availableTabs(table, dataSourceName)}
+        />
       </div>
     </div>
   );

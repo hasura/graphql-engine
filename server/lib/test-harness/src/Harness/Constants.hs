@@ -34,6 +34,7 @@ module Harness.Constants
     cockroachDb,
     serveOptions,
     dataConnectorDb,
+    sqliteSchemaName,
     maxRetriesRateLimitExceeded,
   )
 where
@@ -158,7 +159,10 @@ cockroachConnectionString =
 -- * DataConnector
 
 dataConnectorDb :: String
-dataConnectorDb = "data-connector"
+dataConnectorDb = "hasura"
+
+sqliteSchemaName :: Text
+sqliteSchemaName = "main"
 
 -- * Liveness
 
@@ -252,7 +256,7 @@ serveOptions =
       soConsoleAssetsDir = Just "../console/static/dist",
       soConsoleSentryDsn = Nothing,
       soEnableTelemetry = False,
-      soStringifyNum = Options.StringifyNumbers,
+      soStringifyNum = Options.Don'tStringifyNumbers,
       soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
       soEnabledAPIs = testSuiteEnabledApis,
       soLiveQueryOpts = ES.mkSubscriptionsOptions Nothing Nothing,
