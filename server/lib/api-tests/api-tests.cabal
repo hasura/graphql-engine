@@ -114,6 +114,7 @@ executable api-tests
     Test.Queries.Directives.SkipSpec
     Test.Queries.DirectivesSpec
     Test.Queries.FilterSearchSpec
+    Test.Queries.FragmentsSpec
     Test.Queries.MultiColumnObjectRelationshipsSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
