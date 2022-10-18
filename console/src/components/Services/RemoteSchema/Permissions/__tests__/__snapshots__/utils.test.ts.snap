@@ -17,8 +17,8 @@ type books{
 }
 
 type users{
-      books : [books!]!
-      books_aggregate : books_aggregate!
+      books(distinct_on : [books_select_column!] limit : Int offset : Int order_by : [books_order_by!] where : books_bool_exp ): [books!]! 
+      books_aggregate(distinct_on : [books_select_column!] limit : Int offset : Int order_by : [books_order_by!] where : books_bool_exp ): books_aggregate! 
       id : Int!
       name : String!
 }
@@ -30,7 +30,7 @@ type books_aggregate{
 
 type books_aggregate_fields{
       avg : books_avg_fields
-      count : Int
+      count(columns : [books_select_column!] distinct : Boolean ): Int 
       max : books_max_fields
       min : books_min_fields
       stddev : books_stddev_fields
@@ -248,8 +248,8 @@ type books{
 }
 
 type users{
-      books : [books!]!
-      books_aggregate : books_aggregate!
+      books(distinct_on : [books_select_column!] limit : Int offset : Int order_by : [books_order_by!] where : books_bool_exp ): [books!]! 
+      books_aggregate(distinct_on : [books_select_column!] limit : Int offset : Int order_by : [books_order_by!] where : books_bool_exp ): books_aggregate! 
       id : Int!
       name : String!
 }
@@ -261,7 +261,7 @@ type books_aggregate{
 
 type books_aggregate_fields{
       avg : books_avg_fields
-      count : Int
+      count(columns : [books_select_column!] distinct : Boolean ): Int 
       max : books_max_fields
       min : books_min_fields
       stddev : books_stddev_fields
@@ -586,8 +586,8 @@ type books{
 }
 
 type users{
-      books : [books!]!
-      books_aggregate : books_aggregate!
+      books(distinct_on : [books_select_column!] limit : Int offset : Int order_by : [books_order_by!] where : books_bool_exp ): [books!]! 
+      books_aggregate(distinct_on : [books_select_column!] limit : Int offset : Int order_by : [books_order_by!] where : books_bool_exp ): books_aggregate! 
       id : Int!
       name : String!
 }
@@ -599,7 +599,7 @@ type books_aggregate{
 
 type books_aggregate_fields{
       avg : books_avg_fields
-      count : Int
+      count(columns : [books_select_column!] distinct : Boolean ): Int 
       max : books_max_fields
       min : books_min_fields
       stddev : books_stddev_fields
@@ -1507,11 +1507,95 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "distinct_on": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "distinct select on columns",
+            "extensions": undefined,
+            "name": "distinct_on",
+            "type": "[books_select_column!]",
+          },
+          "limit": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "limit the number of rows returned",
+            "extensions": undefined,
+            "name": "limit",
+            "type": "Int",
+          },
+          "offset": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "skip the first n rows. Use only with order_by",
+            "extensions": undefined,
+            "name": "offset",
+            "type": "Int",
+          },
+          "order_by": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sort the rows by one or more columns",
+            "extensions": undefined,
+            "name": "order_by",
+            "type": "[books_order_by!]",
+          },
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows returned",
+            "extensions": undefined,
+            "name": "where",
+            "type": "books_bool_exp",
+          },
+        },
         "checked": true,
         "name": "books",
         "return": "[books!]!",
       },
       Object {
+        "args": Object {
+          "distinct_on": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "distinct select on columns",
+            "extensions": undefined,
+            "name": "distinct_on",
+            "type": "[books_select_column!]",
+          },
+          "limit": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "limit the number of rows returned",
+            "extensions": undefined,
+            "name": "limit",
+            "type": "Int",
+          },
+          "offset": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "skip the first n rows. Use only with order_by",
+            "extensions": undefined,
+            "name": "offset",
+            "type": "Int",
+          },
+          "order_by": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sort the rows by one or more columns",
+            "extensions": undefined,
+            "name": "order_by",
+            "type": "[books_order_by!]",
+          },
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows returned",
+            "extensions": undefined,
+            "name": "where",
+            "type": "books_bool_exp",
+          },
+        },
         "checked": true,
         "name": "books_aggregate",
         "return": "books_aggregate!",
@@ -1554,6 +1638,24 @@ Array [
         "return": "books_avg_fields",
       },
       Object {
+        "args": Object {
+          "columns": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "columns",
+            "type": "[books_select_column!]",
+          },
+          "distinct": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "distinct",
+            "type": "Boolean",
+          },
+        },
         "checked": true,
         "name": "count",
         "return": "Int",
@@ -1801,6 +1903,24 @@ Array [
         "return": "users_avg_fields",
       },
       Object {
+        "args": Object {
+          "columns": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "columns",
+            "type": "[users_select_column!]",
+          },
+          "distinct": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "distinct",
+            "type": "Boolean",
+          },
+        },
         "checked": false,
         "name": "count",
         "return": "Int",
@@ -6065,11 +6185,95 @@ Array [
   Object {
     "children": Array [
       Object {
+        "args": Object {
+          "distinct_on": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "distinct select on columns",
+            "extensions": undefined,
+            "name": "distinct_on",
+            "type": "[books_select_column!]",
+          },
+          "limit": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "limit the number of rows returned",
+            "extensions": undefined,
+            "name": "limit",
+            "type": "Int",
+          },
+          "offset": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "skip the first n rows. Use only with order_by",
+            "extensions": undefined,
+            "name": "offset",
+            "type": "Int",
+          },
+          "order_by": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sort the rows by one or more columns",
+            "extensions": undefined,
+            "name": "order_by",
+            "type": "[books_order_by!]",
+          },
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows returned",
+            "extensions": undefined,
+            "name": "where",
+            "type": "books_bool_exp",
+          },
+        },
         "checked": false,
         "name": "books",
         "return": "[books!]!",
       },
       Object {
+        "args": Object {
+          "distinct_on": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "distinct select on columns",
+            "extensions": undefined,
+            "name": "distinct_on",
+            "type": "[books_select_column!]",
+          },
+          "limit": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "limit the number of rows returned",
+            "extensions": undefined,
+            "name": "limit",
+            "type": "Int",
+          },
+          "offset": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "skip the first n rows. Use only with order_by",
+            "extensions": undefined,
+            "name": "offset",
+            "type": "Int",
+          },
+          "order_by": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "sort the rows by one or more columns",
+            "extensions": undefined,
+            "name": "order_by",
+            "type": "[books_order_by!]",
+          },
+          "where": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": "filter the rows returned",
+            "extensions": undefined,
+            "name": "where",
+            "type": "books_bool_exp",
+          },
+        },
         "checked": false,
         "name": "books_aggregate",
         "return": "books_aggregate!",
@@ -6112,6 +6316,24 @@ Array [
         "return": "books_avg_fields",
       },
       Object {
+        "args": Object {
+          "columns": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "columns",
+            "type": "[books_select_column!]",
+          },
+          "distinct": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "distinct",
+            "type": "Boolean",
+          },
+        },
         "checked": false,
         "name": "count",
         "return": "Int",
@@ -6359,6 +6581,24 @@ Array [
         "return": "users_avg_fields",
       },
       Object {
+        "args": Object {
+          "columns": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "columns",
+            "type": "[users_select_column!]",
+          },
+          "distinct": Object {
+            "astNode": undefined,
+            "defaultValue": undefined,
+            "description": null,
+            "extensions": undefined,
+            "name": "distinct",
+            "type": "Boolean",
+          },
+        },
         "checked": false,
         "name": "count",
         "return": "Int",

@@ -339,7 +339,12 @@ export const getType = (
           field.args = { [k]: v };
           field.isInputObjectType = true;
           field.parentName = type.name;
+        } else if (v.args?.length) {
+          field.args = v.args.reduce((p: ArgTreeType, c: FieldType) => {
+            return { ...p, [c.name]: { ...c } };
+          }, {});
         }
+
         childArray.push(field);
       });
 
