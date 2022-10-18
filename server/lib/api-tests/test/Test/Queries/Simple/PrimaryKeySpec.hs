@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- |
+-- | Primary Key Queries
 -- Accessing objects based on their primary keys.
 --
 -- https://hasura.io/docs/latest/queries/postgres/simple-object-queries/#fetch-an-object-using-its-primary-key
@@ -49,14 +49,11 @@ spec =
                 [ Sqlserver.setupTablesAction schema testEnvironment
                 ]
             },
-          ( \(DataConnector.TestSourceConfig {..}) ->
-              (Fixture.fixture $ Fixture.Backend typeConfig)
-                { Fixture.setupTeardown = \(testEnvironment, _) ->
-                    [ DataConnector.setupTablesAction schema testEnvironment
-                    ]
-                }
-          )
-            DataConnector.sqliteGenericConfig
+          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ DataConnector.setupTablesAction schema testEnvironment
+                ]
+            }
         ]
     )
     tests

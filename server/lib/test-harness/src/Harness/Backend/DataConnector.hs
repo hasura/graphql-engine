@@ -7,7 +7,6 @@ module Harness.Backend.DataConnector
     setupFixtureAction,
     setupFixture,
     teardown,
-    sqliteGenericConfig,
 
     -- * Sqlite Agent
     setupTablesAction,
@@ -80,9 +79,6 @@ teardown (testEnvironment, _) = do
 
 --------------------------------------------------------------------------------
 -- Agent Config
-
-sqliteGenericConfig :: TestSourceConfig
-sqliteGenericConfig = TestSourceConfig DataConnectorSqlite sqliteBackendConfig emptyConfig emptyConfig
 
 chinookConfigs :: NE.NonEmpty TestSourceConfig
 chinookConfigs =
