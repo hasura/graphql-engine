@@ -6,7 +6,7 @@ import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 
 type SelectItem = {
   label: ReactText;
-  value: ReactText;
+  value: any;
   disabled?: boolean;
 };
 

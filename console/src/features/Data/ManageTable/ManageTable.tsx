@@ -102,8 +102,8 @@ export const ManageTable = (props: ManageTableProps) => {
                   ],
                 ]}
               >
-                <div className="flex gap-0.5 items-center">
-                  <h1 className="inline-flex items-center text-xl font-semibold mb-1">
+                <div className="flex items-center">
+                  <h1 className="inline-flex items-center text-xl font-semibold mb-1 pr-xs">
                     {tableName}
                   </h1>
                   <FaChevronDown className="text-gray-400 text-sm transition-transform group-radix-state-open:rotate-180" />

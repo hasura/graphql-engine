@@ -123,7 +123,7 @@ export const UpdatedForm = <FormSchema extends Schema>(
     <FormProvider {...methods}>
       <form
         id={id}
-        className={`space-y-md bg-legacybg ${className || ''}`}
+        className={`bg-legacybg ${className || ''}`}
         onSubmit={methods.handleSubmit(onSubmit)}
         {...rest}
       >

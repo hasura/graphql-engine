@@ -50,7 +50,7 @@ export const getTableColumns = async (props: GetTableColumnsProps) => {
       sourceCustomization: metadataSource?.customization,
       configuration: metadataTable.configuration,
     });
-
+    console.log(queryRoot);
     // eslint-disable-next-line no-underscore-dangle
     const graphQLFields =
       introspectionResult.data.__schema.types.find(

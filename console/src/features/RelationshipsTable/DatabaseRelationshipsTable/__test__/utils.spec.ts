@@ -105,7 +105,8 @@ describe('test adapters', () => {
             },
           },
         },
-      }
+      },
+      'Array'
     );
     expect(result).toEqual(expectedManualLocalRelationshipOutput);
   });
@@ -147,7 +148,8 @@ describe('test adapters', () => {
             column: ['EmployeeId'],
           },
         },
-      ]
+      ],
+      'Object'
     );
     expect(result).toEqual(expectedLocalTableRelationships);
   });

@@ -82,7 +82,7 @@ export const expectedManualLocalRelationshipOutput: Relationship & {
     name: 'Employee',
     schema: 'public',
   },
-  relationship_type: 'Object',
+  relationship_type: 'Array',
   mapping: {
     from: {
       source: 'chinook',
