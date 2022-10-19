@@ -6,4 +6,9 @@
       free the foreign data from e.g. libpq.</li><li>as of GHC 8.10.2 we have access to `-Iw`, but those two knobs still
       don&#8217;t give us a guarantee that a major GC will always run at some
       minumum frequency (e.g. for finalizers)</li></ul><p>...so we hack together our own using GHC.Stats, which should have
- insignificant runtime overhead.</p></div></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.26.0</p></div></body></html>
+ insignificant runtime overhead.</p><p>NOTE: as always the cost of a major GC (forced here, or initiated by the RTS)
+ with the default copying collector is proportional to live (non-garbage)
+ heap data. Tune parameters here to balance: more frequent GC pauses vs.
+ prompt cleanup of foreign data (which does not exert GC pressure).</p><p>NOTE: larger nursery size (+RTS -A) may help us run more finalizers during
+ cheaper minor GCs, before they are promoted, making it feasible (maybe) to
+ run this with longer interval parameters.</p></div></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.26.0</p></div></body></html>
