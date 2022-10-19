@@ -512,6 +512,10 @@ const serialiseArgs = (args: ArgTreeType, argDef: GraphQLInputField) => {
   let res = '{';
   const { children } = getChildArguments(argDef);
 
+  if (args === null) {
+    return 'null';
+  }
+
   Object.entries(args).forEach(([key, value]) => {
     if (isEmpty(value) || isEmpty(children)) {
       return;
@@ -672,7 +676,7 @@ const getSDLField = (
             valueStr = `${arg.name} : ${arg.type.inspect()}`;
 
             // add default value after type definition if it exists
-            if (arg.defaultValue) {
+            if (arg.defaultValue !== undefined) {
               const defaultValue = formatArg({
                 arg,
                 argName: arg.defaultValue,
