@@ -31,6 +31,12 @@ import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Data.Time (defaultTimeLocale, formatTime)
 import Database.PostgreSQL.Simple qualified as Postgres
+import Harness.Backend.Postgres qualified as Postgres
+  ( createUniqueIndexSql,
+    mkPrimaryKeySql,
+    mkReferenceSql,
+    uniqueConstraintSql,
+  )
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -108,7 +114,7 @@ connection_info:
 
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Cockroach backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
-createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableUniqueConstraints} = do
+createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
   run_ $
     T.unpack $
@@ -117,19 +123,14 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
           T.pack Constants.cockroachDb <> "." <> wrapIdentifier tableName,
           "(",
           commaSeparated $
-            (mkColumn <$> tableColumns)
-              <> (bool [mkPrimaryKey pk] [] (null pk))
-              <> (mkReference schemaName <$> tableReferences),
+            (mkColumnSql <$> tableColumns)
+              <> (bool [Postgres.mkPrimaryKeySql pk] [] (null pk))
+              <> (Postgres.mkReferenceSql schemaName <$> tableReferences)
+              <> map Postgres.uniqueConstraintSql tableConstraints,
           ");"
         ]
 
-  for_ tableUniqueConstraints (createUniqueConstraint tableName)
-
-createUniqueConstraint :: Text -> Schema.UniqueConstraint -> IO ()
-createUniqueConstraint tableName (Schema.UniqueConstraintColumns cols) =
-  run_ $ T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", tableName, "("] ++ [commaSeparated cols] ++ [")"]
-createUniqueConstraint tableName (Schema.UniqueConstraintExpression ex) =
-  run_ $ T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", tableName, "((", ex, "))"]
+  for_ tableUniqueIndexes (run_ . Postgres.createUniqueIndexSql schemaName tableName)
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
@@ -140,38 +141,13 @@ scalarType = \case
   Schema.TGeography -> "GEOGRAPHY"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstCockroach
 
-mkColumn :: Schema.Column -> Text
-mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
+mkColumnSql :: Schema.Column -> Text
+mkColumnSql Schema.Column {columnName, columnType, columnNullable, columnDefault} =
   T.unwords
     [ wrapIdentifier columnName,
       scalarType columnType,
       bool "NOT NULL" "DEFAULT NULL" columnNullable,
       maybe "" ("DEFAULT " <>) columnDefault
-    ]
-
-mkPrimaryKey :: [Text] -> Text
-mkPrimaryKey key =
-  T.unwords
-    [ "PRIMARY KEY",
-      "(",
-      commaSeparated $ map wrapIdentifier key,
-      ")"
-    ]
-
-mkReference :: SchemaName -> Schema.Reference -> Text
-mkReference schemaName Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
-  T.unwords
-    [ "FOREIGN KEY",
-      "(",
-      wrapIdentifier referenceLocalColumn,
-      ")",
-      "REFERENCES",
-      unSchemaName schemaName <> "." <> wrapIdentifier referenceTargetTable,
-      "(",
-      wrapIdentifier referenceTargetColumn,
-      ")",
-      "ON DELETE CASCADE",
-      "ON UPDATE CASCADE"
     ]
 
 -- | Serialize tableData into a PL-SQL insert statement and execute it.

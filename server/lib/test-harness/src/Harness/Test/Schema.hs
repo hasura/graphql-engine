@@ -10,7 +10,8 @@ module Harness.Test.Schema
     defaultSerialType,
     ScalarValue (..),
     WKT (..),
-    UniqueConstraint (..),
+    Constraint (..),
+    UniqueIndex (..),
     BackendScalarType (..),
     BackendScalarValue (..),
     BackendScalarValueType (..),
@@ -74,17 +75,31 @@ data Table = Table
     tableReferences :: [Reference],
     tableManualRelationships :: [Reference],
     tableData :: [[ScalarValue]],
-    tableUniqueConstraints :: [UniqueConstraint]
+    tableConstraints :: [Constraint],
+    tableUniqueIndexes :: [UniqueIndex]
   }
   deriving (Show, Eq)
 
-data UniqueConstraint = UniqueConstraintColumns [Text] | UniqueConstraintExpression Text
+data Constraint = UniqueConstraintColumns [Text] | CheckConstraintExpression Text
+  deriving (Show, Eq)
+
+data UniqueIndex = UniqueIndexColumns [Text] | UniqueIndexExpression Text
   deriving (Show, Eq)
 
 -- | Create a table from just a name.
 -- Use record updates to modify the result.
 table :: Text -> Table
-table tableName = Table tableName [] [] [] [] [] []
+table tableName =
+  Table
+    { tableName = tableName,
+      tableColumns = [],
+      tablePrimaryKey = [],
+      tableReferences = [],
+      tableManualRelationships = [],
+      tableData = [],
+      tableConstraints = [],
+      tableUniqueIndexes = []
+    }
 
 -- | Foreign keys for backends that support it.
 data Reference = Reference

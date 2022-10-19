@@ -148,7 +148,7 @@ runSql testEnvironment source sql = do
 
 -- | Serialize Table into a SQLite statement, as needed, and execute it on the SQLite backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
-createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableUniqueConstraints} = do
+createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
 
   -- Build a SQL QUERY AND THEN CALL run_sql
@@ -161,22 +161,30 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
               Text.commaSeparated $
                 (mkColumn <$> tableColumns)
                   <> (bool [mkPrimaryKey pk] [] (null pk))
-                  <> (mkReference schemaName <$> tableReferences),
+                  <> (mkReference schemaName <$> tableReferences)
+                  <> map uniqueConstraint tableConstraints,
               ");"
             ]
   runSql testEnv (Fixture.defaultSource Fixture.DataConnectorSqlite) expr
-  for_ tableUniqueConstraints (createUniqueConstraint testEnv tableName)
+  for_ tableUniqueIndexes (createUniqueIndex testEnv tableName)
 
 indexName :: Text -> [Text] -> Text
 indexName tableName cols = Text.intercalate "-" $ tableName : cols
 
-createUniqueConstraint :: TestEnvironment -> Text -> Schema.UniqueConstraint -> IO ()
-createUniqueConstraint testEnv tableName = \case
-  Schema.UniqueConstraintColumns cols -> do
+uniqueConstraint :: Schema.Constraint -> Text
+uniqueConstraint = \case
+  Schema.UniqueConstraintColumns cols ->
+    Text.unwords $ ["UNIQUE ", "("] ++ [Text.commaSeparated cols] ++ [")"]
+  Schema.CheckConstraintExpression ex ->
+    Text.unwords $ ["CHECK ", "(", ex, ")"]
+
+createUniqueIndex :: TestEnvironment -> Text -> Schema.UniqueIndex -> IO ()
+createUniqueIndex testEnv tableName = \case
+  Schema.UniqueIndexColumns cols -> do
     let schemaName = Schema.getSchemaName testEnv
         tableIdentifier = wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName
     runSql testEnv (Fixture.defaultSource Fixture.DataConnectorSqlite) $ Text.unpack $ Text.unwords $ ["CREATE UNIQUE INDEX", indexName tableIdentifier cols, " ON ", tableName, "("] ++ [Text.commaSeparated cols] ++ [")"]
-  Schema.UniqueConstraintExpression ex -> do
+  Schema.UniqueIndexExpression ex -> do
     let schemaName = Schema.getSchemaName testEnv
         tableIdentifier = wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName
     runSql testEnv (Fixture.defaultSource Fixture.DataConnectorSqlite) $ Text.unpack $ Text.unwords $ ["CREATE UNIQUE INDEX", indexName tableIdentifier [ex], " ON ", tableName, "((", ex, "))"]

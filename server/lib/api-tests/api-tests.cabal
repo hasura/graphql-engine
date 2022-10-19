@@ -98,6 +98,7 @@ executable api-tests
     Test.Mutations.Delete.PrimaryKeySpec
     Test.Mutations.Insert.MultipleSpec
     Test.Mutations.Insert.SingleSpec
+    Test.Mutations.Upsert.OnConflictSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.Mutations.Update.FieldSpec
     Test.Mutations.Update.PrimaryKeySpec
