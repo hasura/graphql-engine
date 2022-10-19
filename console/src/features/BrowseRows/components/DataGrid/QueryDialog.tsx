@@ -146,6 +146,6 @@ export const QueryDialog = ({
 };
 
 QueryDialog.defaultProps = {
-  filters: [],
-  sorts: [],
+  filters: undefined,
+  sorts: undefined,
 };

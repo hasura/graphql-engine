@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { FilterRows } from './FilterRows';
 
 export default {
-  title: 'Browse Rows/Run Query/Filters',
+  title: 'Browse Rows/Run Query 📁/Filters 🧬',
   component: FilterRows,
 } as ComponentMeta<typeof FilterRows>;
 

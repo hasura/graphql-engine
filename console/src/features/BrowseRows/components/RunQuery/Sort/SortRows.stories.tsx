@@ -8,7 +8,7 @@ import { expect } from '@storybook/jest';
 import { SortRows } from './SortRows';
 
 export default {
-  title: 'Browse Rows/Run Query/Sort',
+  title: 'Browse Rows/Run Query 📁/Sort 🧬',
   component: SortRows,
   decorators: [FormDecorator()],
 } as ComponentMeta<typeof SortRows>;

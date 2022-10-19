@@ -6,7 +6,7 @@ import { expect } from '@storybook/jest';
 import { LegacyRunQuery } from './LegacyRunQuery';
 
 export default {
-  title: 'Browse Rows/Run Query/Legacy',
+  title: 'Browse Rows/Run Query 📁/Legacy 🦠',
   component: LegacyRunQuery,
 } as ComponentMeta<typeof LegacyRunQuery>;
 
