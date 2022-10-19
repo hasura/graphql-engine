@@ -47,7 +47,7 @@ type graphQLSchemaIntrospectionObject struct {
 	DisabledForRoles []yaml.Node `yaml:"disabled_for_roles"`
 }
 
-func (o *MetadataObject) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (o *MetadataObject) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(o.MetadataDir, o.Filename()))
 	if err != nil {
 		return nil, o.error(err)
@@ -79,7 +79,7 @@ func (o *MetadataObject) Build() (map[string]interface{}, metadataobject.ErrPars
 //  "error": "the key 'disabled_for_roles' was not present",
 //  "code": "parse-failed"
 //}
-func (o *MetadataObject) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (o *MetadataObject) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	var object graphQLSchemaIntrospectionObject
 	if v, ok := metadata[o.Key()]; ok {
 		objectbs, err := yaml.Marshal(v)

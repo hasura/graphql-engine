@@ -260,7 +260,7 @@ func (a *ActionConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *ActionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (a *ActionConfig) Build() (map[string]interface{}, error) {
 	if !a.serverFeatureFlags.HasAction {
 		_, err := a.GetActionsFileContent()
 		if err == nil {
@@ -385,7 +385,7 @@ func (a *ActionConfig) Build() (map[string]interface{}, metadataobject.ErrParsin
 	return metadata, nil
 }
 
-func (a *ActionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (a *ActionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	if !a.serverFeatureFlags.HasAction {
 		a.logger.Debugf("Skipping creating %s and %s", a.Filename(), graphqlFileName)
 		return make(map[string][]byte), nil

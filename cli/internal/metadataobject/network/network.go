@@ -46,7 +46,7 @@ type networkObject struct {
 	TLSAllowlist yaml.Node `yaml:"tls_allowlist,omitempty"`
 }
 
-func (o *NetworkObject) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (o *NetworkObject) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(o.MetadataDir, o.Filename()))
 	if err != nil {
 		return nil, o.error(err)
@@ -59,7 +59,7 @@ func (o *NetworkObject) Build() (map[string]interface{}, metadataobject.ErrParsi
 	return map[string]interface{}{o.Key(): obj}, nil
 }
 
-func (o *NetworkObject) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (o *NetworkObject) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	return metadataobject.DefaultExport(o, metadata, o.error, metadataobject.DefaultObjectTypeMapping)
 }
 

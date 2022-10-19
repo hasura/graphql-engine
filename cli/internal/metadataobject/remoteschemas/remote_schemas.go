@@ -53,7 +53,7 @@ func (r *RemoteSchemaConfig) CreateFiles() error {
 	}
 	return nil
 }
-func (r *RemoteSchemaConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (r *RemoteSchemaConfig) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(r.MetadataDir, r.Filename()))
 	if err != nil {
 		return nil, r.error(err)
@@ -83,7 +83,7 @@ type definition struct {
 	Schema string `yaml:"schema,omitempty"`
 }
 
-func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	var value interface{}
 	if v, ok := metadata[r.Key()]; !ok {
 		value = []yaml.Node{}

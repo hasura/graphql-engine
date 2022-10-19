@@ -49,7 +49,7 @@ func (a *VersionConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *VersionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (a *VersionConfig) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(a.MetadataDir, a.Filename()))
 	if err != nil {
 		return nil, a.error(err)
@@ -62,7 +62,7 @@ func (a *VersionConfig) Build() (map[string]interface{}, metadataobject.ErrParsi
 	return map[string]interface{}{a.Key(): v.Version}, nil
 }
 
-func (a *VersionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (a *VersionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	var version map[string]yaml.Node
 	if v, ok := metadata[a.Key()]; ok {
 		version = map[string]yaml.Node{a.Key(): v}

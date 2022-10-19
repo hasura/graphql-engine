@@ -48,7 +48,7 @@ func (q *QueryCollectionConfig) CreateFiles() error {
 	return nil
 }
 
-func (q *QueryCollectionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (q *QueryCollectionConfig) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(q.MetadataDir, q.Filename()))
 	if err != nil {
 		return nil, q.error(err)
@@ -74,7 +74,7 @@ type query struct {
 	Query string    `yaml:"query,omitempty"`
 }
 
-func (q *QueryCollectionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (q *QueryCollectionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	var value interface{}
 	if v, ok := metadata[q.Key()]; !ok {
 		value = []yaml.Node{}

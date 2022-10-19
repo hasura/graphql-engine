@@ -28,7 +28,7 @@ type SourceWithNormalFields struct {
 	Configuration yaml.Node `yaml:"configuration"`
 	QueryTags     yaml.Node `yaml:"query_tags,omitempty"`
 	Customization yaml.Node `yaml:"customization,omitempty"`
-	HealthCheck	  yaml.Node `yaml:"health_check,omitempty"`
+	HealthCheck   yaml.Node `yaml:"health_check,omitempty"`
 }
 type Source struct {
 	SourceWithNormalFields `yaml:",inline"`
@@ -71,7 +71,7 @@ func (t *SourceConfig) CreateFiles() error {
 	return nil
 }
 
-func (t *SourceConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (t *SourceConfig) Build() (map[string]interface{}, error) {
 	sourceFile := filepath.Join(t.MetadataDir, sourcesDirectory, t.Filename())
 	sourcesBytes, err := metadataobject.ReadMetadataFile(sourceFile)
 	if err != nil {
@@ -125,7 +125,7 @@ func (t *SourceConfig) Build() (map[string]interface{}, metadataobject.ErrParsin
 	return map[string]interface{}{t.Key(): sources}, nil
 }
 
-func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	var sourcesNode yaml.Node
 	var ok bool
 	if sourcesNode, ok = metadata[t.Key()]; !ok {

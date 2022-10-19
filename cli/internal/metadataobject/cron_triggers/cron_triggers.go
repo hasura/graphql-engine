@@ -45,7 +45,7 @@ func (c *CronTriggers) CreateFiles() error {
 	return nil
 }
 
-func (c *CronTriggers) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (c *CronTriggers) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(c.MetadataDir, c.Filename()))
 	if err != nil {
 		return nil, c.error(err)
@@ -58,7 +58,7 @@ func (c *CronTriggers) Build() (map[string]interface{}, metadataobject.ErrParsin
 	return map[string]interface{}{c.Key(): obj}, nil
 }
 
-func (c *CronTriggers) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (c *CronTriggers) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	return metadataobject.DefaultExport(c, metadata, c.error, metadataobject.DefaultObjectTypeSequence)
 }
 

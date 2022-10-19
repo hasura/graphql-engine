@@ -34,7 +34,7 @@ func (ir *InheritedRolesConfig) CreateFiles() error {
 	return nil
 }
 
-func (ir *InheritedRolesConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (ir *InheritedRolesConfig) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(ir.MetadataDir, ir.Filename()))
 	if err != nil {
 		return nil, ir.error(err)
@@ -47,7 +47,7 @@ func (ir *InheritedRolesConfig) Build() (map[string]interface{}, metadataobject.
 	return map[string]interface{}{ir.Key(): obj}, nil
 }
 
-func (ir *InheritedRolesConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (ir *InheritedRolesConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	return metadataobject.DefaultExport(ir, metadata, ir.error, metadataobject.DefaultObjectTypeSequence)
 }
 

@@ -41,7 +41,7 @@ func (f *FunctionConfig) CreateFiles() error {
 	return nil
 }
 
-func (f *FunctionConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (f *FunctionConfig) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(f.MetadataDir, f.Filename()))
 	if err != nil {
 		return nil, f.error(err)
@@ -54,7 +54,7 @@ func (f *FunctionConfig) Build() (map[string]interface{}, metadataobject.ErrPars
 	return map[string]interface{}{f.Key(): obj}, nil
 }
 
-func (f *FunctionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (f *FunctionConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	return metadataobject.DefaultExport(f, metadata, f.error, metadataobject.DefaultObjectTypeSequence)
 }
 
