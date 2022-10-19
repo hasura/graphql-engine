@@ -10,7 +10,7 @@ keywords:
   - git
 sidebar_label: GitHub deployment
 sidebar_position: 20
-sidebar_class_name: cloud-icon
+sidebar_class_name: cloud-and-enterprise-icon
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
@@ -18,7 +18,7 @@ import HeadingIcon from '@site/src/components/HeadingIcon';
 
 # GitHub Deployment
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
 
 ## Introduction
 
@@ -137,7 +137,7 @@ You need to ensure the your Cloud project has been appropriately set up to execu
 - Ensure that you have connected the required database(s) with the right name and connection params as you have in the
   metadata to the Cloud project.
 
-## Troubleshooting Failures {#github-integration-troubleshooting}
+## Troubleshooting failures {#github-integration-troubleshooting}
 
 If a deployment fails, depending on the kind of error, you can fix it by retrying the deployment by either updating your
 metadata and migrations with a fix and pushing a commit to deploy again or by just redeploying the failed commit after
@@ -145,36 +145,36 @@ making any required fixes to your project.
 
 The following are some troubleshooting steps to fix some possible errors in the deployment sub-tasks:
 
-### Error parsing metadata
+### Error parsing Metadata
 
 - Nothing has been modified on your project yet so there will be no service impact.
-- Typically happens due to some issue with the metadata directory structure or the format of the metadata files.
-- Check the reported error message and fix the issues in the metadata. See
-  [metadata format](/migrations-metadata-seeds/metadata-format.mdx).
+- Typically happens due to some issue with the Metadata directory structure or the format of the Metadata files.
+- Check the reported error message and fix the issues in the Metadata. See
+  [Metadata format](/migrations-metadata-seeds/metadata-format.mdx).
 - Push the fix to GitHub to redeploy.
 
-### Error parsing migrations
+### Error parsing Migrations
 
 - Nothing has been modified on your project yet so there will be no service impact.
-- Typically happens due to some issue with the migration directory structure or the format of the migration files.
-- Check the reported error message and fix the issues in the migrations. See
-  [migrations format](/migrations-metadata-seeds/manage-migrations.mdx).
+- Typically happens due to some issue with the Migration directory structure or the format of the Migration files.
+- Check the reported error message and fix the issues in the Migrations. See
+  [Migrations format](/migrations-metadata-seeds/manage-migrations.mdx).
 - Push the fix to GitHub to redeploy.
 
-### Error applying metadata
+### Error applying Metadata
 
 - Nothing has been modified on your project yet so there will be no service impact.
-- Typically happens due to some invalid metadata (e.g. due to type mismatches, missing required keys, etc.) trying to be
+- Typically happens due to some invalid Metadata (e.g. due to type mismatches, missing required keys, etc.) trying to be
   applied.
-- Check the reported error message and fix the issues in the metadata. See
-  [metadata format](/migrations-metadata-seeds/metadata-format.mdx).
+- Check the reported error message and fix the issues in the Metadata. See
+  [Metadata format](/migrations-metadata-seeds/metadata-format.mdx).
 - Push the fix to GitHub to redeploy.
 
-### Error applying migrations
+### Error applying Migrations
 
-- As your metadata has already been applied but applying your migrations have failed, your project might be in an
-  unhealthy state. If your migrations and metadata had only incremental changes, i.e. no existing objects were modified,
-  you likely won’t have any service impact because existing parts of your metadata are likely to be still valid and your
+- As your Metadata has already been applied but applying your Migrations have failed, your project might be in an
+  unhealthy state. If your Migrations and Metadata had only incremental changes, i.e. no existing objects were modified,
+  you likely won’t have any service impact because existing parts of your Metadata are likely to be still valid and your
   existing functionality will be working as it were.
 - Look at the underlying database error. Make the appropriate fix depending on the error and redeploy.
 - Some common errors:
@@ -189,37 +189,37 @@ The following are some troubleshooting steps to fix some possible errors in the 
   - `“relation '<some-object>' already exists”`
 
     In such situations when you get errors of tables or other objects already existing, this might be because the
-    migration might have been already applied on the database and the project was not yet aware of it.
+    Migration might have been already applied on the database and the project was not yet aware of it.
 
     To fix this, use the Hasura CLI command
     `hasura migrate apply --skip-execution --version <migration_version> --endpoint "<cloud_project_endpoint>"` to mark
-    the migration as already applied on the project. Then redeploy the failed commit to continue with further steps.
+    the Migration as already applied on the project. Then redeploy the failed commit to continue with further steps.
 
   - `version check: failed to get version from server`
 
-    In such situations, the project has inconsistent metadata and has issues connecting to the server.
+    In such situations, the project has inconsistent Metadata and has issues connecting to the server.
 
-    To fix this, try reloading the metadata and confirming all required ENV VARS for the project are available. If the
+    To fix this, try reloading the Metadata and confirming all required ENV VARS for the project are available. If the
     issue persists, please contact the [Hasura Help Center](https://hasura.io/help/).
 
-### Inconsistent metadata after finalizing update
+### Inconsistent Metadata after finalizing update
 
-- It is possible your project might be in an unhealthy state depending on which metadata objects are inconsistent and
-  what migrations were applied. If your metadata and migrations had only incremental changes, i.e. no existing objects
-  were modified, you likely won’t have any service impact because existing parts of your metadata are likely to be still
-  valid and your existing functionality will be working as it were.
+- It is possible your project might be in an unhealthy state depending on which Metadata objects are inconsistent and
+  what Migrations were applied. If your Metadata and Migrations had only incremental changes, i.e. no existing objects
+  were modified, you likely won’t have any service impact because existing parts of your Metadata are likely to be still
+  valid and your existing functionality will be working as it was.
 - Check the logs under `Applying Migrations` and `Finalizing Update`.
-- In the situation that the applied metadata applied was indeed incorrect, fix the metadata and push a new commit to
+- In the situation that the applied Metadata applied was indeed incorrect, fix the Metadata and push a new commit to
   redeploy.
-- If objects depending on upstream services are inconsistent, e.g. remote schemas, the upstream service might be
+- If objects depending on upstream services are inconsistent, e.g. Remote Schemas, the upstream service might be
   unavailable or inconsistent. In this case please fix them and redeploy the commit.
 - If database objects are inconsistent with errors such as <em>Inconsistent object: no such table/view exists in source:
   `<table-name>`</em>, it could be because:
-  - a migration might have been skipped as the project believes its already been applied though its not the case. To fix
-    it, mark the migration as unapplied using the following Hasura CLI command
+  - a Migration might have been skipped as the project believes its already been applied though its not the case. To fix
+    it, mark the Migration as unapplied using the following Hasura CLI command
     `hasura migrate delete --version <migration_version> --server --database-name <database-name> --endpoint <cloud_project_endpoint>`
     and redeploy the commit.
-  - a migration to create the database objects might be missing completely. To fix this create a new migration for
+  - a Migration to create the database objects might be missing completely. To fix this create a new Migration for
     creation of the missing objects and push a new commit to redeploy.
-- A rollback can be done to the previous functioning state of metadata by reverting your metadata changes on your branch
+- A rollback can be done to the previous functioning state of Metadata by reverting your Metadata changes on your branch
   and then pushing to redeploy.

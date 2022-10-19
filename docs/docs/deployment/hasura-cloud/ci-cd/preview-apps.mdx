@@ -12,14 +12,14 @@ keywords:
   - GitHub
 sidebar_label: Preview Apps
 sidebar_position: 10
-sidebar_class_name: cloud-icon
+sidebar_class_name: cloud-and-enterprise-icon
 ---
 
 import Thumbnail from '@site/src/components/Thumbnail';
 
 # Preview Apps
 
-<div className='badge badge--primary heading-badge'>Available on: Cloud</div>
+<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
 
 ## TL;DR
 
@@ -38,7 +38,9 @@ This can be achieved using either of the following:
 
 :::info Note
 
-This feature is currently in beta. Please reach out through our support channels with any questions or concerns.
+This feature is currently in beta. Please reach out through our support channels with any questions or concerns or open an
+issue on the [Hasura Cloud Preview Apps](https://github.com/hasura/hasura-cloud-preview-apps) GitHub action repository.
+
 
 :::
 
@@ -54,13 +56,6 @@ More plans are coming soon.
 Hasura Cloud enables automatically creating Preview Apps with Migrations and Metadata from a branch on a GitHub repo by
 triggering a new deployment using the official
 [Hasura Cloud Preview Apps](https://github.com/marketplace/actions/hasura-cloud-preview-apps) GitHub action.
-
-:::info Note
-
-This feature is currently in beta. Please reach out on our support channels with any questions or concerns or open an
-issue on the [Hasura Cloud Preview Apps](https://github.com/hasura/hasura-cloud-preview-apps) GitHub action repository.
-
-:::
 
 ### GitHub Action Workflow steps
 
@@ -78,13 +73,6 @@ This GitHub Action will do the following:
 
 For more detailed information, please refer to the GitHub action docs
 [action docs](https://github.com/marketplace/actions/hasura-cloud-preview-apps).
-
-:::info Usage Limit
-
-For users with only `Free` tier projects on Hasura Cloud, usage of the Preview App API is limited to 60 calls per month.
-More plans are coming soon.
-
-:::
 
 ### Configure the Hasura Cloud Preview Apps GitHub Action
 
@@ -304,19 +292,6 @@ workflow so that the created databases get deleted when the pull request gets cl
 If the [hasura/hasura-cloud-preview-apps](#preview-apps-github-action) GitHub action does not suit your needs, you can
 also directly contact the [createGitHubPreviewApp](/api-reference/cloud-api-reference.mdx#api-ref-create-preview-app)
 API to manually setup Preview Apps for your GitHub repo.
-
-:::info Note
-
-This feature is currently in beta. Please reach out through our support channels with any questions or concerns.
-
-:::
-
-:::info Usage Limit
-
-For users with only `Free` tier projects on Hasura Cloud, usage of the Preview App API is limited to 60 calls per month.
-More plans are coming soon.
-
-:::
 
 A GraphQL mutation to create a Preview App will be of the following format:
 
