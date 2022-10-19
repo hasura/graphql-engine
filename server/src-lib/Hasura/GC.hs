@@ -24,6 +24,15 @@ import System.Mem (performMajorGC)
 --
 -- ...so we hack together our own using GHC.Stats, which should have
 -- insignificant runtime overhead.
+--
+-- NOTE: as always the cost of a major GC (forced here, or initiated by the RTS)
+-- with the default copying collector is proportional to live (non-garbage)
+-- heap data. Tune parameters here to balance: more frequent GC pauses vs.
+-- prompt cleanup of foreign data (which does not exert GC pressure).
+--
+-- NOTE: larger nursery size (+RTS -A) may help us run more finalizers during
+-- cheaper minor GCs, before they are promoted, making it feasible (maybe) to
+-- run this with longer interval parameters.
 ourIdleGC ::
   Logger Hasura ->
   -- | Run a major GC when we've been "idle" for idleInterval
