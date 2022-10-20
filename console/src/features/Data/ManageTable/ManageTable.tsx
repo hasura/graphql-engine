@@ -1,15 +1,14 @@
 import { BrowseRowsContainer } from '@/features/BrowseRows';
 import { Table } from '@/features/MetadataAPI';
-import { Badge } from '@/new-components/Badge';
-import { DropdownMenu } from '@/new-components/DropdownMenu';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Tabs } from '@/new-components/Tabs';
 import React, { useState } from 'react';
-import { FaAngleRight, FaChevronDown, FaDatabase } from 'react-icons/fa';
 import { useDatabaseHierarchy } from '../hooks';
+import { ModifyTable } from '../ModifyTable/ModifyTable';
 import { getTableName } from '../TrackTables/hooks/useTables';
+import { Breadcrumbs, TableName } from './parts';
 
-interface ManageTableProps {
+export interface ManageTableProps {
   dataSourceName: string;
   table: Table;
 }
@@ -24,18 +23,18 @@ const FeatureNotImplemented = () => {
   );
 };
 
-const availableTabs = (table: Table, dataSourceName: string) => [
+const STARTING_TAB = 'Modify';
+
+const availableTabs = (props: ManageTableProps) => [
   {
     value: 'Browse',
     label: 'Browse',
-    content: (
-      <BrowseRowsContainer table={table} dataSourceName={dataSourceName} />
-    ),
+    content: <BrowseRowsContainer {...props} />,
   },
   {
     value: 'Modify',
     label: 'Modify',
-    content: <FeatureNotImplemented />,
+    content: <ModifyTable {...props} />,
   },
   {
     value: 'Relationships',
@@ -49,15 +48,17 @@ const availableTabs = (table: Table, dataSourceName: string) => [
   },
 ];
 
-export const ManageTable = (props: ManageTableProps) => {
+export const ManageTable: React.VFC<ManageTableProps> = props => {
   const { table, dataSourceName } = props;
 
   const { data: databaseHierarchy, isLoading } =
     useDatabaseHierarchy(dataSourceName);
 
-  const [tab, setTab] = useState('Browse');
+  const [tab, setTab] = useState(STARTING_TAB);
 
-  if (isLoading) return <IndicatorCard status="info">Loading...</IndicatorCard>;
+  const tableName = databaseHierarchy
+    ? getTableName(table, databaseHierarchy)
+    : '';
 
   if (!databaseHierarchy)
     return (
@@ -66,61 +67,14 @@ export const ManageTable = (props: ManageTableProps) => {
       </IndicatorCard>
     );
 
-  const tableName = getTableName(table, databaseHierarchy);
+  if (isLoading) return <IndicatorCard status="info">Loading...</IndicatorCard>;
 
   return (
     <div className="w-full overflow-y-auto bg-gray-50">
       <div className="px-md pt-md mb-xs">
-        <div className="flex items-center space-x-xs mb-1">
-          <div className="cursor-pointer flex items-center text-muted hover:text-gray-900">
-            <FaDatabase className="mr-1.5" />
-            <span className="text-sm">{dataSourceName}</span>
-          </div>
-          <FaAngleRight className="text-muted" />
-          <div className="cursor-pointer flex items-center text-muted hover:text-gray-900">
-            <FaDatabase className="mr-1.5" />
-            <span className="text-sm">{tableName}</span>
-          </div>
-          <FaAngleRight className="text-muted" />
-          <div className="cursor-pointer flex items-center">
-            <span className="text-sm font-semibold text-yellow-500">
-              Manage
-            </span>
-          </div>
-        </div>
-        <br />
-        <div className="flex items-center gap-3">
-          <div className="group relative">
-            <div>
-              <DropdownMenu
-                items={[
-                  [
-                    // TODO: To be implemented after metadata util functions have been added to the metadata library
-                    <span className="py-xs text-red-600" onClick={() => {}}>
-                      Untrack {tableName}
-                    </span>,
-                  ],
-                ]}
-              >
-                <div className="flex items-center">
-                  <h1 className="inline-flex items-center text-xl font-semibold mb-1 pr-xs">
-                    {tableName}
-                  </h1>
-                  <FaChevronDown className="text-gray-400 text-sm transition-transform group-radix-state-open:rotate-180" />
-                </div>
-              </DropdownMenu>
-            </div>
-          </div>
-          <div>
-            <Badge color="green">Tracked</Badge>
-          </div>
-        </div>
-
-        <Tabs
-          value={tab}
-          onValueChange={setTab}
-          items={availableTabs(table, dataSourceName)}
-        />
+        <Breadcrumbs dataSourceName={dataSourceName} tableName={tableName} />
+        <TableName dataSourceName={dataSourceName} tableName={tableName} />
+        <Tabs value={tab} onValueChange={setTab} items={availableTabs(props)} />
       </div>
     </div>
   );

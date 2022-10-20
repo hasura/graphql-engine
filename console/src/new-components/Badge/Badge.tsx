@@ -24,7 +24,7 @@ export const Badge: React.FC<React.PropsWithChildren<BadgeProps>> = props => {
     <span
       {...rest}
       className={clsx(
-        'inline-flex items-center mr-sm px-sm py-0.5 rounded-full text-sm tracking-wide font-semibold',
+        'inline-flex items-center px-sm py-0.5 rounded-full text-sm tracking-wide font-semibold',
         badgeClassnames[color],
         rest.className,
         rest.onClick && 'cursor-pointer'

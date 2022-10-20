@@ -1,40 +1,41 @@
-import { AxiosInstance } from 'axios';
-import { z } from 'zod';
+import { Source, SupportedDrivers, Table } from '@/features/MetadataAPI';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
-import { Source, SupportedDrivers, Table } from '@/features/MetadataAPI';
-import { postgres, PostgresTable } from './postgres';
+import { AxiosInstance } from 'axios';
+import { z } from 'zod';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
-import { mssql } from './mssql';
-import { gdc } from './gdc';
 import { cockroach } from './cockroach';
 import * as utils from './common/utils';
+import { gdc } from './gdc';
+import { mssql } from './mssql';
+import { postgres, PostgresTable } from './postgres';
+
 import type {
+  DriverInfoResponse,
+  GetFKRelationshipProps,
+  GetSupportedOperatorsProps,
+  GetTableColumnsProps,
+  GetTableRowsProps,
+  GetTablesListAsTreeProps,
+  GetTrackableTablesProps,
   // Property,
   IntrospectedTable,
-  TableColumn,
-  GetTrackableTablesProps,
-  GetTableColumnsProps,
-  TableFkRelationships,
-  GetFKRelationshipProps,
-  DriverInfoResponse,
-  GetTablesListAsTreeProps,
-  TableRow,
-  GetTableRowsProps,
-  WhereClause,
-  OrderBy,
   Operator,
-  GetSupportedOperatorsProps,
+  OrderBy,
+  TableColumn,
+  TableFkRelationships,
+  TableRow,
+  WhereClause,
 } from './types';
 
+import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
 import {
   exportMetadata,
+  getDriverPrefix,
   NetworkArgs,
   RunSQLResponse,
-  getDriverPrefix,
 } from './api';
-import { transformSchemaToZodObject } from '../OpenApi3Form/utils';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
 
 export enum Feature {
@@ -400,13 +401,13 @@ export const DataSource = (httpClient: AxiosInstance) => ({
   },
 });
 
+export { GDCTable } from './gdc';
+export * from './guards';
+export * from './types';
 export {
+  PostgresTable,
   exportMetadata,
   utils,
   RunSQLResponse,
   getDriverPrefix,
-  PostgresTable,
 };
-
-export * from './types';
-export * from './guards';

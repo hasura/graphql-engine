@@ -4,17 +4,18 @@ import {
   LocalTableObjectRelationship,
   ManualArrayRelationship,
   ManualObjectRelationship,
-  SourceToSourceRelationship,
-  SourceToRemoteSchemaRelationship,
   SameTableObjectRelationship,
-  Table,
-  SupportedDrivers,
   Source,
+  SourceToRemoteSchemaRelationship,
+  SourceToSourceRelationship,
+  SupportedDrivers,
+  Table,
 } from '@/features/MetadataAPI';
 
 import { NetworkArgs } from './api';
 
 export type { BigQueryTable } from './bigquery';
+export { NetworkArgs };
 
 export type AllowedTableRelationships =
   | Legacy_SourceToRemoteSchemaRelationship
@@ -35,6 +36,8 @@ export type IntrospectedTable = {
 export type TableColumn = {
   name: string;
   dataType: string;
+  nullable?: boolean;
+  isPrimaryKey?: boolean;
   graphQLProperties?: {
     name: string;
     scalarType: string;
@@ -45,11 +48,13 @@ export type GetTrackableTablesProps = {
   dataSourceName: string;
   configuration: any;
 } & NetworkArgs;
+
 export type GetTableColumnsProps = {
   dataSourceName: string;
   configuration?: Source['configuration'];
   table: Table;
 } & NetworkArgs;
+
 export type GetFKRelationshipProps = {
   dataSourceName: string;
   table: Table;
@@ -112,5 +117,3 @@ export type Operator = {
   defaultValue?: string;
 };
 export type GetSupportedOperatorsProps = NetworkArgs;
-
-export { NetworkArgs };
