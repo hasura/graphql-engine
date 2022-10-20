@@ -591,8 +591,9 @@ runHGEServer ::
   ManagedT m ()
 runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore startupStatusHook prometheusMetrics = do
   waiApplication <-
-    mkHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore prometheusMetrics
+    mkHGEServer setupHook env serveOptions serveCtx postPollHook serverMetrics ekgStore prometheusMetrics
 
+  let logger = _lsLogger $ _scLoggers serveCtx
   -- `startupStatusHook`: add `Service started successfully` message to config_status
   -- table when a tenant starts up in multitenant
   let warpSettings :: Warp.Settings
@@ -626,9 +627,13 @@ runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMet
       shutdownHandler closeSocket =
         LA.link =<< LA.async do
           waitForShutdown $ _scShutdownLatch serveCtx
-          let logger = _lsLogger $ _scLoggers serveCtx
           unLogger logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
           closeSocket
+
+  finishTime <- liftIO Clock.getCurrentTime
+  let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
+  unLogger logger $
+    mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
 
   -- Here we block until the shutdown latch 'MVar' is filled, and then
   -- shut down the server. Once this blocking call returns, we'll tidy up
@@ -668,14 +673,12 @@ mkHGEServer ::
   ServeCtx ->
   -- and mutations
 
-  -- | start time
-  UTCTime ->
   Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
   PrometheusMetrics ->
   ManagedT m Application
-mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook serverMetrics ekgStore prometheusMetrics = do
+mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMetrics ekgStore prometheusMetrics = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -825,11 +828,6 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
             liftIO $ runTelemetry logger _scHttpManager (getSchemaCache cacheRef) dbUid _scInstanceId pgVersion
         return $ Just telemetryThread
       else return Nothing
-
-  finishTime <- liftIO Clock.getCurrentTime
-  let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
-  unLogger logger $
-    mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
 
   -- These cleanup actions are not directly associated with any
   -- resource, but we still need to make sure we clean them up here.
