@@ -7,7 +7,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://hasura.io/newsletter/"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura è un prodotto open source che accelera lo sviluppo API di 10 volte fornendoti all'istante [GraphQL](https://hasura.io/graphql/) o API REST con autorizzazione integrata sui tuoi dati.
+Hasura è un prodotto open source che accelera lo sviluppo API di 10 volte fornendoti all'istante API [GraphQL](https://hasura.io/graphql/) o REST con autorizzazione integrata.
 
 Leggi di più su [hasura.io](https://hasura.io) e nei [docs](https://hasura.io/docs/).
 
@@ -23,15 +23,15 @@ Leggi di più su [hasura.io](https://hasura.io) e nei [docs](https://hasura.io/d
 
 ## Features
 
-* **Crea queries potenti**: Filtro, paginazione, ricerca pattern, inserimento in bulk, aggiornamento ed eliminazione mutazioni integrati
+* **Crea queries potenti**: Filtri, paginazione, ricerca di pattern, e mutazioni di inserimento, aggiornamento ed eliminazione, anche in bulk
 * **Lavora con live database esistenti**: Punta a un database esistente per ottenere istantaneamente una GraphQL API pronta all'uso
 * **In tempo reale**: Converti qualsiasi query GraphQL in una query live usando le sottoscrizioni
 * **Merge di schemi remoti**: Accedi a schemi GraphQL personalizzati per la business logic tramite un singolo endpoint GraphQL Engine. [**Leggi di più**](remote-schemas.md).
 * **Estendibile con le Azioni**: Scrivi API REST per estendere lo schema di Hasura con una business logic personalizzata.
-* **Attiva webhook o funzioni serverless**: Inserisci/aggiorna/elimina eventi su Postgres ([leggi di più](event-triggers.md))
+* **Attiva webhook o funzioni serverless**: Eventi di inserimento/aggiornamento/eliminazione su Postgres ([leggi di più](event-triggers.md))
 * **Trigger programmati**: Esegui la business logic personalizzata in momenti specifici utilizzando una configurazione cron o un singolo evento.
 * **Controllo degli accessi preciso**: Controllo accessi dinamico che si integra con il tuo sistema di autenticazione (es: auth0, firebase-auth)
-* **Admin UI & Migrazioni**: Migrazioni dell'UI dell'amministratore e delgli schemi ispirate a Rails.
+* **Admin UI & Migrazioni**: Interfaccia utente di amministrazione & migrazioni degli schemi ispirate a Rails.
 * **Database Supportati**: Supporta PostgreSQL (e le sue varianti), MS SQL Server e Big Query. Supporto per altri [database](https://hasura.io/graphql/database/) in arrivo.
 
 Leggi di più su [hasura.io](https://hasura.io) e nei [docs](https://hasura.io/docs/).
@@ -48,14 +48,14 @@ Leggi di più su [hasura.io](https://hasura.io) e nei [docs](https://hasura.io/d
 - [Strumenti client-side](#client-side-tooling)
 - [Aggiungere la business logic](#add-business-logic)
     - [Schemi remoti](#remote-schemas)
-    - [Attiva webhook su eventi del database](#trigger-webhooks-on-database-events)
+    - [Invoca webhook su eventi del database](#trigger-webhooks-on-database-events)
 - [Demo](#demos)
     - [Applicazioni in tempo reale](#realtime-applications)
     - [Video](#videos)
 - [Supporto e Risoluzione dei Problemi](#support--troubleshooting)
 - [Resta aggiornato](#stay-up-to-date)
 - [Contribuire](#contributing)
-- [Risorse del Marchio](#brand-assets)
+- [Asset del Marchio](#brand-assets)
 - [Licenza](#license)
 - [Traduzioni](#translations)
  
@@ -118,7 +118,7 @@ Aggiungi risolutori personalizzati in uno schema remoto in aggiunta allo schema 
 
 ### Azioni
 
-Le azioni sono un modo per estendere lo schema di Hasura con una business logic personalizzata utilizzando query e mutazioni ad hoc. È possibile aggiungere azioni ad Hasura per gestire vari casi d'uso come la convalida dei dati, l'arricchimento dei dati da fonti esterne e qualsiasi altra buniness logic complessa - [leggi di più](https://hasura.io/docs/latest/graphql/core/actions/index.html)
+Le azioni sono un modo per estendere lo schema di Hasura con una business logic personalizzata utilizzando query e mutazioni ad hoc. È possibile aggiungere azioni ad Hasura per gestire vari casi d'uso come la convalida dei dati, l'arricchimento dei dati da fonti esterne e qualsiasi altra business logic complessa - [leggi di più](https://hasura.io/docs/latest/graphql/core/actions/index.html)
 
 ### Attiva webhook su eventi del database
 
@@ -178,10 +178,10 @@ Rilasciamo nuove features ogni mese. Iscriviti alla nostra newsletter utilizzand
 
 Dai un'occhiata alla nostra [guida per i contributi](CONTRIBUTING.md) per ulteriori dettagli.
 
-## Risorse del Marchio
+## Asset del Marchio
 
-Le risorse del marchio Hasura (loghi, la mascotte di Hasura, i badge "powered by", etc.) possono
-essere trovate nella cartella [assets/brand](../assets/brand). Sentiti libero di userle nella tua
+Gli asset del marchio Hasura (loghi, la mascotte di Hasura, i badge "powered by", etc.) possono
+essere trovati nella cartella [assets/brand](../assets/brand). Sentiti libero di usarle nella tua
 applicazione/sito web etc. Saremmo entusiasti se aggiungessi il badge "Powered by Hasura"
 alle tue applicazioni create utilizzando Hasura. ❤️
 
@@ -228,4 +228,4 @@ Questo readme è disponibile nelle seguenti traduzioni:
 - [Korean :kr:](../translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
 - [Italian :it:](../translations/README.italian.md) (:pray: [@befire](https://github.com/francesca-belfiore))
 
-Le traduzioni degli altri file possono essere trovate [qui](translations).
+Le traduzioni di altri file possono essere trovate [qui](translations).
