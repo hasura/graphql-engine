@@ -70,10 +70,12 @@ export type CodeEditorFieldProps = FieldWrapperPassThroughProps & {
   disabled?: boolean;
 };
 
+const DEFAULT_EDITOR_OPTIONS = { minLines: 5, maxLines: 8, showGutter: false };
+
 export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
   name,
   editorProps,
-  editorOptions = { minLines: 5, maxLines: 8, showGutter: false },
+  editorOptions = DEFAULT_EDITOR_OPTIONS,
   theme = 'github',
   mode = 'json',
   disabled,
@@ -87,10 +89,11 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
   const maybeError = get(errors, name) as FieldError | undefined;
   const editorRef = React.useRef<AceEditor>(null);
   const [tipState, setTipState] = React.useState<'ANY' | 'ESC' | 'TAB'>('ANY');
+  editorOptions = { ...DEFAULT_EDITOR_OPTIONS, ...editorOptions };
 
   return (
     <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
-      <div className="relative w-full max-w-xl">
+      <div className="relative w-full">
         <Controller
           name={name}
           control={control}
@@ -162,12 +165,12 @@ export const CodeEditorField: React.FC<CodeEditorFieldProps> = ({
                   setOptions={editorOptions}
                   data-test={dataTest}
                   className={clsx(
-                    'block relative inset-0 !w-inherit w-full max-w-xl h-code input shadow-sm rounded border border-gray-300 focus-within:outline-0 focus-within:ring-2 focus-within:ring-yellow-200 focus-within:border-yellow-400 placeholder-gray-500',
+                    'block relative inset-0 !w-inherit w-full h-code input shadow-sm rounded border border-gray-300 focus-within:outline-0 focus-within:ring-2 focus-within:ring-yellow-200 focus-within:border-yellow-400 placeholder-gray-500',
                     maybeError
                       ? 'border-red-600 hover:border-red-700'
                       : 'border-gray-300',
                     disabled
-                      ? 'bg-gray-200 border-gray-200 hover:border-gray-200'
+                      ? 'bg-gray-200 border-gray-200 hover:border-gray-200 focus-within:ring-0 focus-within:border-gray-200'
                       : 'hover:border-gray-400',
                     editorProps?.className
                   )}

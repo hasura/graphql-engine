@@ -30,7 +30,12 @@ export default {
   decorators: [
     ReactQueryDecorator(),
     StoryComponent => (
-      <Form schema={z.any()} onSubmit={() => {}} options={{ defaultValues }}>
+      <Form
+        schema={z.any()}
+        onSubmit={() => {}}
+        options={{ defaultValues }}
+        className="p-4"
+      >
         {() => <StoryComponent />}
       </Form>
     ),

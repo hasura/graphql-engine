@@ -62,7 +62,6 @@ export const SuggestedRelationshipForm = ({
           relationshipName: relationship.to.table,
         },
       }}
-      className="p-0"
     >
       {options => (
         <div className="flex items-center space-x-1.5 bg-white">

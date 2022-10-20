@@ -155,6 +155,7 @@ export const PermissionsForm: React.FC<PermissionsFormProps> = ({
       onSubmit={handleSubmit}
       schema={schema}
       options={{ defaultValues } as UseFormProps<FieldValues>}
+      className="p-4"
     >
       {() => (
         <div className="bg-white rounded p-md border border-gray-300">

@@ -160,6 +160,23 @@ VariantHorizontalWithDescriptionAndTooltip.parameters = {
   },
 };
 
+export const StateLoading: ComponentStory<typeof FieldWrapper> = () => (
+  <FieldWrapper
+    label="The field wrapper label"
+    description="The field wrapper description"
+    tooltip="The field wrapper tooltip"
+    loading
+  >
+    <ChildrenExample />
+  </FieldWrapper>
+);
+StateLoading.storyName = '🔁 State - Loading';
+StateLoading.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
 export const StateWithErrorMessage: ComponentStory<typeof FieldWrapper> =
   () => (
     <FieldWrapper

@@ -58,7 +58,7 @@ const CreateConnection = ({ name, driver, onDriverChange }: Props) => {
       options={{
         defaultValues,
       }}
-      className="p-0 pl-sm"
+      className="pl-sm"
     >
       {options => {
         return (

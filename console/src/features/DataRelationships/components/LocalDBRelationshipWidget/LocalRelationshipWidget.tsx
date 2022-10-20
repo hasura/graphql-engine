@@ -184,7 +184,12 @@ export const LocalRelationshipWidget = ({
   }
 
   return (
-    <Form schema={schema} onSubmit={submit} options={{ defaultValues }}>
+    <Form
+      schema={schema}
+      onSubmit={submit}
+      options={{ defaultValues }}
+      className="p-4"
+    >
       {options => (
         <>
           <div>

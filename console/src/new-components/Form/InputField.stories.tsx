@@ -35,6 +35,7 @@ ApiPlayground.storyName = '⚙️ API';
 ApiPlayground.args = {
   name: 'inputFieldName',
   label: 'Play with me!',
+  placeholder: 'Play with me!',
 };
 
 export const Basic: ComponentStory<typeof InputField> = () => {
@@ -62,6 +63,7 @@ export const VariantEmailType: ComponentStory<typeof InputField> = () => {
         <InputField
           name="inputFieldName"
           label="The inputField label"
+          placeholder="The inputField placeholder"
           type="email"
         />
       )}
@@ -69,7 +71,7 @@ export const VariantEmailType: ComponentStory<typeof InputField> = () => {
   );
 };
 VariantEmailType.storyName = '🎭 Variant - Type email';
-Basic.parameters = {
+VariantEmailType.parameters = {
   docs: {
     source: { state: 'open' },
   },
@@ -84,6 +86,7 @@ export const VariantPasswordType: ComponentStory<typeof InputField> = () => {
         <InputField
           name="inputFieldName"
           label="The inputField label"
+          placeholder="The inputField placeholder"
           type="password"
         />
       )}
@@ -91,7 +94,7 @@ export const VariantPasswordType: ComponentStory<typeof InputField> = () => {
   );
 };
 VariantPasswordType.storyName = '🎭 Variant - Type password';
-Basic.parameters = {
+VariantPasswordType.parameters = {
   docs: {
     source: { state: 'open' },
   },
@@ -106,6 +109,7 @@ export const VariantWithDescription: ComponentStory<typeof InputField> = () => {
         <InputField
           name="inputFieldName"
           label="The inputField label"
+          placeholder="The inputField placeholder"
           description="InputField description"
         />
       )}
@@ -128,6 +132,7 @@ export const VariantWithTooltip: ComponentStory<typeof InputField> = () => {
         <InputField
           name="inputFieldName"
           label="The inputField label"
+          placeholder="The inputField placeholder"
           tooltip="InputField tooltip"
         />
       )}
@@ -135,7 +140,7 @@ export const VariantWithTooltip: ComponentStory<typeof InputField> = () => {
   );
 };
 VariantWithTooltip.storyName = '🎭 Variant - With tooltip';
-Basic.parameters = {
+VariantWithTooltip.parameters = {
   docs: {
     source: { state: 'open' },
   },
@@ -150,6 +155,7 @@ export const VariantSizeFull: ComponentStory<typeof InputField> = () => {
         <InputField
           name="inputFieldName"
           label="The inputField label"
+          placeholder="The inputField placeholder"
           size="full"
         />
       )}
@@ -172,6 +178,7 @@ export const VariantSizeMedium: ComponentStory<typeof InputField> = () => {
         <InputField
           name="inputFieldName"
           label="The inputField label"
+          placeholder="The inputField placeholder"
           size="medium"
         />
       )}
@@ -216,6 +223,7 @@ export const VariantIconEnd: ComponentStory<typeof InputField> = () => {
         <InputField
           name="inputFieldName"
           label="The inputField label"
+          placeholder="The inputField placeholder"
           icon={<FiSearch />}
           iconPosition="end"
         />
@@ -239,6 +247,7 @@ export const VariantPrependLabel: ComponentStory<typeof InputField> = () => {
         <InputField
           name="inputFieldName"
           label="The inputField label"
+          placeholder="The inputField placeholder"
           prependLabel="Prepend label"
         />
       )}
@@ -261,6 +270,7 @@ export const VariantAppendLabel: ComponentStory<typeof InputField> = () => {
         <InputField
           name="inputFieldName"
           label="The inputField label"
+          placeholder="The inputField placeholder"
           appendLabel="Append label"
         />
       )}
@@ -285,7 +295,13 @@ export const StateWithDefaultValue: ComponentStory<typeof InputField> = () => {
       options={{ defaultValues }}
       onSubmit={action('onSubmit')}
     >
-      {() => <InputField name="inputFieldName" label="The inputField label" />}
+      {() => (
+        <InputField
+          name="inputFieldName"
+          label="The inputField label"
+          placeholder="The inputField placeholder"
+        />
+      )}
     </Form>
   );
 };
@@ -299,6 +315,29 @@ StateWithDefaultValue.parameters = {
   },
 };
 
+export const StateLoading: ComponentStory<typeof InputField> = () => {
+  const validationSchema = z.object({});
+
+  return (
+    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
+      {() => (
+        <InputField
+          name="inputFieldName"
+          label="The inputField label"
+          placeholder="The inputField placeholder"
+          loading
+        />
+      )}
+    </Form>
+  );
+};
+StateLoading.storyName = '🔁 State - Loading';
+StateLoading.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
 export const StateDisabled: ComponentStory<typeof InputField> = () => {
   const validationSchema = z.object({});
 
@@ -308,6 +347,7 @@ export const StateDisabled: ComponentStory<typeof InputField> = () => {
         <InputField
           name="inputFieldName"
           label="The inputField label"
+          placeholder="The inputField placeholder"
           disabled
         />
       )}
@@ -334,7 +374,13 @@ export const StateWithErrorMessage: ComponentStory<typeof InputField> = () => {
 
   return (
     <Form ref={formRef} schema={validationSchema} onSubmit={action('onSubmit')}>
-      {() => <InputField name="inputFieldName" label="The inputField label" />}
+      {() => (
+        <InputField
+          name="inputFieldName"
+          label="The inputField label"
+          placeholder="The inputField placeholder"
+        />
+      )}
     </Form>
   );
 };

@@ -177,6 +177,34 @@ StateWithDefaultValue.parameters = {
   },
 };
 
+export const StateLoading: ComponentStory<typeof CodeEditorField> = () => {
+  const defaultValues = { codeEditorFieldName: '{ "prop": "value"}' };
+
+  const validationSchema = z.object({});
+
+  return (
+    <Form
+      schema={validationSchema}
+      options={{ defaultValues }}
+      onSubmit={action('onSubmit')}
+    >
+      {() => (
+        <CodeEditorField
+          name="codeEditorFieldName"
+          label="The codeEditor label"
+          loading
+        />
+      )}
+    </Form>
+  );
+};
+StateLoading.storyName = '🔁 State - Loading';
+StateLoading.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
 export const StateDisabled: ComponentStory<typeof CodeEditorField> = () => {
   const defaultValues = { codeEditorFieldName: '{ "prop": "value"}' };
 
