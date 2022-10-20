@@ -385,6 +385,9 @@ query {
 
 </div>
 
+BoolExp are not just limited to individual fields but can be used be used with relationships
+and computed fields as well.
+
 ###### AndExp
 
 <div className="parsed-literal">
@@ -584,8 +587,7 @@ query {
 <pre>
   <code>
     {`{
-  field-name: { `}
-    <a href='#operator'>Operator</a>
+  <a href='#operator'>Operator</a>
     {`: Value }
 }`}
   </code>
@@ -603,12 +605,6 @@ query {
   }
 }
 ```
-
-:::info Note
-
-ColumnExp applies to more than just the column or the `field-name` but also apply to relationships and computed fields as well.
-
-:::
 
 **More examples:**
 
