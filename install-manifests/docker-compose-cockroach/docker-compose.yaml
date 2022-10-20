@@ -1,0 +1,58 @@
+version: '3.6'
+services:
+  postgres:
+    image: postgres:14
+    restart: always
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+
+  ## Hasura is compatible with CockroachDB 22.2 onwards
+  cockroach:
+    image: cockroachdb/cockroach-unstable:v22.2.0-beta.4
+    # starts an _insecure_, single-node CockroachDB intended for non-production uses only
+    # follow the CockroachDB Cloud Guide to connect to a production CockroachDB cluster
+    command:
+      - start-single-node
+      - --insecure
+      - --accept-sql-without-tls
+    ports:
+      - '26257:26257'
+    environment:
+      COCKROACH_USER: 'root'
+      COCKROACH_DATABASE: 'hasura'
+    volumes:
+      - '${PWD}/cockroach-data:/cockroach/cockroach-data'
+      - ./docker-compose/cockroach/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+
+  graphql-engine:
+    ## TODO: replace image after beta release
+    ## https://hasurahq.atlassian.net/browse/NDAT-192
+    image: hasurabuild/graphql-engine:mono-pr-6366-cockroach.ubuntu
+    ## Apple M1-compatible image
+    # image: hasura/graphql-engine:dev-2da1d2a-enable-cockroach.debian.arm64
+    ports:
+      - '8080:8080'
+    depends_on:
+      - 'postgres'
+      - 'cockroach'
+    restart: always
+    environment:
+      ## postgres database to store Hasura metadata
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
+      ## enable the console served by server
+      HASURA_GRAPHQL_ENABLE_CONSOLE: 'true' # set to "false" to disable console
+      ## enable debugging mode. It is recommended to disable this in production
+      HASURA_GRAPHQL_DEV_MODE: 'true'
+      HASURA_GRAPHQL_ENABLED_LOG_TYPES: startup, http-log, webhook-log, websocket-log, query-log
+      ## uncomment next line to run console offline (i.e load console assets from server instead of CDN)
+      ## TODO: comment line after beta release
+      ## https://hasurahq.atlassian.net/browse/NDAT-192
+      HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
+      ## uncomment next line to set an admin secret
+      # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+volumes:
+  postgres-data:
+  cockroach-data:
