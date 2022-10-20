@@ -26,8 +26,8 @@ import Hasura.Backends.Postgres.SQL.Error
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Prelude
+import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..), ServerReplicas, getServerReplicasInt)
 import Hasura.SQL.Types (ExtensionsSchema)
-import Hasura.Server.Types (ResizePoolStrategy (..), ServerReplicas, getServerReplicasInt)
 
 -- See Note [Existentially Quantified Types]
 type RunTx =

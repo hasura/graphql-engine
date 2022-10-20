@@ -29,6 +29,7 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Init
 import Hasura.Server.Migrate

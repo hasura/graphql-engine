@@ -12,8 +12,8 @@ import Hasura.Backends.BigQuery.Types qualified as BigQuery
 import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend
-import Hasura.Server.Types (ServerReplicas)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'BigQuery where

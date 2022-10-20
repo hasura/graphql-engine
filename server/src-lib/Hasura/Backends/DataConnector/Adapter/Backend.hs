@@ -16,8 +16,8 @@ import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable, XEnable)
+import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend (BackendType (DataConnector))
-import Hasura.Server.Types (ServerReplicas)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -- | An alias for '()' indicating that a particular associated type has not yet
