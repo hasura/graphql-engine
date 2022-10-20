@@ -13,7 +13,7 @@ import Data.List.NonEmpty qualified as NE
 import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended ((<<>))
 import Hasura.Backends.DataConnector.API.V0.Capabilities (lookupComparisonInputObjectDefinition)
-import Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..))
+import Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..), columnTypeToScalarType)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class
@@ -194,7 +194,7 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
 
     mkListLiteral :: [RQL.ColumnValue 'DataConnector] -> IR.UnpreparedValue 'DataConnector
     mkListLiteral columnValues =
-      IR.UVLiteral . DC.ArrayLiteral $ RQL.cvValue <$> columnValues
+      IR.UVLiteral $ DC.ArrayLiteral (columnTypeToScalarType columnType) (RQL.cvValue <$> columnValues)
 
     mkCustomOperators ::
       NamingCase ->

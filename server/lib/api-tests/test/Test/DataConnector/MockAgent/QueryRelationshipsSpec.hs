@@ -212,7 +212,7 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name")),
+                                      [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") API.StringTy),
                                         ( API.FieldName "Genre",
                                           API.RelField
                                             ( API.RelationshipField
@@ -221,7 +221,7 @@ tests opts = do
                                                   { _qFields =
                                                       Just $
                                                         HashMap.fromList
-                                                          [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name"))
+                                                          [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") API.StringTy)
                                                           ],
                                                     _qAggregates = Nothing,
                                                     _qLimit = Nothing,
@@ -239,7 +239,7 @@ tests opts = do
                                                   { _qFields =
                                                       Just $
                                                         HashMap.fromList
-                                                          [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name"))
+                                                          [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") API.StringTy)
                                                           ],
                                                     _qAggregates = Nothing,
                                                     _qLimit = Nothing,
@@ -342,7 +342,7 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name")),
+                                      [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") API.StringTy),
                                         ( API.FieldName "Album",
                                           API.RelField
                                             ( API.RelationshipField
@@ -359,7 +359,7 @@ tests opts = do
                                                                       { _qFields =
                                                                           Just $
                                                                             HashMap.fromList
-                                                                              [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name"))
+                                                                              [ (API.FieldName "Name", API.ColumnField (API.ColumnName "Name") API.StringTy)
                                                                               ],
                                                                         _qAggregates = Nothing,
                                                                         _qLimit = Nothing,
@@ -475,7 +475,7 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "EmployeeId", API.ColumnField (API.ColumnName "EmployeeId"))
+                                      [ (API.FieldName "EmployeeId", API.ColumnField (API.ColumnName "EmployeeId") API.NumberTy)
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
@@ -485,8 +485,8 @@ tests opts = do
                                     API.Exists (API.RelatedTable $ API.RelationshipName "SupportRepForCustomers") $
                                       API.ApplyBinaryComparisonOperator
                                         API.Equal
-                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country"))
-                                        (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country"))),
+                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") API.StringTy)
+                                        (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") API.StringTy)),
                                 _qOrderBy =
                                   Just $
                                     API.OrderBy
@@ -497,8 +497,8 @@ tests opts = do
                                                     API.Exists (API.RelatedTable $ API.RelationshipName "SupportRep") $
                                                       API.ApplyBinaryComparisonOperator
                                                         API.Equal
-                                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country"))
-                                                        (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country")))
+                                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "Country") API.StringTy)
+                                                        (API.AnotherColumn (API.ComparisonColumn API.QueryTable (API.ColumnName "Country") API.StringTy))
                                                 )
                                                 mempty
                                             )

@@ -292,7 +292,7 @@ mkPlan session (SourceConfig {}) ir = do
       AFColumn colField ->
         -- TODO: make sure certain fields in colField are not in use, since we don't
         -- support them
-        pure . Just . API.ColumnField . Witch.from $ _acfColumn colField
+        pure . Just $ API.ColumnField (Witch.from $ _acfColumn colField) (Witch.from . columnTypeToScalarType $ _acfType colField)
       AFObjectRelation objRel -> do
         let targetTable = Witch.from $ _aosTableFrom (_aarAnnSelect objRel)
         let relationshipName = mkRelationshipName $ _aarRelationshipName objRel
@@ -432,7 +432,7 @@ mkPlan session (SourceConfig {}) ir = do
       UnpreparedValue 'DataConnector ->
       m Literal
     prepareLiterals (UVLiteral literal) = pure $ literal
-    prepareLiterals (UVParameter _ e) = pure (ValueLiteral (cvValue e))
+    prepareLiterals (UVParameter _ e) = pure (ValueLiteral (columnTypeToScalarType $ cvType e) (cvValue e))
     prepareLiterals UVSession = throw400 NotSupported "prepareLiterals: UVSession"
     prepareLiterals (UVSessionVar sessionVarType sessionVar) = do
       textValue <-
@@ -445,16 +445,16 @@ mkPlan session (SourceConfig {}) ir = do
       case varType of
         CollectableTypeScalar scalarType ->
           case scalarType of
-            StringTy -> pure . ValueLiteral $ J.String varValue
-            NumberTy -> parseValue (ValueLiteral . J.Number) "number value"
-            BoolTy -> parseValue (ValueLiteral . J.Bool) "boolean value"
-            CustomTy customTypeName -> parseValue ValueLiteral (customTypeName <> " JSON value")
+            StringTy -> pure . ValueLiteral scalarType $ J.String varValue
+            NumberTy -> parseValue (ValueLiteral scalarType . J.Number) "number value"
+            BoolTy -> parseValue (ValueLiteral scalarType . J.Bool) "boolean value"
+            CustomTy customTypeName -> parseValue (ValueLiteral scalarType) (customTypeName <> " JSON value")
         CollectableTypeArray scalarType ->
           case scalarType of
-            StringTy -> parseValue (ArrayLiteral . fmap J.String) "JSON array of strings"
-            NumberTy -> parseValue (ArrayLiteral . fmap J.Number) "JSON array of numbers"
-            BoolTy -> parseValue (ArrayLiteral . fmap J.Bool) "JSON array of booleans"
-            CustomTy customTypeName -> parseValue ArrayLiteral ("JSON array of " <> customTypeName <> " JSON values")
+            StringTy -> parseValue (ArrayLiteral scalarType . fmap J.String) "JSON array of strings"
+            NumberTy -> parseValue (ArrayLiteral scalarType . fmap J.Number) "JSON array of numbers"
+            BoolTy -> parseValue (ArrayLiteral scalarType . fmap J.Bool) "JSON array of booleans"
+            CustomTy customTypeName -> parseValue (ArrayLiteral scalarType) ("JSON array of " <> customTypeName <> " JSON values")
       where
         parseValue :: J.FromJSON a => (a -> Literal) -> Text -> m Literal
         parseValue toLiteral description =
@@ -483,7 +483,7 @@ mkPlan session (SourceConfig {}) ir = do
       BoolNot x ->
         API.Not <$> (translateBoolExp sourceTableName) x
       BoolField (AVColumn c xs) ->
-        lift $ mkIfZeroOrMany API.And <$> traverse (translateOp (Witch.from $ ciColumn c)) xs
+        lift $ mkIfZeroOrMany API.And <$> traverse (translateOp (Witch.from $ ciColumn c) (Witch.from . columnTypeToScalarType $ ciType c)) xs
       BoolField (AVRelationship relationshipInfo boolExp) -> do
         (relationshipName, API.Relationship {..}) <- recordTableRelationshipFromRelInfo sourceTableName relationshipInfo
         API.Exists (API.RelatedTable relationshipName) <$> translateBoolExp _rTargetTable boolExp
@@ -512,34 +512,35 @@ mkPlan session (SourceConfig {}) ir = do
 
     translateOp ::
       API.ColumnName ->
+      API.ScalarType ->
       OpExpG 'DataConnector (UnpreparedValue 'DataConnector) ->
       m API.Expression
-    translateOp columnName opExp = do
+    translateOp columnName columnType opExp = do
       preparedOpExp <- traverse prepareLiterals $ opExp
       case preparedOpExp of
-        AEQ _ (ValueLiteral value) ->
-          pure $ mkApplyBinaryComparisonOperatorToScalar API.Equal value
-        AEQ _ (ArrayLiteral _array) ->
+        AEQ _ (ValueLiteral scalarType value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar API.Equal value scalarType
+        AEQ _ (ArrayLiteral _scalarType _array) ->
           throw400 NotSupported "Array literals not supported for AEQ operator"
-        ANE _ (ValueLiteral value) ->
-          pure . API.Not $ mkApplyBinaryComparisonOperatorToScalar API.Equal value
-        ANE _ (ArrayLiteral _array) ->
+        ANE _ (ValueLiteral scalarType value) ->
+          pure . API.Not $ mkApplyBinaryComparisonOperatorToScalar API.Equal value scalarType
+        ANE _ (ArrayLiteral _scalarType _array) ->
           throw400 NotSupported "Array literals not supported for ANE operator"
-        AGT (ValueLiteral value) ->
-          pure $ mkApplyBinaryComparisonOperatorToScalar API.GreaterThan value
-        AGT (ArrayLiteral _array) ->
+        AGT (ValueLiteral scalarType value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar API.GreaterThan value scalarType
+        AGT (ArrayLiteral _scalarType _array) ->
           throw400 NotSupported "Array literals not supported for AGT operator"
-        ALT (ValueLiteral value) ->
-          pure $ mkApplyBinaryComparisonOperatorToScalar API.LessThan value
-        ALT (ArrayLiteral _array) ->
+        ALT (ValueLiteral scalarType value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar API.LessThan value scalarType
+        ALT (ArrayLiteral _scalarType _array) ->
           throw400 NotSupported "Array literals not supported for ALT operator"
-        AGTE (ValueLiteral value) ->
-          pure $ mkApplyBinaryComparisonOperatorToScalar API.GreaterThanOrEqual value
-        AGTE (ArrayLiteral _array) ->
+        AGTE (ValueLiteral scalarType value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar API.GreaterThanOrEqual value scalarType
+        AGTE (ArrayLiteral _scalarType _array) ->
           throw400 NotSupported "Array literals not supported for AGTE operator"
-        ALTE (ValueLiteral value) ->
-          pure $ mkApplyBinaryComparisonOperatorToScalar API.LessThanOrEqual value
-        ALTE (ArrayLiteral _array) ->
+        ALTE (ValueLiteral scalarType value) ->
+          pure $ mkApplyBinaryComparisonOperatorToScalar API.LessThanOrEqual value scalarType
+        ALTE (ArrayLiteral _scalarType _array) ->
           throw400 NotSupported "Array literals not supported for ALTE operator"
         ANISNULL ->
           pure $ API.ApplyUnaryComparisonOperator API.IsNull currentComparisonColumn
@@ -569,31 +570,31 @@ mkPlan session (SourceConfig {}) ir = do
           Nothing -> pure $ API.ApplyUnaryComparisonOperator (API.CustomUnaryComparisonOperator _cboName) currentComparisonColumn
           Just (Left rootOrCurrentColumn) ->
             pure $ mkApplyBinaryComparisonOperatorToAnotherColumn (API.CustomBinaryComparisonOperator _cboName) rootOrCurrentColumn
-          Just (Right (ValueLiteral value)) ->
-            pure $ mkApplyBinaryComparisonOperatorToScalar (API.CustomBinaryComparisonOperator _cboName) value
-          Just (Right (ArrayLiteral array)) ->
-            pure $ API.ApplyBinaryArrayComparisonOperator (API.CustomBinaryArrayComparisonOperator _cboName) currentComparisonColumn array
+          Just (Right (ValueLiteral scalarType value)) ->
+            pure $ mkApplyBinaryComparisonOperatorToScalar (API.CustomBinaryComparisonOperator _cboName) value scalarType
+          Just (Right (ArrayLiteral scalarType array)) ->
+            pure $ API.ApplyBinaryArrayComparisonOperator (API.CustomBinaryArrayComparisonOperator _cboName) currentComparisonColumn array (Witch.from scalarType)
       where
         currentComparisonColumn :: API.ComparisonColumn
-        currentComparisonColumn = API.ComparisonColumn API.CurrentTable columnName
+        currentComparisonColumn = API.ComparisonColumn API.CurrentTable columnName columnType
 
         mkApplyBinaryComparisonOperatorToAnotherColumn :: API.BinaryComparisonOperator -> RootOrCurrentColumn 'DataConnector -> API.Expression
         mkApplyBinaryComparisonOperatorToAnotherColumn operator (RootOrCurrentColumn rootOrCurrent otherColumnName) =
           let columnPath = case rootOrCurrent of
                 IsRoot -> API.QueryTable
                 IsCurrent -> API.CurrentTable
-           in API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.AnotherColumn . API.ComparisonColumn columnPath $ Witch.from otherColumnName)
+           in API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.AnotherColumn $ API.ComparisonColumn columnPath (Witch.from otherColumnName) columnType)
 
         inOperator :: Literal -> API.Expression
         inOperator literal =
-          let values = case literal of
-                ArrayLiteral array -> array
-                ValueLiteral value -> [value]
-           in API.ApplyBinaryArrayComparisonOperator API.In currentComparisonColumn values
+          let (values, scalarType) = case literal of
+                ArrayLiteral scalarType' array -> (array, scalarType')
+                ValueLiteral scalarType' value -> ([value], scalarType')
+           in API.ApplyBinaryArrayComparisonOperator API.In currentComparisonColumn values (Witch.from scalarType)
 
-        mkApplyBinaryComparisonOperatorToScalar :: API.BinaryComparisonOperator -> J.Value -> API.Expression
-        mkApplyBinaryComparisonOperatorToScalar operator value =
-          API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.ScalarValue value)
+        mkApplyBinaryComparisonOperatorToScalar :: API.BinaryComparisonOperator -> J.Value -> ScalarType -> API.Expression
+        mkApplyBinaryComparisonOperatorToScalar operator value scalarType =
+          API.ApplyBinaryComparisonOperator operator currentComparisonColumn (API.ScalarValue value (Witch.from scalarType))
 
 -- | Validate if a 'API.QueryRequest' contains any relationships.
 queryHasRelations :: API.QueryRequest -> Bool

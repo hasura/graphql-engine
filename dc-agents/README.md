@@ -318,11 +318,13 @@ and here is the resulting query request payload:
     "fields": {
       "ArtistId": {
         "type": "column",
-        "column": "ArtistId"
+        "column": "ArtistId",
+        "column_type": "number"
       },
       "Name": {
         "type": "column",
-        "column": "Name"
+        "column": "Name",
+        "column_type": "string"
       }
     }
   }
@@ -339,7 +341,7 @@ Let's break down the request:
   - The `where` field tells us that there is currently no (interesting) predicate being applied to the rows of the data set (just an empty conjunction, which ought to return every row).
   - The `order_by` field tells us that there is no particular ordering to use, and that we can return data in its natural order.
   - The `limit` and `offset` fields tell us that there is no pagination required.
-  - The `fields` field tells us that we ought to return two fields per row (`ArtistId` and `Name`), and that these fields should be fetched from the columns with the same names.
+  - The `fields` field tells us that we ought to return two fields per row (`ArtistId` and `Name`), and that these fields should be fetched from the columns with the same names. The scalar types of the columns are also denoted with `column_type`.
 
 #### Response Body Structure
 
@@ -375,15 +377,15 @@ The `where` field contains a recursive expression data structure which should be
 
 Each node of this recursive expression structure is tagged with a `type` property, which indicates the type of that node, and the node will contain one or more additional fields depending on that type. The valid expression types are enumerated below, along with these additional fields:
 
-| type            | Additional fields              | Description |
-|-----------------|--------------------------------|-------------|
-| `and`           | `expressions`                  | A conjunction of several subexpressions |
-| `or`            | `expressions`                  | A disjunction of several subexpressions |
-| `not`           | `expression`                   | The negation of a single subexpression |
-| `exists`        | `in_table`, `where`            | Test if a row exists that matches the `where` subexpression in the specified table (`in_table`) |
-| `binary_op`     | `operator`, `column`, `value`  | Test the specified `column` against a single `value` using a particular binary comparison `operator` |
-| `binary_arr_op` | `operator`, `column`, `values` | Test the specified `column` against an array of `values` using a particular binary comparison `operator` |
-| `unary_op`      | `operator`, `column`           | Test the specified `column` against a particular unary comparison `operator` |
+| type            | Additional fields                            | Description |
+|-----------------|----------------------------------------------|-------------|
+| `and`           | `expressions`                                | A conjunction of several subexpressions |
+| `or`            | `expressions`                                | A disjunction of several subexpressions |
+| `not`           | `expression`                                 | The negation of a single subexpression |
+| `exists`        | `in_table`, `where`                          | Test if a row exists that matches the `where` subexpression in the specified table (`in_table`) |
+| `binary_op`     | `operator`, `column`, `value`                | Test the specified `column` against a single `value` using a particular binary comparison `operator` |
+| `binary_arr_op` | `operator`, `column`, `values`, `value_type` | Test the specified `column` against an array of `values` using a particular binary comparison `operator` where the type of each value is a `value_type` |
+| `unary_op`      | `operator`, `column`                         | Test the specified `column` against a particular unary comparison `operator` |
 
 The value of the `in_table` property of the `exists` expression is an object that describes which table to look for rows in. The object is tagged with a `type` property:
 
@@ -423,7 +425,7 @@ Values (as used in `value` in `binary_op` and the `values` array in `binary_arr_
 | `scalar` | `value`           | A scalar `value` to compare against |
 | `column` | `column`          | A `column` in the current table being queried to compare against |
 
-Columns (as used in `column` fields in `binary_op`, `binary_arr_op`, `unary_op` and in `column`-typed Values) are specified as a column `name`, as well as optionally a `path` to the table that contains the column. If the `path` property is missing/null or an empty array, then the column is on the current table. However, if the path is `["$"]`, then the column is on the table involved in the Query that the whole `where` expression is from. At this point in time, these are the only valid values of `path`.
+Columns (as used in `column` fields in `binary_op`, `binary_arr_op`, `unary_op` and in `column`-typed Values) are specified as a column `name`, a `column_type` to denote the scalar type of the column, as well as optionally a `path` to the table that contains the column. If the `path` property is missing/null or an empty array, then the column is on the current table. However, if the path is `["$"]`, then the column is on the table involved in the Query that the whole `where` expression is from. At this point in time, these are the only valid values of `path`.
 
 Here is a simple example, which correponds to the predicate "`first_name` is John and `last_name` is Smith":
 
@@ -435,22 +437,26 @@ Here is a simple example, which correponds to the predicate "`first_name` is Joh
       "type": "binary_op",
       "operator": "equal",
       "column": {
-        "name": "first_name"
+        "name": "first_name",
+        "column_type": "string"
       },
       "value": {
         "type": "scalar",
-        "value": "John"
+        "value": "John",
+        "value_type": "string"
       }
     },
     {
       "type": "binary_op",
       "operator": "equal",
       "column": {
-        "name": "last_name"
+        "name": "last_name",
+        "column_type": "string"
       },
       "value": {
         "type": "scalar",
-        "value": "John"
+        "value": "John",
+        "value_type": "string"
       }
     }
   ]
@@ -464,12 +470,14 @@ Here's another example, which corresponds to the predicate "`first_name` is the 
   "type": "binary_op",
   "operator": "equal",
   "column": {
-    "name": "first_name"
+    "name": "first_name",
+    "column_type": "string"
   },
   "value": {
     "type": "column",
     "column": {
-      "name": "last_name"
+      "name": "last_name",
+      "column_type": "string"
     }
   }
 }
@@ -488,11 +496,13 @@ In this example, a person table is filtered by whether or not that person has an
     "type": "binary_op",
     "operator": "greater_than_or_equal",
     "column": {
-      "name": "age"
+      "name": "age",
+      "column_type": "number"
     },
     "value": {
       "type": "scalar",
-      "value": 18
+      "value": 18,
+      "value_type": "number"
     }
   }
 }
@@ -511,13 +521,15 @@ In this example, a person table is filtered by whether or not that person has an
     "type": "binary_op",
     "operator": "equal",
     "column": {
-      "name": "first_name" // This column refers to the child's name
+      "name": "first_name", // This column refers to the child's name,
+      "column_type": "string"
     },
     "value": {
       "type": "column",
       "column": {
         "path": ["$"],
-        "name": "first_name" // This column refers to the parent's name
+        "name": "first_name", // This column refers to the parent's name
+        "column_type": "string"
       }
     }
   }
@@ -543,13 +555,15 @@ Exists expressions can be nested, but the `["$"]` path always refers to the quer
       "type": "binary_op",
       "operator": "equal",
       "column": {
-        "name": "first_name" // This column refers to the children's friend's name
+        "name": "first_name", // This column refers to the children's friend's name
+        "column_type": "string"
       },
       "value": {
         "type": "column",
         "column": {
           "path": ["$"],
-          "name": "first_name" // This column refers to the parent's name
+          "name": "first_name", // This column refers to the parent's name
+          "column_type": "string"
         }
       }
     }
@@ -570,11 +584,13 @@ In this example, a table is filtered by whether or not an unrelated administrato
     "type": "binary_op",
     "operator": "equal",
     "column": {
-      "name": "username"
+      "name": "username",
+      "column_type": "string"
     },
     "value": {
       "type": "scalar",
-      "value": "superuser"
+      "value": "superuser",
+      "value_type": "string"
     }
   }
 }
@@ -647,14 +663,16 @@ This will generate the following JSON query if the agent supports relationships:
           "fields": {
             "Title": {
               "type": "column",
-              "column": "Title"
+              "column": "Title",
+              "column_type": "string"
             }
           }
         }
       },
       "Name": {
         "type": "column",
-        "column": "Name"
+        "column": "Name",
+        "column_type": "string"
       }
     }
   }
@@ -678,7 +696,8 @@ Note the `Albums` field in particular, which traverses the `Artists` -> `Albums`
     "fields": {
       "Title": {
         "type": "column",
-        "column": "Title"
+        "column": "Title",
+        "column_type": "string"
       }
     }
   }
@@ -836,23 +855,28 @@ We would get the following query request JSON:
     "fields": {
       "Country": {
         "type": "column",
-        "column": "Country"
+        "column": "Country",
+        "column_type": "string"
       },
       "CustomerId": {
         "type": "column",
-        "column": "CustomerId"
+        "column": "CustomerId",
+        "column_type": "number"
       },
       "FirstName": {
         "type": "column",
-        "column": "FirstName"
+        "column": "FirstName",
+        "column_type": "string"
       },
       "LastName": {
         "type": "column",
-        "column": "LastName"
+        "column": "LastName",
+        "column_type": "string"
       },
       "SupportRepId": {
         "type": "column",
-        "column": "SupportRepId"
+        "column": "SupportRepId",
+        "column_type": "number"
       }
     },
     "where": {
@@ -868,13 +892,15 @@ We would get the following query request JSON:
             "type": "binary_op",
             "operator": "equal",
             "column": {
-              "name": "Country"
+              "name": "Country",
+              "column_type": "string"
             },
             "value": {
               "type": "column",
               "column": {
                 "path": ["$"],
-                "name": "Country"
+                "name": "Country",
+                "column_type": "string"
               }
             }
           }
@@ -976,23 +1002,28 @@ We would get the following query request JSON:
     "fields": {
       "Country": {
         "type": "column",
-        "column": "Country"
+        "column": "Country",
+        "column_type": "string"
       },
       "CustomerId": {
         "type": "column",
-        "column": "CustomerId"
+        "column": "CustomerId",
+        "column_type": "number"
       },
       "FirstName": {
         "type": "column",
-        "column": "FirstName"
+        "column": "FirstName",
+        "column_type": "string"
       },
       "LastName": {
         "type": "column",
-        "column": "LastName"
+        "column": "LastName",
+        "column_type": "string"
       },
       "SupportRepId": {
         "type": "column",
-        "column": "SupportRepId"
+        "column": "SupportRepId",
+        "column_type": "number"
       }
     },
     "where": {
@@ -1008,22 +1039,26 @@ We would get the following query request JSON:
             "type": "binary_op",
             "operator": "equal",
             "column": {
-              "name": "EmployeeId"
+              "name": "EmployeeId",
+              "column_type": "number"
             },
             "value": {
               "type": "scalar",
-              "value": 2
+              "value": 2,
+              "value_type": "number"
             }
           },
           {
             "type": "binary_op",
             "operator": "equal",
             "column": {
-              "name": "City"
+              "name": "City",
+              "column_type": "string"
             },
             "value": {
               "type": "scalar",
-              "value": "Calgary"
+              "value": "Calgary",
+              "value_type": "string"
             }
           }
         ]
@@ -1162,22 +1197,26 @@ The `nodes` part of the query ends up as standard `fields` in the `Query`, and t
     "fields": {
       "nodes_ArtistId": {
         "type": "column",
-        "column": "ArtistId"
+        "column": "ArtistId",
+        "column_type": "number"
       },
       "nodes_Name": {
         "type": "column",
-        "column": "Name"
+        "column": "Name",
+        "column_type": "string"
       }
     },
     "where": {
       "type": "binary_op",
       "operator": "greater_than",
       "column": {
-        "name": "Name"
+        "name": "Name",
+        "column_type": "string"
       },
       "value": {
         "type": "scalar",
-        "value": "Z"
+        "value": "Z",
+        "value_type": "string"
       }
     }
   },
@@ -1249,7 +1288,8 @@ This would generate the following `QueryRequest`:
       },
       "Name": {
         "type": "column",
-        "column": "Name"
+        "column": "Name",
+        "column_type": "string"
       }
     },
     "limit": 2,
@@ -1295,7 +1335,8 @@ The `order_by` field can either be null, which means no particular ordering is r
       "target_path": [],
       "target": {
         "type": "column",
-        "column": "last_name"
+        "column": "last_name",
+        "column_type": "string"
       },
       "order_direction": "asc"
     },
@@ -1303,7 +1344,8 @@ The `order_by` field can either be null, which means no particular ordering is r
       "target_path": [],
       "target": {
         "type": "column",
-        "column": "first_name"
+        "column": "first_name",
+        "column_type": "string"
       },
       "order_direction": "desc"
     }
@@ -1344,7 +1386,7 @@ Here's an example of applying an ordering by a related table; the Album table is
   ],
   "query": {
     "fields": {
-      "Title": { "type": "column", "column": "Title" }
+      "Title": { "type": "column", "column": "Title", "column_type": "string" }
     },
     "order_by": {
       "relations": {
@@ -1419,7 +1461,7 @@ For example, here's a query that retrieves artists ordered descending by the cou
   ],
   "query": {
     "fields": {
-      "Name": { "type": "column", "column": "Name" }
+      "Name": { "type": "column", "column": "Name", "column_type": "string" }
     },
     "order_by": {
       "relations": {
@@ -1428,11 +1470,13 @@ For example, here's a query that retrieves artists ordered descending by the cou
             "type": "binary_op",
             "operator": "greater_than",
             "column": {
-              "name": "Title"
+              "name": "Title",
+              "column_type": "string"
             },
             "value": {
               "type": "scalar",
-              "value": "T"
+              "value": "T",
+              "value_type": "string"
             }
           },
           "subrelations": {}
