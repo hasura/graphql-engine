@@ -67,7 +67,7 @@ func (t *TableConfig) Key() string {
 	return metadataobject.TablesKey
 }
 
-func (t *TableConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (t *TableConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(t.BaseDirectory(), t.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -76,7 +76,7 @@ func (t *TableConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObj
 	return files, nil
 }
 
-func (t *TableConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (t *TableConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: t, WriteDiffOpts: opts})
 	if err != nil {
 		return t.error(err)

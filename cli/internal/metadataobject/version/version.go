@@ -87,7 +87,7 @@ func (a *VersionConfig) Filename() string {
 	return "version.yaml"
 }
 
-func (a *VersionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (a *VersionConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(a.BaseDirectory(), a.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -96,7 +96,7 @@ func (a *VersionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataO
 	return files, nil
 }
 
-func (a *VersionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (a *VersionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: a, WriteDiffOpts: opts})
 	if err != nil {
 		return a.error(err)

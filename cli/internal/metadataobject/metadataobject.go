@@ -94,10 +94,10 @@ type Object interface {
 	// databases.yaml. which then will have !include tags which will branch to include
 	// files like databases/<source-name>/tables/tables.yaml
 	// this function is expected to return the list of all these files which make up the metadata object
-	GetFiles() ([]string, ErrParsingMetadataObject)
+	GetFiles() ([]string, error)
 	// WriteDiff should be implemented such that it should write the difference
 	// between the current object and passed in object on the provided writer
-	WriteDiff(WriteDiffOpts) ErrParsingMetadataObject
+	WriteDiff(WriteDiffOpts) error
 	Key() string
 	Filename() string
 	// BaseDirectory will return the parent directory of `Filename()`

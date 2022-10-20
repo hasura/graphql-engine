@@ -72,7 +72,7 @@ func (re *RestEndpointsConfig) Filename() string {
 	return "rest_endpoints.yaml"
 }
 
-func (re *RestEndpointsConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (re *RestEndpointsConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(re.BaseDirectory(), re.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -81,7 +81,7 @@ func (re *RestEndpointsConfig) GetFiles() ([]string, metadataobject.ErrParsingMe
 	return files, nil
 }
 
-func (re *RestEndpointsConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (re *RestEndpointsConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: re, WriteDiffOpts: opts})
 	if err != nil {
 		return re.error(err)

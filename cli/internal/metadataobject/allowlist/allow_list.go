@@ -67,7 +67,7 @@ func (a *AllowListConfig) Filename() string {
 	return "allow_list.yaml"
 }
 
-func (a *AllowListConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (a *AllowListConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(a.BaseDirectory(), a.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -76,7 +76,7 @@ func (a *AllowListConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadat
 	return files, nil
 }
 
-func (a *AllowListConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (a *AllowListConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: a, WriteDiffOpts: opts})
 	if err != nil {
 		return a.error(err)

@@ -438,7 +438,7 @@ func (a *ActionConfig) Filename() string {
 	return "actions.yaml"
 }
 
-func (a *ActionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (a *ActionConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(a.BaseDirectory(), a.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -448,7 +448,7 @@ func (a *ActionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataOb
 	return files, nil
 }
 
-func (a *ActionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (a *ActionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: a, WriteDiffOpts: opts})
 	if err != nil {
 		return a.error(err)

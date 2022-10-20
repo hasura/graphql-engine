@@ -17,9 +17,9 @@ import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common (defaultSource)
 import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.ResizePool
 import Hasura.SQL.Backend
 import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
-import Hasura.Server.Types
 import System.Cron (everyMinute)
 import System.Environment (getEnvironment)
 import System.Exit (exitFailure)

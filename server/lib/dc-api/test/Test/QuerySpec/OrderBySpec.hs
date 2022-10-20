@@ -74,7 +74,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
       _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
     it "can order results by a column in a related table where the related table is filtered" $ do
-      let artistTableFilter = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "Name") (ScalarValue $ String "N")
+      let artistTableFilter = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "Name" _tdStringType) (ScalarValue (String "N") _tdStringType)
       let orderByRelations = HashMap.fromList [(_tdArtistRelationshipName, OrderByRelation (Just artistTableFilter) mempty)]
       let orderBy = OrderBy orderByRelations $ _tdOrderByColumn [_tdArtistRelationshipName] "Name" Ascending :| []
       let query =
@@ -168,7 +168,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
       _qrAggregates receivedArtists `jsonShouldBe` Nothing
 
     it "can order results by an aggregate of a related table where the related table is filtered" $ do
-      let albumTableFilter = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "Title") (ScalarValue $ String "N")
+      let albumTableFilter = ApplyBinaryComparisonOperator GreaterThan (_tdCurrentComparisonColumn "Title" _tdStringType) (ScalarValue (String "N") _tdStringType)
       let orderByRelations = HashMap.fromList [(_tdAlbumsRelationshipName, OrderByRelation (Just albumTableFilter) mempty)]
       let orderBy = OrderBy orderByRelations $ OrderByElement [_tdAlbumsRelationshipName] OrderByStarCountAggregate Descending :| []
       let query =
@@ -238,19 +238,19 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
   where
     albumsQueryRequest :: QueryRequest
     albumsQueryRequest =
-      let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField "AlbumId"), ("ArtistId", _tdColumnField "ArtistId"), ("Title", _tdColumnField "Title")]
+      let fields = Data.mkFieldsMap [("AlbumId", _tdColumnField "AlbumId" _tdIntType), ("ArtistId", _tdColumnField "ArtistId" _tdIntType), ("Title", _tdColumnField "Title" _tdStringType)]
           query = Data.emptyQuery & qFields ?~ fields
        in QueryRequest _tdAlbumsTableName [] query
 
     artistsQueryRequest :: QueryRequest
     artistsQueryRequest =
-      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId"), ("Name", _tdColumnField "Name")]
+      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId" _tdIntType), ("Name", _tdColumnField "Name" _tdStringType)]
           query = Data.emptyQuery & qFields ?~ fields
        in QueryRequest _tdArtistsTableName [] query
 
     tracksQueryRequest :: QueryRequest
     tracksQueryRequest =
-      let fields = Data.mkFieldsMap [("TrackId", _tdColumnField "TrackId"), ("Name", _tdColumnField "Name")]
+      let fields = Data.mkFieldsMap [("TrackId", _tdColumnField "TrackId" _tdIntType), ("Name", _tdColumnField "Name" _tdStringType)]
           query = Data.emptyQuery & qFields ?~ fields
        in QueryRequest _tdTracksTableName [] query
 

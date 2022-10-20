@@ -279,7 +279,7 @@ func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte,
 	return files, nil
 }
 
-func (t *SourceConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (t *SourceConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(t.MetadataDir, sourcesDirectory, t.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -300,7 +300,7 @@ func (t *SourceConfig) BaseDirectory() string {
 	return t.MetadataDir
 }
 
-func (t *SourceConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (t *SourceConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	excludePatterns := []string{"tables/tables.yaml", "functions/functions.yaml"}
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: t, WriteDiffOpts: opts, ExcludeFilesPatterns: excludePatterns})
 	if err != nil {

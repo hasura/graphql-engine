@@ -43,7 +43,7 @@ import Hasura.Base.Error
 import Hasura.Incremental (Cacheable (..))
 import Hasura.Metadata.DTO.Utils (fromEnvCodec)
 import Hasura.Prelude
-import Hasura.Server.Types (ResizePoolStrategy (..), ServerReplicas, getServerReplicasInt)
+import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..), ServerReplicas, getServerReplicasInt)
 
 class MonadError QErr m => MonadMSSQLTx m where
   liftMSSQLTx :: MSTx.TxE QErr a -> m a

@@ -747,6 +747,7 @@ library
                      , Hasura.RQL.Types.ResultCustomization
                      , Hasura.RQL.Types.Roles
                      , Hasura.RQL.Types.Roles.Internal
+                     , Hasura.RQL.Types.ResizePool
                      , Hasura.RQL.Types.ScheduledTrigger
                      , Hasura.RQL.Types.SchemaCache
                      , Hasura.RQL.Types.SchemaCache.AggregationPredicates

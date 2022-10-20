@@ -133,6 +133,7 @@ executable api-tests
     Test.Regression.DoNotTruncateSessionVariables8158Spec
     Test.Regression.DropColumnWithPermissions8415Spec
     Test.Regression.InsertOnConflict8260Spec
+    Test.Regression.NullRemoteRelationship8345Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec

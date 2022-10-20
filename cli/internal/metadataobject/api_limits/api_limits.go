@@ -87,7 +87,7 @@ func (o *MetadataObject) Filename() string {
 	return "api_limits.yaml"
 }
 
-func (o *MetadataObject) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (o *MetadataObject) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(o.BaseDirectory(), o.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -96,7 +96,7 @@ func (o *MetadataObject) GetFiles() ([]string, metadataobject.ErrParsingMetadata
 	return files, nil
 }
 
-func (o *MetadataObject) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (o *MetadataObject) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: o, WriteDiffOpts: opts})
 	if err != nil {
 		return o.error(err)

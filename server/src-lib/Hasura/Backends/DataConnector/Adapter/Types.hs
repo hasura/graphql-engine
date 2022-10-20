@@ -291,8 +291,8 @@ data CountAggregate
 --------------------------------------------------------------------------------
 
 data Literal
-  = ValueLiteral J.Value
-  | ArrayLiteral [J.Value]
+  = ValueLiteral ScalarType J.Value
+  | ArrayLiteral ScalarType [J.Value]
   deriving stock (Eq, Show, Generic, Ord)
   deriving anyclass (Cacheable, Hashable, NFData, ToJSON)
 

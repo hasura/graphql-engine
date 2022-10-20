@@ -313,10 +313,6 @@ instance (Num a, Ord a, FromEnv a) => FromEnv (Refined NonNegative a) where
   fromEnv s =
     fmap (maybeToEither "Only expecting a non negative numeric") refineFail =<< fromEnv s
 
-instance FromEnv (Refined NonNegative DiffTime) where
-  fromEnv s =
-    fmap (maybeToEither "Only expecting a non negative difftime") refineFail =<< (fromEnv @DiffTime s)
-
 instance FromEnv (Refined Positive Int) where
   fromEnv s =
     maybeToEither "Only expecting a positive integer" (refineFail =<< readMaybe s)
