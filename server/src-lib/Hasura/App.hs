@@ -386,6 +386,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
           soEventingMode
           soReadOnlyMode
           soDefaultNamingConvention
+          soMetadataDefaults
 
   rebuildableSchemaCache <-
     lift . flip onException (flushLogger loggerCtx) $
@@ -748,6 +749,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
           soWebSocketConnectionInitTimeout
           soEnableMetadataQueryLogging
           soDefaultNamingConvention
+          soMetadataDefaults
 
   let serverConfigCtx =
         ServerConfigCtx
@@ -759,6 +761,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMet
           soEventingMode
           soReadOnlyMode
           soDefaultNamingConvention
+          soMetadataDefaults
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache cacheRef)

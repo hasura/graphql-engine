@@ -272,10 +272,11 @@ buildSchemaCacheRule ::
   (Metadata, InvalidationKeys) `arr` SchemaCache
 buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
   invalidationKeysDep <- Inc.newDependency -< invalidationKeys
+  metadataDefaults <- bindA -< askMetadataDefaults
 
   -- Step 1: Process metadata and collect dependency information.
   (outputs, collectedInfo) <-
-    runWriterA buildAndCollectInfo -< (metadata, invalidationKeysDep)
+    runWriterA buildAndCollectInfo -< (metadataDefaults, metadata, invalidationKeysDep)
   let (inconsistentObjects, unresolvedDependencies) = partitionCollectedInfo collectedInfo
 
   -- Step 2: Resolve dependency information and drop dangling dependents.
@@ -652,8 +653,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         HasServerConfigCtx m,
         MonadResolveSource m
       ) =>
-      (Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
-    buildAndCollectInfo = proc (metadata, invalidationKeys) -> do
+      (MetadataDefaults, Metadata, Inc.Dependency InvalidationKeys) `arr` BuildOutputs
+    buildAndCollectInfo = proc (metadataDefaults, metadata, invalidationKeys) -> do
       let Metadata
             sources
             remoteSchemas
@@ -668,7 +669,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             inheritedRoles
             _introspectionDisabledRoles
             networkConfig
-            backendConfigs = metadata
+            backendConfigs = overrideMetadataDefaults metadata metadataDefaults
           actionRoles = map _apmRole . _amPermissions =<< OMap.elems actions
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
           sourceRoles =

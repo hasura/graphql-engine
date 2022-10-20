@@ -14,6 +14,7 @@ module Hasura.Server.Types
     RequestId (..),
     ServerConfigCtx (..),
     HasServerConfigCtx (..),
+    askMetadataDefaults,
     getRequestId,
   )
 where
@@ -25,6 +26,7 @@ import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata (MetadataDefaults)
 import Hasura.Server.Utils
 import Network.HTTP.Types qualified as HTTP
 
@@ -132,9 +134,15 @@ data ServerConfigCtx = ServerConfigCtx
     _sccEventingMode :: EventingMode,
     _sccReadOnlyMode :: ReadOnlyMode,
     -- | stores global default naming convention
-    _sccDefaultNamingConvention :: Maybe NamingCase
+    _sccDefaultNamingConvention :: Maybe NamingCase,
+    _sccMetadataDefaults :: MetadataDefaults
   }
   deriving (Show, Eq)
+
+askMetadataDefaults :: HasServerConfigCtx m => m MetadataDefaults
+askMetadataDefaults = do
+  ServerConfigCtx {_sccMetadataDefaults} <- askServerConfigCtx
+  pure _sccMetadataDefaults
 
 class (Monad m) => HasServerConfigCtx m where
   askServerConfigCtx :: m ServerConfigCtx

@@ -96,6 +96,7 @@ module Hasura.SQL.AnyBackend
     dispatchAnyBackend'',
     dispatchAnyBackendArrow,
     dispatchAnyBackendWithTwoConstraints,
+    mergeAnyBackend,
     unpackAnyBackend,
     composeAnyBackend,
     runBackend,
@@ -362,6 +363,30 @@ composeAnyBackend f e1 e2 owise = case (e1, e2) of
   (value1, value2) ->
     if mapBackend value1 (Const . const ()) == mapBackend value2 (Const . const ())
       then error "Programming error: missing case in composeAnyBackend"
+      else owise
+
+-- | Merge two matching backends, falling back on a default.
+mergeAnyBackend ::
+  forall
+    (c :: Type -> Constraint)
+    (i :: BackendType -> Type).
+  i `SatisfiesForAllBackends` c =>
+  (forall (b :: BackendType). c (i b) => i b -> i b -> i b) ->
+  AnyBackend i ->
+  AnyBackend i ->
+  AnyBackend i ->
+  AnyBackend i
+mergeAnyBackend f e1 e2 owise = case (e1, e2) of
+  (PostgresVanillaValue x, PostgresVanillaValue y) -> PostgresVanillaValue (f x y)
+  (PostgresCitusValue x, PostgresCitusValue y) -> PostgresCitusValue (f x y)
+  (PostgresCockroachValue x, PostgresCockroachValue y) -> PostgresCockroachValue (f x y)
+  (MSSQLValue x, MSSQLValue y) -> MSSQLValue (f x y)
+  (BigQueryValue x, BigQueryValue y) -> BigQueryValue (f x y)
+  (MySQLValue x, MySQLValue y) -> MySQLValue (f x y)
+  (DataConnectorValue x, DataConnectorValue y) -> DataConnectorValue (f x y)
+  (value1, value2) ->
+    if mapBackend value1 (Const . const ()) == mapBackend value2 (Const . const ())
+      then error "Programming error: missing case in mergeAnyBackend"
       else owise
 
 -- | Try to unpack the type of an existential.

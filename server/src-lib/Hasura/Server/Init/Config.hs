@@ -81,6 +81,7 @@ import Hasura.Incremental (Cacheable)
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
 import Hasura.RQL.Types.Common qualified as Common
+import Hasura.RQL.Types.Metadata (MetadataDefaults)
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Logging qualified as Server.Logging
@@ -303,7 +304,8 @@ data ServeOptionsRaw impl = ServeOptionsRaw
     rsoEnableMetadataQueryLoggingEnv :: Server.Logging.MetadataQueryLoggingMode,
     -- | stores global default naming convention
     rsoDefaultNamingConvention :: Maybe NamingCase,
-    rsoExtensionsSchema :: Maybe MonadTx.ExtensionsSchema
+    rsoExtensionsSchema :: Maybe MonadTx.ExtensionsSchema,
+    rsoMetadataDefaults :: Maybe MetadataDefaults
   }
 
 -- | An 'Int' representing a Port number in the range 0 to 65536.
@@ -473,7 +475,8 @@ data ServeOptions impl = ServeOptions
     soReadOnlyMode :: Server.Types.ReadOnlyMode,
     soEnableMetadataQueryLogging :: Server.Logging.MetadataQueryLoggingMode,
     soDefaultNamingConvention :: Maybe NamingCase,
-    soExtensionsSchema :: MonadTx.ExtensionsSchema
+    soExtensionsSchema :: MonadTx.ExtensionsSchema,
+    soMetadataDefaults :: MetadataDefaults
   }
 
 -- | 'ResponseInternalErrorsConfig' represents the encoding of the

@@ -275,9 +275,11 @@ instance (UserInfoM m) => UserInfoM (MetadataT m) where
 instance HasServerConfigCtx m => HasServerConfigCtx (MetadataT m) where
   askServerConfigCtx = lift askServerConfigCtx
 
-runMetadataT :: Metadata -> MetadataT m a -> m (a, Metadata)
-runMetadataT metadata (MetadataT m) =
-  runStateT m metadata
+-- | @runMetadataT@ puts a stateful metadata in scope. @MetadataDefaults@ is
+-- provided so that it can be considered from the --metadataDefaults arguments.
+runMetadataT :: Metadata -> MetadataDefaults -> MetadataT m a -> m (a, Metadata)
+runMetadataT metadata defaults (MetadataT m) =
+  runStateT m (metadata `overrideMetadataDefaults` defaults)
 
 buildSchemaCacheWithInvalidations :: (MetadataM m, CacheRWM m) => CacheInvalidations -> MetadataModifier -> m ()
 buildSchemaCacheWithInvalidations cacheInvalidations MetadataModifier {..} = do

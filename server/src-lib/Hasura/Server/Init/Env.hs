@@ -20,6 +20,8 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Monad.Morph qualified as Morph
+import Data.Aeson qualified as Aeson
+import Data.ByteString.Lazy.UTF8 qualified as BLU
 import Data.Char qualified as Char
 import Data.HashSet qualified as HashSet
 import Data.String qualified as String
@@ -36,6 +38,7 @@ import Hasura.GraphQL.Schema.NamingCase qualified as NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
+import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults (..))
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Config qualified as Config
@@ -200,6 +203,15 @@ instance FromEnv Bool where
           ++ " and  False values are "
           ++ show falseVals
           ++ ". All values are case insensitive"
+
+instance FromEnv Aeson.Value where
+  fromEnv = Aeson.eitherDecode . BLU.fromString
+
+instance FromEnv MetadataDefaults where
+  fromEnv = Aeson.eitherDecode . BLU.fromString
+
+instance FromEnv Metadata where
+  fromEnv = Aeson.eitherDecode . BLU.fromString
 
 instance FromEnv Options.StringifyNumbers where
   fromEnv = fmap (bool Options.Don'tStringifyNumbers Options.StringifyNumbers) . fromEnv @Bool

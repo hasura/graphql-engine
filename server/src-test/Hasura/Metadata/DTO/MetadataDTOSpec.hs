@@ -21,7 +21,7 @@ import Hasura.Metadata.DTO.MetadataV2 (MetadataV2 (..))
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
 import Hasura.Metadata.DTO.Placeholder (PlaceholderArray (PlaceholderArray))
 import Hasura.Prelude
-import Hasura.RQL.Types.Metadata (Metadata, metadataToDTO)
+import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults, metadataToDTO, overrideMetadataDefaults)
 import Test.Hspec
 import Test.Hspec.Expectations.Json (shouldBeJson)
 
@@ -54,6 +54,17 @@ spec = describe "MetadataDTO" $ do
       let expected = V3 $ emptyMetadataV3
       let actual = eitherDecode input :: Either String MetadataDTO
       actual `shouldBe` Right expected
+
+    it "works with defaults" $ do
+      let emptyJSON = "{\"version\": 3, \"sources\": []}"
+      let defaultJSON = "{\"backend_configs\": {\"dataconnector\": {\"sqlite\": {\"uri\": \"http://localhost:8100\"}}}}"
+      let parsed = do
+            emptyMD <- eitherDecode emptyJSON :: Either String Metadata
+            defaults <- eitherDecode defaultJSON :: Either String MetadataDefaults
+            pure (emptyMD, defaults)
+      case parsed of
+        Left e -> fail $ "Expected defaults to parse: " <> show e
+        Right (e, d) -> overrideMetadataDefaults e d `shouldNotBe` e
 
     it "fails parsing v3 on version mismatch" $ do
       let input = "{\"version\": 3, \"tables\": [] }"
