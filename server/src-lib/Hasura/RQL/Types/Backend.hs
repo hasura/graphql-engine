@@ -24,10 +24,10 @@ import Hasura.Base.ToErrorValue
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
+import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.SQL.Types
-import Hasura.Server.Types (ServerReplicas)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 type Representable a = (Show a, Eq a, Hashable a, Cacheable a, NFData a)

@@ -13,8 +13,8 @@ import Data.Aeson qualified as Aeson
 import Data.ByteString (ByteString)
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector (TestCase (..))
-import Harness.Backend.DataConnector qualified as DataConnector
+import Harness.Backend.DataConnector.Mock (TestCase (..))
+import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
@@ -31,13 +31,15 @@ spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorMock)
-            { Fixture.mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
+            { Fixture.mkLocalTestEnvironment = Mock.mkLocalTestEnvironment,
               Fixture.setupTeardown = \(testEnv, mockEnv) ->
-                [DataConnector.setupMockAction sourceMetadata DataConnector.mockBackendConfig (testEnv, mockEnv)]
+                [Mock.setupAction sourceMetadata Mock.agentConfig (testEnv, mockEnv)]
             }
         ]
     )
     tests
+
+--------------------------------------------------------------------------------
 
 testRoleName :: ByteString
 testRoleName = "test-role"
@@ -104,20 +106,20 @@ sourceMetadata =
 
 --------------------------------------------------------------------------------
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, DataConnector.MockAgentEnvironment)
+tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests opts = do
   describe "Basic Tests" $ do
     it "works with simple object query" $
-      DataConnector.runMockedTest opts $
+      Mock.runTest opts $
         let required =
-              DataConnector.TestCaseRequired
+              Mock.TestCaseRequired
                 { _givenRequired =
                     let albums =
                           [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
                               (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "For Those About To Rock We Salute You")
                             ]
                           ]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse albums)},
+                     in Mock.chinookMock {Mock._queryResponse = \_ -> Right (rowsResponse albums)},
                   _whenRequestRequired =
                     [graphql|
                       query getAlbum {
@@ -135,7 +137,7 @@ tests opts = do
                             title: For Those About To Rock We Salute You
                     |]
                 }
-         in (DataConnector.defaultTestCase required)
+         in (Mock.defaultTestCase required)
               { _whenQuery =
                   Just
                     ( API.QueryRequest
@@ -146,8 +148,8 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId")),
-                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title"))
+                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") API.NumberTy),
+                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") API.StringTy)
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,
@@ -160,9 +162,9 @@ tests opts = do
               }
 
     it "works with order_by id" $
-      DataConnector.runMockedTest opts $
+      Mock.runTest opts $
         let required =
-              DataConnector.TestCaseRequired
+              Mock.TestCaseRequired
                 { _givenRequired =
                     let albums =
                           [ [ (API.FieldName "id", API.mkColumnFieldValue $ Aeson.Number 1),
@@ -175,7 +177,7 @@ tests opts = do
                               (API.FieldName "title", API.mkColumnFieldValue $ Aeson.String "Restless and Wild")
                             ]
                           ]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse albums)},
+                     in Mock.chinookMock {Mock._queryResponse = \_ -> Right (rowsResponse albums)},
                   _whenRequestRequired =
                     [graphql|
                       query getAlbum {
@@ -197,7 +199,7 @@ tests opts = do
                             title: Restless and Wild
                     |]
                 }
-         in (DataConnector.defaultTestCase required)
+         in (Mock.defaultTestCase required)
               { _whenQuery =
                   Just
                     ( API.QueryRequest
@@ -208,8 +210,8 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId")),
-                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title"))
+                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") API.NumberTy),
+                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") API.StringTy)
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 3,
@@ -222,9 +224,9 @@ tests opts = do
               }
 
     it "works with an exists-based permissions filter" $
-      DataConnector.runMockedTest opts $
+      Mock.runTest opts $
         let required =
-              DataConnector.TestCaseRequired
+              Mock.TestCaseRequired
                 { _givenRequired =
                     let albums =
                           [ [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 1)
@@ -234,7 +236,7 @@ tests opts = do
                             [ (API.FieldName "CustomerId", API.mkColumnFieldValue $ Aeson.Number 3)
                             ]
                           ]
-                     in DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Right (rowsResponse albums)},
+                     in Mock.chinookMock {Mock._queryResponse = \_ -> Right (rowsResponse albums)},
                   _whenRequestRequired =
                     [graphql|
                       query getCustomers {
@@ -252,7 +254,7 @@ tests opts = do
                           - CustomerId: 3
                     |]
                 }
-         in (DataConnector.defaultTestCase required)
+         in (Mock.defaultTestCase required)
               { _whenRequestHeaders =
                   [ ("X-Hasura-Role", testRoleName),
                     ("X-Hasura-EmployeeId", "1")
@@ -267,7 +269,7 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "CustomerId", API.ColumnField (API.ColumnName "CustomerId"))
+                                      [ (API.FieldName "CustomerId", API.ColumnField (API.ColumnName "CustomerId") API.NumberTy)
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Nothing,
@@ -277,8 +279,8 @@ tests opts = do
                                     API.Exists (API.UnrelatedTable $ API.TableName ("Employee" :| [])) $
                                       API.ApplyBinaryComparisonOperator
                                         API.Equal
-                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId"))
-                                        (API.ScalarValue (Aeson.Number 1)),
+                                        (API.ComparisonColumn API.CurrentTable (API.ColumnName "EmployeeId") API.NumberTy)
+                                        (API.ScalarValue (Aeson.Number 1) API.NumberTy),
                                 _qOrderBy = Nothing
                               }
                         }

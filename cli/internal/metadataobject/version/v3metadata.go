@@ -4,8 +4,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
-
 	"github.com/hasura/graphql-engine/cli/v2"
 	"gopkg.in/yaml.v3"
 )
@@ -14,7 +12,7 @@ type V3MetadataV2ConfigVersion struct {
 	*VersionConfig
 }
 
-func (a *V3MetadataV2ConfigVersion) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (a *V3MetadataV2ConfigVersion) Build() (map[string]interface{}, error) {
 	return map[string]interface{}{a.Key(): 2}, nil
 }
 
@@ -48,7 +46,7 @@ func (a *V3MetadataV2ConfigVersion) CreateFiles() error {
 	return nil
 }
 
-func (a *V3MetadataV2ConfigVersion) Export(_ map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (a *V3MetadataV2ConfigVersion) Export(_ map[string]yaml.Node) (map[string][]byte, error) {
 	v := Version{
 		// during a v3 metadata export forcefully write metadata v2
 		Version: 2,

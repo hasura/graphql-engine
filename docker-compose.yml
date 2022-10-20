@@ -206,6 +206,7 @@ services:
       - "65007:8100"
     volumes:
       - "./dc-agents/sqlite/test/db.chinook.sqlite:/db.chinook.sqlite"
+      - "./dc-agents/sqlite/test/db.sqlite:/db.sqlite"
     environment:
       METRICS: y
       PRETTY_PRINT_LOGS: y

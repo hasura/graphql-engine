@@ -12,6 +12,7 @@ import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Backends.DataConnector.API.V0.ExpressionSpec (genExpression)
 import Hasura.Backends.DataConnector.API.V0.OrderBySpec (genOrderBy)
 import Hasura.Backends.DataConnector.API.V0.RelationshipsSpec (genRelationshipName, genTableRelationships)
+import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
 import Hasura.Backends.DataConnector.API.V0.TableSpec (genTableName)
 import Hasura.Generator.Common (defaultRange, genArbitraryAlphaNumText)
 import Hasura.Prelude
@@ -25,10 +26,11 @@ spec = do
   describe "Field" $ do
     describe "ColumnField" $
       testToFromJSONToSchema
-        (ColumnField $ ColumnName "my_column_name")
+        (ColumnField (ColumnName "my_column_name") StringTy)
         [aesonQQ|
           { "type": "column",
-            "column": "my_column_name"
+            "column": "my_column_name",
+            "column_type": "string"
           }
         |]
     describe "RelationshipField" $ do
@@ -46,7 +48,7 @@ spec = do
   describe "Query" $ do
     let query =
           Query
-            { _qFields = Just $ HashMap.fromList [(FieldName "my_field_alias", ColumnField $ ColumnName "my_field_name")],
+            { _qFields = Just $ HashMap.fromList [(FieldName "my_field_alias", ColumnField (ColumnName "my_field_name") StringTy)],
               _qAggregates = Just $ HashMap.fromList [(FieldName "my_aggregate", StarCount)],
               _qLimit = Just 10,
               _qOffset = Just 20,
@@ -56,7 +58,7 @@ spec = do
     testToFromJSONToSchema
       query
       [aesonQQ|
-        { "fields": {"my_field_alias": {"type": "column", "column": "my_field_name"}},
+        { "fields": {"my_field_alias": {"type": "column", "column": "my_field_name", "column_type": "string"}},
           "aggregates": { "my_aggregate": { "type": "star_count" } },
           "limit": 10,
           "offset": 20,
@@ -145,7 +147,7 @@ genField :: MonadGen m => m Field
 genField =
   Gen.recursive
     Gen.choice
-    [ColumnField <$> genColumnName]
+    [ColumnField <$> genColumnName <*> genScalarType]
     [RelField <$> genRelationshipField]
 
 genFieldName :: MonadGen m => m FieldName

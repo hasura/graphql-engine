@@ -23,6 +23,7 @@ export default {
             columns: { id: false, name: false, description: false },
           },
         }}
+        className="p-4"
       >
         {() => <StoryComponent />}
       </Form>
@@ -86,6 +87,7 @@ PartiallySelected.decorators = [
           columns: { id: true, name: false, description: true },
         },
       }}
+      className="p-4"
     >
       {() => <S />}
     </Form>
@@ -108,6 +110,7 @@ AllSelected.decorators = [
           columns: { id: true, name: true, description: true },
         },
       }}
+      className="p-4"
     >
       {() => <S />}
     </Form>

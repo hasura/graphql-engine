@@ -8,6 +8,7 @@ module Hasura.SQL.BackendMap
     elems,
     alter,
     modify,
+    overridesDeeply,
   )
 where
 
@@ -25,7 +26,7 @@ import Data.Text.Extended (toTxt)
 import Hasura.Incremental.Internal.Dependency (Cacheable, Dependency (..), selectD)
 import Hasura.Incremental.Select
 import Hasura.Prelude hiding (empty, lookup, modify)
-import Hasura.SQL.AnyBackend (AnyBackend, SatisfiesForAllBackends, dispatchAnyBackend'', mkAnyBackend, parseAnyBackendFromJSON, unpackAnyBackend)
+import Hasura.SQL.AnyBackend (AnyBackend, SatisfiesForAllBackends, dispatchAnyBackend'', mergeAnyBackend, mkAnyBackend, parseAnyBackendFromJSON, unpackAnyBackend)
 import Hasura.SQL.Backend (BackendType, parseBackendTypeFromText)
 import Hasura.SQL.Tag (BackendTag, HasTag, backendTag, reify)
 
@@ -129,3 +130,10 @@ alter f (BackendMap bmap) = BackendMap $ Map.alter (wrap . f . unwrap) (reify @b
 
     unwrap :: Maybe (AnyBackend i) -> Maybe (i b)
     unwrap x = x >>= unpackAnyBackend @b
+
+-- | The expression @a `overridesDeeply b@ applies the values from @a@ on top of the defaults @b@.
+-- In practice this should union the maps for each backend type.
+overridesDeeply :: i `SatisfiesForAllBackends` Semigroup => BackendMap i -> BackendMap i -> BackendMap i
+overridesDeeply (BackendMap a) (BackendMap b) = BackendMap (Map.unionWith override a b)
+  where
+    override a' b' = mergeAnyBackend @Semigroup (<>) a' b' a'

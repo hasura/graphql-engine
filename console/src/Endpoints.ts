@@ -26,6 +26,7 @@ const Endpoints = {
   luxDataGraphql: globals.luxDataHost
     ? `${window.location.protocol}//${globals.luxDataHost}/v1/graphql`
     : `${globals.cloudDataApiUrl}/v1/graphql`,
+  prometheusUrl: `${baseUrl}/v1/metrics`,
 };
 
 const globalCookiePolicy = 'same-origin';

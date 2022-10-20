@@ -47,6 +47,7 @@ executable api-tests
     TypeFamilies
 
   hs-source-dirs: test
+  default-language: Haskell2010
 
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
@@ -97,6 +98,7 @@ executable api-tests
     Test.Mutations.Delete.PrimaryKeySpec
     Test.Mutations.Insert.MultipleSpec
     Test.Mutations.Insert.SingleSpec
+    Test.Mutations.Upsert.OnConflictSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
     Test.Mutations.Update.FieldSpec
     Test.Mutations.Update.PrimaryKeySpec
@@ -108,11 +110,14 @@ executable api-tests
     Test.Postgres.UniqueConstraintsSpec
     Test.Queries.AggregationPredicatesSpec
     Test.Queries.AggregationSpec
+    Test.Queries.AliasesSpec
     Test.Queries.Directives.IncludeAndSkipSpec
     Test.Queries.Directives.IncludeSpec
     Test.Queries.Directives.SkipSpec
     Test.Queries.DirectivesSpec
+    Test.Queries.ExplainSpec
     Test.Queries.FilterSearchSpec
+    Test.Queries.FragmentsSpec
     Test.Queries.MultiColumnObjectRelationshipsSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
@@ -122,11 +127,13 @@ executable api-tests
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
+    Test.Queries.VariablesSpec
     Test.Quoter.YamlSpec
     Test.Regression.ArrayLiteralTextEncodingSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
     Test.Regression.DropColumnWithPermissions8415Spec
     Test.Regression.InsertOnConflict8260Spec
+    Test.Regression.NullRemoteRelationship8345Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec

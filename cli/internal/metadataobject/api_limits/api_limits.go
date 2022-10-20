@@ -50,7 +50,7 @@ type apiLimitsObject struct {
 	TimeLimit  yaml.Node `yaml:"time_limit,omitempty"`
 }
 
-func (o *MetadataObject) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (o *MetadataObject) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(o.MetadataDir, o.Filename()))
 	if err != nil {
 		return nil, o.error(err)
@@ -75,7 +75,7 @@ func (o *MetadataObject) Build() (map[string]interface{}, metadataobject.ErrPars
 	return map[string]interface{}{o.Key(): obj}, nil
 }
 
-func (o *MetadataObject) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (o *MetadataObject) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	return metadataobject.DefaultExport(o, metadata, o.error, metadataobject.DefaultObjectTypeMapping)
 }
 
@@ -87,7 +87,7 @@ func (o *MetadataObject) Filename() string {
 	return "api_limits.yaml"
 }
 
-func (o *MetadataObject) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (o *MetadataObject) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(o.BaseDirectory(), o.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -96,7 +96,7 @@ func (o *MetadataObject) GetFiles() ([]string, metadataobject.ErrParsingMetadata
 	return files, nil
 }
 
-func (o *MetadataObject) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (o *MetadataObject) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: o, WriteDiffOpts: opts})
 	if err != nil {
 		return o.error(err)

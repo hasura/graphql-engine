@@ -96,6 +96,7 @@ module Hasura.SQL.AnyBackend
     dispatchAnyBackend'',
     dispatchAnyBackendArrow,
     dispatchAnyBackendWithTwoConstraints,
+    mergeAnyBackend,
     unpackAnyBackend,
     composeAnyBackend,
     runBackend,
@@ -111,12 +112,12 @@ import Control.Arrow.Extended (ArrowChoice)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
 import Data.Kind (Constraint, Type)
-import Data.Text.NonEmpty (mkNonEmptyText)
 import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..))
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
+import Language.GraphQL.Draft.Syntax qualified as GQL
 
 --------------------------------------------------------------------------------
 
@@ -364,6 +365,30 @@ composeAnyBackend f e1 e2 owise = case (e1, e2) of
       then error "Programming error: missing case in composeAnyBackend"
       else owise
 
+-- | Merge two matching backends, falling back on a default.
+mergeAnyBackend ::
+  forall
+    (c :: Type -> Constraint)
+    (i :: BackendType -> Type).
+  i `SatisfiesForAllBackends` c =>
+  (forall (b :: BackendType). c (i b) => i b -> i b -> i b) ->
+  AnyBackend i ->
+  AnyBackend i ->
+  AnyBackend i ->
+  AnyBackend i
+mergeAnyBackend f e1 e2 owise = case (e1, e2) of
+  (PostgresVanillaValue x, PostgresVanillaValue y) -> PostgresVanillaValue (f x y)
+  (PostgresCitusValue x, PostgresCitusValue y) -> PostgresCitusValue (f x y)
+  (PostgresCockroachValue x, PostgresCockroachValue y) -> PostgresCockroachValue (f x y)
+  (MSSQLValue x, MSSQLValue y) -> MSSQLValue (f x y)
+  (BigQueryValue x, BigQueryValue y) -> BigQueryValue (f x y)
+  (MySQLValue x, MySQLValue y) -> MySQLValue (f x y)
+  (DataConnectorValue x, DataConnectorValue y) -> DataConnectorValue (f x y)
+  (value1, value2) ->
+    if mapBackend value1 (Const . const ()) == mapBackend value2 (Const . const ())
+      then error "Programming error: missing case in mergeAnyBackend"
+      else owise
+
 -- | Try to unpack the type of an existential.
 -- Returns @Just x@ upon a succesful match, @Nothing@ otherwise.
 unpackAnyBackend ::
@@ -478,7 +503,7 @@ backendSourceKindFromText text =
     <|> BigQueryValue <$> staticKindFromText BigQueryKind
     <|> MySQLValue <$> staticKindFromText MySQLKind
     -- IMPORTANT: This must be the last thing here, since it will accept (almost) any string
-    <|> DataConnectorValue . DataConnectorKind . DataConnectorName <$> mkNonEmptyText text
+    <|> DataConnectorValue . DataConnectorKind . DataConnectorName <$> GQL.mkName text
   where
     staticKindFromText :: BackendSourceKind b -> Maybe (BackendSourceKind b)
     staticKindFromText kind =

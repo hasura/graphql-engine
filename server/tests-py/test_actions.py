@@ -2,11 +2,10 @@
 
 import pytest
 import time
-import subprocess
 
-from validate import check_query_f, check_query, get_conf_f
-from remote_server import NodeGraphQL
 from conftest import use_action_fixtures
+from remote_server import NodeGraphQL
+from validate import check_query_f, check_query, get_conf_f
 
 """
 TODO:- Test Actions metadata

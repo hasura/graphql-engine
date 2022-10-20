@@ -23,6 +23,10 @@ export const isProConsole = (env: ProConsoleEnv) => {
   return false;
 };
 
+export const isProLiteConsole = (env: ProConsoleEnv) => {
+  return env.consoleType === 'pro-lite';
+};
+
 export const isMonitoringTabSupportedEnvironment = (env: ProConsoleEnv) => {
   // pro-lite and OSS environments won't have access to metrics server
   if (env.consoleMode === 'server')

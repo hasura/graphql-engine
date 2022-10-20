@@ -19,10 +19,11 @@ import string
 import subprocess
 import threading
 import time
-from typing import Any, Optional, Tuple
+from typing import Any, NamedTuple, Optional
 from urllib.parse import urlparse
 import websocket
 
+import fixtures.tls
 import graphql_server
 
 # pytest has removed the global pytest.config
@@ -156,7 +157,7 @@ class GQLWsClient():
     def _on_close(self):
         self.remote_closed = True
         self.init_done = False
-    
+
     def get_conn_close_state(self):
         return self.remote_closed or self.is_closing
 
@@ -769,16 +770,16 @@ class EvtsWebhookServer(ThreadedHTTPServer):
         return f'http://{self.server_address[0]}:{self.server_address[1]}'
 
 class HGECtxGQLServer:
-    def __init__(self, port: int, tls_configuration: Optional[Tuple[str, str]] = None, hge_urls: list[str] = []):
+    def __init__(self, port: int, tls_ca_configuration: Optional[fixtures.tls.TLSCAConfiguration] = None, hge_urls: list[str] = []):
         # start the graphql server
         self.port = port
-        self.tls_configuration = tls_configuration
+        self.tls_ca_configuration = tls_ca_configuration
         self.hge_urls = hge_urls
         self.is_running: bool = False
 
     def start_server(self):
         if not self.is_running:
-            self.server = graphql_server.create_server('localhost', self.port, self.tls_configuration, self.hge_urls)
+            self.server = graphql_server.create_server('localhost', self.port, self.tls_ca_configuration, self.hge_urls)
             self.thread = threading.Thread(target=self.server.serve_forever)
             self.thread.start()
         self.is_running = True
@@ -791,22 +792,34 @@ class HGECtxGQLServer:
 
     @property
     def url(self):
-        scheme = 'https' if self.tls_configuration else 'http'
+        scheme = 'https' if self.tls_ca_configuration else 'http'
         # We must use 'localhost' and not `self.server.server_address[0]`
         # because when using TLS, we need a domain name, not an IP address.
         host = 'localhost'
         port = self.server.server_address[1]
         return f'{scheme}://{host}:{port}'
 
+class HGECtxWebhook(NamedTuple):
+    tls_trust: Optional[fixtures.tls.TLSTrust]
+
 class HGECtx:
 
-    def __init__(self, hge_url, pg_url, hge_key, enabled_apis, config):
+    def __init__(
+        self,
+        hge_url: str,
+        pg_url: str,
+        hge_key: Optional[str],
+        webhook: Optional[HGECtxWebhook],
+        enabled_apis: Optional[set[str]],
+        config,
+    ):
         self.http = requests.Session()
-        self.hge_key = hge_key
         self.timeout = 120  # BigQuery can take a while
+
         self.hge_url = hge_url
         self.pg_url = pg_url
-        self.hge_webhook = config.getoption('--hge-webhook')
+        self.hge_key = hge_key
+        self.webhook = webhook
         hge_jwt_key_file = config.getoption('--hge-jwt-key-file')
         if hge_jwt_key_file is None:
             self.hge_jwt_key = None
@@ -819,7 +832,6 @@ class HGECtx:
             self.hge_jwt_algo = self.hge_jwt_conf_dict["type"]
             if self.hge_jwt_algo == "Ed25519":
                 self.hge_jwt_algo = "EdDSA"
-        self.webhook_insecure = config.getoption('--test-webhook-insecure')
         self.may_skip_test_teardown = False
 
         # This will be GC'd, but we also explicitly dispose() in teardown()
@@ -921,7 +933,7 @@ class HGECtx:
 
     def execute_query(self, q, url_path, headers = {}, expected_status_code = 200):
         h = headers.copy()
-        if self.hge_key is not None:
+        if self.hge_key is not None and 'X-Hasura-Admin-Secret' not in headers:
             h['X-Hasura-Admin-Secret'] = self.hge_key
         resp = self.http.post(
             self.hge_url + url_path,

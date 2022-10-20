@@ -34,6 +34,7 @@ import Hasura.Backends.Postgres.Types.Update as PGIR
 import Hasura.Base.Error
 import Hasura.Base.ErrorMessage (toErrorMessage)
 import Hasura.Base.ToErrorValue
+import Hasura.GraphQL.ApolloFederation (ApolloFederationParserFunction)
 import Hasura.GraphQL.Schema.Backend
   ( BackendSchema,
     BackendTableSelectSchema,
@@ -121,21 +122,61 @@ class PostgresSchema (pgKind :: PostgresKind) where
     SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
   pgkRelayExtension ::
     Maybe (XRelay ('Postgres pgKind))
+  pgkBuildTableQueryAndSubscriptionFields ::
+    forall r m n.
+    ( MonadBuildSchema ('Postgres pgKind) r m n,
+      AggregationPredicatesSchema ('Postgres pgKind),
+      BackendTableSelectSchema ('Postgres pgKind)
+    ) =>
+    MkRootFieldName ->
+    SourceInfo ('Postgres pgKind) ->
+    TableName ('Postgres pgKind) ->
+    TableInfo ('Postgres pgKind) ->
+    C.GQLNameIdentifier ->
+    SchemaT
+      r
+      m
+      ( [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))],
+        [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))],
+        Maybe (G.Name, Parser 'Output n (ApolloFederationParserFunction n))
+      )
+  pgkBuildTableStreamingSubscriptionFields ::
+    forall r m n.
+    ( MonadBuildSchema ('Postgres pgKind) r m n,
+      AggregationPredicatesSchema ('Postgres pgKind),
+      BackendTableSelectSchema ('Postgres pgKind)
+    ) =>
+    MkRootFieldName ->
+    SourceInfo ('Postgres pgKind) ->
+    TableName ('Postgres pgKind) ->
+    TableInfo ('Postgres pgKind) ->
+    C.GQLNameIdentifier ->
+    SchemaT r m [FieldParser n (QueryDB ('Postgres pgKind) (RemoteRelationshipField IR.UnpreparedValue) (IR.UnpreparedValue ('Postgres pgKind)))]
 
 instance PostgresSchema 'Vanilla where
   pgkBuildTableRelayQueryFields = buildTableRelayQueryFields
   pgkBuildFunctionRelayQueryFields = buildFunctionRelayQueryFields
   pgkRelayExtension = Just ()
+  pgkBuildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
+  pgkBuildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
 
 instance PostgresSchema 'Citus where
   pgkBuildTableRelayQueryFields _ _ _ _ _ _ = pure []
   pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
+  pgkBuildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
+  pgkBuildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
 
 instance PostgresSchema 'Cockroach where
   pgkBuildTableRelayQueryFields = buildTableRelayQueryFields
   pgkBuildFunctionRelayQueryFields = buildFunctionRelayQueryFields
   pgkRelayExtension = Just ()
+
+  -- CockroachDB does not support subscriptions yet.
+  pgkBuildTableQueryAndSubscriptionFields x1 x2 x3 x4 x5 = do
+    (queries, _subscriptions, federation) <- GSB.buildTableQueryAndSubscriptionFields x1 x2 x3 x4 x5
+    return (queries, [], federation)
+  pgkBuildTableStreamingSubscriptionFields _ _ _ _ _ = return []
 
 -- postgres schema
 
@@ -255,9 +296,9 @@ instance
   BackendSchema ('Postgres pgKind)
   where
   -- top level parsers
-  buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
+  buildTableQueryAndSubscriptionFields = pgkBuildTableQueryAndSubscriptionFields
   buildTableRelayQueryFields = pgkBuildTableRelayQueryFields
-  buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
+  buildTableStreamingSubscriptionFields = pgkBuildTableStreamingSubscriptionFields
   buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
   buildTableUpdateMutationFields = pgkBuildTableUpdateMutationFields
   buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
@@ -629,7 +670,7 @@ comparisonExps = memoize 'comparisonExps \columnType -> do
         G.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
-            <<> ". All fields are combined with logical 'AND'."
+              <<> ". All fields are combined with logical 'AND'."
       textListParser = fmap IR.openValueOrigin <$> P.list textParser
       columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
   -- Naming conventions
@@ -941,7 +982,8 @@ geographyWithinDistanceInput = do
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
     P.object Name._st_d_within_geography_input Nothing $
-      DWithinGeogOp <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
+      DWithinGeogOp
+        <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
         <*> (IR.mkParameter <$> P.field Name._from Nothing geographyParser)
         <*> (IR.mkParameter <$> P.fieldWithDefault Name._use_spheroid Nothing (G.VBoolean True) booleanParser)
 
@@ -954,7 +996,8 @@ geometryWithinDistanceInput = do
   floatParser <- columnParser (ColumnScalar PGFloat) (G.Nullability False)
   pure $
     P.object Name._st_d_within_input Nothing $
-      DWithinGeomOp <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
+      DWithinGeomOp
+        <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
         <*> (IR.mkParameter <$> P.field Name._from Nothing geometryParser)
 
 intersectsNbandGeomInput ::
@@ -966,7 +1009,8 @@ intersectsNbandGeomInput = do
   integerParser <- columnParser (ColumnScalar PGInteger) (G.Nullability False)
   pure $
     P.object Name._st_intersects_nband_geom_input Nothing $
-      STIntersectsNbandGeommin <$> (IR.mkParameter <$> P.field Name._nband Nothing integerParser)
+      STIntersectsNbandGeommin
+        <$> (IR.mkParameter <$> P.field Name._nband Nothing integerParser)
         <*> (IR.mkParameter <$> P.field Name._geommin Nothing geometryParser)
 
 intersectsGeomNbandInput ::

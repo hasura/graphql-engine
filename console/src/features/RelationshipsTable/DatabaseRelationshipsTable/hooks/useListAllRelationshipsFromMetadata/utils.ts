@@ -106,13 +106,16 @@ export const adaptRemoteDBRelationship = (
 export const adaptManualRelationship = (
   dataSourceName: string,
   table: Table,
-  relationship: ManualObjectRelationship | ManualArrayRelationship
-): Relationship & { type: 'toLocalTableManual' } => {
+  relationship: ManualObjectRelationship | ManualArrayRelationship,
+  relationship_type: 'Object' | 'Array'
+): Relationship & {
+  type: 'toLocalTableManual';
+} => {
   return {
     name: relationship.name,
     type: 'toLocalTableManual',
     toLocalTable: table,
-    relationship_type: 'Object',
+    relationship_type,
     mapping: {
       from: {
         source: dataSourceName,
@@ -136,7 +139,8 @@ export const adaptLocalTableRelationship = (
   dataSourceName: string,
   table: Table,
   relationship: LocalTableObjectRelationship | LocalTableArrayRelationship,
-  fkRelationships: TableFkRelationships[]
+  fkRelationships: TableFkRelationships[],
+  relationship_type: 'Array' | 'Object'
 ): Relationship & { type: 'toLocalTableFk' } => {
   const columns = isLegacyFkConstraint(
     relationship.using.foreign_key_constraint_on
@@ -148,7 +152,7 @@ export const adaptLocalTableRelationship = (
     name: relationship.name,
     type: 'toLocalTableFk',
     toLocalTable: table,
-    relationship_type: 'Object',
+    relationship_type,
     mapping: {
       from: {
         source: dataSourceName,

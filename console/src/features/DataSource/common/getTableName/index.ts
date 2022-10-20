@@ -1,0 +1,1 @@
+export { getTableName } from './getTableName';

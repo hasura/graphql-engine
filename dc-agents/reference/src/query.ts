@@ -236,7 +236,7 @@ const buildQueryForPathedOrderByElement = (orderByElement: OrderByElement, order
       case "column":
         return {
           fields: {
-            [orderByElement.target.column]: { type: "column", column: orderByElement.target.column }
+            [orderByElement.target.column]: { type: "column", column: orderByElement.target.column, column_type: "unknown" } // Unknown column type here is a hack because we don't actually know what the column type is and we don't care
           }
         };
       case "single_column_aggregate":
@@ -387,14 +387,16 @@ const createFilterExpressionForRelationshipJoin = (row: Record<string, ScalarVal
       return outerValue !== null;
     })
     .map(([outerValue, innerColumnName]) => {
+      const unknownScalarType = "unknown"; // We don't know what the type is and don't care since we never look at it anyway
       return {
         type: "binary_op",
         operator: "equal",
         column: {
           path: [],
           name: innerColumnName,
+          column_type: unknownScalarType,
         },
-        value: { type: "scalar", value: outerValue }
+        value: { type: "scalar", value: outerValue, value_type: unknownScalarType }
       };
     });
 

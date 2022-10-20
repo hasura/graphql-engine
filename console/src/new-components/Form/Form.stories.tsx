@@ -45,7 +45,7 @@ export const Basic: ComponentStory<typeof Form> = () => {
       {/* 💡 The `control` prop is provided by [**React Hook Form**](https://react-hook-form.com/api/useform)
       and is used to access the form state. */}
       {({ control }) => (
-        <div className="space-y-2">
+        <div className="space-y-xs">
           <h1 className="text-xl font-semibold mb-xs">Basic form</h1>
           <InputField
             name="inputFieldName"
@@ -93,7 +93,7 @@ export const FormInputDefaultValue: ComponentStory<typeof Form> = () => {
       onSubmit={action('onSubmit')}
     >
       {({ control }) => (
-        <div className="space-y-2">
+        <div className="space-y-xs">
           <h1 className="text-xl font-semibold mb-xs">Default value</h1>
           <InputField
             name="inputFieldName"
@@ -139,7 +139,7 @@ export const ManuallyTriggerFormValidation: ComponentStory<typeof Form> =
         onSubmit={action('onSubmit')}
       >
         {({ control }) => (
-          <div className="space-y-2">
+          <div className="space-y-xs">
             <h1 className="text-xl font-semibold mb-xs">
               Manually trigger form validation
             </h1>
@@ -186,7 +186,7 @@ export const ManuallyFocusField: ComponentStory<typeof Form> = () => {
       onSubmit={action('onSubmit')}
     >
       {({ control }) => (
-        <div className="space-y-2">
+        <div className="space-y-xs">
           <h1 className="text-xl font-semibold mb-xs">Manually focus field</h1>
           <CodeEditorField
             name="codeEditorFieldName"
@@ -251,7 +251,7 @@ export const AllInputs: ComponentStory<typeof Form> = () => {
       onSubmit={action('onSubmit')}
     >
       {({ control, reset }) => (
-        <div className="space-y-2">
+        <div className="space-y-xs">
           <h1 className="text-xl font-semibold mb-xs">Form title</h1>
           <InputField
             name="inputFieldName"
@@ -384,7 +384,7 @@ export const AllInputsHorizontal: ComponentStory<typeof Form> = () => {
       onSubmit={action('onSubmit')}
     >
       {({ control, reset }) => (
-        <div className="space-y-2">
+        <div className="space-y-xs">
           <h1 className="text-xl font-semibold mb-xs">Form title</h1>
           <InputField
             name="inputFieldName"

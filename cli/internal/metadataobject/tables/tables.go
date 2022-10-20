@@ -42,7 +42,7 @@ func (t *TableConfig) CreateFiles() error {
 	return nil
 }
 
-func (t *TableConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (t *TableConfig) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(t.MetadataDir, t.Filename()))
 	if err != nil {
 		return nil, t.error(err)
@@ -55,7 +55,7 @@ func (t *TableConfig) Build() (map[string]interface{}, metadataobject.ErrParsing
 	return map[string]interface{}{t.Key(): obj}, nil
 }
 
-func (t *TableConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (t *TableConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	return metadataobject.DefaultExport(t, metadata, t.error, metadataobject.DefaultObjectTypeSequence)
 }
 
@@ -67,7 +67,7 @@ func (t *TableConfig) Key() string {
 	return metadataobject.TablesKey
 }
 
-func (t *TableConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (t *TableConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(t.BaseDirectory(), t.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -76,7 +76,7 @@ func (t *TableConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObj
 	return files, nil
 }
 
-func (t *TableConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (t *TableConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: t, WriteDiffOpts: opts})
 	if err != nil {
 		return t.error(err)

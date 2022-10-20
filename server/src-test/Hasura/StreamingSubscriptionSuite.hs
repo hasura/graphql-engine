@@ -36,11 +36,12 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.ResizePool (ResizePoolStrategy (..))
 import Hasura.SQL.Backend
 import Hasura.Server.Init (considerEnv, databaseUrlOption, runWithEnv, _envVar)
 import Hasura.Server.Metrics (createServerMetrics)
 import Hasura.Server.Prometheus (makeDummyPrometheusMetrics)
-import Hasura.Server.Types (RequestId (..), ResizePoolStrategy (..))
+import Hasura.Server.Types (RequestId (..))
 import Hasura.Session (RoleName, mkRoleName)
 import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import ListT qualified

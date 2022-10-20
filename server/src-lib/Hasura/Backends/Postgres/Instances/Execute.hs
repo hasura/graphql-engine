@@ -155,7 +155,7 @@ pgDBQueryExplain fieldName userInfo sourceName sourceConfig rootSelection = do
       textSQL = PG.getQueryText querySQL
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
       -- query, maybe resulting in privilege escalation:
-      withExplain = "EXPLAIN (FORMAT TEXT) " <> textSQL
+      withExplain = "EXPLAIN " <> textSQL
   let action =
         liftTx $
           PG.withQE dmlTxErrorHandler (PG.fromText withExplain) () True <&> \planList ->
@@ -177,7 +177,7 @@ pgDBSubscriptionExplain plan = do
       queryText = PG.getQueryText . PGL.unMultiplexedQuery $ _plqpQuery parameterizedPlan
       -- CAREFUL!: an `EXPLAIN ANALYZE` here would actually *execute* this
       -- query, maybe resulting in privilege escalation:
-      explainQuery = PG.fromText $ "EXPLAIN (FORMAT TEXT) " <> queryText
+      explainQuery = PG.fromText $ "EXPLAIN " <> queryText
   cohortId <- newCohortId
   explanationLines <-
     liftEitherM $

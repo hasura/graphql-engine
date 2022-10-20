@@ -161,6 +161,24 @@ StateWithDefaultValue.parameters = {
   },
 };
 
+export const StateLoading: ComponentStory<typeof Textarea> = () => {
+  const validationSchema = z.object({});
+
+  return (
+    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
+      {() => (
+        <Textarea name="textareaName" label="The textarea label" loading />
+      )}
+    </Form>
+  );
+};
+StateLoading.storyName = '🔁 State - Loading';
+StateLoading.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
 export const StateDisabled: ComponentStory<typeof Textarea> = () => {
   const validationSchema = z.object({});
 

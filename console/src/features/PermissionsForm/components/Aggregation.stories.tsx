@@ -30,6 +30,7 @@ AggregationEnabled.decorators = [
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { enableAggregation: true } }}
+      className="p-4"
     >
       {() => <StoryComponent />}
     </Form>
@@ -48,6 +49,7 @@ AggregationDisabled.decorators = [
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { enableAggregation: false } }}
+      className="p-4"
     >
       {() => <StoryComponent />}
     </Form>

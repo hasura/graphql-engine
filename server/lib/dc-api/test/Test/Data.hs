@@ -322,11 +322,15 @@ data TestData = TestData
     _tdGenresTableName :: API.TableName,
     _tdGenresRows :: [HashMap API.FieldName API.FieldValue],
     _tdGenresTableRelationships :: API.TableRelationships,
+    -- = Scalar Types
+    _tdStringType :: API.ScalarType,
+    _tdIntType :: API.ScalarType,
+    _tdFloatType :: API.ScalarType,
     -- = Utility functions
     _tdColumnName :: Text -> API.ColumnName,
-    _tdColumnField :: Text -> API.Field,
-    _tdQueryComparisonColumn :: Text -> API.ComparisonColumn,
-    _tdCurrentComparisonColumn :: Text -> API.ComparisonColumn,
+    _tdColumnField :: Text -> API.ScalarType -> API.Field,
+    _tdQueryComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn,
+    _tdCurrentComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn,
     _tdOrderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
   }
 
@@ -372,6 +376,9 @@ mkTestData TestConfig {..} =
       _tdGenresTableRelationships = formatTableRelationships genresTableRelationships,
       _tdColumnName = API.ColumnName . applyNameCasing _tcColumnNameCasing,
       _tdColumnField = columnField . applyNameCasing _tcColumnNameCasing,
+      _tdStringType = API.StringTy,
+      _tdIntType = API.NumberTy,
+      _tdFloatType = API.NumberTy,
       _tdQueryComparisonColumn = queryComparisonColumn . applyNameCasing _tcColumnNameCasing,
       _tdCurrentComparisonColumn = currentComparisonColumn . applyNameCasing _tcColumnNameCasing,
       _tdOrderByColumn = \targetPath name -> orderByColumn targetPath (applyNameCasing _tcColumnNameCasing name)
@@ -479,14 +486,14 @@ _ColumnFieldString = API._ColumnFieldValue . _String
 _ColumnFieldBoolean :: Traversal' API.FieldValue Bool
 _ColumnFieldBoolean = API._ColumnFieldValue . _Bool
 
-columnField :: Text -> API.Field
-columnField = API.ColumnField . API.ColumnName
+columnField :: Text -> API.ScalarType -> API.Field
+columnField name scalarType = API.ColumnField (API.ColumnName name) scalarType
 
-queryComparisonColumn :: Text -> API.ComparisonColumn
-queryComparisonColumn columnName = API.ComparisonColumn API.QueryTable $ API.ColumnName columnName
+queryComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn
+queryComparisonColumn columnName scalarType = API.ComparisonColumn API.QueryTable (API.ColumnName columnName) scalarType
 
-currentComparisonColumn :: Text -> API.ComparisonColumn
-currentComparisonColumn columnName = API.ComparisonColumn API.CurrentTable $ API.ColumnName columnName
+currentComparisonColumn :: Text -> API.ScalarType -> API.ComparisonColumn
+currentComparisonColumn columnName scalarType = API.ComparisonColumn API.CurrentTable (API.ColumnName columnName) scalarType
 
 orderByColumn :: [API.RelationshipName] -> Text -> API.OrderDirection -> API.OrderByElement
 orderByColumn targetPath columnName orderDirection =

@@ -83,3 +83,11 @@ declare global {
 export type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
 };
+
+export type Nullable<T> = T | null;
+
+export type NullableProps<T> = { [K in keyof T]: T[K] | null };
+
+export type DeepNullableProps<T> = {
+  [K in keyof T]: DeepNullableProps<T[K]> | null;
+};

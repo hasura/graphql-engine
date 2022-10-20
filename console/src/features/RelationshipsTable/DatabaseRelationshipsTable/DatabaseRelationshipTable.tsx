@@ -10,7 +10,6 @@ import {
   FaTable,
   FaTrash,
 } from 'react-icons/fa';
-import { Button } from '@/new-components/Button';
 import { CardedTable } from '@/new-components/CardedTable';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Relationship } from './types';
@@ -20,6 +19,8 @@ import { useListAllRelationshipsFromMetadata } from './hooks/useListAllRelations
 export const columns = ['NAME', 'SOURCE', 'TYPE', 'RELATIONSHIP', null];
 
 const getTableDisplayName = (table: Table): string => {
+  if (Array.isArray(table)) return table.join();
+
   if (!table) return 'Empty Object';
 
   if (typeof table === 'string') return table;
@@ -131,17 +132,7 @@ export const DatabaseRelationshipsTable = ({
           {relationships.map(relationship => (
             <CardedTable.TableBodyRow key={relationship.name}>
               <CardedTable.TableBodyCell>
-                <Button
-                  onClick={() =>
-                    onEditRow({
-                      dataSourceName,
-                      table,
-                      relationship,
-                    })
-                  }
-                >
-                  {relationship.name}
-                </Button>
+                {relationship.name}
               </CardedTable.TableBodyCell>
 
               <CardedTable.TableBodyCell>

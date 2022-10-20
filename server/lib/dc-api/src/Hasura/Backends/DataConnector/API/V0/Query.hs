@@ -51,6 +51,7 @@ import Hasura.Backends.DataConnector.API.V0.Column qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Expression qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.OrderBy qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Relationships qualified as API.V0
+import Hasura.Backends.DataConnector.API.V0.Scalar qualified as API.V0
 import Hasura.Backends.DataConnector.API.V0.Table qualified as API.V0
 import Servant.API (HasStatus (..))
 import Prelude
@@ -142,7 +143,7 @@ relationshipFieldObjectCodec =
 --   2. a "relationship", which indicates that the field is the result of
 --      a subquery
 data Field
-  = ColumnField API.V0.ColumnName
+  = ColumnField API.V0.ColumnName API.V0.ScalarType
   | RelField RelationshipField
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Field
@@ -153,13 +154,16 @@ instance HasCodec Field where
       object "Field" $
         discriminatedUnionCodec "type" enc dec
     where
-      columnCodec = requiredField' "column"
+      columnCodec =
+        (,)
+          <$> requiredField' "column" .= fst
+          <*> requiredField' "column_type" .= snd
       enc = \case
-        ColumnField columnName -> ("column", mapToEncoder columnName columnCodec)
+        ColumnField columnName scalarType -> ("column", mapToEncoder (columnName, scalarType) columnCodec)
         RelField relField -> ("relationship", mapToEncoder relField relationshipFieldObjectCodec)
       dec =
         HashMap.fromList
-          [ ("column", ("ColumnField", mapToDecoder ColumnField columnCodec)),
+          [ ("column", ("ColumnField", mapToDecoder (uncurry ColumnField) columnCodec)),
             ("relationship", ("RelationshipField", mapToDecoder RelField relationshipFieldObjectCodec))
           ]
 

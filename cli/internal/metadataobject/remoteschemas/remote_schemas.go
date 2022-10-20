@@ -53,7 +53,7 @@ func (r *RemoteSchemaConfig) CreateFiles() error {
 	}
 	return nil
 }
-func (r *RemoteSchemaConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (r *RemoteSchemaConfig) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(r.MetadataDir, r.Filename()))
 	if err != nil {
 		return nil, r.error(err)
@@ -83,7 +83,7 @@ type definition struct {
 	Schema string `yaml:"schema,omitempty"`
 }
 
-func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	var value interface{}
 	if v, ok := metadata[r.Key()]; !ok {
 		value = []yaml.Node{}
@@ -129,7 +129,7 @@ func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][
 	}, nil
 }
 
-func (r *RemoteSchemaConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (r *RemoteSchemaConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(r.BaseDirectory(), r.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -138,7 +138,7 @@ func (r *RemoteSchemaConfig) GetFiles() ([]string, metadataobject.ErrParsingMeta
 	return files, nil
 }
 
-func (r *RemoteSchemaConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (r *RemoteSchemaConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: r, WriteDiffOpts: opts})
 	if err != nil {
 		return r.error(err)
