@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { bigquery } from './bigquery';
 import { citus } from './citus';
 import { cockroach } from './cockroach';
-import * as utils from './common/utils';
 import { gdc } from './gdc';
 import { mssql } from './mssql';
 import { postgres, PostgresTable } from './postgres';
@@ -37,6 +36,7 @@ import {
   RunSQLResponse,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
+import { getTableName } from './common/getTableName';
 
 export enum Feature {
   NotImplemented = 'Not Implemented',
@@ -407,7 +407,7 @@ export * from './types';
 export {
   PostgresTable,
   exportMetadata,
-  utils,
+  getTableName,
   RunSQLResponse,
   getDriverPrefix,
 };

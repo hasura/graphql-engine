@@ -1,4 +1,5 @@
-import { useDatabaseHierarchy, getTableName } from '@/features/Data';
+import { useDatabaseHierarchy } from '@/features/Data';
+import { getTableName } from '@/features/DataSource';
 import { Table } from '@/features/MetadataAPI';
 import { InputField, Select } from '@/new-components/Form';
 import React from 'react';
