@@ -33,7 +33,6 @@ import Data.HashMap.Strict qualified as HM
 import Data.HashMap.Strict.Extended qualified as Map
 import Data.HashMap.Strict.InsOrd qualified as OMap
 import Data.HashSet qualified as Set
-import Data.HashSet.InsOrd qualified as OSet
 import Data.List.Extended qualified as LE
 import Data.List.NonEmpty qualified as NE
 import Data.Time.Clock (UTCTime, getCurrentTime)
@@ -166,7 +165,7 @@ resolveDatabaseMetadata ::
 resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExceptT do
   (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) PG.ReadOnly $ do
     tablesMeta <- fetchTableMetadata $ OMap.keys $ _smTables sourceMetadata
-    let allFunctions = OSet.fromList $
+    let allFunctions = Set.fromList $
           OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
             <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
     functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
@@ -395,7 +394,7 @@ cockroachFetchTableMetadata _tables = do
 class FetchFunctionMetadata (pgKind :: PostgresKind) where
   fetchFunctionMetadata ::
     (MonadTx m) =>
-    OSet.InsOrdHashSet QualifiedFunction ->
+    Set.HashSet QualifiedFunction ->
     m (DBFunctionsMetadata ('Postgres pgKind))
 
 instance FetchFunctionMetadata 'Vanilla where
@@ -408,7 +407,7 @@ instance FetchFunctionMetadata 'Cockroach where
   fetchFunctionMetadata _ = pure mempty
 
 -- | Fetch Postgres metadata for all user functions
-pgFetchFunctionMetadata :: (MonadTx m) => OSet.InsOrdHashSet QualifiedFunction -> m (DBFunctionsMetadata ('Postgres pgKind))
+pgFetchFunctionMetadata :: (MonadTx m) => Set.HashSet QualifiedFunction -> m (DBFunctionsMetadata ('Postgres pgKind))
 pgFetchFunctionMetadata functions = do
   results <-
     liftTx $
