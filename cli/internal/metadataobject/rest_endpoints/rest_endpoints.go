@@ -72,7 +72,7 @@ func (re *RestEndpointsConfig) Filename() string {
 	return "rest_endpoints.yaml"
 }
 
-func (re *RestEndpointsConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (re *RestEndpointsConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(re.BaseDirectory(), re.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

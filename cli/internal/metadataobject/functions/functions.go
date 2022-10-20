@@ -66,7 +66,7 @@ func (f *FunctionConfig) Filename() string {
 	return "functions.yaml"
 }
 
-func (f *FunctionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (f *FunctionConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(f.BaseDirectory(), f.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

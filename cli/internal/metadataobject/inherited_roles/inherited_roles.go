@@ -59,7 +59,7 @@ func (ir *InheritedRolesConfig) Filename() string {
 	return "inherited_roles.yaml"
 }
 
-func (ir *InheritedRolesConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (ir *InheritedRolesConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(ir.BaseDirectory(), ir.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

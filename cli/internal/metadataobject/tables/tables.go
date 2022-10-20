@@ -67,7 +67,7 @@ func (t *TableConfig) Key() string {
 	return metadataobject.TablesKey
 }
 
-func (t *TableConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (t *TableConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(t.BaseDirectory(), t.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

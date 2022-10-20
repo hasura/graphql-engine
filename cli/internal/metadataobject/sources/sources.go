@@ -279,7 +279,7 @@ func (t *SourceConfig) Export(metadata map[string]yaml.Node) (map[string][]byte,
 	return files, nil
 }
 
-func (t *SourceConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (t *SourceConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(t.MetadataDir, sourcesDirectory, t.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

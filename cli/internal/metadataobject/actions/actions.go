@@ -438,7 +438,7 @@ func (a *ActionConfig) Filename() string {
 	return "actions.yaml"
 }
 
-func (a *ActionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (a *ActionConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(a.BaseDirectory(), a.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

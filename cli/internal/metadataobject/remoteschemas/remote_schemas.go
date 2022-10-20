@@ -129,7 +129,7 @@ func (r *RemoteSchemaConfig) Export(metadata map[string]yaml.Node) (map[string][
 	}, nil
 }
 
-func (r *RemoteSchemaConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (r *RemoteSchemaConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(r.BaseDirectory(), r.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

@@ -108,7 +108,7 @@ func (o *MetadataObject) Filename() string {
 	return "graphql_schema_introspection.yaml"
 }
 
-func (o *MetadataObject) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (o *MetadataObject) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(o.BaseDirectory(), o.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

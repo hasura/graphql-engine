@@ -70,7 +70,7 @@ func (c *CronTriggers) Filename() string {
 	return "cron_triggers.yaml"
 }
 
-func (c *CronTriggers) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (c *CronTriggers) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(c.BaseDirectory(), c.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

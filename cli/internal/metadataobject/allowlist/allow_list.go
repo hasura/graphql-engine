@@ -67,7 +67,7 @@ func (a *AllowListConfig) Filename() string {
 	return "allow_list.yaml"
 }
 
-func (a *AllowListConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (a *AllowListConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(a.BaseDirectory(), a.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

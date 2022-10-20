@@ -124,7 +124,7 @@ func (q *QueryCollectionConfig) Filename() string {
 	return "query_collections.yaml"
 }
 
-func (q *QueryCollectionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (q *QueryCollectionConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(q.BaseDirectory(), q.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

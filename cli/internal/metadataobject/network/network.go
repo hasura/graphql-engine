@@ -71,7 +71,7 @@ func (o *NetworkObject) Filename() string {
 	return "network.yaml"
 }
 
-func (o *NetworkObject) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (o *NetworkObject) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(o.BaseDirectory(), o.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {

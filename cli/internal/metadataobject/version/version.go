@@ -87,7 +87,7 @@ func (a *VersionConfig) Filename() string {
 	return "version.yaml"
 }
 
-func (a *VersionConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (a *VersionConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(a.BaseDirectory(), a.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
