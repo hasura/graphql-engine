@@ -130,7 +130,13 @@ export const TableInsertItemContainer = (
       return acc;
     }, {});
 
-    dispatch(insertItem(tableName, inputValues, isMigration)).then(() => {
+    dispatch(
+      insertItem(
+        tableName,
+        clone ? { ...clone, ...inputValues } : inputValues,
+        isMigration
+      )
+    ).then(() => {
       nextInsert();
     });
   };
