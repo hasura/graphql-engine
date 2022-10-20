@@ -300,7 +300,7 @@ func (t *SourceConfig) BaseDirectory() string {
 	return t.MetadataDir
 }
 
-func (t *SourceConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (t *SourceConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	excludePatterns := []string{"tables/tables.yaml", "functions/functions.yaml"}
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: t, WriteDiffOpts: opts, ExcludeFilesPatterns: excludePatterns})
 	if err != nil {

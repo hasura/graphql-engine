@@ -68,7 +68,7 @@ func (ir *InheritedRolesConfig) GetFiles() ([]string, error) {
 	return files, nil
 }
 
-func (ir *InheritedRolesConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (ir *InheritedRolesConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: ir, WriteDiffOpts: opts})
 	if err != nil {
 		return ir.error(err)

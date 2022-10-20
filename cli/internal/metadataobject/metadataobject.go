@@ -97,7 +97,7 @@ type Object interface {
 	GetFiles() ([]string, error)
 	// WriteDiff should be implemented such that it should write the difference
 	// between the current object and passed in object on the provided writer
-	WriteDiff(WriteDiffOpts) ErrParsingMetadataObject
+	WriteDiff(WriteDiffOpts) error
 	Key() string
 	Filename() string
 	// BaseDirectory will return the parent directory of `Filename()`

@@ -75,7 +75,7 @@ func (f *FunctionConfig) GetFiles() ([]string, error) {
 	return files, nil
 }
 
-func (f *FunctionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (f *FunctionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: f, WriteDiffOpts: opts})
 	if err != nil {
 		return f.error(err)

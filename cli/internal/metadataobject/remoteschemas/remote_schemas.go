@@ -138,7 +138,7 @@ func (r *RemoteSchemaConfig) GetFiles() ([]string, error) {
 	return files, nil
 }
 
-func (r *RemoteSchemaConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (r *RemoteSchemaConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: r, WriteDiffOpts: opts})
 	if err != nil {
 		return r.error(err)

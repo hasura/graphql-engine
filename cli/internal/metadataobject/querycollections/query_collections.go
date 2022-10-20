@@ -133,7 +133,7 @@ func (q *QueryCollectionConfig) GetFiles() ([]string, error) {
 	return files, nil
 }
 
-func (q *QueryCollectionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (q *QueryCollectionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: q, WriteDiffOpts: opts})
 	if err != nil {
 		return q.error(err)

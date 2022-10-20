@@ -79,7 +79,7 @@ func (c *CronTriggers) GetFiles() ([]string, error) {
 	return files, nil
 }
 
-func (c *CronTriggers) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (c *CronTriggers) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: c, WriteDiffOpts: opts})
 	if err != nil {
 		return c.error(err)

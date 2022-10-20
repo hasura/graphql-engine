@@ -76,7 +76,7 @@ func (t *TableConfig) GetFiles() ([]string, error) {
 	return files, nil
 }
 
-func (t *TableConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (t *TableConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: t, WriteDiffOpts: opts})
 	if err != nil {
 		return t.error(err)

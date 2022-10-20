@@ -448,7 +448,7 @@ func (a *ActionConfig) GetFiles() ([]string, error) {
 	return files, nil
 }
 
-func (a *ActionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (a *ActionConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: a, WriteDiffOpts: opts})
 	if err != nil {
 		return a.error(err)

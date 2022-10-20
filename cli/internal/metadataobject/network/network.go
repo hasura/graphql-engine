@@ -80,7 +80,7 @@ func (o *NetworkObject) GetFiles() ([]string, error) {
 	return files, nil
 }
 
-func (o *NetworkObject) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (o *NetworkObject) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: o, WriteDiffOpts: opts})
 	if err != nil {
 		return o.error(err)
