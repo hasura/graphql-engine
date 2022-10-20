@@ -31,7 +31,7 @@ RUN set -ex; \
     curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -; \
     echo 'deb http://apt.postgresql.org/pub/repos/apt bullseye-pgdg main' > /etc/apt/sources.list.d/pgdg.list; \
     apt-get -y update; \
-    apt-get install -y postgresql-client; \
+    apt-get install -y postgresql-client-15; \
     # delete all pg tools except pg_dump to keep the image minimal
     find /usr/bin -name 'pg*' -not -path '/usr/bin/pg_dump' -delete
 
