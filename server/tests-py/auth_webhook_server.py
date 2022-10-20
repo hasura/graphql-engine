@@ -48,7 +48,7 @@ handlers = MkHandlers({
     '/auth': CookieAuth,
 })
 
-def create_server(host='127.0.0.1', port=9876):
+def create_server(host='localhost', port=9876):
     return http.server.HTTPServer((host, port), handlers)
 
 def stop_server(server):

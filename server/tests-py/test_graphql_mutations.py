@@ -227,7 +227,7 @@ class TestGraphqlInsertPermission:
         check_query_admin_secret(hge_ctx, self.dir() + "/user_with_no_backend_privilege.yaml")
 
     def test_backend_user_no_admin_secret_fail(self, hge_ctx):
-        if hge_ctx.hge_key and (hge_ctx.hge_jwt_key or hge_ctx.hge_webhook):
+        if hge_ctx.hge_key and (hge_ctx.hge_jwt_key or hge_ctx.webhook):
             check_query_f(hge_ctx, self.dir() + "/backend_user_no_admin_secret_fail.yaml")
         else:
             pytest.skip("authorization not configured, skipping the test")

@@ -13,11 +13,11 @@ import random
 import ruamel.yaml as yaml
 from ruamel.yaml.comments import CommentedMap
 from ruamel.yaml.compat import ordereddict, StringIO
-import string
 import textwrap
 import warnings
 
-from context import GQLWsClient, PytestConf
+from context import HGECtx, PytestConf
+from fixtures.tls import TLSTrust
 
 def check_keys(keys, obj):
     for k in keys:
@@ -185,7 +185,7 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
     })
 
     # Test with random admin secret
-    headers['X-Hasura-Admin-Secret'] = base64.b64encode(os.urandom(30))
+    headers['X-Hasura-Admin-Secret'] = base64.b64encode(os.urandom(30)).decode()
     code, resp, resp_hdrs = hge_ctx.anyq(conf['url'], conf['query'], headers)
     #assert code in [401,404], "\n" + yaml.dump({
     assert code in status, "\n" + yaml.dump({
@@ -238,8 +238,7 @@ def mk_claims_with_namespace_path(claims,hasura_claims,namespace_path):
 
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
-def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace_path=None, gqlws=False):
-    hge_ctx.tests_passed = True
+def check_query(hge_ctx: HGECtx, conf, transport='http', add_auth=True, claims_namespace_path=None, gqlws=False):
     headers = {}
     if 'headers' in conf:
         # Convert header values to strings, as the YAML parser might give us an internal class.
@@ -269,24 +268,20 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
             headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
 
         # Use the hasura role specified in the test case, and create an authorization token which will be verified by webhook
-        if hge_ctx.hge_webhook is not None and len(headers) > 0:
-            if not hge_ctx.webhook_insecure:
-            # Check whether the output is also forbidden when webhook returns forbidden
+        if hge_ctx.webhook and len(headers) > 0:
+            if hge_ctx.webhook.tls_trust != TLSTrust.INSECURE:
+                # Check whether the output is also forbidden when webhook returns forbidden
                 test_forbidden_webhook(hge_ctx, conf)
-            headers['X-Hasura-Auth-Mode'] = 'webhook'
-            headers_new = dict()
-            headers_new['Authorization'] = 'Bearer ' + base64.b64encode(json.dumps(headers).encode('utf-8')).decode(
-                'utf-8')
-            headers = headers_new
+            headers = authorize_for_webhook(headers)
 
         # The case as admin with admin-secret and jwt/webhook
-        elif (
-                hge_ctx.hge_webhook is not None or hge_ctx.hge_jwt_key is not None) and hge_ctx.hge_key is not None and len(
-                headers) == 0:
+        elif (hge_ctx.webhook or hge_ctx.hge_jwt_key is not None) \
+             and hge_ctx.hge_key is not None \
+             and len(headers) == 0:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
         # The case as admin with only admin-secret
-        elif hge_ctx.hge_key is not None and hge_ctx.hge_webhook is None and hge_ctx.hge_jwt_key is None:
+        elif hge_ctx.hge_key is not None and not hge_ctx.webhook and hge_ctx.hge_jwt_key is None:
             # Test whether it is forbidden when incorrect/no admin_secret is specified
             test_forbidden_when_admin_secret_reqd(hge_ctx, conf)
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
@@ -306,6 +301,13 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
     elif transport == 'subscription':
         print('running via subscription')
         return validate_gql_ws_q(hge_ctx, conf, headers, retry=True, via_subscription=True, gqlws=gqlws)
+
+
+def authorize_for_webhook(headers: dict[str, str]) -> dict[str, str]:
+    headers['X-Hasura-Auth-Mode'] = 'webhook'
+    headers_new = dict()
+    headers_new['Authorization'] = 'Bearer ' + base64.b64encode(json.dumps(headers).encode('utf-8')).decode('utf-8')
+    return headers_new
 
 
 def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=False, gqlws=False):

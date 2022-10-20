@@ -8,9 +8,10 @@ from http import HTTPStatus
 import time
 import ssl
 import sys
-from typing import Callable, NamedTuple, Optional, Tuple, Union
+from typing import Callable, NamedTuple, Optional, Union
 from urllib.parse import urlparse
 
+import fixtures.tls
 from graphql import GraphQLError
 from webserver import MkHandlers, RequestHandler, Response
 
@@ -910,19 +911,13 @@ def handlers(context):
 def create_server(
     host: str = 'localhost',
     port: int = 0,
-    tls_configuration: Optional[Tuple[str, str]] = None,
+    tls_ca_configuration: Optional[fixtures.tls.TLSCAConfiguration] = None,
     hge_urls: Optional[list[str]] = None,
 ):
     context = Context([urlparse(url).netloc for url in hge_urls] if hge_urls else None)
     server = http.server.HTTPServer((host, port), handlers(context))
-    if tls_configuration:
-        server.socket = ssl.wrap_socket(
-            server.socket,
-            certfile=tls_configuration[0],
-            keyfile=tls_configuration[1],
-            server_side=True,
-            ssl_version=ssl.PROTOCOL_SSLv23,
-        )
+    if tls_ca_configuration:
+        server = tls_ca_configuration.configure(server, fixtures.tls.TLSTrust.SECURE)
     return server
 
 def stop_server(server):
