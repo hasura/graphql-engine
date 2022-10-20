@@ -76,6 +76,7 @@ let
 
   ciInputs = [
     pkgs.go
+    pkgs.gox
   ];
 
   dynamicLibraries = [

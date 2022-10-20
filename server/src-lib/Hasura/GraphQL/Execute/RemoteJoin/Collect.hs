@@ -321,7 +321,7 @@ transformAnnFields fields = do
             -- without which preserving the order of fields in the final response
             -- would require a lot of bookkeeping.
             remoteAnnPlaceholder,
-            Just $ createRemoteJoin joinColumnAliases _rrsRelationship
+            Just $ createRemoteJoin (Map.intersection joinColumnAliases _rrsLHSJoinFields) _rrsRelationship
           )
 
   let transformedFields = (fmap . fmap) fst annotatedFields
@@ -434,7 +434,7 @@ transformActionFields fields = do
             -- without which preserving the order of fields in the final response
             -- would require a lot of bookkeeping.
             remoteActionPlaceholder,
-            Just $ createRemoteJoin joinColumnAliases _arrsRelationship
+            Just $ createRemoteJoin (Map.intersection joinColumnAliases _arrsLHSJoinFields) _arrsRelationship
           )
       ACFNestedObject fn fs ->
         (,Nothing) . ACFNestedObject fn <$> transformActionFields fs
@@ -519,7 +519,7 @@ transformObjectSelectionSet typename selectionSet = do
             FieldRemote SchemaRemoteRelationshipSelect {..} -> do
               pure
                 ( mkPlaceholderField alias,
-                  Just $ createRemoteJoin joinColumnAliases _srrsRelationship
+                  Just $ createRemoteJoin (Map.intersection joinColumnAliases _srrsLHSJoinFields) _srrsRelationship
                 )
   let internalTypeAlias = Name.___hasura_internal_typename
       remoteJoins = OMap.mapMaybe snd annotatedFields

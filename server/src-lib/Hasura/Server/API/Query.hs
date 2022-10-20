@@ -197,11 +197,20 @@ runQuery env logger instanceId userInfo sc hMgr serverConfigCtx query = do
   when ((_sccReadOnlyMode serverConfigCtx == ReadOnlyModeEnabled) && queryModifiesUserDB query) $
     throw400 NotSupported "Cannot run write queries when read-only mode is enabled"
 
+  let exportsMetadata = \case
+        RQV1 (RQExportMetadata _) -> True
+        _ -> False
+      metadataDefaults =
+        if (exportsMetadata query)
+          then emptyMetadataDefaults
+          else _sccMetadataDefaults serverConfigCtx
+
   (metadata, currentResourceVersion) <- fetchMetadata
   result <-
     runReaderT (runQueryM env query) logger & \x -> do
       ((js, meta), rsc, ci) <-
-        x & runMetadataT metadata
+        x
+          & runMetadataT metadata metadataDefaults
           & runCacheRWT sc
           & peelRun runCtx
           & runExceptT

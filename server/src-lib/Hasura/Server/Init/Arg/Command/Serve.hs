@@ -56,6 +56,8 @@ module Hasura.Server.Init.Arg.Command.Serve
     enableMetadataQueryLoggingOption,
     defaultNamingConventionOption,
     metadataDBExtensionsSchemaOption,
+    parseMetadataDefaults,
+    metadataDefaultsOption,
 
     -- * Pretty Printer
     serveCmdFooter,
@@ -75,6 +77,7 @@ import Hasura.GraphQL.Schema.NamingCase (NamingCase)
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
+import Hasura.RQL.Types.Metadata (MetadataDefaults, emptyMetadataDefaults)
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init.Arg.PrettyPrinter qualified as PP
@@ -137,6 +140,7 @@ serveCommandParser =
     <*> parseEnableMetadataQueryLogging
     <*> parseDefaultNamingConvention
     <*> parseExtensionsSchema
+    <*> parseMetadataDefaults
 
 --------------------------------------------------------------------------------
 -- Serve Options
@@ -1067,9 +1071,9 @@ parseDefaultNamingConvention =
       )
 
 -- NOTE: This should be 'Config.Option NC.NamingCase' with a default
---of 'NC.HasuraCase' but 'ServeOptions' expects a 'Maybe
---NC.NamingCase' and HGE handles the defaulting explicitly. This
---should be changed in a subsequent PR.
+-- of 'NC.HasuraCase' but 'ServeOptions' expects a 'Maybe
+-- NC.NamingCase' and HGE handles the defaulting explicitly. This
+-- should be changed in a subsequent PR.
 defaultNamingConventionOption :: Config.Option ()
 defaultNamingConventionOption =
   Config.Option
@@ -1088,6 +1092,23 @@ parseExtensionsSchema =
       (Opt.eitherReader Env.fromEnv)
       ( Opt.long "metadata-database-extensions-schema"
           <> Opt.help (Config._helpMessage metadataDBExtensionsSchemaOption)
+      )
+
+metadataDefaultsOption :: Config.Option MetadataDefaults
+metadataDefaultsOption =
+  Config.Option
+    { Config._default = emptyMetadataDefaults,
+      Config._envVar = "HASURA_GRAPHQL_METADATA_DEFAULTS",
+      Config._helpMessage = "Default values to be included in metadata."
+    }
+
+parseMetadataDefaults :: Opt.Parser (Maybe MetadataDefaults)
+parseMetadataDefaults =
+  Opt.optional $
+    Opt.option
+      (Opt.eitherReader Env.fromEnv)
+      ( Opt.long "metadata-defaults"
+          <> Opt.help (Config._helpMessage metadataDefaultsOption)
       )
 
 metadataDBExtensionsSchemaOption :: Config.Option MonadTx.ExtensionsSchema

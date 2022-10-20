@@ -12,8 +12,8 @@ where
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NE
-import Harness.Backend.DataConnector (TestCase (..))
-import Harness.Backend.DataConnector qualified as DataConnector
+import Harness.Backend.DataConnector.Mock (TestCase (..))
+import Harness.Backend.DataConnector.Mock qualified as Mock
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
@@ -30,9 +30,9 @@ spec =
   Fixture.runWithLocalTestEnvironment
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorMock)
-            { Fixture.mkLocalTestEnvironment = DataConnector.mkLocalTestEnvironmentMock,
+            { Fixture.mkLocalTestEnvironment = Mock.mkLocalTestEnvironment,
               Fixture.setupTeardown = \(testEnv, mockEnv) ->
-                [DataConnector.setupMockAction sourceMetadata DataConnector.mockBackendConfig (testEnv, mockEnv)]
+                [Mock.setupAction sourceMetadata Mock.agentConfig (testEnv, mockEnv)]
             }
         ]
     )
@@ -59,15 +59,17 @@ sourceMetadata =
         configuration: {}
       |]
 
-tests :: Fixture.Options -> SpecWith (TestEnvironment, DataConnector.MockAgentEnvironment)
+--------------------------------------------------------------------------------
+
+tests :: Fixture.Options -> SpecWith (TestEnvironment, Mock.MockAgentEnvironment)
 tests opts = do
   describe "Error Protocol Tests" $ do
     it "handles returned errors correctly" $
-      DataConnector.runMockedTest opts $
+      Mock.runTest opts $
         let errorResponse = API.ErrorResponse API.UncaughtError "Hello World!" [yaml| { foo: "bar" } |]
             required =
-              DataConnector.TestCaseRequired
-                { _givenRequired = DataConnector.chinookMock {DataConnector._queryResponse = \_ -> Left errorResponse},
+              Mock.TestCaseRequired
+                { _givenRequired = Mock.chinookMock {Mock._queryResponse = \_ -> Left errorResponse},
                   _whenRequestRequired =
                     [graphql|
                       query getAlbum {
@@ -89,7 +91,7 @@ tests opts = do
                           message: "UncaughtError: Hello World!"
                     |]
                 }
-         in (DataConnector.defaultTestCase required)
+         in (Mock.defaultTestCase required)
               { _whenQuery =
                   Just
                     ( API.QueryRequest
@@ -100,8 +102,8 @@ tests opts = do
                               { _qFields =
                                   Just $
                                     HashMap.fromList
-                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId")),
-                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title"))
+                                      [ (API.FieldName "id", API.ColumnField (API.ColumnName "AlbumId") API.NumberTy),
+                                        (API.FieldName "title", API.ColumnField (API.ColumnName "Title") API.StringTy)
                                       ],
                                 _qAggregates = Nothing,
                                 _qLimit = Just 1,

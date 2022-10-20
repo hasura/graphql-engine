@@ -3,6 +3,7 @@
 module Hasura.Backends.MySQL.Instances.Types () where
 
 import Data.Aeson qualified as J
+import Data.Pool qualified as Pool
 import Data.Text.Casing qualified as C
 import Database.MySQL.Base.Types qualified as MySQL
 import Hasura.Backends.MySQL.Types qualified as MySQL
@@ -10,6 +11,7 @@ import Hasura.Base.Error
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers ()
 import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.ResizePool (ServerReplicas, getServerReplicasInt)
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -126,3 +128,17 @@ instance Backend 'MySQL where
 
   fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments 'MySQL -> [FunctionArgumentExp 'MySQL v]
   fromComputedFieldImplicitArguments = error "fromComputedFieldImplicitArguments: MySQL backend does not support this operation yet"
+
+  resizeSourcePools :: SourceConfig 'MySQL -> ServerReplicas -> IO ()
+  resizeSourcePools sourceConfig serverReplicas = do
+    -- As of writing this, the MySQL isn't generally available (GA).
+    -- However, implementing the pool resize logic.
+    let pool = MySQL.scConnectionPool sourceConfig
+        maxConnections =
+          fromInteger $
+            toInteger $
+              MySQL._cscMaxConnections $ MySQL._cscPoolSettings $ MySQL.scConfig sourceConfig
+    -- Resize the pool max resources
+    Pool.resizePool pool (maxConnections `div` getServerReplicasInt serverReplicas)
+    -- Trim pool by destroying excess resources, if any
+    Pool.tryTrimPool pool

@@ -60,7 +60,6 @@ import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers
 import Hasura.RQL.DDL.Webhook.Transform
-import Hasura.RQL.DDL.Webhook.Transform.Class (mkReqTransformCtx)
 import Hasura.RQL.IR.Action qualified as IR
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.IR.Select qualified as RS
@@ -557,7 +556,7 @@ callWebhook
     (transformedReq, transformedReqSize, reqTransformCtx) <- case metadataRequestTransform of
       Nothing -> pure (Nothing, Nothing, Nothing)
       Just RequestTransform {..} ->
-        let reqTransformCtx = mkReqTransformCtx webhookUrl sessionVars templateEngine
+        let reqTransformCtx = fmap mkRequestContext $ mkReqTransformCtx webhookUrl sessionVars templateEngine
          in case applyRequestTransform reqTransformCtx requestFields req of
               Left err -> do
                 -- Log The Transformation Error

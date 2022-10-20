@@ -6,7 +6,7 @@ import { FieldWrapper, FieldWrapperPassThroughProps } from './FieldWrapper';
 
 type SelectItem = {
   label: ReactText;
-  value: ReactText;
+  value: any;
   disabled?: boolean;
 };
 
@@ -56,10 +56,10 @@ export const Select: React.VFC<SelectProps> = ({
       <select
         id={name}
         className={clsx(
-          'block w-full max-w-xl h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400',
+          'block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus-visible:outline-0 focus-visible:ring-2 focus-visible:ring-yellow-200 focus-visible:border-yellow-400',
           watchValue && watchValue !== '' ? 'text-black' : 'text-gray-500',
           disabled
-            ? 'cursor-not-allowed bg-gray-200 border-gray-200'
+            ? 'cursor-not-allowed bg-gray-200 border-gray-200 hover:border-gray-200'
             : 'hover:border-gray-400'
         )}
         disabled={disabled}

@@ -1,6 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..)) where
+module Hasura.Backends.DataConnector.Adapter.Backend
+  ( CustomBooleanOperator (..),
+    columnTypeToScalarType,
+  )
+where
 
 import Data.Aeson qualified as J
 import Data.Aeson.Extended (ToJSONKeyValue (..))
@@ -16,6 +20,8 @@ import Hasura.Incremental
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend (Backend (..), ComputedFieldReturnType, SupportedNamingCase (..), XDisable, XEnable)
+import Hasura.RQL.Types.Column (ColumnType (..))
+import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
 
@@ -127,6 +133,11 @@ instance Backend 'DataConnector where
   namingConventionSupport :: SupportedNamingCase
   namingConventionSupport = OnlyHasuraCase
 
+  resizeSourcePools :: SourceConfig 'DataConnector -> ServerReplicas -> IO ()
+  resizeSourcePools _sourceConfig _serverReplicas =
+    -- Data connectors do not have concept of connection pools
+    pure ()
+
 data CustomBooleanOperator a = CustomBooleanOperator
   { _cboName :: Text,
     _cboRHS :: Maybe (Either (RootOrCurrentColumn 'DataConnector) a) -- TODO turn Either into a specific type
@@ -152,3 +163,8 @@ parseValue type' val =
     -- For custom scalar types we don't know what subset of JSON values
     -- they accept, so we just accept any value.
     (DC.CustomTy _, value) -> pure value
+
+columnTypeToScalarType :: ColumnType 'DataConnector -> DC.ScalarType
+columnTypeToScalarType = \case
+  ColumnScalar scalarType -> scalarType
+  ColumnEnumReference _ -> DC.StringTy

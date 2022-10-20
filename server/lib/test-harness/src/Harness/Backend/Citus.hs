@@ -30,6 +30,12 @@ import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Data.Time (defaultTimeLocale, formatTime)
 import Database.PostgreSQL.Simple qualified as Postgres
+import Harness.Backend.Postgres qualified as Postgres
+  ( createUniqueIndexSql,
+    mkPrimaryKeySql,
+    mkReferenceSql,
+    uniqueConstraintSql,
+  )
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -99,8 +105,9 @@ configuration:
   |]
 
 -- | Serialize Table into a Citus-SQL statement, as needed, and execute it on the Citus backend
-createTable :: HasCallStack => Schema.Table -> IO ()
-createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableUniqueConstraints} = do
+createTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
+createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
+  let schemaName = Schema.getSchemaName testEnv
   run_ $
     T.unpack $
       T.unwords
@@ -108,19 +115,14 @@ createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableRe
           T.pack Constants.citusDb <> "." <> wrapIdentifier tableName,
           "(",
           commaSeparated $
-            (mkColumn <$> tableColumns)
-              <> (bool [mkPrimaryKey pk] [] (null pk))
-              <> (mkReference <$> tableReferences),
+            (mkColumnSql <$> tableColumns)
+              <> (bool [Postgres.mkPrimaryKeySql pk] [] (null pk))
+              <> (Postgres.mkReferenceSql schemaName <$> tableReferences)
+              <> map Postgres.uniqueConstraintSql tableConstraints,
           ");"
         ]
 
-  for_ tableUniqueConstraints (createUniqueConstraint tableName)
-
-createUniqueConstraint :: Text -> Schema.UniqueConstraint -> IO ()
-createUniqueConstraint tableName (Schema.UniqueConstraintColumns cols) =
-  run_ $ T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", tableName, "("] ++ [commaSeparated cols] ++ [")"]
-createUniqueConstraint tableName (Schema.UniqueConstraintExpression ex) =
-  run_ $ T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", tableName, "((", ex, "))"]
+  for_ tableUniqueIndexes (run_ . Postgres.createUniqueIndexSql schemaName tableName)
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
@@ -131,8 +133,8 @@ scalarType = \case
   Schema.TGeography -> "GEOGRAPHY"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstCitus
 
-mkColumn :: Schema.Column -> Text
-mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
+mkColumnSql :: Schema.Column -> Text
+mkColumnSql Schema.Column {columnName, columnType, columnNullable, columnDefault} =
   T.unwords
     [ wrapIdentifier columnName,
       scalarType columnType,
@@ -140,41 +142,17 @@ mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
       maybe "" ("DEFAULT " <>) columnDefault
     ]
 
-mkPrimaryKey :: [Text] -> Text
-mkPrimaryKey key =
-  T.unwords
-    [ "PRIMARY KEY",
-      "(",
-      commaSeparated $ map wrapIdentifier key,
-      ")"
-    ]
-
-mkReference :: Schema.Reference -> Text
-mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
-  T.unwords
-    [ "FOREIGN KEY",
-      "(",
-      wrapIdentifier referenceLocalColumn,
-      ")",
-      "REFERENCES",
-      referenceTargetTable,
-      "(",
-      wrapIdentifier referenceTargetColumn,
-      ")",
-      "ON DELETE CASCADE",
-      "ON UPDATE CASCADE"
-    ]
-
 -- | Serialize tableData into a Citus-SQL insert statement and execute it.
-insertTable :: HasCallStack => Schema.Table -> IO ()
-insertTable Schema.Table {tableName, tableColumns, tableData}
+insertTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
+insertTable testEnv Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
+    let schemaName = Schema.unSchemaName $ Schema.getSchemaName testEnv
     run_ $
       T.unpack $
         T.unwords
           [ "INSERT INTO",
-            T.pack Constants.citusDb <> "." <> wrapIdentifier tableName,
+            T.pack Constants.citusDb <> "." <> wrapIdentifier schemaName <> "." <> wrapIdentifier tableName,
             "(",
             commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
             ")",
@@ -235,8 +213,8 @@ setup tables (testEnvironment, _) = do
   GraphqlEngine.setSource testEnvironment defaultSourceMetadata Nothing
   -- Setup and track tables
   for_ tables $ \table -> do
-    createTable table
-    insertTable table
+    createTable testEnvironment table
+    insertTable testEnvironment table
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do

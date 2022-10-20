@@ -29,7 +29,7 @@ export const getTablesListAsTree = async ({
       <div className="inline-block">
         <span className="font-bold text-lg">{source.name}</span>
         <span className="items-center ml-sm px-sm py-0.5 rounded-full text-sm tracking-wide font-semibold bg-indigo-100 text-indigo-800">
-          Experimental
+          Beta
         </span>
       </div>
     ),

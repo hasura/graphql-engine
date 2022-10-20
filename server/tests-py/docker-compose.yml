@@ -4,7 +4,7 @@ version: "3.6"
 
 services:
   cabal-update:
-    image: hasura/graphql-engine-server-builder:${PLATFORM:-}-${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
+    image: hasura/graphql-engine-server-builder:${DOCKER_PLATFORM:-}-${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
     command:
       - cabal
       - update
@@ -15,13 +15,17 @@ services:
     working_dir: /src
 
   hge-build:
-    image: hasura/graphql-engine-server-builder:${PLATFORM:-}-${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
+    image: hasura/graphql-engine-server-builder:${DOCKER_PLATFORM:-}-${HASURA_GRAPHQL_ENGINE_SERVER_BUILDER_SHA}
     command:
-      - cabal
-      - build
-      - graphql-engine:exe:graphql-engine
+      - sh
+      - -c
+      - |
+        set -ex
+        cabal build graphql-engine:exe:graphql-engine
+        cabal list-bin graphql-engine:exe:graphql-engine > dist-newstyle/bin.txt
     volumes:
       - ../..:/src
+      - /dev/null:/src/cabal.project.local # don't include cabal.project.local in build
       - hge-dist:/src/dist-newstyle
       - cabal-cache:/root/.cabal
     working_dir: /src
@@ -35,12 +39,16 @@ services:
       dockerfile: ./.buildkite/dockerfiles/server-pytest-runner/Dockerfile
     image: hasura/graphql-engine-server-pytest-runner:${HASURA_GRAPHQL_ENGINE_SERVER_PYTEST_RUNNER_SHA}
     command:
-      - ./oss-.circleci/test-server.sh
+      - sh
+      - -c
+      - |
+        set -ex
+        export GRAPHQL_ENGINE="$$(cat dist-newstyle/bin.txt)"
+        ./oss-.circleci/test-server.sh
     environment:
       - CIRCLE_NODE_INDEX=1
       - CIRCLE_NODE_TOTAL=1
       - OUTPUT_FOLDER=/output
-      - GRAPHQL_ENGINE=/src/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-engine-1.0.0/x/graphql-engine/noopt/build/graphql-engine/graphql-engine
       - HASURA_GRAPHQL_DATABASE_URL=postgresql://postgres:hasura@tests-py-postgres-1/postgres
       - HASURA_GRAPHQL_DATABASE_URL_2=postgresql://postgres:hasura@tests-py-postgres-2/postgres
       - HASURA_GRAPHQL_CITUS_SOURCE_URL=postgresql://postgres:hasura@citus/postgres
@@ -81,7 +89,10 @@ services:
       - /var/lib/postgresql/data
 
   mssql:
-    # Uses a different image for arm64.
+    # We cannot use this image on arm64, as it's not available.
+    # Instead, we use `mcr.microsoft.com/azure-sql-edge`.
+    # This uses an environment variable so it can be overridden by scripts to
+    # provide that image instead.
     image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest@sha256:a098c9ff6fbb8e1c9608ad7511fa42dba8d22e0d50b48302761717840ccc26af}
     ports:
       - 1433
@@ -92,8 +103,13 @@ services:
     volumes:
       - /var/opt/mssql
 
-  # This is necessary because on macOS on amd64, the `mssql/server` image is not available.
-  # We use the `azure-sql-edge` image instead, which does not ship with `sqlcmd` on amd64.
+  # We would prefer to attach the healthcheck directly to the `sqlserver` container.
+  # However, while we can do this in the `mcr.microsoft.com/mssql/server` image,
+  # it's not possible when running on macOS, as we don't use that image, but
+  # instead `mcr.microsoft.com/azure-sql-edge`.
+  # The `mcr.microsoft.com/azure-sql-edge` image does not provide `sqlcmd`.
+  # We therefore need to run it in a separate container.
+  # We can reconsider this once the MSSQL Server image can run on arm64.
   mssql-healthcheck:
     image: mcr.microsoft.com/mssql-tools
     command:

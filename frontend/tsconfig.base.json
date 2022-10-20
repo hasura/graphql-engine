@@ -15,15 +15,25 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["libs/console/legacy-oss/src/lib/*"],
-      "@hasura/console-oss/lib/main": ["libs/console/legacy-oss/src/exports/main.js"],
-      "@hasura/console-oss": ["libs/console/legacy-oss/src/exports/main.js"],
-      "@hasura/console-oss/lib/hoc": ["libs/console/legacy-oss/src/exports/index.js"],
-      "@hasura/console-oss/lib/app": ["libs/console/legacy-oss/src/exports/app.js"],
-      "@hasura/console-oss/lib/appState": ["libs/console/legacy-oss/src/exports/appState.js"],
-      "@hasura/console-oss/lib/constants": ["libs/console/legacy-oss/src/exports/constants.js"],
-      "@hasura/console/legacy-oss": ["libs/console/legacy-oss/src/index.ts"],
-      "@hasura/console/legacy-pro": ["libs/console/legacy-pro/src/index.js"]
+      "@/*": ["libs/console/legacy-ce/src/lib/*"],
+      "@hasura/console-legacy-ce": ["libs/console/legacy-ce/src/index.ts"],
+      "@hasura/console-legacy-ee": ["libs/console/legacy-ee/src/index.js"],
+      "@hasura/console-oss": ["libs/console/legacy-ce/src/exports/main.js"],
+      "@hasura/console-oss/lib/app": [
+        "libs/console/legacy-ce/src/exports/app.js"
+      ],
+      "@hasura/console-oss/lib/appState": [
+        "libs/console/legacy-ce/src/exports/appState.js"
+      ],
+      "@hasura/console-oss/lib/constants": [
+        "libs/console/legacy-ce/src/exports/constants.js"
+      ],
+      "@hasura/console-oss/lib/hoc": [
+        "libs/console/legacy-ce/src/exports/index.js"
+      ],
+      "@hasura/console-oss/lib/main": [
+        "libs/console/legacy-ce/src/exports/main.js"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]

@@ -78,6 +78,8 @@ export {
 export * from './table';
 export { ReactQueryProvider, reactQueryClient } from '../src/lib/reactQuery';
 
+export { PrometheusSettings } from '../src/features/Prometheus';
+
 export { FeatureFlags } from '../src/features/FeatureFlags';
 
 export {

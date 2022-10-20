@@ -84,6 +84,7 @@ export const RestEndpointForm: React.FC<RestEndpointFormProps> = ({
     <Form
       ref={restEndpointFormRef}
       schema={validationSchema}
+      className="p-4"
       options={{
         defaultValues: formState,
       }}

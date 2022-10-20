@@ -168,3 +168,10 @@ label {
   font-weight: normal;
   margin-bottom: 0;
 }
+
+/* Customize skeleton colors */
+.react-loading-skeleton {
+  --base-color: #E2E8F0 !important;
+  --highlight-color: #F1F5F9 !important;
+  --animation-duration: 1.5s !important;
+}

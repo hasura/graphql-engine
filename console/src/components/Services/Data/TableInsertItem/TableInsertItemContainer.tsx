@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { setTable } from '../DataActions';
 import { fetchEnumOptions, I_RESET, insertItem } from './InsertActions';
-import { ColumnName, RowValues } from './InsertItem.types';
-import { TableInsertRowItemProps } from './TableInsertRowItem';
+import { ColumnName, RowValues } from '../TableCommon/DataTableRowItem.types';
+import { DataTableRowItemProps } from '../TableCommon/DataTableRowItem';
 import { TableInsertItems } from './TableInsertItems';
 
 type GetButtonTextArgs = {
@@ -42,7 +42,7 @@ export const TableInsertItemContainer = (
   const [insertedRows, setInsertedRows] = useState(0);
   const [values, setValues] = useState<Record<ColumnName, RowValues>>({});
 
-  const onColumnUpdate: TableInsertRowItemProps['onColumnUpdate'] = (
+  const onColumnUpdate: DataTableRowItemProps['onColumnUpdate'] = (
     columnName,
     rowValues
   ) => {
@@ -52,7 +52,7 @@ export const TableInsertItemContainer = (
         valueNode: rowValues.valueNode,
         nullNode: rowValues.nullNode,
         defaultNode: rowValues.defaultNode,
-        insertRadioNode: rowValues.insertRadioNode,
+        radioNode: rowValues.radioNode,
       };
     }
     newValues[columnName] = rowValues;
@@ -130,7 +130,13 @@ export const TableInsertItemContainer = (
       return acc;
     }, {});
 
-    dispatch(insertItem(tableName, inputValues, isMigration)).then(() => {
+    dispatch(
+      insertItem(
+        tableName,
+        clone ? { ...clone, ...inputValues } : inputValues,
+        isMigration
+      )
+    ).then(() => {
       nextInsert();
     });
   };

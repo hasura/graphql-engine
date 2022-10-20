@@ -259,7 +259,7 @@ export type ConnectDBActions =
   | { type: 'UPDATE_DB_PASSWORD'; data: string }
   | { type: 'UPDATE_DB_DATABASE_NAME'; data: string }
   | { type: 'UPDATE_MAX_CONNECTIONS'; data: string }
-  | { type: 'UPDATE_CUMULATIVE_MAX_CONNECTIONS'; data: string }
+  | { type: 'UPDATE_TOTAL_MAX_CONNECTIONS'; data: string }
   | { type: 'UPDATE_RETRIES'; data: string }
   | { type: 'UPDATE_IDLE_TIMEOUT'; data: string }
   | { type: 'UPDATE_POOL_TIMEOUT'; data: string }
@@ -389,11 +389,12 @@ export const connectDBReducer = (
           max_connections: setNumberFromString(action.data),
         },
       };
-    case 'UPDATE_CUMULATIVE_MAX_CONNECTIONS':
+    case 'UPDATE_TOTAL_MAX_CONNECTIONS':
       return produce(state, (draft: ConnectDBState) => {
         draft.connectionSettings = state.connectionSettings ?? {};
-        draft.connectionSettings.cumulative_max_connections =
-          setNumberFromString(action.data);
+        draft.connectionSettings.total_max_connections = setNumberFromString(
+          action.data
+        );
       });
     case 'UPDATE_RETRIES':
       return {
@@ -670,9 +671,9 @@ export const makeReadReplicaConnectionObject = (
   if (stateVal.connectionSettings?.max_connections) {
     pool_settings.max_connections = stateVal.connectionSettings.max_connections;
   }
-  if (stateVal.connectionSettings?.cumulative_max_connections) {
-    pool_settings.cumulative_max_connections =
-      stateVal.connectionSettings.cumulative_max_connections;
+  if (stateVal.connectionSettings?.total_max_connections) {
+    pool_settings.total_max_connections =
+      stateVal.connectionSettings.total_max_connections;
   }
   if (stateVal.connectionSettings?.idle_timeout) {
     pool_settings.idle_timeout = stateVal.connectionSettings.idle_timeout;

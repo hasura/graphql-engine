@@ -44,7 +44,7 @@ func (re *RestEndpointsConfig) CreateFiles() error {
 	return nil
 }
 
-func (re *RestEndpointsConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (re *RestEndpointsConfig) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(re.MetadataDir, re.Filename()))
 	if err != nil {
 		return nil, re.error(err)
@@ -60,7 +60,7 @@ func (re *RestEndpointsConfig) Build() (map[string]interface{}, metadataobject.E
 	return map[string]interface{}{re.Key(): obj}, nil
 }
 
-func (re *RestEndpointsConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (re *RestEndpointsConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	return metadataobject.DefaultExport(re, metadata, re.error, metadataobject.DefaultObjectTypeSequence)
 }
 
@@ -72,7 +72,7 @@ func (re *RestEndpointsConfig) Filename() string {
 	return "rest_endpoints.yaml"
 }
 
-func (re *RestEndpointsConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (re *RestEndpointsConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(re.BaseDirectory(), re.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -81,7 +81,7 @@ func (re *RestEndpointsConfig) GetFiles() ([]string, metadataobject.ErrParsingMe
 	return files, nil
 }
 
-func (re *RestEndpointsConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (re *RestEndpointsConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: re, WriteDiffOpts: opts})
 	if err != nil {
 		return re.error(err)

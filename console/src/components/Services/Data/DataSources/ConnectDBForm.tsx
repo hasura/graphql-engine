@@ -90,6 +90,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
     connectionTypeState,
     isReadReplica = false,
     title,
+    isEditState,
   } = props;
 
   const isDBSupported = (driver: Driver, connectionType: string) => {
@@ -385,6 +386,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
       <ConnectionSettingsForm
         connectionDBState={connectionDBState}
         connectionDBStateDispatch={connectionDBStateDispatch}
+        isEditState={isEditState}
       />
       {/*
         TODO: remove the edit state condition when the BE issue is solved

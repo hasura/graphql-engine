@@ -69,7 +69,7 @@ export const InputField = <T extends z.infer<Schema>>({
   const maybeError = get(errors, name) as FieldError | undefined;
   return (
     <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
-      <div className={clsx('relative flex max-w-xl')}>
+      <div className={clsx('relative flex')}>
         {prependLabel !== '' ? (
           <span className="inline-flex items-center h-input rounded-l text-muted font-semibold px-sm border border-r-0 border-gray-300 bg-gray-50 whitespace-nowrap shadow-sm">
             {prependLabel}
@@ -96,7 +96,7 @@ export const InputField = <T extends z.infer<Schema>>({
               ? 'border-red-600 hover:border-red-700'
               : 'border-gray-300',
             disabled
-              ? 'cursor-not-allowed bg-gray-200 border-gray-200'
+              ? 'cursor-not-allowed bg-gray-200 border-gray-200 hover:border-gray-200'
               : 'hover:border-gray-400',
             {
               'pl-10': iconPosition === 'start' && icon,

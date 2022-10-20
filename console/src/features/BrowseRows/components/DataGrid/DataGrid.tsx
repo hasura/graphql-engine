@@ -2,11 +2,23 @@ import { useRows } from '@/components/Services/Data/TableBrowseRows/Hooks';
 import { Feature, OrderBy, WhereClause } from '@/features/DataSource';
 import { Table } from '@/features/MetadataAPI';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
-import { PaginationState, SortingState } from '@tanstack/react-table';
+import { ColumnSort } from '@tanstack/react-table';
 import React, { useEffect, useState } from 'react';
-import { DataTable } from './parts/DataTable';
+import Skeleton from 'react-loading-skeleton';
+import {
+  DEFAULT_ORDER_BY_CLAUSES,
+  DEFAULT_PAGE_INDEX,
+  DEFAULT_PAGE_SIZE,
+  DEFAULT_QUERY_DIALOG_STATE,
+  DEFAULT_SORT_CLAUSES,
+  DEFAULT_WHERE_CLAUSES,
+} from './constants';
+import { DataTableOptions } from './parts/DataTableOptions';
+import { ReactTableWrapper } from './parts/ReactTableWrapper';
 
 import { QueryDialog } from './QueryDialog';
+import { useTableColumns } from './useTableColumns';
+import { transformToOrderByClause } from './utils';
 
 interface DataGridProps {
   table: Table;
@@ -14,35 +26,48 @@ interface DataGridProps {
 }
 
 export const DataGrid = (props: DataGridProps) => {
-  const [{ pageIndex, pageSize }, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [queryDialogVisibility, setQueryDialogVisibility] = useState(false);
-  const [whereClauses, setWhereClauses] = React.useState<WhereClause[]>();
-  const [orderByClauses, setOrderClauses] = React.useState<OrderBy[]>([]);
-  const pagination = React.useMemo(
-    () => ({
-      pageIndex,
-      pageSize,
-    }),
-    [pageIndex, pageSize]
+  /**
+   * States used by the component - passed around and shared by the table and it's options
+   */
+  const [pageIndex, setPageIndex] = useState(DEFAULT_PAGE_INDEX);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [sorting, setSorting] =
+    React.useState<ColumnSort[]>(DEFAULT_SORT_CLAUSES);
+  const [queryDialogVisibility, setQueryDialogVisibility] = useState(
+    DEFAULT_QUERY_DIALOG_STATE
   );
+  const [whereClauses, setWhereClauses] = React.useState<WhereClause[]>(
+    DEFAULT_WHERE_CLAUSES
+  );
+  const [orderByClauses, setOrderClauses] = React.useState<OrderBy[]>(
+    DEFAULT_ORDER_BY_CLAUSES
+  );
+
+  /**
+   * Function to reset everything back to the original state
+   */
+  const refreshAllOptions = () => {
+    setPageIndex(DEFAULT_PAGE_INDEX);
+    setPageSize(DEFAULT_PAGE_SIZE);
+    setSorting(DEFAULT_SORT_CLAUSES);
+    setWhereClauses(DEFAULT_WHERE_CLAUSES);
+    setOrderClauses(DEFAULT_ORDER_BY_CLAUSES);
+  };
 
   const { dataSourceName, table } = props;
 
+  /**
+   * React preserves the component's state between table to table switch.
+   * This helps the component to shed the options in between the user's jump between one table to another
+   */
   useEffect(() => {
-    setPagination({
-      pageIndex: 0,
-      pageSize: 10,
-    });
-    setSorting([]);
-    setQueryDialogVisibility(false);
-    setWhereClauses([]);
-    setOrderClauses([]);
+    refreshAllOptions();
   }, [dataSourceName, table]);
 
+  /**
+   * React query hook wrapper to get the rows for
+   * the current props.table and props.dataSourceName
+   */
   const {
     data: rows,
     isLoading,
@@ -53,17 +78,12 @@ export const DataGrid = (props: DataGridProps) => {
     options: {
       limit: pageSize,
       offset: pageIndex * pageSize,
-      order_by: [
-        ...orderByClauses,
-        ...sorting.map<OrderBy>(sort => ({
-          column: sort.id,
-          type: sort.desc ? 'desc' : 'asc',
-        })),
-      ],
-
+      order_by: [...orderByClauses, ...transformToOrderByClause(sorting)],
       where: whereClauses,
     },
   });
+
+  const { data: tableColumnQuery } = useTableColumns({ table, dataSourceName });
 
   if (rows === Feature.NotImplemented)
     return <IndicatorCard status="info" headline="Feature Not Implemented" />;
@@ -77,26 +97,52 @@ export const DataGrid = (props: DataGridProps) => {
       </div>
     );
 
-  const columns = rows?.length ? Object.keys(rows[0]) : [];
-
   return (
     <div>
-      <DataTable
-        rows={rows ?? []}
-        columns={columns}
-        pagination={pagination}
-        setPagination={setPagination}
-        sorting={sorting}
-        setSorting={setSorting}
-        onQueryClick={() => {
-          setQueryDialogVisibility(true);
+      <DataTableOptions
+        pagination={{
+          goToNextPage: () => {
+            setPageIndex(currentPage => currentPage + 1);
+          },
+          goToPreviousPage: () => {
+            setPageIndex(currentPage => currentPage - 1);
+          },
+          isNextPageDisabled: (rows ?? []).length < pageSize,
+          isPreviousPageDisabled: pageIndex <= 0,
+          pageSize,
+          setPageSize,
         }}
-        resetQuery={() => {
-          setWhereClauses(undefined);
-          setOrderClauses([]);
+        query={{
+          onQuerySearch: () => {
+            setQueryDialogVisibility(true);
+          },
+          onRefreshQueryOptions: refreshAllOptions,
+          orderByClauses,
+          whereClauses,
+          supportedOperators: tableColumnQuery?.supportedOperators ?? [],
+          removeWhereClause: id => {
+            setWhereClauses(whereClauses.filter((_, i) => i !== id));
+          },
+          removeOrderByClause: id => {
+            setOrderClauses(orderByClauses.filter((_, i) => i !== id));
+          },
         }}
-        isLoading={isLoading}
       />
+
+      {isLoading ? (
+        <div className="my-4">
+          <Skeleton height={30} count={8} className="my-2" />
+        </div>
+      ) : (
+        <ReactTableWrapper
+          rows={rows ?? []}
+          sort={{
+            sorting,
+            setSorting,
+          }}
+        />
+      )}
+
       {queryDialogVisibility && (
         <QueryDialog
           onClose={() => {

@@ -113,7 +113,8 @@ export const useListAllRelationshipsFromMetadata = (
                 return adaptManualRelationship(
                   dataSourceName,
                   table,
-                  relationship
+                  relationship,
+                  'Object'
                 );
 
               /**
@@ -124,7 +125,8 @@ export const useListAllRelationshipsFromMetadata = (
                   dataSourceName,
                   table,
                   relationship,
-                  fkRelationships
+                  fkRelationships,
+                  'Object'
                 );
 
               /**
@@ -153,14 +155,16 @@ export const useListAllRelationshipsFromMetadata = (
                 return adaptManualRelationship(
                   dataSourceName,
                   table,
-                  relationship
+                  relationship,
+                  'Array'
                 );
 
               return adaptLocalTableRelationship(
                 dataSourceName,
                 table,
                 relationship,
-                fkRelationships
+                fkRelationships,
+                'Array'
               );
             }
           ),

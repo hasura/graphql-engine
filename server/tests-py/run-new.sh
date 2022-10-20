@@ -35,7 +35,7 @@ fi
 
 echo
 echo '*** Pulling images ***'
-docker compose pull citus mssql postgres
+docker compose pull --ignore-pull-failures
 
 echo
 echo '*** Starting databases ***'

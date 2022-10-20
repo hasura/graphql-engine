@@ -137,3 +137,5 @@ instance
   snakeCaseTableName = Postgres.snakeCaseQualifiedObject
   getTableIdentifier = Postgres.getIdentifierQualifiedObject
   namingConventionSupport = Postgres.namingConventionSupport
+
+  resizeSourcePools sourceConfig = Postgres._pecResizePools (Postgres._pscExecCtx sourceConfig)

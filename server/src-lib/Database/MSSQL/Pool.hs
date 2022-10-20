@@ -9,6 +9,8 @@ module Database.MSSQL.Pool
     initMSSQLPool,
     drainMSSQLPool,
     withMSSQLPool,
+    resizePool,
+    getInUseConnections,
   )
 where
 
@@ -64,3 +66,14 @@ withMSSQLPool ::
   m (Either ODBC.ODBCException a)
 withMSSQLPool (MSSQLPool pool) action = do
   try $ Pool.withResource pool action
+
+-- | Resize a pool
+resizePool :: MSSQLPool -> Int -> IO ()
+resizePool (MSSQLPool pool) resizeTo = do
+  -- Resize the pool max resources
+  Pool.resizePool pool resizeTo
+  -- Trim pool by destroying excess resources, if any
+  Pool.tryTrimPool pool
+
+getInUseConnections :: MSSQLPool -> IO Int
+getInUseConnections (MSSQLPool pool) = Pool.getInUseResourceCount $ pool

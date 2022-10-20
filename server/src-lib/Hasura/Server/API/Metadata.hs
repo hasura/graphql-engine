@@ -55,7 +55,7 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.GraphqlSchemaIntrospection
-import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata (GetCatalogState, SetCatalogState, emptyMetadataDefaults)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.Permission
@@ -293,7 +293,8 @@ instance FromJSON RQLMetadataV1 where
           command <- choice <$> sequenceA [p backendSourceKind' cmd argValue | p <- metadataV1CommandParsers @b]
           onNothing command $
             fail $
-              "unknown metadata command \"" <> T.unpack cmd
+              "unknown metadata command \""
+                <> T.unpack cmd
                 <> "\" for backend "
                 <> T.unpack (T.toTxt backendSourceKind')
 
@@ -304,9 +305,11 @@ instance FromJSON RQLMetadataV1 where
 parseQueryType :: MonadFail m => Text -> m (AnyBackend BackendSourceKind, Text)
 parseQueryType queryType =
   let (prefix, T.drop 1 -> cmd) = T.breakOn "_" queryType
-   in (,cmd) <$> backendSourceKindFromText prefix
+   in (,cmd)
+        <$> backendSourceKindFromText prefix
         `onNothing` fail
-          ( "unknown metadata command \"" <> T.unpack queryType
+          ( "unknown metadata command \""
+              <> T.unpack queryType
               <> "\"; \""
               <> T.unpack prefix
               <> "\" was not recognized as a valid backend name"
@@ -370,10 +373,18 @@ runMetadataQuery ::
   m (EncJSON, RebuildableSchemaCache)
 runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx schemaCache RQLMetadata {..} = do
   (metadata, currentResourceVersion) <- Tracing.trace "fetchMetadata" fetchMetadata
+  let exportsMetadata = \case
+        RMV1 (RMExportMetadata _) -> True
+        RMV2 (RMV2ExportMetadata _) -> True
+        _ -> False
+      metadataDefaults =
+        if (exportsMetadata _rqlMetadata)
+          then emptyMetadataDefaults
+          else _sccMetadataDefaults serverConfigCtx
   ((r, modMetadata), modSchemaCache, cacheInvalidations) <-
     runMetadataQueryM env currentResourceVersion _rqlMetadata
       & flip runReaderT logger
-      & runMetadataT metadata
+      & runMetadataT metadata metadataDefaults
       & runCacheRWT schemaCache
       & peelRun (RunCtx userInfo httpManager serverConfigCtx)
       & runExceptT

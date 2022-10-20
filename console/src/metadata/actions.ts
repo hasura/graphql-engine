@@ -211,6 +211,10 @@ export interface UpdateAPILimits {
       global?: number;
       per_role?: Record<string, number>;
     };
+    batch_limit?: {
+      global?: number;
+      per_role?: Record<string, number>;
+    };
   };
 }
 

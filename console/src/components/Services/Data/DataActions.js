@@ -6,7 +6,7 @@ import Endpoints, { globalCookiePolicy } from '../../../Endpoints';
 import requestAction from '../../../utils/requestAction';
 import defaultState from './DataState';
 import viewReducer from './TableBrowseRows/ViewActions';
-import editReducer from './TableBrowseRows/EditActions';
+import editReducer from './TableEditItem/EditActions';
 import modifyReducer from './TableCommon/TableReducer';
 import { getAllUnTrackedRelations } from './TableRelationships/Actions';
 import {

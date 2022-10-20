@@ -29,6 +29,8 @@ import Hasura.Prelude
 import Hasura.RQL.DDL.Schema.Cache
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
+import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.Server.Init
 import Hasura.Server.Migrate
@@ -101,7 +103,8 @@ buildPostgresSpecs = do
       let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
       onNothing maybeV $
-        throwError $ "Expected: " <> envVar
+        throwError $
+          "Expected: " <> envVar
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
       urlConf = UrlValue $ InputWebhook $ mkPlainURLTemplate pgUrlText
@@ -110,7 +113,7 @@ buildPostgresSpecs = do
       sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
 
   pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams {PG.cpConns = 1} print
-  let pgContext = mkPGExecCtx PG.Serializable pgPool
+  let pgContext = mkPGExecCtx PG.Serializable pgPool NeverResizePool
 
       logger :: Logger Hasura = Logger $ \l -> do
         let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
@@ -137,6 +140,7 @@ buildPostgresSpecs = do
                 EventingEnabled
                 readOnlyMode
                 Nothing -- We are not testing the naming convention here, so defaulting to hasura-default
+                emptyMetadataDefaults
             cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
             pgLogger = print
 
@@ -158,7 +162,7 @@ buildPostgresSpecs = do
           pure (metadata, schemaCache)
 
         cacheRef <- newMVar schemaCache
-        pure $ NT (run . flip MigrateSuite.runCacheRefT cacheRef . fmap fst . runMetadataT metadata)
+        pure $ NT (run . flip MigrateSuite.runCacheRefT cacheRef . fmap fst . runMetadataT metadata emptyMetadataDefaults)
 
   -- We use "suite" to denote a set of tests that can't (yet) be detected and
   -- run by @hspec-discover@.
@@ -168,7 +172,8 @@ buildPostgresSpecs = do
   pure $ do
     describe "Migrate suite" $
       beforeAll setupCacheRef $
-        describe "Hasura.Server.Migrate" $ MigrateSuite.suite sourceConfig pgContext pgConnInfo
+        describe "Hasura.Server.Migrate" $
+          MigrateSuite.suite sourceConfig pgContext pgConnInfo
     describe "Streaming subscription suite" $ streamingSubscriptionSuite
     describe "Event trigger log cleanup suite" $ eventTriggerLogCleanupSuite
 

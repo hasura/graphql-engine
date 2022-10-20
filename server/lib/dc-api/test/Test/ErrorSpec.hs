@@ -18,13 +18,13 @@ spec TestData {..} api sourceName config _capabilities = describe "Basic Queries
   where
     brokenQueryRequest :: QueryRequest
     brokenQueryRequest =
-      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId"), ("Name", _tdColumnField "Name")]
+      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId" _tdIntType), ("Name", _tdColumnField "Name" _tdStringType)]
           query =
             Data.emptyQuery
               & qFields ?~ fields
               & qWhere
                 ?~ ApplyBinaryComparisonOperator
                   (CustomBinaryComparisonOperator "FOOBAR")
-                  (ComparisonColumn CurrentTable (ColumnName "ArtistId"))
-                  (ScalarValue "1")
+                  (ComparisonColumn CurrentTable (ColumnName "ArtistId") NumberTy)
+                  (ScalarValue "1" StringTy)
        in QueryRequest _tdArtistsTableName [] query

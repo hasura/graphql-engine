@@ -67,6 +67,7 @@ import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup)
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Endpoint as EP
+import Hasura.RQL.Types.Metadata (MetadataDefaults)
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Source
 import Hasura.SQL.Backend
@@ -132,7 +133,8 @@ data ServerCtx = ServerCtx
     scEventingMode :: !EventingMode,
     scEnableReadOnlyMode :: !ReadOnlyMode,
     scDefaultNamingConvention :: !(Maybe NamingCase),
-    scPrometheusMetrics :: !PrometheusMetrics
+    scPrometheusMetrics :: !PrometheusMetrics,
+    scMetadataDefaults :: !MetadataDefaults
   }
 
 data HandlerCtx = HandlerCtx
@@ -405,6 +407,7 @@ v1QueryHandler query = do
     action logger = do
       userInfo <- asks hcUser
       scRef <- asks (scCacheRef . hcServerCtx)
+      metadataDefaults <- asks (scMetadataDefaults . hcServerCtx)
       schemaCache <- liftIO $ fst <$> readSchemaCacheRef scRef
       httpMgr <- asks (scManager . hcServerCtx)
       sqlGenCtx <- asks (scSQLGenCtx . hcServerCtx)
@@ -427,6 +430,7 @@ v1QueryHandler query = do
               eventingMode
               readOnlyMode
               defaultNamingCase
+              metadataDefaults
       runQuery
         env
         logger
@@ -466,6 +470,7 @@ v1MetadataHandler query = Tracing.trace "Metadata" $ do
   _sccEventingMode <- asks (scEventingMode . hcServerCtx)
   _sccReadOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
   _sccDefaultNamingConvention <- asks (scDefaultNamingConvention . hcServerCtx)
+  _sccMetadataDefaults <- asks (scMetadataDefaults . hcServerCtx)
   let serverConfigCtx = ServerConfigCtx {..}
   r <-
     withSchemaCacheUpdate
@@ -520,6 +525,7 @@ v2QueryHandler query = Tracing.trace "v2 Query" $ do
       eventingMode <- asks (scEventingMode . hcServerCtx)
       readOnlyMode <- asks (scEnableReadOnlyMode . hcServerCtx)
       defaultNamingCase <- asks (scDefaultNamingConvention . hcServerCtx)
+      defaultMetadata <- asks (scMetadataDefaults . hcServerCtx)
       let serverConfigCtx =
             ServerConfigCtx
               functionPermsCtx
@@ -530,6 +536,7 @@ v2QueryHandler query = Tracing.trace "v2 Query" $ do
               eventingMode
               readOnlyMode
               defaultNamingCase
+              defaultMetadata
 
       V2Q.runQuery env instanceId userInfo schemaCache httpMgr serverConfigCtx query
 
@@ -798,6 +805,8 @@ mkWaiApp ::
   MetadataQueryLoggingMode ->
   -- | default naming convention
   Maybe NamingCase ->
+  -- | default metadata entries
+  MetadataDefaults ->
   m HasuraApp
 mkWaiApp
   setupHook
@@ -833,7 +842,8 @@ mkWaiApp
   enabledLogTypes
   wsConnInitTimeout
   enableMetadataQueryLogging
-  defaultNC = do
+  defaultNC
+  metadataDefaults = do
     let getSchemaCache' = first lastBuiltSchemaCache <$> readSchemaCacheRef schemaCacheRef
 
     let corsPolicy = mkDefaultCorsPolicy corsCfg
@@ -877,7 +887,8 @@ mkWaiApp
               scEventingMode = eventingMode,
               scEnableReadOnlyMode = readOnlyMode,
               scDefaultNamingConvention = defaultNC,
-              scPrometheusMetrics = prometheusMetrics
+              scPrometheusMetrics = prometheusMetrics,
+              scMetadataDefaults = metadataDefaults
             }
 
     spockApp <- liftWithStateless $ \lowerIO ->

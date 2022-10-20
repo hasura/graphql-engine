@@ -16,8 +16,7 @@ where
 import Data.Aeson (FromJSON, ToJSON, (.:), (.=))
 import Data.Aeson qualified as Aeson
 import Data.HashMap.Strict.InsOrd qualified as InsOrdHashMap
-import Data.Text.NonEmpty (NonEmptyText)
-import Data.Text.NonEmpty qualified as Text.NE
+import Data.Text.Extended (ToTxt (..))
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC.Types
 import Hasura.Base.Error qualified as Error
 import Hasura.EncJSON (EncJSON)
@@ -32,7 +31,7 @@ import Servant.Client qualified as Servant
 --------------------------------------------------------------------------------
 
 data DCAddAgent = DCAddAgent
-  { _gdcaName :: NonEmptyText,
+  { _gdcaName :: DC.Types.DataConnectorName,
     _gdcaUrl :: Servant.BaseUrl
   }
 
@@ -56,13 +55,12 @@ runAddDataConnectorAgent ::
   DCAddAgent ->
   m EncJSON
 runAddDataConnectorAgent DCAddAgent {..} = do
-  let kind = DC.Types.DataConnectorName _gdcaName
-      agent = DC.Types.DataConnectorOptions _gdcaUrl
+  let agent = DC.Types.DataConnectorOptions _gdcaUrl
 
   let modifier =
         Metadata.MetadataModifier $
           Metadata.metaBackendConfigs %~ BackendMap.modify @'Backend.DataConnector \oldMap ->
-            Metadata.BackendConfigWrapper $ InsOrdHashMap.insert kind agent (coerce oldMap)
+            Metadata.BackendConfigWrapper $ InsOrdHashMap.insert _gdcaName agent (coerce oldMap)
 
   SC.Build.withNewInconsistentObjsCheck $ SC.Build.buildSchemaCache modifier
 
@@ -70,7 +68,7 @@ runAddDataConnectorAgent DCAddAgent {..} = do
 
 --------------------------------------------------------------------------------
 
-newtype DCDeleteAgent = DCDeleteAgent {_dcdaName :: NonEmptyText}
+newtype DCDeleteAgent = DCDeleteAgent {_dcdaName :: DC.Types.DataConnectorName}
 
 instance FromJSON DCDeleteAgent where
   parseJSON = Aeson.withObject "DCDeleteAgent" \o -> do
@@ -89,21 +87,19 @@ runDeleteDataConnectorAgent ::
   DCDeleteAgent ->
   m EncJSON
 runDeleteDataConnectorAgent DCDeleteAgent {..} = do
-  let kind = DC.Types.DataConnectorName _dcdaName
-
   oldMetadata <- Metadata.getMetadata
 
   let kindExists = do
         agentMap <- BackendMap.lookup @'Backend.DataConnector $ Metadata._metaBackendConfigs oldMetadata
-        InsOrdHashMap.lookup kind $ Metadata.unBackendConfigWrapper agentMap
+        InsOrdHashMap.lookup _dcdaName $ Metadata.unBackendConfigWrapper agentMap
   case kindExists of
-    Nothing -> Error.throw400 Error.NotFound $ "DC Agent '" <> Text.NE.unNonEmptyText _dcdaName <> "' not found"
+    Nothing -> Error.throw400 Error.NotFound $ "DC Agent '" <> toTxt _dcdaName <> "' not found"
     Just _ -> do
       let modifier =
             Metadata.MetadataModifier $
               Metadata.metaBackendConfigs
                 %~ BackendMap.alter @'Backend.DataConnector
-                  (fmap (coerce . InsOrdHashMap.delete kind . Metadata.unBackendConfigWrapper))
+                  (fmap (coerce . InsOrdHashMap.delete _dcdaName . Metadata.unBackendConfigWrapper))
 
       SC.Build.withNewInconsistentObjsCheck $ SC.Build.buildSchemaCache modifier
       pure Common.successMsg

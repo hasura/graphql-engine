@@ -24,6 +24,6 @@ spec TestData {..} api sourceName config _ = do
   where
     artistsQueryRequest :: QueryRequest
     artistsQueryRequest =
-      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId"), ("Name", _tdColumnField "Name")]
+      let fields = Data.mkFieldsMap [("ArtistId", _tdColumnField "ArtistId" _tdIntType), ("Name", _tdColumnField "Name" _tdStringType)]
           query = Data.emptyQuery & qFields ?~ fields
        in QueryRequest _tdArtistsTableName [] query

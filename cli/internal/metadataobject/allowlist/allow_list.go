@@ -42,7 +42,7 @@ func (a *AllowListConfig) CreateFiles() error {
 	return nil
 }
 
-func (a *AllowListConfig) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (a *AllowListConfig) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(a.MetadataDir, a.Filename()))
 	if err != nil {
 		return nil, a.error(err)
@@ -55,7 +55,7 @@ func (a *AllowListConfig) Build() (map[string]interface{}, metadataobject.ErrPar
 	return map[string]interface{}{a.Key(): obj}, nil
 }
 
-func (a *AllowListConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (a *AllowListConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	return metadataobject.DefaultExport(a, metadata, a.error, metadataobject.DefaultObjectTypeSequence)
 }
 
@@ -67,7 +67,7 @@ func (a *AllowListConfig) Filename() string {
 	return "allow_list.yaml"
 }
 
-func (a *AllowListConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (a *AllowListConfig) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(a.BaseDirectory(), a.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -76,7 +76,7 @@ func (a *AllowListConfig) GetFiles() ([]string, metadataobject.ErrParsingMetadat
 	return files, nil
 }
 
-func (a *AllowListConfig) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (a *AllowListConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: a, WriteDiffOpts: opts})
 	if err != nil {
 		return a.error(err)

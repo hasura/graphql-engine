@@ -30,6 +30,7 @@ BackendOnlyEnabled.decorators = [
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { backendOnly: true } }}
+      className="p-4"
     >
       {() => <StoryComponent />}
     </Form>
@@ -48,6 +49,7 @@ BackendOnlyDisabled.decorators = [
       schema={schema}
       onSubmit={() => {}}
       options={{ defaultValues: { backendOnly: false } }}
+      className="p-4"
     >
       {() => <StoryComponent />}
     </Form>
