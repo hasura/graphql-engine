@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 
@@ -40,11 +39,6 @@ const ComputedFields = (props: ComputedFieldsProps) => {
       />
     </React.Fragment>
   );
-};
-
-ComputedFields.propTypes = {
-  currentSchema: PropTypes.string.isRequired,
-  dispatch: PropTypes.func.isRequired,
 };
 
 type OwnProps = {

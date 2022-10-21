@@ -22,14 +22,14 @@ import { FaDatabase, FaFolder, FaTable } from 'react-icons/fa';
 import styles from '../../../Common/TableCommon/Table.module.scss';
 
 const TableHeader = ({
-  tabName,
   count,
+  dispatch,
   isCountEstimated,
-  table,
   migrationMode,
   readOnlyMode,
   source,
-  dispatch,
+  table,
+  tabName,
 }) => {
   const tableName = table.table_name;
   const tableSchema = table.table_schema;
