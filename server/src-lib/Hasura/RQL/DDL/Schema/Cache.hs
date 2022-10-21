@@ -21,12 +21,10 @@ module Hasura.RQL.DDL.Schema.Cache
 where
 
 import Control.Arrow.Extended
-import Control.Arrow.Interpret
 import Control.Lens hiding ((.=))
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Control.Retry qualified as Retry
 import Data.Aeson
-import Data.Align (align)
 import Data.Either (isLeft)
 import Data.Environment qualified as Env
 import Data.HashMap.Strict.Extended qualified as M
@@ -35,7 +33,6 @@ import Data.HashSet qualified as HS
 import Data.Proxy
 import Data.Set qualified as S
 import Data.Text.Extended
-import Data.These (These (..))
 import Hasura.Base.Error
 import Hasura.GraphQL.Schema (buildGQLContext)
 import Hasura.GraphQL.Schema.NamingCase
@@ -48,8 +45,6 @@ import Hasura.RQL.DDL.CustomTypes
 import Hasura.RQL.DDL.EventTrigger (MonadEventLogCleanup (..), buildEventTriggerInfo)
 import Hasura.RQL.DDL.InheritedRoles (resolveInheritedRole)
 import Hasura.RQL.DDL.RemoteRelationship (CreateRemoteSchemaRemoteRelationship (..), PartiallyResolvedSource (..), buildRemoteFieldInfo, getRemoteSchemaEntityJoinColumns)
-import Hasura.RQL.DDL.RemoteSchema
-import Hasura.RQL.DDL.RemoteSchema.Permission (resolveRoleBasedRemoteSchema)
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema.Cache.Common
 import Hasura.RQL.DDL.Schema.Cache.Dependencies
@@ -73,10 +68,7 @@ import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Relationships.ToSchema
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
-import Hasura.RQL.Types.Roles.Internal (CheckPermission (..))
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
@@ -85,6 +77,8 @@ import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
+import Hasura.RemoteSchema.Metadata
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
@@ -546,7 +540,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         HashMap (TableName b) (EventTriggerInfoMap b),
         DBTablesMetadata b,
         DBFunctionsMetadata b,
-        RemoteSchemaMap,
+        PartiallyResolvedRemoteSchemaMap,
         OrderedRoles
       )
         `arr` BackendSourceInfo
@@ -686,15 +680,6 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           inheritedRoleNames = OMap.keys inheritedRoles
           allRoleNames = sourceRoles <> HS.fromList (remoteSchemaRoles <> actionRoles <> inheritedRoleNames)
 
-          remoteSchemaPermissions =
-            let remoteSchemaPermsList = OMap.toList $ _rsmPermissions <$> remoteSchemas
-             in concat $
-                  flip map remoteSchemaPermsList $
-                    ( \(remoteSchemaName, remoteSchemaPerms) ->
-                        flip map remoteSchemaPerms $ \(RemoteSchemaPermissionMetadata role defn comment) ->
-                          AddRemoteSchemaPermission remoteSchemaName role defn comment
-                    )
-
       -- roles which have some kind of permission (action/remote schema/table/function) set in the metadata
       let metadataRoles = mapFromL _rRoleName $ (`Role` ParentRoles mempty) <$> toList allRoleNames
 
@@ -706,8 +691,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
 
       -- remote schemas
       let remoteSchemaInvalidationKeys = Inc.selectD #_ikRemoteSchemas invalidationKeys
-      remoteSchemaMap <- buildRemoteSchemas -< (remoteSchemaInvalidationKeys, OMap.elems remoteSchemas)
-      let remoteSchemaCtxMap = M.map (fst . fst) remoteSchemaMap
+      remoteSchemaMap <- buildRemoteSchemas env -< ((remoteSchemaInvalidationKeys, orderedRoles), OMap.elems remoteSchemas)
+      let remoteSchemaCtxMap = M.map fst remoteSchemaMap
 
       !defaultNC <- bindA -< _sccDefaultNamingConvention <$> askServerConfigCtx
       !isNamingConventionEnabled <- bindA -< ((EFNamingConventions `elem`) . _sccExperimentalFeatures) <$> askServerConfigCtx
@@ -820,73 +805,22 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
 
       remoteSchemaCache <-
         (remoteSchemaMap >- returnA)
-          >-> ( \info ->
-                  (info, M.groupOn _arspRemoteSchema remoteSchemaPermissions)
-                    >-
-                      alignExtraRemoteSchemaInfo mkRemoteSchemaPermissionMetadataObject
-              )
           >-> (|
                 Inc.keyed
-                  ( \_ (((remoteSchemaCtx, relationships), metadataObj), remoteSchemaPerms) -> do
-                      metadataPermissionsMap <-
-                        buildRemoteSchemaPermissions -< (remoteSchemaCtx, remoteSchemaPerms)
-                      -- convert to the intermediate form `CheckPermission` whose `Semigroup`
-                      -- instance is used to combine permissions
-                      let metadataCheckPermissionsMap = CPDefined <$> metadataPermissionsMap
-                      allRolesUnresolvedPermissionsMap <-
-                        bindA
-                          -<
-                            foldM
-                              ( \accumulatedRolePermMap (Role roleName (ParentRoles parentRoles)) -> do
-                                  rolePermission <- onNothing (M.lookup roleName accumulatedRolePermMap) $ do
-                                    parentRolePermissions <-
-                                      for (toList parentRoles) $ \role ->
-                                        onNothing (M.lookup role accumulatedRolePermMap) $
-                                          throw500 $
-                                            "remote schema permissions: bad ordering of roles, could not find the permission of role: " <>> role
-                                    let combinedPermission = sconcat <$> nonEmpty parentRolePermissions
-                                    pure $ fromMaybe CPUndefined combinedPermission
-                                  pure $ M.insert roleName rolePermission accumulatedRolePermMap
-                              )
-                              metadataCheckPermissionsMap
-                              (_unOrderedRoles orderedRoles)
-                      -- traverse through `allRolesUnresolvedPermissionsMap` to record any inconsistencies (if exists)
-                      resolvedPermissions <-
+                  ( \_ (partiallyResolvedRemoteSchemaCtx, metadataObj) -> do
+                      let remoteSchemaIntrospection = irDoc $ _rscIntroOriginal partiallyResolvedRemoteSchemaCtx
+                      resolvedSchemaCtx <-
                         (|
                           traverseA
-                            ( \(roleName, checkPermission) -> do
-                                let inconsistentRoleEntity = InconsistentRemoteSchemaPermission $ _rscName remoteSchemaCtx
-                                resolvedCheckPermission <- interpretWriter -< resolveCheckPermission checkPermission roleName inconsistentRoleEntity
-                                returnA -< (roleName, resolvedCheckPermission)
+                            ( \PartiallyResolvedRemoteRelationship {..} ->
+                                buildRemoteSchemaRemoteRelationship
+                                  -<
+                                    ( (partiallyResolvedSources, remoteSchemaCtxMap),
+                                      (_rscName partiallyResolvedRemoteSchemaCtx, remoteSchemaIntrospection, _prrrTypeName, _prrrDefinition)
+                                    )
                             )
-                          |) (M.toList allRolesUnresolvedPermissionsMap)
-                      let remoteSchemaIntrospection = irDoc $ _rscIntroOriginal remoteSchemaCtx
-                      resolvedRelationships <-
-                        (|
-                          traverseA
-                            ( \(typeName, typeRelationships) -> do
-                                resolvedRelationships <-
-                                  (|
-                                    traverseA
-                                      ( \fromSchemaDef ->
-                                          buildRemoteSchemaRemoteRelationship
-                                            -<
-                                              ( (partiallyResolvedSources, remoteSchemaCtxMap),
-                                                (_rscName remoteSchemaCtx, remoteSchemaIntrospection, typeName, fromSchemaDef)
-                                              )
-                                      )
-                                    |) (_rstrsRelationships typeRelationships)
-                                returnA -< (typeName, resolvedRelationships)
-                            )
-                          |) (OMap.toList relationships)
-                      returnA
-                        -<
-                          ( remoteSchemaCtx
-                              { _rscPermissions = catMaybes $ M.fromList resolvedPermissions,
-                                _rscRemoteRelationships = OMap.catMaybes <$> OMap.fromList resolvedRelationships
-                              },
-                            metadataObj
-                          )
+                          |) partiallyResolvedRemoteSchemaCtx
+                      returnA -< (catMaybes $ resolvedSchemaCtx, metadataObj)
                   )
               |)
 
@@ -1020,70 +954,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
     mkActionMetadataObject (ActionMetadata name comment defn _) =
       MetadataObject (MOAction name) (toJSON $ CreateAction name defn comment)
 
-    mkRemoteSchemaMetadataObject remoteSchema =
-      MetadataObject (MORemoteSchema (_rsmName remoteSchema)) (toJSON remoteSchema)
-
     mkInheritedRoleMetadataObject inheritedRole@(Role roleName _) =
       MetadataObject (MOInheritedRole roleName) (toJSON inheritedRole)
-
-    alignExtraRemoteSchemaInfo ::
-      forall a b arr.
-      (ArrowChoice arr, Inc.ArrowDistribute arr, ArrowWriter (Seq CollectedInfo) arr) =>
-      (b -> MetadataObject) ->
-      ( M.HashMap RemoteSchemaName a,
-        M.HashMap RemoteSchemaName [b]
-      )
-        `arr` M.HashMap RemoteSchemaName (a, [b])
-    alignExtraRemoteSchemaInfo mkMetadataObject = proc (baseInfo, extraInfo) -> do
-      combinedInfo <-
-        (|
-          Inc.keyed
-            (\remoteSchemaName infos -> combine -< (remoteSchemaName, infos))
-          |) (align baseInfo extraInfo)
-      returnA -< catMaybes combinedInfo
-      where
-        combine :: (RemoteSchemaName, These a [b]) `arr` Maybe (a, [b])
-        combine = proc (remoteSchemaName, infos) -> case infos of
-          This base -> returnA -< Just (base, [])
-          These base extras -> returnA -< Just (base, extras)
-          That extras -> do
-            let errorMessage = "remote schema  " <> unRemoteSchemaName remoteSchemaName <<> " does not exist"
-            recordInconsistencies -< (map mkMetadataObject extras, errorMessage)
-            returnA -< Nothing
-
-    buildRemoteSchemaPermissions ::
-      ( ArrowChoice arr,
-        Inc.ArrowDistribute arr,
-        ArrowWriter (Seq CollectedInfo) arr,
-        Inc.ArrowCache m arr,
-        MonadError QErr m
-      ) =>
-      (RemoteSchemaCtx, [AddRemoteSchemaPermission]) `arr` M.HashMap RoleName IntrospectionResult
-    buildRemoteSchemaPermissions = buildInfoMap _arspRole mkRemoteSchemaPermissionMetadataObject buildRemoteSchemaPermission
-      where
-        buildRemoteSchemaPermission = proc (remoteSchemaCtx, remoteSchemaPerm) -> do
-          let AddRemoteSchemaPermission rsName roleName defn _ = remoteSchemaPerm
-              metadataObject = mkRemoteSchemaPermissionMetadataObject remoteSchemaPerm
-              schemaObject = SORemoteSchemaPermission rsName roleName
-              providedSchemaDoc = _rspdSchema defn
-              addPermContext err = "in remote schema permission for role " <> roleName <<> ": " <> err
-          (|
-            withRecordInconsistency
-              ( (|
-                  modifyErrA
-                    ( do
-                        bindErrorA
-                          -<
-                            when (roleName == adminRoleName) $
-                              throw400 ConstraintViolation $ "cannot define permission for admin role"
-                        (resolvedSchemaIntrospection, dependencies) <-
-                          bindErrorA -< resolveRoleBasedRemoteSchema providedSchemaDoc remoteSchemaCtx
-                        recordDependencies -< (metadataObject, schemaObject, dependencies)
-                        returnA -< resolvedSchemaIntrospection
-                    )
-                |) addPermContext
-              )
-            |) metadataObject
 
     buildTableEventTriggers ::
       forall arr m b.
@@ -1303,40 +1175,6 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               )
             |) (mkActionMetadataObject action)
 
-    buildRemoteSchemas ::
-      ( ArrowChoice arr,
-        Inc.ArrowDistribute arr,
-        ArrowWriter (Seq CollectedInfo) arr,
-        Inc.ArrowCache m arr,
-        MonadIO m,
-        HasHttpManagerM m
-      ) =>
-      ( Inc.Dependency (HashMap RemoteSchemaName Inc.InvalidationKey),
-        [RemoteSchemaMetadata]
-      )
-        `arr` HashMap RemoteSchemaName ((RemoteSchemaCtx, SchemaRemoteRelationships), MetadataObject)
-    buildRemoteSchemas =
-      buildInfoMapPreservingMetadata _rsmName mkRemoteSchemaMetadataObject buildRemoteSchema
-      where
-        -- We want to cache this call because it fetches the remote schema over HTTP, and we don’t
-        -- want to re-run that if the remote schema definition hasn’t changed.
-        buildRemoteSchema = Inc.cache proc (invalidationKeys, remoteSchema@(RemoteSchemaMetadata name defn comment _ relationships)) -> do
-          -- TODO is it strange how we convert from RemoteSchemaMetadata back
-          --      to AddRemoteSchemaQuery here? Document types please.
-          let addRemoteSchemaQuery = AddRemoteSchemaQuery name defn comment
-          Inc.dependOn -< Inc.selectKeyD name invalidationKeys
-          (|
-            withRecordInconsistency
-              ( liftEitherA <<< bindA
-                  -<
-                    (fmap . fmap) (,relationships) $
-                      runExceptT $ noopTrace $ addRemoteSchemaP2Setup env addRemoteSchemaQuery
-              )
-            |) (mkRemoteSchemaMetadataObject remoteSchema)
-        -- TODO continue propagating MonadTrace up calls so that we can get tracing for remote schema introspection.
-        -- This will require modifying CacheBuild.
-        noopTrace = Tracing.runTraceTWithReporter Tracing.noReporter "buildSchemaCacheRule"
-
 buildRemoteSchemaRemoteRelationship ::
   forall arr m.
   ( ArrowChoice arr,
@@ -1344,7 +1182,7 @@ buildRemoteSchemaRemoteRelationship ::
     ArrowKleisli m arr,
     MonadError QErr m
   ) =>
-  ( (HashMap SourceName (AB.AnyBackend PartiallyResolvedSource), RemoteSchemaMap),
+  ( (HashMap SourceName (AB.AnyBackend PartiallyResolvedSource), PartiallyResolvedRemoteSchemaMap),
     (RemoteSchemaName, RemoteSchemaIntrospection, G.Name, RemoteRelationship)
   )
     `arr` Maybe (RemoteFieldInfo G.Name)

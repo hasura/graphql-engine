@@ -36,10 +36,6 @@ import Hasura.Base.Error
   )
 import Hasura.EncJSON (EncJSON)
 import Hasura.Prelude
-import Hasura.RQL.DDL.RemoteRelationship.Validate
-  ( errorToText,
-    validateToSchemaRelationship,
-  )
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
@@ -47,14 +43,14 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Relationships.ToSchema
 import Hasura.RQL.Types.Relationships.ToSource
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.SchemaCacheTypes
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.Table
+import Hasura.RemoteSchema.Metadata
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -318,7 +314,7 @@ buildRemoteFieldInfo ::
   -- | Required context to process cross boundary relationships
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
   -- | Required context to process cross boundary relationships
-  RemoteSchemaMap ->
+  PartiallyResolvedRemoteSchemaMap ->
   -- | returns
   --   1. schema cache representation of the remote relationships
   --   2. the dependencies on the RHS of the join. The dependencies

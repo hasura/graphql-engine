@@ -3,7 +3,6 @@
 module Hasura.RQL.DDL.Schema.Cache.Permission
   ( buildTablePermissions,
     mkPermissionMetadataObject,
-    mkRemoteSchemaPermissionMetadataObject,
     orderRoles,
     OrderedRoles,
     _unOrderedRoles,
@@ -31,7 +30,6 @@ import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.Relationships.Local
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.Roles.Internal
   ( CheckPermission (..),
@@ -280,13 +278,6 @@ mkPermissionMetadataObject source table permDef =
               MTOPerm (_pdRole permDef) permType
       definition = toJSON $ WithTable @b source table permDef
    in MetadataObject objectId definition
-
-mkRemoteSchemaPermissionMetadataObject ::
-  AddRemoteSchemaPermission ->
-  MetadataObject
-mkRemoteSchemaPermissionMetadataObject (AddRemoteSchemaPermission rsName roleName defn _) =
-  let objectId = MORemoteSchemaPermissions rsName roleName
-   in MetadataObject objectId $ toJSON defn
 
 withPermission ::
   forall bknd a b c s arr.

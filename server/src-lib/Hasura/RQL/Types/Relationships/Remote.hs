@@ -2,7 +2,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Relationships.Remote
-  ( RemoteRelationship (..),
+  ( RemoteRelationship,
     RemoteRelationshipDefinition (..),
     parseRemoteRelationshipDefinition,
     RRFormat (..),
@@ -23,12 +23,11 @@ module Hasura.RQL.Types.Relationships.Remote
   )
 where
 
-import Control.Lens (makeLenses, makePrisms)
+import Control.Lens (makePrisms)
 import Data.Aeson
-import Data.Aeson qualified as J
-import Data.Aeson.TH qualified as J
 import Data.Aeson.Types (Parser)
 import Data.HashMap.Strict qualified as HM
+import Data.Text.Extended (ToTxt (toTxt))
 import GHC.TypeLits (ErrorMessage (..), TypeError)
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
@@ -37,24 +36,13 @@ import Hasura.RQL.Types.Column
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Instances ()
-import Hasura.RQL.Types.Relationships.ToSchema
 import Hasura.RQL.Types.Relationships.ToSource
+import Hasura.RemoteSchema.Metadata
+import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.Backend
 
---------------------------------------------------------------------------------
--- metadata
-
--- | Metadata representation of a generic remote relationship, regardless of the
--- source: all sources use this same agnostic definition. The internal
--- definition field is where we differentiate between different targets.
-data RemoteRelationship = RemoteRelationship
-  { _rrName :: RelName,
-    _rrDefinition :: RemoteRelationshipDefinition
-  }
-  deriving (Show, Eq, Generic)
-
-instance Cacheable RemoteRelationship
+type RemoteRelationship = RemoteRelationshipG RemoteRelationshipDefinition
 
 instance FromJSON RemoteRelationship where
   parseJSON = withObject "RemoteRelationship" $ \obj ->
@@ -288,9 +276,12 @@ instance Backend b => ToJSON (ScalarComputedField b) where
         "type" .= _scfType
       ]
 
+-- TODO: this will probably end up in a database module when we
+-- modularise databases related code
+tableNameToLHSIdentifier :: (Backend b) => TableName b -> LHSIdentifier
+tableNameToLHSIdentifier = LHSIdentifier . toTxt
+
 --------------------------------------------------------------------------------
 -- template haskell generation
 
-$(makeLenses ''RemoteRelationship)
-$(J.deriveToJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationship)
 $(makePrisms ''RemoteRelationshipDefinition)

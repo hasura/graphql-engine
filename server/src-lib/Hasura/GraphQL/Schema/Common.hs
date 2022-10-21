@@ -45,6 +45,7 @@ module Hasura.GraphQL.Schema.Common
     mkEnumTypeName,
     addEnumSuffix,
     peelWithOrigin,
+    getIntrospectionResult,
   )
 where
 
@@ -62,6 +63,7 @@ import Hasura.GraphQL.Parser.Internal.TypeChecking qualified as P
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Node
 import Hasura.GraphQL.Schema.Options (SchemaOptions)
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.GraphQL.Schema.Parser qualified as P
 import Hasura.GraphQL.Schema.Typename
 import Hasura.Name qualified as Name
@@ -72,12 +74,12 @@ import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache hiding (askTableInfo)
 import Hasura.RQL.Types.Source
 import Hasura.RQL.Types.SourceCustomization
+import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.AnyBackend qualified as AB
-import Hasura.Session (RoleName)
+import Hasura.Session (RoleName, adminRoleName)
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
@@ -419,3 +421,16 @@ peelWithOrigin parser =
           IR.ValueWithOrigin vInfo <$> P.pParser parser (absurd <$> vValue)
         value -> IR.ValueNoOrigin <$> P.pParser parser value
     }
+
+getIntrospectionResult :: Options.RemoteSchemaPermissions -> RoleName -> RemoteSchemaCtxG remoteFieldInfo -> Maybe IntrospectionResult
+getIntrospectionResult remoteSchemaPermsCtx role remoteSchemaContext =
+  if
+      | -- admin doesn't have a custom annotated introspection, defaulting to the original one
+        role == adminRoleName ->
+        pure $ _rscIntroOriginal remoteSchemaContext
+      | -- if permissions are disabled, the role map will be empty, defaulting to the original one
+        remoteSchemaPermsCtx == Options.DisableRemoteSchemaPermissions ->
+        pure $ _rscIntroOriginal remoteSchemaContext
+      | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
+        otherwise ->
+        Map.lookup role (_rscPermissions remoteSchemaContext)

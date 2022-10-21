@@ -1,30 +1,32 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Hasura.RQL.Types.RemoteSchema
-  ( AddRemoteSchemaPermission (..),
-    AddRemoteSchemaQuery (..),
-    AliasMapping,
-    DropRemoteSchemaPermissions (..),
-    RemoteFieldCustomization (..),
-    RemoteSchemaCustomization (..),
+module Hasura.RemoteSchema.SchemaCache.Types
+  ( RemoteSchemaRelationshipsG,
+    IntrospectionResult (..),
+    RemoteSchemaCtxG (..),
+    PartiallyResolvedRemoteRelationship (..),
+    PartiallyResolvedRemoteSchemaCtxG,
+    rscName,
+    rscInfo,
+    rscIntroOriginal,
+    rscRawIntrospectionResult,
+    rscPermissions,
+    rscRemoteRelationships,
     RemoteSchemaCustomizer (..),
-    RemoteSchemaDef (..),
     RemoteSchemaInfo (..),
-    RemoteSchemaInputValueDefinition (..),
-    RemoteSchemaIntrospection (..),
-    RemoteSchemaName (..),
-    RemoteSchemaNameQuery (..),
-    RemoteSchemaPermissionDefinition (..),
-    RemoteSchemaVariable (..),
-    RemoteTypeCustomization (..),
-    SessionArgumentPresetInfo (..),
-    UrlFromEnv,
     ValidatedRemoteSchemaDef (..),
-    applyAliasMapping,
-    customizeTypeNameString,
-    getUrlFromEnv,
     hasTypeOrFieldCustomizations,
     identityCustomizer,
+    remoteSchemaCustomizeFieldName,
+    remoteSchemaCustomizeTypeName,
+    validateRemoteSchemaCustomization,
+    validateRemoteSchemaDef,
+    CustomizeRemoteFieldName (..),
+    withRemoteFieldNameCustomization,
+    RemoteSchemaInputValueDefinition (..),
+    RemoteSchemaIntrospection (..),
+    RemoteSchemaVariable (..),
+    SessionArgumentPresetInfo (..),
     lookupEnum,
     lookupInputObject,
     lookupInterface,
@@ -32,26 +34,31 @@ module Hasura.RQL.Types.RemoteSchema
     lookupScalar,
     lookupType,
     lookupUnion,
-    modifyFieldByName,
-    remoteSchemaCustomizeFieldName,
     getTypeName,
-    remoteSchemaCustomizeTypeName,
-    singletonAliasMapping,
-    validateRemoteSchemaCustomization,
-    validateRemoteSchemaDef,
+    FieldCall (..),
+    RemoteArguments (..),
+    RemoteFields (..),
+    RemoteSchemaFieldInfo (..),
+    graphQLValueToJSON,
+    LHSIdentifier (..),
+    remoteSchemaToLHSIdentifier,
+    lhsIdentifierToGraphQLName,
   )
 where
 
+import Control.Lens
 import Data.Aeson qualified as J
 import Data.Aeson.TH qualified as J
+import Data.ByteString.Lazy qualified as BL
+import Data.Char qualified as C
 import Data.Environment qualified as Env
+import Data.Has
 import Data.HashMap.Strict qualified as Map
 import Data.HashSet qualified as Set
+import Data.Monoid
 import Data.Text qualified as T
 import Data.Text.Extended
-import Data.Text.NonEmpty
 import Data.URL.Template (printURLTemplate)
-import Database.PG.Query qualified as PG
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Variable
 import Hasura.GraphQL.Schema.Typename
@@ -59,101 +66,71 @@ import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (HeaderConf (..))
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.ResultCustomization
-import Hasura.RQL.Types.SourceCustomization
+import Hasura.RemoteSchema.Metadata
 import Hasura.Session
-import Language.GraphQL.Draft.Printer qualified as G
 import Language.GraphQL.Draft.Syntax qualified as G
 import Network.URI.Extended qualified as N
-import Text.Builder qualified as TB
+import Witherable (Filterable (..))
 
-type UrlFromEnv = Text
+type RemoteSchemaRelationshipsG remoteFieldInfo =
+  InsOrdHashMap G.Name (InsOrdHashMap RelName remoteFieldInfo)
 
--- | Remote schema identifier.
---
--- NOTE: no validation on the character set is done here; it's likely there is
--- a bug (FIXME) where this interacts with remote relationships and some name
--- mangling needs to happen.
-newtype RemoteSchemaName = RemoteSchemaName
-  {unRemoteSchemaName :: NonEmptyText}
-  deriving
-    ( Show,
-      Eq,
-      Ord,
-      Hashable,
-      J.ToJSON,
-      J.ToJSONKey,
-      J.FromJSON,
-      PG.ToPrepArg,
-      PG.FromCol,
-      ToTxt,
-      NFData,
-      Generic,
-      Cacheable
-    )
-
--- NOTE: Prefix and suffix use 'G.Name' so that we can '<>' to form a new valid
--- by-construction 'G.Name'.
-data RemoteTypeCustomization = RemoteTypeCustomization
-  { _rtcPrefix :: Maybe G.Name,
-    _rtcSuffix :: Maybe G.Name,
-    _rtcMapping :: HashMap G.Name G.Name
+data IntrospectionResult = IntrospectionResult
+  { irDoc :: RemoteSchemaIntrospection,
+    irQueryRoot :: G.Name,
+    irMutationRoot :: Maybe G.Name,
+    irSubscriptionRoot :: Maybe G.Name
   }
   deriving (Show, Eq, Generic)
 
-instance NFData RemoteTypeCustomization
+instance Cacheable IntrospectionResult
 
-instance Cacheable RemoteTypeCustomization
-
-instance Hashable RemoteTypeCustomization
-
-$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteTypeCustomization)
-
-instance J.FromJSON RemoteTypeCustomization where
-  parseJSON = J.withObject "RemoteTypeCustomization" $ \o ->
-    RemoteTypeCustomization
-      <$> o J..:? "prefix"
-      <*> o J..:? "suffix"
-      <*> o J..:? "mapping" J..!= mempty
-
-data RemoteFieldCustomization = RemoteFieldCustomization
-  { _rfcParentType :: G.Name,
-    _rfcPrefix :: Maybe G.Name,
-    _rfcSuffix :: Maybe G.Name,
-    _rfcMapping :: HashMap G.Name G.Name
+-- | The resolved information of a remote schema. It is parameterized by
+-- `remoteFieldInfo` so as to work on an arbitrary 'remote relationship'
+-- TODO: Get rid of this 'G' suffix using pattern synonyms or qualified
+-- usage
+data RemoteSchemaCtxG remoteFieldInfo = RemoteSchemaCtx
+  { _rscName :: RemoteSchemaName,
+    -- | Original remote schema without customizations
+    _rscIntroOriginal :: IntrospectionResult,
+    _rscInfo :: RemoteSchemaInfo,
+    -- | The raw response from the introspection query against the remote server.
+    -- We store this so we can efficiently service 'introspect_remote_schema'.
+    _rscRawIntrospectionResult :: BL.ByteString,
+    _rscPermissions :: Map.HashMap RoleName IntrospectionResult,
+    _rscRemoteRelationships :: RemoteSchemaRelationshipsG remoteFieldInfo
   }
-  deriving (Show, Eq, Generic)
+  deriving (Functor, Foldable, Traversable)
 
-instance NFData RemoteFieldCustomization
+instance Filterable RemoteSchemaCtxG where
+  filter f RemoteSchemaCtx {..} =
+    RemoteSchemaCtx
+      { _rscRemoteRelationships = fmap (Witherable.filter f) _rscRemoteRelationships,
+        ..
+      }
+  mapMaybe f RemoteSchemaCtx {..} =
+    RemoteSchemaCtx
+      { _rscRemoteRelationships = fmap (mapMaybe f) _rscRemoteRelationships,
+        ..
+      }
 
-instance Cacheable RemoteFieldCustomization
-
-instance Hashable RemoteFieldCustomization
-
-$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteFieldCustomization)
-
-instance J.FromJSON RemoteFieldCustomization where
-  parseJSON = J.withObject "RemoteFieldCustomization" $ \o ->
-    RemoteFieldCustomization
-      <$> o J..: "parent_type"
-      <*> o J..:? "prefix"
-      <*> o J..:? "suffix"
-      <*> o J..:? "mapping" J..!= mempty
-
-data RemoteSchemaCustomization = RemoteSchemaCustomization
-  { _rscRootFieldsNamespace :: Maybe G.Name,
-    _rscTypeNames :: Maybe RemoteTypeCustomization,
-    _rscFieldNames :: Maybe [RemoteFieldCustomization]
+-- | Resolved information of a remote relationship with the local information
+-- that we have. Currently this is only the typename on which the relationship
+-- is defined. TODO: also add the available join fields on the type
+data PartiallyResolvedRemoteRelationship remoteRelationshipDefinition = PartiallyResolvedRemoteRelationship
+  { _prrrTypeName :: G.Name,
+    _prrrDefinition :: RemoteRelationshipG remoteRelationshipDefinition
   }
-  deriving (Show, Eq, Generic)
+  deriving (Eq, Generic)
 
-instance NFData RemoteSchemaCustomization
+instance Cacheable remoteRelationshipDefinition => Cacheable (PartiallyResolvedRemoteRelationship remoteRelationshipDefinition)
 
-instance Cacheable RemoteSchemaCustomization
-
-instance Hashable RemoteSchemaCustomization
-
-$(J.deriveJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaCustomization)
+-- | We can't go from RemoteSchemaMetadata to RemoteSchemaCtx in a single phase
+-- because we don't have information to resolve remote relationships. So we
+-- annotate remote relationships with as much information as we know about them
+-- which would be further resolved in a later stage.
+type PartiallyResolvedRemoteSchemaCtxG remoteRelationshipDefinition =
+  RemoteSchemaCtxG (PartiallyResolvedRemoteRelationship remoteRelationshipDefinition)
 
 -- | 'RemoteSchemaDef' after validation and baking-in of defaults in 'validateRemoteSchemaDef'.
 data ValidatedRemoteSchemaDef = ValidatedRemoteSchemaDef
@@ -171,8 +148,6 @@ instance NFData ValidatedRemoteSchemaDef
 instance Cacheable ValidatedRemoteSchemaDef
 
 instance Hashable ValidatedRemoteSchemaDef
-
-$(J.deriveJSON hasuraJSON ''ValidatedRemoteSchemaDef)
 
 data RemoteSchemaCustomizer = RemoteSchemaCustomizer
   { _rscNamespaceFieldName :: Maybe G.Name,
@@ -192,11 +167,17 @@ instance Cacheable RemoteSchemaCustomizer
 
 instance Hashable RemoteSchemaCustomizer
 
-$(J.deriveJSON hasuraJSON ''RemoteSchemaCustomizer)
-
 remoteSchemaCustomizeTypeName :: RemoteSchemaCustomizer -> MkTypename
 remoteSchemaCustomizeTypeName RemoteSchemaCustomizer {..} = MkTypename $ \typeName ->
   Map.lookupDefault typeName typeName _rscCustomizeTypeName
+
+newtype CustomizeRemoteFieldName = CustomizeRemoteFieldName
+  { runCustomizeRemoteFieldName :: G.Name -> G.Name -> G.Name
+  }
+  deriving (Semigroup, Monoid) via (G.Name -> Endo G.Name)
+
+withRemoteFieldNameCustomization :: forall m r a. (MonadReader r m, Has CustomizeRemoteFieldName r) => CustomizeRemoteFieldName -> m a -> m a
+withRemoteFieldNameCustomization = local . set hasLens
 
 remoteSchemaCustomizeFieldName :: RemoteSchemaCustomizer -> CustomizeRemoteFieldName
 remoteSchemaCustomizeFieldName RemoteSchemaCustomizer {..} = CustomizeRemoteFieldName $ \typeName fieldName ->
@@ -220,75 +201,6 @@ instance Cacheable RemoteSchemaInfo
 
 instance Hashable RemoteSchemaInfo
 
-$(J.deriveJSON hasuraJSON ''RemoteSchemaInfo)
-
--- | Unvalidated remote schema config, from the user's API request
-data RemoteSchemaDef = RemoteSchemaDef
-  { _rsdUrl :: Maybe InputWebhook,
-    _rsdUrlFromEnv :: Maybe UrlFromEnv,
-    _rsdHeaders :: Maybe [HeaderConf],
-    _rsdForwardClientHeaders :: Bool,
-    _rsdTimeoutSeconds :: Maybe Int,
-    _rsdCustomization :: Maybe RemoteSchemaCustomization
-    -- NOTE: In the future we might extend this API to support a small DSL of
-    -- name transformations; this might live at a different layer, and be part of
-    -- the schema customization story.
-    --
-    -- See: https://github.com/hasura/graphql-engine-mono/issues/144
-    -- TODO we probably want to move this into a sub-field "transformations"?
-  }
-  deriving (Show, Eq, Generic)
-
-instance NFData RemoteSchemaDef
-
-instance Cacheable RemoteSchemaDef
-
-$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''RemoteSchemaDef)
-
-instance J.FromJSON RemoteSchemaDef where
-  parseJSON = J.withObject "Object" $ \o ->
-    RemoteSchemaDef
-      <$> o J..:? "url"
-      <*> o J..:? "url_from_env"
-      <*> o J..:? "headers"
-      <*> o J..:? "forward_client_headers" J..!= False
-      <*> o J..:? "timeout_seconds"
-      <*> o J..:? "customization"
-
--- | The payload for 'add_remote_schema', and a component of 'Metadata'.
-data AddRemoteSchemaQuery = AddRemoteSchemaQuery
-  { -- | An internal identifier for this remote schema.
-    _arsqName :: RemoteSchemaName,
-    _arsqDefinition :: RemoteSchemaDef,
-    -- | An opaque description or comment. We might display this in the UI, for instance.
-    _arsqComment :: Maybe Text
-  }
-  deriving (Show, Eq, Generic)
-
-instance NFData AddRemoteSchemaQuery
-
-instance Cacheable AddRemoteSchemaQuery
-
-$(J.deriveJSON hasuraJSON ''AddRemoteSchemaQuery)
-
-newtype RemoteSchemaNameQuery = RemoteSchemaNameQuery
-  { _rsnqName :: RemoteSchemaName
-  }
-  deriving (Show, Eq)
-
-$(J.deriveJSON hasuraJSON ''RemoteSchemaNameQuery)
-
-getUrlFromEnv :: (MonadIO m, MonadError QErr m) => Env.Environment -> Text -> m (EnvRecord N.URI)
-getUrlFromEnv env urlFromEnv = do
-  let mEnv = Env.lookupEnv env $ T.unpack urlFromEnv
-  uri <- onNothing mEnv (throw400 InvalidParams $ envNotFoundMsg urlFromEnv)
-  case (N.parseURI uri) of
-    Just uri' -> pure $ EnvRecord urlFromEnv uri'
-    Nothing -> throw400 InvalidParams $ invalidUri urlFromEnv
-  where
-    invalidUri x = "not a valid URI in environment variable: " <> x
-    envNotFoundMsg e = "environment variable '" <> e <> "' not set"
-
 validateRemoteSchemaCustomization ::
   (MonadError QErr m) =>
   Maybe RemoteSchemaCustomization ->
@@ -299,7 +211,8 @@ validateRemoteSchemaCustomization (Just RemoteSchemaCustomization {..}) =
     for_ fieldCustomizations $ \RemoteFieldCustomization {..} ->
       for_ (Map.keys _rfcMapping) $ \fieldName ->
         when (isReservedName fieldName) $
-          throw400 InvalidParams $ "attempt to customize reserved field name " <>> fieldName
+          throw400 InvalidParams $
+            "attempt to customize reserved field name " <>> fieldName
   where
     isReservedName = ("__" `T.isPrefixOf`) . G.unName
 
@@ -331,51 +244,6 @@ validateRemoteSchemaDef env (RemoteSchemaDef mUrl mUrlEnv hdrC fwdHdrs mTimeout 
     hdrs = fromMaybe [] hdrC
     timeout = fromMaybe 60 mTimeout
     getTemplateFromUrl url = printURLTemplate $ unInputWebhook url
-
-newtype RemoteSchemaPermissionDefinition = RemoteSchemaPermissionDefinition
-  { _rspdSchema :: G.SchemaDocument
-  }
-  deriving (Show, Eq, Generic)
-
-instance NFData RemoteSchemaPermissionDefinition
-
-instance Cacheable RemoteSchemaPermissionDefinition
-
-instance Hashable RemoteSchemaPermissionDefinition
-
-instance J.FromJSON RemoteSchemaPermissionDefinition where
-  parseJSON = J.withObject "RemoteSchemaPermissionDefinition" $ \obj -> do
-    fmap RemoteSchemaPermissionDefinition $ obj J..: "schema"
-
-instance J.ToJSON RemoteSchemaPermissionDefinition where
-  toJSON (RemoteSchemaPermissionDefinition schema) =
-    J.object $ ["schema" J..= J.String (TB.run . G.schemaDocument $ schema)]
-
-data AddRemoteSchemaPermission = AddRemoteSchemaPermission
-  { _arspRemoteSchema :: RemoteSchemaName,
-    _arspRole :: RoleName,
-    _arspDefinition :: RemoteSchemaPermissionDefinition,
-    _arspComment :: Maybe Text
-  }
-  deriving (Show, Eq, Generic)
-
-instance NFData AddRemoteSchemaPermission
-
-instance Cacheable AddRemoteSchemaPermission
-
-$(J.deriveJSON hasuraJSON ''AddRemoteSchemaPermission)
-
-data DropRemoteSchemaPermissions = DropRemoteSchemaPermissions
-  { _drspRemoteSchema :: RemoteSchemaName,
-    _drspRole :: RoleName
-  }
-  deriving (Show, Eq, Generic)
-
-instance NFData DropRemoteSchemaPermissions
-
-instance Cacheable DropRemoteSchemaPermissions
-
-$(J.deriveJSON hasuraJSON ''DropRemoteSchemaPermissions)
 
 -- | See `resolveRemoteVariable` function. This data type is used
 --   for validation of the session variable value
@@ -495,3 +363,95 @@ lookupInputObject introspection name =
   lookupType introspection name >>= \case
     G.TypeDefinitionInputObject t | G._iotdName t == name -> Just t
     _ -> Nothing
+
+-- remote relationships
+
+-- A textual identifier for an entity on which remote relationships can be
+-- defined. This is used in error messages and type name generation for
+-- arguments in remote relationship fields to remote schemas (See
+-- RemoteRelationship.Validate)
+newtype LHSIdentifier = LHSIdentifier {getLHSIdentifier :: Text}
+  deriving (Show, Eq, Generic)
+
+instance Cacheable LHSIdentifier
+
+remoteSchemaToLHSIdentifier :: RemoteSchemaName -> LHSIdentifier
+remoteSchemaToLHSIdentifier = LHSIdentifier . toTxt
+
+-- | Generates a valid graphql name from an arbitrary LHS identifier.
+-- This is done by replacing all unrecognized characters by '_'. This
+-- function still returns a @Maybe@ value, in cases we can't adjust
+-- the raw text (such as the case of empty identifiers).
+lhsIdentifierToGraphQLName :: LHSIdentifier -> Maybe G.Name
+lhsIdentifierToGraphQLName (LHSIdentifier rawText) = G.mkName $ T.map adjust rawText
+  where
+    adjust c =
+      if C.isAsciiUpper c || C.isAsciiLower c || C.isDigit c
+        then c
+        else '_'
+
+-- | Schema cache information for a table field targeting a remote schema.
+data RemoteSchemaFieldInfo = RemoteSchemaFieldInfo
+  { -- | Field name to which we'll map the remote in hasura; this becomes part
+    --   of the hasura schema.
+    _rrfiName :: RelName,
+    -- | Input arguments to the remote field info; The '_rfiParamMap' will only
+    --   include the arguments to the remote field that is being joined. The
+    --   names of the arguments here are modified, it will be in the format of
+    --   <Original Field Name>_remote_rel_<hasura table schema>_<hasura table name><remote relationship name>
+    _rrfiParamMap :: HashMap G.Name RemoteSchemaInputValueDefinition,
+    _rrfiRemoteFields :: RemoteFields,
+    _rrfiRemoteSchema :: RemoteSchemaInfo,
+    -- | The new input value definitions created for this remote field
+    _rrfiInputValueDefinitions :: [G.TypeDefinition [G.Name] RemoteSchemaInputValueDefinition],
+    -- | Name of the remote schema, that's used for joining
+    _rrfiRemoteSchemaName :: RemoteSchemaName,
+    -- | TODO: this one should be gone when 'validateRemoteRelationship'
+    -- function is cleaned up
+    _rrfiLHSIdentifier :: LHSIdentifier
+  }
+  deriving (Generic, Eq, Show)
+
+instance Cacheable RemoteSchemaFieldInfo
+
+-- FIXME: deduplicate this
+graphQLValueToJSON :: G.Value Void -> J.Value
+graphQLValueToJSON = \case
+  G.VNull -> J.Null
+  G.VInt i -> J.toJSON i
+  G.VFloat f -> J.toJSON f
+  G.VString t -> J.toJSON t
+  G.VBoolean b -> J.toJSON b
+  G.VEnum (G.EnumValue n) -> J.toJSON n
+  G.VList values -> J.toJSON $ graphQLValueToJSON <$> values
+  G.VObject objects -> J.toJSON $ graphQLValueToJSON <$> objects
+
+$(J.deriveJSON hasuraJSON ''ValidatedRemoteSchemaDef)
+$(J.deriveJSON hasuraJSON ''RemoteSchemaCustomizer)
+$(J.deriveJSON hasuraJSON ''RemoteSchemaInfo)
+
+instance (J.ToJSON remoteFieldInfo) => J.ToJSON (RemoteSchemaCtxG remoteFieldInfo) where
+  toJSON RemoteSchemaCtx {..} =
+    J.object $
+      [ "name" J..= _rscName,
+        "info" J..= J.toJSON _rscInfo
+      ]
+
+instance J.ToJSON RemoteSchemaFieldInfo where
+  toJSON RemoteSchemaFieldInfo {..} =
+    J.object
+      [ "name" J..= _rrfiName,
+        "param_map" J..= fmap toJsonInpValInfo _rrfiParamMap,
+        "remote_fields" J..= _rrfiRemoteFields,
+        "remote_schema" J..= _rrfiRemoteSchema
+      ]
+    where
+      toJsonInpValInfo (RemoteSchemaInputValueDefinition (G.InputValueDefinition desc name type' defVal _directives) _preset) =
+        J.object
+          [ "desc" J..= desc,
+            "name" J..= name,
+            "def_val" J..= fmap graphQLValueToJSON defVal,
+            "type" J..= type'
+          ]
+
+$(makeLenses ''RemoteSchemaCtxG)

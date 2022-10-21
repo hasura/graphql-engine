@@ -23,8 +23,8 @@ import Hasura.GraphQL.Transport.HTTP.Protocol qualified as GH
 import Hasura.Prelude
 import Hasura.RQL.IR.RemoteSchema qualified as IR
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
 

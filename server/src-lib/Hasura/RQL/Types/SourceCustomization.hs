@@ -13,8 +13,6 @@ module Hasura.RQL.Types.SourceCustomization
     mkResolvedSourceCustomization,
     withSourceCustomization,
     MkRootFieldName (..),
-    CustomizeRemoteFieldName (..),
-    withRemoteFieldNameCustomization,
 
     -- * Naming Convention specific
     applyEnumValueCase,
@@ -280,14 +278,6 @@ getNamingCase sc namingConventionSupport defaultNC = do
 
 withNamingCaseCustomization :: forall m r a. (MonadReader r m, Has NamingCase r) => NamingCase -> m a -> m a
 withNamingCaseCustomization = local . set hasLens
-
-newtype CustomizeRemoteFieldName = CustomizeRemoteFieldName
-  { runCustomizeRemoteFieldName :: G.Name -> G.Name -> G.Name
-  }
-  deriving (Semigroup, Monoid) via (G.Name -> Endo G.Name)
-
-withRemoteFieldNameCustomization :: forall m r a. (MonadReader r m, Has CustomizeRemoteFieldName r) => CustomizeRemoteFieldName -> m a -> m a
-withRemoteFieldNameCustomization = local . set hasLens
 
 -------------------------------------------------------------------------------
 -- Some helper functions to build the field names as an identifier

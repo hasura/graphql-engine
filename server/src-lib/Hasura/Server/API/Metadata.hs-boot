@@ -27,9 +27,9 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.ScheduledTrigger
+import Hasura.RemoteSchema.MetadataAPI
 import Hasura.SQL.AnyBackend
 
 data RQLMetadataV1

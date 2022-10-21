@@ -32,7 +32,7 @@
 --
 -- For validation, we use the `MonadValidate` monad transformer to collect as many errors
 -- as possible and then report all those errors at one go to the user.
-module Hasura.RQL.DDL.RemoteSchema.Permission
+module Hasura.RemoteSchema.SchemaCache.Permission
   ( resolveRoleBasedRemoteSchema,
   )
 where
@@ -49,8 +49,9 @@ import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata.Instances ()
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
+import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils (englishList, isSessionVariable)
 import Hasura.Session
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -982,10 +983,13 @@ validateRemoteSchema upstreamRemoteSchemaIntrospection = do
 
 resolveRoleBasedRemoteSchema ::
   MonadError QErr m =>
+  RoleName ->
+  RemoteSchemaName ->
+  IntrospectionResult ->
   G.SchemaDocument ->
-  RemoteSchemaCtx ->
   m (IntrospectionResult, [SchemaDependency])
-resolveRoleBasedRemoteSchema (G.SchemaDocument providedTypeDefns) upstreamRemoteCtx = do
+resolveRoleBasedRemoteSchema roleName remoteSchemaName remoteSchemaIntrospection (G.SchemaDocument providedTypeDefns) = do
+  when (roleName == adminRoleName) $ throw400 ConstraintViolation $ "cannot define permission for admin role"
   let providedSchemaDocWithDefaultScalars =
         G.SchemaDocument $
           providedTypeDefns <> (map (G.TypeSystemDefinitionType . G.TypeDefinitionScalar) defaultScalars)
@@ -993,7 +997,7 @@ resolveRoleBasedRemoteSchema (G.SchemaDocument providedTypeDefns) upstreamRemote
     flip onLeft (throw400 ValidationFailed . showErrors)
       =<< runValidateT
         ( flip runReaderT providedSchemaDocWithDefaultScalars $
-            validateRemoteSchema $ irDoc $ _rscIntroOriginal upstreamRemoteCtx
+            validateRemoteSchema $ irDoc remoteSchemaIntrospection
         )
   pure (introspectionRes, [schemaDependency])
   where
@@ -1008,7 +1012,7 @@ resolveRoleBasedRemoteSchema (G.SchemaDocument providedTypeDefns) upstreamRemote
               <> T.unlines
                 (map ((" • " <>) . showRoleBasedSchemaValidationError) errors)
 
-    schemaDependency = SchemaDependency (SORemoteSchema $ _rscName upstreamRemoteCtx) DRRemoteSchema
+    schemaDependency = SchemaDependency (SORemoteSchema remoteSchemaName) DRRemoteSchema
 
     defaultScalars =
       map (\n -> G.ScalarTypeDefinition Nothing n []) . toList $

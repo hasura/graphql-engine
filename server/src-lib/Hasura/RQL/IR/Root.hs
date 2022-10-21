@@ -27,7 +27,7 @@ import Hasura.RQL.IR.Update
 import Hasura.RQL.Types.Backend qualified as RQL
 import Hasura.RQL.Types.Common qualified as RQL
 import Hasura.RQL.Types.QueryTags qualified as RQL
-import Hasura.RQL.Types.RemoteSchema qualified as RQL
+import Hasura.RemoteSchema.SchemaCache.Types qualified as RQL
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 
