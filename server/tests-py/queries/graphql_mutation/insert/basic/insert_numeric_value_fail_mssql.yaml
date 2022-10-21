@@ -28,6 +28,6 @@ response:
           [c50_float], [c7_double_precision], [c59_uniqueidentifier], [c53_datetime2],
           [c17_time], [c1_smallint]) VALUES ( 1234567890 )'
       path: $
-    message: Data exception. Numeric value out of range. [Microsoft][ODBC Driver 17
+    message: Data exception. Numeric value out of range. [Microsoft][ODBC Driver 18
       for SQL Server][SQL Server]Arithmetic overflow error for data type smallint,
       value = 1234567890.

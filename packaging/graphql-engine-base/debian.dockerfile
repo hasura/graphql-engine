@@ -19,11 +19,15 @@ RUN set -ex; \
     apt-get update; \
     apt-get install -y ca-certificates libkrb5-3 libpq5 libssl1.1 libnuma1 unixodbc-dev libmariadb-dev-compat mariadb-client
 
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ] ; then \
-      curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -; \
-      curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list; \
-      apt-get update; \
-      ACCEPT_EULA=Y apt-get install -y msodbcsql17; \
+RUN set -ex; \
+    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -; \
+    curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list; \
+    apt-get update; \
+    ACCEPT_EULA=Y apt-get install -y msodbcsql18; \
+    if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
+      # Support the old version of the driver too, where possible.
+      # v17 is only supported on amd64.
+      ACCEPT_EULA=Y apt-get -y install msodbcsql17; \
     fi
 
 # Install pg_dump

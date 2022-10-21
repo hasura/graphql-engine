@@ -1,7 +1,7 @@
 version: '3.6'
 services:
   postgres:
-    image: postgres:12
+    image: postgres
     restart: always
     volumes:
       - pg_data:/var/lib/postgresql/data
@@ -13,9 +13,9 @@ services:
       ACCEPT_EULA: 'Y'
       SA_PASSWORD: ${MSSQL_PASSWORD:-Password1}
     volumes:
-      - mssql_data:/var/lib/mysql
+      - mssql_data:/var/opt/mssql
   graphql-engine:
-    image: hasura/graphql-engine:v2.8.4
+    image: hasura/graphql-engine:v2.13.0
     ports:
       - '8080:8080'
     depends_on:
@@ -26,8 +26,7 @@ services:
       ## postgres database to store Hasura metadata
       HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://postgres:postgrespassword@postgres:5432/postgres
       ## this env var can be used to add the above ms sql server database to Hasura as a data source. this can be removed/updated based on your needs
-      MSSQL_DATABASE_URL:
-        Driver={ODBC Driver 17 for SQL Server};Server=tcp:mssql,1433;Database=tempdb;Uid=sa;Pwd=Password1;
+      MSSQL_DATABASE_URL: Driver={ODBC Driver 18 for SQL Server};Server=tcp:mssql,1433;Database=tempdb;Uid=sa;Pwd=Password1;Encrypt=optional
       ## enable the console served by server
       HASURA_GRAPHQL_ENABLE_CONSOLE: 'true' # set to "false" to disable console
       ## enable debugging mode. It is recommended to disable this in production
