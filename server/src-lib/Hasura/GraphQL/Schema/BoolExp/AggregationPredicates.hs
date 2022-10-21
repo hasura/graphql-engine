@@ -63,7 +63,7 @@ defaultAggregationPredicatesParser aggFns si ti = runMaybeT do
       guard $ spiAllowAgg selectPermissions
       let rowPermissions = fmap partialSQLExpToUnpreparedValue <$> spiFilter selectPermissions
       relGqlName <- textToName $ relNameToTxt $ riName rel
-      typeGqlName <- (<> Name.__ <> relGqlName <> Name.__ <> Name._aggregate) <$> getTableGQLName ti
+      typeGqlName <- (<> Name.__ <> Name._aggregate_bool_exp) <$> getTableGQLName relTable
 
       -- We only make a field for aggregations over a relation if at least
       -- some aggregation predicates are callable.

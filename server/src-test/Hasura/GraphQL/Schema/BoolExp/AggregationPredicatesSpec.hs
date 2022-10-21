@@ -130,13 +130,13 @@ spec = do
                 [aesonQQ|
                 { "types": [
                   {
-                    "name": "album_tracks_aggregate",
+                    "name": "track_aggregate_bool_exp",
                     "fields": null,
                     "inputFields": [
                       {
                         "name": "count",
                         "type": {
-                          "name": "album_tracks_aggregate_count"
+                          "name": "track_aggregate_bool_exp_count"
                         }
                       }
                     ]
@@ -148,7 +148,7 @@ spec = do
                 [aesonQQ|
                 { "types": [
                   {
-                    "name": "album_tracks_aggregate_count",
+                    "name": "track_aggregate_bool_exp_count",
                     "fields": null,
                     "inputFields": [
                       {
