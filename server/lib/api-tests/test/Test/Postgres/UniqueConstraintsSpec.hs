@@ -6,7 +6,7 @@ module Test.Postgres.UniqueConstraintsSpec (spec) where
 
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
--- import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
@@ -28,12 +28,12 @@ spec = do
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Citus.setupTablesAction schema testEnv
                 ]
-            } -- ,
-            --    (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
-            --      { Fixture.setupTeardown = \(testEnv, _) ->
-            --          [ Cockroach.setupTablesAction schema testEnv
-            --          ]
-            --      }
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Cockroach.setupTablesAction schema testEnv
+                ]
+            }
         ]
     )
     tests
