@@ -1,6 +1,6 @@
-This note is in [Hasura.RQL.DDL.RemoteSchema.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/DDL/RemoteSchema/Permission.hs#L187).
+This note is in [Hasura.RemoteSchema.SchemaCache.Permission](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RemoteSchema/SchemaCache/Permission.hs#L188).
 It is referenced at:
-  - line 407 of [Hasura.RQL.Types.RemoteSchema](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RQL/Types/RemoteSchema.hs#L407)
+  - line 275 of [Hasura.RemoteSchema.SchemaCache.Types](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/RemoteSchema/SchemaCache/Types.hs#L275)
 
 # Remote Schema Argument Presets
 
