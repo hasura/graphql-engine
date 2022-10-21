@@ -11,7 +11,6 @@ import re
 import requests
 import ruamel.yaml as yaml
 from ruamel.yaml.comments import CommentedMap as OrderedDict # to avoid '!!omap' in yaml
-import socket
 import socketserver
 import sqlalchemy
 import sqlalchemy.schema
@@ -25,6 +24,7 @@ import websocket
 
 import fixtures.tls
 import graphql_server
+import ports
 
 # pytest has removed the global pytest.config
 # As a solution to this we are going to store it in PyTestConf.config
@@ -681,10 +681,6 @@ class ActionsWebhookServer(http.server.HTTPServer):
         handler.hge_key = hge_key
         super().__init__(server_address, handler)
 
-    def server_bind(self):
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.server_address)
-
     @property
     def url(self):
         return f'http://{self.server_address[0]}:{self.server_address[1]}'
@@ -738,6 +734,10 @@ class EvtsWebhookHandler(http.server.BaseHTTPRequestHandler):
 class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
     """Handle requests in a separate thread."""
 
+    @property
+    def url(self):
+        return f'http://{self.server_address[0]}:{self.server_address[1]}'
+
 class EvtsWebhookServer(ThreadedHTTPServer):
     def __init__(self, server_address):
         # Data received from hasura by our web hook, pushed after it returns to the client:
@@ -765,39 +765,45 @@ class EvtsWebhookServer(ThreadedHTTPServer):
     def is_queue_empty(self):
         return self.resp_queue.empty
 
-    @property
-    def url(self):
-        return f'http://{self.server_address[0]}:{self.server_address[1]}'
-
 class HGECtxGQLServer:
-    def __init__(self, port: int, tls_ca_configuration: Optional[fixtures.tls.TLSCAConfiguration] = None, hge_urls: list[str] = []):
-        # start the graphql server
-        self.port = port
+    def __init__(self, server_address: tuple[str, int], tls_ca_configuration: Optional[fixtures.tls.TLSCAConfiguration] = None, hge_urls: list[str] = []):
+        self.server_address = server_address
         self.tls_ca_configuration = tls_ca_configuration
-        self.hge_urls = hge_urls
-        self.is_running: bool = False
+        self.server: Optional[http.server.HTTPServer] = None
 
     def start_server(self):
-        if not self.is_running:
-            self.server = graphql_server.create_server('localhost', self.port, self.tls_ca_configuration, self.hge_urls)
+        if not self.server:
+            self.server = graphql_server.create_server(self.server_address, self.tls_ca_configuration)
             self.thread = threading.Thread(target=self.server.serve_forever)
             self.thread.start()
-        self.is_running = True
+        # If the port is specified as 0, we will get a different,
+        # dynamically-allocated port whenever we restart. This captures the
+        # actual assigned port so that we re-use it.
+        self.server_address = self.server.server_address
+        ports.wait_for_port(self.port)
 
     def stop_server(self):
-        if self.is_running:
+        if self.server:
             graphql_server.stop_server(self.server)
             self.thread.join()
-        self.is_running = False
+            self.server = None
 
     @property
     def url(self):
         scheme = 'https' if self.tls_ca_configuration else 'http'
+        return f'{scheme}://{self.host}:{self.port}'
+
+    @property
+    def host(self):
         # We must use 'localhost' and not `self.server.server_address[0]`
         # because when using TLS, we need a domain name, not an IP address.
-        host = 'localhost'
-        port = self.server.server_address[1]
-        return f'{scheme}://{host}:{port}'
+        return 'localhost'
+
+    @property
+    def port(self):
+        if not self.server:
+            raise Exception('The server is not started.')
+        return self.server.server_address[1]
 
 class HGECtxWebhook(NamedTuple):
     tls_trust: Optional[fixtures.tls.TLSTrust]

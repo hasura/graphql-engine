@@ -1,5 +1,6 @@
 import collections
 import http.server
+import inspect
 import os
 import pytest
 import re
@@ -431,21 +432,24 @@ def hge_ctx(
 @pytest.fixture(scope='class')
 @pytest.mark.early
 def evts_webhook(hge_fixture_env: dict[str, str]):
-    webhook_httpd = EvtsWebhookServer(server_address=('localhost', 5592))
-    web_server = threading.Thread(target=webhook_httpd.serve_forever)
-    web_server.start()
-    hge_fixture_env['EVENT_WEBHOOK_HANDLER'] = webhook_httpd.url
-    yield webhook_httpd
-    webhook_httpd.shutdown()
-    webhook_httpd.server_close()
-    web_server.join()
+    server = EvtsWebhookServer(extract_server_address_from('EVENT_WEBHOOK_HANDLER'))
+    thread = threading.Thread(target=server.serve_forever)
+    thread.start()
+    print(f'{evts_webhook.__name__} server started on {server.url}')
+    hge_fixture_env['EVENT_WEBHOOK_HANDLER'] = server.url
+    yield server
+    server.shutdown()
+    server.server_close()
+    thread.join()
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
 def actions_fixture(hge_url: str, hge_key: Optional[str], hge_fixture_env: dict[str, str]):
-    server = ActionsWebhookServer(hge_url, hge_key, server_address=('localhost', 5593))
+    # Start actions' webhook server
+    server = ActionsWebhookServer(hge_url, hge_key, server_address=extract_server_address_from('ACTION_WEBHOOK_HANDLER'))
     thread = threading.Thread(target=server.serve_forever)
     thread.start()
+    print(f'{actions_fixture.__name__} server started on {server.url}')
     hge_fixture_env['ACTION_WEBHOOK_HANDLER'] = server.url
     yield server
     server.shutdown()
@@ -461,10 +465,11 @@ use_action_fixtures = pytest.mark.usefixtures(
 @pytest.fixture(scope='class')
 @pytest.mark.early
 def auth_hook(hge_fixture_env: dict[str, str]):
-    server = auth_webhook_server.create_server()
-    server_thread = threading.Thread(target = server.serve_forever)
-    server_thread.start()
-    hge_fixture_env['HASURA_GRAPHQL_AUTH_HOOK'] = 'http://localhost:9876/auth'
+    server = auth_webhook_server.create_server(extract_server_address_from('HASURA_GRAPHQL_AUTH_HOOK'))
+    thread = threading.Thread(target = server.serve_forever)
+    thread.start()
+    print(f'{auth_hook.__name__} server started on {server.url}')
+    hge_fixture_env['HASURA_GRAPHQL_AUTH_HOOK'] = server.url + '/auth'
     ports.wait_for_port(server.server_port)
     yield server
     auth_webhook_server.stop_server(server)
@@ -522,14 +527,15 @@ def pro_tests_fixtures(hge_ctx):
 @pytest.fixture(scope='class')
 @pytest.mark.early
 def scheduled_triggers_evts_webhook(hge_fixture_env: dict[str, str]):
-    webhook_httpd = EvtsWebhookServer(server_address=('localhost', 5594))
-    web_server = threading.Thread(target=webhook_httpd.serve_forever)
-    web_server.start()
-    hge_fixture_env['SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN'] = webhook_httpd.url
-    yield webhook_httpd
-    webhook_httpd.shutdown()
-    webhook_httpd.server_close()
-    web_server.join()
+    server = EvtsWebhookServer(extract_server_address_from('SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN'))
+    thread = threading.Thread(target=server.serve_forever)
+    thread.start()
+    print(f'{scheduled_triggers_evts_webhook.__name__} server started on {server.url}')
+    hge_fixture_env['SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN'] = server.url
+    yield server
+    server.shutdown()
+    server.server_close()
+    thread.join()
 
 # This will use TLS on CI, and won't when run locally. Unfortunately,
 # parameterization doesn't really work (see test_webhook.py and test_tests.py
@@ -543,31 +549,37 @@ def gql_server(
     hge_fixture_env: dict[str,str],
     tls_ca_configuration: Optional[fixtures.tls.TLSCAConfiguration],
 ):
-    port = 5000
-    if socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect_ex(('127.0.0.1', port)) == 0:
-        # The server is already running. This might be the case if we're running the server upgrade/downgrade tests.
-        # In this case, skip starting it and rely on the external service.
-        url = f'http://127.0.0.1:{port}'
-        hge_fixture_env['REMOTE_SCHEMAS_WEBHOOK_DOMAIN'] = url
-        # Create an object with a field named "url", set to `url`.
-        return collections.namedtuple('ExternalGraphQLServer', ['url'])(url)
-
-    hge_urls: list[str] = request.config.getoption('--hge-urls') or [hge_url]  # type: ignore
-
+    server_address = extract_server_address_from('REMOTE_SCHEMAS_WEBHOOK_DOMAIN')
     scheme = None
     if not hge_bin:
         scheme = str(urllib.parse.urlparse(os.getenv('REMOTE_SCHEMAS_WEBHOOK_DOMAIN')).scheme)
+
+        if socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect_ex(server_address) == 0:
+            # The server is already running. This might be the case if we're running the server upgrade/downgrade tests.
+            # In this case, skip starting it and rely on the external service.
+            url = f'http://{server_address[0]}:{server_address[1]}'
+            hge_fixture_env['REMOTE_SCHEMAS_WEBHOOK_DOMAIN'] = url
+            # Create an object with a field named "url", set to `url`.
+            return collections.namedtuple('ExternalGraphQLServer', ['url'])(url)
+
     if tls_ca_configuration:
         if scheme is not None and scheme != 'https':
             pytest.skip(f'Cannot run the remote schema server with TLS; HGE is configured to talk to it over "{scheme}".')
     else:
         if scheme is not None and scheme != 'http':
             pytest.skip(f'Cannot run the remote schema server without TLS; HGE is configured to talk to it over "{scheme}".')
-    server = HGECtxGQLServer(port=port, tls_ca_configuration=tls_ca_configuration, hge_urls=hge_urls)
+
+    hge_urls: list[str] = request.config.getoption('--hge-urls') or [hge_url]  # type: ignore
+
+    server = HGECtxGQLServer(
+        server_address=server_address,
+        tls_ca_configuration=tls_ca_configuration,
+        hge_urls=hge_urls,
+    )
     server.start_server()
+    print(f'{gql_server.__name__} server started on {server.url}')
     hge_fixture_env['REMOTE_SCHEMAS_WEBHOOK_DOMAIN'] = server.url
     request.addfinalizer(server.stop_server)
-    ports.wait_for_port(port)
     return server
 
 @pytest.fixture(scope='class')
@@ -589,6 +601,23 @@ def ws_client_graphql_ws(hge_ctx):
     time.sleep(0.1)
     yield client
     client.teardown()
+
+def extract_server_address_from(env_var: str) -> tuple[str, int]:
+    """
+    Extracts a server address (a pair of host and port) from the given environment variable.
+    If the environment variable doesn't exist, returns `('localhost', 0)`.
+    """
+    value = os.getenv(env_var)
+    if not value:
+        return ('localhost', 0)
+
+    url = urllib.parse.urlparse(value)
+    if not url.hostname:
+        raise Exception(f'Invalid host in {env_var}.')
+    if not url.port:
+        raise Exception(f'Invalid port in {env_var}.')
+    print(f'Found {env_var} = {value!r}, so {inspect.stack()[1].function} server will start on {url.geturl()}')
+    return (url.hostname, url.port)
 
 @pytest.fixture(scope='class')
 def per_class_tests_db_state(request, hge_ctx):

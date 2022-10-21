@@ -1056,12 +1056,10 @@ class TestGraphQLQueryCaching:
     def test_introspection(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/introspection.yaml', transport)
 
-@pytest.mark.skipif(
-    not PytestConf.config.getoption("--test-unauthorized-role"),
-    reason="--test-unauthorized-role missing"
-)
 @pytest.mark.parametrize('transport', ['http', 'websocket'])
 @usefixtures('per_class_tests_db_state')
+@pytest.mark.admin_secret
+@pytest.mark.hge_env('HASURA_GRAPHQL_UNAUTHORIZED_ROLE', 'anonymous')
 class TestUnauthorizedRolePermission:
     @classmethod
     def dir(cls):
@@ -1070,12 +1068,10 @@ class TestUnauthorizedRolePermission:
     def test_unauth_role(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/unauthorized_role.yaml', transport, False)
 
-@pytest.mark.skipif(
-    not PytestConf.config.getoption("--test-unauthorized-role"),
-    reason="--test-unauthorized-role missing"
-)
 @pytest.mark.parametrize('transport', ['http'])
 @usefixtures('per_class_tests_db_state')
+@pytest.mark.admin_secret
+@pytest.mark.hge_env('HASURA_GRAPHQL_UNAUTHORIZED_ROLE', 'anonymous')
 class TestFallbackUnauthorizedRoleCookie:
     @classmethod
     def dir(cls):

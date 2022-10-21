@@ -2,7 +2,6 @@
 
 import pytest
 from validate import check_query, check_query_f
-from context import PytestConf
 
 usefixtures = pytest.mark.usefixtures
 
