@@ -52,7 +52,8 @@ executable api-tests
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options:
-    -Wall -O0
+    -Wall
+    -Werror
     -threaded
     -rtsopts "-with-rtsopts=-N"
 
