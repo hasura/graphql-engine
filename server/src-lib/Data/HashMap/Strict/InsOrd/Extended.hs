@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Data.HashMap.Strict.InsOrd.Extended
   ( module OMap,
     catMaybes,
@@ -8,10 +10,12 @@ where
 
 import Data.HashMap.Strict.InsOrd as OMap
 import Data.Hashable (Hashable)
+import Witherable (Filterable (..))
 import Prelude
 
-catMaybes :: InsOrdHashMap k (Maybe v) -> InsOrdHashMap k v
-catMaybes = OMap.mapMaybe id
+instance Filterable (OMap.InsOrdHashMap k) where
+  mapMaybe = OMap.mapMaybe
+  filter = OMap.filter
 
 partition :: (Eq k, Hashable k) => (v -> Bool) -> OMap.InsOrdHashMap k v -> (OMap.InsOrdHashMap k v, OMap.InsOrdHashMap k v)
 partition predicate =

@@ -14,6 +14,8 @@ set -o pipefail
 
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")"
 
+DATABASES=(citus mssql mssql-healthcheck postgres)
+
 (
   cd ../..
   echo '*** Building HGE ***'
@@ -35,12 +37,12 @@ fi
 
 echo
 echo '*** Pulling images ***'
-docker compose pull --ignore-pull-failures
+docker compose pull "${DATABASES[@]}"
 
 echo
 echo '*** Starting databases ***'
-docker compose rm -svf citus mssql mssql-healthcheck postgres # tear down databases beforehand
-docker compose up -d --wait citus mssql-healthcheck postgres
+docker compose rm -svf "${DATABASES[@]}" # tear down databases beforehand
+docker compose up -d --wait "${DATABASES[@]}"
 
 HASURA_GRAPHQL_CITUS_SOURCE_URL="postgresql://postgres:hasura@localhost:$(docker compose port citus 5432 | sed -E 's/.*://')/postgres"
 HASURA_GRAPHQL_MSSQL_SOURCE_URL="DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost,$(docker compose port mssql 1433 | sed -E 's/.*://');Uid=sa;Pwd=Password!;"

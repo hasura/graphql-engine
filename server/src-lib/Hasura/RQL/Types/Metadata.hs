@@ -68,7 +68,7 @@ import Hasura.RQL.Types.Metadata.Common
 import Hasura.RQL.Types.Metadata.Serialization
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.RemoteSchema
+import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)

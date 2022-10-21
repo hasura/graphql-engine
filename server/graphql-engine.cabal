@@ -710,6 +710,20 @@ library
                      , Hasura.Server.Migrate.Internal
                      , Hasura.Server.Auth.JWT.Internal
                      , Hasura.Server.Auth.JWT.Logging
+                     , Hasura.RemoteSchema.Metadata.Base
+                     , Hasura.RemoteSchema.Metadata.Customization
+                     , Hasura.RemoteSchema.Metadata.Permission
+                     , Hasura.RemoteSchema.Metadata.RemoteRelationship
+                     , Hasura.RemoteSchema.Metadata.Core
+                     , Hasura.RemoteSchema.Metadata
+                     , Hasura.RemoteSchema.MetadataAPI.Core
+                     , Hasura.RemoteSchema.MetadataAPI.Permission
+                     , Hasura.RemoteSchema.MetadataAPI
+                     , Hasura.RemoteSchema.SchemaCache.Types
+                     , Hasura.RemoteSchema.SchemaCache.Permission
+                     , Hasura.RemoteSchema.SchemaCache.RemoteRelationship
+                     , Hasura.RemoteSchema.SchemaCache.Build
+                     , Hasura.RemoteSchema.SchemaCache
                      , Hasura.RQL.Types.Action
                      , Hasura.RQL.Types.Allowlist
                      , Hasura.RQL.Types.ApiLimit
@@ -741,9 +755,7 @@ library
                      , Hasura.RQL.Types.QueryTags
                      , Hasura.RQL.Types.Relationships.Local
                      , Hasura.RQL.Types.Relationships.Remote
-                     , Hasura.RQL.Types.Relationships.ToSchema
                      , Hasura.RQL.Types.Relationships.ToSource
-                     , Hasura.RQL.Types.RemoteSchema
                      , Hasura.RQL.Types.ResultCustomization
                      , Hasura.RQL.Types.Roles
                      , Hasura.RQL.Types.Roles.Internal
@@ -776,9 +788,6 @@ library
                      , Hasura.RQL.DDL.Relationship
                      , Hasura.RQL.DDL.Relationship.Rename
                      , Hasura.RQL.DDL.RemoteRelationship
-                     , Hasura.RQL.DDL.RemoteRelationship.Validate
-                     , Hasura.RQL.DDL.RemoteSchema
-                     , Hasura.RQL.DDL.RemoteSchema.Permission
                      , Hasura.RQL.DDL.Webhook.Transform
                      , Hasura.RQL.DDL.Webhook.Transform.Body
                      , Hasura.RQL.DDL.Webhook.Transform.Class

@@ -33,7 +33,6 @@ import Hasura.RQL.DDL.QueryCollection
 import Hasura.RQL.DDL.Relationship
 import Hasura.RQL.DDL.Relationship.Rename
 import Hasura.RQL.DDL.RemoteRelationship
-import Hasura.RQL.DDL.RemoteSchema
 import Hasura.RQL.DDL.ScheduledTrigger
 import Hasura.RQL.DDL.Schema
 import Hasura.RQL.DML.Count
@@ -49,11 +48,11 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Run
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
+import Hasura.RemoteSchema.MetadataAPI
 import Hasura.SQL.Backend
 import Hasura.Server.Types
 import Hasura.Server.Utils

@@ -41,6 +41,9 @@ module Hasura.RQL.Types.Common
     ApolloFederationConfig (..),
     ApolloFederationVersion (..),
     isApolloFedV1enabled,
+    RemoteRelationshipG (..),
+    rrDefinition,
+    rrName,
   )
 where
 
@@ -54,6 +57,7 @@ import Autodocodec
     stringConstCodec,
   )
 import Autodocodec qualified as AC
+import Control.Lens (makeLenses)
 import Data.Aeson
 import Data.Aeson qualified as J
 import Data.Aeson.Casing
@@ -631,3 +635,23 @@ instance NFData ApolloFederationConfig
 
 isApolloFedV1enabled :: Maybe ApolloFederationConfig -> Bool
 isApolloFedV1enabled = isJust
+
+--------------------------------------------------------------------------------
+-- metadata
+
+-- | Metadata representation of a generic remote relationship, regardless of the
+-- source: all sources use this same agnostic definition. The internal
+-- definition field is where we differentiate between different targets.
+--
+-- TODO: This needs to be moved to an appropriate module, maybe something
+-- like Hasura.RemoteRelationships.Metadata.
+data RemoteRelationshipG definition = RemoteRelationship
+  { _rrName :: RelName,
+    _rrDefinition :: definition
+  }
+  deriving (Show, Eq, Generic)
+
+instance Cacheable definition => Cacheable (RemoteRelationshipG definition)
+
+$(makeLenses ''RemoteRelationshipG)
+$(deriveToJSON hasuraJSON {J.omitNothingFields = False} ''RemoteRelationshipG)

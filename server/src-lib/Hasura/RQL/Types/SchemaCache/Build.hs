@@ -57,8 +57,8 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.QueryCollection
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaName)
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RemoteSchema.Metadata (RemoteSchemaName)
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing (TraceT)

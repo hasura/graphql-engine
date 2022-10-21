@@ -45,6 +45,7 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.Backend
 
 saveMetadataToHdbTables ::

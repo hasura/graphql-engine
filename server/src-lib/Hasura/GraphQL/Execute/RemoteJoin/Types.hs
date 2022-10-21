@@ -40,9 +40,8 @@ import Hasura.RQL.IR.Select qualified as IR
 import Hasura.RQL.IR.Value qualified as IR
 import Hasura.RQL.Types.Backend
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Relationships.ToSchema
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.ResultCustomization
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Language.GraphQL.Draft.Syntax qualified as G
 

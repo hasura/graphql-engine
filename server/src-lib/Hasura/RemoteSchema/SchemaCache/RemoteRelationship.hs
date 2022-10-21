@@ -1,7 +1,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Validate input queries against remote schemas.
-module Hasura.RQL.DDL.RemoteRelationship.Validate
+module Hasura.RemoteSchema.SchemaCache.RemoteRelationship
   ( validateToSchemaRelationship,
     errorToText,
   )
@@ -15,10 +15,8 @@ import Hasura.GraphQL.Parser.Name qualified as GName
 import Hasura.Name qualified as Name
 import Hasura.Prelude hiding (first)
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.Relationships.ToSchema
-import Hasura.RQL.Types.RemoteSchema
-import Hasura.RQL.Types.SchemaCache
+import Hasura.RemoteSchema.Metadata
+import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils (englishList)
 import Language.GraphQL.Draft.Syntax qualified as G
 
