@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { Button } from '@/new-components/Button';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import globals from '../../../../Globals';
 import { getAddSTRoute } from '../../../Common/utils/routesUtils';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
@@ -29,32 +30,34 @@ const Landing: React.FC<Props> = props => {
   );
 
   return (
-    <div className="pl-0 w-full mt-md">
-      <div className="pl-md">
-        <div className="flex">
-          <h2 className="text-xl font-bold mr-md">{CRON_TRIGGER}s</h2>
-          <div className="ml-md">
-            <Button
-              mode="primary"
-              size="md"
-              onClick={() => dispatch(_push(getAddSTRoute()))}
-            >
-              Create
-            </Button>
+    <Analytics name="ScheduledTriggerLanding" {...REDACT_EVERYTHING}>
+      <div className="pl-0 w-full mt-md">
+        <div className="pl-md">
+          <div className="flex">
+            <h2 className="text-xl font-bold mr-md">{CRON_TRIGGER}s</h2>
+            <div className="ml-md">
+              <Button
+                mode="primary"
+                size="md"
+                onClick={() => dispatch(_push(getAddSTRoute()))}
+              >
+                Create
+              </Button>
+            </div>
+          </div>
+          <hr className="my-md" />
+          <div>
+            <TopicDescription
+              title="What are Cron Triggers?"
+              imgUrl={`${globals.assetsPath}/common/img/cron-trigger.png`}
+              imgAlt={CRON_TRIGGER}
+              description={topicDescription}
+            />
+            <hr className="clear-both my-lg" />
           </div>
         </div>
-        <hr className="my-md" />
-        <div>
-          <TopicDescription
-            title="What are Cron Triggers?"
-            imgUrl={`${globals.assetsPath}/common/img/cron-trigger.png`}
-            imgAlt={CRON_TRIGGER}
-            description={topicDescription}
-          />
-          <hr className="clear-both my-lg" />
-        </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 

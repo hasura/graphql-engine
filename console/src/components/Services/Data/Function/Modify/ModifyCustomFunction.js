@@ -4,6 +4,11 @@ import PropTypes from 'prop-types';
 
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+  getAnalyticsAttributes,
+} from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import tabInfo from './tabInfo';
@@ -209,73 +214,82 @@ class ModifyCustomFunction extends React.Component {
       });
     }
 
-    return (
-      <div>
-        <Helmet>
-          <title data-heap-redact-text="true">{`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}</title>
-        </Helmet>
-        <CommonTabLayout
-          appPrefix={this.urlWithSource}
-          currentTab="modify"
-          heading={functionName}
-          tabsInfo={tabInfo}
-          breadCrumbs={breadCrumbs}
-          baseUrl={functionBaseUrl}
-          showLoader={isFetching}
-          testPrefix={'functions'}
-        />
+    const titleAnalyticsAttributes = getAnalyticsAttributes(
+      'ModifyCustomFunction',
+      { redactText: true }
+    );
 
-        <br />
-        {isFeatureSupported('functions.modify.comments.view') && (
-          <div className="w-full sm:w-6/12 mb-lg">
+    return (
+      <Analytics name="ModifyCustomFunction" {...REDACT_EVERYTHING}>
+        <div>
+          <Helmet>
+            <title
+              {...titleAnalyticsAttributes}
+            >{`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}</title>
+          </Helmet>
+          <CommonTabLayout
+            appPrefix={this.urlWithSource}
+            currentTab="modify"
+            heading={functionName}
+            tabsInfo={tabInfo}
+            breadCrumbs={breadCrumbs}
+            baseUrl={functionBaseUrl}
+            showLoader={isFetching}
+            testPrefix={'functions'}
+          />
+
+          <br />
+          {isFeatureSupported('functions.modify.comments.view') && (
+            <div className="w-full sm:w-6/12 mb-lg">
+              <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                Function Comments
+              </h4>
+
+              <FunctionCommentEditor
+                isEditing={isEditingComment}
+                defaultValue={functionComment}
+                dispatch={dispatch}
+                readOnly={!isFeatureSupported('functions.modify.comments.edit')}
+              />
+            </div>
+          )}
+
+          <div className="w-full sm:w-6/12 mb-md">
             <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-              Function Comments
+              Function Definition:
+              <span className="ml-xs">
+                <RawSqlButton
+                  sql={functionDefinition}
+                  dispatch={dispatch}
+                  data-test="modify-view"
+                  source={currentSource}
+                >
+                  Modify
+                </RawSqlButton>
+              </span>
             </h4>
 
-            <FunctionCommentEditor
-              isEditing={isEditingComment}
-              defaultValue={functionComment}
-              dispatch={dispatch}
-              readOnly={!isFeatureSupported('functions.modify.comments.edit')}
-            />
+            <div className={styles.sqlBlock}>
+              <TextAreaWithCopy
+                copyText={functionDefinition}
+                textLanguage={'sql'}
+                id="copyCustomFunctionSQL"
+              />
+            </div>
           </div>
-        )}
 
-        <div className="w-full sm:w-6/12 mb-md">
-          <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
-            Function Definition:
-            <span className="ml-xs">
-              <RawSqlButton
-                sql={functionDefinition}
-                dispatch={dispatch}
-                data-test="modify-view"
-                source={currentSource}
-              >
-                Modify
-              </RawSqlButton>
-            </span>
-          </h4>
-
-          <div className={styles.sqlBlock}>
-            <TextAreaWithCopy
-              copyText={functionDefinition}
-              textLanguage={'sql'}
-              id="copyCustomFunctionSQL"
+          <div className="w-full sm:w-6/12 mb-md">
+            <SessionVarSection
+              key={functionName}
+              functionName={functionName}
+              configuration={configuration}
+              loading={loading}
+              onSessVarUpdate={this.onSessVarUpdate}
             />
+            {migrationMode ? [generateMigrateBtns()] : null}
           </div>
         </div>
-
-        <div className="w-full sm:w-6/12 mb-md">
-          <SessionVarSection
-            key={functionName}
-            functionName={functionName}
-            configuration={configuration}
-            loading={loading}
-            onSessVarUpdate={this.onSessVarUpdate}
-          />
-          {migrationMode ? [generateMigrateBtns()] : null}
-        </div>
-      </div>
+      </Analytics>
     );
   }
 }

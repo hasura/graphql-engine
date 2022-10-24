@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import {
   getDataEventsLandingRoute,
@@ -109,27 +110,29 @@ const STContainer: React.FC<Props> = ({
   );
 
   return (
-    <div
-      className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
-    >
-      <Helmet
-        title={getReactHelmetTitle(
-          `${tabInfo[tabName].display_text} - ${triggerName}`,
-          EVENTS_SERVICE_HEADING
-        )}
-      />
-      <CommonTabLayout
-        appPrefix={appPrefix}
-        currentTab={tabName}
-        heading={triggerName}
-        tabsInfo={tabInfo}
-        breadCrumbs={breadCrumbs}
-        baseUrl={getSTRoute('absolute', triggerName)}
-        showLoader={false}
-        testPrefix={`${triggerName}-container-tabs`}
-      />
-      <div className={styles.add_pad_top}>{childrenWithProps}</div>
-    </div>
+    <Analytics name="CronTriggers" {...REDACT_EVERYTHING}>
+      <div
+        className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
+      >
+        <Helmet
+          title={getReactHelmetTitle(
+            `${tabInfo[tabName].display_text} - ${triggerName}`,
+            EVENTS_SERVICE_HEADING
+          )}
+        />
+        <CommonTabLayout
+          appPrefix={appPrefix}
+          currentTab={tabName}
+          heading={triggerName}
+          tabsInfo={tabInfo}
+          breadCrumbs={breadCrumbs}
+          baseUrl={getSTRoute('absolute', triggerName)}
+          showLoader={false}
+          testPrefix={`${triggerName}-container-tabs`}
+        />
+        <div className={styles.add_pad_top}>{childrenWithProps}</div>
+      </div>
+    </Analytics>
   );
 };
 

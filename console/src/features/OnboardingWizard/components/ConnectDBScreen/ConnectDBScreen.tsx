@@ -1,8 +1,12 @@
 import React from 'react';
 import { Dispatch } from '@/types';
 import { Button } from '@/new-components/Button';
+
+import { Analytics } from '@/features/Analytics';
+
 import { OnboardingAnimation } from './components/OnboardingAnimation';
 import { NeonOnboarding } from './components/NeonOnboarding';
+
 import _push from '../../../../components/Services/Data/push';
 import {
   persistSkippedOnboarding,
@@ -58,20 +62,20 @@ export function ConnectDBScreen(props: ConnectDBScreenProps) {
         ) : (
           <>
             <div className="cursor-pointer text-secondary text-sm hover:text-secondary-dark">
-              <div
-                data-trackid="onboarding-skip-button"
-                onClick={skipLandingPage}
-              >
-                Skip setup, continue to dashboard
-              </div>
+              <Analytics name="onboarding-skip-button">
+                <div onClick={skipLandingPage}>
+                  Skip setup, continue to dashboard
+                </div>
+              </Analytics>
             </div>
-            <Button
-              data-trackid="onboarding-connect-db-button"
-              mode="primary"
-              onClick={onClickConnectDB}
+            <Analytics
+              name="onboarding-connect-db-button"
+              passHtmlAttributesToChildren
             >
-              Connect Your Database
-            </Button>
+              <Button mode="primary" onClick={onClickConnectDB}>
+                Connect Your Database
+              </Button>
+            </Analytics>
           </>
         )}
       </div>

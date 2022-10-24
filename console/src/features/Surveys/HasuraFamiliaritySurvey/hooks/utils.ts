@@ -1,4 +1,4 @@
-import { IconCardGroupItem } from '@/new-components/IconCardGroup';
+import { IconCardGroupItem } from '../components/IconCardGroup';
 import { SurveysResponseData } from '../../types';
 import {
   familiaritySurveyOptionCode,

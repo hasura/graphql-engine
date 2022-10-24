@@ -8,6 +8,7 @@ import { DropdownButton } from '@/new-components/DropdownButton';
 import { FaArrowRight, FaFlask } from 'react-icons/fa';
 import { LS_KEYS, setLSItem } from '@/utils/localStorage';
 import { Tooltip } from '@/new-components/Tooltip';
+import { Analytics } from '@/features/Analytics';
 import { useMetadataSource } from '@/features/MetadataAPI';
 import {
   getInitialValueField,
@@ -41,28 +42,29 @@ export const TryOperation = (props: Props) => {
     dbInfo?.customization?.naming_convention !== 'graphql-default';
 
   const streamingSubscripton = (
-    <div
-      onClick={
-        isStreamingSubscriptionAvailable
-          ? tryOnGQL('streaming_subscription')
-          : undefined
-      }
-      data-trackid="data-tab-btn-try-streaming-subscriptions"
-      className={clsx(
-        'py-xs w-full flex justify-between align-center',
-        isStreamingSubscriptionAvailable
-          ? 'cursor-pointer'
-          : 'cursor-not-allowed text-muted'
-      )}
-    >
-      Subscription - Streaming
-      <Badge className="mx-2" color="yellow">
-        New
-      </Badge>
-      <div className="text-muted">
-        <FaArrowRight className="w-3 h-3" />
+    <Analytics name="data-tab-btn-try-streaming-subscriptions">
+      <div
+        onClick={
+          isStreamingSubscriptionAvailable
+            ? tryOnGQL('streaming_subscription')
+            : undefined
+        }
+        className={clsx(
+          'py-xs w-full flex justify-between align-center',
+          isStreamingSubscriptionAvailable
+            ? 'cursor-pointer'
+            : 'cursor-not-allowed text-muted'
+        )}
+      >
+        Subscription - Streaming
+        <Badge className="mx-2" color="yellow">
+          New
+        </Badge>
+        <div className="text-muted">
+          <FaArrowRight className="w-3 h-3" />
+        </div>
       </div>
-    </div>
+    </Analytics>
   );
   if (isTryitButtonAvailable) {
     return (
@@ -72,36 +74,39 @@ export const TryOperation = (props: Props) => {
             <span className="py-xs text-xs font-semibold text-muted uppercase tracking-wider whitespace-nowrap">
               Try it in GraphiQL
             </span>,
-            <div
-              onClick={tryOnGQL('query')}
-              className="py-xs w-full flex justify-between align-center"
-              data-trackid="data-tab-btn-try-query"
-            >
-              Query
-              <div className="text-muted">
-                <FaArrowRight className="w-3 h-3" />
+            <Analytics name="data-tab-btn-try-query">
+              <div
+                onClick={tryOnGQL('query')}
+                className="py-xs w-full flex justify-between align-center"
+              >
+                Query
+                <div className="text-muted">
+                  <FaArrowRight className="w-3 h-3" />
+                </div>
               </div>
-            </div>,
-            <div
-              onClick={tryOnGQL('mutation')}
-              className="py-xs w-full flex justify-between align-center"
-              data-trackid="data-tab-btn-try-streaming-mutation"
-            >
-              Mutation
-              <div className="text-muted">
-                <FaArrowRight className="w-3 h-3" />
+            </Analytics>,
+            <Analytics name="data-tab-btn-try-streaming-mutation">
+              <div
+                onClick={tryOnGQL('mutation')}
+                className="py-xs w-full flex justify-between align-center"
+              >
+                Mutation
+                <div className="text-muted">
+                  <FaArrowRight className="w-3 h-3" />
+                </div>
               </div>
-            </div>,
-            <div
-              onClick={tryOnGQL('subscription')}
-              className="py-xs w-full flex justify-between align-center"
-              data-trackid="data-tab-btn-try-subscriptions"
-            >
-              Subscription - Live query
-              <div className="text-muted">
-                <FaArrowRight className="w-3 h-3" />
+            </Analytics>,
+            <Analytics name="data-tab-btn-try-subscriptions">
+              <div
+                onClick={tryOnGQL('subscription')}
+                className="py-xs w-full flex justify-between align-center"
+              >
+                Subscription - Live query
+                <div className="text-muted">
+                  <FaArrowRight className="w-3 h-3" />
+                </div>
               </div>
-            </div>,
+            </Analytics>,
             isStreamingSubscriptionAvailable ? (
               streamingSubscripton
             ) : (
