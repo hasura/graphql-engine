@@ -8,6 +8,7 @@ import (
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v3"
 )
 
@@ -22,6 +23,7 @@ func TestQueryCollectionConfig_Build(t *testing.T) {
 		fields     fields
 		wantGolden string
 		wantErr    bool
+		assertErr  require.ErrorAssertionFunc
 	}{
 		{
 			"t1",
@@ -32,6 +34,7 @@ func TestQueryCollectionConfig_Build(t *testing.T) {
 			},
 			"testdata/build_test/t1/want.golden.json",
 			false,
+			require.NoError,
 		},
 		{
 			"t2",
@@ -42,6 +45,7 @@ func TestQueryCollectionConfig_Build(t *testing.T) {
 			},
 			"testdata/build_test/t2/want.golden.json",
 			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -51,9 +55,8 @@ func TestQueryCollectionConfig_Build(t *testing.T) {
 				logger:      tt.fields.logger,
 			}
 			got, err := q.Build()
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
+			tt.assertErr(t, err)
+			if !tt.wantErr {
 				assert.NoError(t, err)
 				gotbs, err := yaml.Marshal(got)
 				assert.NoError(t, err)
@@ -80,12 +83,13 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 		metadata map[string]yaml.Node
 	}
 	tests := []struct {
-		id      string
-		name    string
-		fields  fields
-		args    args
-		want    map[string][]byte
-		wantErr bool
+		id        string
+		name      string
+		fields    fields
+		args      args
+		want      map[string][]byte
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"t1",
@@ -113,6 +117,7 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 				}(),
 			},
 			false,
+			require.NoError,
 		},
 		{
 			"t2",
@@ -140,6 +145,7 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 				}(),
 			},
 			false,
+			require.NoError,
 		},
 		{
 			"t3",
@@ -167,6 +173,7 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 				}(),
 			},
 			false,
+			require.NoError,
 		},
 		{
 			"t4",
@@ -194,6 +201,7 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 				}(),
 			},
 			false,
+			require.NoError,
 		},
 		{
 			"t5",
@@ -209,6 +217,7 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 				"metadata/query_collections.yaml": readYamlFileAndEmitBytes(t, "testdata/export_test/t5/want.query_collections.yaml"),
 			},
 			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -218,9 +227,8 @@ func TestQueryCollectionConfig_Export(t *testing.T) {
 				logger:      tt.fields.logger,
 			}
 			got, err := q.Export(tt.args.metadata)
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
+			tt.assertErr(t, err)
+			if !tt.wantErr {
 				assert.NoError(t, err)
 				for k, v := range got {
 					assert.Contains(t, tt.want, k)
