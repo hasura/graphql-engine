@@ -75,7 +75,7 @@ library
     TypeApplications
     TypeSynonymInstances
 
-  ghc-options: -Wall -O0
+  ghc-options: -Wall -Werror
 
   exposed-modules:
     Harness.Constants

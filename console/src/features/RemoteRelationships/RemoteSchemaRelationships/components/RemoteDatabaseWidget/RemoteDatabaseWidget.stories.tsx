@@ -24,6 +24,7 @@ export default {
         schema={z.any()}
         onSubmit={o => console.log(o)}
         options={{ defaultValues }}
+        className="p-4"
       >
         {() => (
           <div>

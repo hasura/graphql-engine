@@ -14,9 +14,9 @@ import Data.Semigroup (Any (..), Max (..))
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
 import Hasura.RQL.Types.Backend
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
+import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.SQL.Backend
 import Language.GraphQL.Draft.Syntax qualified as G
 

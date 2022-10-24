@@ -20,11 +20,10 @@ fi
 stop_services() {
 	echo "killing and waiting for spawned services"
 
-	[[ -n "${HGE_PIDS[*]}" ]] && kill -s INT "${HGE_PIDS[@]}" || true
-	[[ -n "$WH_PID" ]] && kill "$WH_PID" || true
-
-	[[ -n "${HGE_PIDS[*]}" ]] && wait "${HGE_PIDS[@]}" || true
-	[[ -n "$WH_PID" ]] && wait "$WH_PID" || true
+	[[ -n "${HGE_PIDS[*]}" ]] && {
+		kill -s INT "${HGE_PIDS[@]}"
+		wait "${HGE_PIDS[@]}"
+	} || true
 }
 
 time_elapsed() {
@@ -83,35 +82,14 @@ init_hge_and_test_jwt() {
 }
 
 init_ssl() {
-	CUR_DIR="$PWD"
 	mkdir -p "$OUTPUT_FOLDER/ssl"
-	cd "$OUTPUT_FOLDER/ssl"
-	CNF_TEMPLATE='[req]
-req_extensions = v3_req
-distinguished_name = req_distinguished_name
-
-[req_distinguished_name]
-
-[ v3_req ]
-basicConstraints = CA:FALSE
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment
-subjectAltName = @alt_names
-
-[alt_names]
-DNS.1 = localhost
-IP.1 = 127.0.0.1'
-
-	echo "$CNF_TEMPLATE" >webhook-req.cnf
-
-	openssl genrsa -out ca-key.pem 2048
-	openssl req -x509 -new -nodes -key ca-key.pem -days 10 -out ca.pem -subj "/CN=webhook-ca"
-	openssl genrsa -out webhook-key.pem 2048
-	openssl req -new -key webhook-key.pem -out webhook.csr -subj "/CN=hge-webhook" -config webhook-req.cnf
-	openssl x509 -req -in webhook.csr -CA ca.pem -CAkey ca-key.pem -CAcreateserial -out webhook.pem -days 10 -extensions v3_req -extfile webhook-req.cnf
-
-	cp ca.pem /etc/ssl/certs/webhook.crt
-	update-ca-certificates
-	cd "$CUR_DIR"
+	(
+		cd "$OUTPUT_FOLDER/ssl"
+		openssl genrsa -out ca-key.pem 2048
+		openssl req -x509 -new -nodes -key ca-key.pem -days 10 -out ca.pem -subj "/CN=webhook-ca"
+		cp ca.pem /usr/local/share/ca-certificates/hge-tests-ca.crt
+		update-ca-certificates
+	)
 }
 
 webhook_tests_check_root() {
@@ -226,7 +204,6 @@ PYTEST_PARALLEL_ARGS=(
 )
 
 HGE_PIDS=()
-WH_PID=""
 
 trap stop_services ERR
 trap stop_services INT
@@ -624,8 +601,6 @@ auth-webhook-cookie)
 	wait_for_port 8080
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" \
-		--test-auth-webhook-header \
 		test_auth_webhook_cookie.py
 
 	kill_hge_servers
@@ -968,32 +943,10 @@ remote-schema-https)
 	wait_for_port 8080
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--tls-cert="$OUTPUT_FOLDER/ssl/webhook.pem" --tls-key="$OUTPUT_FOLDER/ssl/webhook-key.pem" \
+		--tls-ca-cert="$OUTPUT_FOLDER/ssl/ca.pem" --tls-ca-key="$OUTPUT_FOLDER/ssl/ca-key.pem" \
 		test_schema_stitching.py::TestRemoteSchemaBasic
 
 	export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="${OLD_REMOTE_SCHEMAS_WEBHOOK_DOMAIN}"
-	kill_hge_servers
-	;;
-
-
-post-webhook)
-	webhook_tests_check_root
-
-	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
-
-	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
-	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
-	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
-	init_ssl
-
-	start_multiple_hge_servers
-
-	python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" >"$OUTPUT_FOLDER/webhook.log" 2>&1 &
-	WH_PID=$!
-	wait_for_port 9090
-
-	run_pytest_parallel --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
-
 	kill_hge_servers
 	;;
 
@@ -1009,9 +962,27 @@ webhook-request-context)
 	wait_for_port 8080
 
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" \
-		--test-webhook-request-context \
 		test_webhook_request_context.py
+
+	kill_hge_servers
+	;;
+
+post-webhook)
+	webhook_tests_check_root
+
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH ADMIN SECRET & WEBHOOK (POST) #########################>\n"
+
+	export HASURA_GRAPHQL_AUTH_HOOK="https://localhost:9090/"
+	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
+	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
+	init_ssl
+
+	run_hge_with_args serve
+	wait_for_port 8080
+
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--tls-ca-cert="$OUTPUT_FOLDER/ssl/ca.pem" --tls-ca-key="$OUTPUT_FOLDER/ssl/ca-key.pem" \
+		-- test_webhook.py
 
 	kill_hge_servers
 	;;
@@ -1025,13 +996,12 @@ get-webhook)
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 	init_ssl
 
-	start_multiple_hge_servers
+	run_hge_with_args serve
+	wait_for_port 8080
 
-	python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" >"$OUTPUT_FOLDER/webhook.log" 2>&1 &
-	WH_PID=$!
-	wait_for_port 9090
-
-	run_pytest_parallel --hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK"
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--tls-ca-cert="$OUTPUT_FOLDER/ssl/ca.pem" --tls-ca-key="$OUTPUT_FOLDER/ssl/ca-key.pem" \
+		-- test_webhook.py
 
 	kill_hge_servers
 	;;
@@ -1044,21 +1014,12 @@ insecure-webhook)
 	export HASURA_GRAPHQL_AUTH_HOOK_MODE="GET"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 	init_ssl
-	rm /etc/ssl/certs/webhook.crt
-	update-ca-certificates
 
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	echo -e "running webhook"
-	python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" &
-	WH_PID=$!
-	echo -e "webhook pid $WH_PID"
-	wait_for_port 9090
-
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" \
-		--test-webhook-insecure \
+		--tls-ca-cert="$OUTPUT_FOLDER/ssl/ca.pem" --tls-ca-key="$OUTPUT_FOLDER/ssl/ca-key.pem" \
 		test_webhook_insecure.py
 
 	kill_hge_servers
@@ -1072,25 +1033,15 @@ insecure-webhook-with-admin-secret)
 	export HASURA_GRAPHQL_AUTH_HOOK_MODE="POST"
 	export HASURA_GRAPHQL_ADMIN_SECRET="HGE$RANDOM$RANDOM"
 	init_ssl
-	rm /etc/ssl/certs/webhook.crt
-	update-ca-certificates
 
 	run_hge_with_args serve
 	wait_for_port 8080
 
-	python3 webhook.py 9090 "$OUTPUT_FOLDER/ssl/webhook-key.pem" "$OUTPUT_FOLDER/ssl/webhook.pem" >"$OUTPUT_FOLDER/webhook.log" 2>&1 &
-	WH_PID=$!
-	echo -e "webhook pid $WH_PID"
-	wait_for_port 9090
-
 	pytest "${PYTEST_COMMON_ARGS[@]}" \
-		--hge-webhook="$HASURA_GRAPHQL_AUTH_HOOK" \
-		--test-webhook-insecure \
+		--tls-ca-cert="$OUTPUT_FOLDER/ssl/ca.pem" --tls-ca-key="$OUTPUT_FOLDER/ssl/ca-key.pem" \
 		test_webhook_insecure.py
 
 	kill_hge_servers
-
-	kill $WH_PID
 	;;
 
 apollo-federation)

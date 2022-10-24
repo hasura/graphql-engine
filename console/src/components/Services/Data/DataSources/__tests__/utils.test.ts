@@ -87,13 +87,13 @@ describe('dataSourceIsEqual works', () => {
       configuration: {
         connection_info: {
           connection_string:
-            'DRIVER={ODBC Driver 17 for SQL Server};SERVER=172.17.0.1;DATABASE=master;Uid=SA;Pwd=reallyStrongPwd123',
+            'DRIVER={ODBC Driver 18 for SQL Server};SERVER=172.17.0.1;DATABASE=master;Uid=SA;Pwd=reallyStrongPwd123;Encrypt=optional',
           pool_settings: {},
         },
         read_replicas: [
           {
             connection_string:
-              'DRIVER={ODBC Driver 17 for SQL Server};SERVER=172.16.238.1,1502;Database=agtestdb;Uid=sa;Pwd=Password1;ApplicationIntent=ReadOnly',
+              'DRIVER={ODBC Driver 18 for SQL Server};SERVER=172.16.238.1,1502;Database=agtestdb;Uid=sa;Pwd=Password1;ApplicationIntent=ReadOnly;Encrypt=optional',
             pool_settings: { idle_timeout: 5, max_connections: 50 },
           },
         ],
@@ -107,7 +107,7 @@ describe('dataSourceIsEqual works', () => {
       configuration: {
         connection_info: {
           connection_string:
-            'DRIVER={ODBC Driver 17 for SQL Server};SERVER=172.17.0.1;DATABASE=master;Uid=SA;Pwd=reallyStrongPwd123',
+            'DRIVER={ODBC Driver 18 for SQL Server};SERVER=172.17.0.1;DATABASE=master;Uid=SA;Pwd=reallyStrongPwd123;Encrypt=optional',
           pool_settings: {
             idle_timeout: 5,
             max_connections: 50,

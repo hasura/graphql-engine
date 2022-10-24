@@ -102,7 +102,10 @@ test-suite tests-dc-api
     data-fix,
     deepseq,
     dc-api,
+    directory,
     file-embed,
+    filepath,
+    graphql-parser,
     hashable,
     hspec,
     hspec-core,
@@ -119,6 +122,7 @@ test-suite tests-dc-api
     servant-client-core,
     servant-openapi3,
     text,
+    time,
     unordered-containers,
     vector,
     xml-conduit,
@@ -134,6 +138,7 @@ test-suite tests-dc-api
     Command
     Paths_dc_api
     Test.Data
+    Test.DataExport
     Test.CapabilitiesSpec
     Test.Expectations
     Test.HealthSpec

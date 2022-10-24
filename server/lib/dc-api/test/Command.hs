@@ -3,6 +3,8 @@ module Command
     TestConfig (..),
     NameCasing (..),
     TestOptions (..),
+    ExportDataConfig (..),
+    ExportFormat (..),
     parseCommandLine,
   )
 where
@@ -22,6 +24,7 @@ import Prelude
 data Command
   = Test TestOptions
   | ExportOpenAPISpec
+  | ExportData ExportDataConfig
 
 data TestConfig = TestConfig
   { _tcTableNamePrefix :: [Text],
@@ -44,6 +47,17 @@ data TestOptions = TestOptions
     _toDryRun :: Bool,
     _toExportMatchStrings :: Bool
   }
+
+data ExportDataConfig = ExportDataConfig
+  { _edcDirectory :: FilePath,
+    _edcFormat :: ExportFormat,
+    _edcDateTimeFormat :: Maybe String
+  }
+
+data ExportFormat
+  = JSON
+  | JSONLines
+  deriving (Eq, Show, Read)
 
 parseCommandLine :: IO Command
 parseCommandLine =
@@ -69,7 +83,7 @@ version =
 commandParser :: Parser Command
 commandParser =
   subparser
-    (testCommand <> exportOpenApiSpecCommand)
+    (testCommand <> exportOpenApiSpecCommand <> exportData)
   where
     testCommand =
       command
@@ -84,6 +98,13 @@ commandParser =
         ( info
             (helper <*> pure ExportOpenAPISpec)
             (progDesc "Exports the OpenAPI specification of the Data Connector API that agents must implement")
+        )
+    exportData =
+      command
+        "export-data"
+        ( info
+            (helper <*> (ExportData <$> exportDataConfigParser))
+            (progDesc "Exports the Chinook dataset to files in the specified directory")
         )
 
 testConfigParser :: Parser TestConfig
@@ -166,6 +187,30 @@ testOptionsParser =
 
 testCommandParser :: Parser Command
 testCommandParser = Test <$> testOptionsParser
+
+exportDataConfigParser :: Parser ExportDataConfig
+exportDataConfigParser =
+  ExportDataConfig
+    <$> strOption
+      ( long "directory"
+          <> short 'd'
+          <> metavar "DIR"
+          <> help "The directory to export the data files into"
+      )
+    <*> option
+      auto
+      ( long "format"
+          <> short 'f'
+          <> metavar "FORMAT"
+          <> help "The format to export (JSON or JSONLines)"
+      )
+    <*> optional
+      ( strOption
+          ( long "datetime-format"
+              <> metavar "FORMAT"
+              <> help "Format string to use when formatting DateTime columns (use format syntax from https://hackage.haskell.org/package/time-1.12.2/docs/Data-Time-Format.html#v:formatTime)"
+          )
+      )
 
 baseUrl :: ReadM BaseUrl
 baseUrl = eitherReader $ left show . parseBaseUrl

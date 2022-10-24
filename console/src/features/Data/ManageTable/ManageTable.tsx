@@ -1,11 +1,11 @@
 import { BrowseRowsContainer } from '@/features/BrowseRows';
+import { getTableName } from '@/features/DataSource';
 import { Table } from '@/features/MetadataAPI';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Tabs } from '@/new-components/Tabs';
 import React, { useState } from 'react';
 import { useDatabaseHierarchy } from '../hooks';
 import { ModifyTable } from '../ModifyTable/ModifyTable';
-import { getTableName } from '../TrackTables/hooks/useTables';
 import { Breadcrumbs, TableName } from './parts';
 
 export interface ManageTableProps {

@@ -20,7 +20,7 @@ export const QueryCollectionCreateDialog: React.FC<QueryCollectionCreateDialogPr
     const { fireNotification } = useFireNotification();
 
     return (
-      <Form schema={schema} onSubmit={() => {}}>
+      <Form schema={schema} onSubmit={() => {}} className="p-4">
         {({ watch, setError, trigger }) => {
           const name = watch('name');
           return (

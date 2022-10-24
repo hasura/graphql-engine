@@ -128,6 +128,7 @@ export const RemoteSchemaToRemoteSchemaForm = (
       schema={rsToRsFormSchema}
       options={{ defaultValues: {} }}
       onSubmit={submit}
+      className="p-4"
     >
       {options => (
         <>

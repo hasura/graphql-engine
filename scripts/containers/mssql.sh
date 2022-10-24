@@ -19,7 +19,7 @@ MSSQL_PASSWORD=hasuraMSSQL1
 MSSQL_VOLUME_NAME='hasura-dev-mssql'
 MSSQL_CONTAINER_NAME="hasura-dev-mssql-$MSSQL_PORT"
 # shellcheck disable=SC2034  # this variable is used in scripts sourcing this one
-MSSQL_CONN_STR="DRIVER={ODBC Driver 17 for SQL Server};SERVER=$MSSQL_HOST,$MSSQL_PORT;Uid=sa;Pwd=$MSSQL_PASSWORD;"
+MSSQL_CONN_STR="DRIVER={ODBC Driver 18 for SQL Server};SERVER=$MSSQL_HOST,$MSSQL_PORT;Uid=sa;Pwd=$MSSQL_PASSWORD;Encrypt=optional"
 MSSQL_DOCKER="docker exec -it $MSSQL_CONTAINER_NAME sqlcmd -S localhost -U sa -P $MSSQL_PASSWORD"
 
 if [[ "$(uname -m)" == 'arm64' ]]; then

@@ -114,7 +114,9 @@ runQuery env instanceId userInfo schemaCache httpManager serverConfigCtx rqlQuer
   result <-
     runQueryM env rqlQuery & \x -> do
       ((js, meta), rsc, ci) <-
-        x & runMetadataT metadata
+        -- We can use defaults here unconditionally, since there is no MD export function in V2Query
+        x
+          & runMetadataT metadata (_sccMetadataDefaults serverConfigCtx)
           & runCacheRWT schemaCache
           & peelRun runCtx
           & runExceptT

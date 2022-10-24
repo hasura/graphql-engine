@@ -124,6 +124,7 @@ export const WithReactFormHookNested: Story = () => {
       }}
       onSubmit={submit}
       schema={schema}
+      className="p-4"
     >
       {() => {
         return (

@@ -203,6 +203,7 @@ mkServeOptions ServeOptionsRaw {..} = do
     Server.Logging.MetadataQueryLoggingDisabled -> withOptionDefault Nothing enableMetadataQueryLoggingOption
     metadataQueryLoggingEnabled -> pure metadataQueryLoggingEnabled
   soDefaultNamingConvention <- withOption rsoDefaultNamingConvention defaultNamingConventionOption
+  soMetadataDefaults <- withOptionDefault rsoMetadataDefaults metadataDefaultsOption
   soExtensionsSchema <- withOptionDefault rsoExtensionsSchema metadataDBExtensionsSchemaOption
 
   pure ServeOptions {..}

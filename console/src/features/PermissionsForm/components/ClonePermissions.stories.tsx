@@ -14,7 +14,7 @@ export default {
   component: ClonePermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
-      <Form schema={z.any()} onSubmit={() => {}}>
+      <Form schema={z.any()} onSubmit={() => {}} className="p-4">
         {() => <StoryComponent />}
       </Form>
     ),

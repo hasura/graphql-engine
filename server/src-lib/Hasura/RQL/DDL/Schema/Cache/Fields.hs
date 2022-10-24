@@ -50,7 +50,7 @@ addNonColumnFields ::
     SourceName,
     HashMap (TableName b) (TableCoreInfoG b (ColumnInfo b) (ColumnInfo b)),
     FieldInfoMap (ColumnInfo b),
-    RemoteSchemaMap,
+    PartiallyResolvedRemoteSchemaMap,
     DBFunctionsMetadata b,
     NonColumnTableInputs b
   )
@@ -338,7 +338,7 @@ buildRemoteRelationship ::
   ) =>
   HashMap SourceName (AB.AnyBackend PartiallyResolvedSource) ->
   M.HashMap FieldName (DBJoinField b) ->
-  RemoteSchemaMap ->
+  PartiallyResolvedRemoteSchemaMap ->
   (SourceName, TableName b, RemoteRelationship) ->
   m (Either QErr (Maybe (RemoteFieldInfo (DBJoinField b))))
 buildRemoteRelationship allSources allColumns remoteSchemaMap (source, table, rr@RemoteRelationship {..}) = runExceptT $ do

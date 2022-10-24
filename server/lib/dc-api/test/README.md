@@ -3,7 +3,7 @@ This test suite provides a set of tests that is able to test any Data Connector 
 
 Not all tests will be appropriate for all agents. Agents self-describe their capabilities and only the tests appropriate for those capabilities will be run.
 
-The executable also has the ability to export the OpenAPI spec of the Data Connector agent API so that customers can use that to ensure their agent complies with the API format.
+The executable also has the ability to export the OpenAPI spec of the Data Connector agent API so that customers can use that to ensure their agent complies with the API format. In addition, the Chinook data set can be exported to files on disk in various formats.
 
 ## How to Use
 First, start your Data Connector agent and ensure it is populated with the [Chinook data set](https://github.com/lerocha/chinook-database/). For example, you could start the Reference Agent by following the instructions in [its README](../../dc-agents/reference/README.md).
@@ -29,3 +29,14 @@ To export the OpenAPI spec, you can run this command, and the spec will be writt
 ```
 > cabal run test:tests-dc-api -- export-openapi-spec
 ```
+
+To export the Chinook data set, you can run this command:
+```
+> cabal run test:tests-dc-api -- export-data -d /tmp/chinook-data -f JSONLines
+```
+
+This will export the data into the directory specified by `-d` in the `JSONLines` format (`-f`) which is as a JSON object per row, newline separated. Each table's data will be exported into a separate file.
+
+If you need to customize the format of any DateTime columns, you can use the `--datetime-format` option and specify a format string using the syntax specified [here](https://hackage.haskell.org/package/time-1.12.2/docs/Data-Time-Format.html#v:formatTime). By default the DateTime columns are exported in ISO8601 format.
+
+The other format supported by `-f` is `JSON`, which results in each file being a JSON array of table rows as JSON objects.

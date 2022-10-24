@@ -73,7 +73,7 @@ export const Form = React.forwardRef(
       <FormProvider {...methods}>
         <form
           id={id}
-          className={`space-y-md bg-legacybg p-4 ${className || ''}`}
+          className={`space-y-xs bg-legacybg ${className || ''}`}
           onSubmit={methods.handleSubmit(onSubmit)}
         >
           {children(methods)}

@@ -73,7 +73,6 @@ const Login: React.FC<ConnectInjectedProps> = ({ dispatch }) => {
           defaultValues: undefined,
         }}
         onSubmit={onSubmit}
-        className="p-0"
       >
         {() => (
           <div className="flex flex-col bg-white p-4">

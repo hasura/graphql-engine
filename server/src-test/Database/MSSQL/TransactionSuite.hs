@@ -261,7 +261,7 @@ createMinimalPool connString =
 
 invalidSyntaxError :: String
 invalidSyntaxError =
-  "[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The definition for column 'INVALID_SYNTAX' must include a data type."
+  "[Microsoft][ODBC Driver 18 for SQL Server][SQL Server]The definition for column 'INVALID_SYNTAX' must include a data type."
 
 matchDataRetrievalError :: String -> Either (MSSQLTxError -> Expectation) a
 matchDataRetrievalError = matchQueryError . DataRetrievalError

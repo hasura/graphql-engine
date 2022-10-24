@@ -722,8 +722,8 @@ class TestRemoteSchemaTypePrefix:
     def test_add_schema(self, hge_ctx):
         """ check if the remote schema is added in the metadata """
         resp = hge_ctx.v1q(export_metadata_q)
-        assert resp['remote_schemas'][0]['name'] == "simple 2"
-        # assert resp['remote_schemas'][0]['definition']['type_prefix'] == "foo"
+        found = [schema for schema in resp['remote_schemas'] if schema['name'] == 'simple 2']
+        assert len(found) == 1, resp
 
     @pytest.mark.allow_server_upgrade_test
     def test_introspection(self, hge_ctx):

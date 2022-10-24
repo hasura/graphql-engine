@@ -5,6 +5,8 @@ module Test.Data
   ( -- = Test Data
     TestData (..),
     mkTestData,
+    schemaTables,
+    allTableRows,
     -- = Utilities
     emptyQuery,
     sortBy,
@@ -273,6 +275,34 @@ genresTableRelationships =
             [ (tracksRelationshipName, API.Relationship tracksTableName API.ArrayRelationship joinFieldMapping)
             ]
         )
+
+playlistsTableName :: API.TableName
+playlistsTableName = mkTableName "Playlist"
+
+playlistsRows :: [HashMap API.FieldName API.FieldValue]
+playlistsRows = sortBy (API.FieldName "PlaylistId") $ readTableFromXmlIntoRows playlistsTableName
+
+playlistTracksTableName :: API.TableName
+playlistTracksTableName = mkTableName "PlaylistTrack"
+
+playlistTracksRows :: [HashMap API.FieldName API.FieldValue]
+playlistTracksRows = sortOn (\r -> (r ^? ix (API.FieldName "PlaylistId"), r ^? ix (API.FieldName "TrackId"))) $ readTableFromXmlIntoRows playlistTracksTableName
+
+allTableRows :: HashMap API.TableName ([HashMap API.FieldName API.FieldValue])
+allTableRows =
+  HashMap.fromList
+    [ (artistsTableName, artistsRows),
+      (albumsTableName, albumsRows),
+      (customersTableName, customersRows),
+      (employeesTableName, employeesRows),
+      (genresTableName, genresRows),
+      (invoicesTableName, invoicesRows),
+      (invoiceLinesTableName, invoiceLinesRows),
+      (mediaTypesTableName, mediaTypesRows),
+      (playlistsTableName, playlistsRows),
+      (playlistTracksTableName, playlistTracksRows),
+      (tracksTableName, tracksRows)
+    ]
 
 data TestData = TestData
   { -- = Schema

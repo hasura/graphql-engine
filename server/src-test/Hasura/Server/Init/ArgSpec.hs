@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 
 module Hasura.Server.Init.ArgSpec
   ( spec,
@@ -8,6 +9,7 @@ where
 --------------------------------------------------------------------------------
 
 import Control.Lens (preview, _Just)
+import Data.Aeson qualified as Aeson
 import Data.HashSet qualified as Set
 import Data.Time (NominalDiffTime)
 import Data.URL.Template qualified as Template
@@ -17,6 +19,8 @@ import Hasura.GraphQL.Schema.NamingCase qualified as NC
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as Logging
 import Hasura.Prelude
+import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults (..), overrideMetadataDefaults, _metaBackendConfigs)
+import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Server.Auth qualified as Auth
 import Hasura.Server.Cors qualified as Cors
 import Hasura.Server.Init qualified as UUT
@@ -2032,3 +2036,49 @@ serveParserSpec =
         Opt.Success _result -> Hspec.expectationFailure "Should not parse successfully"
         Opt.Failure _pf -> pure ()
         Opt.CompletionInvoked cr -> Hspec.expectationFailure $ show cr
+
+    Hspec.it "It accepts '--metadata-defaults'" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput =
+            [ "--metadata-defaults",
+              "{\"backend_configs\": {\"dataconnector\": {\"sqlite\": {\"uri\": \"http://localhost:8100\"}}}}"
+            ]
+          -- Then
+          result = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+
+      fmap UUT.rsoMetadataDefaults result `Hspec.shouldSatisfy` \case
+        Opt.Success (Just (MetadataDefaults md)) -> not (null (BackendMap.elems (_metaBackendConfigs md)))
+        Opt.Success Nothing -> False
+        Opt.Failure _pf -> False
+        Opt.CompletionInvoked _cr -> False
+
+    Hspec.it "It prefers explicit metadata over '--metadata-defaults'" $ do
+      let -- Given
+          parserInfo = Opt.info (UUT.serveCommandParser @Logging.Hasura Opt.<**> Opt.helper) Opt.fullDesc
+          -- When
+          argInput =
+            [ "--metadata-defaults",
+              "{\"backend_configs\": {\"dataconnector\": {\"sqlite\": {\"uri\": \"http://x:80\"}, \"mongo\": {\"uri\": \"http://x:81\"}}}}"
+            ]
+          mdInput =
+            "{\"version\": 3, \"sources\": [], \"backend_configs\": {\"dataconnector\": {\"sqlite\": {\"uri\": \"http://x:82\"}, \"db2\": {\"uri\": \"http://x:83\"}}}}"
+          mdExpected =
+            "{\"version\": 3, \"sources\": [], \"backend_configs\": {\"dataconnector\": { \"mongo\": {\"uri\": \"http://x:81\"}, \"sqlite\": {\"uri\": \"http://x:82\"}, \"db2\": {\"uri\": \"http://x:83\"}}}}"
+
+          -- Then
+          argResult = Opt.execParserPure Opt.defaultPrefs parserInfo argInput
+          mdResult = Aeson.eitherDecode @Metadata mdInput
+          mdExpectedResult = Aeson.eitherDecode @Metadata mdExpected
+
+      fmap UUT.rsoMetadataDefaults argResult `Hspec.shouldSatisfy` \case
+        Opt.Success Nothing -> False
+        Opt.Failure _pf -> False
+        Opt.CompletionInvoked _cr -> False
+        Opt.Success (Just (MetadataDefaults mdd)) ->
+          case (mdResult, mdExpectedResult) of
+            (Right md, Right mde) ->
+              let o = overrideMetadataDefaults md (MetadataDefaults mdd)
+               in o == mde
+            _ -> False
