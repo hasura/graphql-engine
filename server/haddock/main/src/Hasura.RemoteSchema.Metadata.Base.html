@@ -15,11 +15,11 @@
 </span><span id="line-15"></span><span class="hs-comment">-- NOTE: no validation on the character set is done here; it's likely there is</span><span>
 </span><span id="line-16"></span><span class="hs-comment">-- a bug (FIXME) where this interacts with remote relationships and some name</span><span>
 </span><span id="line-17"></span><span class="hs-comment">-- mangling needs to happen.</span><span>
-</span><span id="line-18"></span><span id="local-6989586621690304127"><span id="local-6989586621690304128"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RemoteSchemaName"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-var">RemoteSchemaName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaName"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-var">RemoteSchemaName</span></a></span></span><span>
+</span><span id="line-18"></span><span id="local-6989586621690303911"><span id="local-6989586621690303912"></span></span><span class="hs-keyword">newtype</span><span> </span><span id="RemoteSchemaName"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-var">RemoteSchemaName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="RemoteSchemaName"><span class="annot"><a href="Hasura.RemoteSchema.Metadata.Base.html#RemoteSchemaName"><span class="hs-identifier hs-var">RemoteSchemaName</span></a></span></span><span>
 </span><span id="line-19"></span><span>  </span><span class="hs-special">{</span><span id="unRemoteSchemaName"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; NonEmptyText
 </span><a href="Hasura.RemoteSchema.Metadata.Base.html#unRemoteSchemaName"><span class="hs-identifier hs-var hs-var">unRemoteSchemaName</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Text.NonEmpty.html#NonEmptyText"><span class="hs-identifier hs-type">NonEmptyText</span></a></span><span class="hs-special">}</span><span>
 </span><span id="line-20"></span><span>  </span><span class="hs-keyword">deriving</span><span>
-</span><span id="line-21"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621690304115"><span id="local-6989586621690304117"><span id="local-6989586621690304123"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaName -&gt; ShowS
+</span><span id="line-21"></span><span>    </span><span class="hs-special">(</span><span> </span><span id="local-6989586621690303899"><span id="local-6989586621690303901"><span id="local-6989586621690303907"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaName -&gt; ShowS
 [RemoteSchemaName] -&gt; ShowS
 RemoteSchemaName -&gt; String
 forall a.
@@ -31,14 +31,14 @@ $cshow :: RemoteSchemaName -&gt; String
 showsPrec :: Int -&gt; RemoteSchemaName -&gt; ShowS
 $cshowsPrec :: Int -&gt; RemoteSchemaName -&gt; ShowS
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-22"></span><span>      </span><span id="local-6989586621690304107"><span id="local-6989586621690304112"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
+</span><span id="line-22"></span><span>      </span><span id="local-6989586621690303891"><span id="local-6989586621690303896"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 $c/= :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 == :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 $c== :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></a></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-23"></span><span>      </span><span id="local-6989586621690304074"><span id="local-6989586621690304078"><span id="local-6989586621690304082"><span id="local-6989586621690304086"><span id="local-6989586621690304090"><span id="local-6989586621690304094"><span id="local-6989586621690304099"><span class="annot"><span class="annottext">Eq RemoteSchemaName
+</span><span id="line-23"></span><span>      </span><span id="local-6989586621690303858"><span id="local-6989586621690303862"><span id="local-6989586621690303866"><span id="local-6989586621690303870"><span id="local-6989586621690303874"><span id="local-6989586621690303878"><span id="local-6989586621690303883"><span class="annot"><span class="annottext">Eq RemoteSchemaName
 RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 RemoteSchemaName -&gt; RemoteSchemaName -&gt; Ordering
 RemoteSchemaName -&gt; RemoteSchemaName -&gt; RemoteSchemaName
@@ -67,7 +67,7 @@ $c&lt; :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 compare :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; Ordering
 $ccompare :: RemoteSchemaName -&gt; RemoteSchemaName -&gt; Ordering
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-24"></span><span>      </span><span id="local-6989586621690304063"><span id="local-6989586621690304068"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaName -&gt; Int
+</span><span id="line-24"></span><span>      </span><span id="local-6989586621690303847"><span id="local-6989586621690303852"><span class="annot"><span class="annottext">Int -&gt; RemoteSchemaName -&gt; Int
 RemoteSchemaName -&gt; Int
 forall a. (Int -&gt; a -&gt; Int) -&gt; (a -&gt; Int) -&gt; Hashable a
 hash :: RemoteSchemaName -&gt; Int
@@ -75,7 +75,7 @@ $chash :: RemoteSchemaName -&gt; Int
 hashWithSalt :: Int -&gt; RemoteSchemaName -&gt; Int
 $chashWithSalt :: Int -&gt; RemoteSchemaName -&gt; Int
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Hashable</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-25"></span><span>      </span><span id="local-6989586621690304044"><span id="local-6989586621690304048"><span id="local-6989586621690304052"><span id="local-6989586621690304057"><span class="annot"><span class="annottext">[RemoteSchemaName] -&gt; Value
+</span><span id="line-25"></span><span>      </span><span id="local-6989586621690303828"><span id="local-6989586621690303832"><span id="local-6989586621690303836"><span id="local-6989586621690303841"><span class="annot"><span class="annottext">[RemoteSchemaName] -&gt; Value
 [RemoteSchemaName] -&gt; Encoding
 RemoteSchemaName -&gt; Value
 RemoteSchemaName -&gt; Encoding
@@ -94,7 +94,7 @@ $ctoEncoding :: RemoteSchemaName -&gt; Encoding
 toJSON :: RemoteSchemaName -&gt; Value
 $ctoJSON :: RemoteSchemaName -&gt; Value
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-26"></span><span>      </span><span id="local-6989586621690304033"><span id="local-6989586621690304038"><span class="annot"><span class="annottext">ToJSONKeyFunction [RemoteSchemaName]
+</span><span id="line-26"></span><span>      </span><span id="local-6989586621690303817"><span id="local-6989586621690303822"><span class="annot"><span class="annottext">ToJSONKeyFunction [RemoteSchemaName]
 ToJSONKeyFunction RemoteSchemaName
 forall a.
 ToJSONKeyFunction a -&gt; ToJSONKeyFunction [a] -&gt; ToJSONKey a
@@ -103,7 +103,7 @@ $ctoJSONKeyList :: ToJSONKeyFunction [RemoteSchemaName]
 toJSONKey :: ToJSONKeyFunction RemoteSchemaName
 $ctoJSONKey :: ToJSONKeyFunction RemoteSchemaName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.ToJSONKey</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-27"></span><span>      </span><span id="local-6989586621690304022"><span id="local-6989586621690304027"><span class="annot"><span class="annottext">Value -&gt; Parser [RemoteSchemaName]
+</span><span id="line-27"></span><span>      </span><span id="local-6989586621690303806"><span id="local-6989586621690303811"><span class="annot"><span class="annottext">Value -&gt; Parser [RemoteSchemaName]
 Value -&gt; Parser RemoteSchemaName
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -112,22 +112,22 @@ $cparseJSONList :: Value -&gt; Parser [RemoteSchemaName]
 parseJSON :: Value -&gt; Parser RemoteSchemaName
 $cparseJSON :: Value -&gt; Parser RemoteSchemaName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">J.FromJSON</span></span></span></span><span class="hs-special">,</span><span>
-</span><span id="line-28"></span><span>      </span><span id="local-6989586621690304016"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; PrepArg
+</span><span id="line-28"></span><span>      </span><span id="local-6989586621690303800"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; PrepArg
 forall a. (a -&gt; PrepArg) -&gt; ToPrepArg a
 toPrepVal :: RemoteSchemaName -&gt; PrepArg
 $ctoPrepVal :: RemoteSchemaName -&gt; PrepArg
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.ToPrepArg</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-29"></span><span>      </span><span id="local-6989586621690304009"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text RemoteSchemaName
+</span><span id="line-29"></span><span>      </span><span id="local-6989586621690303793"><span class="annot"><span class="annottext">Maybe ByteString -&gt; Either Text RemoteSchemaName
 forall a. (Maybe ByteString -&gt; Either Text a) -&gt; FromCol a
 fromCol :: Maybe ByteString -&gt; Either Text RemoteSchemaName
 $cfromCol :: Maybe ByteString -&gt; Either Text RemoteSchemaName
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">PG.FromCol</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-30"></span><span>      </span><span id="local-6989586621690304002"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; Text
+</span><span id="line-30"></span><span>      </span><span id="local-6989586621690303786"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; Text
 forall a. (a -&gt; Text) -&gt; ToTxt a
 toTxt :: RemoteSchemaName -&gt; Text
 $ctoTxt :: RemoteSchemaName -&gt; Text
 </span><a href="Data.Text.Extended.html#C%3AToTxt"><span class="hs-identifier hs-var hs-var hs-var hs-var">ToTxt</span></a></span></span><span class="hs-special">,</span><span>
-</span><span id="line-31"></span><span>      </span><span id="local-6989586621690303995"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; ()
+</span><span id="line-31"></span><span>      </span><span id="local-6989586621690303779"><span class="annot"><span class="annottext">RemoteSchemaName -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: RemoteSchemaName -&gt; ()
 $crnf :: RemoteSchemaName -&gt; ()
@@ -139,7 +139,7 @@ forall a.
 $cto :: forall x. Rep RemoteSchemaName x -&gt; RemoteSchemaName
 $cfrom :: forall x. RemoteSchemaName -&gt; Rep RemoteSchemaName x
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-33"></span><span>      </span><span id="local-6989586621690303982"><span class="annot"><span class="annottext">Eq RemoteSchemaName
+</span><span id="line-33"></span><span>      </span><span id="local-6989586621690303766"><span class="annot"><span class="annottext">Eq RemoteSchemaName
 Accesses -&gt; RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
 forall a. Eq a -&gt; (Accesses -&gt; a -&gt; a -&gt; Bool) -&gt; Cacheable a
 unchanged :: Accesses -&gt; RemoteSchemaName -&gt; RemoteSchemaName -&gt; Bool
