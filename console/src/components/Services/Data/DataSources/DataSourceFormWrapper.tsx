@@ -112,10 +112,10 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
     .filter(driver => driver.native)
     .map(driver => driver.name);
 
-  if (!isGDCFeatureFlagEnabled) return null;
   return (
     <>
-      {!nativeDrivers.includes(connectionDBState.dbType) ? (
+      {isGDCFeatureFlagEnabled &&
+      !nativeDrivers.includes(connectionDBState.dbType) ? (
         <Analytics name="EditDataSource" {...REDACT_EVERYTHING}>
           <div className="max-w-xl">
             <Connect.CreateConnection
