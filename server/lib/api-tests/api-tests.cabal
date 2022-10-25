@@ -119,6 +119,7 @@ executable api-tests
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
     Test.Quoter.YamlSpec
+    Test.Regression.AggregateBoolExpConflictSpec
     Test.Regression.ArrayLiteralTextEncodingSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
     Test.Regression.DropColumnWithPermissions8415Spec

@@ -5,6 +5,7 @@
 module Hasura.GraphQL.Schema.BoolExp.AggregationPredicatesSpec (spec) where
 
 import Data.Aeson.QQ (aesonQQ)
+import Data.Has (Has (..))
 import Data.HashMap.Strict qualified as HM
 import Data.Text.NonEmpty (nonEmptyTextQQ)
 import Hasura.Backends.Postgres.Instances.Schema ()
@@ -21,6 +22,7 @@ import Hasura.GraphQL.Schema.BoolExp.AggregationPredicates
   )
 import Hasura.GraphQL.Schema.Introspection (queryInputFieldsParserIntrospection)
 import Hasura.GraphQL.Schema.NamingCase (NamingCase (..))
+import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp (GBoolExp (..), OpExpG (AEQ))
 import Hasura.RQL.IR.BoolExp.AggregationPredicates
@@ -130,13 +132,13 @@ spec = do
                 [aesonQQ|
                 { "types": [
                   {
-                    "name": "album_tracks_aggregate",
+                    "name": "track_aggregate_bool_exp",
                     "fields": null,
                     "inputFields": [
                       {
                         "name": "count",
                         "type": {
-                          "name": "album_tracks_aggregate_count"
+                          "name": "track_aggregate_bool_exp_count"
                         }
                       }
                     ]
@@ -148,7 +150,7 @@ spec = do
                 [aesonQQ|
                 { "types": [
                   {
-                    "name": "album_tracks_aggregate_count",
+                    "name": "track_aggregate_bool_exp_count",
                     "fields": null,
                     "inputFields": [
                       {
@@ -224,6 +226,30 @@ spec = do
 
           -- Permissions aren't in scope for this test.
           actual {aggRowPermission = BoolAnd []} `shouldBe` expected
+
+    describe "When SchemaOptions dictate exclusion of aggregation predicates" do
+      it "Yields no parsers" do
+        let maybeParser =
+              runSchemaTest $
+                local
+                  ( modifier
+                      ( \so ->
+                          so
+                            { Options.soIncludeAggregationPredicates = Options.Don'tIncludeAggregationPredicates
+                            }
+                      )
+                  )
+                  $ defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
+                    [ FunctionSignature
+                        { fnName = "count",
+                          fnGQLName = [G.name|count|],
+                          fnArguments = ArgumentsStar,
+                          fnReturnType = PGInteger
+                        }
+                    ]
+                    sourceInfo
+                    albumTableInfo
+        (Unshowable maybeParser) `shouldSatisfy` (isNothing . unUnshowable)
   where
     albumTableInfo :: TableInfo ('Postgres 'Vanilla)
     albumTableInfo =
