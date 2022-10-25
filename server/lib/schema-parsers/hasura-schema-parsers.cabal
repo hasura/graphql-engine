@@ -54,7 +54,9 @@ library
       Hasura.GraphQL.Parser.Name.TypeSystem
       Hasura.GraphQL.Parser.Names
       Hasura.GraphQL.Parser.Schema
+      Hasura.GraphQL.Parser.Schema.Collect
       Hasura.GraphQL.Parser.Schema.Convert
+      Hasura.GraphQL.Parser.Schema.Definition
       Hasura.GraphQL.Parser.Variable
   other-modules:
       Paths_hasura_schema_parsers

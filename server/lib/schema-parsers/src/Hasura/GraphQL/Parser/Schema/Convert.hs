@@ -7,7 +7,7 @@ module Hasura.GraphQL.Parser.Schema.Convert
 where
 
 import Data.List.NonEmpty qualified as NonEmpty
-import Hasura.GraphQL.Parser.Schema
+import Hasura.GraphQL.Parser.Schema.Definition
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
