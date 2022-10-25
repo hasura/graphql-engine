@@ -162,3 +162,4 @@ executable api-tests
     Test.Schema.ViewsSpec
     Test.ServiceLivenessSpec
     Test.Subscriptions.CustomFieldsSpec
+    Test.Subscriptions.LiveQueriesSpec
