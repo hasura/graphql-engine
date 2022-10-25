@@ -15,7 +15,26 @@ const metadata: Metadata = {
       {
         name: 'sqlite_test',
         kind: 'sqlite',
-        tables: [{ table: ['Album'] }, { table: ['Artist'] }],
+        tables: [
+          {
+            table: ['Album'],
+            object_relationships: [
+              {
+                name: 'Artist',
+                using: {
+                  manual_configuration: {
+                    column_mapping: {
+                      ArtistId: 'ArtistId',
+                    },
+                    insertion_order: null,
+                    remote_table: ['Artist'],
+                  },
+                },
+              },
+            ],
+          },
+          { table: ['Artist'] },
+        ],
         configuration: {
           foo: 'bar',
         },

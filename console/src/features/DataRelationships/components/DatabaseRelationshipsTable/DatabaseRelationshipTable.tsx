@@ -10,6 +10,7 @@ import {
   FaTable,
   FaTrash,
 } from 'react-icons/fa';
+import Skeleton from 'react-loading-skeleton';
 import { CardedTable } from '@/new-components/CardedTable';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Relationship } from './types';
@@ -19,7 +20,7 @@ import { useListAllRelationshipsFromMetadata } from './hooks/useListAllRelations
 export const columns = ['NAME', 'SOURCE', 'TYPE', 'RELATIONSHIP', null];
 
 const getTableDisplayName = (table: Table): string => {
-  if (Array.isArray(table)) return table.join();
+  if (Array.isArray(table)) return table.join('.');
 
   if (!table) return 'Empty Object';
 
@@ -110,7 +111,8 @@ export const DatabaseRelationshipsTable = ({
     isLoading,
     isError,
   } = useListAllRelationshipsFromMetadata(dataSourceName, table);
-  if (isError && !isLoading)
+
+  if (isError)
     return (
       <IndicatorCard
         status="negative"
@@ -118,10 +120,14 @@ export const DatabaseRelationshipsTable = ({
       />
     );
 
-  if (!relationships && isLoading)
-    return <IndicatorCard status="info" headline="Fetching relationships..." />;
+  if (isLoading)
+    return (
+      <div className="my-4">
+        <Skeleton height={30} count={8} className="my-2" />
+      </div>
+    );
 
-  if (!relationships || relationships.length === 0)
+  if ((relationships ?? []).length === 0)
     return <IndicatorCard status="info" headline="No relationships found" />;
 
   return (
@@ -129,7 +135,7 @@ export const DatabaseRelationshipsTable = ({
       <CardedTable.Table>
         <CardedTable.Header columns={columns} />
         <CardedTable.TableBody>
-          {relationships.map(relationship => (
+          {(relationships ?? []).map(relationship => (
             <CardedTable.TableBodyRow key={relationship.name}>
               <CardedTable.TableBodyCell>
                 {relationship.name}

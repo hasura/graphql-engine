@@ -101,6 +101,21 @@ export const expectedManualLocalRelationshipOutput: Relationship & {
       columns: ['AlbumId'],
     },
   },
+  definition: {
+    name: 'local_array_rel',
+    using: {
+      manual_configuration: {
+        column_mapping: {
+          EmployeeId: 'AlbumId',
+        },
+        insertion_order: null,
+        remote_table: {
+          name: 'Album',
+          schema: 'public',
+        },
+      },
+    },
+  },
 };
 
 export const expectedLocalTableRelationships: Relationship & {
@@ -129,6 +144,18 @@ export const expectedLocalTableRelationships: Relationship & {
         schema: 'public',
       },
       columns: ['EmployeeId'],
+    },
+  },
+  definition: {
+    name: 'Employees',
+    using: {
+      foreign_key_constraint_on: {
+        column: 'ReportsTo',
+        table: {
+          name: 'Employee',
+          schema: 'public',
+        },
+      },
     },
   },
 };

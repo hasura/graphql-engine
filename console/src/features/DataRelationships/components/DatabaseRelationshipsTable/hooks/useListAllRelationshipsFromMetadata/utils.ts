@@ -132,6 +132,7 @@ export const adaptManualRelationship = (
         ),
       },
     },
+    definition: relationship,
   };
 };
 
@@ -165,6 +166,7 @@ export const adaptLocalTableRelationship = (
         columns: getTargetColumns(fkRelationships, columns),
       },
     },
+    definition: relationship,
   };
 };
 

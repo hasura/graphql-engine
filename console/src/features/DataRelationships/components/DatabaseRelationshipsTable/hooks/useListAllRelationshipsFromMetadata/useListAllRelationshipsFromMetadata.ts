@@ -10,7 +10,7 @@ import {
 import { Table } from '@/features/MetadataAPI';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
-import { areTablesEqual } from '../../../utils';
+import { areTablesEqual } from '../../../../../RelationshipsTable/utils';
 import { Relationship } from '../../types';
 import {
   adaptLegacyRemoteSchemaRelationship,

@@ -1,7 +1,7 @@
 import { Select } from '@/new-components/Form';
 import React from 'react';
 
-export const RelationshipType = () => {
+export const RelationshipType = ({ disabled }: { disabled: boolean }) => {
   return (
     <Select
       name="relationship_type"
@@ -18,6 +18,7 @@ export const RelationshipType = () => {
           value: 'array',
         },
       ]}
+      disabled={disabled}
     />
   );
 };

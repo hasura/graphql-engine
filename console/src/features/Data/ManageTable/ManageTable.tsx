@@ -1,4 +1,5 @@
 import { BrowseRowsContainer } from '@/features/BrowseRows';
+import { DatabaseRelationshipsContainer } from '@/features/DataRelationships';
 import { getTableName } from '@/features/DataSource';
 import { Table } from '@/features/MetadataAPI';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
@@ -39,7 +40,7 @@ const availableTabs = (props: ManageTableProps) => [
   {
     value: 'Relationships',
     label: 'Relationships',
-    content: <FeatureNotImplemented />,
+    content: <DatabaseRelationshipsContainer {...props} />,
   },
   {
     value: 'Permissions',

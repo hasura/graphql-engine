@@ -1,4 +1,10 @@
-import { Table } from '@/features/MetadataAPI';
+import {
+  LocalTableArrayRelationship,
+  LocalTableObjectRelationship,
+  ManualArrayRelationship,
+  ManualObjectRelationship,
+  Table,
+} from '@/features/MetadataAPI';
 
 type SourceDef = {
   source: string;
@@ -15,13 +21,24 @@ export type Relationship = {
   name: string;
 } & (
   | {
-      type: 'toLocalTableManual' | 'toLocalTableFk';
+      type: 'toLocalTableManual';
       toLocalTable: Table;
       relationship_type: 'Array' | 'Object';
       mapping: {
         from: SourceDef;
         to: SourceDef;
       };
+      definition: ManualObjectRelationship | ManualArrayRelationship;
+    }
+  | {
+      type: 'toLocalTableFk';
+      toLocalTable: Table;
+      relationship_type: 'Array' | 'Object';
+      mapping: {
+        from: SourceDef;
+        to: SourceDef;
+      };
+      definition: LocalTableObjectRelationship | LocalTableArrayRelationship;
     }
   | {
       type: 'toSameTableFk';

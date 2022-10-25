@@ -2,7 +2,7 @@ import { exportMetadata } from '@/features/DataSource';
 import { Table } from '@/features/MetadataAPI';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
-import { areTablesEqual } from '../../utils';
+import { areTablesEqual } from '../../../../RelationshipsTable/utils';
 
 export const useFindRelationship = ({
   dataSourceName,
