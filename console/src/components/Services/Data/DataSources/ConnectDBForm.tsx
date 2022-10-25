@@ -58,19 +58,34 @@ const defaultTitle = 'Connect Database Via';
 
 const driverToLabel: Record<
   Driver,
-  { label: string; defaultConnection: string; info?: string; beta?: boolean }
+  {
+    label: string;
+    defaultConnection: string;
+    info?: React.ReactElement[];
+    beta?: boolean;
+  }
 > = {
   mysql: { label: 'MySQL', defaultConnection: 'DATABASE_URL' },
   postgres: { label: 'PostgreSQL', defaultConnection: 'DATABASE_URL' },
   mssql: {
     label: 'MS SQL Server',
     defaultConnection: 'DATABASE_URL',
-    info: 'Only Database URLs and Environment Variables are available for MS SQL Server',
+    info: [
+      <>
+        Only Database URLs and Environment Variables are available for MS SQL
+        Server
+      </>,
+    ],
   },
   bigquery: {
     label: 'BigQuery',
     defaultConnection: 'CONNECTION_PARAMETERS',
-    info: 'Only Connection Parameters and Environment Variables are available for BigQuery',
+    info: [
+      <>
+        Only Connection Parameters and Environment Variables are available for
+        BigQuery
+      </>,
+    ],
   },
   citus: {
     label: 'Citus',
@@ -79,7 +94,24 @@ const driverToLabel: Record<
   cockroach: {
     label: 'CockroachDB',
     defaultConnection: 'DATABASE_URL',
-    info: 'Only Database URLs and Environment Variables are available for CockroachD',
+    info: [
+      <>
+        Only Database URLs and Environment Variables are available for
+        CockroachD
+      </>,
+      <div className="flex whitespace-nowrap">
+        Please makes sure to not use the
+        <div className="font-semibold text-gray-500 px-1">
+          &quot;sslverify=verify-full&quot;
+        </div>
+        parameter in your connection string. SSL mode needs to be configured
+        under the
+        <div className="font-semibold text-gray-500 px-1">
+          SSL Certificate Section
+        </div>
+        section below
+      </div>,
+    ],
   },
 };
 
@@ -169,14 +201,14 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
             </span>
           </div>
         ) : null}
-        {driverToLabel[connectionDBState.dbType].info ? (
-          <div>
-            <FaInfoCircle className={`${styles.padd_small_right}`} />
-            <span className={styles.text_muted}>
-              {driverToLabel[connectionDBState.dbType].info}
-            </span>
-          </div>
-        ) : null}
+        {driverToLabel[connectionDBState.dbType].info?.map(info => {
+          return (
+            <div className="flex">
+              <FaInfoCircle className={`${styles.padd_small_right} mt-1`} />
+              <span className={styles.text_muted}>{info}</span>
+            </div>
+          );
+        })}
       </div>
       {connectionTypeState.includes(connectionTypes.DATABASE_URL) ||
       (connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&
