@@ -60,7 +60,7 @@ export type DialogProps = {
   children: string | React.ReactElement;
   title: string;
   description?: string;
-  hasBackdrop: boolean;
+  hasBackdrop?: boolean;
   onClose?: () => void;
   footer?: FooterProps | React.ReactElement;
   size?: DialogSize;

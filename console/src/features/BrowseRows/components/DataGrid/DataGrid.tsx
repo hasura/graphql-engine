@@ -88,15 +88,6 @@ export const DataGrid = (props: DataGridProps) => {
   if (rows === Feature.NotImplemented)
     return <IndicatorCard status="info" headline="Feature Not Implemented" />;
 
-  if (isError)
-    return (
-      <div className="my-4">
-        <IndicatorCard status="negative" headline="Something went wrong">
-          Unable to fetch GraphQL response for table
-        </IndicatorCard>
-      </div>
-    );
-
   return (
     <div>
       <DataTableOptions
@@ -132,6 +123,12 @@ export const DataGrid = (props: DataGridProps) => {
       {isLoading ? (
         <div className="my-4">
           <Skeleton height={30} count={8} className="my-2" />
+        </div>
+      ) : isError ? (
+        <div className="my-4">
+          <IndicatorCard status="negative" headline="Something went wrong">
+            Unable to fetch GraphQL response for table
+          </IndicatorCard>
         </div>
       ) : (
         <ReactTableWrapper

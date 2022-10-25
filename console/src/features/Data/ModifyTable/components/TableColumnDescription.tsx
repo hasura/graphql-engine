@@ -1,32 +1,28 @@
-import { TableColumn } from '@/features/DataSource';
 import { Badge } from '@/new-components/Badge';
 import { Button } from '@/new-components/Button';
-import { useFireNotification } from '@/new-components/Notifications';
 import React from 'react';
 import { FaKey } from 'react-icons/fa';
+import { ModifyTableColumn } from '../types';
 
 export const TableColumnDescription: React.VFC<{
-  column: TableColumn;
-}> = ({ column }) => {
-  const { fireNotification } = useFireNotification();
+  column: ModifyTableColumn;
+  onEdit: (column: ModifyTableColumn) => void;
+}> = ({ column, onEdit }) => {
   return (
     <div key={column.name} className="flex gap-4 items-center mb-2">
       <Button
         size="sm"
-        // disabled
         onClick={() => {
-          fireNotification({
-            message: 'This feature is coming soon.',
-            title: 'Feature Not Available',
-            type: 'info',
-          });
+          onEdit(column);
         }}
       >
         Edit
       </Button>
 
-      <strong>{column.name}</strong>
-
+      <div>
+        <div className="font-bold">{column.name}</div>
+        <div className="italic">{column.config?.comment}</div>
+      </div>
       <div>{column.dataType}</div>
 
       {column.nullable && <Badge color="gray">nullable</Badge>}

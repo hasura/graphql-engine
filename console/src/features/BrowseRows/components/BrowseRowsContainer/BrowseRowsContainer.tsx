@@ -8,5 +8,9 @@ interface BrowseRowsContainerProps {
 }
 
 export const BrowseRowsContainer = (props: BrowseRowsContainerProps) => {
-  return <DataGrid {...props} />;
+  return (
+    <div className="p-2">
+      <DataGrid {...props} />
+    </div>
+  );
 };
