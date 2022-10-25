@@ -256,17 +256,14 @@ instance FromEnv (HashSet Server.Types.ExperimentalFeature) where
   fromEnv = fmap HashSet.fromList . traverse readAPI . Text.splitOn "," . Text.pack
     where
       readAPI si = case Text.toLower $ Text.strip si of
-        "inherited_roles" -> Right Server.Types.EFInheritedRoles
-        "streaming_subscriptions" -> Right Server.Types.EFStreamingSubscriptions
-        "optimize_permission_filters" -> Right Server.Types.EFOptimizePermissionFilters
-        "naming_convention" -> Right Server.Types.EFNamingConventions
-        "apollo_federation" -> Right Server.Types.EFApolloFederation
-        "hide_update_many_fields" -> Right Server.Types.EFHideUpdateManyFields
-        "bigquery_string_numeric_input" -> Right Server.Types.EFBigQueryStringNumericInput
+        key | Just (_, ef) <- find ((== key) . fst) experimentalFeatures -> Right ef
         _ ->
           Left $
             "Only expecting list of comma separated experimental features, options are:"
-              ++ "inherited_roles, streaming_subscriptions, hide_update_many_fields, optimize_permission_filters, naming_convention, apollo_federation, bigquery_string_numeric_input"
+              ++ intercalate ", " (map (Text.unpack . fst) experimentalFeatures)
+
+      experimentalFeatures :: [(Text, Server.Types.ExperimentalFeature)]
+      experimentalFeatures = [(Server.Types.experimentalFeatureKey ef, ef) | ef <- [minBound .. maxBound]]
 
 instance FromEnv Subscription.Options.BatchSize where
   fromEnv s = do
