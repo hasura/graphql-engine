@@ -79,6 +79,7 @@ const driverToLabel: Record<
   cockroach: {
     label: 'CockroachDB',
     defaultConnection: 'DATABASE_URL',
+    info: 'Only Database URLs and Environment Variables are available for CockroachD',
   },
 };
 
