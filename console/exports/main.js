@@ -92,9 +92,4 @@ export {
   isEnvironmentSupportMultiTenantConnectionPooling,
 } from '../src/utils/proConsole';
 
-export {
-  SampleDBBanner,
-  newSampleDBTrial,
-} from '../src/components/Services/Data/DataSources/SampleDatabase';
-
 export { AllowListDetail } from '../src/components/Services/AllowList/AllowListDetail';

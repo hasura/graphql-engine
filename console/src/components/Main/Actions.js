@@ -12,7 +12,6 @@ import { getConsoleNotificationQuery } from '../Common/utils/v1QueryUtils';
 import dataHeaders from '../Services/Data/Common/Headers';
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import { getUserType, getConsoleScope } from './utils';
-import { fetchSampleDBCohortConfig } from '../Services/Data/DataSources/SampleDatabase';
 
 const SET_MIGRATION_STATUS_SUCCESS = 'Main/SET_MIGRATION_STATUS_SUCCESS';
 const SET_MIGRATION_STATUS_ERROR = 'Main/SET_MIGRATION_STATUS_ERROR';
@@ -507,28 +506,6 @@ export const fetchHerokuSession = () => dispatch => {
       console.error('Failed fetching Heroku session');
       console.error(e);
     });
-};
-
-// fetches the cohort config for sample DB and stores in redux
-export const initialiseOnboardingSampleDBConfig = () => {
-  return dispatch => {
-    if (globals.consoleType !== 'cloud') {
-      return null;
-    }
-
-    fetchSampleDBCohortConfig()
-      .then(cohortConfig => {
-        if (cohortConfig) {
-          dispatch({
-            type: SET_CLOUD_ONBOARDING_SAMPLE_DB_COHORT_CONFIG,
-            data: cohortConfig,
-          });
-        }
-      })
-      .catch(() => {
-        console.error('unable to fetch sample DB cohort config');
-      });
-  };
 };
 
 const mainReducer = (state = defaultState, action) => {
