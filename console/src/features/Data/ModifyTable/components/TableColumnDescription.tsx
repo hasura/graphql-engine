@@ -23,9 +23,11 @@ export const TableColumnDescription: React.VFC<{
         <div className="font-bold">{column.name}</div>
         <div className="italic">{column.config?.comment}</div>
       </div>
-      <div>{column.dataType}</div>
+      <div>
+        <Badge color="gray">{column.dataType}</Badge>
+      </div>
 
-      {column.nullable && <Badge color="gray">nullable</Badge>}
+      {column.nullable && <Badge color="yellow">nullable</Badge>}
 
       {column.isPrimaryKey && (
         <Badge color="indigo">

@@ -24,9 +24,9 @@ const FeatureNotImplemented = () => {
   );
 };
 
-const STARTING_TAB = 'Modify';
+const STARTING_TAB = 'Browse';
 
-const availableTabs = (props: ManageTableProps) => [
+const availableTabs = (props: ManageTableProps, tableName: string) => [
   {
     value: 'Browse',
     label: 'Browse',
@@ -35,7 +35,7 @@ const availableTabs = (props: ManageTableProps) => [
   {
     value: 'Modify',
     label: 'Modify',
-    content: <ModifyTable {...props} />,
+    content: <ModifyTable {...props} tableName={tableName} />,
   },
   {
     value: 'Relationships',
@@ -75,7 +75,11 @@ export const ManageTable: React.VFC<ManageTableProps> = props => {
       <div className="px-md pt-md mb-xs">
         <Breadcrumbs dataSourceName={dataSourceName} tableName={tableName} />
         <TableName dataSourceName={dataSourceName} tableName={tableName} />
-        <Tabs value={tab} onValueChange={setTab} items={availableTabs(props)} />
+        <Tabs
+          value={tab}
+          onValueChange={setTab}
+          items={availableTabs(props, tableName)}
+        />
       </div>
     </div>
   );

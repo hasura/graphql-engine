@@ -1,2 +1,7 @@
-export { useMetadataForManageTable } from './useMetadataForManageTable';
-export { useUpdateComment } from './useUpdateComment';
+export {
+  getTableFromMetadata,
+  manageTableMetadataQueryKey,
+  useMetadataForManageTable,
+  useMetadataTable,
+} from './useMetadataForManageTable';
+export { useUpdateTableConfiguration } from './useUpdateTableConfiguration';
