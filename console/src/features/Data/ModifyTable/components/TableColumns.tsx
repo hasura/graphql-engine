@@ -1,13 +1,13 @@
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import React, { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
-import { ManageTableProps } from '../../ManageTable';
 import { useListAllTableColumns } from '../hooks/useListAllTableColumns';
 import { ModifyTableColumn } from '../types';
 import { EditTableColumnDialog } from './EditTableColumnDialog/EditTableColumnDialog';
 import { TableColumnDescription } from './TableColumnDescription';
+import { ModifyTableProps } from '../ModifyTable';
 
-export const TableColumns: React.VFC<ManageTableProps> = props => {
+export const TableColumns: React.VFC<ModifyTableProps> = props => {
   const { data: columns, isLoading, isError } = useListAllTableColumns(props);
 
   const [isEditColumnFormActive, setIsEditColumnFormActive] = useState(false);

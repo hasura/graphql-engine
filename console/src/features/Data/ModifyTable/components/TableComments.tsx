@@ -4,12 +4,17 @@ import { Nullable } from '@/types';
 import clsx from 'clsx';
 import React, { useMemo } from 'react';
 import TextareaAutosize from 'react-autosize-textarea';
+import { Table } from '@/features/MetadataAPI';
 import { FaEdit } from 'react-icons/fa';
-import { ManageTableProps } from '../../ManageTable';
 import { useMetadataForManageTable, getTableFromMetadata } from '../hooks';
 import { useUpdateTableConfiguration } from '../hooks/useUpdateTableConfiguration';
 
-export const TableComments: React.VFC<ManageTableProps> = props => {
+export interface TableCommentsProps {
+  dataSourceName: string;
+  table: Table;
+}
+
+export const TableComments: React.VFC<TableCommentsProps> = props => {
   const { dataSourceName, table } = props;
   const { data, isLoading } = useMetadataForManageTable(dataSourceName);
 

@@ -4,14 +4,19 @@ import { getTableName } from '@/features/DataSource';
 import { Table } from '@/features/MetadataAPI';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Tabs } from '@/new-components/Tabs';
-import React, { useState } from 'react';
-import { useDatabaseHierarchy } from '../hooks';
+import { getRoute } from '@/features/Data';
+import React from 'react';
+import { useDispatch } from 'react-redux';
+import { useDatabaseHierarchy, useTableDefinition } from '../hooks';
 import { ModifyTable } from '../ModifyTable/ModifyTable';
 import { Breadcrumbs, TableName } from './parts';
+import _push from '../../../components/Services/Data/push';
 
+type AllowedTabs = 'modify' | 'browse' | 'relationship' | 'permissions';
 export interface ManageTableProps {
-  dataSourceName: string;
-  table: Table;
+  params: {
+    operation: AllowedTabs;
+  };
 }
 
 const FeatureNotImplemented = () => {
@@ -24,38 +29,63 @@ const FeatureNotImplemented = () => {
   );
 };
 
-const STARTING_TAB = 'Browse';
-
-const availableTabs = (props: ManageTableProps, tableName: string) => [
+const availableTabs = (
+  dataSourceName: string,
+  table: Table,
+  tableName: string
+) => [
   {
-    value: 'Browse',
+    value: 'browse',
     label: 'Browse',
-    content: <BrowseRowsContainer {...props} />,
+    content: (
+      <BrowseRowsContainer dataSourceName={dataSourceName} table={table} />
+    ),
   },
   {
-    value: 'Modify',
+    value: 'modify',
     label: 'Modify',
-    content: <ModifyTable {...props} tableName={tableName} />,
+    content: (
+      <ModifyTable
+        dataSourceName={dataSourceName}
+        table={table}
+        tableName={tableName}
+      />
+    ),
   },
   {
-    value: 'Relationships',
+    value: 'relationships',
     label: 'Relationships',
-    content: <DatabaseRelationshipsContainer {...props} />,
+    content: (
+      <DatabaseRelationshipsContainer
+        dataSourceName={dataSourceName}
+        table={table}
+      />
+    ),
   },
   {
-    value: 'Permissions',
+    value: 'permissions',
     label: 'Permissions',
     content: <FeatureNotImplemented />,
   },
 ];
 
-export const ManageTable: React.VFC<ManageTableProps> = props => {
-  const { table, dataSourceName } = props;
+export const ManageTable: React.VFC<ManageTableProps> = (
+  props: ManageTableProps
+) => {
+  const {
+    params: { operation },
+  } = props;
+
+  const urlData = useTableDefinition(window.location);
+  const dispatch = useDispatch();
+
+  if (urlData.querystringParseResult === 'error')
+    throw Error('Unable to render');
+
+  const { database: dataSourceName, table } = urlData.data;
 
   const { data: databaseHierarchy, isLoading } =
     useDatabaseHierarchy(dataSourceName);
-
-  const [tab, setTab] = useState(STARTING_TAB);
 
   const tableName = databaseHierarchy
     ? getTableName(table, databaseHierarchy)
@@ -76,9 +106,13 @@ export const ManageTable: React.VFC<ManageTableProps> = props => {
         <Breadcrumbs dataSourceName={dataSourceName} tableName={tableName} />
         <TableName dataSourceName={dataSourceName} tableName={tableName} />
         <Tabs
-          value={tab}
-          onValueChange={setTab}
-          items={availableTabs(props, tableName)}
+          value={operation}
+          onValueChange={_operation => {
+            dispatch(
+              _push(getRoute().table(dataSourceName, table, _operation))
+            );
+          }}
+          items={availableTabs(dataSourceName, table, tableName)}
         />
       </div>
     </div>

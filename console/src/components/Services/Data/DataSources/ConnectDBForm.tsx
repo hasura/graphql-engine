@@ -31,15 +31,15 @@ export interface ConnectDatabaseFormProps {
 
 export const connectionRadios = [
   {
-    value: connectionTypes.ENV_VAR,
+    value: connectionTypes?.ENV_VAR,
     title: 'Environment Variable',
   },
   {
-    value: connectionTypes.DATABASE_URL,
+    value: connectionTypes?.DATABASE_URL,
     title: 'Database URL',
   },
   {
-    value: connectionTypes.CONNECTION_PARAMS,
+    value: connectionTypes?.CONNECTION_PARAMS,
     title: 'Connection Parameters',
   },
 ];
