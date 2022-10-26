@@ -43,11 +43,9 @@ import Hasura.GraphQL.Parser.Name as GName
 import Hasura.GraphQL.Parser.Variable (InputValue)
 import Hasura.Prelude
 import Hasura.RQL.Types.Common (FieldName)
-import Hasura.RQL.Types.Relationships.ToSchema
-import Hasura.RQL.Types.RemoteSchema
-import Hasura.RQL.Types.RemoteSchema qualified as RQL
 import Hasura.RQL.Types.ResultCustomization
 import Hasura.RQL.Types.ResultCustomization qualified as RQL
+import Hasura.RemoteSchema.SchemaCache.Types
 import Language.GraphQL.Draft.Syntax qualified as G
 
 -------------------------------------------------------------------------------
@@ -145,7 +143,7 @@ mkGraphQLField alias name =
 
 -- | Root entry point for a remote schema.
 data RemoteSchemaRootField r var = RemoteSchemaRootField
-  { _rfRemoteSchemaInfo :: RQL.RemoteSchemaInfo,
+  { _rfRemoteSchemaInfo :: RemoteSchemaInfo,
     _rfResultCustomizer :: RQL.ResultCustomizer,
     _rfField :: GraphQLField r var
   }

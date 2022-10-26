@@ -4,6 +4,7 @@ import { Dispatch } from '@/types';
 import { cloudDataServiceApiClient } from '@/hooks/cloudDataServiceApiClient';
 import { Api } from '@/hooks/apiUtils';
 import { HasuraMetadataV3 } from '@/metadata/types';
+import { programmaticallyTraceError } from '@/features/Analytics';
 import {
   clickRunQueryButton,
   forceGraphiQLIntrospection,
@@ -96,7 +97,7 @@ export const persistSkippedOnboarding = () => {
     skippedOnboardingVariables,
     cloudHeaders
   ).catch(error => {
-    // TODO throw Sentry alert
+    programmaticallyTraceError(error);
     throw error;
   });
 };
@@ -109,8 +110,8 @@ export const persistOnboardingCompletion = () => {
     onboardingCompleteVariables,
     cloudHeaders
   ).catch(error => {
-    // TODO throw Sentry alert
     console.error(error);
+    programmaticallyTraceError(error);
   });
 };
 
@@ -121,8 +122,8 @@ export const emitOnboardingEvent = (variables: Record<string, unknown>) => {
     variables,
     cloudHeaders
   ).catch(error => {
-    // TODO throw Sentry alert
     console.error(error);
+    programmaticallyTraceError(error);
   });
 };
 /**

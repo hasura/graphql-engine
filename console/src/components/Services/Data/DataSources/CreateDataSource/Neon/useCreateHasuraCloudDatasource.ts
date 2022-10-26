@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { tracingTools } from '@/features/TracingTools';
+import { programmaticallyTraceError } from '@/features/Analytics';
 import { Dispatch } from '@/types';
 import {
   setDBURLInEnvVars,
@@ -159,18 +159,16 @@ export function useCreateHasuraCloudDatasource(
             );
           }, 5000);
         })
-        .catch(e => {
+        .catch(error => {
           // if adding env var fails unexpectedly, set the error state
           setState(prevState => {
             if (prevState.status === 'adding-env-var') {
               // this is an unexpected error; so we need alerts about this
-              tracingTools.sentry.captureException(
-                new Error('failed creating env vars in Hasura'),
+              programmaticallyTraceError(
+                new Error('Failed creating env vars in Hasura'),
                 {
-                  debug: {
-                    error: 'message' in e ? e.message : e,
-                    trace: 'useCreateHasuraDatasource',
-                  },
+                  sourceError: error,
+                  errorMessage: error.message ?? '',
                 }
               );
               return {
@@ -180,13 +178,11 @@ export function useCreateHasuraCloudDatasource(
               // if adding data-source fails unexpectedly, set the error state
             } else if (prevState.status === 'adding-data-source') {
               // this is an unexpected error; so we need alerts about this
-              tracingTools.sentry.captureException(
-                new Error('failed adding created data source in Hasura'),
+              programmaticallyTraceError(
+                new Error('Failed adding created data source in Hasura'),
                 {
-                  debug: {
-                    error: 'message' in e ? e.message : e,
-                    trace: 'useCreateHasuraDatasource',
-                  },
+                  sourceError: error,
+                  errorMessage: error.message ?? '',
                 }
               );
 

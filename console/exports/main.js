@@ -11,7 +11,12 @@ export {
 export { fetchConsoleNotifications } from '../src/components/Main/Actions';
 export { default as NotificationSection } from '../src/components/Main/NotificationSection';
 export { default as Onboarding } from '../src/components/Common/Onboarding';
-export { tracingTools } from '../src/features/TracingTools';
+export {
+  Analytics,
+  startTracing,
+  addUserProperties,
+  programmaticallyTraceError,
+} from '../src/features/Analytics';
 export { OnboardingWizard } from '../src/features/OnboardingWizard';
 export { prefetchSurveysData } from '../src/features/Surveys';
 export { makeGrowthExperimentsClient } from '../src/features/GrowthExperiments';
@@ -78,16 +83,13 @@ export {
 export * from './table';
 export { ReactQueryProvider, reactQueryClient } from '../src/lib/reactQuery';
 
+export { PrometheusSettings } from '../src/features/Prometheus';
+
 export { FeatureFlags } from '../src/features/FeatureFlags';
 
 export {
   isMonitoringTabSupportedEnvironment,
   isEnvironmentSupportMultiTenantConnectionPooling,
 } from '../src/utils/proConsole';
-
-export {
-  SampleDBBanner,
-  newSampleDBTrial,
-} from '../src/components/Services/Data/DataSources/SampleDatabase';
 
 export { AllowListDetail } from '../src/components/Services/AllowList/AllowListDetail';

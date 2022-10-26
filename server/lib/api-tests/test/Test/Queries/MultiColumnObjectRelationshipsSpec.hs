@@ -9,6 +9,7 @@ import Data.Text qualified as T
 import Harness.Backend.BigQuery qualified as BigQuery
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Mysql qualified as Mysql
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
@@ -67,6 +68,12 @@ spec = do
                 [ Cockroach.setupTablesAction schema testEnv,
                   setupRelationships Fixture.Cockroach testEnv
                 ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Sqlite.setupTablesAction schema testEnv,
+                  setupRelationships Fixture.DataConnectorSqlite testEnv
+                ]
             }
         ]
     )
@@ -114,81 +121,40 @@ schema =
 setupRelationships :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
 setupRelationships backendType testEnv =
   let backend = T.pack $ Fixture.defaultBackendTypeString backendType
+      source = Fixture.defaultSource backendType
       schemaName = Schema.getSchemaName testEnv
+      quoteTable = Schema.mkTableField backendType schemaName "quote"
+      characterTable = Schema.mkTableField backendType schemaName "character"
       createRelationship = backend <> "_create_object_relationship"
       dropRelationship = backend <> "_drop_relationship"
-   in case backendType of
-        -- for some reason we use 'dataset' instead of 'schema' for bigquery...
-        Fixture.BigQuery ->
-          Fixture.SetupAction
-            { Fixture.setupAction =
-                postMetadata_
-                  testEnv
-                  [yaml|
-              type: *createRelationship
-              args:
-                source: *backend
-                name: by
-                table:
-                  dataset: *schemaName
-                  name: quote
-                using:
-                  manual_configuration:
-                    remote_table:
-                      name: character
-                      dataset: *schemaName
-                    column_mapping:
-                      character_first_name: first_name
-                      character_last_name: last_name
-              |],
-              Fixture.teardownAction = \_ ->
-                postMetadata_
-                  testEnv
-                  [yaml|
-              type: *dropRelationship
-              args:
-                source: *backend
-                table:
-                  dataset: *schemaName
-                  name: quote
-                relationship: by
-              |]
-            }
-        _ ->
-          Fixture.SetupAction
-            { Fixture.setupAction =
-                postMetadata_
-                  testEnv
-                  [yaml|
-              type: *createRelationship
-              args:
-                source: *backend
-                name: by
-                table:
-                  schema: *schemaName
-                  name: quote
-                using:
-                  manual_configuration:
-                    remote_table:
-                      name: character
-                      schema: *schemaName
-                    column_mapping:
-                      character_first_name: first_name
-                      character_last_name: last_name
-              |],
-              Fixture.teardownAction = \_ ->
-                postMetadata_
-                  testEnv
-                  [yaml|
-              type: *dropRelationship
-              args:
-                source: *backend
-                table:
-                  schema: *schemaName
-                  name: quote
-                relationship: by
-              |]
-            }
+   in Fixture.SetupAction
+        { Fixture.setupAction =
+            postMetadata_
+              testEnv
+              [yaml|
+          type: *createRelationship
+          args:
+            source: *source
+            name: by
+            table: *quoteTable
+            using:
+              manual_configuration:
+                remote_table: *characterTable
+                column_mapping:
+                  character_first_name: first_name
+                  character_last_name: last_name
+          |],
+          Fixture.teardownAction = \_ ->
+            postMetadata_
+              testEnv
+              [yaml|
+          type: *dropRelationship
+          args:
+            source: *source
+            table: *quoteTable
+            relationship: by
+          |]
+        }
 
 --------------------------------------------------------------------------------
 -- Tests

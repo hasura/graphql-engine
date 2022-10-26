@@ -2,6 +2,8 @@ import React from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
 import { Button } from '@/new-components/Button';
@@ -51,19 +53,21 @@ class Landing extends React.Component {
     };
 
     return (
-      <div>
-        <div className="p-5">
-          <Helmet title={`${pageTitle} | Hasura`} />
-          <div>
-            <div className={'flex'}>
-              <h2 className="font-bold text-3xl pr-3">Actions</h2>
-              {getAddBtn()}
+      <Analytics name="Actions" {...REDACT_EVERYTHING}>
+        <div>
+          <div className="p-5">
+            <Helmet title={`${pageTitle} | Hasura`} />
+            <div>
+              <div className={'flex'}>
+                <h2 className="font-bold text-3xl pr-3">Actions</h2>
+                {getAddBtn()}
+              </div>
+              <hr className="mt-5 mb-5" />
+              {getIntroSection()}
             </div>
-            <hr className="mt-5 mb-5" />
-            {getIntroSection()}
           </div>
         </div>
-      </div>
+      </Analytics>
     );
   }
 }

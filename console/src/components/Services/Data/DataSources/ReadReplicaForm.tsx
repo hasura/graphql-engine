@@ -1,6 +1,6 @@
 import React, { useState, Dispatch, ChangeEvent } from 'react';
 import { FaEye, FaTimes } from 'react-icons/fa';
-
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import { Tooltip } from '@/new-components/Tooltip';
 import {
@@ -227,51 +227,55 @@ const ReadReplicaForm: React.FC<ReadReplicaProps> = ({
 
   return (
     <>
-      <div className={`${styles.flexColumn} my-1.5`}>
-        <h5 className={`${styles.read_replicas_heading} my-1.5`}>
-          Read Replicas
-        </h5>
-        <p>
-          Hasura Cloud can load balance queries and subscriptions across read
-          replicas while sending all mutations and metadata API calls to the
-          master.&nbsp;
-          <a
-            href="https://hasura.io/docs/latest/graphql/cloud/read-replicas.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <i>(Read More)</i>
-          </a>
-        </p>
-        {readReplicaState.map((stateVar, index) => (
-          <ReadReplicaListItem
-            currentState={stateVar}
-            onClickRemove={onClickRemoveReadReplica(stateVar.displayName)}
-            key={index}
-          />
-        ))}
-        {!isReadReplicaButtonClicked ? (
-          <span className="py-1.5">
-            <Button
-              size="sm"
-              onClick={onClickAddReadReplica}
-              className={styles.add_button_styles}
+      <Analytics name="EditDataSource" {...REDACT_EVERYTHING}>
+        <div className={`${styles.flexColumn} my-1.5`}>
+          <h5 className={`${styles.read_replicas_heading} my-1.5`}>
+            Read Replicas
+          </h5>
+          <p>
+            Hasura Cloud can load balance queries and subscriptions across read
+            replicas while sending all mutations and metadata API calls to the
+            master.&nbsp;
+            <a
+              href="https://hasura.io/docs/latest/graphql/cloud/read-replicas.html"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Add Read Replica
-            </Button>
-          </span>
-        ) : (
-          <Form
-            connectDBState={connectDBState}
-            connectDBStateDispatch={connectDBStateDispatch}
-            onClickCancel={onClickCancelOnReadReplica}
-            onClickSave={onClickSaveReadReplica}
-            readReplicaConnectionType={readReplicaConnectionType}
-            updateReadReplicaConnectionType={updateReadReplicaConnectionType}
-          />
-        )}
-      </div>
-      <hr className={styles.line_width} />
+              <i>(Read More)</i>
+            </a>
+          </p>
+          {readReplicaState.map((stateVar, index) => (
+            <ReadReplicaListItem
+              currentState={stateVar}
+              onClickRemove={onClickRemoveReadReplica(stateVar.displayName)}
+              key={index}
+            />
+          ))}
+          {!isReadReplicaButtonClicked ? (
+            <span className="py-1.5">
+              <Button
+                size="sm"
+                onClick={onClickAddReadReplica}
+                className={styles.add_button_styles}
+              >
+                Add Read Replica
+              </Button>
+            </span>
+          ) : (
+            <Form
+              connectDBState={connectDBState}
+              connectDBStateDispatch={connectDBStateDispatch}
+              onClickCancel={onClickCancelOnReadReplica}
+              onClickSave={onClickSaveReadReplica}
+              readReplicaConnectionType={readReplicaConnectionType}
+              updateReadReplicaConnectionType={updateReadReplicaConnectionType}
+            />
+          )}
+        </div>
+      </Analytics>
+      <Analytics name="EditDataSource" {...REDACT_EVERYTHING}>
+        <hr className={styles.line_width} />
+      </Analytics>
     </>
   );
 };

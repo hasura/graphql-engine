@@ -31,8 +31,10 @@ import Hasura.EncJSON qualified as EncJSON
 import Hasura.Prelude
 import Hasura.RQL.Types.Metadata qualified as Metadata
 import Hasura.RQL.Types.SchemaCache qualified as SchemaCache
+import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend qualified as Backend
 import Hasura.SQL.BackendMap qualified as BackendMap
+import Language.GraphQL.Draft.Syntax qualified as GQL
 import Network.HTTP.Client.Manager qualified as HTTP.Manager
 
 --------------------------------------------------------------------------------
@@ -84,7 +86,7 @@ agentSourceKinds = do
 
 mkAgentSource :: DC.Types.DataConnectorName -> SourceKindInfo
 mkAgentSource (DC.Types.DataConnectorName name) =
-  SourceKindInfo {_skiSourceKind = NE.Text.unNonEmptyText name, _skiBuiltin = Agent}
+  SourceKindInfo {_skiSourceKind = GQL.unName name, _skiBuiltin = Agent}
 
 mkNativeSource :: Backend.BackendType -> Maybe SourceKindInfo
 mkNativeSource = \case
@@ -116,16 +118,19 @@ runGetSourceKindCapabilities ::
   GetSourceKindCapabilities ->
   m EncJSON
 runGetSourceKindCapabilities GetSourceKindCapabilities {..} = do
-  case Backend.backendTypeFromText $ NE.Text.unNonEmptyText _gskcKind of
-    -- NOTE: A succesful parse here implies a native backend
-    Just backend -> Error.throw400 Error.DataConnectorError (Text.E.toTxt backend <> " does not support Capabilities.")
-    Nothing -> do
-      backendCache <- fmap SchemaCache.scBackendCache $ SchemaCache.askSchemaCache
-      let capabilitiesMap = maybe mempty SchemaCache.unBackendInfoWrapper $ BackendMap.lookup @'Backend.DataConnector backendCache
-      let dataConnectorName = DC.Types.DataConnectorName _gskcKind
+  case AB.backendSourceKindFromText $ NE.Text.unNonEmptyText _gskcKind of
+    Just backendSourceKind ->
+      case AB.unpackAnyBackend @'Backend.DataConnector backendSourceKind of
+        Just (Backend.DataConnectorKind dataConnectorName) -> do
+          backendCache <- fmap SchemaCache.scBackendCache $ SchemaCache.askSchemaCache
+          let capabilitiesMap = maybe mempty SchemaCache.unBackendInfoWrapper $ BackendMap.lookup @'Backend.DataConnector backendCache
+          capabilities <-
+            HashMap.lookup dataConnectorName capabilitiesMap
+              `onNothing` Error.throw400 Error.DataConnectorError ("Source Kind " <> Text.E.toTxt dataConnectorName <> " was not found")
 
-      capabilities <-
-        HashMap.lookup dataConnectorName capabilitiesMap
-          `onNothing` Error.throw400 Error.DataConnectorError ("Source Kind " <> Text.E.toTxt dataConnectorName <> " was not found.")
-
-      pure $ EncJSON.encJFromJValue capabilities
+          pure $ EncJSON.encJFromJValue capabilities
+        Nothing ->
+          -- Must be a native backend
+          Error.throw400 Error.DataConnectorError (Text.E.toTxt _gskcKind <> " does not support Capabilities")
+    Nothing ->
+      Error.throw400 Error.DataConnectorError ("Source Kind " <> Text.E.toTxt _gskcKind <> " was not found")

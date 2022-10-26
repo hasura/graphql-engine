@@ -32,6 +32,6 @@ response:
           \ [c7_double_precision], [c59_uniqueidentifier], [c53_datetime2], [c17_time],\
           \ [c1_smallint]) VALUES ( (N'invalid_datetime') )"
       path: $
-    message: Data exception. Invalid datetime format. [Microsoft][ODBC Driver 17 for
+    message: Data exception. Invalid datetime format. [Microsoft][ODBC Driver 18 for
       SQL Server][SQL Server]Conversion failed when converting date and/or time from
       character string.

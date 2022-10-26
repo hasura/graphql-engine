@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/new-components/Button';
 import { FaPlayCircle } from 'react-icons/fa';
+import { Analytics } from '@/features/Analytics';
 
 export interface Props {
   schemaImage: string;
@@ -49,27 +50,29 @@ export function QueryScreen(props: Props) {
                 </div>
               </div>
               <div className="flex w-1/4 justify-end">
-                <Button
-                  mode="primary"
-                  data-trackid="query-screen-get-started-button"
-                  onClick={onRunHandler}
+                <Analytics
+                  name="query-screen-get-started-button"
+                  passHtmlAttributesToChildren
                 >
-                  Run a Sample Query <FaPlayCircle />
-                </Button>
+                  <Button mode="primary" onClick={onRunHandler}>
+                    Run a Sample Query <FaPlayCircle />
+                  </Button>
+                </Analytics>
               </div>
             </div>
           </div>
         </div>
         <div className="flex justify-start items-center w-full">
-          <a
-            className="w-auto text-secondary cursor-pointer text-sm hover:text-secondary-dark"
-            data-trackid="onboarding-skip-button"
-            onClick={() => {
-              onSkipHandler();
-            }}
-          >
-            Skip, continue to Console
-          </a>
+          <Analytics name="onboarding-skip-button">
+            <a
+              className="w-auto text-secondary cursor-pointer text-sm hover:text-secondary-dark"
+              onClick={() => {
+                onSkipHandler();
+              }}
+            >
+              Skip, continue to Console
+            </a>
+          </Analytics>
         </div>
       </div>
     </>

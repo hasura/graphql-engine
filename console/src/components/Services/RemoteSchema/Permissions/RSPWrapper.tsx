@@ -1,4 +1,5 @@
 import React from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { RemoteSchema } from '../../../../metadata/types';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { Tabs } from '../Common/Tabs';
@@ -65,7 +66,9 @@ const RSPWrapper: React.FC<RSPWrapperProps> = ({
         showLoader={false}
         testPrefix="remote-schema-container-tabs"
       />
-      <div className="pt-md">{permissionRenderer(currentRemoteSchema)}</div>
+      <Analytics name="RemoteSchemaPermission" {...REDACT_EVERYTHING}>
+        <div className="pt-md">{permissionRenderer(currentRemoteSchema)}</div>
+      </Analytics>
     </>
   );
 };

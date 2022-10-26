@@ -18,6 +18,7 @@ import Servant.API (NamedRoutes)
 import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM)
 import Test.CapabilitiesSpec qualified
 import Test.Data (TestData, guardedCapabilities, mkTestData)
+import Test.DataExport (exportData)
 import Test.ErrorSpec qualified
 import Test.ExplainSpec qualified
 import Test.HealthSpec qualified
@@ -62,6 +63,8 @@ main = do
           traverse_ ((traverse_ putStrLn) . (foldPaths . extractLabels)) tree
     ExportOpenAPISpec ->
       Text.putStrLn $ encodeToLazyText openApiSchema
+    ExportData config ->
+      exportData config
 
   pure ()
 

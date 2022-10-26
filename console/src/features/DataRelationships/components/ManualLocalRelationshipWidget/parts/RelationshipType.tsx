@@ -1,0 +1,24 @@
+import { Select } from '@/new-components/Form';
+import React from 'react';
+
+export const RelationshipType = ({ disabled }: { disabled: boolean }) => {
+  return (
+    <Select
+      name="relationship_type"
+      label="Relationship Type"
+      dataTest="local-db-to-db-select-rel-type"
+      placeholder="Select a relationship type..."
+      options={[
+        {
+          label: 'Object Relationship',
+          value: 'object',
+        },
+        {
+          label: 'Array Relationship',
+          value: 'array',
+        },
+      ]}
+      disabled={disabled}
+    />
+  );
+};

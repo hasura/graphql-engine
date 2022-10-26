@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { isCloudConsole, hasLuxFeatureAccess } from '@/utils/cloudConsole';
 import Globals from '../../../../../Globals';
 import Heroku from './Heroku';
@@ -32,27 +33,29 @@ const CreateDataSource: React.FC<Props> = ({
 
   return (
     <Tabbed tabName="create">
-      <div className={styles.connect_db_content}>
-        {showNeonIntegration ? (
-          <div className={`${styles.container} mb-md`}>
-            <div className="w-full mb-md">
-              <Neon
-                allDatabases={allDataSources.map(d => d.name)}
+      <Analytics name="CreateDataSource" {...REDACT_EVERYTHING}>
+        <div className={styles.connect_db_content}>
+          {showNeonIntegration ? (
+            <div className={`${styles.container} mb-md`}>
+              <div className="w-full mb-md">
+                <Neon
+                  allDatabases={allDataSources.map(d => d.name)}
+                  dispatch={dispatch}
+                />
+              </div>
+              <HerokuBanner />
+            </div>
+          ) : (
+            <div className={`${styles.container} mb-md`}>
+              <Heroku
+                session={herokuSession}
                 dispatch={dispatch}
+                allDataSources={allDataSources}
               />
             </div>
-            <HerokuBanner />
-          </div>
-        ) : (
-          <div className={`${styles.container} mb-md`}>
-            <Heroku
-              session={herokuSession}
-              dispatch={dispatch}
-              allDataSources={allDataSources}
-            />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </Analytics>
     </Tabbed>
   );
 };

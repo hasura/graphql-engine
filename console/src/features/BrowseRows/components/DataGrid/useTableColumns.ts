@@ -12,7 +12,7 @@ export const useTableColumns = ({
 }) => {
   const httpClient = useHttpClient();
   return useQuery({
-    queryKey: [table, dataSourceName],
+    queryKey: ['column-introspection', dataSourceName, table],
     queryFn: async () => {
       const columns = await DataSource(httpClient).getTableColumns({
         dataSourceName,

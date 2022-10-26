@@ -1,5 +1,10 @@
 import React from 'react';
 import { FaPencilAlt } from 'react-icons/fa';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+  useGetAnalyticsAttributes,
+} from '@/features/Analytics';
 import { getActionPermissions, findActionPermission } from '../utils';
 import Helmet from 'react-helmet';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
@@ -163,23 +168,32 @@ const Permissions = ({
     );
   };
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes(
+    'ActionPermissions',
+    { redactText: true }
+  );
+
   return (
-    <div>
-      <Helmet>
-        <title data-heap-redact-text="true">{`Permissions - ${currentAction.name} - Actions | Hasura`}</title>
-      </Helmet>
-      {getPermissionsTable()}
-      <div className={`${styles.add_mar_bottom}`}>
-        {!readOnlyMode && (
-          <PermissionEditor
-            permissionEdit={permissionEdit}
-            dispatch={dispatch}
-            isFetching={isFetching}
-            isEditing={isEditing}
-          />
-        )}
+    <Analytics name="ActionPermissions" {...REDACT_EVERYTHING}>
+      <div>
+        <Helmet>
+          <title
+            {...titleAnalyticsAttributes}
+          >{`Permissions - ${currentAction.name} - Actions | Hasura`}</title>
+        </Helmet>
+        {getPermissionsTable()}
+        <div className={`${styles.add_mar_bottom}`}>
+          {!readOnlyMode && (
+            <PermissionEditor
+              permissionEdit={permissionEdit}
+              dispatch={dispatch}
+              isFetching={isFetching}
+              isEditing={isEditing}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 

@@ -1043,6 +1043,9 @@
           "column": {
             "type": "string"
           },
+          "column_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "type": {
             "enum": [
               "column"
@@ -1052,6 +1055,7 @@
         },
         "required": [
           "column",
+          "column_type",
           "type"
         ],
         "type": "object"
@@ -1296,6 +1300,9 @@
       },
       "ComparisonColumn": {
         "properties": {
+          "column_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "name": {
             "description": "The name of the column",
             "type": "string"
@@ -1310,7 +1317,8 @@
           }
         },
         "required": [
-          "name"
+          "name",
+          "column_type"
         ],
         "type": "object"
       },
@@ -1328,6 +1336,9 @@
             ],
             "type": "string"
           },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
+          },
           "values": {
             "items": {
               "additionalProperties": true
@@ -1339,6 +1350,7 @@
           "operator",
           "column",
           "values",
+          "value_type",
           "type"
         ],
         "type": "object"
@@ -1428,10 +1440,14 @@
           },
           "value": {
             "additionalProperties": true
+          },
+          "value_type": {
+            "$ref": "#/components/schemas/ScalarType"
           }
         },
         "required": [
           "value",
+          "value_type",
           "type"
         ],
         "type": "object"

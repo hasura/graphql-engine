@@ -2,7 +2,10 @@
 /* tslint:disable */
 /* eslint-disable */
 
+import type { ScalarType } from './ScalarType';
+
 export type ComparisonColumn = {
+  column_type: ScalarType;
   /**
    * The name of the column
    */

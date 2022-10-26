@@ -7,31 +7,31 @@ test-bigquery: start-postgres remove-tix-file
 
 .PHONY: test-sqlserver
 ## test-sqlserver: run tests for SQL Server backend
-test-sqlserver: spawn-postgres spawn-sqlserver wait-for-postgres wait-for-sqlserver remove-tix-file
+test-sqlserver: start-postgres start-sqlserver remove-tix-file
 	$(call stop_after, \
 		cabal run api-tests -- -m 'SQLServer')
 
 .PHONY: test-mysql
 ## test-mysql: run tests for MySQL backend
-test-mysql: spawn-postgres spawn-mysql wait-for-postgres wait-for-mysql remove-tix-file
+test-mysql: start-postgres start-mysql remove-tix-file
 	$(call stop_after, \
 		cabal run api-tests -- -m 'MySQL')
 
 .PHONY: test-citus
 ## test-citus: run tests for Citus backend
-test-citus: spawn-postgres spawn-citus wait-for-postgres wait-for-citus remove-tix-file
+test-citus: start-postgres start-citus remove-tix-file
 	$(call stop_after, \
 		cabal run api-tests -- -m 'Citus')
 
 .PHONY: test-data-connectors
 ## test-data-connectors: run tests for Data Connectors
-test-data-connectors: start-postgres start-dc-reference-agent remove-tix-file
+test-data-connectors: start-postgres start-dc-reference-agent start-dc-sqlite-agent remove-tix-file
 	$(call stop_after, \
 		cabal run api-tests -- -m 'DataConnector')
 
 .PHONY: test-cockroach
 ## test-cockroach: run tests for Cockroach backend
-test-cockroach: spawn-postgres spawn-cockroach wait-for-postgres wait-for-cockroach remove-tix-file
+test-cockroach: start-postgres start-cockroach remove-tix-file
 	$(call stop_after, \
 		cabal run api-tests -- -m 'Cockroach')
 

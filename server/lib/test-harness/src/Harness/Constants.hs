@@ -34,6 +34,7 @@ module Harness.Constants
     cockroachDb,
     serveOptions,
     dataConnectorDb,
+    sqliteSchemaName,
     maxRetriesRateLimitExceeded,
   )
 where
@@ -49,6 +50,7 @@ import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
 import Hasura.Server.Cors (CorsConfig (CCAllowAll))
 import Hasura.Server.Init
   ( API (CONFIG, DEVELOPER, GRAPHQL, METADATA),
@@ -158,7 +160,10 @@ cockroachConnectionString =
 -- * DataConnector
 
 dataConnectorDb :: String
-dataConnectorDb = "data-connector"
+dataConnectorDb = "hasura"
+
+sqliteSchemaName :: Text
+sqliteSchemaName = "main"
 
 -- * Liveness
 
@@ -177,7 +182,7 @@ sqlserverLivenessCheckIntervalSeconds = 1
 -- | SQL Server has strict password requirements, that's why it's not
 -- simply @hasura@ like the others.
 sqlserverConnectInfo :: Text
-sqlserverConnectInfo = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1,65003;Uid=hasura;Pwd=Hasura1!;Encrypt=no"
+sqlserverConnectInfo = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=hasura;Pwd=Hasura1!;Encrypt=optional"
 
 sqlserverDb :: String
 sqlserverDb = "hasura"
@@ -280,7 +285,8 @@ serveOptions =
       soReadOnlyMode = ReadOnlyModeDisabled,
       soEnableMetadataQueryLogging = MetadataQueryLoggingDisabled,
       soDefaultNamingConvention = Nothing,
-      soExtensionsSchema = ExtensionsSchema "public"
+      soExtensionsSchema = ExtensionsSchema "public",
+      soMetadataDefaults = emptyMetadataDefaults
     }
 
 -- | What log level should be used by the engine; this is not exported, and

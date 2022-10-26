@@ -8,10 +8,8 @@ import {
   schemaConnector,
   viewTableConnector,
   rawSQLConnector,
-  editItemConnector,
   addExistingTableViewConnector,
   addTableConnector,
-  modifyTableConnector,
   modifyViewConnector,
   relationshipsConnector,
   relationshipsViewConnector,
@@ -32,9 +30,12 @@ import ConnectDatabase from './DataSources/ConnectDatabase';
 import { setDriver } from '../../../dataSources';
 import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 import { getSourcesFromMetadata } from '../../../metadata/selector';
-import { ManageContainer } from '@/features/Data';
+import { ManageDatabaseContainer } from '@/features/Data';
 import { Connect } from '@/features/ConnectDB';
 import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemContainer';
+import { ModifyTableContainer } from './TableModify/ModifyTableContainer';
+import { TableEditItemContainer } from './TableEditItem/TableEditItemContainer';
+import { ManageTable } from '@/features/Data/ManageTable';
 
 const makeDataRouter = (
   connect,
@@ -54,7 +55,13 @@ const makeDataRouter = (
       <IndexRedirect to="manage" />
 
       <Route path="v2">
-        <Route path="manage" component={ManageContainer} />
+        <Route path="manage">
+          <Route path="table" component={ManageTable}>
+            <IndexRedirect to="modify" />
+            <Route path=":operation" component={ManageTable} />
+          </Route>
+          <Route path="database" component={ManageDatabaseContainer} />
+        </Route>
         <Route path="edit" component={Connect.EditConnection} />
       </Route>
 
@@ -87,7 +94,7 @@ const makeDataRouter = (
           </Route>
           <Route
             path=":schema/tables/:table/edit"
-            component={editItemConnector(connect)}
+            component={TableEditItemContainer}
           />
           <Route
             path=":schema/tables/:table/insert"
@@ -96,7 +103,7 @@ const makeDataRouter = (
           <Route
             path=":schema/tables/:table/modify"
             onEnter={migrationRedirects}
-            component={modifyTableConnector(connect)}
+            component={ModifyTableContainer}
           />
           <Route
             path=":schema/tables/:table/relationships"

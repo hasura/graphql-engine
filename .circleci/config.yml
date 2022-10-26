@@ -332,7 +332,7 @@ jobs:
           name: All server tests passed
           command: echo 'all server tests passed!'
 
-  # pytest the server with SQL Server ODBC Driver 17
+  # pytest the server with SQL Server ODBC Driver 18
   test_server_mssql_2019:
     docker:
       - image: *server_builder_image
@@ -350,7 +350,7 @@ jobs:
       HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE: 8
       HASURA_GRAPHQL_DATABASE_URL: postgresql://gql_test:gql_test@localhost:5432/gql_test
       HASURA_GRAPHQL_DATABASE_URL_2: postgresql://gql_test:gql_test@localhost:5432/gql_test2
-      HASURA_GRAPHQL_MSSQL_SOURCE_URL: DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost,1433;Uid=sa;Pwd=hasuraMSSQL1;
+      HASURA_GRAPHQL_MSSQL_SOURCE_URL: DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost,1433;Uid=sa;Pwd=hasuraMSSQL1;
       GRAPHQL_ENGINE: /build/_server_output/graphql-engine
       GRAPHQL_ENGINE_TESTS: /build/_server_output/graphql-engine-tests
       MIX_FILES_FOLDER: /build/_server_output/mix
@@ -802,7 +802,7 @@ jobs:
           HASURA_GRAPHQL_DATABASE_URL: "postgres://gql_test:gqltest@localhost:5432/gql_test"
           CYPRESS_KEY: 983be0db-0f19-40cc-bfc4-194fcacd85e1
           GHCRTS: -N1
-          TEST_MSSQL_DATABASE_URL: "DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=master;Uid=SA;Pwd=hasuraMSSQL1"
+          TEST_MSSQL_DATABASE_URL: "DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost;DATABASE=master;Uid=SA;Pwd=hasuraMSSQL1;Encrypt=optional"
       - image: circleci/postgres:10-alpine-postgis
         environment:
           POSTGRES_USER: gql_test

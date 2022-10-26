@@ -1,203 +1,150 @@
 import { TrackingTableFormValues } from '@/components/Services/Data/Schema/tableTrackCustomization/types';
+import { MetadataTableConfig } from '@/features/MetadataAPI';
+import { Button } from '@/new-components/Button';
 import { Collapse } from '@/new-components/deprecated';
-import React, { useState } from 'react';
-import { UseFormRegisterReturn, UseFormReturn } from 'react-hook-form';
+import { Dialog } from '@/new-components/Dialog';
+import React from 'react';
+import { FormProvider } from 'react-hook-form';
 import { FaExclamationCircle } from 'react-icons/fa';
-import { getTrackingTableFormPlaceholders } from './utils';
+import { useGqlCustomizationForm } from './hooks';
+import { InputField } from './parts';
+import { mutation_field_props, query_field_props } from './utils';
 
-type InputFieldProps = {
-  name: string;
-  placeholder: string;
-  formMethods: UseFormRegisterReturn;
-  onChange?: (value: string) => void;
-};
-
-// TODO NEXT: replace with InputField component when the horizontal version is ready
-const InputField: React.FC<InputFieldProps> = ({
-  name,
-  placeholder,
-  formMethods,
-  onChange,
-}) => {
-  return (
-    <div className="grid grid-cols-12 gap-3">
-      <div className="col-span-4 flex items-center">
-        <label className="block font-normal">{name}</label>
-      </div>
-      <div className="col-span-8">
-        <input
-          type="text"
-          className="block w-full h-input shadow-sm rounded border border-gray-300 hover:border-gray-400 focus:outline-0 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400"
-          placeholder={placeholder}
-          {...formMethods}
-          onChange={e => {
-            formMethods.onChange(e);
-            if (onChange) {
-              onChange(e.target.value);
-            }
-          }}
-        />
-      </div>
-    </div>
-  );
-};
-
-type TableTrackingCustomizationFormProps = {
+export type TableTrackingCustomizationFormProps = {
   initialTableName: string;
-  formMethods: UseFormReturn<TrackingTableFormValues>;
+  currentConfiguration?: MetadataTableConfig;
+  onSubmit: (
+    data: TrackingTableFormValues,
+    configuration: MetadataTableConfig
+  ) => void;
+  onClose: () => void;
 };
 
-export const TableTrackingCustomizationForm: React.FC<TableTrackingCustomizationFormProps> =
-  ({ initialTableName, formMethods }) => {
-    const [customTableName, setCustomTableName] = useState('');
-    const placeholders = getTrackingTableFormPlaceholders(
-      customTableName || initialTableName
-    );
+export const TableTrackingCustomizationForm: React.VFC<TableTrackingCustomizationFormProps> =
+  props => {
+    const { onClose } = props;
+
     const {
-      formState: { errors },
-    } = formMethods;
-
-    const customNameFormMethods = formMethods.register('custom_name');
-    const selectFormMethods = formMethods.register('select');
-    const selectByPkFormMethods = formMethods.register('select_by_pk');
-    const selectAggregateFormMethods = formMethods.register('select_aggregate');
-    const selectStreamFormMethods = formMethods.register('select_stream');
-    const insertFormMethods = formMethods.register('insert');
-    const insertOneFormMethods = formMethods.register('insert_one');
-    const updateFormMethods = formMethods.register('update');
-    const updateByPkFormMethods = formMethods.register('update_by_pk');
-    const deleteFormMethods = formMethods.register('delete');
-    const deleteByPkFormMethods = formMethods.register('delete_by_pk');
-
-    const queryAndSubscriptionFields = [
-      {
-        name: 'Select',
-        placeholder: placeholders.select,
-        formMethods: selectFormMethods,
-      },
-      {
-        name: 'Select by PK',
-        placeholder: placeholders.select_by_pk,
-        formMethods: selectByPkFormMethods,
-      },
-      {
-        name: 'Select Aggregate',
-        placeholder: placeholders.select_aggregate,
-        formMethods: selectAggregateFormMethods,
-      },
-      {
-        name: 'Select Stream',
-        placeholder: placeholders.select_stream,
-        formMethods: selectStreamFormMethods,
-      },
-    ];
-
-    const mutationFields = [
-      {
-        name: 'Insert',
-        placeholder: placeholders.insert,
-        formMethods: insertFormMethods,
-      },
-      {
-        name: 'Insert One',
-        placeholder: placeholders.insert_one,
-        formMethods: insertOneFormMethods,
-      },
-      {
-        name: 'Update',
-        placeholder: placeholders.update,
-        formMethods: updateFormMethods,
-      },
-      {
-        name: 'Update by PK',
-        placeholder: placeholders.update_by_pk,
-        formMethods: updateByPkFormMethods,
-      },
-      {
-        name: 'Delete',
-        placeholder: placeholders.delete,
-        formMethods: deleteFormMethods,
-      },
-      {
-        name: 'Delete by PK',
-        placeholder: placeholders.delete_by_pk,
-        formMethods: deleteByPkFormMethods,
-      },
-    ];
+      errors,
+      formMethods,
+      handleSubmit,
+      hasValues,
+      isMutateOpen,
+      isQueryOpen,
+      placeholders,
+      reset,
+      setCustomTableName,
+    } = useGqlCustomizationForm(props);
 
     return (
-      <>
-        <div className="px-sm pb-sm pt-1">
-          <div className="pl-6">
-            <InputField
-              name="Custom Table Name"
-              placeholder={placeholders.custom_name}
-              formMethods={customNameFormMethods}
-              onChange={value => {
-                setCustomTableName(value);
-              }}
-            />
-          </div>
-          {errors.custom_name?.type === 'required' && (
-            <div className="grid grid-cols-12 gap-3">
-              <div className="col-span-4 flex items-center" />
-              <div className="col-span-8">
-                <div
-                  role="alert"
-                  aria-label="custom table name is a required field!"
-                  className="text-red-600 flex items-center text-sm pt-1"
-                >
-                  <span className="flex items-center">
-                    <FaExclamationCircle className="mr-1" />
-                    This field is required!
-                  </span>
+      <FormProvider {...formMethods}>
+        <form onSubmit={formMethods.handleSubmit(handleSubmit)}>
+          <div>
+            <div className="px-sm pb-sm">
+              <div className="flex text-muted flex-col mb-4">
+                <div>
+                  Values are limited to letters, numbers, and underscores.
+                </div>
+                <div>Spaces are converted to underscores.</div>
+              </div>
+
+              <div className="mb-4 flex justify-end">
+                <Button disabled={!hasValues} size="sm" onClick={reset}>
+                  Clear All Fields
+                </Button>
+              </div>
+
+              <div className="pl-6">
+                <InputField
+                  label="Custom Table Name"
+                  fieldName="custom_name"
+                  placeholder={placeholders.custom_name}
+                  onClear={() => {
+                    setCustomTableName('');
+                  }}
+                  onChange={value => {
+                    setCustomTableName(value);
+                  }}
+                />
+              </div>
+              {errors.custom_name?.type === 'required' && (
+                <div className="grid grid-cols-12 gap-3">
+                  <div className="col-span-4 flex items-center" />
+                  <div className="col-span-8">
+                    <div
+                      role="alert"
+                      aria-label="custom table name is a required field!"
+                      className="text-red-600 flex items-center text-sm pt-1"
+                    >
+                      <span className="flex items-center">
+                        <FaExclamationCircle className="mr-1" />
+                        This field is required!
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="mb-sm">
+                <div className="flex items-center">
+                  <Collapse
+                    defaultOpen={isQueryOpen}
+                    title="Query and Subscription"
+                    rootClassName="w-full"
+                  >
+                    <Collapse.Content>
+                      <div className="pl-sm py-xs ml-[0.47rem]">
+                        <div className="space-y-sm">
+                          {query_field_props.map(name => (
+                            <InputField
+                              key={`query-and-subscription-${name}`}
+                              fieldName={name}
+                              label={name}
+                              placeholder={placeholders[name]}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </Collapse.Content>
+                  </Collapse>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center">
+                  <Collapse
+                    defaultOpen={isMutateOpen}
+                    title="Mutation"
+                    rootClassName="w-full"
+                  >
+                    <Collapse.Content>
+                      <div className="pl-sm py-xs ml-[0.47rem]">
+                        <div className="space-y-sm">
+                          {mutation_field_props.map(name => (
+                            <InputField
+                              key={`mutation-${name}`}
+                              label={name}
+                              fieldName={name}
+                              placeholder={placeholders[name]}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </Collapse.Content>
+                  </Collapse>
                 </div>
               </div>
             </div>
-          )}
 
-          <div className="mb-sm">
-            <div className="flex items-center">
-              <Collapse title="Query and Subscription" rootClassName="w-full">
-                <Collapse.Content>
-                  <div className="pl-sm py-xs ml-[0.47rem]">
-                    <div className="space-y-sm">
-                      {queryAndSubscriptionFields.map(field => (
-                        <InputField
-                          key={`query-and-subscription-${field.name}`}
-                          name={field.name}
-                          placeholder={field.placeholder}
-                          formMethods={field.formMethods}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </Collapse.Content>
-              </Collapse>
-            </div>
+            <Dialog.Footer
+              callToAction="Save"
+              callToActionLoadingText="Saving..."
+              callToDeny="Cancel"
+              onClose={onClose}
+              className="absolute w-full bottom-0"
+            />
           </div>
-
-          <div>
-            <div className="flex items-center">
-              <Collapse title="Mutation" rootClassName="w-full">
-                <Collapse.Content>
-                  <div className="pl-sm py-xs ml-[0.47rem]">
-                    <div className="space-y-sm">
-                      {mutationFields.map(field => (
-                        <InputField
-                          key={`mutation-${field.name}`}
-                          name={field.name}
-                          placeholder={field.placeholder}
-                          formMethods={field.formMethods}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </Collapse.Content>
-              </Collapse>
-            </div>
-          </div>
-        </div>
-      </>
+        </form>
+      </FormProvider>
     );
   };

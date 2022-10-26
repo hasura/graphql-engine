@@ -65,7 +65,7 @@ import {
 const ActionIcon = ({ message, dataHeaderID }) => (
   <Tooltip placement="left" message={message}>
     <FaQuestionCircle
-      className="cursor-pointer text-md p-sm inline-block"
+      className="cursor-pointer mr-sm"
       data-header-id={dataHeaderID}
       aria-hidden="true"
     />
@@ -443,7 +443,7 @@ class ApiRequest extends Component {
                   message="Show admin secret"
                 >
                   <FaEye
-                    className="cursor-pointer mr-md"
+                    className="cursor-pointer mr-sm"
                     data-header-id={i}
                     aria-hidden="true"
                     onClick={onShowAdminSecretClicked}
@@ -466,12 +466,12 @@ class ApiRequest extends Component {
 
               if (isAnalyzingToken && analyzingHeaderRow === i) {
                 analyzeIcon = (
-                  <FaSpinner className="cursor-pointer mr-md animate-spin" />
+                  <FaSpinner className="cursor-pointer mr-sm animate-spin" />
                 );
               } else {
                 analyzeIcon = (
                   <FaUserSecret
-                    className="cursor-pointer mr-md"
+                    className="cursor-pointer mr-sm"
                     token={token}
                     data-header-index={i}
                     onClick={this.analyzeBearerToken}
@@ -514,21 +514,23 @@ class ApiRequest extends Component {
             if (!header.isNewHeader) {
               headerActions = (
                 <td className="text-right">
-                  {getHeaderAdminVal()}
-                  {getJWTInspectorIcon()}
-                  {getHeaderRemoveBtn()}
-                  {isClientName && (
-                    <ActionIcon
-                      message="Hasura client name is a header that indicates where the request is being made from. This is used by GraphQL Engine for providing detailed metrics."
-                      dataHeaderID={i}
-                    />
-                  )}
-                  {isCollaboratorToken && (
-                    <ActionIcon
-                      message="Hasura collaborator token is an admin-secret alternative when you login using Hasura. This is used by GraphQL Engine to authorise your requests."
-                      dataHeaderID={i}
-                    />
-                  )}
+                  <div className="flex justify-end items-center">
+                    {getHeaderAdminVal()}
+                    {getJWTInspectorIcon()}
+                    {isClientName && (
+                      <ActionIcon
+                        message="Hasura client name is a header that indicates where the request is being made from. This is used by GraphQL Engine for providing detailed metrics."
+                        dataHeaderID={i}
+                      />
+                    )}
+                    {isCollaboratorToken && (
+                      <ActionIcon
+                        message="Hasura collaborator token is an admin-secret alternative when you login using Hasura. This is used by GraphQL Engine to authorise your requests."
+                        dataHeaderID={i}
+                      />
+                    )}
+                    {getHeaderRemoveBtn()}
+                  </div>
                 </td>
               );
             }

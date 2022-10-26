@@ -29,11 +29,11 @@ This guide will show how to configure your Hasura project for easy switching bet
 ### Step 1: Setup local development of Hasura with Docker
 
 Follow the guide [here](/getting-started/docker-simple.mdx) to get up and running with Hasura GraphQL engine and
-Postgres as Docker containers in your local system. You can skip the steps involving connecting a database, as
-you'll be applying metadata from your cloud database in a later step. Make sure that the ENV variable name for
-database connection in your local setup is the same as that in your Cloud project so that your database connection
-metadata will still work and not need to be updated. The value of this variable will be updated to point
-to your local database. Also add any other ENV variables that you might have set on the Cloud project.
+Postgres as Docker containers in your local system. You can skip the steps involving connecting a database, as you'll be
+applying metadata from your cloud database in a later step. Make sure that the ENV variable name for database connection
+in your local setup is the same as that in your Cloud project so that your database connection metadata will still work
+and not need to be updated. The value of this variable will be updated to point to your local database. Also add any
+other ENV variables that you might have set on the Cloud project.
 
 ### Step 2: Install Hasura CLI
 
@@ -104,9 +104,9 @@ Also add any other ENV vars that you might have set on your local project.
 ### Setting up a Git repo for your Hasura project
 
 In order to easily apply your local changes to your new Cloud project, we'll use the Hasura
-[GitHub deployment](/deployment/hasura-cloud/github-integration.mdx) feature. But before we do that, we need to setup
-Metadata & Migrations of your local setup that you can apply to your Cloud project. For a lowdown on Hasura Metadata
-& Migrations refer the guide [here](/migrations-metadata-seeds/index.mdx)
+[GitHub deployment](/deployment/hasura-cloud/ci-cd/github-integration.mdx) feature. But before we do that, we need to
+setup Metadata & Migrations of your local setup that you can apply to your Cloud project. For a lowdown on Hasura
+Metadata & Migrations refer the guide [here](/migrations-metadata-seeds/index.mdx)
 
 ### Step 1: Install Hasura CLI
 
@@ -156,4 +156,4 @@ git commit -m "initialize metadata and migrations"
 Push these changes to GitHub repo of your choice.
 
 Now we're all set to see the magic of our GitHub integration to deploy the metadata and migrations to your Cloud project
-by following the steps [here](/deployment/hasura-cloud/github-integration.mdx)!
+by following the steps [here](/deployment/hasura-cloud/ci-cd/github-integration.mdx)!

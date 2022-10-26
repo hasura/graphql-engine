@@ -4,6 +4,11 @@ import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
 import Endpoints from '@/Endpoints';
 import {
+  Analytics,
+  REDACT_EVERYTHING,
+  useGetAnalyticsAttributes,
+} from '@/features/Analytics';
+import {
   parseValidateApiData,
   getValidateTransformOptions,
   getTransformState,
@@ -363,79 +368,86 @@ const ModifyAction: React.FC<ModifyProps> = ({
     }
   }
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes('ModifyAction', {
+    redactText: true,
+  });
+
   return (
     <>
       <Helmet>
-        <title data-heap-redact-text="true">{`Modify Action - ${actionName} - Actions | Hasura`}</title>
+        <title
+          {...titleAnalyticsAttributes}
+        >{`Modify Action - ${actionName} - Actions | Hasura`}</title>
       </Helmet>
+      <Analytics name="ModifyAction" {...REDACT_EVERYTHING}>
+        <div className="w-full overflow-y-auto bg-gray-50">
+          <div className="max-w-6xl">
+            <ActionEditor
+              handler={handler}
+              execution={kind}
+              actionDefinition={actionDefinition}
+              typeDefinition={typeDefinition}
+              headers={headers}
+              forwardClientHeaders={forwardClientHeaders}
+              readOnlyMode={readOnlyMode}
+              timeout={timeout}
+              comment={comment}
+              actionType={actionType}
+              commentOnChange={commentOnChange}
+              handlerOnChange={handlerOnChange}
+              executionOnChange={executionOnChange}
+              timeoutOnChange={timeoutOnChange}
+              setHeaders={setHeaders}
+              toggleForwardClientHeaders={toggleForwardClientHeaders}
+              actionDefinitionOnChange={actionDefinitionOnChange}
+              typeDefinitionOnChange={typeDefinitionOnChange}
+            />
 
-      <div className="w-full overflow-y-auto bg-gray-50">
-        <div className="max-w-6xl">
-          <ActionEditor
-            handler={handler}
-            execution={kind}
-            actionDefinition={actionDefinition}
-            typeDefinition={typeDefinition}
-            headers={headers}
-            forwardClientHeaders={forwardClientHeaders}
-            readOnlyMode={readOnlyMode}
-            timeout={timeout}
-            comment={comment}
-            actionType={actionType}
-            commentOnChange={commentOnChange}
-            handlerOnChange={handlerOnChange}
-            executionOnChange={executionOnChange}
-            timeoutOnChange={timeoutOnChange}
-            setHeaders={setHeaders}
-            toggleForwardClientHeaders={toggleForwardClientHeaders}
-            actionDefinitionOnChange={actionDefinitionOnChange}
-            typeDefinitionOnChange={typeDefinitionOnChange}
-          />
+            <ConfigureTransformation
+              transformationType="action"
+              state={transformState}
+              resetSampleInput={resetSampleInput}
+              envVarsOnChange={envVarsOnChange}
+              sessionVarsOnChange={sessionVarsOnChange}
+              requestMethodOnChange={requestMethodOnChange}
+              requestUrlOnChange={requestUrlOnChange}
+              requestQueryParamsOnChange={requestQueryParamsOnChange}
+              requestAddHeadersOnChange={requestAddHeadersOnChange}
+              requestBodyOnChange={requestBodyOnChange}
+              requestSampleInputOnChange={requestSampleInputOnChange}
+              requestContentTypeOnChange={requestContentTypeOnChange}
+              requestUrlTransformOnChange={requestUrlTransformOnChange}
+              requestPayloadTransformOnChange={requestPayloadTransformOnChange}
+            />
 
-          <ConfigureTransformation
-            transformationType="action"
-            state={transformState}
-            resetSampleInput={resetSampleInput}
-            envVarsOnChange={envVarsOnChange}
-            sessionVarsOnChange={sessionVarsOnChange}
-            requestMethodOnChange={requestMethodOnChange}
-            requestUrlOnChange={requestUrlOnChange}
-            requestQueryParamsOnChange={requestQueryParamsOnChange}
-            requestAddHeadersOnChange={requestAddHeadersOnChange}
-            requestBodyOnChange={requestBodyOnChange}
-            requestSampleInputOnChange={requestSampleInputOnChange}
-            requestContentTypeOnChange={requestContentTypeOnChange}
-            requestUrlTransformOnChange={requestUrlTransformOnChange}
-            requestPayloadTransformOnChange={requestPayloadTransformOnChange}
-          />
-
-          <div className="flex items-start mb-lg">
-            {!readOnlyMode && (
-              <>
-                <div className="mr-5">
+            <div className="flex items-start mb-lg">
+              {!readOnlyMode && (
+                <>
+                  <div className="mr-5">
+                    <Button
+                      mode="primary"
+                      onClick={onSave}
+                      disabled={!allowSave}
+                      data-test="save-modify-action-changes"
+                    >
+                      Save Action
+                    </Button>
+                  </div>
                   <Button
-                    mode="primary"
-                    onClick={onSave}
-                    disabled={!allowSave}
-                    data-test="save-modify-action-changes"
+                    mode="destructive"
+                    size="md"
+                    onClick={onDelete}
+                    disabled={isFetching}
+                    data-test="delete-action"
                   >
-                    Save Action
+                    Delete Action
                   </Button>
-                </div>
-                <Button
-                  mode="destructive"
-                  size="md"
-                  onClick={onDelete}
-                  disabled={isFetching}
-                  data-test="delete-action"
-                >
-                  Delete Action
-                </Button>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </Analytics>
     </>
   );
 };

@@ -7,6 +7,7 @@ module Hasura.GraphQL.Schema.Options
     InferFunctionPermissions (..),
     RemoteSchemaPermissions (..),
     OptimizePermissionFilters (..),
+    IncludeAggregationPredicates (..),
     IncludeUpdateManyFields (..),
     BigQueryStringNumericInput (..),
   )
@@ -23,6 +24,7 @@ data SchemaOptions = SchemaOptions
     soInferFunctionPermissions :: InferFunctionPermissions,
     soOptimizePermissionFilters :: OptimizePermissionFilters,
     soIncludeUpdateManyFields :: IncludeUpdateManyFields,
+    soIncludeAggregationPredicates :: IncludeAggregationPredicates,
     soBigQueryStringNumericInput :: BigQueryStringNumericInput
   }
 
@@ -42,6 +44,14 @@ data IncludeUpdateManyFields
   = IncludeUpdateManyFields
   | DontIncludeUpdateManyFields
   deriving (Eq, Show)
+
+-- | Should we include aggregation functions in where clauses?
+-- Because this has the potential to cause naming conflicts in graphql schema
+-- types, this flag allows users to toggle the feature off if it an upgrade breaks
+-- their setup.
+data IncludeAggregationPredicates
+  = IncludeAggregationPredicates
+  | Don'tIncludeAggregationPredicates
 
 -- | Should Boolean fields be collapsed to 'True' when a null value is
 -- given? This was the behaviour of Hasura V1, and is now discouraged.

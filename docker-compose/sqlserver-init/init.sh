@@ -5,8 +5,8 @@ set -u
 set -o pipefail
 
 SERVER_PORT="${1:-1433}"
-SLEEP=3
-MAX_ATTEMPTS=10
+SLEEP=5
+MAX_ATTEMPTS=50
 
 if [[ -z "${SERVER_HOST-}" ]]; then
   echo 'The server host must be set.'

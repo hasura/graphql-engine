@@ -6,6 +6,7 @@ module Hasura.RQL.Types.Metadata
     MetadataModifier (..),
     MetadataNoSources (..),
     MetadataVersion (..),
+    MetadataDefaults (..),
     currentMetadataVersion,
     dropComputedFieldInMetadata,
     dropEventTriggerInMetadata,
@@ -18,6 +19,7 @@ module Hasura.RQL.Types.Metadata
     dropRemoteSchemaPermissionInMetadata,
     dropRemoteSchemaRemoteRelationshipInMetadata,
     emptyMetadata,
+    emptyMetadataDefaults,
     functionMetadataSetter,
     metaActions,
     metaAllowlist,
@@ -35,6 +37,7 @@ module Hasura.RQL.Types.Metadata
     metaSources,
     metadataToDTO,
     metadataToOrdJSON,
+    overrideMetadataDefaults,
     tableMetadataSetter,
     module Hasura.RQL.Types.Metadata.Common,
   )
@@ -42,6 +45,7 @@ where
 
 import Control.Lens hiding (set, (.=))
 import Data.Aeson.Extended (FromJSONWithContext (..), mapWithJSONPath)
+import Data.Aeson.KeyMap (singleton)
 import Data.Aeson.Ordered qualified as AO
 import Data.Aeson.TH
 import Data.Aeson.Types
@@ -64,10 +68,11 @@ import Hasura.RQL.Types.Metadata.Common
 import Hasura.RQL.Types.Metadata.Serialization
 import Hasura.RQL.Types.Network
 import Hasura.RQL.Types.Permission
-import Hasura.RQL.Types.RemoteSchema
+import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
+import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.Session
 import Hasura.Tracing (TraceT)
 import Language.GraphQL.Draft.Syntax qualified as G
@@ -134,7 +139,8 @@ instance FromJSON Metadata where
   parseJSON = withObject "Metadata" $ \o -> do
     version <- o .:? "version" .!= MVVersion1
     when (version /= MVVersion3) $
-      fail $ "unexpected metadata version from storage: " <> show version
+      fail $
+        "unexpected metadata version from storage: " <> show version
     rawSources <- o .: "sources"
     backendConfigs <- o .:? "backend_configs" .!= mempty
     sources <- oMapFromL getSourceName <$> mapWithJSONPath parseSourceMetadata rawSources <?> Key "sources"
@@ -196,6 +202,49 @@ emptyMetadata =
       _metaNetwork = emptyNetwork,
       _metaBackendConfigs = mempty
     }
+
+-- | This type serves to allow Metadata arguments to be distinguished
+newtype MetadataDefaults = MetadataDefaults Metadata
+  deriving (Eq, Show)
+
+-- | The metadata instance first defaults the version and sources fields, then defers to the Metadata FromJSON instance
+instance FromJSON MetadataDefaults where
+  parseJSON o = MetadataDefaults <$> (parseJSON =<< defaultVersionAndSources o)
+    where
+      defaultVersionAndSources = \case
+        (Object o') -> pure (Object (o' <> versionSingleton <> sourcesSingleton))
+        _ -> fail "Was expecting an Object for Metadata"
+        where
+          versionSingleton = singleton "version" (Number 3)
+          sourcesSingleton = singleton "sources" (Array mempty)
+
+emptyMetadataDefaults :: MetadataDefaults
+emptyMetadataDefaults = MetadataDefaults emptyMetadata
+
+-- | This acts like a Semigroup instance for Metadata, favouring the non-default Metadata
+overrideMetadataDefaults :: Metadata -> MetadataDefaults -> Metadata
+overrideMetadataDefaults md (MetadataDefaults defs) =
+  Metadata
+    { _metaSources = (_metaSources md) <> (_metaSources defs),
+      _metaRemoteSchemas = (_metaRemoteSchemas md) <> (_metaRemoteSchemas defs),
+      _metaQueryCollections = (_metaQueryCollections md) <> (_metaQueryCollections defs),
+      _metaAllowlist = (_metaAllowlist md) <> (_metaAllowlist defs),
+      _metaActions = (_metaActions md) <> (_metaActions defs),
+      _metaCronTriggers = (_metaCronTriggers md) <> (_metaCronTriggers defs),
+      _metaRestEndpoints = (_metaRestEndpoints md) <> (_metaRestEndpoints defs),
+      _metaInheritedRoles = (_metaInheritedRoles md) <> (_metaInheritedRoles defs),
+      _metaSetGraphqlIntrospectionOptions = (_metaSetGraphqlIntrospectionOptions md) <> (_metaSetGraphqlIntrospectionOptions defs),
+      _metaCustomTypes = (_metaCustomTypes md) `overrideCustomTypesDefaults` (_metaCustomTypes defs),
+      _metaApiLimits = (_metaApiLimits md) `overrideApiLimitsDefaults` (_metaApiLimits defs),
+      _metaMetricsConfig = (_metaMetricsConfig md) `overrideMetricsConfigDefaults` (_metaMetricsConfig defs),
+      _metaNetwork = (_metaNetwork md) `overrideNetworkDefaults` (_metaNetwork defs),
+      _metaBackendConfigs = _metaBackendConfigs md `BackendMap.overridesDeeply` _metaBackendConfigs defs
+    }
+  where
+    overrideCustomTypesDefaults (CustomTypes a1 a2 a3 a4) (CustomTypes b1 b2 b3 b4) = CustomTypes (a1 <> b1) (a2 <> b2) (a3 <> b3) (a4 <> b4)
+    overrideApiLimitsDefaults (ApiLimit a1 a2 a3 a4 a5 a6) (ApiLimit b1 b2 b3 b4 b5 b6) = ApiLimit (a1 <|> b1) (a2 <|> b2) (a3 <|> b3) (a4 <|> b4) (a5 <|> b5) (a6 || b6)
+    overrideMetricsConfigDefaults (MetricsConfig a1 a2) (MetricsConfig b1 b2) = MetricsConfig (a1 || b1) (a2 || b2)
+    overrideNetworkDefaults (Network a1) (Network b1) = Network (a1 <> b1)
 
 tableMetadataSetter ::
   (Backend b) =>
@@ -418,6 +467,9 @@ metadataToOrdJSON
 
 instance ToJSON Metadata where
   toJSON = AO.fromOrdered . metadataToOrdJSON
+
+instance ToJSON MetadataDefaults where
+  toJSON (MetadataDefaults m) = toJSON m
 
 -- | Convert 'Metadata' to a DTO for serialization. In the near future the plan
 -- is to use this function instead of the 'ToJSON' instance of 'Metadata'.

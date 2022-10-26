@@ -11,10 +11,10 @@ import { Table } from '@/features/MetadataAPI';
 import { DataSourceDriver, getDataSourcePrefix } from '@/metadata/queryUtils';
 import TableHeader from '../../components/Services/Data/TableCommon/TableHeader';
 import { FeatureFlagFloatingButton } from '../FeatureFlags/components/FeatureFlagFloatingButton';
-import { DatabaseRelationshipsTable } from '../RelationshipsTable/DatabaseRelationshipsTable';
+import { DatabaseRelationshipsTable } from './components/DatabaseRelationshipsTable';
 import { allowedMetadataTypes, useMetadataMigration } from '../MetadataAPI';
 import { Form } from './components/Form/Form';
-import { Relationship } from '../RelationshipsTable/DatabaseRelationshipsTable/types';
+import { Relationship } from './components/DatabaseRelationshipsTable/types';
 
 const useFormState = (currentSource: string) => {
   const queryClient = useQueryClient();

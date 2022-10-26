@@ -27,7 +27,7 @@ func NewV3MetadataTableConfig(ec *cli.ExecutionContext, baseDir string) *V3Metad
 		},
 	}
 }
-func (t *V3MetadataTableConfig) Export(md map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (t *V3MetadataTableConfig) Export(md map[string]yaml.Node) (map[string][]byte, error) {
 	metadataBytes, err := yaml.Marshal(md)
 	if err != nil {
 		return nil, t.error(err)

@@ -22,6 +22,7 @@ export default {
           },
         }}
         onSubmit={() => {}}
+        className="p-4"
       >
         {() => <StoryComponent />}
       </Form>
@@ -75,6 +76,7 @@ WithPartialPresets.decorators = [
         },
       }}
       onSubmit={() => {}}
+      className="p-4"
     >
       {() => <S />}
     </Form>
@@ -127,6 +129,7 @@ WithAllPresets.decorators = [
         },
       }}
       onSubmit={() => {}}
+      className="p-4"
     >
       {() => <S />}
     </Form>

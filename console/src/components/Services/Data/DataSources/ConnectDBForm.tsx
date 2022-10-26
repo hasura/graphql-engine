@@ -12,12 +12,10 @@ import { SupportedFeaturesType } from '../../../../dataSources/types';
 import { Path } from '../../../Common/utils/tsUtils';
 import ConnectionSettingsForm from './ConnectionSettings/ConnectionSettingsForm';
 import { GraphQLFieldCustomizationContainer } from './GraphQLFieldCustomization/GraphQLFieldCustomizationContainer';
-import { SampleDBTrial } from './SampleDatabase';
 
 export interface ConnectDatabaseFormProps {
   // Connect DB State Props
   connectionDBState: ConnectDBState;
-  sampleDBTrial?: SampleDBTrial;
   connectionDBStateDispatch: Dispatch<ConnectDBActions>;
   // Connection Type Props - for the Radio buttons
   updateConnectionTypeRadio: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -31,15 +29,15 @@ export interface ConnectDatabaseFormProps {
 
 export const connectionRadios = [
   {
-    value: connectionTypes.ENV_VAR,
+    value: connectionTypes?.ENV_VAR,
     title: 'Environment Variable',
   },
   {
-    value: connectionTypes.DATABASE_URL,
+    value: connectionTypes?.DATABASE_URL,
     title: 'Database URL',
   },
   {
-    value: connectionTypes.CONNECTION_PARAMS,
+    value: connectionTypes?.CONNECTION_PARAMS,
     title: 'Connection Parameters',
   },
 ];
@@ -48,7 +46,7 @@ const dbTypePlaceholders: Record<Driver, string> = {
   postgres: 'postgresql://username:password@hostname:5432/database',
   citus: 'postgresql://username:password@hostname:5432/database',
   mssql:
-    'Driver={ODBC Driver 17 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password;',
+    'Driver={ODBC Driver 18 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password',
   mysql: 'MySQL connection string',
   bigquery: 'SERVICE_ACCOUNT_KEY_FROM_ENV',
   cockroach: 'postgresql://username:password@hostname:5432/database',
@@ -58,19 +56,34 @@ const defaultTitle = 'Connect Database Via';
 
 const driverToLabel: Record<
   Driver,
-  { label: string; defaultConnection: string; info?: string; beta?: boolean }
+  {
+    label: string;
+    defaultConnection: string;
+    info?: React.ReactElement[];
+    beta?: boolean;
+  }
 > = {
   mysql: { label: 'MySQL', defaultConnection: 'DATABASE_URL' },
   postgres: { label: 'PostgreSQL', defaultConnection: 'DATABASE_URL' },
   mssql: {
     label: 'MS SQL Server',
     defaultConnection: 'DATABASE_URL',
-    info: 'Only Database URLs and Environment Variables are available for MS SQL Server',
+    info: [
+      <>
+        Only Database URLs and Environment Variables are available for MS SQL
+        Server
+      </>,
+    ],
   },
   bigquery: {
     label: 'BigQuery',
     defaultConnection: 'CONNECTION_PARAMETERS',
-    info: 'Only Connection Parameters and Environment Variables are available for BigQuery',
+    info: [
+      <>
+        Only Connection Parameters and Environment Variables are available for
+        BigQuery
+      </>,
+    ],
   },
   citus: {
     label: 'Citus',
@@ -79,6 +92,24 @@ const driverToLabel: Record<
   cockroach: {
     label: 'CockroachDB',
     defaultConnection: 'DATABASE_URL',
+    info: [
+      <>
+        Only Database URLs and Environment Variables are available for
+        CockroachD
+      </>,
+      <div className="flex whitespace-nowrap">
+        Please makes sure to not use the
+        <div className="font-semibold text-gray-500 px-1">
+          &quot;sslverify=verify-full&quot;
+        </div>
+        parameter in your connection string. SSL mode needs to be configured
+        under the
+        <div className="font-semibold text-gray-500 px-1">
+          SSL Certificate Section
+        </div>
+        section below
+      </div>,
+    ],
   },
 };
 
@@ -90,6 +121,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
     connectionTypeState,
     isReadReplica = false,
     title,
+    isEditState,
   } = props;
 
   const isDBSupported = (driver: Driver, connectionType: string) => {
@@ -167,14 +199,14 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
             </span>
           </div>
         ) : null}
-        {driverToLabel[connectionDBState.dbType].info ? (
-          <div>
-            <FaInfoCircle className={`${styles.padd_small_right}`} />
-            <span className={styles.text_muted}>
-              {driverToLabel[connectionDBState.dbType].info}
-            </span>
-          </div>
-        ) : null}
+        {driverToLabel[connectionDBState.dbType].info?.map(info => {
+          return (
+            <div className="flex">
+              <FaInfoCircle className={`${styles.padd_small_right} mt-1`} />
+              <span className={styles.text_muted}>{info}</span>
+            </div>
+          );
+        })}
       </div>
       {connectionTypeState.includes(connectionTypes.DATABASE_URL) ||
       (connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&
@@ -385,6 +417,7 @@ const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
       <ConnectionSettingsForm
         connectionDBState={connectionDBState}
         connectionDBStateDispatch={connectionDBStateDispatch}
+        isEditState={isEditState}
       />
       {/*
         TODO: remove the edit state condition when the BE issue is solved

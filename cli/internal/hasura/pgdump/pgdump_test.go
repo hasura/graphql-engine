@@ -2,11 +2,8 @@ package pgdump
 
 import (
 	"io/ioutil"
-	"os"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
-	errorstestutil "github.com/hasura/graphql-engine/cli/v2/internal/errors/testutil"
 	pg "github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 
 	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
@@ -45,11 +42,12 @@ func TestClient_Send(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr *errors.Error
+		name      string
+		fields    fields
+		args      args
+		want      string
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"can make a pg_dump hasura/graphql-engine:v1.3.3",
@@ -70,7 +68,8 @@ func TestClient_Send(t *testing.T) {
 );
 ALTER TABLE public.test OWNER TO test;
 `,
-			nil,
+			false,
+			require.NoError,
 		},
 		{
 			"can make a pg_dump on latest",
@@ -92,7 +91,8 @@ CREATE TABLE public.test (
 );
 ALTER TABLE public.test OWNER TO test;
 `,
-			nil,
+			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -102,10 +102,8 @@ ALTER TABLE public.test OWNER TO test;
 				path:   tt.fields.path,
 			}
 			got, err := c.Send(tt.args.request)
-			if tt.wantErr != nil {
-				errorstestutil.Match(t, os.Stdout, tt.wantErr, err)
-			} else {
-				require.NoError(t, err)
+			tt.assertErr(t, err)
+			if !tt.wantErr {
 				gotb, err := ioutil.ReadAll(got)
 				require.NoError(t, err)
 				require.Equal(t, tt.want, string(gotb))

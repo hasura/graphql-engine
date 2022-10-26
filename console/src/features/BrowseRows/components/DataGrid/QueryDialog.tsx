@@ -144,3 +144,8 @@ export const QueryDialog = ({
     </div>
   );
 };
+
+QueryDialog.defaultProps = {
+  filters: undefined,
+  sorts: undefined,
+};

@@ -1,17 +1,22 @@
 import { BrowseRowsContainer } from '@/features/BrowseRows';
+import { DatabaseRelationshipsContainer } from '@/features/DataRelationships';
+import { getTableName } from '@/features/DataSource';
 import { Table } from '@/features/MetadataAPI';
-import { Badge } from '@/new-components/Badge';
-import { DropdownMenu } from '@/new-components/DropdownMenu';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Tabs } from '@/new-components/Tabs';
-import React, { useState } from 'react';
-import { FaAngleRight, FaChevronDown, FaDatabase } from 'react-icons/fa';
-import { useDatabaseHierarchy } from '../hooks';
-import { getTableName } from '../TrackTables/hooks/useTables';
+import { getRoute } from '@/features/Data';
+import React from 'react';
+import { useDispatch } from 'react-redux';
+import { useDatabaseHierarchy, useTableDefinition } from '../hooks';
+import { ModifyTable } from '../ModifyTable/ModifyTable';
+import { Breadcrumbs, TableName } from './parts';
+import _push from '../../../components/Services/Data/push';
 
-interface ManageTableProps {
-  dataSourceName: string;
-  table: Table;
+type AllowedTabs = 'modify' | 'browse' | 'relationship' | 'permissions';
+export interface ManageTableProps {
+  params: {
+    operation: AllowedTabs;
+  };
 }
 
 const FeatureNotImplemented = () => {
@@ -24,40 +29,67 @@ const FeatureNotImplemented = () => {
   );
 };
 
-const availableTabs = (table: Table, dataSourceName: string) => [
+const availableTabs = (
+  dataSourceName: string,
+  table: Table,
+  tableName: string
+) => [
   {
-    value: 'Browse',
+    value: 'browse',
     label: 'Browse',
     content: (
-      <BrowseRowsContainer table={table} dataSourceName={dataSourceName} />
+      <BrowseRowsContainer dataSourceName={dataSourceName} table={table} />
     ),
   },
   {
-    value: 'Modify',
+    value: 'modify',
     label: 'Modify',
-    content: <FeatureNotImplemented />,
+    content: (
+      <ModifyTable
+        dataSourceName={dataSourceName}
+        table={table}
+        tableName={tableName}
+      />
+    ),
   },
   {
-    value: 'Relationships',
+    value: 'relationships',
     label: 'Relationships',
-    content: <FeatureNotImplemented />,
+    content: (
+      <DatabaseRelationshipsContainer
+        dataSourceName={dataSourceName}
+        table={table}
+      />
+    ),
   },
   {
-    value: 'Permissions',
+    value: 'permissions',
     label: 'Permissions',
     content: <FeatureNotImplemented />,
   },
 ];
 
-export const ManageTable = (props: ManageTableProps) => {
-  const { table, dataSourceName } = props;
+export const ManageTable: React.VFC<ManageTableProps> = (
+  props: ManageTableProps
+) => {
+  const {
+    params: { operation },
+  } = props;
+
+  const urlData = useTableDefinition(window.location);
+  const dispatch = useDispatch();
+
+  if (urlData.querystringParseResult === 'error')
+    throw Error('Unable to render');
+
+  const { database: dataSourceName, table } = urlData.data;
 
   const { data: databaseHierarchy, isLoading } =
     useDatabaseHierarchy(dataSourceName);
 
-  const [tab, setTab] = useState('Browse');
-
-  if (isLoading) return <IndicatorCard status="info">Loading...</IndicatorCard>;
+  const tableName = databaseHierarchy
+    ? getTableName(table, databaseHierarchy)
+    : '';
 
   if (!databaseHierarchy)
     return (
@@ -66,60 +98,21 @@ export const ManageTable = (props: ManageTableProps) => {
       </IndicatorCard>
     );
 
-  const tableName = getTableName(table, databaseHierarchy);
+  if (isLoading) return <IndicatorCard status="info">Loading...</IndicatorCard>;
 
   return (
     <div className="w-full overflow-y-auto bg-gray-50">
       <div className="px-md pt-md mb-xs">
-        <div className="flex items-center space-x-xs mb-1">
-          <div className="cursor-pointer flex items-center text-muted hover:text-gray-900">
-            <FaDatabase className="mr-1.5" />
-            <span className="text-sm">{dataSourceName}</span>
-          </div>
-          <FaAngleRight className="text-muted" />
-          <div className="cursor-pointer flex items-center text-muted hover:text-gray-900">
-            <FaDatabase className="mr-1.5" />
-            <span className="text-sm">{tableName}</span>
-          </div>
-          <FaAngleRight className="text-muted" />
-          <div className="cursor-pointer flex items-center">
-            <span className="text-sm font-semibold text-yellow-500">
-              Manage
-            </span>
-          </div>
-        </div>
-        <br />
-        <div className="flex items-center gap-3">
-          <div className="group relative">
-            <div>
-              <DropdownMenu
-                items={[
-                  [
-                    // TODO: To be implemented after metadata util functions have been added to the metadata library
-                    <span className="py-xs text-red-600" onClick={() => {}}>
-                      Untrack {tableName}
-                    </span>,
-                  ],
-                ]}
-              >
-                <div className="flex gap-0.5 items-center">
-                  <h1 className="inline-flex items-center text-xl font-semibold mb-1">
-                    {tableName}
-                  </h1>
-                  <FaChevronDown className="text-gray-400 text-sm transition-transform group-radix-state-open:rotate-180" />
-                </div>
-              </DropdownMenu>
-            </div>
-          </div>
-          <div>
-            <Badge color="green">Tracked</Badge>
-          </div>
-        </div>
-
+        <Breadcrumbs dataSourceName={dataSourceName} tableName={tableName} />
+        <TableName dataSourceName={dataSourceName} tableName={tableName} />
         <Tabs
-          value={tab}
-          onValueChange={setTab}
-          items={availableTabs(table, dataSourceName)}
+          value={operation}
+          onValueChange={_operation => {
+            dispatch(
+              _push(getRoute().table(dataSourceName, table, _operation))
+            );
+          }}
+          items={availableTabs(dataSourceName, table, tableName)}
         />
       </div>
     </div>

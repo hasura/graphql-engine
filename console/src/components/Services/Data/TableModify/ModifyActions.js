@@ -1810,7 +1810,7 @@ export const toggleTableAsEnum =
     );
   };
 
-export const toggleAsApollofederation =
+export const toggleAsApolloFederation =
   (isApolloFederationSupported, successCallback, failureCallback) =>
   (dispatch, getState) => {
     const confirmMessage = `This will ${

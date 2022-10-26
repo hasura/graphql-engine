@@ -1,4 +1,4 @@
-import { IconCardGroupItem } from '@/new-components/IconCardGroup';
+import { IconCardGroupItem } from '../components/IconCardGroup';
 import { SurveysResponseData } from '../../types';
 import {
   familiaritySurveyOptionCode,
@@ -6,14 +6,61 @@ import {
   getFamiliaritySurveyOptionDetails,
 } from './familiaritySurveyOptionDetails';
 
+type UnroderedOptionArray = {
+  option: FamiliaritySurveyOptionCode;
+  id: string;
+}[];
+
+/**
+ * Manually enforces the order of options as present in `familiaritySurveyOptionCode`
+ * array.
+ */
+// Not removing this function. Although it is not being used currenty due to dynamic product requirements,
+// but can again be used in future.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const manuallyOrderOptions = (unroderedOptionArray: UnroderedOptionArray) => {
+  const surveyOptionDetails: IconCardGroupItem<string>[] = [];
+  familiaritySurveyOptionCode.forEach(optionCode => {
+    const optionData = unroderedOptionArray.find(
+      optionObj => optionObj.option === optionCode
+    );
+    if (optionData) {
+      const optionValues = getFamiliaritySurveyOptionDetails(
+        optionData.id,
+        optionCode
+      );
+      surveyOptionDetails.push(optionValues);
+    }
+  });
+  return surveyOptionDetails;
+};
+
+/**
+ * Randomly shuffles order of options of survey.
+ * The method comes from this algorithm: https://stackoverflow.com/a/46545530/7088648
+ */
+const randomlyOrderOptions = (unroderedOptionArray: UnroderedOptionArray) => {
+  const shuffledOptionArray = unroderedOptionArray
+    .map(value => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
+
+  const surveyOptionDetails: IconCardGroupItem<string>[] =
+    shuffledOptionArray.map(option =>
+      getFamiliaritySurveyOptionDetails(option.id, option.option)
+    );
+
+  return surveyOptionDetails;
+};
+
 export const mapOptionLabelToDetails = (
-  data: SurveysResponseData['data']['survey'][0]['survey_questions'][0]
+  data?: SurveysResponseData['data']['survey'][0]['survey_questions'][0]
 ): IconCardGroupItem<string>[] => {
-  const unroderedOptionArray: {
-    option: FamiliaritySurveyOptionCode;
-    id: string;
-  }[] = [];
-  data.survey_question_options.forEach(optionData => {
+  if (!data) return [];
+
+  // Array containing order of options as it comes from backend
+  const unroderedOptionArray: UnroderedOptionArray = [];
+  data?.survey_question_options?.forEach(optionData => {
     const optionLabel = optionData.option.toLowerCase();
 
     if (
@@ -34,20 +81,6 @@ export const mapOptionLabelToDetails = (
     });
   });
 
-  // enforce order of options to show in the UI
-  const surveyOptionDetails: IconCardGroupItem<string>[] = [];
-  familiaritySurveyOptionCode.forEach(optionCode => {
-    const optionData = unroderedOptionArray.find(
-      optionObj => optionObj.option === optionCode
-    );
-    if (optionData) {
-      const optionValues = getFamiliaritySurveyOptionDetails(
-        optionData.id,
-        optionCode
-      );
-      surveyOptionDetails.push(optionValues);
-    }
-  });
-
-  return surveyOptionDetails;
+  // return manuallyOrderOptions(unroderedOptionArray);
+  return randomlyOrderOptions(unroderedOptionArray);
 };

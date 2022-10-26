@@ -4,6 +4,7 @@ import {
   RequestTransformContentType,
 } from '@/metadata/types';
 import { Button } from '@/new-components/Button';
+import { Analytics } from '@/features/Analytics';
 import {
   KeyValuePair,
   RequestTransformState,
@@ -93,22 +94,26 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
         <p className="text-sm text-gray-600 mb-sm">
           Add sample env vars and session vars for testing the connector
         </p>
-        <Button
-          color="white"
-          size="sm"
-          data-test="toggle-context-area"
-          onClick={() => {
-            toggleContextArea(!isContextAreaActive);
-          }}
-          data-trackid={
+        <Analytics
+          name={
             isContextAreaActive
               ? 'actions-tab-hide-sample-context-button'
               : 'actions-tab-show-sample-context-button'
           }
+          passHtmlAttributesToChildren
         >
-          {!isContextAreaActive ? <AddIcon /> : null}
-          {contextAreaText}
-        </Button>
+          <Button
+            color="white"
+            size="sm"
+            data-test="toggle-context-area"
+            onClick={() => {
+              toggleContextArea(!isContextAreaActive);
+            }}
+          >
+            {!isContextAreaActive ? <AddIcon /> : null}
+            {contextAreaText}
+          </Button>
+        </Analytics>
 
         {isContextAreaActive ? (
           <SampleContextTransforms
@@ -128,23 +133,27 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
         <p className="text-sm text-gray-600 mb-sm">
           Change the method and URL to adapt to your API&apos;s expected format.
         </p>
-        <Button
-          size="sm"
-          icon={!isRequestUrlTransform ? <AddIcon /> : undefined}
-          iconPosition="start"
-          data-test="toggle-request-transform"
-          onClick={() => {
-            requestUrlTransformOnChange(!isRequestUrlTransform);
-            resetSampleInput();
-          }}
-          data-trackid={
+        <Analytics
+          name={
             isRequestUrlTransform
               ? 'actions-tab-hide-request-transform-button'
               : 'actions-tab-show-request-transform-button'
           }
+          passHtmlAttributesToChildren
         >
-          {requestUrlTransformText}
-        </Button>
+          <Button
+            size="sm"
+            icon={!isRequestUrlTransform ? <AddIcon /> : undefined}
+            iconPosition="start"
+            data-test="toggle-request-transform"
+            onClick={() => {
+              requestUrlTransformOnChange(!isRequestUrlTransform);
+              resetSampleInput();
+            }}
+          >
+            {requestUrlTransformText}
+          </Button>
+        </Analytics>
 
         {isRequestUrlTransform ? (
           <RequestOptionsTransforms
@@ -169,23 +178,27 @@ const ConfigureTransformation: React.FC<ConfigureTransformationProps> = ({
         <p className="text-sm text-gray-600 mb-sm">
           Change the payload to adapt to your API&apos;s expected format.
         </p>
-        <Button
-          color="white"
-          size="sm"
-          data-test="toggle-payload-transform"
-          onClick={() => {
-            requestPayloadTransformOnChange(!isRequestPayloadTransform);
-            resetSampleInput();
-          }}
-          data-trackid={
+        <Analytics
+          name={
             isRequestPayloadTransform
               ? 'actions-tab-hide-payload-transform-button'
               : 'actions-tab-show-payload-transform-button'
           }
+          passHtmlAttributesToChildren
         >
-          {!isRequestPayloadTransform ? <AddIcon /> : null}
-          {requestPayloadTransformText}
-        </Button>
+          <Button
+            color="white"
+            size="sm"
+            data-test="toggle-payload-transform"
+            onClick={() => {
+              requestPayloadTransformOnChange(!isRequestPayloadTransform);
+              resetSampleInput();
+            }}
+          >
+            {!isRequestPayloadTransform ? <AddIcon /> : null}
+            {requestPayloadTransformText}
+          </Button>
+        </Analytics>
         {isRequestPayloadTransform ? (
           <PayloadOptionsTransforms
             transformationType={transformationType}

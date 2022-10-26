@@ -631,6 +631,7 @@ deleteDataset conn datasetId = do
         "DELETE " <> bigQueryProjectUrl (_bqProjectId conn)
           <> "/datasets/"
           <> T.unpack datasetId
+          <> "/?force=true&deleteContents=true"
 
   let req = jsonRequestHeader (parseRequest_ url)
 

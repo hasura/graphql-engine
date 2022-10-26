@@ -97,7 +97,8 @@ configuration:
 
 -- | Serialize Table into a SQL statement, as needed, and execute it on the MySQL backend
 createTable :: Schema.Table -> IO ()
-createTable Schema.Table {tableUniqueConstraints = _ : _} = error "Not Implemented: MySql test harness support for Unique constraints"
+createTable Schema.Table {tableUniqueIndexes = _ : _} = error "Not Implemented: MySql test harness support for unique indexes"
+createTable Schema.Table {tableConstraints = _ : _} = error "Not Implemented: MySql test harness support for constraints"
 createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences} = do
   run_ $
     T.unpack $

@@ -72,7 +72,9 @@ import Data.Text qualified as T
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock qualified as Clock
 import Data.Yaml qualified as Y
+import Database.MSSQL.Pool qualified as MSPool
 import Database.PG.Query qualified as PG
+import Database.PG.Query qualified as Q
 import GHC.AssertNF.CPP
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.Postgres.Connection
@@ -111,6 +113,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Eventing.Backend
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.ResizePool
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
@@ -355,8 +358,9 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
         fst _gcDefaultPostgresConnInfo <&> \(dbUrlConf, _) ->
           let connSettings =
                 PostgresPoolSettings
-                  { _ppsMaxConnections = Just $ PG.cpConns soConnParams,
-                    _ppsIdleTimeout = Just $ PG.cpIdleTime soConnParams,
+                  { _ppsMaxConnections = Just $ Q.cpConns soConnParams,
+                    _ppsTotalMaxConnections = Nothing,
+                    _ppsIdleTimeout = Just $ Q.cpIdleTime soConnParams,
                     _ppsRetries = snd _gcDefaultPostgresConnInfo <|> Just 1,
                     _ppsPoolTimeout = PG.cpTimeout soConnParams,
                     _ppsConnectionLifetime = PG.cpMbLifetime soConnParams
@@ -382,6 +386,7 @@ initialiseServeCtx env GlobalCtx {..} so@ServeOptions {..} serverMetrics = do
           soEventingMode
           soReadOnlyMode
           soDefaultNamingConvention
+          soMetadataDefaults
 
   rebuildableSchemaCache <-
     lift . flip onException (flushLogger loggerCtx) $
@@ -587,8 +592,9 @@ runHGEServer ::
   ManagedT m ()
 runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore startupStatusHook prometheusMetrics = do
   waiApplication <-
-    mkHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMetrics ekgStore prometheusMetrics
+    mkHGEServer setupHook env serveOptions serveCtx postPollHook serverMetrics ekgStore prometheusMetrics
 
+  let logger = _lsLogger $ _scLoggers serveCtx
   -- `startupStatusHook`: add `Service started successfully` message to config_status
   -- table when a tenant starts up in multitenant
   let warpSettings :: Warp.Settings
@@ -622,9 +628,13 @@ runHGEServer setupHook env serveOptions serveCtx initTime postPollHook serverMet
       shutdownHandler closeSocket =
         LA.link =<< LA.async do
           waitForShutdown $ _scShutdownLatch serveCtx
-          let logger = _lsLogger $ _scLoggers serveCtx
           unLogger logger $ mkGenericStrLog LevelInfo "server" "gracefully shutting down server"
           closeSocket
+
+  finishTime <- liftIO Clock.getCurrentTime
+  let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
+  unLogger logger $
+    mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
 
   -- Here we block until the shutdown latch 'MVar' is filled, and then
   -- shut down the server. Once this blocking call returns, we'll tidy up
@@ -664,14 +674,12 @@ mkHGEServer ::
   ServeCtx ->
   -- and mutations
 
-  -- | start time
-  UTCTime ->
   Maybe ES.SubscriptionPostPollHook ->
   ServerMetrics ->
   EKG.Store EKG.EmptyMetrics ->
   PrometheusMetrics ->
   ManagedT m Application
-mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook serverMetrics ekgStore prometheusMetrics = do
+mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} postPollHook serverMetrics ekgStore prometheusMetrics = do
   -- Comment this to enable expensive assertions from "GHC.AssertNF". These
   -- will log lines to STDOUT containing "not in normal form". In the future we
   -- could try to integrate this into our tests. For now this is a development
@@ -741,6 +749,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soWebSocketConnectionInitTimeout
           soEnableMetadataQueryLogging
           soDefaultNamingConvention
+          soMetadataDefaults
 
   let serverConfigCtx =
         ServerConfigCtx
@@ -752,6 +761,7 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
           soEventingMode
           soReadOnlyMode
           soDefaultNamingConvention
+          soMetadataDefaults
 
   -- Log Warning if deprecated environment variables are used
   sources <- scSources <$> liftIO (getSchemaCache cacheRef)
@@ -821,11 +831,6 @@ mkHGEServer setupHook env ServeOptions {..} ServeCtx {..} initTime postPollHook 
             liftIO $ runTelemetry logger _scHttpManager (getSchemaCache cacheRef) dbUid _scInstanceId pgVersion
         return $ Just telemetryThread
       else return Nothing
-
-  finishTime <- liftIO Clock.getCurrentTime
-  let apiInitTime = realToFrac $ Clock.diffUTCTime finishTime initTime
-  unLogger logger $
-    mkGenericLog LevelInfo "server" $ StartupTimeInfo "starting API server" apiInitTime
 
   -- These cleanup actions are not directly associated with any
   -- resource, but we still need to make sure we clean them up here.
@@ -1256,13 +1261,20 @@ mkPgSourceResolver pgLogger _ config = runExceptT do
             PG.cpMbLifetime = _ppsConnectionLifetime =<< poolSettings,
             PG.cpTimeout = _ppsPoolTimeout =<< poolSettings
           }
-  pgPool <- liftIO $ PG.initPGPool connInfo connParams pgLogger
-  let pgExecCtx = mkPGExecCtx isoLevel pgPool
+  pgPool <- liftIO $ Q.initPGPool connInfo connParams pgLogger
+  let pgExecCtx = mkPGExecCtx isoLevel pgPool NeverResizePool
   pure $ PGSourceConfig pgExecCtx connInfo Nothing mempty $ _pccExtensionsSchema config
 
 mkMSSQLSourceResolver :: SourceResolver ('MSSQL)
 mkMSSQLSourceResolver _name (MSSQLConnConfiguration connInfo _) = runExceptT do
   env <- lift Env.getEnvironment
-  (connString, mssqlPool) <- createMSSQLPool connInfo env
-  let mssqlExecCtx = mkMSSQLExecCtx mssqlPool
+  let MSSQLConnectionInfo iConnString MSSQLPoolSettings {..} = connInfo
+      connOptions =
+        MSPool.ConnectionOptions
+          { _coConnections = fromMaybe defaultMSSQLMaxConnections _mpsMaxConnections,
+            _coStripes = 1,
+            _coIdleTime = _mpsIdleTimeout
+          }
+  (connString, mssqlPool) <- createMSSQLPool iConnString connOptions env
+  let mssqlExecCtx = mkMSSQLExecCtx mssqlPool NeverResizePool
   pure $ MSSQLSourceConfig connString mssqlExecCtx

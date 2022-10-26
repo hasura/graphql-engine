@@ -20,6 +20,7 @@ import Data.Text.Extended (toTxt, (<<>), (<>>))
 import Hasura.Backends.DataConnector.API (capabilitiesCase, errorResponseSummary, schemaCase)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.ErrorResponse (_crDetails)
+import Hasura.Backends.DataConnector.Adapter.Backend (columnTypeToScalarType)
 import Hasura.Backends.DataConnector.Adapter.ConfigTransform (transformConnSourceConfig)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Backends.DataConnector.Agent.Client (AgentClientContext (..), runAgentClientT)
@@ -377,8 +378,8 @@ parseCollectableType' collectableType = \case
     | HSU.isSessionVariable t -> pure $ mkTypedSessionVar collectableType $ mkSessionVariable t
     | HSU.isReqUserId t -> pure $ mkTypedSessionVar collectableType HSU.userIdHeader
   val -> case collectableType of
-    CollectableTypeScalar scalarType ->
-      PSESQLExp . DC.ValueLiteral <$> RQL.T.C.parseScalarValueColumnType scalarType val
+    CollectableTypeScalar columnType ->
+      PSESQLExp . DC.ValueLiteral (columnTypeToScalarType columnType) <$> RQL.T.C.parseScalarValueColumnType columnType val
     CollectableTypeArray _ ->
       throw400 NotSupported "Array types are not supported by the Data Connector backend"
 
@@ -388,12 +389,6 @@ mkTypedSessionVar ::
   PartialSQLExp 'DataConnector
 mkTypedSessionVar columnType =
   PSESessVar (columnTypeToScalarType <$> columnType)
-
-columnTypeToScalarType :: RQL.T.C.ColumnType 'DataConnector -> DC.ScalarType
-columnTypeToScalarType = \case
-  RQL.T.C.ColumnScalar scalarType -> scalarType
-  -- NOTE: This should be unreachable:
-  RQL.T.C.ColumnEnumReference _ -> DC.StringTy
 
 errorAction :: MonadError QErr m => API.ErrorResponse -> m a
 errorAction e = throw400WithDetail DataConnectorError (errorResponseSummary e) (_crDetails e)

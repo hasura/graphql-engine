@@ -59,7 +59,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
       <div
         className={clsx(
           'flex',
-          { vertical: 'flex-col', horizontal: 'flex-row ' }[orientation]
+          { vertical: 'flex-col', horizontal: 'flex-row gap-6' }[orientation]
         )}
       >
         {options.map(({ label, value, disabled: optionDisabled = false }) => {

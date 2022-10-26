@@ -41,15 +41,7 @@ CLI Version (for CLI related issue):
 
 <!-- Provide your answer here. -->
 
-### Any possible solutions?
-
-<!-- Provide your answer here. -->
-
-### Can you identify the location in the source code where the problem exists?
-
-<!-- Provide your answer here. -->
-
-### If the bug is confirmed, would you be willing to submit a PR?
+### Any possible solutions/workarounds you're aware of?
 
 <!-- Provide your answer here. -->
 

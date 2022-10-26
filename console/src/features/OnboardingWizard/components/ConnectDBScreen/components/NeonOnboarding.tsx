@@ -3,6 +3,7 @@ import { Dispatch } from '@/types';
 import { useNeonIntegration } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/useNeonIntegration';
 import { transformNeonIntegrationStatusToNeonBannerProps } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/utils';
 import { reactQueryClient } from '@/lib/reactQuery';
+import { Analytics } from '@/features/Analytics';
 import { FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY } from '@/components/Services/Data/DataSources/CreateDataSource/Neon/components/NeonDashboardLink';
 import { NeonBanner } from '../../NeonConnectBanner/NeonBanner';
 import _push from '../../../../../components/Services/Data/push';
@@ -52,7 +53,7 @@ export function NeonOnboarding(props: {
   const neonIntegrationStatus = useNeonIntegration(
     'default',
     () => {
-      // on success, refetch queries to show neon onboarding link in connect database page,
+      // on success, refetch queries to show neon dashboard link in connect database page,
       // overriding the stale time
       reactQueryClient.refetchQueries(
         FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY
@@ -92,20 +93,21 @@ export function NeonOnboarding(props: {
         <NeonBanner {...neonBannerProps} setStepperIndex={setStepperIndex} />
       </div>
       <div className="flex justify-start items-center w-full">
-        <a
-          className={`w-auto text-secondary text-sm hover:text-secondary-dark hover:no-underline ${
-            allowSkipping ? 'cursor-pointer' : 'cursor-not-allowed'
-          }`}
-          data-trackid="onboarding-skip-button"
-          title={!allowSkipping ? 'Please wait...' : undefined}
-          onClick={() => {
-            if (allowSkipping) {
-              onSkipHandler();
-            }
-          }}
-        >
-          Skip getting started tutorial
-        </a>
+        <Analytics name="onboarding-skip-button">
+          <a
+            className={`w-auto text-secondary text-sm hover:text-secondary-dark hover:no-underline ${
+              allowSkipping ? 'cursor-pointer' : 'cursor-not-allowed'
+            }`}
+            title={!allowSkipping ? 'Please wait...' : undefined}
+            onClick={() => {
+              if (allowSkipping) {
+                onSkipHandler();
+              }
+            }}
+          >
+            Skip getting started tutorial
+          </a>
+        </Analytics>
       </div>
     </div>
   );

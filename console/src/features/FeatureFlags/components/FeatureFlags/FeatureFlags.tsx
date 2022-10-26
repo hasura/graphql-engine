@@ -1,5 +1,6 @@
 import { CardedTable } from '@/new-components/CardedTable';
 import { Switch } from '@/new-components/Switch';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import React from 'react';
 import { useFeatureFlags } from '../../hooks/useFeatureFlags';
 import { useSetFeatureFlagEnabled } from '../../hooks/useSetFeatureFlagEnabled';
@@ -71,14 +72,16 @@ const FeatureFlagsBody = (props: FeatureFlagsProps) => {
 export const FeatureFlags = (props: FeatureFlagsProps) => {
   const { additionalFlags } = props;
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-semibold mb-3.5">Feature Flags</h2>
-      <p>
-        Feature flags enable experimental features in Console. <br />
-        These features may be actively in development or in beta status.
-      </p>
-      <div className="mb-10" />
-      <FeatureFlagsBody additionalFlags={additionalFlags} />
-    </div>
+    <Analytics name="FeatureFlags" {...REDACT_EVERYTHING}>
+      <div className="p-4">
+        <h2 className="text-xl font-semibold mb-3.5">Feature Flags</h2>
+        <p>
+          Feature flags enable experimental features in Console. <br />
+          These features may be actively in development or in beta status.
+        </p>
+        <div className="mb-10" />
+        <FeatureFlagsBody additionalFlags={additionalFlags} />
+      </div>
+    </Analytics>
   );
 };

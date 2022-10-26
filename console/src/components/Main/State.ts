@@ -1,9 +1,5 @@
 import { ConsoleNotification } from './ConsoleNotification';
 import { HerokuSession } from '../Services/Data/DataSources/CreateDataSource/Heroku/types';
-import {
-  StateType as OnboardingSampleDBStateType,
-  initState as onboardingSampleDBState,
-} from '../Services/Data/DataSources/SampleDatabase/ReduxState';
 
 export type CloudProjectInfo = {
   name: string;
@@ -58,6 +54,7 @@ export interface MainState {
         claims_namespace: string;
         claims_format: string;
       };
+      is_prometheus_metrics_enabled: boolean;
     };
     error: Error | null;
     isFetching: boolean;
@@ -70,7 +67,6 @@ export interface MainState {
   };
   cloud: {
     project?: CloudProjectInfo;
-    onboardingSampleDB: OnboardingSampleDBStateType;
   };
 }
 
@@ -101,6 +97,7 @@ const defaultState: MainState = {
         claims_namespace: '',
         claims_format: '',
       },
+      is_prometheus_metrics_enabled: true,
     },
     error: null,
     isFetching: false,
@@ -113,7 +110,6 @@ const defaultState: MainState = {
   },
   cloud: {
     project: undefined,
-    onboardingSampleDB: onboardingSampleDBState,
   },
 };
 

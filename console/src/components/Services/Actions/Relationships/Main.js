@@ -1,4 +1,5 @@
 import React from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import styles from '../Actions.module.scss';
 import ActionContainer from '../Containers/ActionContainer';
 import { findAction } from '../utils';
@@ -35,22 +36,24 @@ const Relationships = ({
       tabName="relationships"
       dispatch={dispatch}
     >
-      <div className={`${styles.padd_left_remove} container-fluid`}>
-        <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-          <h4 className={styles.subheading_text}>Relationships</h4>
-          <AllRelationships
-            objectType={actionOutputType}
-            allTables={allTables}
-            schemaList={schemaList}
-            dispatch={dispatch}
-            currentAction={action}
-            readOnlyMode={readOnlyMode}
-            dataSources={dataSources}
-          />
-          <hr className="my-md" />
+      <Analytics name="ActionsRelationships" {...REDACT_EVERYTHING}>
+        <div className={`${styles.padd_left_remove} container-fluid`}>
+          <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
+            <h4 className={styles.subheading_text}>Relationships</h4>
+            <AllRelationships
+              objectType={actionOutputType}
+              allTables={allTables}
+              schemaList={schemaList}
+              dispatch={dispatch}
+              currentAction={action}
+              readOnlyMode={readOnlyMode}
+              dataSources={dataSources}
+            />
+            <hr className="my-md" />
+          </div>
         </div>
-      </div>
-      <div className={`${styles.fixed} hidden`}>{alert}</div>
+        <div className={`${styles.fixed} hidden`}>{alert}</div>
+      </Analytics>
     </ActionContainer>
   );
 };

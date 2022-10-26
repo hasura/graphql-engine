@@ -8,6 +8,7 @@ import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Encoding (encodeUtf8)
 import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphqlWithHeaders)
 import Harness.Quoter.Graphql (graphql)
@@ -36,6 +37,12 @@ spec = do
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment,
                   Citus.setupPermissionsAction (permissions "citus") testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend BackendType.Cockroach)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Cockroach.setupTablesAction schema testEnvironment,
+                  Cockroach.setupPermissionsAction (permissions "cockroach") testEnvironment
                 ]
             }
         ]

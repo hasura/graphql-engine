@@ -36,17 +36,15 @@ export const buildConfigFromFormValues = (
 
   if (custom_name) config.custom_name = custom_name;
 
-  let prop: keyof typeof remainingValues;
-
-  for (prop in remainingValues) {
-    if (remainingValues[prop]) {
+  Object.entries(remainingValues).forEach(entry => {
+    const [key, value] = entry as [keyof typeof remainingValues, string];
+    if (value) {
       if (!config.custom_root_fields) {
-        // initialize obj if not yet created
         config.custom_root_fields = {};
       }
-      config.custom_root_fields[prop] = remainingValues[prop];
+      config.custom_root_fields[key] = value;
     }
-  }
+  });
 
   return config;
 };
@@ -75,3 +73,51 @@ export const getQualifiedTable = ({
     name: tableName,
   };
 };
+
+export const query_field_props: (keyof TrackingTableFormValues)[] = [
+  'select',
+  'select_by_pk',
+  'select_aggregate',
+  'select_stream',
+];
+export const mutation_field_props: (keyof TrackingTableFormValues)[] = [
+  'insert',
+  'insert_one',
+  'update',
+  'update_by_pk',
+  'delete',
+  'delete_by_pk',
+];
+
+export const emptyForm: TrackingTableFormValues = Object.freeze({
+  custom_name: '',
+  select: '',
+  select_by_pk: '',
+  select_aggregate: '',
+  select_stream: '',
+  insert: '',
+  insert_one: '',
+  update: '',
+  update_by_pk: '',
+  delete: '',
+  delete_by_pk: '',
+  update_many: '',
+});
+
+export const buildDefaults = (
+  currentConfiguration: MetadataTableConfig | undefined
+) => ({
+  custom_name: currentConfiguration?.custom_name || '',
+  select: '',
+  select_by_pk: '',
+  select_aggregate: '',
+  select_stream: '',
+  insert: '',
+  insert_one: '',
+  update: '',
+  update_by_pk: '',
+  delete: '',
+  delete_by_pk: '',
+  update_many: '',
+  ...currentConfiguration?.custom_root_fields,
+});

@@ -1,48 +1,17 @@
-import type { IntrospectedTable } from '@/features/DataSource';
-import { DataSource, exportMetadata, Feature } from '@/features/DataSource';
-import { MetadataTable, Table } from '@/features/MetadataAPI';
+import {
+  getTableName,
+  IntrospectedTable,
+  DataSource,
+  exportMetadata,
+  Feature,
+} from '@/features/DataSource';
+import { MetadataTable } from '@/features/MetadataAPI';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 import type { TrackableTable } from '../types';
 
 export type UseTablesProps = {
   dataSourceName: string;
-};
-
-export const getTableName = (
-  table: Table,
-  databaseHierarchy: string[]
-): string => {
-  if (databaseHierarchy.length === 0) {
-    if (!Array.isArray(table)) return '';
-
-    const result = table.reduce<string[]>((acc, item) => {
-      if (typeof item === 'string') acc.push(item);
-      return acc;
-    }, []);
-
-    return result.join('.');
-  }
-
-  if (table && typeof table === 'object') {
-    const flatJsonTableDefinition = Object.entries(table).reduce<
-      Record<string, string>
-    >((acc, item) => {
-      const [key, value] = item;
-      if (typeof key === 'string' && typeof value === 'string')
-        acc[key] = value;
-      return acc;
-    }, {});
-
-    const tableName = databaseHierarchy
-      .map(key => {
-        return flatJsonTableDefinition[key];
-      })
-      .join('.');
-    return tableName;
-  }
-
-  return JSON.stringify(table);
 };
 
 const getTrackableTables = (

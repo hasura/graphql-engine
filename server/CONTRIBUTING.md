@@ -1,42 +1,48 @@
 # Contributing
 
-This guide explains how to set up the graphql-engine server for development on your
-own machine and how to contribute.
+This guide explains how to set up the graphql-engine server for development on your own machine and how to contribute.
 
 ## Pre-requisites
 
 - [GHC](https://www.haskell.org/ghc/) 9.2.4 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
-- There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the packager [Dockerfile](../.buildkite/dockerfiles/ci-builders/server-builder.dockerfile)
+- There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the [Dockerfile](../packaging/graphql-engine-base/ubuntu.dockerfile)
 - Additional Haskell tools (expected versions can be found in _VERSIONS.json_):
   - [HLint](https://github.com/ndmitchell/hlint), for linting Haskell code
   - [hpack](https://github.com/sol/hpack), for generating Cabal files
   - [Ormolu](https://github.com/tweag/ormolu), for formatting Haskell code
-
-For building console and running test suite:
-
 - [Docker](https://www.docker.com/get-started/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
-- [Node.js](https://nodejs.org/en/) (v12+, it is recommended that you use `node` with version `v12.x.x` A.K.A `erbium` or version `14.x.x` A.K.A `Fermium`)
-- npm >= 5.7
-- python >= 3.5 with pip3 and virtualenv
 
-Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
+For running the test suite:
 
-- [PostgreSQL](https://www.postgresql.org) >= 9.5
+- [node.js](https://nodejs.org/en/) (see [.nvmrc](../.nvmrc) for the version), and the bundled NPM version
+- Python >= 3.9 with pip3 and virtualenv
+
+For building the Console:
+
+- node.js, as above
+
+Additionally, you will need a way to run a PostgreSQL database server. The `dev.sh` script (described below) can set up a PostgreSQL instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
+
+- [PostgreSQL](https://www.postgresql.org) >= 10
 - [postgis](https://postgis.net)
+
+### Installing tooling with Nix
+
+Simply [install Nix](https://nixos.org/download.html) and type `nix develop`.
+
+If you don't want to start a new shell each time, you can also use [direnv](https://direnv.net/) and [nix-direnv](https://github.com/nix-community/nix-direnv), then create a _.envrc.local_ file with the contents:
+
+```bash
+#!/usr/bin/env bash
+
+use flake
+```
 
 ### Installing tooling with direnv
 
 This project contains scripts for installing project dependencies automatically with [direnv](https://direnv.net/). For more information, see the `.envrc` file in the root.
-
-### Upgrading npm
-
-If your npm is too old (>= 5.7 required):
-
-    $ npm install -g npm@latest   # sudo may be required
-
-or update your nodejs.
 
 ## Development workflow
 
@@ -48,6 +54,7 @@ After making your changes
 ...console assets:
 
     $ cd console
+    $ nvm use
     $ npm ci
     $ npm run server-build
     $ cd ..
@@ -64,7 +71,7 @@ To set up the project configuration to coincide with the testing scripts below, 
 
 #### Compiling on MacOS
 
-If you are on MacOS, or experiencing any errors related to missing dependencies on MacOS, please try [this alternative setup guide](COMPILING-ON-MACOS.md).
+If you are on MacOS, or experiencing any errors related to missing dependencies on MacOS, please try [this alternative setup guide](COMPILING-ON-MACOS.md), or try Nix (as above).
 
 ### IDE Support
 

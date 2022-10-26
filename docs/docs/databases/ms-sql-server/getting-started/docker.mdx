@@ -84,11 +84,11 @@ Here are 2 examples of what your connection strings might look like:
 
 - Testing with SQL Server running locally on Mac:
 
-  `Driver={ODBC Driver 17 for SQL Server};Server=tcp:host.docker.internal,1433;Database=tempdb;Uid=sa;Pwd=Password123;`
+  `Driver={ODBC Driver 18 for SQL Server};Server=tcp:host.docker.internal,1433;Database=tempdb;Uid=sa;Pwd=Password123;Encrypt=optional`
 
 - A SQL Server instance on Azure SQL Serverless:
 
-  `Driver={ODBC Driver 17 for SQL Server};Server=tcp:db.<hostname>.com,1433;Database=<db-name>;Uid=<username>;Pwd=<password>;Encrypt=yes;TrustServerCertificate=no;ConnectionTimeout=30;`
+  `Driver={ODBC Driver 18 for SQL Server};Server=tcp:db.<hostname>.com,1433;Database=<db-name>;Uid=<username>;Pwd=<password>;Encrypt=yes;TrustServerCertificate=no;ConnectionTimeout=30;`
 
 If you're testing Hasura with SQL Server running locally, [read this guide](/guides/docker-networking.mdx) on Docker
 networking in case you're not sure how to make sure that your SQL Server database is reachable from the Hasura docker

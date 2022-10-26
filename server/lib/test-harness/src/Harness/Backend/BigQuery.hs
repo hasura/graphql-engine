@@ -246,16 +246,8 @@ teardown (reverse -> tables) (testEnvironment, _) = do
     ( forFinally_ tables $ \table ->
         Schema.untrackRelationships BigQuery table testEnvironment
     )
-    -- Then teardown tables
-    ( finally
-        ( forFinally_ tables $ \table -> do
-            finally
-              (untrackTable testEnvironment schemaName table)
-              (dropTable schemaName table)
-        )
-        -- remove test dataset
-        (removeDataset schemaName)
-    )
+    -- remove test dataset
+    (removeDataset schemaName)
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =
