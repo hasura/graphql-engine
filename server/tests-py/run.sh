@@ -67,9 +67,10 @@ echo
 echo '*** Building images ***'
 # We rebuild the images because on arm64, we end up with an amd64 Python test
 # runner. This won't actually be able to run HGE. Until we build an arm64 image
-# on CI, we need to instead build it locally. On amd64, this is benign; the
-# `docker compose run tests-py` step would have built it anyway.
-docker compose build
+# on CI, we need to instead build it locally.
+if [[ "$DOCKER_PLATFORM" == 'arm64' ]]; then
+  docker compose build
+fi
 
 echo
 echo '*** Building HGE ***'
