@@ -482,7 +482,7 @@ def webhook_server(
     hge_fixture_env: dict[str,str],
     tls_ca_configuration: Optional[fixtures.tls.TLSCAConfiguration],
 ):
-    port = 9090
+    server_address = extract_server_address_from('HASURA_GRAPHQL_AUTH_HOOK')
 
     scheme = None
     if not hge_bin:
@@ -493,7 +493,7 @@ def webhook_server(
         if request.node.get_closest_marker('no_tls_webhook_server') is not None:
             pytest.skip('Only running this test with TLS disabled; skipping the version with TLS enabled.')
 
-        server = http.server.HTTPServer(('localhost', port), webhook.Handler)
+        server = http.server.HTTPServer(server_address, webhook.Handler)
         insecure = request.node.get_closest_marker('tls_insecure_certificate') is not None
         tls_trust = fixtures.tls.TLSTrust.INSECURE if insecure else fixtures.tls.TLSTrust.SECURE
         tls_ca_configuration.configure(server, tls_trust)
@@ -502,7 +502,7 @@ def webhook_server(
             pytest.skip(f'Cannot run the remote schema server without TLS; HGE is configured to talk to it over "{scheme}".')
         if request.node.get_closest_marker('tls_webhook_server') is not None:
             pytest.skip('Only running this test with TLS enabled; skipping the version with TLS disabled.')
-        server = http.server.HTTPServer(('localhost', port), webhook.Handler)
+        server = http.server.HTTPServer(server_address, webhook.Handler)
         tls_trust = None
 
     thread = threading.Thread(target=server.serve_forever)
