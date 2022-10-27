@@ -63,7 +63,7 @@ data QueryRequest = QueryRequest
     _qrTableRelationships :: [API.V0.TableRelationships],
     _qrQuery :: Query
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec QueryRequest
 
 instance HasCodec QueryRequest where
@@ -96,7 +96,7 @@ data Query = Query
     -- | Optionally order the results by the value of one or more fields.
     _qOrderBy :: Maybe API.V0.OrderBy
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Query
 
 instance HasCodec Query where
@@ -126,7 +126,7 @@ data RelationshipField = RelationshipField
   { _rfRelationship :: API.V0.RelationshipName,
     _rfQuery :: Query
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
 
 relationshipFieldObjectCodec :: JSONObjectCodec RelationshipField
 relationshipFieldObjectCodec =
@@ -145,7 +145,7 @@ relationshipFieldObjectCodec =
 data Field
   = ColumnField API.V0.ColumnName API.V0.ScalarType
   | RelField RelationshipField
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec Field
 
 instance HasCodec Field where

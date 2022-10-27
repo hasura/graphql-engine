@@ -12,6 +12,7 @@ executable api-tests
     , bytestring
     , dc-api
     , fast-logger
+    , graphql-parser
     , hasura-prelude
     , hspec
     , http-conduit

@@ -86,6 +86,8 @@ library
     Hasura.Backends.DataConnector.API.V0.Scalar
     Hasura.Backends.DataConnector.API.V0.Schema
     Hasura.Backends.DataConnector.API.V0.Table
+  other-modules:
+    Hasura.Backends.DataConnector.API.V0.Name
 
 test-suite tests-dc-api
   import: common-all

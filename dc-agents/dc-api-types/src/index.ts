@@ -3,6 +3,7 @@
 /* eslint-disable */
 
 export type { Aggregate } from './models/Aggregate';
+export type { AggregateFunctions } from './models/AggregateFunctions';
 export type { AndExpression } from './models/AndExpression';
 export type { AnotherColumnComparison } from './models/AnotherColumnComparison';
 export type { ApplyBinaryArrayComparisonOperator } from './models/ApplyBinaryArrayComparisonOperator';

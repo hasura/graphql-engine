@@ -87,6 +87,13 @@ defaultBackendCapabilities = \case
         scalar_types:
           DateTime:
             comparison_type: DateTimeComparisons
+            aggregate_functions:
+              max: DateTime
+              min: DateTime
+          string:
+            aggregate_functions:
+              longest: string
+              shortest: string
     |]
   _ -> Nothing
 

@@ -7,14 +7,27 @@ const schemaDoc: string =
 input DateTimeComparisons {
   same_day_as: DateTime
   in_year: Int
-}`
+}
+`
 
 const dateTimeCapabilities: ScalarTypeCapabilities = {
-  comparison_type: 'DateTimeComparisons'
+  comparison_type: 'DateTimeComparisons',
+  aggregate_functions: {
+    max: 'DateTime',
+    min: 'DateTime'
+  }
+}
+
+const stringCapabilities: ScalarTypeCapabilities = {
+  aggregate_functions: {
+    longest: 'string',
+    shortest: 'string'
+  }
 }
 
 const scalarTypes: ScalarTypesCapabilities = {
-  DateTime: dateTimeCapabilities
+  DateTime: dateTimeCapabilities,
+  string: stringCapabilities
 }
 
 const capabilities: Capabilities = {

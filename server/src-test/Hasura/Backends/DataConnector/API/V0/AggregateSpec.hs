@@ -14,6 +14,8 @@ import Hasura.Backends.DataConnector.API.V0.ColumnSpec (genColumnName)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
+import Language.GraphQL.Draft.Generator (genName)
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Aeson.Utils (jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Hspec
 
@@ -22,7 +24,7 @@ spec = do
   describe "Aggregate" $ do
     describe "SingleColumn" $ do
       testToFromJSONToSchema
-        (SingleColumn $ SingleColumnAggregate Average (ColumnName "my_column_name"))
+        (SingleColumn $ SingleColumnAggregate (SingleColumnAggregateFunction [G.name|avg|]) (ColumnName "my_column_name"))
         [aesonQQ|
           { "type": "single_column",
             "function": "avg",
@@ -48,25 +50,10 @@ spec = do
     jsonOpenApiProperties genAggregate
 
   describe "SingleColumnAggregateFunction" $ do
-    describe "Average" $
-      testToFromJSONToSchema Average [aesonQQ|"avg"|]
-    describe "Max" $
-      testToFromJSONToSchema Max [aesonQQ|"max"|]
-    describe "Min" $
-      testToFromJSONToSchema Min [aesonQQ|"min"|]
-    describe "StandardDeviationPopulation" $
-      testToFromJSONToSchema StandardDeviationPopulation [aesonQQ|"stddev_pop"|]
-    describe "StandardDeviationSample" $
-      testToFromJSONToSchema StandardDeviationSample [aesonQQ|"stddev_samp"|]
-    describe "Sum" $
-      testToFromJSONToSchema Sum [aesonQQ|"sum"|]
-    describe "VariancePopulation" $
-      testToFromJSONToSchema VariancePopulation [aesonQQ|"var_pop"|]
-    describe "VarianceSample" $
-      testToFromJSONToSchema VarianceSample [aesonQQ|"var_samp"|]
+    testToFromJSONToSchema (SingleColumnAggregateFunction [G.name|avg|]) [aesonQQ|"avg"|]
     jsonOpenApiProperties genSingleColumnAggregateFunction
 
-genAggregate :: MonadGen m => m Aggregate
+genAggregate :: Gen Aggregate
 genAggregate =
   Gen.choice
     [ SingleColumn <$> genSingleColumnAggregate,
@@ -74,17 +61,17 @@ genAggregate =
       pure StarCount
     ]
 
-genSingleColumnAggregate :: MonadGen m => m SingleColumnAggregate
+genSingleColumnAggregate :: Gen SingleColumnAggregate
 genSingleColumnAggregate =
   SingleColumnAggregate
     <$> genSingleColumnAggregateFunction
     <*> genColumnName
 
-genColumnCountAggregate :: MonadGen m => m ColumnCountAggregate
+genColumnCountAggregate :: Gen ColumnCountAggregate
 genColumnCountAggregate =
   ColumnCountAggregate
     <$> genColumnName
     <*> Gen.bool
 
-genSingleColumnAggregateFunction :: MonadGen m => m SingleColumnAggregateFunction
-genSingleColumnAggregateFunction = Gen.enumBounded
+genSingleColumnAggregateFunction :: Gen SingleColumnAggregateFunction
+genSingleColumnAggregateFunction = SingleColumnAggregateFunction <$> genName

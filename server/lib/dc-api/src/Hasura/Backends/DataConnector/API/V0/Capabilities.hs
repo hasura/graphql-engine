@@ -13,6 +13,7 @@ module Hasura.Backends.DataConnector.API.V0.Capabilities
     QueryCapabilities (..),
     MutationCapabilities (..),
     SubscriptionCapabilities (..),
+    AggregateFunctions (..),
     ScalarTypeCapabilities (..),
     ScalarTypesCapabilities (..),
     GraphQLTypeDefinitions,
@@ -52,6 +53,8 @@ import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Builder qualified as Builder
 import GHC.Generics (Generic)
 import Hasura.Backends.DataConnector.API.V0.ConfigSchema (ConfigSchemaResponse)
+import Hasura.Backends.DataConnector.API.V0.Name (nameCodec)
+import Hasura.Backends.DataConnector.API.V0.Scalar (ScalarType (..))
 import Language.GraphQL.Draft.Parser qualified as GQL.Parser
 import Language.GraphQL.Draft.Printer qualified as GQL.Printer
 import Language.GraphQL.Draft.Syntax qualified as GQL.Syntax
@@ -167,18 +170,25 @@ data RelationshipCapabilities = RelationshipCapabilities {}
 instance HasCodec RelationshipCapabilities where
   codec = object "RelationshipCapabilities" $ pure RelationshipCapabilities
 
-nameCodec :: JSONCodec GQL.Syntax.Name
-nameCodec =
-  bimapCodec
-    parseName
-    GQL.Syntax.unName
-    (StringCodec (Just "GraphQLName"))
-    <?> "A valid GraphQL name"
-  where
-    parseName text = maybe (Left $ Text.unpack text <> " is not a valid GraphQL name") pure $ GQL.Syntax.mkName text
+newtype AggregateFunctions = AggregateFunctions
+  { unAggregateFunctions :: HashMap GQL.Syntax.Name ScalarType
+  }
+  deriving stock (Eq, Ord, Show, Generic)
+  deriving anyclass (NFData, Hashable)
+  deriving (FromJSON, ToJSON, ToSchema) via Autodocodec AggregateFunctions
+
+instance HasCodec AggregateFunctions where
+  codec =
+    named "AggregateFunctions" $
+      dimapCodec AggregateFunctions unAggregateFunctions (hashMapCodec codec)
+        <??> [ "A map from aggregate function names to their result types.",
+               "Function and result type names must be valid GraphQL names.",
+               "Result type names must be defined scalar types - either builtin or declared in ScalarTypesCapabilities."
+             ]
 
 data ScalarTypeCapabilities = ScalarTypeCapabilities
-  { _stcComparisonInputObject :: Maybe GQL.Syntax.Name
+  { _stcComparisonInputObject :: Maybe GQL.Syntax.Name,
+    _stcAggregateFunctions :: Maybe AggregateFunctions
   }
   deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (NFData, Hashable)
@@ -190,16 +200,19 @@ instance HasCodec ScalarTypeCapabilities where
       "ScalarTypeCapabilities"
       ( ScalarTypeCapabilities
           <$> optionalFieldWith' "comparison_type" nameCodec .= _stcComparisonInputObject
+          <*> optionalField' "aggregate_functions" .= _stcAggregateFunctions
       )
       <??> [ "Capabilities of a scalar type.",
-             "comparison_type: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphql_schema`."
+             "comparison_type: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphql_schema`.",
+             "aggregate_functions: The aggregate functions supported by the scalar type."
            ]
 
 newtype ScalarTypesCapabilities = ScalarTypesCapabilities
-  { unScalarTypesCapabilities :: HashMap GQL.Syntax.Name ScalarTypeCapabilities
+  { unScalarTypesCapabilities :: HashMap ScalarType ScalarTypeCapabilities
   }
   deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (NFData, Hashable)
+  deriving newtype (Semigroup, Monoid)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ScalarTypesCapabilities
 
 instance HasCodec ScalarTypesCapabilities where
@@ -353,7 +366,7 @@ instance ToSchema CapabilitiesResponse where
 
     pure $ NamedSchema (Just "CapabilitiesResponse") schema
 
-lookupComparisonInputObjectDefinition :: Capabilities -> GQL.Syntax.Name -> Maybe (GQL.Syntax.InputObjectTypeDefinition GQL.Syntax.InputValueDefinition)
+lookupComparisonInputObjectDefinition :: Capabilities -> ScalarType -> Maybe (GQL.Syntax.InputObjectTypeDefinition GQL.Syntax.InputValueDefinition)
 lookupComparisonInputObjectDefinition Capabilities {..} typeName = do
   scalarTypesMap <- _cScalarTypes
   ScalarTypeCapabilities {..} <- HashMap.lookup typeName $ unScalarTypesCapabilities scalarTypesMap

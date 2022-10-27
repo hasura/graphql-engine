@@ -36,6 +36,7 @@ import Hasura.RQL.Types.Relationships.Local (RelInfo (..))
 import Hasura.SQL.Backend
 import Hasura.SQL.Types (CollectableType (..))
 import Hasura.Session
+import Language.GraphQL.Draft.Syntax qualified as G
 import Witch qualified
 
 --------------------------------------------------------------------------------
@@ -415,18 +416,9 @@ mkPlan session (SourceConfig {}) ir = do
         pure mempty
 
     translateSingleColumnAggregateFunction :: Text -> m API.SingleColumnAggregateFunction
-    translateSingleColumnAggregateFunction = \case
-      "avg" -> pure API.Average
-      "max" -> pure API.Max
-      "min" -> pure API.Min
-      "stddev_pop" -> pure API.StandardDeviationPopulation
-      "stddev_samp" -> pure API.StandardDeviationSample
-      "stddev" -> pure API.StandardDeviationSample
-      "sum" -> pure API.Sum
-      "var_pop" -> pure API.VariancePopulation
-      "var_samp" -> pure API.VarianceSample
-      "variance" -> pure API.VarianceSample
-      unknownFunc -> throw500 $ "translateSingleColumnAggregateFunction: Unknown aggregate function encountered: " <> unknownFunc
+    translateSingleColumnAggregateFunction functionName =
+      fmap API.SingleColumnAggregateFunction (G.mkName functionName)
+        `onNothing` throw500 ("translateSingleColumnAggregateFunction: Invalid aggregate function encountered: " <> functionName)
 
     prepareLiterals ::
       UnpreparedValue 'DataConnector ->

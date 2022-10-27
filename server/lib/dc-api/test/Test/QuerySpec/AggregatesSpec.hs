@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Test.QuerySpec.AggregatesSpec (spec) where
 
 import Control.Arrow ((>>>))
@@ -12,6 +14,7 @@ import Data.List.NonEmpty qualified as NonEmpty
 import Data.Maybe (fromMaybe, isJust, mapMaybe)
 import Data.Ord (Down (..))
 import Hasura.Backends.DataConnector.API
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Servant.API (NamedRoutes)
 import Servant.Client (Client)
 import Test.Data (TestData (..), guardedQuery)
@@ -119,7 +122,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
 
   describe "Single Column Function" $ do
     it "can get the max total from all rows" $ do
-      let aggregates = Data.mkFieldsMap [("max", SingleColumn $ SingleColumnAggregate Max (_tdColumnName "Total"))]
+      let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Total"))]
       let queryRequest = invoicesQueryRequest aggregates
       response <- guardedQuery api sourceName config queryRequest
 
@@ -132,7 +135,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
     it "can get the max total from all rows, after applying pagination, filtering and ordering" $ do
       let where' = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "BillingCountry" _tdStringType) (ScalarValue (String "USA") _tdStringType)
       let orderBy = OrderBy mempty $ _tdOrderByColumn [] "BillingPostalCode" Descending :| [_tdOrderByColumn [] "InvoiceId" Ascending]
-      let aggregates = Data.mkFieldsMap [("max", SingleColumn $ SingleColumnAggregate Max (_tdColumnName "Total"))]
+      let aggregates = Data.mkFieldsMap [("max", singleColumnAggregateMax (_tdColumnName "Total"))]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qLimit ?~ 20 >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- guardedQuery api sourceName config queryRequest
 
@@ -152,8 +155,8 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
     it "can get the min and max of a non-numeric comparable type such as a string" $ do
       let aggregates =
             Data.mkFieldsMap
-              [ ("min", SingleColumn $ SingleColumnAggregate Min (_tdColumnName "Name")),
-                ("max", SingleColumn $ SingleColumnAggregate Max (_tdColumnName "Name"))
+              [ ("min", singleColumnAggregateMin (_tdColumnName "Name")),
+                ("max", singleColumnAggregateMax (_tdColumnName "Name"))
               ]
       let queryRequest = artistsQueryRequest aggregates
       response <- guardedQuery api sourceName config queryRequest
@@ -170,7 +173,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
 
     it "aggregates over empty row lists results in nulls" $ do
       let where' = ApplyBinaryComparisonOperator LessThan (_tdCurrentComparisonColumn "ArtistId" _tdIntType) (ScalarValue (Number 0) _tdIntType)
-      let aggregates = Data.mkFieldsMap [("min", SingleColumn $ SingleColumnAggregate Min (_tdColumnName "Name"))]
+      let aggregates = Data.mkFieldsMap [("min", singleColumnAggregateMin (_tdColumnName "Name"))]
       let queryRequest = artistsQueryRequest aggregates & qrQuery . qWhere ?~ where'
       response <- guardedQuery api sourceName config queryRequest
 
@@ -185,7 +188,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
             Data.mkFieldsMap
               [ ("count", StarCount),
                 ("distinctBillingStates", ColumnCount $ ColumnCountAggregate (_tdColumnName "BillingState") True),
-                ("maxTotal", SingleColumn $ SingleColumnAggregate Max (_tdColumnName "Total"))
+                ("maxTotal", singleColumnAggregateMax (_tdColumnName "Total"))
               ]
       let queryRequest = invoicesQueryRequest aggregates
       response <- guardedQuery api sourceName config queryRequest
@@ -207,8 +210,8 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
     it "can reuse the same aggregate twice" $ do
       let aggregates =
             Data.mkFieldsMap
-              [ ("minInvoiceId", SingleColumn $ SingleColumnAggregate Min (_tdColumnName "InvoiceId")),
-                ("minTotal", SingleColumn $ SingleColumnAggregate Min (_tdColumnName "Total"))
+              [ ("minInvoiceId", singleColumnAggregateMin (_tdColumnName "InvoiceId")),
+                ("minTotal", singleColumnAggregateMin (_tdColumnName "Total"))
               ]
       let queryRequest = invoicesQueryRequest aggregates
       response <- guardedQuery api sourceName config queryRequest
@@ -233,7 +236,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
               ]
       let where' = ApplyBinaryComparisonOperator Equal (_tdCurrentComparisonColumn "BillingCountry" _tdStringType) (ScalarValue (String "Canada") _tdStringType)
       let orderBy = OrderBy mempty $ _tdOrderByColumn [] "BillingAddress" Ascending :| [_tdOrderByColumn [] "InvoiceId" Ascending]
-      let aggregates = Data.mkFieldsMap [("min", SingleColumn $ SingleColumnAggregate Min (_tdColumnName "Total"))]
+      let aggregates = Data.mkFieldsMap [("min", singleColumnAggregateMin (_tdColumnName "Total"))]
       let queryRequest = invoicesQueryRequest aggregates & qrQuery %~ (qFields ?~ fields >>> qLimit ?~ 30 >>> qWhere ?~ where' >>> qOrderBy ?~ orderBy)
       response <- guardedQuery api sourceName config queryRequest
 
@@ -408,7 +411,7 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
     -- @
     deeplyNestedArtistsQuery :: QueryRequest
     deeplyNestedArtistsQuery =
-      let invoiceLinesAggregates = Data.mkFieldsMap [("aggregate_sum_Quantity", SingleColumn $ SingleColumnAggregate Sum (_tdColumnName "Quantity"))]
+      let invoiceLinesAggregates = Data.mkFieldsMap [("aggregate_sum_Quantity", singleColumnAggregateSum (_tdColumnName "Quantity"))]
           invoiceLinesSubquery = Data.emptyQuery & qAggregates ?~ invoiceLinesAggregates
           mediaTypeFields = Data.mkFieldsMap [("Name", _tdColumnField "Name" _tdStringType)]
           mediaTypeSubquery = Data.emptyQuery & qFields ?~ mediaTypeFields
@@ -465,3 +468,12 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
     aggregate :: (NonEmpty a -> Value) -> [a] -> Value
     aggregate aggFn values =
       maybe Null aggFn $ NonEmpty.nonEmpty values
+
+    singleColumnAggregateMax :: ColumnName -> Aggregate
+    singleColumnAggregateMax = SingleColumn . SingleColumnAggregate (SingleColumnAggregateFunction [G.name|max|])
+
+    singleColumnAggregateMin :: ColumnName -> Aggregate
+    singleColumnAggregateMin = SingleColumn . SingleColumnAggregate (SingleColumnAggregateFunction [G.name|min|])
+
+    singleColumnAggregateSum :: ColumnName -> Aggregate
+    singleColumnAggregateSum = SingleColumn . SingleColumnAggregate (SingleColumnAggregateFunction [G.name|sum|])

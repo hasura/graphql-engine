@@ -187,9 +187,13 @@ It is the agent's responsibility to validate the values provided as GraphQL inpu
 
 Custom scalar types are declared by adding a property to the `scalar_types` section of the [capabilities](#capabilities-and-configuration-schema) and
 by adding scalar type declaration with the same name in the `graphql_schema` capabilities property.
+
 Custom comparison types can be defined by adding a `comparisonType` property to the scalar type capabilities object.
 The `comparisonType` property gives the name of a GraphQL input object type, which must be defined in the `graphql_schema` capabilities property.
 The input object type will be spliced into the `where` argument for any columns of the scalar type in the GraphQL schema.
+
+Custom aggregate functions can be defined by adding a `aggregate_functions` property to the scalar type capabilities object.
+The `aggregate_functions` property must be an object mapping aggregate function names to their result types.
 
 Example:
 
@@ -204,12 +208,15 @@ capabilities:
   scalar_types:
     DateTime:
       comparisonType: DateTimeComparisons
+      aggregate_functions:
+        max: 'DateTime'
+        min: 'DateTime'
 ```
 
 This example declares a custom scalar type `DateTime`, with comparison operators defined by the GraphQL input object type `DateTimeComparisons`.
 The input type `DateTimeComparisons` defines one comparison operator `in_year` which takes a `Number` argument
 
-An example GraphQL query using this custom operator might look like below:
+An example GraphQL query using the custom comparison operator might look like below:
 ```graphql
 query MyQuery {
   Employee(where: {BirthDate: {in_year: 1962}}) {
@@ -220,6 +227,8 @@ query MyQuery {
 ```
 In this query we have an `Employee` field with a `BirthDate` property of type `DateTime`.
 The `in_year` custom comparison operator is being used to request all employees with a birth date in the year 1962.
+
+The example also defines two aggregate functions `min` and `max`, both of which have a result type of `DateTime`.
 
 ### Schema
 

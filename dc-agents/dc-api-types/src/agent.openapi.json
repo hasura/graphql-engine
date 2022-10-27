@@ -371,9 +371,35 @@
         "description": "A valid GraphQL name",
         "type": "string"
       },
+      "ScalarType": {
+        "additionalProperties": true,
+        "anyOf": [
+          {
+            "enum": [
+              "string",
+              "number",
+              "bool"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "string"
+          }
+        ]
+      },
+      "AggregateFunctions": {
+        "additionalProperties": {
+          "$ref": "#/components/schemas/ScalarType"
+        },
+        "description": "A map from aggregate function names to their result types.\nFunction and result type names must be valid GraphQL names.\nResult type names must be defined scalar types - either builtin or declared in ScalarTypesCapabilities.\n",
+        "type": "object"
+      },
       "ScalarTypeCapabilities": {
-        "description": "Capabilities of a scalar type.\ncomparison_type: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphql_schema`.\n",
+        "description": "Capabilities of a scalar type.\ncomparison_type: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphql_schema`.\naggregate_functions: The aggregate functions supported by the scalar type.\n",
         "properties": {
+          "aggregate_functions": {
+            "$ref": "#/components/schemas/AggregateFunctions"
+          },
           "comparison_type": {
             "$ref": "#/components/schemas/GraphQLName"
           }
@@ -760,22 +786,6 @@
         },
         "type": "array"
       },
-      "ScalarType": {
-        "additionalProperties": true,
-        "anyOf": [
-          {
-            "enum": [
-              "string",
-              "number",
-              "bool"
-            ],
-            "type": "string"
-          },
-          {
-            "type": "string"
-          }
-        ]
-      },
       "ColumnInfo": {
         "properties": {
           "description": {
@@ -1102,16 +1112,7 @@
         "type": "object"
       },
       "SingleColumnAggregateFunction": {
-        "enum": [
-          "avg",
-          "max",
-          "min",
-          "stddev_pop",
-          "stddev_samp",
-          "sum",
-          "var_pop",
-          "var_samp"
-        ],
+        "description": "Single column aggregate function name.\nA valid GraphQL name",
         "type": "string"
       },
       "SingleColumnAggregate": {
