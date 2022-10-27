@@ -171,12 +171,8 @@ instance PostgresSchema 'Cockroach where
   pgkBuildTableRelayQueryFields _ _ _ _ _ _ = pure []
   pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
   pgkRelayExtension = Nothing
-
-  -- CockroachDB does not support subscriptions yet.
-  pgkBuildTableQueryAndSubscriptionFields x1 x2 x3 x4 x5 = do
-    (queries, _subscriptions, federation) <- GSB.buildTableQueryAndSubscriptionFields x1 x2 x3 x4 x5
-    return (queries, [], federation)
-  pgkBuildTableStreamingSubscriptionFields _ _ _ _ _ = return []
+  pgkBuildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
+  pgkBuildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
 
 -- postgres schema
 
