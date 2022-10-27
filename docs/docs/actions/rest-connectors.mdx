@@ -23,7 +23,7 @@ REST Connectors for actions are used to integrate existing REST APIs to the Grap
 or modifications to the upstream code.
 
 REST Connectors modify the default HTTP request made by an action to adapt to your webhook's expected format by adding
-suitable transforms. 
+suitable transforms.
 
 :::info Note
 
@@ -142,11 +142,11 @@ The context variables available in transforms are:
 | $base_url          | Original configured webhook handler URL |
 | $session_variables | Session variables                       |
 
-In addition to these variables, the following functions are available in addition to the
-standard [Basic Functions](/api-reference/kriti-templating.mdx#kriti-function-reference):
+In addition to these variables, the following functions are available in addition to the standard
+[Basic Functions](/api-reference/kriti-templating.mdx#kriti-function-reference):
 
 | Context variable           | Value                                                 |
-|----------------------------|-------------------------------------------------------|
+| -------------------------- | ----------------------------------------------------- |
 | `getSessionVariable(NAME)` | Look up a session variable by name (case-insensitive) |
 
 #### Console sample context {#action-transforms-sample-context}
@@ -383,6 +383,16 @@ X-Hasura-Role: admin
 Note that you must use the `escapeUri` function to urlencode templated values. For example, if you have to use session
 variables in the URL and those may contain non-ASCII values, then you should provide the template URL as
 `{{$base_url}}/{{escapeUri $session_variables['x-hasura-user-id']}}`
+
+:::
+
+:::info Optional query params
+
+Query params with key/value pairs which evaluate to `null` are ignored by Hasura while performing the HTTP API call.
+Hasura considers such query params optional.
+
+For example, consider a query param value with template `{{$session_variables?['x-hasura-user-id']}}`. If the variable
+`x-hasura-user-id` is absent in the session variables, then the query param will be omitted from the HTTP API call.
 
 :::
 

@@ -3,7 +3,7 @@
 import pytest
 import time
 
-from conftest import use_action_fixtures
+from conftest import use_action_fixtures, extract_server_address_from
 from remote_server import NodeGraphQL
 from validate import check_query_f, check_query, get_conf_f
 
@@ -14,11 +14,13 @@ TODO:- Test Actions metadata
 @pytest.fixture(scope='class')
 @pytest.mark.early
 def graphql_service(hge_fixture_env: dict[str, str]):
-    svc = NodeGraphQL(['node', 'remote_schemas/nodejs/actions_remote_join_schema.js'], port=4001)
-    svc.start()
-    hge_fixture_env['GRAPHQL_SERVICE_HANDLER'] = svc.url
-    yield svc
-    svc.stop()
+    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_HANDLER')
+    server = NodeGraphQL(['node', 'remote_schemas/nodejs/actions_remote_join_schema.js'], port=port)
+    server.start()
+    print(f'{graphql_service.__name__} server started on {server.url}')
+    hge_fixture_env['GRAPHQL_SERVICE_HANDLER'] = server.url
+    yield server
+    server.stop()
 
 
 use_action_fixtures_with_remote_joins = pytest.mark.usefixtures(

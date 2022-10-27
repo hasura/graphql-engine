@@ -1,5 +1,6 @@
 module Hasura.Server.Types
   ( ExperimentalFeature (..),
+    experimentalFeatureKey,
     InstanceId (..),
     generateInstanceId,
     MetadataDbId (..),
@@ -21,10 +22,11 @@ where
 
 import Data.Aeson
 import Data.HashSet qualified as Set
+import Data.Text (intercalate, unpack)
 import Database.PG.Query qualified as PG
 import Hasura.GraphQL.Schema.NamingCase
 import Hasura.GraphQL.Schema.Options qualified as Options
-import Hasura.Prelude
+import Hasura.Prelude hiding (intercalate)
 import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.Metadata (MetadataDefaults)
 import Hasura.Server.Utils
@@ -79,30 +81,38 @@ data ExperimentalFeature
   | EFApolloFederation
   | EFHideUpdateManyFields
   | EFBigQueryStringNumericInput
-  deriving (Show, Eq, Generic)
+  | EFHideAggregationPredicates
+  deriving (Bounded, Enum, Eq, Generic, Show)
+
+experimentalFeatureKey :: ExperimentalFeature -> Text
+experimentalFeatureKey = \case
+  EFInheritedRoles -> "inherited_roles"
+  EFOptimizePermissionFilters -> "optimize_permission_filters"
+  EFNamingConventions -> "naming_convention"
+  EFStreamingSubscriptions -> "streaming_subscriptions"
+  EFApolloFederation -> "apollo_federation"
+  EFHideUpdateManyFields -> "hide_update_many_fields"
+  EFBigQueryStringNumericInput -> "bigquery_string_numeric_input"
+  EFHideAggregationPredicates -> "hide_aggregation_predicates"
 
 instance Hashable ExperimentalFeature
 
 instance FromJSON ExperimentalFeature where
   parseJSON = withText "ExperimentalFeature" $ \case
-    "inherited_roles" -> pure EFInheritedRoles
-    "optimize_permission_filters" -> pure EFOptimizePermissionFilters
-    "naming_convention" -> pure EFNamingConventions
-    "streaming_subscriptions" -> pure EFStreamingSubscriptions
-    "hide_update_many_fields" -> pure EFHideUpdateManyFields
-    "apollo_federation" -> pure EFApolloFederation
-    "bigquery_string_numeric_input" -> pure EFBigQueryStringNumericInput
-    _ -> fail "ExperimentalFeature can only be one of these value: inherited_roles, optimize_permission_filters, hide_update_many_fields, naming_convention, streaming_subscriptions apollo_federation, or bigquery_string_numeric_input"
+    k | Just (_, ef) <- find ((== k) . fst) experimentalFeatures -> return $ ef
+    _ ->
+      fail $
+        "ExperimentalFeature can only be one of these values: "
+          <> unpack (intercalate "," (map fst experimentalFeatures))
+    where
+      experimentalFeatures :: [(Text, ExperimentalFeature)]
+      experimentalFeatures =
+        [ (experimentalFeatureKey ef, ef)
+          | ef <- [minBound .. maxBound]
+        ]
 
 instance ToJSON ExperimentalFeature where
-  toJSON = \case
-    EFInheritedRoles -> "inherited_roles"
-    EFOptimizePermissionFilters -> "optimize_permission_filters"
-    EFNamingConventions -> "naming_convention"
-    EFStreamingSubscriptions -> "streaming_subscriptions"
-    EFApolloFederation -> "apollo_federation"
-    EFHideUpdateManyFields -> "hide_update_many_fields"
-    EFBigQueryStringNumericInput -> "bigquery_string_numeric_input"
+  toJSON = toJSON . experimentalFeatureKey
 
 data MaintenanceMode a = MaintenanceModeEnabled a | MaintenanceModeDisabled
   deriving (Show, Eq)

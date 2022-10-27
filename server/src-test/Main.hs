@@ -90,7 +90,7 @@ buildMSSQLSpecs = do
 mssqlConnectionString :: (String, String)
 mssqlConnectionString =
   ( "HASURA_MSSQL_CONN_STR",
-    "SQL Server database connection string. Example DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost,1433;Uid=user;Pwd=pass;"
+    "SQL Server database connection string. Example DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost,1433;Uid=user;Pwd=pass;Encrypt=optional"
   )
 
 buildPostgresSpecs :: IO Spec

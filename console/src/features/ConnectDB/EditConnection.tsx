@@ -39,6 +39,7 @@ const useEditDataSourceConnectionInfo = () => {
         configuration: metadataSource.configuration,
         driver: metadataSource.kind,
         name: metadataSource.name,
+        customization: metadataSource.customization,
       };
     },
   });
@@ -52,7 +53,7 @@ export const EditConnection = () => {
 
   if (!data) return <>Error</>;
 
-  const { schema, name, driver, configuration } = data;
+  const { schema, name, driver, configuration, customization } = data;
 
   if (!schema) return <>Could not find schema</>;
 
@@ -68,6 +69,7 @@ export const EditConnection = () => {
           driver,
           configuration: (configuration as any).value,
           replace_configuration: true,
+          customization,
         },
       }}
       className="p-0 pl-sm"

@@ -39,7 +39,7 @@ export const Basic: Story<typeof TargetTable> = () => {
           },
         }}
       >
-        {() => <TargetTable />}
+        {() => <TargetTable disabled={false} />}
       </UpdatedForm>
       <div>{formState}</div>
     </>

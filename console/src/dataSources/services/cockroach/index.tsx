@@ -75,6 +75,7 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   ...PgSupportedFeatures,
   connectDbForm: {
     ...PgSupportedFeatures?.connectDbForm,
+    connectionParameters: false,
     enabled: false,
     namingConvention: false,
     extensions_schema: false,

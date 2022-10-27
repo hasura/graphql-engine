@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import { Button } from '@/new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
@@ -988,12 +989,13 @@ class PermissionsSummary extends Component {
           className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
         >
           <Helmet title="Permissions Summary | Hasura" />
-          <div className={styles.add_mar_bottom}>
-            <h2 className={styles.heading_text}>
-              Permissions summary - {currentSchema}
-            </h2>
-          </div>
-
+          <Analytics name="PermissionsSummary" {...REDACT_EVERYTHING}>
+            <div className={styles.add_mar_bottom}>
+              <h2 className={styles.heading_text}>
+                Permissions summary - {currentSchema}
+              </h2>
+            </div>
+          </Analytics>
           {getTable()}
 
           {getCopyModal()}

@@ -218,8 +218,8 @@ tests opts = do
 
 setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
 setupMetadata backendType testEnvironment = do
-  let backend :: String
-      backend = Fixture.defaultBackendTypeString backendType
+  let backendPrefix = Fixture.defaultBackendTypeString backendType
+      source = Fixture.defaultSource backendType
 
       schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
@@ -231,9 +231,9 @@ setupMetadata backendType testEnvironment = do
           [interpolateYaml|
             type: bulk
             args:
-            - type: #{backend}_create_select_permission
+            - type: #{backendPrefix}_create_select_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
                   schema: #{schemaName}
                   name: author
@@ -243,9 +243,9 @@ setupMetadata backendType testEnvironment = do
                     uuid: X-Hasura-User-Id
                   columns: '*'
 
-            - type: #{backend}_create_insert_permission
+            - type: #{backendPrefix}_create_insert_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
                   schema: #{schemaName}
                   name: author
@@ -265,16 +265,16 @@ setupMetadata backendType testEnvironment = do
           [interpolateYaml|
             type: bulk
             args:
-            - type: #{backend}_drop_select_permission
+            - type: #{backendPrefix}_drop_select_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
                   schema: #{schemaName}
                   name: author
                 role: user
-            - type: #{backend}_drop_insert_permission
+            - type: #{backendPrefix}_drop_insert_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
                   schema: #{schemaName}
                   name: author

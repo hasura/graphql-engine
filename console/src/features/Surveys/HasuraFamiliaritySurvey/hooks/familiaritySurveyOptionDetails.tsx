@@ -1,6 +1,6 @@
 import React from 'react';
-import { IconCardGroupItem } from '@/new-components/IconCardGroup';
 import { FaBookmark, FaHeart, FaStar, FaUser } from 'react-icons/fa';
+import { IconCardGroupItem } from '../components/IconCardGroup';
 
 export const familiaritySurveyOptionCode = [
   'new user',

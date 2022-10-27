@@ -14,7 +14,7 @@ keywords:
 
 ## Introduction
 
-As CockroachDB supports PostgresSQL, the way it functions with Hasura is also very similar. However, there are a few
+As CockroachDB supports PostgreSQL, the way it functions with Hasura is also very similar. However, there are a few
 incompatibilities to be aware of.
 
 ## Incompatibilities and unsupported features
@@ -32,7 +32,7 @@ Currently, the following features are supported with CockroachDB and Hasura:
 Queries are fully supported, but please note that GraphQL key ordering in JSON objects is not guaranteed. This is
 because CockroachDB implements the `JSONB` variant of the Postgres JSON types, which do not preserve key ordering.
 
-Please also note that SERIAL columns will produce numbers that overflow Javascript numbers. These will need special
+Please also note that SERIAL columns will produce numbers that overflow JavaScript numbers. These will need special
 treatment by either enabling the
 [`HASURA_GRAPHQL_STRINGIFY_NUMERIC_TYPES` environment variable](/deployment/graphql-engine-flags/reference.mdx) or
 bespoke JSON parsing client-side.
@@ -68,6 +68,10 @@ support has recently been added to CockroachDB Beta
 
 Mutations are supported in GraphQL Engine with the exception of fetching relationship data as part of `returning`. This
 is not yet supported.
+
+## Subscriptions
+
+Subscriptions are currently not supported with CockroachDB. Support will be added in a future release.
 
 ## Event triggers
 

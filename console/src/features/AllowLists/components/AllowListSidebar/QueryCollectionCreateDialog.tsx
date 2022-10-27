@@ -2,6 +2,7 @@ import React from 'react';
 import z from 'zod';
 import { Dialog } from '@/new-components/Dialog';
 import { Form, InputField } from '@/new-components/Form';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { useFireNotification } from '@/new-components/Notifications';
 import { useCreateQueryCollection } from '../../../QueryCollections/hooks/useCreateQueryCollection';
 
@@ -26,14 +27,16 @@ export const QueryCollectionCreateDialog: React.FC<QueryCollectionCreateDialogPr
           return (
             <Dialog hasBackdrop title="Create Collection" onClose={onClose}>
               <>
-                <div className="p-4">
-                  <InputField
-                    id="name"
-                    name="name"
-                    label="New Collection Name"
-                    placeholder="New Collection Name..."
-                  />
-                </div>
+                <Analytics name="AllowList" {...REDACT_EVERYTHING}>
+                  <div className="p-4">
+                    <InputField
+                      id="name"
+                      name="name"
+                      label="New Collection Name"
+                      placeholder="New Collection Name..."
+                    />
+                  </div>
+                </Analytics>
                 <Dialog.Footer
                   callToDeny="Cancel"
                   callToAction="Create Collection"

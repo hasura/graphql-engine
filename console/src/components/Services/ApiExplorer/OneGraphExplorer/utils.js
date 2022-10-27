@@ -1,3 +1,4 @@
+import { programmaticallyTraceError } from '@/features/Analytics';
 import GraphiQLExplorer from 'graphiql-explorer';
 import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
 import { setForceIntrospectAt, setGraphiQLQuery } from '../Actions';
@@ -59,8 +60,11 @@ export const clickRunQueryButton = () => {
   if (runQueryButton && runQueryButton[0]) {
     runQueryButton[0].click();
   } else {
-    // TODO throw Sentry alert
-    console.error('could not find run query button in the DOM');
+    const error = new Error(
+      'Could not find run query button in the DOM (.execute-button)'
+    );
+    programmaticallyTraceError(error);
+    console.warn(error);
   }
 };
 

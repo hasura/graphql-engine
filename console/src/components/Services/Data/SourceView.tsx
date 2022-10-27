@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { connect } from 'react-redux';
 import Helmet from 'react-helmet';
 import { FaDatabase, FaTrash } from 'react-icons/fa';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import { Dispatch, ReduxState } from '../../../types';
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
@@ -118,68 +119,70 @@ const SourceView: React.FC<Props> = props => {
   };
 
   return (
-    <div style={{ paddingTop: '20px', paddingLeft: '15px' }}>
-      <Helmet title="Source - Data | Hasura" />
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
+    <Analytics name="SourceView" {...REDACT_EVERYTHING}>
+      <div style={{ paddingTop: '20px', paddingLeft: '15px' }}>
+        <Helmet title="Source - Data | Hasura" />
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div>
+            <BreadCrumb
+              breadCrumbs={[
+                { url: `/data`, title: 'Data' },
+                {
+                  url: getDataSourceBaseRoute(currentDataSource),
+                  title: currentDataSource,
+                  prefix: <FaDatabase />,
+                },
+              ]}
+            />
+          </div>
+          <div className={`${styles.display_flex}`}>
+            <h2
+              className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_right_mid}`}
+            >
+              {currentDataSource}
+            </h2>
+            <AddSchema />
+          </div>
+        </div>
         <div>
-          <BreadCrumb
-            breadCrumbs={[
-              { url: `/data`, title: 'Data' },
-              {
-                url: getDataSourceBaseRoute(currentDataSource),
-                title: currentDataSource,
-                prefix: <FaDatabase />,
-              },
-            ]}
-          />
-        </div>
-        <div className={`${styles.display_flex}`}>
-          <h2
-            className={`${styles.headerText} ${styles.display_inline} ${styles.add_mar_right_mid}`}
-          >
-            {currentDataSource}
-          </h2>
-          <AddSchema />
-        </div>
-      </div>
-      <div>
-        <hr className="my-md" />
-        <div id="schema-list-view" className="space-y-sm">
-          {schemaList.length ? (
-            schemaList.map((schema, key: number) => {
-              return (
-                <div className="flex gap-3 py-1 items-center" key={key}>
-                  <Button size="sm" onClick={() => handleView(schema)}>
-                    View
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => handlePermissionsSummary(schema)}
-                  >
-                    Permissions Summary
-                  </Button>
-                  {isFeatureSupported('schemas.delete.enabled') ? (
-                    <Button size="sm" onClick={() => handleDelete(schema)}>
-                      <FaTrash aria-hidden="true" />
+          <hr className="my-md" />
+          <div id="schema-list-view" className="space-y-sm">
+            {schemaList.length ? (
+              schemaList.map((schema, key: number) => {
+                return (
+                  <div className="flex gap-3 py-1 items-center" key={key}>
+                    <Button size="sm" onClick={() => handleView(schema)}>
+                      View
                     </Button>
-                  ) : null}
-                  <div
-                    key={key}
-                    className={`${styles.display_inline} ${styles.padd_small_left}`}
-                  >
-                    {schema}
+                    <Button
+                      size="sm"
+                      onClick={() => handlePermissionsSummary(schema)}
+                    >
+                      Permissions Summary
+                    </Button>
+                    {isFeatureSupported('schemas.delete.enabled') ? (
+                      <Button size="sm" onClick={() => handleDelete(schema)}>
+                        <FaTrash aria-hidden="true" />
+                      </Button>
+                    ) : null}
+                    <div
+                      key={key}
+                      className={`${styles.display_inline} ${styles.padd_small_left}`}
+                    >
+                      {schema}
+                    </div>
                   </div>
-                </div>
-              );
-            })
-          ) : (
-            <div>There are no schemas at the moment</div>
-          )}
+                );
+              })
+            ) : (
+              <div>There are no schemas at the moment</div>
+            )}
+          </div>
+          <hr className="my-md" />
+          {isTemplateGalleryEnabled ? <TemplateGallery /> : null}
         </div>
-        <hr className="my-md" />
-        {isTemplateGalleryEnabled ? <TemplateGallery /> : null}
       </div>
-    </div>
+    </Analytics>
   );
 };
 

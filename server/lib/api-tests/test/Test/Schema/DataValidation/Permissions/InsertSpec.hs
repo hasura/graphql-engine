@@ -2,12 +2,17 @@
 
 -- | Test insert permissions
 --
--- https://hasura.io/docs/latest/schema/bigquery/data-validations/#using-hasura-permissions
 -- https://hasura.io/docs/latest/schema/postgres/data-validations/#using-hasura-permissions
 module Test.Schema.DataValidation.Permissions.InsertSpec (spec) where
 
+import Control.Lens ((.~))
 import Data.Aeson (Value)
+import Data.Aeson.Key qualified as Key (toString)
+import Data.Aeson.Lens (atKey, key, values)
 import Data.List.NonEmpty qualified as NE
+import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphqlWithHeaders, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
@@ -20,13 +25,29 @@ import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
 
--- BigQuery should also work if we make a second version of the metadata with
--- "dataset" instead of "schema" as our key name.
 spec :: SpecWith TestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Postgres.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.Postgres testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Citus.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.Citus testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Cockroach.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.Cockroach testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlserver.setupTablesAction schema testEnvironment,
                   setupMetadata Fixture.SQLServer testEnvironment
@@ -72,6 +93,10 @@ tests opts = do
   let shouldBe :: IO Value -> Value -> IO ()
       shouldBe = shouldReturnYaml opts
 
+      -- The error path differs across backends. Since it's immaterial for the tests we want to make we simply ignore it.
+      removeErrorPath :: Value -> Value
+      removeErrorPath = key "errors" . values . key "extensions" . atKey "path" .~ Nothing
+
   describe "Permissions on mutations" do
     it "Rejects insertions by authors on behalf of others" \testEnvironment -> do
       let schemaName :: Schema.SchemaName
@@ -82,9 +107,8 @@ tests opts = do
             [interpolateYaml|
               errors:
               - extensions:
-                  path: "$"
                   code: permission-error
-                message: check constraint of an insert permission has failed
+                message: check constraint of an insert/update permission has failed
             |]
 
           actual :: IO Value
@@ -104,7 +128,7 @@ tests opts = do
                 }
               |]
 
-      actual `shouldBe` expected
+      fmap removeErrorPath actual `shouldBe` expected
 
   it "Allows authors to insert their own articles" \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -146,7 +170,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    fmap removeErrorPath actual `shouldBe` expected
 
   it "Authors can't add other authors" $ \testEnvironment -> do
     let schemaName :: Schema.SchemaName
@@ -157,9 +181,8 @@ tests opts = do
           [interpolateYaml|
             errors:
             - extensions:
-                path: "$"
                 code: permission-error
-              message: check constraint of an insert permission has failed
+              message: check constraint of an insert/update permission has failed
           |]
 
         actual :: IO Value
@@ -179,7 +202,7 @@ tests opts = do
               }
             |]
 
-    actual `shouldBe` expected
+    fmap removeErrorPath actual `shouldBe` expected
 
 --------------------------------------------------------------------------------
 -- Metadata
@@ -189,8 +212,14 @@ setupMetadata backendType testEnvironment = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
 
-      backend :: String
-      backend = Fixture.defaultSource backendType
+      schemaKeyword :: String
+      schemaKeyword = Key.toString $ Fixture.schemaKeyword backendType
+
+      backendPrefix :: String
+      backendPrefix = Fixture.defaultBackendTypeString backendType
+
+      source :: String
+      source = Fixture.defaultSource backendType
 
       setup :: IO ()
       setup =
@@ -199,11 +228,11 @@ setupMetadata backendType testEnvironment = do
           [interpolateYaml|
             type: bulk
             args:
-            - type: #{backend}_create_insert_permission
+            - type: #{backendPrefix}_create_insert_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
-                  schema: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                   name: article
                 role: user
                 permission:
@@ -215,11 +244,11 @@ setupMetadata backendType testEnvironment = do
                   - title
                   - content
                   - author_id
-            - type: #{backend}_create_select_permission
+            - type: #{backendPrefix}_create_select_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
-                  schema: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                   name: article
                 role: user
                 permission:
@@ -231,11 +260,11 @@ setupMetadata backendType testEnvironment = do
                   - title
                   - content
                   - author_id
-            - type: #{backend}_create_insert_permission
+            - type: #{backendPrefix}_create_insert_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
-                  schema: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                   name: author
                 role: user
                 permission:
@@ -253,25 +282,25 @@ setupMetadata backendType testEnvironment = do
           [interpolateYaml|
             type: bulk
             args:
-            - type: #{backend}_drop_insert_permission
+            - type: #{backendPrefix}_drop_insert_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
-                  schema: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                   name: article
                 role: user
-            - type: #{backend}_drop_select_permission
+            - type: #{backendPrefix}_drop_select_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
-                  schema: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                   name: article
                 role: user
-            - type: #{backend}_drop_insert_permission
+            - type: #{backendPrefix}_drop_insert_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
-                  schema: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                   name: author
                 role: user
           |]

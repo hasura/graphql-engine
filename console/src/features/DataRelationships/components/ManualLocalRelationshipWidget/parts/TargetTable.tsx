@@ -8,7 +8,7 @@ import { FaDatabase, FaTable } from 'react-icons/fa';
 import Skeleton from 'react-loading-skeleton';
 import { useGetTargetOptions } from '../hooks/useGetTargetOptions';
 
-export const TargetTable = () => {
+export const TargetTable = ({ disabled }: { disabled: boolean }) => {
   const table = useWatch<Record<string, Table>>({ name: 'source_table' });
   const dataSourceName = useWatch<Record<string, string>>({
     name: 'target_name',
@@ -63,6 +63,7 @@ export const TargetTable = () => {
           value: JSON.stringify(t),
           label: getTableName(t, databaseHierarchy ?? []),
         }))}
+        disabled={disabled}
       />
     </div>
   );

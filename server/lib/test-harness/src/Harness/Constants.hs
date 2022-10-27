@@ -182,7 +182,7 @@ sqlserverLivenessCheckIntervalSeconds = 1
 -- | SQL Server has strict password requirements, that's why it's not
 -- simply @hasura@ like the others.
 sqlserverConnectInfo :: Text
-sqlserverConnectInfo = "DRIVER={ODBC Driver 17 for SQL Server};SERVER=127.0.0.1,65003;Uid=hasura;Pwd=Hasura1!;Encrypt=no"
+sqlserverConnectInfo = "DRIVER={ODBC Driver 18 for SQL Server};SERVER=127.0.0.1,65003;Uid=hasura;Pwd=Hasura1!;Encrypt=optional"
 
 sqlserverDb :: String
 sqlserverDb = "hasura"

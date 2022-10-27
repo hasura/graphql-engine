@@ -46,7 +46,7 @@ data ColumnInfo = ColumnInfo
     _ciNullable :: Bool,
     _ciDescription :: Maybe Text
   }
-  deriving stock (Eq, Ord, Show, Generic, Data)
+  deriving stock (Eq, Ord, Show, Generic)
   deriving anyclass (NFData, Hashable)
   deriving (FromJSON, ToJSON, ToSchema) via Autodocodec ColumnInfo
 

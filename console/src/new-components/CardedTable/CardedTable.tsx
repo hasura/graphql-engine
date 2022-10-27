@@ -54,8 +54,8 @@ const Header = ({ columns }: HeaderProps) => {
   return (
     <TableHead>
       <TableHeadRow>
-        {columns.map(column => (
-          <TableHeadCell>{column}</TableHeadCell>
+        {columns.map((column, i) => (
+          <TableHeadCell key={i}>{column}</TableHeadCell>
         ))}
       </TableHeadRow>
     </TableHead>

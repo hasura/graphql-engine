@@ -69,8 +69,19 @@ to help you:
 
 <details>
   <summary>What should I do if I have a free Heroku Postgres database connected to my Hasura project?</summary>
-  Following Heroku’s announcement of deprecation of free resources, you will have to either upgrade your Heroku database
-  plan or move to a different database provider.
+  Following Heroku’s announcement of deprecation of free resources, you will have to either <a
+    href={'https://help.heroku.com/81MBEG7L/how-do-i-upgrade-from-heroku-s-free-tier-and-begin-using-paid-resources'}
+  >
+    upgrade your Heroku database plan
+  </a> or move to a different database provider. Heroku also appears to not be responding to questions from free-tier users.
+  <br />
+  <br />
+  If you have URL sync enabled via our <a href={'/latest/projects/heroku-url-sync/'}>Heroku integration</a>, you can
+  follow{' '}
+  <a href={'https://devcenter.heroku.com/articles/upgrading-heroku-postgres-databases#upgrading-with-pg-copy'}>
+    these steps
+  </a>{' '}
+  - <i>after</i> verifying your Heroku account with a credit card - to migrate your hobby-tier database to a paid tier.
 </details>
 
 <details>

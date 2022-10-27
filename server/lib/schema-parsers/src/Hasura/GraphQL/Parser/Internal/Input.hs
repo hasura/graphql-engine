@@ -1,3 +1,4 @@
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE ViewPatterns #-}
 
 -- | Defines the 'Parser' type and its primitive combinators.
@@ -28,6 +29,7 @@ import Data.HashMap.Strict qualified as M
 import Data.HashSet qualified as S
 import Data.List.NonEmpty (NonEmpty)
 import Data.List.NonEmpty qualified as NonEmpty
+import Data.Monoid (Ap (..))
 import Data.Traversable (for)
 import Data.Type.Equality
 import Data.Vector qualified as V
@@ -64,7 +66,8 @@ data InputFieldsParser origin m a = InputFieldsParser
   { ifDefinitions :: [Definition origin (InputFieldInfo origin)],
     ifParser :: HashMap Name (InputValue Variable) -> m a
   }
-  deriving (Functor)
+  deriving stock (Functor)
+  deriving (Semigroup, Monoid) via Ap (InputFieldsParser origin m) a
 
 instance Applicative m => Applicative (InputFieldsParser origin m) where
   pure v = InputFieldsParser [] (const $ pure v)

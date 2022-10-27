@@ -7,7 +7,7 @@
 <a href="https://twitter.com/intent/follow?screen_name=HasuraHQ"><img src="https://img.shields.io/badge/Follow-HasuraHQ-blue.svg?style=flat&logo=twitter"></a>
 <a href="https://hasura.io/newsletter/"><img src="https://img.shields.io/badge/newsletter-subscribe-yellow.svg?style=flat"></a>
 
-Hasura is an open source product that accelerates API development by 10x by giving you [GraphQL](https://hasura.io/graphql/) or REST APIs with built in authorization on your data, instantly.
+Hasura is an open-source product that accelerates API development by 10x by giving you [GraphQL](https://hasura.io/graphql/) or REST APIs with built-in authorization on your data, instantly.
 
 Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/docs/).
 
@@ -32,7 +32,7 @@ Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/doc
 * **Scheduled Triggers**: Execute custom business logic at specific points in time using a cron config or a one-off event.
 * **Fine-grained access control**: Dynamic access control that integrates with your auth system (eg: auth0, firebase-auth)
 * **Admin UI & Migrations**: Admin UI & Rails-inspired schema migrations
-* **Supported Databases**: Supports PostgreSQL (and its flavours), MS SQL Server and Big Query. Support for more [databases](https://hasura.io/graphql/database/) coming soon.
+* **Supported Databases**: Supports PostgreSQL (and its flavors), MS SQL Server and Big Query. Support for more [databases](https://hasura.io/graphql/database/) coming soon.
 
 Read more at [hasura.io](https://hasura.io) and the [docs](https://hasura.io/docs/).
 
@@ -141,12 +141,12 @@ Check out all the example applications in the [community/sample-apps](community/
   - [Try it out](https://realtime-chat.demo.hasura.io/)
   - [Tutorial](community/sample-apps/realtime-chat)
 
-- Live location tracking app that shows a running vehicle changing current GPS
+- Live location tracking app that shows a running vehicle changing the current GPS
   coordinates moving on a map.
   - [Try it out](https://realtime-location-tracking.demo.hasura.io/)
   - [Tutorial](community/sample-apps/realtime-location-tracking)
 
-- A realtime dashboard for data aggregations on continuously changing data.
+- A real-time dashboard for data aggregations on continuously changing data.
   - [Try it out](https://realtime-poll.demo.hasura.io/)
   - [Tutorial](community/sample-apps/realtime-poll)
 
@@ -228,5 +228,6 @@ This readme is available in the following translations:
 - [Chinese :cn:](translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
 - [Turkish :tr:](translations/README.turkish.md) (:pray: [@berat](https://github.com/berat))
 - [Korean :kr:](translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
+- [Italian :it:](translations/README.italian.md) (:pray: [@befire](https://github.com/francesca-belfiore))
 
 Translations for other files can be found [here](translations).

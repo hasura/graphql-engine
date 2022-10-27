@@ -3,6 +3,7 @@ import pytest
 import requests
 import threading
 from time import perf_counter, sleep
+from conftest import extract_server_address_from
 
 import jwk_server
 import ports
@@ -25,14 +26,17 @@ def jwk_server_url(request: pytest.FixtureRequest, hge_fixture_env: dict[str, st
         hge_fixture_env['HASURA_GRAPHQL_JWT_SECRET'] = '{"jwk_url": "' + env_var + path + '"}'
         return env_var
 
-    port = 5001
-    server = jwk_server.create_server('localhost', port)
+    server_address = extract_server_address_from('JWK_SERVER_URL')
+    server = jwk_server.create_server(server_address)
     thread = threading.Thread(target=server.serve_forever)
     thread.start()
     request.addfinalizer(server.shutdown)
+
+    host = server.server_address[0]
     port = server.server_address[1]
     ports.wait_for_port(port)
-    url = f'http://localhost:{port}'
+    url = f'http://{host}:{port}'
+    print(f'{jwk_server_url.__name__} server started on {url}')
     hge_fixture_env['HASURA_GRAPHQL_JWT_SECRET'] = '{"jwk_url": "' + url + path + '"}'
     return url
 

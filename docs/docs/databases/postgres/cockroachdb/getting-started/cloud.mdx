@@ -29,11 +29,24 @@ Once you create a project on Hasura Cloud, hit the "Launch Console" button to op
 ### Step 2: Add your CockroachDB database as a source to Hasura
 
 In the `Data > Data Manager > Connect Existing Database` section on the Console, select `CockroachDB` from the
-`Data Source Driver` dropdown and add the connection string directly or through an environment variable. As CockroachDB
-speaks the same protocol as Postgres, the connection string will start with `postgres://`, i.e, there is no difference
-between CockroachDB's connection strings and Postgres’s connection strings.
+`Data Source Driver` dropdown and add the connection string. As CockroachDB speaks the same protocol as Postgres, the
+connection string will start with `postgres://`, i.e, there is no difference between CockroachDB's connection strings
+and Postgres’s connection strings.
 
-<Thumbnail src='/img/databases/cockroachdb-postgres/1-add-source.png' alt='Add source' width='1100px' />
+CockroachDB requires an SSL root certificate by default. To use this, you must set an environment variable for your
+Hasura GraphQL Engine instance with the contents of the certificate as the value, and then specify the name of the environment
+variable as the `SSL Root Certificate`.
+
+:::info Note
+
+Pay extra notice that if you use one of CockroachDB's serverless databases, you will be prompted with a connection string
+that contains the parameter `sslverify`.
+
+You must add this parameter manually via the "SSL Certificates Settings" section.
+
+:::
+
+<Thumbnail src='/img/databases/cockroachdb-postgres/1-add-source-cloud.png' alt='Add source' width='1100px' />
 
 Once you add the database, you'll see your database pop up on the sidebar.
 
@@ -78,11 +91,11 @@ creating a GraphQL query.
 
 ## Keep up to date
 
-Hasura currently supports [queries](./queries/postgres/index.mdx),
-[relationships](./schema/postgres/table-relationships/index.mdx), and [mutations](./mutations/postgres/index.mdx) on
+Hasura currently supports [queries](/queries/postgres/index.mdx),
+[relationships](/schema/postgres/table-relationships/index.mdx), and [mutations](/mutations/postgres/index.mdx) on
 CockroachDB.
 
-Please refer to the [Postgres docs](./queries/postgres/index.mdx) on how you can try these features out via the Console
+Please refer to the [Postgres docs](/queries/postgres/index.mdx) on how you can try these features out via the Console
 or by manipulating Metadata in JSON/YAML directly.
 
 If you'd like to stay informed about the status of CockroachDB support, subscribe to our newsletter and join our

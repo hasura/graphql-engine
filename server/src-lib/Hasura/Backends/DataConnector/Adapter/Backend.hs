@@ -10,10 +10,13 @@ import Data.Aeson qualified as J
 import Data.Aeson.Extended (ToJSONKeyValue (..))
 import Data.Aeson.Key (fromText)
 import Data.Aeson.Types qualified as J
+import Data.HashMap.Strict qualified as HashMap
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as Text
 import Data.Text.Casing qualified as C
 import Data.Text.Extended ((<<>))
+import Hasura.Backends.DataConnector.API qualified as API
+import Hasura.Backends.DataConnector.Adapter.Types qualified as Adapter
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Base.Error (Code (ValidationFailed), QErr, runAesonParser, throw400)
 import Hasura.Incremental
@@ -24,6 +27,7 @@ import Hasura.RQL.Types.Column (ColumnType (..))
 import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend (BackendType (DataConnector))
 import Language.GraphQL.Draft.Syntax qualified as G
+import Witch qualified
 
 -- | An alias for '()' indicating that a particular associated type has not yet
 -- been implemented for the 'DataConnector' backend.
@@ -78,11 +82,24 @@ instance Backend 'DataConnector where
     DC.NumberTy -> True
     DC.StringTy -> True
     DC.BoolTy -> False
-    DC.CustomTy _ -> False -- TODO: extend Capabilities for custom types
+    DC.CustomTy _ -> False
 
   isNumType :: ScalarType 'DataConnector -> Bool
   isNumType DC.NumberTy = True
   isNumType _ = False
+
+  getCustomAggregateOperators :: Adapter.SourceConfig -> HashMap G.Name (HashMap DC.ScalarType DC.ScalarType)
+  getCustomAggregateOperators Adapter.SourceConfig {..} =
+    HashMap.foldrWithKey insertOps mempty scalarTypesCapabilities
+    where
+      scalarTypesCapabilities = maybe mempty API.unScalarTypesCapabilities $ API._cScalarTypes _scCapabilities
+      insertOps typeName API.ScalarTypeCapabilities {..} m =
+        HashMap.foldrWithKey insertOp m $
+          maybe mempty API.unAggregateFunctions _stcAggregateFunctions
+        where
+          insertOp funtionName resultTypeName =
+            HashMap.insertWith HashMap.union funtionName $
+              HashMap.singleton (Witch.from typeName) (Witch.from resultTypeName)
 
   textToScalarValue :: Maybe Text -> ScalarValue 'DataConnector
   textToScalarValue = error "textToScalarValue: not implemented for the Data Connector backend."

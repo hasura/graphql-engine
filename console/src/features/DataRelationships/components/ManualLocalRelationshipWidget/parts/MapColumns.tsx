@@ -8,7 +8,7 @@ import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Schema } from '../schema';
 import { useTableColumns } from '../hooks/useTableColumns';
 
-export const MapColumns = () => {
+export const MapColumns = ({ disabled }: { disabled: boolean }) => {
   const { fields, append } = useFieldArray<Schema>({ name: 'column_mapping' });
 
   const {
@@ -101,6 +101,7 @@ export const MapColumns = () => {
                   name={`column_mapping.${index}.from`}
                   placeholder="Select source column"
                   noErrorPlaceholder={false}
+                  disabled={disabled}
                 />
               )}
             </div>
@@ -120,6 +121,7 @@ export const MapColumns = () => {
                   name={`column_mapping.${index}.to`}
                   placeholder="Select reference column"
                   noErrorPlaceholder={false}
+                  disabled={disabled}
                 />
               )}
             </div>
@@ -133,13 +135,14 @@ export const MapColumns = () => {
                     columnMappings.filter((_, i) => index !== i)
                   );
                 }}
+                disabled={disabled}
               />
             </div>
           </div>
         );
       })}
       <div className="my-4">
-        <Button type="button" onClick={() => append({})}>
+        <Button type="button" onClick={() => append({})} disabled={disabled}>
           Add New Mapping
         </Button>
       </div>

@@ -9,6 +9,7 @@ import {
 import { useAppSelector } from '@/store';
 import { Button } from '@/new-components/Button';
 import { useFireNotification } from '@/new-components/Notifications';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import { RemoteSchemaDetailsHeaders } from './RemoteSchemaDetailsHeaders';
 import { RemoteSchemaDetailsNavigation } from './RemoteSchemaDetailsNavigation';
@@ -81,58 +82,60 @@ export const RemoteSchemaDetails = (props: RemoteSchemaDetailsProps) => {
   );
 
   return (
-    <div>
-      <RemoteSchemaDetailsNavigation remoteSchemaName={remoteSchemaName} />
-      <div className="p-md w-full sm:w-9/12 ">
-        <div className="mb-md">
-          <div className="w-full bg-white shadow-sm rounded p-md border border-gray-300 shadow show">
-            <div className="mb-md">
-              <label className="block mb-xs font-semibold text-muted">
-                Server GraphQL URL
-              </label>
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  className="block w-full mr-2 h-input cursor-not-allowed rounded border bg-gray-200 border-gray-200"
-                  placeholder={manualUrl || `<${envName}>`}
-                  disabled
-                />
-                {readOnlyMode && (
-                  <Button onClick={reload} isLoading={isReloadLoading}>
-                    Reload
-                  </Button>
-                )}
-              </div>
-            </div>
-            <RemoteSchemaDetailsHeaders headers={headers} />
-            {inconsistencyDetails && (
-              <IndicatorCard
-                status="negative"
-                headline="This remote schema is in an inconsistent state."
-              >
-                <div>
-                  <div>
-                    <b>Reason:</b> {inconsistencyDetails.reason}
-                  </div>
-                  <div>
-                    <i>
-                      (Please resolve the inconsistencies and reload the remote
-                      schema. Fields from this remote schema are currently not
-                      exposed over the GraphQL API)
-                    </i>
-                  </div>
+    <Analytics name="RemoteSchemaDetails" {...REDACT_EVERYTHING}>
+      <div>
+        <RemoteSchemaDetailsNavigation remoteSchemaName={remoteSchemaName} />
+        <div className="p-md w-full sm:w-9/12 ">
+          <div className="mb-md">
+            <div className="w-full bg-white shadow-sm rounded p-md border border-gray-300 shadow show">
+              <div className="mb-md">
+                <label className="block mb-xs font-semibold text-muted">
+                  Server GraphQL URL
+                </label>
+                <div className="flex items-center">
+                  <input
+                    type="text"
+                    className="block w-full mr-2 h-input cursor-not-allowed rounded border bg-gray-200 border-gray-200"
+                    placeholder={manualUrl || `<${envName}>`}
+                    disabled
+                  />
+                  {readOnlyMode && (
+                    <Button onClick={reload} isLoading={isReloadLoading}>
+                      Reload
+                    </Button>
+                  )}
                 </div>
-              </IndicatorCard>
-            )}
-            <label className="block mb-xs text-muted font-semibold">
-              Remote Schema Preview
-            </label>
-            <div className="rounded bg-gray-50 border border-gray-300 px-md py-sm">
-              <SchemaPreview name={remoteSchemaName} />
+              </div>
+              <RemoteSchemaDetailsHeaders headers={headers} />
+              {inconsistencyDetails && (
+                <IndicatorCard
+                  status="negative"
+                  headline="This remote schema is in an inconsistent state."
+                >
+                  <div>
+                    <div>
+                      <b>Reason:</b> {inconsistencyDetails.reason}
+                    </div>
+                    <div>
+                      <i>
+                        (Please resolve the inconsistencies and reload the
+                        remote schema. Fields from this remote schema are
+                        currently not exposed over the GraphQL API)
+                      </i>
+                    </div>
+                  </div>
+                </IndicatorCard>
+              )}
+              <label className="block mb-xs text-muted font-semibold">
+                Remote Schema Preview
+              </label>
+              <div className="rounded bg-gray-50 border border-gray-300 px-md py-sm">
+                <SchemaPreview name={remoteSchemaName} />
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </Analytics>
   );
 };

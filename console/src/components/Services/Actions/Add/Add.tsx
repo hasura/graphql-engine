@@ -2,6 +2,7 @@ import React, { useEffect, useReducer } from 'react';
 import { GraphQLError } from 'graphql';
 import { connect, ConnectedProps } from 'react-redux';
 import Helmet from 'react-helmet';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { IconTooltip } from '@/new-components/Tooltip';
 import requestAction from '@/utils/requestAction';
 import { Button } from '@/new-components/Button';
@@ -327,67 +328,73 @@ const AddAction: React.FC<AddActionProps> = ({
   }
 
   return (
-    <div className="w-full overflow-y-auto bg-gray-50">
-      <div className="max-w-6xl">
-        <Helmet title="Add Action - Actions | Hasura" />
-        <h2 className="font-bold text-xl mb-5">Add a new action</h2>
+    <Analytics name="AddAction" {...REDACT_EVERYTHING}>
+      <div className="w-full overflow-y-auto bg-gray-50">
+        <div className="max-w-6xl">
+          <Helmet title="Add Action - Actions | Hasura" />
+          <h2 className="font-bold text-xl mb-5">Add a new action</h2>
 
-        <ActionEditor
-          handler={handler}
-          execution={execution}
-          actionDefinition={actionDefinition}
-          typeDefinition={typeDefinition}
-          headers={headers}
-          forwardClientHeaders={forwardClientHeaders}
-          readOnlyMode={readOnlyMode}
-          timeout={timeout}
-          comment={comment}
-          actionType={actionType}
-          commentOnChange={commentOnChange}
-          handlerOnChange={handlerOnChange}
-          executionOnChange={executionOnChange}
-          timeoutOnChange={timeoutOnChange}
-          setHeaders={setHeaders}
-          toggleForwardClientHeaders={toggleForwardClientHeaders}
-          actionDefinitionOnChange={actionDefinitionOnChange}
-          typeDefinitionOnChange={typeDefinitionOnChange}
-        />
+          <ActionEditor
+            handler={handler}
+            execution={execution}
+            actionDefinition={actionDefinition}
+            typeDefinition={typeDefinition}
+            headers={headers}
+            forwardClientHeaders={forwardClientHeaders}
+            readOnlyMode={readOnlyMode}
+            timeout={timeout}
+            comment={comment}
+            actionType={actionType}
+            commentOnChange={commentOnChange}
+            handlerOnChange={handlerOnChange}
+            executionOnChange={executionOnChange}
+            timeoutOnChange={timeoutOnChange}
+            setHeaders={setHeaders}
+            toggleForwardClientHeaders={toggleForwardClientHeaders}
+            actionDefinitionOnChange={actionDefinitionOnChange}
+            typeDefinitionOnChange={typeDefinitionOnChange}
+          />
 
-        <ConfigureTransformation
-          transformationType="action"
-          state={transformState}
-          resetSampleInput={resetSampleInput}
-          envVarsOnChange={envVarsOnChange}
-          sessionVarsOnChange={sessionVarsOnChange}
-          requestMethodOnChange={requestMethodOnChange}
-          requestUrlOnChange={requestUrlOnChange}
-          requestQueryParamsOnChange={requestQueryParamsOnChange}
-          requestAddHeadersOnChange={requestAddHeadersOnChange}
-          requestBodyOnChange={requestBodyOnChange}
-          requestSampleInputOnChange={requestSampleInputOnChange}
-          requestContentTypeOnChange={requestContentTypeOnChange}
-          requestUrlTransformOnChange={requestUrlTransformOnChange}
-          requestPayloadTransformOnChange={requestPayloadTransformOnChange}
-        />
+          <ConfigureTransformation
+            transformationType="action"
+            state={transformState}
+            resetSampleInput={resetSampleInput}
+            envVarsOnChange={envVarsOnChange}
+            sessionVarsOnChange={sessionVarsOnChange}
+            requestMethodOnChange={requestMethodOnChange}
+            requestUrlOnChange={requestUrlOnChange}
+            requestQueryParamsOnChange={requestQueryParamsOnChange}
+            requestAddHeadersOnChange={requestAddHeadersOnChange}
+            requestBodyOnChange={requestBodyOnChange}
+            requestSampleInputOnChange={requestSampleInputOnChange}
+            requestContentTypeOnChange={requestContentTypeOnChange}
+            requestUrlTransformOnChange={requestUrlTransformOnChange}
+            requestPayloadTransformOnChange={requestPayloadTransformOnChange}
+          />
 
-        <div>
-          <Button
-            mode="primary"
-            size="md"
-            type="submit"
-            disabled={!allowSave}
-            onClick={onSubmit}
-            data-test="create-action-btn"
-            data-trackid="actions-tab-create-action-button"
-          >
-            Create Action
-          </Button>
-          {readOnlyMode && (
-            <IconTooltip message="Adding new action is not allowed in Read only mode!" />
-          )}
+          <div>
+            <Analytics
+              name="actions-tab-create-action-button"
+              passHtmlAttributesToChildren
+            >
+              <Button
+                mode="primary"
+                size="md"
+                type="submit"
+                disabled={!allowSave}
+                onClick={onSubmit}
+                data-test="create-action-btn"
+              >
+                Create Action
+              </Button>
+            </Analytics>
+            {readOnlyMode && (
+              <IconTooltip message="Adding new action is not allowed in Read only mode!" />
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 

@@ -143,7 +143,7 @@ describe('MSSQL browse rows', () => {
           configuration: {
             connection_info: {
               connection_string:
-                'DRIVER={ODBC Driver 17 for SQL Server};SERVER=host.docker.internal;DATABASE=bikes;Uid=SA;Pwd=reallyStrongPwd123',
+                'DRIVER={ODBC Driver 18 for SQL Server};SERVER=host.docker.internal;DATABASE=bikes;Uid=SA;Pwd=reallyStrongPwd123;Encrypt=optional',
               pool_settings: {
                 idle_timeout: 5,
                 max_connections: 50,

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
@@ -62,66 +63,70 @@ const Container: React.FC<Props> = props => {
   }
 
   const sidebarContent = (
-    <ul>
-      <li
-        role="presentation"
-        className={isDataEventsRoute(currentLocation) ? styles.active : ''}
-      >
-        {/* <li role="presentation" className={styles.active}>
+    <Analytics name="EventsSidebar" {...REDACT_EVERYTHING}>
+      <ul>
+        <li
+          role="presentation"
+          className={isDataEventsRoute(currentLocation) ? styles.active : ''}
+        >
+          {/* <li role="presentation" className={styles.active}>
           <Link
             className={styles.linkBorder}
             style={{
               paddingRight: '20px',
             }}
-          >
+            >
 
+            </Link>
+          </li> */}
+          <Link className={styles.linkBorder} to={getDataEventsLandingRoute()}>
+            {DATA_EVENTS_HEADING}
           </Link>
-        </li> */}
-        <Link className={styles.linkBorder} to={getDataEventsLandingRoute()}>
-          {DATA_EVENTS_HEADING}
-        </Link>
 
-        {isDataEventsRoute(currentLocation) ? (
-          <LeftSidebar
-            triggers={eventTriggers}
-            service="data"
-            currentTrigger={currentEventTrigger}
-          />
-        ) : null}
-      </li>
-      <li
-        role="presentation"
-        className={isScheduledEventsRoute(currentLocation) ? styles.active : ''}
-      >
-        <Link
-          className={styles.linkBorder}
-          to={getScheduledEventsLandingRoute()}
+          {isDataEventsRoute(currentLocation) ? (
+            <LeftSidebar
+              triggers={eventTriggers}
+              service="data"
+              currentTrigger={currentEventTrigger}
+            />
+          ) : null}
+        </li>
+        <li
+          role="presentation"
+          className={
+            isScheduledEventsRoute(currentLocation) ? styles.active : ''
+          }
         >
-          {CRON_EVENTS_HEADING}
-        </Link>
-        {isScheduledEventsRoute(currentLocation) ? (
-          <LeftSidebar
-            triggers={cronTriggers}
-            service="cron"
-            currentTrigger={currentScheduledTrigger}
-          />
-        ) : null}
-      </li>
-      <li
-        role="presentation"
-        className={
-          isAdhocScheduledEventRoute(currentLocation) ? styles.active : ''
-        }
-      >
-        <Link
-          className={styles.linkBorder}
-          data-test="one-off-trigger"
-          to={getAdhocEventsRoute('absolute', '')}
+          <Link
+            className={styles.linkBorder}
+            to={getScheduledEventsLandingRoute()}
+          >
+            {CRON_EVENTS_HEADING}
+          </Link>
+          {isScheduledEventsRoute(currentLocation) ? (
+            <LeftSidebar
+              triggers={cronTriggers}
+              service="cron"
+              currentTrigger={currentScheduledTrigger}
+            />
+          ) : null}
+        </li>
+        <li
+          role="presentation"
+          className={
+            isAdhocScheduledEventRoute(currentLocation) ? styles.active : ''
+          }
         >
-          {ADHOC_EVENTS_HEADING}
-        </Link>
-      </li>
-    </ul>
+          <Link
+            className={styles.linkBorder}
+            data-test="one-off-trigger"
+            to={getAdhocEventsRoute('absolute', '')}
+          >
+            {ADHOC_EVENTS_HEADING}
+          </Link>
+        </li>
+      </ul>
+    </Analytics>
   );
 
   const helmetTitle = 'Triggers | Hasura';

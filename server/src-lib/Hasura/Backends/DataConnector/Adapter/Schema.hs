@@ -37,6 +37,7 @@ import Hasura.RQL.Types.SourceCustomization qualified as RQL
 import Hasura.RQL.Types.Table qualified as RQL
 import Hasura.SQL.Backend (BackendType (..))
 import Language.GraphQL.Draft.Syntax qualified as GQL
+import Witch qualified
 
 --------------------------------------------------------------------------------
 
@@ -203,7 +204,7 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
       GS.C.SchemaT r m [P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector)))]
     mkCustomOperators tCase collapseIfNull typeName = do
       let capabilities = sourceInfo ^. RQL.siConfiguration . DC.scCapabilities
-      case lookupComparisonInputObjectDefinition capabilities typeName of
+      case lookupComparisonInputObjectDefinition capabilities (Witch.from $ DC.fromGQLType typeName) of
         Nothing -> pure []
         Just GQL.InputObjectTypeDefinition {..} -> do
           traverse (mkCustomOperator tCase collapseIfNull) _iotdValueDefinitions

@@ -1,7 +1,6 @@
 import pytest
 
-from conftest import use_action_fixtures
-from context import PytestConf
+from conftest import extract_server_address_from, use_action_fixtures
 from remote_server import NodeGraphQL
 from validate import check_query_f
 
@@ -13,11 +12,13 @@ pytestmark = [
 @pytest.fixture(scope='class')
 @pytest.mark.early
 def graphql_service(hge_fixture_env: dict[str, str]):
-    svc = NodeGraphQL(["node", "remote_schemas/nodejs/remote_schema_perms.js"], port=4020)
-    svc.start()
-    hge_fixture_env['GRAPHQL_SERVICE_1'] = svc.url
-    yield svc
-    svc.stop()
+    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_1')
+    server = NodeGraphQL(["node", "remote_schemas/nodejs/remote_schema_perms.js"], port=port)
+    server.start()
+    print(f'{graphql_service.__name__} server started on {server.url}')
+    hge_fixture_env['GRAPHQL_SERVICE_1'] = server.url
+    yield server
+    server.stop()
 
 @pytest.mark.usefixtures('per_class_db_schema_for_mutation_tests', 'per_method_db_data_for_mutation_tests')
 class TestGraphQLMutationRolesInheritance:

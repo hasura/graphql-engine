@@ -10,6 +10,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMetadataObject_Build(t *testing.T) {
@@ -23,6 +24,7 @@ func TestMetadataObject_Build(t *testing.T) {
 		fields     fields
 		wantGolden string
 		wantErr    bool
+		assertErr  require.ErrorAssertionFunc
 	}{
 		{
 			"t1",
@@ -33,6 +35,7 @@ func TestMetadataObject_Build(t *testing.T) {
 			},
 			"testdata/build_test/t1/want.golden.json",
 			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -42,9 +45,8 @@ func TestMetadataObject_Build(t *testing.T) {
 				logger:      tt.fields.logger,
 			}
 			got, err := o.Build()
-			if tt.wantErr {
-				assert.Error(t, err)
-			} else {
+			tt.assertErr(t, err)
+			if !tt.wantErr {
 				assert.NoError(t, err)
 				gotbs, err := yaml.Marshal(got)
 				assert.NoError(t, err)
@@ -70,12 +72,13 @@ func TestMetadataObject_Export(t *testing.T) {
 		metadata map[string]yaml.Node
 	}
 	tests := []struct {
-		id      string
-		name    string
-		fields  fields
-		args    args
-		want    map[string][]byte
-		wantErr bool
+		id        string
+		name      string
+		fields    fields
+		args      args
+		want      map[string][]byte
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"t1",
@@ -104,6 +107,7 @@ rate_limit:
     max_reqs_per_min: 1
 `)},
 			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {

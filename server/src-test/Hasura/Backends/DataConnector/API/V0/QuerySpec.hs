@@ -143,27 +143,27 @@ spec = do
             "aggregates": {} }
         |]
 
-genField :: MonadGen m => m Field
+genField :: Gen Field
 genField =
   Gen.recursive
     Gen.choice
     [ColumnField <$> genColumnName <*> genScalarType]
     [RelField <$> genRelationshipField]
 
-genFieldName :: MonadGen m => m FieldName
+genFieldName :: Gen FieldName
 genFieldName = FieldName <$> genArbitraryAlphaNumText defaultRange
 
-genFieldMap :: MonadGen m => m value -> m (HashMap FieldName value)
+genFieldMap :: Gen value -> Gen (HashMap FieldName value)
 genFieldMap genValue' =
   HashMap.fromList <$> Gen.list defaultRange ((,) <$> genFieldName <*> genValue')
 
-genRelationshipField :: MonadGen m => m RelationshipField
+genRelationshipField :: Gen RelationshipField
 genRelationshipField =
   RelationshipField
     <$> genRelationshipName
     <*> genQuery
 
-genQuery :: MonadGen m => m Query
+genQuery :: Gen Query
 genQuery =
   Query
     <$> Gen.maybe (genFieldMap genField)
@@ -173,21 +173,21 @@ genQuery =
     <*> Gen.maybe genExpression
     <*> Gen.maybe genOrderBy
 
-genQueryRequest :: MonadGen m => m QueryRequest
+genQueryRequest :: Gen QueryRequest
 genQueryRequest =
   QueryRequest
     <$> genTableName
     <*> Gen.list defaultRange genTableRelationships
     <*> genQuery
 
-genFieldValue :: MonadGen m => m FieldValue
+genFieldValue :: Gen FieldValue
 genFieldValue =
   Gen.recursive
     Gen.choice
     [mkColumnFieldValue <$> genValue]
     [mkRelationshipFieldValue <$> genQueryResponse]
 
-genQueryResponse :: MonadGen m => m QueryResponse
+genQueryResponse :: Gen QueryResponse
 genQueryResponse =
   QueryResponse
     <$> Gen.maybe (Gen.list defaultRange (genFieldMap genFieldValue))

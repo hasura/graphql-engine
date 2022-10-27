@@ -87,13 +87,20 @@ defaultBackendCapabilities = \case
         scalar_types:
           DateTime:
             comparison_type: DateTimeComparisons
+            aggregate_functions:
+              max: DateTime
+              min: DateTime
+          string:
+            aggregate_functions:
+              longest: string
+              shortest: string
     |]
   _ -> Nothing
 
 -- | The default hasura metadata backend type used for a given backend in this test suite project.
 defaultBackendTypeString :: BackendType -> String
 defaultBackendTypeString = \case
-  Postgres -> "postgres"
+  Postgres -> "pg"
   MySQL -> "mysql"
   SQLServer -> "mssql"
   BigQuery -> "bigquery"

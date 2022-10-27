@@ -168,9 +168,9 @@ instance PostgresSchema 'Citus where
   pgkBuildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
 
 instance PostgresSchema 'Cockroach where
-  pgkBuildTableRelayQueryFields = buildTableRelayQueryFields
-  pgkBuildFunctionRelayQueryFields = buildFunctionRelayQueryFields
-  pgkRelayExtension = Just ()
+  pgkBuildTableRelayQueryFields _ _ _ _ _ _ = pure []
+  pgkBuildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  pgkRelayExtension = Nothing
 
   -- CockroachDB does not support subscriptions yet.
   pgkBuildTableQueryAndSubscriptionFields x1 x2 x3 x4 x5 = do
@@ -313,7 +313,7 @@ instance
   nodesAggExtension = Just ()
   streamSubscriptionExtension = Just ()
 
-  -- indivdual components
+  -- individual components
   columnParser = columnParser
   enumParser = enumParser @pgKind
   possiblyNullable = possiblyNullable

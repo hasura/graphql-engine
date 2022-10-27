@@ -87,8 +87,11 @@ applyQueryParamsTransformFn fn context _oldQueryParams = case fn of
       for addOrReplaceParams \(rawKey, rawValue) -> do
         key <- runUnescapedRequestTemplateTransform' context rawKey
         value <- traverse (runUnescapedRequestTemplateTransform' context) rawValue
-        pure (key, value)
-    pure $ QueryParams queryParams
+        pure $
+          if key == "null" || value == Just "null"
+            then Nothing
+            else Just (key, value)
+    pure $ QueryParams (catMaybes queryParams)
 
 -- | Validate that the provided 'QueryParamsTransformFn' is correct in the
 -- context of a particular 'TemplatingEngine'.

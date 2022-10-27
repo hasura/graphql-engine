@@ -307,6 +307,17 @@ class
   -- functions on types
   isComparableType :: ScalarType b -> Bool
   isNumType :: ScalarType b -> Bool
+
+  -- | Custom aggregate operators supported by the backend.
+  -- Backends that support custom aggregate operators should
+  -- return a HashMap from operator name to a scalar type mapping.
+  -- In the scalar type mapping the key represents the input type for the operator
+  -- and the value represents the result type.
+  -- Backends that do not support custom aggregate operators can use the default implementation
+  -- which returns an empty map.
+  getCustomAggregateOperators :: SourceConfig b -> HashMap G.Name (HashMap (ScalarType b) (ScalarType b))
+  getCustomAggregateOperators = const mempty
+
   textToScalarValue :: Maybe Text -> ScalarValue b
   parseScalarValue :: ScalarType b -> Value -> Either QErr (ScalarValue b)
   scalarValueToJSON :: ScalarValue b -> Value

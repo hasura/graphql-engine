@@ -7,6 +7,7 @@ module Hasura.GraphQL.Schema.OrderBy
 where
 
 import Data.Has
+import Data.HashMap.Strict.Extended qualified as HashMap
 import Data.Text.Casing qualified as C
 import Data.Text.Extended
 import Hasura.GraphQL.Parser.Class
@@ -166,10 +167,15 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
   tableIdentifierName <- getTableIdentifierName @b tableInfo
   allColumns <- tableSelectColumns sourceInfo tableInfo
   makeTypename <- asks getter
-  let numColumns = onlyNumCols allColumns
-      compColumns = onlyComparableCols allColumns
-      numFields = catMaybes <$> traverse (mkField tCase) numColumns
-      compFields = catMaybes <$> traverse (mkField tCase) compColumns
+  let numColumns = mkAgOpsFields tCase $ onlyNumCols allColumns
+      compColumns = mkAgOpsFields tCase $ onlyComparableCols allColumns
+      numOperatorsAndColumns = HashMap.fromList $ (,numColumns) <$> numericAggOperators
+      compOperatorsAndColumns = HashMap.fromList $ (,compColumns) <$> comparisonAggOperators
+      customOperatorsAndColumns =
+        getCustomAggOpsColumns tCase allColumns <$> getCustomAggregateOperators @b (_siConfiguration sourceInfo)
+      allOperatorsAndColumns =
+        HashMap.catMaybes $
+          HashMap.unionsWith (<>) [numOperatorsAndColumns, compOperatorsAndColumns, customOperatorsAndColumns]
       aggFields =
         fmap (concat . catMaybes . concat) $
           sequenceA $
@@ -181,24 +187,42 @@ orderByAggregation sourceInfo tableInfo = P.memoizeOn 'orderByAggregation (_siNa
                     Nothing
                     (orderByOperator @b tCase sourceInfo)
                     <&> pure . fmap (pure . mkOrderByItemG @b IR.AAOCount) . join,
-                -- operators on numeric columns
-                if null numColumns
+                -- other operators
+                if null allOperatorsAndColumns
                   then Nothing
                   else Just $
-                    for numericAggOperators \operator ->
-                      parseOperator makeTypename operator tableGQLName numFields,
-                -- operators on comparable columns
-                if null compColumns
-                  then Nothing
-                  else Just $
-                    for comparisonAggOperators \operator ->
-                      parseOperator makeTypename operator tableGQLName compFields
+                    for (HashMap.toList allOperatorsAndColumns) \(operator, fields) -> do
+                      parseOperator makeTypename operator tableGQLName fields
               ]
   objectName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateOrderByTypeName tableIdentifierName
   let description = G.Description $ "order by aggregate values of table " <>> tableName
   pure $ P.object objectName (Just description) aggFields
   where
     tableName = tableInfoName tableInfo
+
+    -- Build an InputFieldsParser only if the column list is non-empty
+    mkAgOpsFields ::
+      NamingCase ->
+      [ColumnInfo b] ->
+      Maybe (InputFieldsParser n [(ColumnInfo b, (BasicOrderType b, NullsOrderType b))])
+    mkAgOpsFields tCase =
+      fmap (fmap (catMaybes . toList) . traverse (mkField tCase)) . nonEmpty
+
+    getCustomAggOpsColumns ::
+      NamingCase ->
+      [ColumnInfo b] ->
+      HashMap (ScalarType b) v ->
+      Maybe (InputFieldsParser n [(ColumnInfo b, (BasicOrderType b, NullsOrderType b))])
+    getCustomAggOpsColumns tCase columnInfos typeMap =
+      columnInfos
+        & filter
+          ( \ColumnInfo {..} ->
+              case ciType of
+                ColumnEnumReference _ -> False
+                ColumnScalar scalarType ->
+                  HashMap.member scalarType typeMap
+          )
+        & mkAgOpsFields tCase
 
     mkField :: NamingCase -> ColumnInfo b -> InputFieldsParser n (Maybe (ColumnInfo b, (BasicOrderType b, NullsOrderType b)))
     mkField tCase columnInfo =

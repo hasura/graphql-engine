@@ -37,6 +37,7 @@
         };
         overlays = [
           (import ./nix/overlays/ghc.nix)
+          (import ./nix/overlays/msodbcsql18.nix)
         ];
       };
     in

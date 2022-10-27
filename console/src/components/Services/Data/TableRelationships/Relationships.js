@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import {
   FeatureFlagToast,
@@ -518,55 +519,61 @@ const Relationships = ({
   return (
     <>
       <RightContainer>
-        <div className={`${styles.container} container-fluid`}>
-          <TableHeader
-            dispatch={dispatch}
-            table={tableSchema}
-            source={currentSource}
-            tabName="relationships"
-            migrationMode={migrationMode}
-          />
-          <br />
-          <div className={`${styles.padd_left_remove} container-fluid`}>
-            <div
-              className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
-            >
-              <h4 className={styles.subheading_text}>
-                Table Relationships
-                <ToolTip message={'Relationships to tables / views'} />
-                &nbsp;
-                <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
-              </h4>
-              {addedRelationshipsView}
-              {getAddRelSection()}
-            </div>
-            {isFeatureSupported(
-              'tables.relationships.remoteDbRelationships.hostSource'
-            ) ? (
+        <Analytics name="Relationships" {...REDACT_EVERYTHING}>
+          <div className={`${styles.container} container-fluid`}>
+            <TableHeader
+              dispatch={dispatch}
+              table={tableSchema}
+              source={currentSource}
+              tabName="relationships"
+              migrationMode={migrationMode}
+            />
+            <br />
+            <div className={`${styles.padd_left_remove} container-fluid`}>
               <div
                 className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
               >
-                <RemoteDbRelationships
-                  tableSchema={tableSchema}
-                  reduxDispatch={dispatch}
-                  currentSource={currentSource}
-                />
+                <h4 className={styles.subheading_text}>
+                  Table Relationships
+                  <ToolTip message={'Relationships to tables / views'} />
+                  &nbsp;
+                  <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+                </h4>
+                {addedRelationshipsView}
+                {getAddRelSection()}
               </div>
-            ) : null}
-            {isFeatureSupported('tables.relationships.remoteRelationships') ? (
-              <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-                <RemoteRelationships
-                  relationships={existingRemoteRelationships}
-                  reduxDispatch={dispatch}
-                  table={tableSchema}
-                  allFunctions={allFunctions}
-                  remoteSchemas={remoteSchemas}
-                />
-              </div>
-            ) : null}
+              {isFeatureSupported(
+                'tables.relationships.remoteDbRelationships.hostSource'
+              ) ? (
+                <div
+                  className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
+                >
+                  <RemoteDbRelationships
+                    tableSchema={tableSchema}
+                    reduxDispatch={dispatch}
+                    currentSource={currentSource}
+                  />
+                </div>
+              ) : null}
+              {isFeatureSupported(
+                'tables.relationships.remoteRelationships'
+              ) ? (
+                <div
+                  className={`${styles.padd_left_remove} col-xs-10 col-md-10`}
+                >
+                  <RemoteRelationships
+                    relationships={existingRemoteRelationships}
+                    reduxDispatch={dispatch}
+                    table={tableSchema}
+                    allFunctions={allFunctions}
+                    remoteSchemas={remoteSchemas}
+                  />
+                </div>
+              ) : null}
+            </div>
+            <div className={`${styles.fixed} hidden`}>{alert}</div>
           </div>
-          <div className={`${styles.fixed} hidden`}>{alert}</div>
-        </div>
+        </Analytics>
       </RightContainer>
       <FeatureFlagToast
         flagId={availableFeatureFlagIds.relationshipTabTablesId}

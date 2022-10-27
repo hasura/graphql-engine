@@ -76,7 +76,7 @@ export const Button = (props: ButtonProps) => {
     loadingText,
     disabled,
     full,
-    ...rest
+    ...otherHtmlAttributes
   } = props;
   const isDisabled = disabled || isLoading;
 
@@ -91,48 +91,87 @@ export const Button = (props: ButtonProps) => {
     );
   }
 
+  const buttonAttributes = {
+    type,
+    ...otherHtmlAttributes,
+    disabled: isDisabled,
+    className: clsx(
+      sharedButtonStyle,
+      buttonModesStyles[mode],
+      buttonSizing[size],
+      isDisabled ? 'cursor-not-allowed' : '',
+      full && fullWidth,
+      otherHtmlAttributes?.className
+    ),
+  };
+
+  if (isLoading) {
+    return (
+      <button {...buttonAttributes}>
+        {!!loadingText && (
+          <span className="whitespace-nowrap mr-2">{loadingText}</span>
+        )}
+        <CgSpinner
+          className={`animate-spin ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`}
+        />
+      </button>
+    );
+  }
+
+  if (!icon) {
+    return (
+      <button {...buttonAttributes}>
+        <span className="whitespace-nowrap max-w-full">{children}</span>
+      </button>
+    );
+  }
+
   return (
-    <button
-      type={type}
-      {...rest}
-      className={clsx(
-        sharedButtonStyle,
-        buttonModesStyles[mode],
-        buttonSizing[size],
-        isDisabled ? 'cursor-not-allowed' : '',
-        full && fullWidth,
-        rest?.className
-      )}
-      disabled={isDisabled}
-    >
-      {isLoading ? (
-        <>
-          {loadingText ? (
-            <span className="whitespace-nowrap mr-2">{loadingText}</span>
-          ) : null}
-          <CgSpinner
-            className={`animate-spin ${size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'}`}
+    <button {...buttonAttributes}>
+      <>
+        {iconPosition === 'start' && (
+          <ButtonIcon
+            icon={icon}
+            size={size}
+            iconPosition={iconPosition}
+            buttonHasChildren={!!children}
           />
-        </>
-      ) : (
-        <>
-          {icon && iconPosition === 'start'
-            ? React.cloneElement(icon, {
-                className: `inline-flex ${children && 'mr-2'} ${
-                  size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
-                } ${icon.props.className}`,
-              })
-            : null}
-          <span className="whitespace-nowrap max-w-full">{children}</span>
-          {icon && iconPosition === 'end'
-            ? React.cloneElement(icon, {
-                className: `inline-flex ${children && 'ml-2'} ${
-                  size === 'sm' ? 'w-4 h-4' : 'w-5 h-5'
-                } ${icon.props.className}`,
-              })
-            : null}
-        </>
-      )}
+        )}
+
+        <span className="whitespace-nowrap max-w-full">{children}</span>
+
+        {iconPosition === 'end' && (
+          <ButtonIcon
+            icon={icon}
+            size={size}
+            iconPosition={iconPosition}
+            buttonHasChildren={!!children}
+          />
+        )}
+      </>
     </button>
   );
 };
+
+function ButtonIcon(props: {
+  size?: ButtonSize;
+  icon: ReactElement;
+  buttonHasChildren: boolean;
+  iconPosition?: 'start' | 'end';
+}) {
+  const { icon, size, iconPosition, buttonHasChildren } = props;
+
+  const className = clsx(
+    'inline-flex',
+    {
+      'mr-2': buttonHasChildren || iconPosition === 'start',
+      'ml-2': buttonHasChildren || iconPosition === 'end',
+    },
+
+    size === 'sm' ? 'w-4 h-4' : 'w-5 h-5',
+
+    icon.props.className
+  );
+
+  return React.cloneElement(icon, { className });
+}

@@ -8,21 +8,20 @@ let
     inherit (pkgs) unixODBC;
   };
 
+  msodbcsql = pkgs.unixODBCDrivers.msodbcsql18;
+
   # Verify this works by running `odbcinst -q -d`.
   # The output should be the headings from the odbcinst.ini file.
   # (You can easily see the generated file by running `cat $ODBCINSTINI`.)
   # If you see any errors, please contact your friendly MSSQL and/or Nix expert.
-  odbcinstFile =
-    let msodbcsql = pkgs.unixODBCDrivers.msodbcsql17;
-    in
-    pkgs.writeTextFile {
-      name = "odbcinst.ini";
-      text = ''
-        [${msodbcsql.fancyName}]
-        Description = ${msodbcsql.meta.description}
-        Driver = ${msodbcsql}/${msodbcsql.driver}
-      '';
-    };
+  odbcinstFile = pkgs.writeTextFile {
+    name = "odbcinst.ini";
+    text = ''
+      [${msodbcsql.fancyName}]
+      Description = ${msodbcsql.meta.description}
+      Driver = ${msodbcsql}/${msodbcsql.driver}
+    '';
+  };
 
   baseInputs = [
     pkgs.stdenv
@@ -82,6 +81,7 @@ let
   dynamicLibraries = [
     pkgs.gmp
     pkgs.libkrb5 # Includes required `gssapi` headers.
+    pkgs.libiconv
     pkgs.ncurses
     pkgs.openssl_3
     pkgs.pcre
@@ -94,12 +94,11 @@ let
     pkgs.mariadb
     pkgs.postgresql
     pkgs.unixODBC
+    msodbcsql
   ]
   # Linux-specific libraries.
   ++ pkgs.lib.optionals pkgs.stdenv.targetPlatform.isLinux [
     pkgs.stdenv.cc.cc.lib
-    # Microsoft SQL Server drivers don't work on aarch64 yet.
-    pkgs.unixODBCDrivers.msodbcsql17
   ];
 
   includeLibraries = [
@@ -121,9 +120,8 @@ pkgs.mkShell {
 
   # We set the ODBCINSTINI to the file defined above, which points to the MSSQL ODBC driver.
   # The path is relative to `ODBCSYSINI`, which we set to empty.
-  # Microsoft SQL Server drivers don't work on aarch64 yet, so we also disable this.
   ODBCSYSINI = "";
-  ODBCINSTINI = pkgs.lib.strings.optionalString pkgs.stdenv.targetPlatform.isLinux "${odbcinstFile}";
+  ODBCINSTINI = "${odbcinstFile}";
 
   LD_LIBRARY_PATH = pkgs.lib.strings.makeLibraryPath dynamicLibraries;
   shellHook = pkgs.lib.strings.optionalString pkgs.stdenv.targetPlatform.isDarwin ''

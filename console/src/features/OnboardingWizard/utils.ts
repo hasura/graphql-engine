@@ -4,6 +4,7 @@ import { Dispatch } from '@/types';
 import { cloudDataServiceApiClient } from '@/hooks/cloudDataServiceApiClient';
 import { Api } from '@/hooks/apiUtils';
 import { HasuraMetadataV3 } from '@/metadata/types';
+import { programmaticallyTraceError } from '@/features/Analytics';
 import {
   clickRunQueryButton,
   forceGraphiQLIntrospection,
@@ -31,8 +32,7 @@ export function isExperimentActive(
 
 export function shouldShowOnboarding(
   experimentsData: ExperimentConfig[],
-  experimentId: string,
-  hasNeonAccess: boolean
+  experimentId: string
 ) {
   const experimentData = experimentsData?.find(
     experimentConfig => experimentConfig.experiment === experimentId
@@ -40,21 +40,13 @@ export function shouldShowOnboarding(
 
   const userActivity = experimentData?.userActivity;
 
-  // onboarding skipped/completion is different with the new Neon flow
-  if (hasNeonAccess) {
-    if (
-      userActivity?.[skippedOnboardingVariables.kind] ||
-      userActivity?.[onboardingCompleteVariables.kind] ||
-      userActivity?.[hasuraSourceCreationStartVariables.kind] ||
-      userActivity?.[templateSummaryRunQuerySkipVariables.kind] ||
-      userActivity?.[templateSummaryRunQueryClickVariables.kind]
-    ) {
-      return false;
-    }
-    return true;
-  }
-
-  if (userActivity?.onboarding_complete || userActivity?.skipped_onboarding) {
+  if (
+    userActivity?.[skippedOnboardingVariables.kind] ||
+    userActivity?.[onboardingCompleteVariables.kind] ||
+    userActivity?.[hasuraSourceCreationStartVariables.kind] ||
+    userActivity?.[templateSummaryRunQuerySkipVariables.kind] ||
+    userActivity?.[templateSummaryRunQueryClickVariables.kind]
+  ) {
     return false;
   }
   return true;
@@ -63,11 +55,10 @@ export function shouldShowOnboarding(
 export function getWizardState(
   experimentsData: ExperimentConfig[],
   experimentId: string,
-  showFamiliaritySurvey: boolean,
-  hasNeonAccess: boolean
+  showFamiliaritySurvey: boolean
 ): WizardState {
   if (
-    shouldShowOnboarding(experimentsData, experimentId, hasNeonAccess) &&
+    shouldShowOnboarding(experimentsData, experimentId) &&
     isExperimentActive(experimentsData, experimentId)
   ) {
     if (showFamiliaritySurvey) return 'familiarity-survey';
@@ -96,21 +87,8 @@ export const persistSkippedOnboarding = () => {
     skippedOnboardingVariables,
     cloudHeaders
   ).catch(error => {
-    // TODO throw Sentry alert
+    programmaticallyTraceError(error);
     throw error;
-  });
-};
-
-// persist onboarding completion in the database
-export const persistOnboardingCompletion = () => {
-  // mutate server data
-  cloudDataServiceApiClient<ResponseDataOnMutation, ResponseDataOnMutation>(
-    graphQlMutation,
-    onboardingCompleteVariables,
-    cloudHeaders
-  ).catch(error => {
-    // TODO throw Sentry alert
-    console.error(error);
   });
 };
 
@@ -121,8 +99,8 @@ export const emitOnboardingEvent = (variables: Record<string, unknown>) => {
     variables,
     cloudHeaders
   ).catch(error => {
-    // TODO throw Sentry alert
     console.error(error);
+    programmaticallyTraceError(error);
   });
 };
 /**

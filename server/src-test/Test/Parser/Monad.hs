@@ -4,7 +4,7 @@
 -- more advanced tests, they might require implementations.
 module Test.Parser.Monad
   ( ParserTest (..),
-    SchemaEnvironment,
+    SchemaEnvironment (..),
     SchemaTest,
     runSchemaTest,
     notImplementedYet,
@@ -53,6 +53,19 @@ notImplementedYet thing =
 -- SchemaEnvironment: currently void. This is subject to change if we require
 -- more complex setup.
 data SchemaEnvironment = SchemaEnvironment
+  {seSchemaOptions :: SchemaOptions}
+
+defaultSchemaOptions :: SchemaOptions
+defaultSchemaOptions =
+  SchemaOptions
+    { soStringifyNumbers = Options.Don'tStringifyNumbers,
+      soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
+      soInferFunctionPermissions = Options.InferFunctionPermissions,
+      soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters,
+      soIncludeUpdateManyFields = Options.IncludeUpdateManyFields,
+      soIncludeAggregationPredicates = Options.IncludeAggregationPredicates,
+      soBigQueryStringNumericInput = Options.EnableBigQueryStringNumericInput
+    }
 
 instance Has NamingCase SchemaEnvironment where
   getter :: SchemaEnvironment -> NamingCase
@@ -64,18 +77,10 @@ instance Has NamingCase SchemaEnvironment where
 instance Has SchemaOptions SchemaEnvironment where
   getter :: SchemaEnvironment -> SchemaOptions
   getter =
-    const
-      SchemaOptions
-        { soStringifyNumbers = Options.Don'tStringifyNumbers,
-          soDangerousBooleanCollapse = Options.Don'tDangerouslyCollapseBooleans,
-          soInferFunctionPermissions = Options.InferFunctionPermissions,
-          soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters,
-          soIncludeUpdateManyFields = Options.IncludeUpdateManyFields,
-          soBigQueryStringNumericInput = Options.EnableBigQueryStringNumericInput
-        }
+    seSchemaOptions
 
   modifier :: (SchemaOptions -> SchemaOptions) -> SchemaEnvironment -> SchemaEnvironment
-  modifier = notImplementedYet "modifier<Has SchemaOptions SchemaEnvironment>"
+  modifier f env = env {seSchemaOptions = f (seSchemaOptions env)}
 
 instance Has SchemaContext SchemaEnvironment where
   getter :: SchemaEnvironment -> SchemaContext
@@ -117,7 +122,7 @@ instance Has CustomizeRemoteFieldName SchemaEnvironment where
 type SchemaTest = SchemaT SchemaEnvironment SchemaTestInternal
 
 runSchemaTest :: SchemaTest a -> a
-runSchemaTest = runSchemaTestInternal . flip runReaderT SchemaEnvironment . runSchemaT
+runSchemaTest = runSchemaTestInternal . flip runReaderT (SchemaEnvironment defaultSchemaOptions) . runSchemaT
 
 newtype SchemaTestInternal a = SchemaTestInternal {runSchemaTestInternal :: a}
   deriving stock (Functor)

@@ -12,6 +12,7 @@ executable api-tests
     , bytestring
     , dc-api
     , fast-logger
+    , graphql-parser
     , hasura-prelude
     , hspec
     , http-conduit
@@ -52,7 +53,8 @@ executable api-tests
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options:
-    -Wall -O0
+    -Wall
+    -Werror
     -threaded
     -rtsopts "-with-rtsopts=-N"
 
@@ -129,6 +131,7 @@ executable api-tests
     Test.Queries.SortSpec
     Test.Queries.VariablesSpec
     Test.Quoter.YamlSpec
+    Test.Regression.AggregateBoolExpConflictSpec
     Test.Regression.ArrayLiteralTextEncodingSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
     Test.Regression.DropColumnWithPermissions8415Spec
@@ -160,3 +163,4 @@ executable api-tests
     Test.Schema.ViewsSpec
     Test.ServiceLivenessSpec
     Test.Subscriptions.CustomFieldsSpec
+    Test.Subscriptions.LiveQueriesSpec

@@ -40,7 +40,7 @@ export const SourceTable = () => {
     <div>
       <InputField
         name="source_name"
-        label="Database"
+        label="Source Database"
         labelIcon={<FaDatabase />}
         disabled
       />
@@ -50,7 +50,7 @@ export const SourceTable = () => {
           value: t,
           label: getTableName(t, databaseHierarchy ?? []),
         }))}
-        label="Table"
+        label="Source Table"
         labelIcon={<FaTable />}
         disabled
       />

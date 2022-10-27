@@ -66,3 +66,36 @@ package api-tests
   executable-dynamic: True
   library-vanilla: False
 
+
+package mysql
+  extra-include-dirs:
+    /opt/homebrew/opt/openssl/include
+    /opt/homebrew/opt/mysql-client@5.7/include
+  extra-lib-dirs:
+    /opt/homebrew/opt/openssl/lib
+    /opt/homebrew/opt/mysql-client@5.7/lib
+
+package odbc
+  extra-include-dirs: /opt/homebrew/opt/unixodbc/include
+  extra-lib-dirs: /opt/homebrew/opt/unixodbc/lib
+
+package pcre-light
+  extra-include-dirs: /opt/homebrew/opt/pcre/include
+  extra-lib-dirs: /opt/homebrew/opt/pcre/lib
+
+package postgresql-libpq
+  extra-include-dirs:
+    /opt/homebrew/opt/libpq/include
+    /opt/homebrew/opt/openssl/include
+  extra-lib-dirs:
+    /opt/homebrew/opt/libpq/lib
+    /opt/homebrew/opt/openssl/lib
+
+package pg-client
+  extra-include-dirs:
+    /opt/homebrew/opt/libpq/include
+    /opt/homebrew/opt/openssl/include
+  extra-lib-dirs:
+    /opt/homebrew/opt/libpq/lib
+    /opt/homebrew/opt/openssl/lib
+

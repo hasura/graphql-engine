@@ -19,7 +19,7 @@ import Harness.TestEnvironment (TestEnvironment)
 import Harness.TestEnvironment qualified as TE
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it)
+import Test.Hspec (SpecWith, describe, it, pendingWith)
 
 spec :: SpecWith TestEnvironment
 spec =
@@ -446,4 +446,45 @@ tests opts = describe "Aggregate Query Tests" $ do
                   InvoiceLines_aggregate:
                     aggregate:
                       count: 14
+        |]
+    it "works for custom aggregate functions" $ \(testEnvironment, _) -> do
+      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) do
+        pendingWith "SQLite DataConnector does not support 'longest' and 'shortest' custom aggregate functions"
+      shouldReturnYaml
+        opts
+        ( GraphqlEngine.postGraphql
+            testEnvironment
+            [graphql|
+              query MyQuery {
+                Album_aggregate {
+                  aggregate {
+                    longest {
+                      Title
+                    }
+                    shortest {
+                      Title
+                    }
+                    max {
+                      Title
+                    }
+                    min {
+                      Title
+                    }
+                  }
+                }
+              }
+            |]
+        )
+        [yaml|
+          "data":
+            "Album_aggregate":
+              "aggregate":
+                "longest":
+                  "Title": "Tchaikovsky: 1812 Festival Overture, Op.49, Capriccio Italien & Beethoven: Wellington's Victory"
+                "shortest":
+                  "Title": "IV"
+                "max":
+                  "Title": "[1997] Black Light Syndrome"
+                "min":
+                  "Title": "...And Justice For All"
         |]

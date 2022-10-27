@@ -1,4 +1,5 @@
 import React from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
@@ -56,27 +57,29 @@ const MetadataOptions = props => {
   };
 
   return (
-    <div className={`clear-both pl-md mt-md mb-md`}>
-      <h2 className="text-xl font-bold">Hasura Metadata Actions</h2>
-      <div className="mt-xs">
-        <div className="w-8/12">
-          Hasura metadata stores information about your tables, relationships,
-          permissions, etc. that is used to generate the GraphQL schema and
-          API.&nbsp;
-          <a
-            href="https://hasura.io/docs/latest/graphql/core/how-it-works/metadata-schema.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <i>(Read more)</i>
-          </a>
+    <Analytics name="MetadataOptions" {...REDACT_EVERYTHING}>
+      <div className={`clear-both pl-md mt-md mb-md`}>
+        <h2 className="text-xl font-bold">Hasura Metadata Actions</h2>
+        <div className="mt-xs">
+          <div className="w-8/12">
+            Hasura metadata stores information about your tables, relationships,
+            permissions, etc. that is used to generate the GraphQL schema and
+            API.&nbsp;
+            <a
+              href="https://hasura.io/docs/latest/graphql/core/how-it-works/metadata-schema.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <i>(Read more)</i>
+            </a>
+          </div>
+
+          {getMetadataImportExportSection()}
+
+          {getMetadataUpdateSection()}
         </div>
-
-        {getMetadataImportExportSection()}
-
-        {getMetadataUpdateSection()}
       </div>
-    </div>
+    </Analytics>
   );
 };
 

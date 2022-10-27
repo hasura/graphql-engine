@@ -28,7 +28,8 @@ Feel free to open pull requests to address these issues or to add/fix  console f
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/en/) (v12+, it is recommended that you use `node` with version `v12.x.x` A.K.A `erbium` or version `14.x.x` A.K.A `Fermium`)
+- [Node.js](https://nodejs.org/en/) (v16 aka 'Gallium')
+- [nvm](https://github.com/nvm-sh/nvm) (Linux and macOS, [deeper shell integration](https://github.com/nvm-sh/nvm#deeper-shell-integration) strongly suggested) or [nvm-windows](https://github.com/coreybutler/nvm-windows) (Windows)
 - [Hasura GraphQL Engine](https://hasura.io/docs/latest/graphql/core/getting-started/index.html)
 - [Hasura CLI](https://hasura.io/docs/latest/graphql/core/hasura-cli/install-hasura-cli.html) (for working with migrations)
 
@@ -41,8 +42,15 @@ Feel free to open pull requests to address these issues or to add/fix  console f
 git clone https://github.com/<your-user-name>/graphql-engine
 cd graphql-engine
 cd console
-npm run deps
+nvm use
+npm ci
+npm run server-build
 ```
+
+At this point you need to compile and run the graphql-engine (follow the [getting started guide](../../server//CONTRIBUTING.md)), run it, and the console will be served at `http://localhost:8080`.
+
+Alternatively, run the Console development server as described below.
+
 
 ### Run console development server
 
@@ -95,8 +103,17 @@ IS_ADMIN_SECRET_SET=true
 
 ##### Run console development server:
 
+Switch to the correct version of Node with [nvm](https://github.com/nvm-sh/nvm) (it's strongly suggested to activate [deeper shell integration](https://github.com/nvm-sh/nvm#deeper-shell-integration))
+
 ```bash
- npm run dev
+nvm install
+nvm use
+```
+
+Run the development server
+
+```bash
+npm run dev
 ```
 
 #### Develop with Hasura CLI (`cli` mode)
@@ -166,7 +183,7 @@ npm run storybook
 
 Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
 
-![Testing Development Server](../assets/console-readme-assets/test-dev-setup.jpg)
+![Testing Development Server](../../assets/console-readme-assets/test-dev-setup.jpg)
 
 ### Make changes to the code
 

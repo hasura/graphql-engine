@@ -5,9 +5,12 @@ module Hasura.Backends.DataConnector.API.V0.CapabilitiesSpec (spec) where
 
 import Data.Aeson (Value (..))
 import Data.Aeson.QQ.Simple (aesonQQ)
+import Data.HashMap.Strict qualified as HashMap
 import Data.Text.RawString (raw)
 import Hasura.Backends.DataConnector.API.V0.Capabilities
 import Hasura.Backends.DataConnector.API.V0.ConfigSchema
+import Hasura.Backends.DataConnector.API.V0.Scalar (ScalarType (..))
+import Hasura.Backends.DataConnector.API.V0.ScalarSpec (genScalarType)
 import Hasura.Generator.Common
 import Hasura.Prelude
 import Hedgehog
@@ -27,8 +30,11 @@ spec = do
     testToFromJSON
       (CapabilitiesResponse (defaultCapabilities {_cRelationships = Just RelationshipCapabilities {}}) emptyConfigSchemaResponse)
       [aesonQQ|{"capabilities": {"relationships": {}}, "config_schemas": {"config_schema": {}, "other_schemas": {}}}|]
+  describe "ScalarTypesCapabilities" $ do
+    testToFromJSONToSchema (ScalarTypesCapabilities (HashMap.singleton StringTy (ScalarTypeCapabilities Nothing Nothing))) [aesonQQ|{"string": {}}|]
+    jsonOpenApiProperties genScalarTypesCapabilities
   describe "ScalarTypeCapabilities" $ do
-    testToFromJSONToSchema (ScalarTypeCapabilities $ Just [G.name|DateTimeComparisons|]) [aesonQQ|{"comparison_type": "DateTimeComparisons"}|]
+    testToFromJSONToSchema (ScalarTypeCapabilities (Just [G.name|DateTimeComparisons|]) Nothing) [aesonQQ|{"comparison_type": "DateTimeComparisons"}|]
   describe "GraphQLTypeDefinitions" $ do
     testToFromJSONToSchema sampleGraphQLTypeDefinitions sampleGraphQLTypeDefinitionsJSON
 
@@ -76,12 +82,19 @@ genMutationCapabilities = pure MutationCapabilities {}
 genSubscriptionCapabilities :: MonadGen m => m SubscriptionCapabilities
 genSubscriptionCapabilities = pure SubscriptionCapabilities {}
 
+genAggregateFunctions :: MonadGen m => m AggregateFunctions
+genAggregateFunctions =
+  AggregateFunctions <$> genHashMap (genGName defaultRange) genScalarType defaultRange
+
 genScalarTypeCapabilities :: MonadGen m => m ScalarTypeCapabilities
-genScalarTypeCapabilities = ScalarTypeCapabilities <$> Gen.maybe (genGName defaultRange)
+genScalarTypeCapabilities =
+  ScalarTypeCapabilities
+    <$> Gen.maybe (genGName defaultRange)
+    <*> Gen.maybe genAggregateFunctions
 
 genScalarTypesCapabilities :: MonadGen m => m ScalarTypesCapabilities
 genScalarTypesCapabilities =
-  ScalarTypesCapabilities <$> genHashMap (genGName defaultRange) genScalarTypeCapabilities defaultRange
+  ScalarTypesCapabilities <$> genHashMap genScalarType genScalarTypeCapabilities defaultRange
 
 -- | 'genTypeDefinition' generates invalid type definitions so we need to filter them out.
 -- The printers also sort various lists upon printing, so we need to pre-sort them for round-tripping to work.
