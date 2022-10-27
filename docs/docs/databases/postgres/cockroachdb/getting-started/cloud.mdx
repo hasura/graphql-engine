@@ -40,9 +40,14 @@ variable as the `SSL Root Certificate`.
 :::info Note
 
 Pay extra notice that if you use one of CockroachDB's serverless databases, you will be prompted with a connection string
-that contains the parameter `sslverify`.
+that contains the parameter `sslverify`. You must add this parameter manually via the "SSL Certificates Settings" section.
 
-You must add this parameter manually via the "SSL Certificates Settings" section.
+Depending on how you have configured [Network
+Authorization](https://www.cockroachlabs.com/docs/cockroachcloud/network-authorization.html) on your CockroachDB
+Serverless database, you will also need to either add the Hasura IP (which can be
+found on the `General` tab of your Hasura project details page) to the allowlist,
+or setup a [dedicated
+VPC](/deployment/hasura-cloud/dedicated-vpc.mdx).
 
 :::
 
