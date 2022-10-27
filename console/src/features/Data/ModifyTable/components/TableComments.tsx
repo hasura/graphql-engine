@@ -1,27 +1,26 @@
+import { Table } from '@/features/MetadataAPI';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Nullable } from '@/types';
 import clsx from 'clsx';
 import React, { useMemo } from 'react';
 import TextareaAutosize from 'react-autosize-textarea';
-import { Table } from '@/features/MetadataAPI';
-import { FaEdit } from 'react-icons/fa';
-import { useMetadataForManageTable, getTableFromMetadata } from '../hooks';
-import { useUpdateTableConfiguration } from '../hooks/useUpdateTableConfiguration';
+import { FaEdit, FaRegComment } from 'react-icons/fa';
+import { useMetadataTable, useUpdateTableConfiguration } from '../hooks';
 
-export interface TableCommentsProps {
+import { ModifyTableProps } from '../ModifyTable';
+
+export interface TableCommentsProps extends ModifyTableProps {
   dataSourceName: string;
   table: Table;
 }
 
 export const TableComments: React.VFC<TableCommentsProps> = props => {
   const { dataSourceName, table } = props;
-  const { data, isLoading } = useMetadataForManageTable(dataSourceName);
 
-  const savedComment = React.useMemo(
-    () => getTableFromMetadata(data?.metadata, table)?.configuration?.comment,
-    [table, data?.metadata]
-  );
+  const { isLoading, metadataTable } = useMetadataTable(dataSourceName, table);
+
+  const savedComment = metadataTable?.configuration?.comment || '';
 
   const [comment, setComment] = React.useState<Nullable<string>>(null);
 
@@ -44,7 +43,7 @@ export const TableComments: React.VFC<TableCommentsProps> = props => {
           className={clsx(
             'bg-secondary-light border border-gray-300 border-l-4 border-l-secondary p-sm peer',
             'focus:bg-white rounded focus:[box-shadow:none] focus:border-secondary',
-            'placeholder-shown:italic placeholder-shown:pl-8',
+            'placeholder-shown:italic pl-9',
             saveNeeded && 'border-l-red-500 '
           )}
           name="comments"
@@ -56,6 +55,12 @@ export const TableComments: React.VFC<TableCommentsProps> = props => {
           className={clsx(
             'invisible absolute opacity-50 left-0 top-1/2 -translate-y-1/2 -mt-[4px] ml-4',
             'peer-placeholder-shown:visible'
+          )}
+        />
+        <FaRegComment
+          className={clsx(
+            'absolute opacity-50 left-0 top-1/2 -translate-y-1/2 -mt-[4px] ml-4',
+            'peer-placeholder-shown:invisible'
           )}
         />
       </div>

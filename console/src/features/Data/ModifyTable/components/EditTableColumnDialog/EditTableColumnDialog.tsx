@@ -1,32 +1,41 @@
-import { Table } from '@/features/MetadataAPI';
 import { Button } from '@/new-components/Button';
 import { Dialog } from '@/new-components/Dialog';
 import { InputField, UpdatedForm } from '@/new-components/Form';
+import { sanitizeGraphQLFieldNames } from '@/utils';
+import { SanitizeTips } from '@/utils/sanitizeGraphQLFieldNames';
 import React from 'react';
-import { schema } from './schema';
-import { useUpdateTableColumn } from '../../hooks/useUpdateTableColumn';
+import {
+  useMetadataTable,
+  useUpdateTableConfiguration,
+} from '../../../ModifyTable/hooks';
+import { ModifyTableProps } from '../../ModifyTable';
 import { ModifyTableColumn } from '../../types';
+import { schema, Schema } from './schema';
 
-interface EditTableColumnDialogProps {
+interface EditTableColumnDialogProps extends ModifyTableProps {
   onClose: () => void;
   column: ModifyTableColumn;
-  table: Table;
-  dataSourceName: string;
 }
 
 export const EditTableColumnDialog = (props: EditTableColumnDialogProps) => {
   const { onClose, column, table, dataSourceName } = props;
 
-  const { updateTableColumn, isLoading: isSaveInProgress } =
-    useUpdateTableColumn({ table, dataSourceName });
+  const { metadataTable } = useMetadataTable(dataSourceName, table);
+
+  const { isLoading: isSaveInProgress, updateTableConfiguration } =
+    useUpdateTableConfiguration(dataSourceName, table);
+
   return (
     <UpdatedForm
       schema={schema}
-      onSubmit={data => {
-        updateTableColumn({
-          column,
-          updatedConfig: data,
-          customOnSuccess: onClose,
+      onSubmit={(data: Schema) => {
+        updateTableConfiguration({
+          column_config: {
+            ...metadataTable?.configuration?.column_config,
+            [column.name]: data,
+          },
+        }).then(() => {
+          onClose();
         });
       }}
       options={{
@@ -39,8 +48,8 @@ export const EditTableColumnDialog = (props: EditTableColumnDialogProps) => {
       {() => (
         <Dialog
           size="md"
-          description="Edit the columns settings"
-          title="Modify Column"
+          titleTooltip={`Edit ${column.name} column settings`}
+          title={`[${column.name}]`}
           hasBackdrop
           onClose={onClose}
           footer={
@@ -52,17 +61,19 @@ export const EditTableColumnDialog = (props: EditTableColumnDialogProps) => {
           }
         >
           <div className="m-4">
+            <SanitizeTips />
+            <InputField
+              label="Custom GraphQL Field Name"
+              name="custom_name"
+              placeholder="Enter GraphQL Field Name"
+              tooltip="Add a custom GQL field name for table column"
+              inputTransform={val => sanitizeGraphQLFieldNames(val)}
+            />
             <InputField
               tooltip="Add a comment for your table column"
               label="Comment"
               name="comment"
               placeholder="Add a comment"
-            />
-            <InputField
-              label="Custom GraphQL field name"
-              name="custom_name"
-              placeholder="Enter GraphQL field name"
-              tooltip="Add a custom GQL field name for table column"
             />
           </div>
         </Dialog>

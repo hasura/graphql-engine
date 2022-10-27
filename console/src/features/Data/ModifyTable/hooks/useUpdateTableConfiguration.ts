@@ -5,7 +5,7 @@ import {
 import { useFireNotification } from '@/new-components/Notifications';
 import { useCallback } from 'react';
 import { useQueryClient } from 'react-query';
-import { useMetadataForManageTable, manageTableMetadataQueryKey } from '.';
+import { manageTableMetadataQueryKey, useMetadataTable } from '.';
 
 export const useUpdateTableConfiguration = (
   dataSourceName: string,
@@ -17,16 +17,20 @@ export const useUpdateTableConfiguration = (
 
   const queryClient = useQueryClient();
 
-  const { data } = useMetadataForManageTable(dataSourceName);
-
-  const metadata = data?.metadata;
-
-  const resource_version = data?.resource_version;
+  const { metadata, resource_version, metadataTable } = useMetadataTable(
+    dataSourceName,
+    table
+  );
 
   const updateTableConfiguration = useCallback(
     (config: MetadataTableConfig) => {
       const driver = metadata?.kind;
+
       return new Promise<void>((resolve, reject) => {
+        if (!metadata) {
+          throw Error('Metadata not found!');
+        }
+
         mutate(
           {
             query: {
@@ -35,7 +39,10 @@ export const useUpdateTableConfiguration = (
               args: {
                 source: dataSourceName,
                 table,
-                configuration: config,
+                configuration: Object.assign(
+                  metadataTable?.configuration || {},
+                  config
+                ),
               },
             },
           },
@@ -74,5 +81,5 @@ export const useUpdateTableConfiguration = (
     ]
   );
 
-  return { updateTableConfiguration, ...rest };
+  return { updateTableConfiguration, metadata, resource_version, ...rest };
 };

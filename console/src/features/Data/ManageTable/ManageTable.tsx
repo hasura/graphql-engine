@@ -84,14 +84,17 @@ export const ManageTable: React.VFC<ManageTableProps> = (
 
   const { database: dataSourceName, table } = urlData.data;
 
-  const { data: databaseHierarchy, isLoading } =
-    useDatabaseHierarchy(dataSourceName);
+  const {
+    data: databaseHierarchy,
+    isLoading,
+    isError,
+  } = useDatabaseHierarchy(dataSourceName);
 
   const tableName = databaseHierarchy
     ? getTableName(table, databaseHierarchy)
     : '';
 
-  if (!databaseHierarchy)
+  if (isError)
     return (
       <IndicatorCard status="negative">
         Could not fetch the database hierarchy for the table.

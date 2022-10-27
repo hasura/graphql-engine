@@ -17,6 +17,11 @@ import {
  */
 export type Table = unknown;
 
+export type MetadataTableColumnConfig = {
+  custom_name?: string;
+  comment?: string;
+};
+
 export type MetadataTableConfig = {
   custom_name?: string;
   custom_root_fields?: {
@@ -32,7 +37,7 @@ export type MetadataTableConfig = {
     delete_by_pk?: string;
     update_many?: string;
   };
-  column_config?: Record<string, { custom_name: string; comment?: string }>;
+  column_config?: Record<string, MetadataTableColumnConfig>;
   comment?: string;
   /**
    * @deprecated do not use this anymore. Should be used only for backcompatiblity reasons

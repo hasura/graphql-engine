@@ -29,7 +29,7 @@ export const TableTrackingCustomizationModal: React.FC<TableTrackingCustomizatio
     onClose,
     show = true,
     currentConfiguration,
-    dialogDescription = 'Customize table name and root fields for GraphQL operations.',
+    dialogDescription,
   }) => {
     return (
       <>

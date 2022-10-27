@@ -5,6 +5,8 @@ import { AxiosError } from 'axios';
 import isEqual from 'lodash.isequal';
 import React from 'react';
 import { useQuery } from 'react-query';
+// eslint-disable-next-line no-restricted-imports
+import { useTableColumns } from '@/features/BrowseRows/components/DataGrid/useTableColumns';
 
 export const getTableFromMetadata = (
   metadata: Source | undefined,
@@ -20,7 +22,10 @@ export const manageTableMetadataQueryKey = (dataSourceName: string) => [
 ];
 
 // adding underscore to prevent conflicts or confusion as this is only mean to be for this scope
-export const useMetadataForManageTable = (dataSourceName: string) => {
+export const useMetadataForManageTable = (
+  dataSourceName: string,
+  queryEnabled = true
+) => {
   const httpClient = useHttpClient();
 
   return useQuery<
@@ -46,17 +51,15 @@ export const useMetadataForManageTable = (dataSourceName: string) => {
         resource_version,
       };
 
-      console.log('DATA', data);
-
       return data;
     },
-
+    enabled: queryEnabled,
     refetchOnWindowFocus: false,
   });
 };
 
 export const useMetadataTable = (dataSourceName: string, table: unknown) => {
-  const { data, isLoading } = useMetadataForManageTable(dataSourceName);
+  const { data, ...rest } = useMetadataForManageTable(dataSourceName);
 
   const metadataTable = React.useMemo(
     () => getTableFromMetadata(data?.metadata, table),
@@ -65,7 +68,39 @@ export const useMetadataTable = (dataSourceName: string, table: unknown) => {
 
   return {
     metadata: data?.metadata,
-    isLoading,
+    resource_version: data?.resource_version,
     metadataTable,
+    ...rest,
+  };
+};
+
+export const useListAllTableColumns = (
+  dataSourceName: string,
+  table: unknown
+) => {
+  const { data: tableColumns, isFetching: isIntrospectionReady } =
+    useTableColumns({
+      table,
+      dataSourceName,
+    });
+
+  const { data, ...rest } = useMetadataForManageTable(
+    dataSourceName,
+    !isIntrospectionReady
+  );
+
+  const metadataTable = React.useMemo(
+    () => getTableFromMetadata(data?.metadata, table),
+    [table, data?.metadata]
+  );
+
+  const tableConfig = metadataTable?.configuration?.column_config;
+
+  return {
+    data: (tableColumns?.columns ?? []).map(tableColumn => ({
+      ...tableColumn,
+      config: tableConfig?.[tableColumn.name],
+    })),
+    ...rest,
   };
 };
