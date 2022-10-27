@@ -16,6 +16,7 @@ import Test.Hspec
 spec :: SpecWith TestEnvironment
 spec = do
   ignoreSubject do
+    it "Postgres metadata DB" $ shouldReturn Postgres.metadataLivenessCheck ()
     it "Postgres" $ shouldReturn Postgres.livenessCheck ()
     it "MySQL" $ shouldReturn Mysql.livenessCheck ()
     it "SQLServer" $ shouldReturn Sqlserver.livenessCheck ()

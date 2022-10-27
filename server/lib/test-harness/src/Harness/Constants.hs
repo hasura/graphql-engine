@@ -9,6 +9,7 @@ module Harness.Constants
     postgresHost,
     postgresPort,
     postgresqlConnectionString,
+    postgresqlMetadataConnectionString,
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
     mysqlLivenessCheckAttempts,
@@ -70,6 +71,40 @@ import Network.WebSockets qualified as WS
 import Refined (refineTH)
 
 -------------------------------------------------------------------------------
+
+-- * Postgres metadata DB
+
+-- To allow us to test different Postgres flavours,
+-- we have separate connection details for the metadata DB
+-- (which should always be Postgres) and other Postgres (which
+-- might actually be Yugabyte, etc)
+postgresMetadataPassword :: String
+postgresMetadataPassword = "hasura"
+
+postgresMetadataUser :: String
+postgresMetadataUser = "hasura"
+
+postgresMetadataDb :: String
+postgresMetadataDb = "hasura_metadata"
+
+postgresMetadataHost :: String
+postgresMetadataHost = "127.0.0.1"
+
+postgresMetadataPort :: Word16
+postgresMetadataPort = 65002
+
+postgresqlMetadataConnectionString :: String
+postgresqlMetadataConnectionString =
+  "postgres://"
+    ++ postgresMetadataUser
+    ++ ":"
+    ++ postgresMetadataPassword
+    ++ "@"
+    ++ postgresMetadataHost
+    ++ ":"
+    ++ show postgresMetadataPort
+    ++ "/"
+    ++ postgresMetadataDb
 
 -- * Postgres
 
