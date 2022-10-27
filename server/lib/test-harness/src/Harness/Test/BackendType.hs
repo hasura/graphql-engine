@@ -100,7 +100,7 @@ defaultBackendCapabilities = \case
 -- | The default hasura metadata backend type used for a given backend in this test suite project.
 defaultBackendTypeString :: BackendType -> String
 defaultBackendTypeString = \case
-  Postgres -> "postgres"
+  Postgres -> "pg"
   MySQL -> "mysql"
   SQLServer -> "mssql"
   BigQuery -> "bigquery"

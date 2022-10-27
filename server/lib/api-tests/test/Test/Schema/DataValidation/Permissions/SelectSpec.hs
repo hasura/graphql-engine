@@ -7,8 +7,12 @@
 module Test.Schema.DataValidation.Permissions.SelectSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.Aeson.Key qualified as Key (toString)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.BigQuery qualified as BigQuery
+import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphqlWithHeaders, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
 import Harness.Quoter.Yaml (interpolateYaml)
@@ -24,7 +28,25 @@ spec :: SpecWith TestEnvironment
 spec = do
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Postgres.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.Postgres testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Citus.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.Citus testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Cockroach.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.Cockroach testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.BigQuery)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ BigQuery.setupTablesAction schema testEnvironment,
                   setupMetadata Fixture.BigQuery testEnvironment
@@ -129,8 +151,8 @@ tests opts = do
           [interpolateYaml|
             data:
               #{schemaName}_article:
-              - id: '1'
-                author_id: '1'
+              - id: 1
+                author_id: 1
           |]
 
         actual :: IO Value
@@ -160,7 +182,7 @@ tests opts = do
           [interpolateYaml|
             data:
               #{schemaName}_article:
-              - author_id: '2'
+              - author_id: 2
                 content: Sample article content 2
                 title: Article 2
           |]
@@ -192,8 +214,14 @@ setupMetadata backendType testEnvironment = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
 
-      backend :: String
-      backend = Fixture.defaultSource backendType
+      schemaKeyword :: String
+      schemaKeyword = Key.toString $ Fixture.schemaKeyword backendType
+
+      backendPrefix :: String
+      backendPrefix = Fixture.defaultBackendTypeString backendType
+
+      source :: String
+      source = Fixture.defaultSource backendType
 
       setup :: IO ()
       setup =
@@ -202,11 +230,11 @@ setupMetadata backendType testEnvironment = do
           [interpolateYaml|
             type: bulk
             args:
-            - type: #{backend}_create_select_permission
+            - type: #{backendPrefix}_create_select_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
-                  dataset: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                   name: article
                 role: author
                 permission:
@@ -214,11 +242,11 @@ setupMetadata backendType testEnvironment = do
                     author_id:
                       _eq: X-Hasura-User-Id
                   columns: "*"
-            - type: #{backend}_create_select_permission
+            - type: #{backendPrefix}_create_select_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
-                  dataset: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                   name: article
                 role: user
                 permission:
@@ -235,19 +263,19 @@ setupMetadata backendType testEnvironment = do
           [interpolateYaml|
             type: bulk
             args:
-            - type: #{backend}_drop_select_permission
+            - type: #{backendPrefix}_drop_select_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
                   name: article
-                  dataset: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                 role: author
-            - type: #{backend}_drop_select_permission
+            - type: #{backendPrefix}_drop_select_permission
               args:
-                source: #{backend}
+                source: #{source}
                 table:
                   name: article
-                  dataset: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                 role: user
           |]
 

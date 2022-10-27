@@ -123,8 +123,9 @@ tests opts = do
 setupTeardown :: TestEnvironment -> Fixture.BackendType -> Fixture.SetupAction
 setupTeardown testEnvironment backend = Fixture.SetupAction setupAction mempty
   where
-    source = Fixture.defaultBackendTypeString backend
-    config = source <> "_set_table_customization"
+    backendPrefix = Fixture.defaultBackendTypeString backend
+    source = Fixture.defaultSource backend
+    config = backendPrefix <> "_set_table_customization"
 
     setupAction =
       postMetadata_

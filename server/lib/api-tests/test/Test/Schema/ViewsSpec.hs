@@ -169,7 +169,7 @@ setupMetadata backend testEnvironment =
           [yaml|
             type: *track
             args:
-              source: *label
+              source: *source
               table:
                 name: author_view
                 schema: hasura
@@ -180,7 +180,7 @@ setupMetadata backend testEnvironment =
           [yaml|
             type: *untrack
             args:
-              source: *label
+              source: *source
               table:
                 name: author_view
                 schema: hasura
@@ -189,6 +189,9 @@ setupMetadata backend testEnvironment =
   where
     label :: String
     label = Fixture.defaultBackendTypeString backend
+
+    source :: String
+    source = Fixture.defaultSource backend
 
     track :: String
     track = label <> "_track_table"
