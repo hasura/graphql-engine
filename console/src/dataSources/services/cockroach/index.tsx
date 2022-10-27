@@ -65,6 +65,7 @@ import {
   generateDeleteRowRequest,
   generateBulkDeleteRowRequest,
 } from './utils';
+import globals from '../../../Globals';
 import { SupportedFeaturesType } from '../../types';
 import {
   postgres,
@@ -79,7 +80,10 @@ export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
     enabled: false,
     namingConvention: false,
     extensions_schema: false,
-    ssl_certificates: true,
+    ssl_certificates:
+      globals.consoleType === 'cloud' ||
+      globals.consoleType === 'pro' ||
+      globals.consoleType === 'pro-lite',
   },
   driver: {
     name: 'cockroach',
