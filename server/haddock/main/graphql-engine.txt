@@ -19799,9 +19799,9 @@ ResourceLimits :: (forall m a. (MonadBaseControl IO m, MonadError QErr m) => m a
 -- | Monads which support resource (memory, CPU time, etc.) limiting
 class Monad m => HasResourceLimits m
 askHTTPHandlerLimit :: HasResourceLimits m => m ResourceLimits
-askGraphqlOperationLimit :: HasResourceLimits m => RequestId -> m (UserInfo -> ApiLimit -> ResourceLimits)
+askGraphqlOperationLimit :: HasResourceLimits m => RequestId -> UserInfo -> ApiLimit -> m ResourceLimits
 askHTTPHandlerLimit :: (HasResourceLimits m, m ~ t n, MonadTrans t, HasResourceLimits n) => m ResourceLimits
-askGraphqlOperationLimit :: (HasResourceLimits m, m ~ t n, MonadTrans t, HasResourceLimits n) => RequestId -> m (UserInfo -> ApiLimit -> ResourceLimits)
+askGraphqlOperationLimit :: (HasResourceLimits m, m ~ t n, MonadTrans t, HasResourceLimits n) => RequestId -> UserInfo -> ApiLimit -> m ResourceLimits
 instance Hasura.Server.Limits.HasResourceLimits m => Hasura.Server.Limits.HasResourceLimits (Control.Monad.Trans.Reader.ReaderT r m)
 instance Hasura.Server.Limits.HasResourceLimits m => Hasura.Server.Limits.HasResourceLimits (Control.Monad.Trans.Except.ExceptT e m)
 instance Hasura.Server.Limits.HasResourceLimits m => Hasura.Server.Limits.HasResourceLimits (Hasura.Tracing.TraceT m)
@@ -20154,21 +20154,21 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqCleanupConfig :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (Maybe Text)
-cetqWebhook :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (Maybe InputWebhook)
-cetqUpdate :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (Maybe (SubscribeOpSpec b_awMvO))
-cetqTable :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (TableName b_awMvO)
-cetqSource :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) SourceName
-cetqRetryConf :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (Maybe RequestTransform)
-cetqReplace :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) Bool
-cetqName :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) TriggerName
-cetqInsert :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (Maybe (SubscribeOpSpec b_awMvO))
-cetqHeaders :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (Maybe Bool)
-cetqDelete :: forall b_awMvO. Lens' (CreateEventTriggerQuery b_awMvO) (Maybe (SubscribeOpSpec b_awMvO))
+cteqCleanupConfig :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (Maybe Text)
+cetqWebhook :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (Maybe InputWebhook)
+cetqUpdate :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (Maybe (SubscribeOpSpec b_awMwp))
+cetqTable :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (TableName b_awMwp)
+cetqSource :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) SourceName
+cetqRetryConf :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (Maybe RequestTransform)
+cetqReplace :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) Bool
+cetqName :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) TriggerName
+cetqInsert :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (Maybe (SubscribeOpSpec b_awMwp))
+cetqHeaders :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (Maybe Bool)
+cetqDelete :: forall b_awMwp. Lens' (CreateEventTriggerQuery b_awMwp) (Maybe (SubscribeOpSpec b_awMwp))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
