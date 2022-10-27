@@ -1,5 +1,5 @@
 import { useQuery } from 'react-query';
-import { hasLuxFeatureAccess, isCloudConsole } from '@/utils/cloudConsole';
+import { isCloudConsole } from '@/utils/cloudConsole';
 import globals from '@/Globals';
 import { cloudDataServiceApiClient } from '@/hooks/cloudDataServiceApiClient';
 import { isArray } from '@/components/Common/utils/jsUtils';
@@ -50,29 +50,20 @@ const fetchNeonProjectsByProjectIdQueryFn = () => {
 const staleTime = 5 * 60 * 1000;
 
 export const useShowNeonDashboardLink = () => {
-  let hasNeonAccess = false;
-
-  if (
-    isCloudConsole(globals) &&
-    hasLuxFeatureAccess(globals, 'NeonDatabaseIntegration') &&
-    globals.neonOAuthClientId &&
-    globals.neonRootDomain
-  ) {
-    hasNeonAccess = true;
-  }
+  const isCloudEnv = !!isCloudConsole(globals);
 
   const { data } = useQuery(
     FETCH_NEON_PROJECTS_BY_PROJECTID_QUERYKEY,
     fetchNeonProjectsByProjectIdQueryFn,
     {
-      // don't run the query if user doesn't have neon access
-      enabled: hasNeonAccess,
+      // don't run the query if current environment is not cloud console
+      enabled: isCloudEnv,
       staleTime,
     }
   );
 
   if (
-    hasNeonAccess &&
+    isCloudEnv &&
     data &&
     isArray(data.data.neon_db_integration) &&
     data.data.neon_db_integration.length > 0

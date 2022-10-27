@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAppDispatch } from '@/store';
 import globals from '@/Globals';
-import { hasLuxFeatureAccess, isCloudConsole } from '@/utils/cloudConsole';
+import { isCloudConsole } from '@/utils/cloudConsole';
 import {
   ConnectDBScreen,
   TemplateSummary,
@@ -29,8 +29,6 @@ function Root(props: Props) {
 
   const dispatch = useAppDispatch();
 
-  const hasNeonAccess = hasLuxFeatureAccess(globals, 'NeonDatabaseIntegration');
-
   const [stepperIndex, setStepperIndex] = React.useState<number>(1);
 
   const {
@@ -39,7 +37,7 @@ function Root(props: Props) {
     familiaritySurveyData,
     familiaritySurveyOnOptionClick,
     familiaritySurveyOnSkip,
-  } = useWizardState(growthExperimentsClient, hasNeonAccess);
+  } = useWizardState(growthExperimentsClient);
 
   const transitionToTemplateSummary = () => {
     setState('template-summary');
@@ -74,7 +72,6 @@ function Root(props: Props) {
           <ConnectDBScreen
             dismissOnboarding={dismiss}
             proceed={transitionToTemplateSummary}
-            hasNeonAccess={hasNeonAccess}
             dispatch={dispatch}
             setStepperIndex={setStepperIndex}
           />

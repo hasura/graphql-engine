@@ -11,8 +11,7 @@ export type WizardState =
   | 'hidden';
 
 export function useWizardState(
-  growthExperimentsClient: GrowthExperimentsClient,
-  hasNeonAccess = false
+  growthExperimentsClient: GrowthExperimentsClient
 ) {
   const { getAllExperimentConfig } = growthExperimentsClient;
   const experimentData = getAllExperimentConfig();
@@ -25,12 +24,7 @@ export function useWizardState(
   } = useFamiliaritySurveyData();
 
   const [state, setState] = useState<WizardState>(
-    getWizardState(
-      experimentData,
-      experimentId,
-      showFamiliaritySurvey,
-      hasNeonAccess
-    )
+    getWizardState(experimentData, experimentId, showFamiliaritySurvey)
   );
 
   useEffect(() => {
@@ -40,13 +34,12 @@ export function useWizardState(
     const wizardState = getWizardState(
       experimentData,
       experimentId,
-      showFamiliaritySurvey,
-      hasNeonAccess
+      showFamiliaritySurvey
     );
     if (wizardState !== 'hidden') {
       setState(wizardState);
     }
-  }, [experimentData, showFamiliaritySurvey, hasNeonAccess]);
+  }, [experimentData, showFamiliaritySurvey]);
 
   return {
     state,
