@@ -95,7 +95,7 @@ const driverToLabel: Record<
     info: [
       <>
         Only Database URLs and Environment Variables are available for
-        CockroachD
+        CockroachDB
       </>,
       <div className="flex whitespace-nowrap">
         Please makes sure to not use the
