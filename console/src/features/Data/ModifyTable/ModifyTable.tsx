@@ -11,7 +11,7 @@ export type ModifyTableProps = {
 
 export const ModifyTable: React.VFC<ModifyTableProps> = props => {
   return (
-    <div className="w-full bg-white p-4 rounded-sm border ">
+    <div className="w-full bg-white p-4 rounded-sm border my-2">
       <Section headerText="Table Comments">
         <TableComments {...props} />
       </Section>

@@ -34,6 +34,10 @@ export const EditTableColumnDialog = (props: EditTableColumnDialogProps) => {
             ...metadataTable?.configuration?.column_config,
             [column.name]: data,
           },
+          custom_column_names: {
+            ...metadataTable?.configuration?.custom_column_names,
+            [column.name]: data.custom_name,
+          },
         }).then(() => {
           onClose();
         });
@@ -49,7 +53,7 @@ export const EditTableColumnDialog = (props: EditTableColumnDialogProps) => {
         <Dialog
           size="md"
           titleTooltip={`Edit ${column.name} column settings`}
-          title={`[${column.name}]`}
+          title={column.name}
           hasBackdrop
           onClose={onClose}
           footer={
