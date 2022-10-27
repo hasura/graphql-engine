@@ -374,7 +374,7 @@ const Add: React.FC<Props> = props => {
                   />
                   <ConfigureTransformation
                     transformationType="event"
-                    state={transformState}
+                    requestTransfromState={transformState}
                     resetSampleInput={resetSampleInput}
                     envVarsOnChange={envVarsOnChange}
                     sessionVarsOnChange={sessionVarsOnChange}

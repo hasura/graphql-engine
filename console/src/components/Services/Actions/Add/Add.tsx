@@ -29,6 +29,10 @@ import {
   setRequestContentType,
   setRequestUrlTransform,
   setRequestPayloadTransform,
+  setResponsePayloadTransform,
+  setResponseBody,
+  responseTransformReducer,
+  getActionResponseTransformDefaultState,
 } from '@/components/Common/ConfigureTransformation/requestTransformState';
 import {
   RequestTransformContentType,
@@ -37,6 +41,7 @@ import {
 import {
   KeyValuePair,
   RequestTransformStateBody,
+  ResponseTransformStateBody,
 } from '@/components/Common/ConfigureTransformation/stateDefaults';
 import ConfigureTransformation from '@/components/Common/ConfigureTransformation/ConfigureTransformation';
 import ActionEditor from '../Common/components/ActionEditor';
@@ -82,6 +87,11 @@ const AddAction: React.FC<AddActionProps> = ({
     getActionRequestTransformDefaultState()
   );
 
+  const [responseTransformState, responseTransformDispatch] = useReducer(
+    responseTransformReducer,
+    getActionResponseTransformDefaultState()
+  );
+
   useEffect(() => {
     if (readOnlyMode)
       dispatch(
@@ -120,7 +130,7 @@ const AddAction: React.FC<AddActionProps> = ({
   } = actionDefinition;
 
   const onSubmit = () => {
-    dispatch(createAction(transformState));
+    dispatch(createAction(transformState, responseTransformState));
   };
 
   const setHeaders = (hs: Header[]) => {
@@ -220,6 +230,14 @@ const AddAction: React.FC<AddActionProps> = ({
 
   const requestPayloadTransformOnChange = (data: boolean) => {
     transformDispatch(setRequestPayloadTransform(data));
+  };
+
+  const responsePayloadTransformOnChange = (data: boolean) => {
+    responseTransformDispatch(setResponsePayloadTransform(data));
+  };
+
+  const responseBodyOnChange = (responseBody: ResponseTransformStateBody) => {
+    responseTransformDispatch(setResponseBody(responseBody));
   };
 
   // we send separate requests for the `url` preview and `body` preview, as in case of error,
@@ -357,7 +375,8 @@ const AddAction: React.FC<AddActionProps> = ({
 
           <ConfigureTransformation
             transformationType="action"
-            state={transformState}
+            requestTransfromState={transformState}
+            responseTransformState={responseTransformState}
             resetSampleInput={resetSampleInput}
             envVarsOnChange={envVarsOnChange}
             sessionVarsOnChange={sessionVarsOnChange}
@@ -370,6 +389,8 @@ const AddAction: React.FC<AddActionProps> = ({
             requestContentTypeOnChange={requestContentTypeOnChange}
             requestUrlTransformOnChange={requestUrlTransformOnChange}
             requestPayloadTransformOnChange={requestPayloadTransformOnChange}
+            responsePayloadTransformOnChange={responsePayloadTransformOnChange}
+            responseBodyOnChange={responseBodyOnChange}
           />
 
           <div>
