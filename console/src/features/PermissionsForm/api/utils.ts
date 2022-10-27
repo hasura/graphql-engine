@@ -2,19 +2,18 @@ import produce from 'immer';
 
 import { allowedMetadataTypes } from '@/features/MetadataAPI';
 
-import { FormOutput } from '../types';
+import { AccessType, FormOutput } from '../types';
 
-export const driverPrefixes = {
-  postgres: 'pg',
-  mysql: 'mysql',
-  mssql: 'mssql',
-  bigquery: 'bigquery',
-  citus: 'citus',
-  cockroach: 'cockroach',
-} as const;
-
-type DriverPrefixKeys = keyof typeof driverPrefixes;
-type DriverPrefixValues = typeof driverPrefixes[DriverPrefixKeys];
+interface PermissionArgs {
+  columns: string[];
+  presets?: Record<string, string | number>;
+  computed_fields: string[];
+  backend_only: boolean;
+  allow_aggregations: boolean;
+  check: Record<string, unknown>;
+  filter: Record<string, unknown>;
+  limit?: number;
+}
 
 /**
  * creates the permissions object for the server
@@ -35,42 +34,47 @@ const createPermission = (formData: FormOutput) => {
     .map(([key]) => key);
 
   // return permissions object for args
-  return {
+  const permissionObject: PermissionArgs = {
     columns,
     presets,
     computed_fields: [],
     backend_only: formData.backendOnly,
-    limit: parseInt(formData.rowCount, 10),
     allow_aggregations: formData.aggregationEnabled,
-    check: JSON.parse(formData.check || '{}'),
-    filter: JSON.parse(formData.filter || '{}'),
+    check: formData.check,
+    filter: formData.filter,
   };
+
+  if (formData.rowCount && formData.rowCount !== '0') {
+    permissionObject.limit = parseInt(formData.rowCount, 10);
+  }
+
+  return permissionObject;
 };
 
 export interface CreateInsertArgs {
-  driverPrefix: DriverPrefixValues;
-  database: string;
-  table: string;
+  currentSource: string;
+  dataSourceName: string;
+  table: unknown;
   queryType: string;
   role: string;
+  accessType: AccessType;
   formData: FormOutput;
   existingPermissions: ExistingPermission[];
 }
 
 interface ExistingPermission {
-  table: string;
+  table: unknown;
   role: string;
   queryType: string;
 }
-
 /**
  * creates the insert arguments to update permissions
  * adds cloned permissions
  * and creates drop arguments where permissions already exist
  */
 export const createInsertArgs = ({
-  driverPrefix,
-  database,
+  currentSource,
+  dataSourceName,
   table,
   queryType,
   role,
@@ -82,12 +86,12 @@ export const createInsertArgs = ({
   // create args object with args from form
   const initialArgs = [
     {
-      type: `${driverPrefix}_create_${queryType}_permission` as allowedMetadataTypes,
+      type: `${currentSource}_create_${queryType}_permission` as allowedMetadataTypes,
       args: {
         table,
         role,
         permission,
-        source: database,
+        source: dataSourceName,
       },
     },
   ];
@@ -96,7 +100,7 @@ export const createInsertArgs = ({
     // determine if args from form already exist
     const permissionExists = existingPermissions.find(
       existingPermission =>
-        existingPermission.table === table &&
+        JSON.stringify(existingPermission.table) === JSON.stringify(table) &&
         existingPermission.role === role &&
         existingPermission.queryType === queryType
     );
@@ -104,11 +108,11 @@ export const createInsertArgs = ({
     // if the permission already exists it needs to be dropped
     if (permissionExists) {
       draft.unshift({
-        type: `${driverPrefix}_drop_${queryType}_permission` as allowedMetadataTypes,
+        type: `${currentSource}_drop_${queryType}_permission` as allowedMetadataTypes,
         args: {
           table,
           role,
-          source: database,
+          source: dataSourceName,
         },
       } as typeof initialArgs[0]);
     }
@@ -133,19 +137,20 @@ export const createInsertArgs = ({
         );
         // add each closed permission to args
         draft.push({
-          type: `${driverPrefix}_create_${clonedPermission.queryType}_permission` as allowedMetadataTypes,
+          type: `${currentSource}_create_${clonedPermission.queryType}_permission` as allowedMetadataTypes,
           args: {
             table: clonedPermission.tableName || '',
             role: clonedPermission.roleName || '',
             permission: permissionWithColumnsAndPresetsRemoved,
-            source: database,
+            source: dataSourceName,
           },
         });
 
         // determined if the cloned permission already exists
         const clonedPermissionExists = existingPermissions.find(
           existingPermission =>
-            existingPermission.table === clonedPermission.tableName &&
+            JSON.stringify(existingPermission.table) ===
+              JSON.stringify(clonedPermission.tableName) &&
             existingPermission.role === clonedPermission.roleName &&
             existingPermission.queryType === clonedPermission.queryType
         );
@@ -153,11 +158,11 @@ export const createInsertArgs = ({
         // if it already exists drop it
         if (clonedPermissionExists) {
           draft.unshift({
-            type: `${driverPrefix}_drop_${clonedPermission.queryType}_permission` as allowedMetadataTypes,
+            type: `${currentSource}_drop_${clonedPermission.queryType}_permission` as allowedMetadataTypes,
             args: {
               table: clonedPermission.tableName,
               role: clonedPermission.roleName,
-              source: database,
+              source: dataSourceName,
             },
           } as typeof initialArgs[0]);
         }

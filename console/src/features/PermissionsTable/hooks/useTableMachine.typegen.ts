@@ -2,12 +2,6 @@
 
 export interface Typegen0 {
   '@@xstate/typegen': true;
-  eventsCausingActions: {
-    formCloseEffect: 'CLOSE' | '';
-    formOpenEffect: 'FORM_OPEN';
-    bulkUpdateEffect: 'BULK_OPEN';
-    updateRoleNameEffect: 'NEW_ROLE_NAME' | '';
-  };
   internalEvents: {
     '': { type: '' };
     'xstate.init': { type: 'xstate.init' };
@@ -19,12 +13,18 @@ export interface Typegen0 {
     guards: never;
     delays: never;
   };
+  eventsCausingActions: {
+    bulkUpdateEffect: 'BULK_OPEN';
+    formCloseEffect: '' | 'CLOSE' | 'xstate.init';
+    formOpenEffect: 'FORM_OPEN';
+    updateRoleNameEffect: '' | 'NEW_ROLE_NAME';
+  };
   eventsCausingServices: {};
   eventsCausingGuards: {
-    newRoleEmpty: '';
     bulkIsEmpty: '';
+    newRoleEmpty: '';
   };
   eventsCausingDelays: {};
-  matchesStates: 'closed' | 'formOpen' | 'bulkOpen' | 'updateRoleName';
+  matchesStates: 'bulkOpen' | 'closed' | 'formOpen' | 'updateRoleName';
   tags: never;
 }

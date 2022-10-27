@@ -33,6 +33,7 @@ import {
   exportMetadata,
   getDriverPrefix,
   NetworkArgs,
+  runIntrospectionQuery,
   RunSQLResponse,
 } from './api';
 import { getAllSourceKinds } from './common/getAllSourceKinds';
@@ -411,4 +412,5 @@ export {
   getTableName,
   RunSQLResponse,
   getDriverPrefix,
+  runIntrospectionQuery,
 };

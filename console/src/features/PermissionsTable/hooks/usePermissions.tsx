@@ -1,23 +1,42 @@
-import { dataSource, Operations } from '@/dataSources';
-import { ComputedField, TableColumn } from '@/dataSources/types';
-import {
-  useMetadataTableComputedFields,
-  useMetadataTablePermissions,
-} from '@/features/MetadataAPI';
-import { useAllFunctions, useSchemaList, useSingleTable } from '@/hooks';
+import { AxiosInstance } from 'axios';
+import isEqual from 'lodash.isequal';
+import { DataSource, exportMetadata } from '@/features/DataSource';
+import type { TableColumn } from '@/features/DataSource';
 
-import { NewDataTarget } from '../../PermissionsTab/types/types';
+import { useQuery } from 'react-query';
+import { useHttpClient } from '@/features/Network';
 
-export type RolePermissions = {
-  [role: string]: {
-    [query in 'insert' | 'select' | 'update' | 'delete']: {
-      columns: (string | '*')[];
-      computed_fields: (string | '*')[];
-    } & {
-      [key in 'check' | 'filter']: Record<string, any>;
-    };
+interface RolePermission {
+  roleName: string;
+  isNewRole: boolean;
+  permissionTypes: {
+    permissionType: QueryType;
+    access: Access;
+  }[];
+  bulkSelect: {
+    isSelectable: boolean;
+    isDisabled: boolean;
   };
-};
+}
+
+const metadataPermissionKeys = [
+  'insert_permissions',
+  'select_permissions',
+  'update_permissions',
+  'delete_permissions',
+] as const;
+
+export const keyToPermission = {
+  insert_permissions: 'insert',
+  select_permissions: 'select',
+  update_permissions: 'update',
+  delete_permissions: 'delete',
+} as const;
+
+type QueryType = 'insert' | 'select' | 'update' | 'delete';
+type Access = 'fullAccess' | 'partialAccess' | 'noAccess';
+
+const supportedQueries: QueryType[] = ['insert', 'select', 'update', 'delete'];
 
 export const getAllowedFilterKeys = (
   query: 'insert' | 'select' | 'update' | 'delete'
@@ -32,154 +51,233 @@ export const getAllowedFilterKeys = (
   }
 };
 
-export const getRolePermission = (
-  role: 'admin' | string,
-  rolePermissions: RolePermissions,
-  query: 'insert' | 'select' | 'update' | 'delete',
-  schemaColumns: TableColumn[],
-  computedFields: { scalar: ComputedField[] }
-): 'fullAccess' | 'partialAccess' | 'noAccess' => {
-  if (role === 'admin') {
-    return 'fullAccess';
-  }
+type GetAccessTypeArgs = {
+  QueryType: QueryType;
+  permission: any;
+  // permission: Permission['permission'];
+  tableColumns: TableColumn[];
+};
 
-  if (!rolePermissions[role]) {
-    return 'noAccess';
-  }
+const getAccessType = ({
+  QueryType,
+  permission,
+  tableColumns,
+}: GetAccessTypeArgs): Access => {
+  const filterKeys = getAllowedFilterKeys(QueryType);
+  const checkColumns = QueryType !== 'delete';
+  // const checkComputedFields = QueryType === 'select';
 
-  const permissions = rolePermissions[role][query];
-  if (!permissions) {
-    return 'noAccess';
-  }
-
-  const filterKeys = getAllowedFilterKeys(query);
-  const checkColumns = query !== 'delete';
-  const checkComputedFields = query === 'select';
-
-  if (!filterKeys.every(key => JSON.stringify(permissions[key]) === '{}')) {
+  // if any permissions are set for any of the filter keys then
+  // the user only has partial access to that QueryType
+  const hasRowPermissionsSet = !filterKeys.every(
+    key => JSON.stringify(permission[key]) === '{}'
+  );
+  if (hasRowPermissionsSet) {
     return 'partialAccess';
   }
 
-  if (
-    checkColumns &&
-    (!permissions.columns ||
-      (!permissions.columns.includes('*') &&
-        permissions.columns.length !== schemaColumns.length))
-  ) {
-    return 'partialAccess';
-  }
+  // unless all columns are selected
+  // the user only has partial access to that QueryType
+  const noColumnsChecked = !permission.columns;
+  const allColumnsChecked =
+    permission.columns?.includes('*') ||
+    permission.columns?.length === tableColumns.length;
 
-  if (
-    checkComputedFields &&
-    computedFields.scalar.length &&
-    (!permissions.computed_fields ||
-      (permissions.computed_fields.includes('*') &&
-        permissions.computed_fields.length !== computedFields.scalar.length))
-  ) {
+  const hasLimitedAccessToColumns =
+    checkColumns && (noColumnsChecked || !allColumnsChecked);
+  if (hasLimitedAccessToColumns) {
     return 'partialAccess';
   }
 
   return 'fullAccess';
 };
 
-interface RolePermission {
-  roleName: string;
-  isNewRole: boolean;
-  permissionTypes: {
-    permissionType: Operations;
-    access: 'fullAccess' | 'partialAccess' | 'noAccess';
-  }[];
-  bulkSelect: {
-    isSelectable: boolean;
-    isDisabled: boolean;
-  };
-}
+type GetMetadataTableArgs = {
+  dataSourceName: string;
+  table: unknown;
+  httpClient: AxiosInstance;
+};
 
-export const useRolePermissions = (dataTarget: NewDataTarget) => {
-  const table = {
-    name: dataTarget.dataLeaf.leaf?.name || '',
-    schema: dataTarget.dataLeaf.name,
-  };
+const getMetadataTable = async ({
+  httpClient,
+  dataSourceName,
+  table,
+}: GetMetadataTableArgs) => {
+  // get all metadata
+  const { metadata } = await exportMetadata({ httpClient });
 
-  const { data: schemas } = useSchemaList({
-    source: dataTarget.dataSource.database,
-    driver: dataTarget.dataSource.driver,
-  });
-  const { data: currentTableSchema } = useSingleTable({
-    table,
-    source: dataTarget.dataSource.database,
-    driver: dataTarget.dataSource.driver,
-  });
-  const { data: permissions } = useMetadataTablePermissions(
-    table,
-    dataTarget.dataSource.database
-  );
-  const { data: computedFields } = useMetadataTableComputedFields(
-    table,
-    dataTarget.dataSource.database
-  );
-  const { data: allFunctions } = useAllFunctions(
-    {
-      schemas: schemas!,
-      driver: dataTarget.dataSource.driver,
-      source: dataTarget.dataSource.database,
-    },
-    { enabled: !!schemas }
+  // find current source
+  const currentMetadataSource = metadata?.sources?.find(
+    source => source.name === dataSourceName
   );
 
-  if (!permissions || !allFunctions) {
-    return { supportedQueries: [], rolePermissions: [] };
-  }
+  if (!currentMetadataSource)
+    throw Error(`useRolePermissions.metadataSource not found`);
 
-  const currentRolePermissions = permissions.reduce((acc, p) => {
-    // only add the role if it exists on the current table
-    if (p.table_name === table.name) {
-      acc[p.role_name] = p.permissions;
-    }
+  const trackedTables = currentMetadataSource.tables;
+
+  // find selected table
+  return trackedTables.find(trackedTable => isEqual(trackedTable.table, table));
+};
+
+type SupportedQueriesObject = Partial<Record<QueryType, Access>>;
+
+const createSupportedQueryObject = (access: Access) =>
+  supportedQueries.reduce<SupportedQueriesObject>((acc, supportedQuery) => {
+    acc[supportedQuery] = access;
     return acc;
-  }, {} as Record<string, any>);
+  }, {});
 
-  let supportedQueries: Operations[] = [];
-  if (currentTableSchema) {
-    supportedQueries = dataSource.getTableSupportedQueries(currentTableSchema);
-  }
+const isPermission = (props: {
+  key: string;
+  value: any;
+}): props is {
+  key: typeof metadataPermissionKeys[number];
+  value: any[];
+  // value: Permission[];
+} => props.key in keyToPermission;
 
-  const groupedComputedFields = dataSource.getGroupedTableComputedFields(
-    computedFields ?? [],
-    allFunctions
+type CreateRoleTableDataArgs = {
+  metadataTable: any;
+  tableColumns?: TableColumn[];
+};
+
+type RoleToPermissionsMap = Record<string, Partial<Record<QueryType, Access>>>;
+
+const createRoleTableData = async ({
+  metadataTable,
+  tableColumns,
+}: CreateRoleTableDataArgs): Promise<RolePermission[]> => {
+  if (!metadataTable) return [];
+  // create object with key of role
+  // and value describing permissions attached to that role
+  const roleToPermissionsMap = Object.entries(
+    metadataTable
+  ).reduce<RoleToPermissionsMap>((acc, [key, value]) => {
+    const props = { key, value };
+    // check if metadata key is related to permissions
+    if (isPermission(props)) {
+      const QueryType = keyToPermission[props.key];
+
+      props.value.forEach(permissionObject => {
+        if (!acc[permissionObject.role]) {
+          // add all supported queries to the object
+          acc[permissionObject.role] = createSupportedQueryObject('noAccess');
+        }
+        // if permission exists on metadata for a particular QueryType
+        // find out the access type for that QueryType
+        // and replace the access type on the object
+        acc[permissionObject.role][QueryType] = getAccessType({
+          QueryType,
+          permission: permissionObject.permission,
+          tableColumns: tableColumns || [],
+        });
+      });
+    }
+
+    return acc;
+  }, {});
+
+  // create the array that has the relevant information for each row of the table
+  const permissions = Object.entries(roleToPermissionsMap).map(
+    ([roleName, permission]) => {
+      const permissionEntries = Object.entries(permission) as [
+        QueryType,
+        Access
+      ][];
+      const permissionTypes = permissionEntries.map(([key, value]) => ({
+        permissionType: key,
+        access: value,
+      }));
+
+      const isNewRole = roleName === 'newRole';
+
+      return {
+        roleName: isNewRole ? '' : roleName,
+        isNewRole,
+        permissionTypes,
+        bulkSelect: {
+          isSelectable: roleName !== 'admin' && !isNewRole,
+          isDisabled: false,
+        },
+      };
+    }
   );
 
-  const currentRoles = Object.keys(currentRolePermissions).map(roleName => ({
-    roleName,
-    isNewRole: false,
-  }));
-
-  const roleList = [
-    { roleName: 'admin', isNewRole: false },
-    ...currentRoles,
-    { roleName: '', isNewRole: true },
-  ];
-
-  const rolePermissions: RolePermission[] = roleList.map(
-    ({ roleName, isNewRole }) => ({
-      roleName,
-      isNewRole,
-      permissionTypes: supportedQueries.map(queryType => ({
-        permissionType: queryType,
-        access: getRolePermission(
-          roleName,
-          currentRolePermissions,
-          queryType,
-          currentTableSchema?.columns || [],
-          groupedComputedFields
-        ),
+  // add admin row
+  // and row for adding a new role
+  const finalPermissions = [
+    {
+      roleName: 'admin',
+      isNewRole: false,
+      permissionTypes: Object.entries(
+        createSupportedQueryObject('fullAccess')
+      ).map(([key, value]) => ({
+        permissionType: key as QueryType,
+        access: value,
       })),
       bulkSelect: {
-        isSelectable: roleName !== 'admin' && !isNewRole,
-        isDisabled: !Object.keys(currentRolePermissions).includes(roleName),
+        isSelectable: false,
+        isDisabled: false,
       },
-    })
-  );
+    },
+    ...permissions,
+    {
+      roleName: 'newRole',
+      isNewRole: true,
+      permissionTypes: Object.entries(
+        createSupportedQueryObject('noAccess')
+      ).map(([key, value]) => ({
+        permissionType: key as QueryType,
+        access: value,
+      })),
+      bulkSelect: {
+        isSelectable: true,
+        isDisabled: false,
+      },
+    },
+  ];
 
-  return { supportedQueries, rolePermissions };
+  return finalPermissions;
+};
+
+type UseRolePermissionsArgs = {
+  dataSourceName: string;
+  table: unknown;
+};
+
+export const useRolePermissions = ({
+  dataSourceName,
+  table,
+}: UseRolePermissionsArgs) => {
+  const httpClient = useHttpClient();
+  return useQuery<
+    { supportedQueries: QueryType[]; rolePermissions: RolePermission[] },
+    Error
+  >({
+    queryKey: [dataSourceName, 'permissionsTable'],
+    queryFn: async () => {
+      // find the specific metadata table
+      const metadataTable = await getMetadataTable({
+        httpClient,
+        dataSourceName,
+        table,
+      });
+
+      // get table columns for metadata table from db introspection
+      const tableColumns = await DataSource(httpClient).getTableColumns({
+        dataSourceName,
+        table,
+      });
+
+      // // extract the permissions data in the format required for the table
+      const rolePermissions = await createRoleTableData({
+        metadataTable,
+        tableColumns,
+      });
+
+      return { rolePermissions, supportedQueries };
+    },
+    refetchOnWindowFocus: false,
+  });
 };

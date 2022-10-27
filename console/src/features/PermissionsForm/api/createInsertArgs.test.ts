@@ -1,16 +1,17 @@
-import { CreateInsertArgs, createInsertArgs } from '../utils';
+import { CreateInsertArgs, createInsertArgs } from './utils';
 
 const insertArgs: CreateInsertArgs = {
-  driverPrefix: 'pg' as const,
-  database: 'default',
+  currentSource: 'postgres',
+  dataSourceName: 'default',
+  accessType: 'fullAccess',
   table: 'users',
   queryType: 'insert',
   role: 'user',
   formData: {
     checkType: 'custom',
     filterType: 'none',
-    check: '{"id":{"_eq":1}}',
-    filter: '',
+    check: { id: { _eq: 1 } },
+    filter: {},
     rowCount: '0',
     columns: {
       id: false,
@@ -55,7 +56,7 @@ test('create insert args object from form data', () => {
 
   expect(result).toEqual([
     {
-      type: 'pg_drop_insert_permission',
+      type: 'postgres_drop_insert_permission',
       args: {
         table: 'users',
         role: 'user',
@@ -63,7 +64,7 @@ test('create insert args object from form data', () => {
       },
     },
     {
-      type: 'pg_create_insert_permission',
+      type: 'postgres_create_insert_permission',
       args: {
         table: 'users',
         role: 'user',
@@ -72,7 +73,6 @@ test('create insert args object from form data', () => {
           presets: {},
           computed_fields: [],
           backend_only: false,
-          limit: 0,
           allow_aggregations: false,
           check: {
             id: {
@@ -88,16 +88,17 @@ test('create insert args object from form data', () => {
 });
 
 const insertArgsWithClonePermissions: CreateInsertArgs = {
-  driverPrefix: 'pg' as const,
-  database: 'default',
+  currentSource: 'postgres',
+  dataSourceName: 'default',
+  accessType: 'fullAccess',
   table: 'users',
   queryType: 'insert',
   role: 'user',
   formData: {
     checkType: 'custom',
     filterType: 'none',
-    check: '{"id":{"_eq":1}}',
-    filter: '',
+    check: { id: { _eq: 1 } },
+    filter: {},
     rowCount: '0',
     columns: {
       id: false,
@@ -147,7 +148,7 @@ test('create insert args object from form data with clone permissions', () => {
 
   expect(result).toEqual([
     {
-      type: 'pg_drop_insert_permission',
+      type: 'postgres_drop_insert_permission',
       args: {
         table: 'users',
         role: 'user',
@@ -155,7 +156,7 @@ test('create insert args object from form data with clone permissions', () => {
       },
     },
     {
-      type: 'pg_create_insert_permission',
+      type: 'postgres_create_insert_permission',
       args: {
         table: 'users',
         role: 'user',
@@ -164,7 +165,6 @@ test('create insert args object from form data with clone permissions', () => {
           presets: {},
           computed_fields: [],
           backend_only: false,
-          limit: 0,
           allow_aggregations: false,
           check: {
             id: {
@@ -177,7 +177,7 @@ test('create insert args object from form data with clone permissions', () => {
       },
     },
     {
-      type: 'pg_create_select_permission',
+      type: 'postgres_create_select_permission',
       args: {
         table: 'a_table',
         role: 'user',
@@ -186,7 +186,6 @@ test('create insert args object from form data with clone permissions', () => {
           presets: {},
           computed_fields: [],
           backend_only: false,
-          limit: 0,
           allow_aggregations: false,
           check: {
             id: {

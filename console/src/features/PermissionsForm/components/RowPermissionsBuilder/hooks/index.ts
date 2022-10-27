@@ -1,9 +1,9 @@
 import React from 'react';
 import { buildClientSchema, GraphQLSchema, IntrospectionQuery } from 'graphql';
 import { useHttpClient } from '@/features/Network';
-import { runIntrospectionQuery } from '../api';
+import { runIntrospectionQuery } from '@/features/DataSource';
 
-import { getAllColumnsAndOperators } from '../utils';
+import { createDefaultValues, getAllColumnsAndOperators } from '../utils';
 
 /**
  *
@@ -49,4 +49,19 @@ export const useData = ({ tableName, schema }: Args) => {
     };
   const data = getAllColumnsAndOperators({ tableName, schema });
   return { data };
+};
+
+interface A {
+  tableName: string;
+  existingPermission: Record<string, any>;
+}
+
+export const useCreateRowPermissionsDefaults = () => {
+  const { data: schema } = useIntrospectSchema();
+
+  const fetchDefaults = async ({ tableName, existingPermission }: A) => {
+    createDefaultValues({ tableName, schema, existingPermission });
+  };
+
+  return fetchDefaults;
 };

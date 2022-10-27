@@ -1,4 +1,10 @@
 import {
+  InsertPermission,
+  SelectPermission,
+  UpdatePermission,
+  DeletePermission,
+} from '../permissions';
+import {
   Legacy_SourceToRemoteSchemaRelationship,
   LocalTableArrayRelationship,
   LocalTableObjectRelationship,
@@ -73,4 +79,9 @@ export type MetadataTable = {
     | ManualArrayRelationship
     | LocalTableArrayRelationship
   )[];
+
+  insert_permissions?: InsertPermission[];
+  select_permissions?: SelectPermission[];
+  update_permissions?: UpdatePermission[];
+  delete_permissions?: DeletePermission[];
 };

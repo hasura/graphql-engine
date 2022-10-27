@@ -1,11 +1,12 @@
 import { allowedMetadataTypes } from '@/features/MetadataAPI';
-import { NewDataTarget } from '../../PermissionsTab/types/types';
 
 import { AccessType, FormOutput, QueryType } from '../types';
-import { createInsertArgs, driverPrefixes } from './utils';
+import { createInsertArgs } from './utils';
 
 interface CreateBodyArgs {
-  dataTarget: NewDataTarget;
+  currentSource: string;
+  dataSourceName: string;
+  table: unknown;
   roleName: string;
   resourceVersion: number;
 }
@@ -15,7 +16,9 @@ interface CreateDeleteBodyArgs extends CreateBodyArgs {
 }
 
 const createDeleteBody = ({
-  dataTarget,
+  currentSource,
+  dataSourceName,
+  table,
   roleName,
   resourceVersion,
   queries,
@@ -25,18 +28,16 @@ const createDeleteBody = ({
   resource_version: number;
   args: BulkArgs[];
 } => {
-  const driverPrefix = driverPrefixes[dataTarget.dataSource.driver];
-
-  if (!['postgres', 'mssql'].includes(dataTarget.dataSource.driver)) {
-    throw new Error(`${dataTarget.dataSource.driver} not supported`);
-  }
+  // if (!['postgres', 'mssql'].includes(currentSource)) {
+  //   throw new Error(`${currentSource} not supported`);
+  // }
 
   const args = queries.map(queryType => ({
-    type: `${driverPrefix}_drop_${queryType}_permission` as allowedMetadataTypes,
+    type: `${currentSource}_drop_${queryType}_permission` as allowedMetadataTypes,
     args: {
-      table: dataTarget.dataLeaf.leaf?.name || '',
+      table,
       role: roleName,
-      source: dataTarget.dataSource.database,
+      source: dataSourceName,
     },
   }));
 
@@ -50,17 +51,23 @@ const createDeleteBody = ({
   return body;
 };
 
-interface CreateBulkDeleteBodyArgs extends CreateBodyArgs {
-  roleList?: Array<{ roleName: string; queries: QueryType[] }>;
+interface CreateBulkDeleteBodyArgs {
+  source: string;
+  dataSourceName: string;
+  table: unknown;
+  resourceVersion: number;
+  roleList?: Array<{ roleName: string; queries: string[] }>;
 }
 
 interface BulkArgs {
   type: allowedMetadataTypes;
-  args: Record<string, string | allowedMetadataTypes>;
+  args: Record<string, string | allowedMetadataTypes | unknown>;
 }
 
 const createBulkDeleteBody = ({
-  dataTarget,
+  source,
+  dataSourceName,
+  table,
   resourceVersion,
   roleList,
 }: CreateBulkDeleteBodyArgs): {
@@ -69,21 +76,19 @@ const createBulkDeleteBody = ({
   resource_version: number;
   args: BulkArgs[];
 } => {
-  const driverPrefix = driverPrefixes[dataTarget.dataSource.driver];
-
-  if (!['postgres', 'mssql'].includes(dataTarget.dataSource.driver)) {
-    throw new Error(`${dataTarget.dataSource.driver} not supported`);
-  }
+  // if (!['postgres', 'mssql'].includes(source)) {
+  //   throw new Error(`${dataSourceName} not supported`);
+  // }
 
   const args =
     roleList?.reduce<BulkArgs[]>((acc, role) => {
       role.queries.forEach(queryType => {
         acc.push({
-          type: `${driverPrefix}_drop_${queryType}_permission` as allowedMetadataTypes,
+          type: `${source}_drop_${queryType}_permission` as allowedMetadataTypes,
           args: {
-            table: dataTarget.dataLeaf.leaf?.name || '',
+            table,
             role: role.roleName,
-            source: dataTarget.dataSource.database,
+            source: dataSourceName,
           },
         });
       });
@@ -93,7 +98,7 @@ const createBulkDeleteBody = ({
 
   const body = {
     type: 'bulk' as allowedMetadataTypes,
-    source: dataTarget.dataSource.database,
+    source: dataSourceName,
     resource_version: resourceVersion,
     args: args ?? [],
   };
@@ -115,27 +120,28 @@ export interface InsertBodyResult {
 }
 
 const createInsertBody = ({
-  dataTarget,
+  currentSource,
+  dataSourceName,
+  table,
   queryType,
   roleName,
   formData,
-  // accessType,
+  accessType,
   resourceVersion,
   existingPermissions,
 }: CreateInsertBodyArgs): InsertBodyResult => {
-  const driverPrefix = driverPrefixes[dataTarget.dataSource.driver];
-
-  if (!['postgres', 'mssql'].includes(dataTarget.dataSource.driver)) {
-    throw new Error(`${dataTarget.dataSource.driver} not supported`);
-  }
+  // if (!['postgres', 'mssql'].includes(currentSource)) {
+  //   throw new Error(`${currentSource} not supported`);
+  // }
 
   const args = createInsertArgs({
-    driverPrefix,
-    database: dataTarget.dataSource.database,
-    table: dataTarget.dataLeaf.leaf?.name || '',
+    currentSource,
+    dataSourceName,
+    table,
     queryType,
     role: roleName,
     formData,
+    accessType,
     existingPermissions,
   });
 
