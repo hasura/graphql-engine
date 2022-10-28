@@ -58,16 +58,18 @@ Here's how a GraphQL query is processed in JWT mode:
 
 :::info Additional Resources
 
-Enterprise Grade Authorization -
-[Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=).
+- Enterprise Grade Authorization -
+  [Watch Webinar](https://hasura.io/events/webinar/authorization-modeling-hasura/?pg=docs&plcmt=body&cta=watch-webinar&tech=)
+- Webhooks Basics - [Learn Tutorial](https://hasura.io/learn/graphql/hasura-authentication/webhook-mode/)
+- JWT Basics - [Learn Tutorial](https://hasura.io/learn/graphql/hasura-authentication/jwt-basics/)
 
 :::
 
 ## Using the Admin Secret header {#admin-secret-header}
 
-Hasura will allow all queries, mutations and subscriptions when you include your `X-Hasura-Admin-Secret` header on
-your request. If you also include the `X-Hasura-User-Id` and `X-Hasura-Role` headers along with the
-`X-Hasura-Admin-Secret` header you can "pretend" to be that user and role.
+Hasura will allow all queries, mutations and subscriptions when you include your `X-Hasura-Admin-Secret` header on your
+request. If you also include the `X-Hasura-User-Id` and `X-Hasura-Role` headers along with the `X-Hasura-Admin-Secret`
+header you can "pretend" to be that user and role.
 
-Without the `X-Hasura-Admin-Secret` header you will need to authenticate your requests as a user and role with one
-of the options below.
+Without the `X-Hasura-Admin-Secret` header you will need to authenticate your requests as a user and role with one of
+the options below.

@@ -42,7 +42,7 @@ You can take a dump of this data before cleaning up if you wish to keep the log 
 
 ## What has changed?
 
-Check the [core updating to v2.0 guide](/guides/upgrade-hasura-v2.mdx) and the
+Check the [core updating to v2.0 guide](/resources/upgrade-hasura-v2.mdx) and the
 [release notes](https://github.com/hasura/graphql-engine/releases) to see what new concepts, features and behaviour
 changes have been introduced in Hasura `v2.0`.
 
@@ -50,7 +50,7 @@ Note that Hasura v2 Cloud projects' metadata is now stored in metadata DBs manag
 `HASURA_GRAPHQL_METADATA_DATABASE_URL` env var is not configurable on Hasura Cloud and is managed by Hasura Cloud
 itself.
 
-See the section on [hasura_v1_v2_compatibility](/guides/upgrade-hasura-v2.mdx#hasura-v1-v2-compatibility) to use a
+See the section on [hasura_v1_v2_compatibility](/resources/upgrade-hasura-v2.mdx#hasura-v1-v2-compatibility) to use a
 Hasura v2 Cloud project like a Hasura v1 Cloud project.
 
 ## Estimated time needed for update
@@ -80,9 +80,9 @@ function during this period.**
   case you notice anything unexpected.
 - You can choose to unset the `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var that was added to your project during
   the update to preserve a `v1.3` behaviour that was modified in `v2.0`.
-  [See details](/guides/upgrade-hasura-v2.mdx#hasura-v2-null-where-change). We recommend moving to the new behaviour by
-  unsetting the env var after verifying your project is not impacted by the change.
-- Check the [Post update steps](/guides/upgrade-hasura-v2.mdx#hasura-v1-to-v2-post-update-steps) section of the core
+  [See details](/resources/upgrade-hasura-v2.mdx#hasura-v2-null-where-change). We recommend moving to the new behaviour
+  by unsetting the env var after verifying your project is not impacted by the change.
+- Check the [Post update steps](/resources/upgrade-hasura-v2.mdx#hasura-v1-to-v2-post-update-steps) section of the core
   updating to v2.0 guide for other changes you should make post your project update.
 
 ## Update process
@@ -135,7 +135,7 @@ assistance.
 
 - Set `HASURA_GRAPHQL_ENABLE_MAINTENANCE_MODE` env var to enable server maintenance mode
 - Set `HASURA_GRAPHQL_V1_BOOLEAN_NULL_COLLAPSE` env var to `true` to maintain `v1.3` behaviour for `null` values in
-  `where` filters. [(Know more)](/guides/upgrade-hasura-v2.mdx#hasura-v2-behaviour-changes)
+  `where` filters. [(Know more)](/resources/upgrade-hasura-v2.mdx#hasura-v2-behaviour-changes)
 
 ###### On Failure:
 
