@@ -1,5 +1,5 @@
 import { Tooltip } from '@/new-components/Tooltip';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import clsx from 'clsx';
 import { FaPlus, FaQuestionCircle } from 'react-icons/fa';
 import { Table } from '@/features/MetadataAPI';
@@ -86,13 +86,6 @@ export const DatabaseRelationshipsContainer = (
     setSelectedRelationship(undefined);
     setIsFormOpen(true);
   };
-
-  /**
-   * Reset the form state when user clicks on another table
-   */
-  useEffect(() => {
-    resetForm();
-  }, [props.dataSourceName, props.table]);
 
   return (
     <div>
