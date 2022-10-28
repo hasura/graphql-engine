@@ -74,11 +74,11 @@ import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
-import Hasura.RQL.Types.RemoteSchema
 import Hasura.RQL.Types.Roles
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.SchemaCache.Build
 import Hasura.RQL.Types.Source
+import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
@@ -173,9 +173,9 @@ data TablePermissionInputs b = TablePermissionInputs
   }
   deriving (Generic)
 
-deriving instance (Backend b, Show (TableName b)) => Show (TablePermissionInputs b)
+deriving instance (Backend b) => Show (TablePermissionInputs b)
 
-deriving instance (Backend b, Eq (TableName b)) => Eq (TablePermissionInputs b)
+deriving instance (Backend b) => Eq (TablePermissionInputs b)
 
 instance (Backend b) => Inc.Cacheable (TablePermissionInputs b)
 

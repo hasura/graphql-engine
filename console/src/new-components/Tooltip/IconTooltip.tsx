@@ -6,7 +6,7 @@ export type IconTooltipProps = {
   /**
    * The tooltip message
    */
-  message: string;
+  message: React.ReactNode;
   /**
    * The tooltip icon classes
    */

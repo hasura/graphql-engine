@@ -202,31 +202,24 @@ buildIntrospectionSchema queryRoot' mutationRoot' subscriptionRoot' = do
       -- statically defined ones.  So, for instance, we don't correctly expose
       -- directives from remote schemas.
       directives :: [DirectiveInfo] = directivesInfo @P.Parse
-      -- The __schema and __type introspection fields
-      introspection = [schema @P.Parse, typeIntrospection]
-      {-# INLINE introspection #-}
 
-  -- Collect type information of all non-introspection fields
-  allBasicTypes <-
+  -- Collect type information of all fields
+  --
+  -- TODO: it may be worth looking at whether we can stop collecting
+  -- introspection types monadically. They are independent of the user schema;
+  -- the types here are always the same and specified by the GraphQL spec
+  allTypes <-
     P.collectTypeDefinitions
       [ P.TypeDefinitionsWrapper queryRoot',
         P.TypeDefinitionsWrapper mutationRoot',
         P.TypeDefinitionsWrapper subscriptionRoot',
-        P.TypeDefinitionsWrapper $ P.diArguments =<< directives
+        P.TypeDefinitionsWrapper $ P.diArguments =<< directives,
+        -- The __schema introspection field
+        P.TypeDefinitionsWrapper $ fDefinition (schema @Parse),
+        -- The __type introspection field
+        P.TypeDefinitionsWrapper $ fDefinition (typeIntrospection @Parse)
       ]
 
-  -- TODO: it may be worth looking at whether we can stop collecting
-  -- introspection types monadically.  They are independent of the user schema;
-  -- the types here are always the same and specified by the GraphQL spec
-
-  -- Pull all the introspection types out (__Type, __Schema, etc)
-  allIntrospectionTypes <- P.collectTypeDefinitions (map fDefinition introspection)
-
-  let allTypes =
-        Map.unions
-          [ allBasicTypes,
-            Map.filterWithKey (\name _info -> name /= P.getName queryRoot') allIntrospectionTypes
-          ]
   pure $
     P.Schema
       { sDescription = Nothing,

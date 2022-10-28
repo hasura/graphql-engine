@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
--- |
+-- | Primary Key Queries
 -- Accessing objects based on their primary keys.
 --
 -- https://hasura.io/docs/latest/queries/postgres/simple-object-queries/#fetch-an-object-using-its-primary-key
@@ -11,6 +11,7 @@ import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
 import Harness.Backend.Cockroach qualified as Cockroach
+import Harness.Backend.DataConnector.Sqlite qualified as Sqlite
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Backend.Sqlserver qualified as Sqlserver
 import Harness.GraphqlEngine (postGraphql)
@@ -41,16 +42,16 @@ spec =
           (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Cockroach.setupTablesAction schema testEnv
-                ],
-              Fixture.customOptions =
-                Just $
-                  Fixture.defaultOptions
-                    { Fixture.stringifyNumbers = True
-                    }
+                ]
             },
           (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Sqlserver.setupTablesAction schema testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Sqlite.setupTablesAction schema testEnvironment
                 ]
             }
         ]

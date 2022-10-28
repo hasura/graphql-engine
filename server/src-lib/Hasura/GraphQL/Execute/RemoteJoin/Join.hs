@@ -30,7 +30,7 @@ import Hasura.GraphQL.Transport.Instances ()
 import Hasura.Logging qualified as L
 import Hasura.Prelude
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.RemoteSchema
+import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Types (RequestId)
 import Hasura.Session

@@ -1,8 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-{-# OPTIONS -Wno-redundant-constraints #-}
-
 -- | MySQL helpers.
 module Harness.Backend.Mysql
   ( livenessCheck,
@@ -99,7 +97,8 @@ configuration:
 
 -- | Serialize Table into a SQL statement, as needed, and execute it on the MySQL backend
 createTable :: Schema.Table -> IO ()
-createTable Schema.Table {tableUniqueConstraints = _ : _} = error "Not Implemented: MySql test harness support for Unique constraints"
+createTable Schema.Table {tableUniqueIndexes = _ : _} = error "Not Implemented: MySql test harness support for unique indexes"
+createTable Schema.Table {tableConstraints = _ : _} = error "Not Implemented: MySql test harness support for constraints"
 createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences} = do
   run_ $
     T.unpack $
@@ -261,8 +260,8 @@ setupPermissionsAction permissions env =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup "mysql" permissions env
+setupPermissions permissions env = Permissions.setup MySQL permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown "mysql" permissions env
+teardownPermissions permissions env = Permissions.teardown MySQL permissions env

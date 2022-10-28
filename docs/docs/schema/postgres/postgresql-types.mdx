@@ -15,53 +15,53 @@ keywords:
 List of PostgreSQL types supported by the Hasura GraphQL engine with
 their equivalent Hasura types:
 
-| Name                                    | Aliases            | Description                                                 | Hasura Type                        |
-| --------------------------------------- | ------------------ | ----------------------------------------------------------- | ---------------------------------- |
-| bigint                                  | int8               | signed eight-byte integer                                   | [String](#string)                            |
-| bigserial                               | serial8            | autoincrementing eight-byte integer                         | [String](#string)                            |
-| bit [ (n) ]                             |                    | fixed-length bit string                                     | [Implicit](#implicit)                          |
-| bit varying [ (n) ]                     | varbit [ (n) ]     | variable-length bit string                                  | [Implicit](#implicit)                          |
-| boolean                                 | bool               | logical Boolean (true/false)                                | [Bool](#bool)                              |
-| box                                     |                    | rectangular box on a plane                                  | [Implicit](#implicit)                          |
-| bytea                                   |                    | binary data (“byte array”)                                  | [Implicit](#implicit)                          |
-| character [ (n) ]                       | char [ (n) ]       | fixed-length character string                               | [Char](#char)                              |
-| character varying [ (n) ]               | varchar [ (n) ]    | variable-length character string                            | [String](#string)                            |
-| cidr                                    |                    | IPv4 or IPv6 network address                                | [Implicit](#implicit)                         |
-| circle                                  |                    | circle on a plane                                           | [Implicit](#implicit)                          |
-| date                                    |                    | calendar date (year, month, day)                            | [Date](#date)                              |
-| double precision                        | float8             | double precision floating-point number (8 bytes)            | [Float](#float)                             |
-| inet                                    |                    | IPv4 or IPv6 host address                                   | [Implicit](#implicit)                          |
-| integer                                 | int, int4          | signed four-byte integer                                    | [Int](#int)                               |
-| interval [ fields ] [ (p) ]             |                    | time span                                                   | [Implicit](#implicit)                          |
-| json                                    |                    | textual JSON data                                           | [JSON](#json)                              |
-| jsonb                                   |                    | binary JSON data, decomposed                                | [JSONB](#jsonb)                             |
-| line                                    |                    | infinite line on a plane                                    | [Implicit](#implicit)                          |
-| lseg                                    |                    | line segment on a plane                                     | [Implicit](#implicit)                         |
-| ltree                                   |                    | labels of data stored in a hierarchical tree-like structure | [Implicit](#implicit)                          |
-| geometry                                |                    | PostGIS Geometry type                                       | [Geometry](#geometry)                         |
-| geography                               |                    | PostGIS Geography type                                      |  [Geography](#geography)                        |
-| macaddr                                 |                    | MAC (Media Access Control) address                          |  [Implicit](#implicit)                         |
-| macaddr8                                |                    | MAC (Media Access Control) address (EUI-64 format)          |  [Implicit](#implicit)                         |
-| money                                   |                    | currency amount                                             | [Implicit](#implicit)                          |
-| numeric [ (p, s) ]                      | decimal [ (p, s) ] | exact numeric of selectable precision                       |              [Numeric](#numeric)              |
-| path                                    |                    | geometric path on a plane                                   | [Implicit](#implicit)                          |
-| pg_lsn                                  |                    | PostgreSQL Log Sequence Number                              | [Implicit](#implicit)                          |
-| point                                   |                    | geometric point on a plane                                  | [Implicit](#implicit)                          |
-| polygon                                 |                    | closed geometric path on a plane                            | [Implicit](#implicit)                          |
-| real                                    | float4             | single precision floating-point number (4 bytes)            | [Float](#float)                             |
-| smallint                                | int2               | signed two-byte integer                                     | [Int](#int)                               |
-| smallserial                             | serial2            | autoincrementing two-byte integer                           | [Int](#int)                               |
-| serial                                  | serial4            | autoincrementing four-byte integer                          | [Int](#int)                               |
-| text                                    |                    | variable-length character string                            | [String](#string)                            |
-| time [ (p) ] [ without time zone ]      |                    | time of day (no time zone)                                  | [Implicit](#implicit)                          |
-| time [ (p) ] with time zone             | timetz             | time of day, including time zone                            | [Timetz](#timetz)                            |
-| timestamp [ (p) ] [ without time zone ] |                    | date and time (no time zone)                                | [Implicit](#implicit)                          |
-| timestamp [ (p) ] with time zone        | timestamptz        | date and time, including time zone                          | [Timestamptz](#timestamptz)                       |
-| tsquery                                 |                    | text search query                                           | [Implicit](#implicit)                          |
-| tsvector                                |                    | text search document                                        | [Implicit](#implicit)                          |
-| txid_snapshot                           |                    | user-level transaction ID snapshot                          | [Implicit](#implicit)                          |
-| uuid                                    |                    | universally unique identifier                               | [Implicit](#implicit)                          |
-| xml                                     |                    | XML data                                                    | [Implicit](#implicit)                          |
+| Name                                    | Aliases            | Description                                                 | Hasura Type                                                                                                                   |
+| --------------------------------------- | ------------------ | ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| bigint                                  | int8               | signed eight-byte integer                                   | [Numeric](#numeric) or [String](#string) ([flag](/latest/deployment/graphql-engine-flags/reference/#stringify-numeric-types)) |
+| bigserial                               | serial8            | autoincrementing eight-byte integer                         | [Numeric](#numeric) or [String](#string) ([flag](/latest/deployment/graphql-engine-flags/reference/#stringify-numeric-types)) |
+| bit [ (n) ]                             |                    | fixed-length bit string                                     | [Implicit](#implicit)                                                                                                         |
+| bit varying [ (n) ]                     | varbit [ (n) ]     | variable-length bit string                                  | [Implicit](#implicit)                                                                                                         |
+| boolean                                 | bool               | logical Boolean (true/false)                                | [Bool](#bool)                                                                                                                 |
+| box                                     |                    | rectangular box on a plane                                  | [Implicit](#implicit)                                                                                                         |
+| bytea                                   |                    | binary data (“byte array”)                                  | [Implicit](#implicit)                                                                                                         |
+| character [ (n) ]                       | char [ (n) ]       | fixed-length character string                               | [Char](#char)                                                                                                                 |
+| character varying [ (n) ]               | varchar [ (n) ]    | variable-length character string                            | [String](#string)                                                                                                             |
+| cidr                                    |                    | IPv4 or IPv6 network address                                | [Implicit](#implicit)                                                                                                         |
+| circle                                  |                    | circle on a plane                                           | [Implicit](#implicit)                                                                                                         |
+| date                                    |                    | calendar date (year, month, day)                            | [Date](#date)                                                                                                                 |
+| double precision                        | float8             | double precision floating-point number (8 bytes)            | [Float](#float) or [String](#string) ([flag](/latest/deployment/graphql-engine-flags/reference/#stringify-numeric-types))     |
+| inet                                    |                    | IPv4 or IPv6 host address                                   | [Implicit](#implicit)                                                                                                         |
+| integer                                 | int, int4          | signed four-byte integer                                    | [Int](#int)                                                                                                                   |
+| interval [ fields ] [ (p) ]             |                    | time span                                                   | [Implicit](#implicit)                                                                                                         |
+| json                                    |                    | textual JSON data                                           | [JSON](#json)                                                                                                                 |
+| jsonb                                   |                    | binary JSON data, decomposed                                | [JSONB](#jsonb)                                                                                                               |
+| line                                    |                    | infinite line on a plane                                    | [Implicit](#implicit)                                                                                                         |
+| lseg                                    |                    | line segment on a plane                                     | [Implicit](#implicit)                                                                                                         |
+| ltree                                   |                    | labels of data stored in a hierarchical tree-like structure | [Implicit](#implicit)                                                                                                         |
+| geometry                                |                    | PostGIS Geometry type                                       | [Geometry](#geometry)                                                                                                         |
+| geography                               |                    | PostGIS Geography type                                      | [Geography](#geography)                                                                                                       |
+| macaddr                                 |                    | MAC (Media Access Control) address                          | [Implicit](#implicit)                                                                                                         |
+| macaddr8                                |                    | MAC (Media Access Control) address (EUI-64 format)          | [Implicit](#implicit)                                                                                                         |
+| money                                   |                    | currency amount                                             | [Implicit](#implicit)                                                                                                         |
+| numeric [ (p, s) ]                      | decimal [ (p, s) ] | exact numeric of selectable precision                       | [Numeric](#numeric) or [String](#string) ([flag](/latest/deployment/graphql-engine-flags/reference/#stringify-numeric-types)) |
+| path                                    |                    | geometric path on a plane                                   | [Implicit](#implicit)                                                                                                         |
+| pg_lsn                                  |                    | PostgreSQL Log Sequence Number                              | [Implicit](#implicit)                                                                                                         |
+| point                                   |                    | geometric point on a plane                                  | [Implicit](#implicit)                                                                                                         |
+| polygon                                 |                    | closed geometric path on a plane                            | [Implicit](#implicit)                                                                                                         |
+| real                                    | float4             | single precision floating-point number (4 bytes)            | [Float](#float)                                                                                                               |
+| smallint                                | int2               | signed two-byte integer                                     | [Int](#int)                                                                                                                   |
+| smallserial                             | serial2            | autoincrementing two-byte integer                           | [Int](#int)                                                                                                                   |
+| serial                                  | serial4            | autoincrementing four-byte integer                          | [Int](#int)                                                                                                                   |
+| text                                    |                    | variable-length character string                            | [String](#string)                                                                                                             |
+| time [ (p) ] [ without time zone ]      |                    | time of day (no time zone)                                  | [Implicit](#implicit)                                                                                                         |
+| time [ (p) ] with time zone             | timetz             | time of day, including time zone                            | [Timetz](#timetz)                                                                                                             |
+| timestamp [ (p) ] [ without time zone ] |                    | date and time (no time zone)                                | [Implicit](#implicit)                                                                                                         |
+| timestamp [ (p) ] with time zone        | timestamptz        | date and time, including time zone                          | [Timestamptz](#timestamptz)                                                                                                   |
+| tsquery                                 |                    | text search query                                           | [Implicit](#implicit)                                                                                                         |
+| tsvector                                |                    | text search document                                        | [Implicit](#implicit)                                                                                                         |
+| txid_snapshot                           |                    | user-level transaction ID snapshot                          | [Implicit](#implicit)                                                                                                         |
+| uuid                                    |                    | universally unique identifier                               | [Implicit](#implicit)                                                                                                         |
+| xml                                     |                    | XML data                                                    | [Implicit](#implicit)                                                                                                         |
 
 ## Int {#int}
 
@@ -232,18 +232,12 @@ through a variable of type **jsonb**.
 E.g.
 
 ```graphql
-mutation insert_test($value : jsonb) {
-  insert_test(
-    objects: [
-      {
-        jsonb_col: $value
-      }
-    ]
-  ) {
-     affected_rows
-     returning{
-       jsonb_col
-     }
+mutation insert_test($value: jsonb) {
+  insert_test(objects: [{ jsonb_col: $value }]) {
+    affected_rows
+    returning {
+      jsonb_col
+    }
   }
 }
 ```
@@ -268,11 +262,7 @@ E.g.
 
 ```graphql
 mutation insertGeometry($point: geometry!) {
-  insert_test(
-    objects: [{
-      geometry_col: $point
-    }]
-  ) {
+  insert_test(objects: [{ geometry_col: $point }]) {
     affected_rows
     returning {
       geometry_col
@@ -302,11 +292,7 @@ E.g.
 
 ```graphql
 mutation insertGeography($point: geography!) {
-  insert_test(
-    objects: [{
-      geography_col: $point
-    }]
-  ) {
+  insert_test(objects: [{ geography_col: $point }]) {
     affected_rows
     returning {
       geography_col

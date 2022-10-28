@@ -12,8 +12,11 @@ import Control.Lens qualified as Lens
 import Data.Aeson qualified as J
 import Data.Aeson.KeyMap qualified as KM
 import Data.Aeson.Lens
+import Data.List.NonEmpty qualified as NE
 import Data.Vector qualified as Vector
-import Harness.Backend.DataConnector qualified as DataConnector
+import Harness.Backend.DataConnector.Chinook qualified as Chinook
+import Harness.Backend.DataConnector.Chinook.Reference qualified as Reference
+import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (defaultBackendCapabilities, defaultBackendServerUrl)
@@ -31,28 +34,30 @@ import Test.Hspec (SpecWith, describe, it, pendingWith)
 spec :: SpecWith TestEnvironment
 spec = do
   Fixture.runWithLocalTestEnvironment
-    ( ( \(DataConnector.TestSourceConfig backendType _backendConfig _sourceConfig _md) ->
-          (Fixture.fixture $ Fixture.Backend backendType)
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [emptySetupAction testEnv]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [emptySetupAction testEnv]
             }
-      )
-        <$> DataConnector.backendConfigs
+        ]
     )
     schemaCrudTests
 
   Fixture.runWithLocalTestEnvironment
-    ( ( \(DataConnector.TestSourceConfig backendType backendConfig _sourceConfig md) ->
-          (Fixture.fixture $ Fixture.Backend backendType)
+    ( NE.fromList
+        [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
             { Fixture.setupTeardown = \(testEnv, _) ->
-                [ DataConnector.setupFixtureAction
-                    md
-                    backendConfig
-                    testEnv
-                ]
+                [Chinook.setupAction Chinook.referenceSourceConfig Reference.agentConfig testEnv]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorSqlite)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [Chinook.setupAction Chinook.sqliteSourceConfig Sqlite.agentConfig testEnv]
             }
-      )
-        <$> DataConnector.backendConfigs
+        ]
     )
     schemaInspectionTests
 

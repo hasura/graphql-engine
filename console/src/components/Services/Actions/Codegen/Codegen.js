@@ -1,5 +1,10 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+  useGetAnalyticsAttributes,
+} from '@/features/Analytics';
 import { getSdlComplete } from '../../../../shared/utils/sdlUtils';
 import {
   getAllCodegenFrameworks,
@@ -47,6 +52,10 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   };
 
   React.useEffect(init, []);
+
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes('Codegen', {
+    redactText: true,
+  });
 
   if (loading) {
     return <Spinner />;
@@ -172,24 +181,29 @@ const Codegen = ({ dispatch, allActions, allTypes, currentAction }) => {
   };
 
   return (
-    <div className="w-[600px]">
-      <Helmet>
-        <title data-heap-redact-text="true">{`Codegen - ${currentAction.name} - Actions | Hasura`}</title>
-      </Helmet>
-      {getFrameworkActions()}
-      <div className="mb-5">
-        <CodeTabs
-          framework={selectedFramework}
-          actionsSdl={getSdlComplete(allActions, allTypes)}
-          currentAction={currentAction}
-          shouldDerive={shouldDerive}
-          parentMutation={parentMutation}
-          dispatch={dispatch}
-        />
+    <Analytics name="ActionsCodegen" {...REDACT_EVERYTHING}>
+      <div className="w-[600px]">
+        <Helmet>
+          <title
+            {...titleAnalyticsAttributes}
+          >{`Codegen - ${currentAction.name} - Actions | Hasura`}</title>
+        </Helmet>
+
+        {getFrameworkActions()}
+        <div className="mb-5">
+          <CodeTabs
+            framework={selectedFramework}
+            actionsSdl={getSdlComplete(allActions, allTypes)}
+            currentAction={currentAction}
+            shouldDerive={shouldDerive}
+            parentMutation={parentMutation}
+            dispatch={dispatch}
+          />
+        </div>
+        <hr className="my-5" />
+        {getDerivationInfo()}
       </div>
-      <hr className="my-5" />
-      {getDerivationInfo()}
-    </div>
+    </Analytics>
   );
 };
 

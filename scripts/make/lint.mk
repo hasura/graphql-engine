@@ -116,6 +116,18 @@ lint-hs-changed: check-hlint-version
 		$(HLINT) $(CHANGED_HS_FILES); \
 	fi
 
+.PHONY: lint-hs-fix
+## lint-hs-fix: lint Haskell code using `hlint` and attempt to fix warnings using `apply-refact`
+lint-hs-fix: check-hlint-version
+	@echo running hlint --refactor
+	@echo $(HS_FILES) | xargs -n1 $(HLINT) --refactor --refactor-options='--inplace'
+
+.PHONY: lint-hs-fix-changed
+## lint-hs-fix-changed: lint Haskell code using `hlint` and attempt to fix warnings using `apply-refact` (changed files only)
+lint-hs-fix-changed: check-hlint-version
+	@echo running hlint --refactor
+	@echo $(CHANGED_HS_FILES) | xargs --no-run-if-empty -n1 $(HLINT) --refactor --refactor-options='--inplace'
+
 .PHONY: lint-shell
 ## lint-shell: lint shell scripts using `shellcheck`
 lint-shell:

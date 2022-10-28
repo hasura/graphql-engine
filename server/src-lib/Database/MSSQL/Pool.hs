@@ -9,9 +9,12 @@ module Database.MSSQL.Pool
     initMSSQLPool,
     drainMSSQLPool,
     withMSSQLPool,
+    resizePool,
+    getInUseConnections,
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Control.Exception.Lifted
 import Control.Monad.Trans.Control
 import Data.Aeson
@@ -23,6 +26,9 @@ import Prelude
 -- | ODBC connection string for MSSQL server
 newtype ConnectionString = ConnectionString {unConnectionString :: Text}
   deriving (Show, Eq, ToJSON, FromJSON, Generic)
+
+instance HasCodec ConnectionString where
+  codec = dimapCodec ConnectionString unConnectionString codec
 
 data ConnectionOptions = ConnectionOptions
   { _coConnections :: Int,
@@ -60,3 +66,14 @@ withMSSQLPool ::
   m (Either ODBC.ODBCException a)
 withMSSQLPool (MSSQLPool pool) action = do
   try $ Pool.withResource pool action
+
+-- | Resize a pool
+resizePool :: MSSQLPool -> Int -> IO ()
+resizePool (MSSQLPool pool) resizeTo = do
+  -- Resize the pool max resources
+  Pool.resizePool pool resizeTo
+  -- Trim pool by destroying excess resources, if any
+  Pool.tryTrimPool pool
+
+getInUseConnections :: MSSQLPool -> IO Int
+getInUseConnections (MSSQLPool pool) = Pool.getInUseResourceCount $ pool

@@ -1,8 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-{-# OPTIONS -Wno-redundant-constraints #-}
-
 -- | PostgreSQL helpers.
 module Harness.Backend.Postgres
   ( livenessCheck,
@@ -22,6 +20,11 @@ module Harness.Backend.Postgres
     setupPermissionsAction,
     setupFunctionRootFieldAction,
     setupComputedFieldAction,
+    -- sql generation for other postgres-like backends
+    uniqueConstraintSql,
+    createUniqueIndexSql,
+    mkPrimaryKeySql,
+    mkReferenceSql,
   )
 where
 
@@ -119,7 +122,7 @@ connection_info:
 
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Postgres backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
-createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableUniqueConstraints} = do
+createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
   run_ $
     T.unpack $
@@ -128,19 +131,30 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
           T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName,
           "(",
           commaSeparated $
-            (mkColumn <$> tableColumns)
-              <> (bool [mkPrimaryKey pk] [] (null pk))
-              <> (mkReference schemaName <$> tableReferences),
+            (mkColumnSql <$> tableColumns)
+              <> (bool [mkPrimaryKeySql pk] [] (null pk))
+              <> (mkReferenceSql schemaName <$> tableReferences)
+              <> map uniqueConstraintSql tableConstraints,
           ");"
         ]
 
-  for_ tableUniqueConstraints (createUniqueConstraint tableName)
+  for_ tableUniqueIndexes (run_ . createUniqueIndexSql schemaName tableName)
 
-createUniqueConstraint :: Text -> Schema.UniqueConstraint -> IO ()
-createUniqueConstraint tableName (Schema.UniqueConstraintColumns cols) =
-  run_ $ T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", tableName, "("] ++ [commaSeparated cols] ++ [")"]
-createUniqueConstraint tableName (Schema.UniqueConstraintExpression ex) =
-  run_ $ T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", tableName, "((", ex, "))"]
+uniqueConstraintSql :: Schema.Constraint -> Text
+uniqueConstraintSql = \case
+  Schema.UniqueConstraintColumns cols ->
+    T.unwords $ ["UNIQUE ", "("] ++ [commaSeparated cols] ++ [")"]
+  Schema.CheckConstraintExpression ex ->
+    T.unwords $ ["CHECK ", "(", ex, ")"]
+
+createUniqueIndexSql :: SchemaName -> Text -> Schema.UniqueIndex -> String
+createUniqueIndexSql schemaName tableName = \case
+  Schema.UniqueIndexColumns cols ->
+    T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", qualifiedTableName, "("] ++ [commaSeparated cols] ++ [")"]
+  Schema.UniqueIndexExpression ex ->
+    T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", qualifiedTableName, "((", ex, "))"]
+  where
+    qualifiedTableName = wrapIdentifier (unSchemaName schemaName) <> "." <> wrapIdentifier tableName
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
@@ -151,8 +165,8 @@ scalarType = \case
   Schema.TGeography -> "GEOGRAPHY"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstPostgres
 
-mkColumn :: Schema.Column -> Text
-mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
+mkColumnSql :: Schema.Column -> Text
+mkColumnSql Schema.Column {columnName, columnType, columnNullable, columnDefault} =
   T.unwords
     [ wrapIdentifier columnName,
       scalarType columnType,
@@ -160,8 +174,8 @@ mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
       maybe "" ("DEFAULT " <>) columnDefault
     ]
 
-mkPrimaryKey :: [Text] -> Text
-mkPrimaryKey key =
+mkPrimaryKeySql :: [Text] -> Text
+mkPrimaryKeySql key =
   T.unwords
     [ "PRIMARY KEY",
       "(",
@@ -169,8 +183,8 @@ mkPrimaryKey key =
       ")"
     ]
 
-mkReference :: SchemaName -> Schema.Reference -> Text
-mkReference schemaName Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
+mkReferenceSql :: SchemaName -> Schema.Reference -> Text
+mkReferenceSql schemaName Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
   T.unwords
     [ "FOREIGN KEY",
       "(",
@@ -307,11 +321,11 @@ setupPermissionsAction permissions env =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup "pg" permissions env
+setupPermissions permissions env = Permissions.setup Postgres permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown "pg" permissions env
+teardownPermissions permissions env = Permissions.teardown Postgres permissions env
 
 setupFunctionRootFieldAction :: String -> TestEnvironment -> SetupAction
 setupFunctionRootFieldAction functionName env =

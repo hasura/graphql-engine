@@ -4,6 +4,7 @@ module Hasura.Eventing.Common
     removeEventFromLockedEvents,
     generateScheduleTimes,
     cleanupSchedulesToBeGenerated,
+    deleteEventTriggerLogsInBatchesWith,
   )
 where
 
@@ -13,9 +14,11 @@ import Control.Monad.STM
 import Data.List (unfoldr)
 import Data.Set qualified as Set
 import Data.Time
+import Hasura.Base.Error (QErr)
 import Hasura.Prelude
 import Hasura.RQL.Types.Action (LockedActionEventId)
 import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Eventing (EventId)
 import Hasura.RQL.Types.ScheduledTrigger (CronEventId, OneOffScheduledEventId)
 import System.Cron
@@ -57,3 +60,31 @@ generateScheduleTimes from n cron = take n $ go from
 -- | number of cleanup schedules to be generated in one iteration
 cleanupSchedulesToBeGenerated :: Int
 cleanupSchedulesToBeGenerated = 50
+
+deleteEventTriggerLogsInBatchesWith ::
+  (MonadIO m, MonadError QErr m) =>
+  IO (Maybe (TriggerLogCleanupConfig, EventTriggerCleanupStatus)) ->
+  TriggerLogCleanupConfig ->
+  (TriggerLogCleanupConfig -> IO (Either QErr DeletedEventLogStats)) ->
+  m DeletedEventLogStats
+deleteEventTriggerLogsInBatchesWith getLatestCleanupConfig oldCleanupConfig dbLogDeleteAction = do
+  -- fetch the latest cleanup config from the schema cache
+  latestCleanupConfig <- liftIO getLatestCleanupConfig
+  case latestCleanupConfig of
+    -- if the cleanup has been paused, then don't delete anything
+    Just (_, ETCSPaused) -> pure (DeletedEventLogStats 0 0)
+    nonPausedNewConfig -> do
+      -- get latest cleanup config if available, else use the older one
+      let cleanupConfig = maybe oldCleanupConfig fst nonPausedNewConfig
+      -- delete one batch of the logs
+      deletedStatsForCurrentBatch@(DeletedEventLogStats delEventLogsInBatch delInvocationLogsInBatch) <-
+        liftEitherM $ liftIO $ dbLogDeleteAction cleanupConfig
+      -- If no logs has been deleted, then end the recursion
+      if deletedStatsForCurrentBatch == (DeletedEventLogStats 0 0)
+        then pure deletedStatsForCurrentBatch
+        else do
+          -- if non zero logs has been deleted then do a recursion
+          (DeletedEventLogStats deletedRemainingEventLogs deletedRemainingInvocationLogs) <-
+            deleteEventTriggerLogsInBatchesWith getLatestCleanupConfig cleanupConfig dbLogDeleteAction
+          -- Finally collect all the statistics
+          pure (DeletedEventLogStats (delEventLogsInBatch + deletedRemainingEventLogs) (delInvocationLogsInBatch + deletedRemainingInvocationLogs))

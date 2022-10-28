@@ -14,16 +14,18 @@ import Data.HashMap.Strict qualified as HM
 import Data.List.NonEmpty qualified as NE
 import Hasura.Backends.Postgres.SQL.DML qualified as S
 import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Types qualified as S
 import Hasura.Backends.Postgres.Translate.Select.Internal.Aliases (mkBaseTableAlias)
 import Hasura.Backends.Postgres.Translate.Select.Internal.Helpers
   ( cursorIdentifier,
+    cursorsSelectAlias,
     cursorsSelectAliasIdentifier,
     endCursorIdentifier,
     hasNextPageIdentifier,
     hasPreviousPageIdentifier,
     mkFirstElementExp,
     mkLastElementExp,
-    pageInfoSelectAliasIdentifier,
+    pageInfoSelectAlias,
     startCursorIdentifier,
   )
 import Hasura.Backends.Postgres.Translate.Types
@@ -71,7 +73,9 @@ generateSQLSelect joinCondition selectSource selectNode =
           S.selOffset = S.OffsetExp . S.int64ToSQLExp <$> _ssOffset baseSlicing,
           S.selDistinct = baseDistinctOn
         }
-    baseSelectAlias = mkBaseTableAlias sourcePrefix
+    -- This is why 'SelectSource{sourcePrefix}' needs to be a TableAlias!
+    baseSelectAlias = mkBaseTableAlias (S.toTableAlias sourcePrefix)
+    baseSelectIdentifier = S.tableAliasToIdentifier baseSelectAlias
     baseFromItem = S.mkSelFromItem baseSelect baseSelectAlias
 
     injectJoinCond ::
@@ -102,7 +106,7 @@ generateSQLSelect joinCondition selectSource selectNode =
       let ObjectRelationSource _ colMapping objectSelectSource = objectRelationSource
           alias = S.toTableAlias $ _ossPrefix objectSelectSource
           source = objectSelectSourceToSelectSource objectSelectSource
-          select = generateSQLSelect (mkJoinCond baseSelectAlias colMapping) source node
+          select = generateSQLSelect (mkJoinCond baseSelectIdentifier colMapping) source node
        in S.mkLateralFromItem select alias
 
     arrayRelationToFromItem ::
@@ -112,7 +116,7 @@ generateSQLSelect joinCondition selectSource selectNode =
           alias = S.toTableAlias $ _ssPrefix source
           select =
             generateSQLSelectFromArrayNode source arraySelectNode $
-              mkJoinCond baseSelectAlias colMapping
+              mkJoinCond baseSelectIdentifier colMapping
        in S.mkLateralFromItem select alias
 
     arrayConnectionToFromItem ::
@@ -153,7 +157,7 @@ generateSQLSelectFromArrayNode selectSource (MultiRowSelectNode topExtractors se
             ]
     }
 
-mkJoinCond :: S.TableAlias -> HashMap PGCol PGCol -> S.BoolExp
+mkJoinCond :: S.TableIdentifier -> HashMap PGCol PGCol -> S.BoolExp
 mkJoinCond baseTablepfx colMapn =
   foldl' (S.BEBin S.AndOp) (S.BELit True) $
     flip map (HM.toList colMapn) $ \(lCol, rCol) ->
@@ -164,7 +168,7 @@ connectionToSelectWith ::
   ArrayConnectionSource ->
   MultiRowSelectNode ->
   S.SelectWithG S.Select
-connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
+connectionToSelectWith rootSelectAlias arrayConnectionSource arraySelectNode =
   let extractionSelect =
         S.mkSelect
           { S.selExtr = topExtractors,
@@ -175,10 +179,20 @@ connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
     ArrayConnectionSource _ columnMapping maybeSplit maybeSlice selectSource =
       arrayConnectionSource
     MultiRowSelectNode topExtractors selectNode = arraySelectNode
-    baseSelectIdentifier = Identifier "__base_select"
-    splitSelectIdentifier = Identifier "__split_select"
-    sliceSelectIdentifier = Identifier "__slice_select"
-    finalSelectIdentifier = Identifier "__final_select"
+
+    rootSelectIdentifier = S.tableAliasToIdentifier rootSelectAlias
+
+    baseSelectAlias = S.mkTableAlias "__base_select"
+    baseSelectIdentifier = S.tableAliasToIdentifier baseSelectAlias
+
+    splitSelectAlias = S.mkTableAlias "__split_select"
+    splitSelectIdentifier = S.tableAliasToIdentifier splitSelectAlias
+
+    sliceSelectAlias = S.mkTableAlias "__slice_select"
+    sliceSelectIdentifier = S.tableAliasToIdentifier sliceSelectAlias
+
+    finalSelectAlias = S.mkTableAlias "__final_select"
+    finalSelectIdentifier = S.tableAliasToIdentifier finalSelectAlias
 
     rowNumberIdentifier = Identifier "__row_number"
     rowNumberExp = S.SEUnsafe "(row_number() over (partition by 1))"
@@ -192,7 +206,7 @@ connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
     endRowNumberExp = mkLastElementExp $ S.SEIdentifier rowNumberIdentifier
 
     fromBaseSelections =
-      let joinCond = mkJoinCond baseSelectAlias columnMapping
+      let joinCond = mkJoinCond rootSelectIdentifier columnMapping
           baseSelectFrom =
             S.mkSelFromItem
               (generateSQLSelect joinCond selectSource selectNode)
@@ -205,7 +219,7 @@ connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
                   ],
                 S.selFrom = Just $ S.FromExp [baseSelectFrom]
               }
-       in (S.toTableAlias baseSelectIdentifier, select) : fromSplitSelection
+       in (baseSelectAlias, select) : fromSplitSelection
 
     mkStarSelect fromIdentifier =
       S.mkSelect
@@ -218,7 +232,7 @@ connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
       Just splitBool ->
         let select =
               (mkStarSelect baseSelectIdentifier) {S.selWhere = Just $ S.WhereFrag splitBool}
-         in (S.toTableAlias splitSelectIdentifier, select) : fromSliceSelection splitSelectIdentifier
+         in (splitSelectAlias, select) : fromSliceSelection splitSelectIdentifier
 
     fromSliceSelection prevSelect = case maybeSlice of
       Nothing -> fromFinalSelect prevSelect
@@ -240,17 +254,17 @@ connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
                           S.selOrderBy = Just $ mkRowNumberOrderBy S.OTDesc
                         }
                     sliceLastSelectFrom =
-                      S.mkSelFromItem sliceLastSelect $ S.toTableAlias sliceSelectIdentifier
+                      S.mkSelFromItem sliceLastSelect $ sliceSelectAlias
                  in S.mkSelect
                       { S.selExtr = [S.selectStar],
                         S.selFrom = Just $ S.FromExp [sliceLastSelectFrom],
                         S.selOrderBy = Just $ mkRowNumberOrderBy S.OTAsc
                       }
-         in (S.toTableAlias sliceSelectIdentifier, select) : fromFinalSelect sliceSelectIdentifier
+         in (sliceSelectAlias, select) : fromFinalSelect sliceSelectIdentifier
 
     fromFinalSelect prevSelect =
       let select = mkStarSelect prevSelect
-       in (S.toTableAlias finalSelectIdentifier, select) : fromCursorSelection
+       in (finalSelectAlias, select) : fromCursorSelection
 
     fromCursorSelection =
       let extrs =
@@ -264,7 +278,7 @@ connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
               { S.selExtr = extrs,
                 S.selFrom = Just $ S.FromExp [S.FIIdentifier finalSelectIdentifier]
               }
-       in (S.toTableAlias cursorsSelectAliasIdentifier, select) : fromPageInfoSelection
+       in (cursorsSelectAlias, select) : fromPageInfoSelection
 
     fromPageInfoSelection =
       let hasPrevPage =
@@ -293,4 +307,4 @@ connectionToSelectWith baseSelectAlias arrayConnectionSource arraySelectNode =
                     S.Extractor hasNextPage $ Just $ S.toColumnAlias hasNextPageIdentifier
                   ]
               }
-       in pure (S.toTableAlias pageInfoSelectAliasIdentifier, select)
+       in pure (pageInfoSelectAlias, select)

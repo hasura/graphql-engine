@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { vSetDefaults, vMakeTableRequests } from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
@@ -163,23 +163,30 @@ class ViewTable extends Component {
     );
 
     let comment = null;
+
     if (tableSchema.comment) {
       comment = (
-        <div
-          className={
-            'sm:max-w-xl rounded bg-secondary-light border border-gray-300 border-l-4 border-l-secondary py-sm px-md mt-lg'
-          }
-        >
-          {tableSchema.comment}
-        </div>
+        <Analytics name="DataTableComment" {...REDACT_EVERYTHING}>
+          <div
+            className={
+              'sm:max-w-xl rounded bg-secondary-light border border-gray-300 border-l-4 border-l-secondary py-sm px-md mt-lg'
+            }
+          >
+            {tableSchema.comment}
+          </div>
+        </Analytics>
       );
     }
 
     return (
       <RightContainer>
-        {header}
+        <Analytics name="DataTableViewRows" {...REDACT_EVERYTHING}>
+          {header}
+        </Analytics>
         {comment}
-        <div>{viewRows}</div>
+        <Analytics name="DataTableViewRows" {...REDACT_EVERYTHING}>
+          {viewRows}
+        </Analytics>
       </RightContainer>
     );
   }

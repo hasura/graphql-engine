@@ -132,7 +132,7 @@ const useColumnEditor = (dispatch: Dispatch, tableName: string) => {
 interface ColumnCreatorProps {
   dispatch: Dispatch;
   tableName: string;
-  dataTypes: string[];
+  dataTypes: string[][];
   validTypeCasts: Record<string, string[]>;
   columnDefaultFunctions: Record<string, string[]>;
   postgresVersion: string;

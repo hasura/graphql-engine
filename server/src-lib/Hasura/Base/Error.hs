@@ -20,6 +20,7 @@ module Hasura.Base.Error
     internalError,
     QErrM,
     throw400,
+    throw400WithDetail,
     throw404,
     throw405,
     throw409,
@@ -291,6 +292,10 @@ type QErrM m = (MonadError QErr m)
 
 throw400 :: (QErrM m) => Code -> Text -> m a
 throw400 c t = throwError $ err400 c t
+
+throw400WithDetail :: (QErrM m) => Code -> Text -> Value -> m a
+throw400WithDetail c t detail =
+  throwError $ (err400 c t) {qeInternal = Just $ ExtraInternal detail}
 
 throw404 :: (QErrM m) => Text -> m a
 throw404 t = throwError $ err404 NotFound t

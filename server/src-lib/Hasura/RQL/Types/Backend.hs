@@ -24,6 +24,7 @@ import Hasura.Base.ToErrorValue
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.Types.HealthCheckImplementation (HealthCheckImplementation)
+import Hasura.RQL.Types.ResizePool (ServerReplicas)
 import Hasura.SQL.Backend
 import Hasura.SQL.Tag
 import Hasura.SQL.Types
@@ -103,7 +104,9 @@ class
     FromJSON (HealthCheckTest b),
     FromJSONKey (Column b),
     HasCodec (BackendSourceKind b),
+    HasCodec (Column b),
     HasCodec (SourceConnConfiguration b),
+    HasCodec (TableName b),
     ToJSON (BackendConfig b),
     ToJSON (BackendInfo b),
     ToJSON (Column b),
@@ -325,6 +328,9 @@ class
 
   -- Global naming convention
   namingConventionSupport :: SupportedNamingCase
+
+  -- Resize source pools based on the count of server replicas
+  resizeSourcePools :: SourceConfig b -> ServerReplicas -> IO ()
 
 -- Prisms
 $(makePrisms ''ComputedFieldReturnType)

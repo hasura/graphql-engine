@@ -23,6 +23,7 @@ executable api-tests
     , postgresql-simple
     , safe-exceptions
     , split
+    , sop-core
     , test-harness
     , text
     , unordered-containers
@@ -46,11 +47,13 @@ executable api-tests
     TypeFamilies
 
   hs-source-dirs: test
+  default-language: Haskell2010
 
   -- Turning off optimizations is intentional; tests aren't
   -- performance sensitive and waiting for compilation is a problem.
   ghc-options:
-    -Wall -O0
+    -Wall
+    -Werror
     -threaded
     -rtsopts "-with-rtsopts=-N"
 
@@ -66,6 +69,7 @@ executable api-tests
     Test.DataConnector.MetadataApiSpec
     Test.DataConnector.MockAgent.AggregateQuerySpec
     Test.DataConnector.MockAgent.BasicQuerySpec
+    Test.DataConnector.MockAgent.ErrorSpec
     Test.DataConnector.MockAgent.QueryRelationshipsSpec
     Test.DataConnector.MockAgent.TransformedConfigurationSpec
     Test.DataConnector.QuerySpec
@@ -77,32 +81,44 @@ executable api-tests
     Test.DisableRootFields.SelectPermission.EnableAggSpec
     Test.DisableRootFields.SelectPermission.EnableAllRootFieldsSpec
     Test.DisableRootFields.SelectPermission.EnablePKSpec
-    Test.EventTrigger.PG.EventTriggersRecreationSpec
-    Test.EventTrigger.PG.EventTriggersRunSQLSpec
-    Test.EventTrigger.PG.EventTriggersUntrackTableCleanupSpec
-    Test.EventTrigger.PG.EventTriggersUniqueNameSpec
-    Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec
-    Test.EventTrigger.PG.EventTriggersReplaceMetadataCleanupSpec
+    Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec
     Test.EventTrigger.MSSQL.EventTriggerDropSourceCleanupSpec
     Test.EventTrigger.MSSQL.EventTriggersUntrackTableCleanupSpec
-    Test.EventTrigger.MSSQL.EventTiggersUniqueNameSpec
+    Test.EventTrigger.PG.EventTriggersExtensionSchemaSpec
+    Test.EventTrigger.PG.EventTriggersRecreationSpec
+    Test.EventTrigger.PG.EventTriggersReplaceMetadataCleanupSpec
+    Test.EventTrigger.PG.EventTriggersRunSQLSpec
+    Test.EventTrigger.PG.EventTriggersUniqueNameSpec
+    Test.EventTrigger.PG.EventTriggersUntrackTableCleanupSpec
     Test.HelloWorldSpec
     Test.LongIdentifiersSpec
     Test.Metadata.InconsistentSpec
+    Test.Mutations.Delete.AllSpec
+    Test.Mutations.Delete.FieldSpec
+    Test.Mutations.Delete.NestedFieldSpec
+    Test.Mutations.Delete.PrimaryKeySpec
+    Test.Mutations.Insert.MultipleSpec
+    Test.Mutations.Insert.SingleSpec
+    Test.Mutations.Upsert.OnConflictSpec
     Test.Mutations.MultiplePerRequest.UpdateManySpec
-    Test.Postgres.DataValidation.PermissionSpec
+    Test.Mutations.Update.FieldSpec
+    Test.Mutations.Update.PrimaryKeySpec
     Test.Postgres.BackendOnlyPermissionsSpec
+    Test.Postgres.DataValidation.PermissionSpec
     Test.Postgres.DefaultValuesSpec
+    Test.Postgres.JsonbSpec
     Test.Postgres.TimestampSpec
     Test.Postgres.UniqueConstraintsSpec
-    Test.Postgres.JsonbSpec
+    Test.Queries.AggregationPredicatesSpec
+    Test.Queries.AggregationSpec
+    Test.Queries.AliasesSpec
     Test.Queries.Directives.IncludeAndSkipSpec
     Test.Queries.Directives.IncludeSpec
     Test.Queries.Directives.SkipSpec
     Test.Queries.DirectivesSpec
-    Test.Queries.AggregationSpec
-    Test.Queries.AggregationPredicatesSpec
+    Test.Queries.ExplainSpec
     Test.Queries.FilterSearchSpec
+    Test.Queries.FragmentsSpec
     Test.Queries.MultiColumnObjectRelationshipsSpec
     Test.Queries.NestedObjectSpec
     Test.Queries.Paginate.LimitSpec
@@ -112,11 +128,14 @@ executable api-tests
     Test.Queries.Simple.OperationNameSpec
     Test.Queries.Simple.PrimaryKeySpec
     Test.Queries.SortSpec
+    Test.Queries.VariablesSpec
     Test.Quoter.YamlSpec
+    Test.Regression.AggregateBoolExpConflictSpec
     Test.Regression.ArrayLiteralTextEncodingSpec
     Test.Regression.DoNotTruncateSessionVariables8158Spec
     Test.Regression.DropColumnWithPermissions8415Spec
     Test.Regression.InsertOnConflict8260Spec
+    Test.Regression.NullRemoteRelationship8345Spec
     Test.Regression.NullsOrderParsing8780Spec
     Test.Regression.ObjectRelationshipsLimit7936Spec
     Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
@@ -128,21 +147,19 @@ executable api-tests
     Test.RemoteRelationship.XToDBArrayRelationshipSpec
     Test.RemoteRelationship.XToDBObjectRelationshipSpec
     Test.RemoteRelationship.XToRemoteSchemaRelationshipSpec
-    Test.Schema.DataValidation.Permissions.InsertSpec
-    Test.Schema.DataValidation.Permissions.SelectSpec
-    Test.Schema.CustomFieldNames.MutationSpec
-    Test.Schema.CustomFieldNames.QuerySpec
     Test.SQLServer.DefaultValuesSpec
-    Test.Schema.DataValidation.Permissions.InsertSpec
-    Test.Schema.DataValidation.Permissions.SelectSpec
     Test.SQLServer.InsertVarcharColumnSpec
     Test.SQLServer.VarcharLiteralsSpec
     Test.Schema.ConflictsSpec
+    Test.Schema.CustomFieldNames.MutationSpec
+    Test.Schema.CustomFieldNames.QuerySpec
+    Test.Schema.DataValidation.Permissions.InsertSpec
+    Test.Schema.DataValidation.Permissions.SelectSpec
     Test.Schema.DefaultValuesSpec
     Test.Schema.EnumSpec
     Test.Schema.TableRelationships.ArrayRelationshipsSpec
     Test.Schema.TableRelationships.ObjectRelationshipsSpec
     Test.Schema.ViewsSpec
     Test.ServiceLivenessSpec
-    Test.SQLServer.InsertVarcharColumnSpec
     Test.Subscriptions.CustomFieldsSpec
+    Test.Subscriptions.LiveQueriesSpec

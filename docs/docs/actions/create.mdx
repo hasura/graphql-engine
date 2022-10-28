@@ -448,6 +448,16 @@ The above definition means:
 - It returns an output type called `AddResult`.
 - `AddResult` is a simple object type with a field called `sum` of type integer.
 
+You can also use Type Generator feature to generate the types for your action:
+
+<Thumbnail
+  src="/img/actions/type-generator.png"
+  alt="Console action create"
+  width="800px"
+/>
+
+Insert JSON samples for the request and the response, click "Insert Types" and Hasura generates the GraphQL types for you.
+
 ### Step 2: Create the action handler
 
 A handler is an HTTP webhook where you can perform the custom logic for the action.

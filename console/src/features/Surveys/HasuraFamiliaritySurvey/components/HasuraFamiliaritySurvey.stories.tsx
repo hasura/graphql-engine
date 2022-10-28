@@ -2,7 +2,7 @@ import React from 'react';
 import { FaBookmark, FaHeart, FaStar, FaUser } from 'react-icons/fa';
 import { ComponentMeta, Story } from '@storybook/react';
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
-import { IconCardGroupItem } from '@/new-components/IconCardGroup';
+import { IconCardGroupItem } from './IconCardGroup';
 import { HasuraFamiliaritySurvey } from './HasuraFamiliaritySurvey';
 
 export default {

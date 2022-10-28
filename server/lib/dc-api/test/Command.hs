@@ -1,22 +1,16 @@
-{-# LANGUAGE TemplateHaskell #-}
-
 module Command
   ( Command (..),
     TestConfig (..),
+    NameCasing (..),
     TestOptions (..),
-    AgentCapabilities (..),
+    ExportDataConfig (..),
+    ExportFormat (..),
     parseCommandLine,
   )
 where
 
 import Control.Arrow (left)
-import Control.Lens (contains, modifying, use, (^.), _2)
-import Control.Lens.TH (makeLenses)
-import Control.Monad (when)
-import Control.Monad.State (State, runState)
 import Data.Aeson (FromJSON (..), eitherDecodeStrict')
-import Data.HashSet (HashSet)
-import Data.HashSet qualified as HashSet
 import Data.Text (Text)
 import Data.Text qualified as Text
 import Data.Text.Encoding qualified as Text
@@ -30,14 +24,22 @@ import Prelude
 data Command
   = Test TestOptions
   | ExportOpenAPISpec
+  | ExportData ExportDataConfig
 
 data TestConfig = TestConfig
-  {_tcTableNamePrefix :: [Text]}
+  { _tcTableNamePrefix :: [Text],
+    _tcTableNameCasing :: NameCasing,
+    _tcColumnNameCasing :: NameCasing
+  }
+
+data NameCasing
+  = PascalCase
+  | Lowercase
+  deriving (Eq, Show, Read)
 
 data TestOptions = TestOptions
   { _toAgentBaseUrl :: BaseUrl,
     _toAgentConfig :: API.Config,
-    _toAgentCapabilities :: AgentCapabilities,
     _toTestConfig :: TestConfig,
     _toParallelDegree :: Maybe Int,
     _toMatch :: Maybe String,
@@ -46,16 +48,16 @@ data TestOptions = TestOptions
     _toExportMatchStrings :: Bool
   }
 
-data AgentCapabilities
-  = AutoDetect
-  | Explicit API.Capabilities
-
-data CapabilitiesState = CapabilitiesState
-  { _csRemainingCapabilities :: HashSet Text,
-    _csCapabilitiesEnquired :: HashSet Text
+data ExportDataConfig = ExportDataConfig
+  { _edcDirectory :: FilePath,
+    _edcFormat :: ExportFormat,
+    _edcDateTimeFormat :: Maybe String
   }
 
-$(makeLenses ''CapabilitiesState)
+data ExportFormat
+  = JSON
+  | JSONLines
+  deriving (Eq, Show, Read)
 
 parseCommandLine :: IO Command
 parseCommandLine =
@@ -81,7 +83,7 @@ version =
 commandParser :: Parser Command
 commandParser =
   subparser
-    (testCommand <> exportOpenApiSpecCommand)
+    (testCommand <> exportOpenApiSpecCommand <> exportData)
   where
     testCommand =
       command
@@ -97,6 +99,13 @@ commandParser =
             (helper <*> pure ExportOpenAPISpec)
             (progDesc "Exports the OpenAPI specification of the Data Connector API that agents must implement")
         )
+    exportData =
+      command
+        "export-data"
+        ( info
+            (helper <*> (ExportData <$> exportDataConfigParser))
+            (progDesc "Exports the Chinook dataset to files in the specified directory")
+        )
 
 testConfigParser :: Parser TestConfig
 testConfigParser =
@@ -108,6 +117,20 @@ testConfigParser =
           <> metavar "PREFIX"
           <> help "The prefix to use for all table names, as a JSON array of strings"
           <> value []
+      )
+    <*> option
+      auto
+      ( long "table-name-casing"
+          <> metavar "CASING"
+          <> help "The casing style to use for table names (PascalCase or Lowercase). Default: PascalCase"
+          <> value PascalCase
+      )
+    <*> option
+      auto
+      ( long "column-name-casing"
+          <> metavar "CASING"
+          <> help "The casing style to use for column names (PascalCase or Lowercase). Default: PascalCase"
+          <> value PascalCase
       )
 
 testOptionsParser :: Parser TestOptions
@@ -127,7 +150,6 @@ testOptionsParser =
           <> metavar "JSON"
           <> help "The configuration JSON to be sent to the agent via the X-Hasura-DataConnector-Config header"
       )
-    <*> agentCapabilitiesParser
     <*> testConfigParser
     <*> optional
       ( option
@@ -166,6 +188,30 @@ testOptionsParser =
 testCommandParser :: Parser Command
 testCommandParser = Test <$> testOptionsParser
 
+exportDataConfigParser :: Parser ExportDataConfig
+exportDataConfigParser =
+  ExportDataConfig
+    <$> strOption
+      ( long "directory"
+          <> short 'd'
+          <> metavar "DIR"
+          <> help "The directory to export the data files into"
+      )
+    <*> option
+      auto
+      ( long "format"
+          <> short 'f'
+          <> metavar "FORMAT"
+          <> help "The format to export (JSON or JSONLines)"
+      )
+    <*> optional
+      ( strOption
+          ( long "datetime-format"
+              <> metavar "FORMAT"
+              <> help "Format string to use when formatting DateTime columns (use format syntax from https://hackage.haskell.org/package/time-1.12.2/docs/Data-Time-Format.html#v:formatTime)"
+          )
+      )
+
 baseUrl :: ReadM BaseUrl
 baseUrl = eitherReader $ left show . parseBaseUrl
 
@@ -179,61 +225,3 @@ configValue = fmap API.Config jsonValue
 
 jsonValue :: FromJSON v => ReadM v
 jsonValue = eitherReader (eitherDecodeStrict' . Text.encodeUtf8 . Text.pack)
-
-agentCapabilitiesParser :: Parser AgentCapabilities
-agentCapabilitiesParser =
-  option
-    agentCapabilities
-    ( long "capabilities"
-        <> short 'c'
-        <> metavar "CAPABILITIES"
-        <> value AutoDetect
-        <> help (Text.unpack helpText)
-    )
-  where
-    helpText =
-      "The capabilities that the agent has, to determine what tests to run. By default, they will be autodetected. The valid capabilities are: " <> allCapabilitiesText
-    allCapabilitiesText =
-      "[autodetect | none | " <> Text.intercalate "," (HashSet.toList allPossibleCapabilities) <> "]"
-
-agentCapabilities :: ReadM AgentCapabilities
-agentCapabilities =
-  str >>= \text -> do
-    let capabilities = HashSet.fromList $ Text.strip <$> Text.split (== ',') text
-    if HashSet.member "autodetect" capabilities
-      then
-        if HashSet.size capabilities == 1
-          then pure AutoDetect
-          else readerError "You can either autodetect capabilities or specify them manually, not both"
-      else
-        if HashSet.member "none" capabilities
-          then
-            if HashSet.size capabilities == 1
-              then pure . Explicit . fst $ readCapabilities mempty
-              else readerError "You cannot specify other capabilities when specifying none"
-          else Explicit <$> readExplicitCapabilities capabilities
-  where
-    readExplicitCapabilities :: HashSet Text -> ReadM API.Capabilities
-    readExplicitCapabilities providedCapabilities =
-      let (capabilities, CapabilitiesState {..}) = readCapabilities providedCapabilities
-       in if _csRemainingCapabilities /= mempty
-            then readerError . Text.unpack $ "Unknown capabilities: " <> Text.intercalate "," (HashSet.toList _csRemainingCapabilities)
-            else pure capabilities
-
-readCapabilities :: HashSet Text -> (API.Capabilities, CapabilitiesState)
-readCapabilities providedCapabilities =
-  flip runState (CapabilitiesState providedCapabilities mempty) $ do
-    supportsRelationships <- readCapability "relationships"
-    pure $ API.emptyCapabilities {API._cRelationships = if supportsRelationships then Just API.RelationshipCapabilities {} else Nothing}
-
-readCapability :: Text -> State CapabilitiesState Bool
-readCapability capability = do
-  modifying csCapabilitiesEnquired $ HashSet.insert capability
-  hasCapability <- use $ csRemainingCapabilities . contains capability
-  when hasCapability $
-    modifying csRemainingCapabilities $ HashSet.delete capability
-  pure hasCapability
-
-allPossibleCapabilities :: HashSet Text
-allPossibleCapabilities =
-  readCapabilities mempty ^. _2 . csCapabilitiesEnquired

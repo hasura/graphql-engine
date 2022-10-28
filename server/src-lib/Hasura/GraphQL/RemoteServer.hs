@@ -31,9 +31,8 @@ import Hasura.HTTP
 import Hasura.Prelude
 import Hasura.RQL.DDL.Headers (makeHeadersFromConf)
 import Hasura.RQL.Types.Common
-import Hasura.RQL.Types.RemoteSchema
-import Hasura.RQL.Types.SchemaCache
-import Hasura.RQL.Types.SourceCustomization
+import Hasura.RemoteSchema.Metadata
+import Hasura.RemoteSchema.SchemaCache.Types
 import Hasura.Server.Utils
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -57,7 +56,7 @@ fetchRemoteSchema ::
   HTTP.Manager ->
   RemoteSchemaName ->
   ValidatedRemoteSchemaDef ->
-  m RemoteSchemaCtx
+  m (IntrospectionResult, BL.ByteString, RemoteSchemaInfo)
 fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   (_, _, _rscRawIntrospectionResult) <-
     execRemoteGQ env manager adminUserInfo [] rsDef introspectionQuery
@@ -70,9 +69,7 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
   let rsCustomizer = getCustomizer (addDefaultRoots _rscIntroOriginal) _vrsdCustomization
   validateSchemaCustomizations rsCustomizer (irDoc _rscIntroOriginal)
 
-  -- At this point, we can't resolve remote relationships; we store an empty map.
-  let _rscRemoteRelationships = mempty
-      _rscInfo = RemoteSchemaInfo {..}
+  let remoteSchemaInfo = RemoteSchemaInfo {..}
 
   -- Check that the parsed GraphQL type info is valid by running the schema
   -- generation. The result is discarded, as the local schema will be built
@@ -83,18 +80,14 @@ fetchRemoteSchema env manager _rscName rsDef@ValidatedRemoteSchemaDef {..} = do
       runRemoteSchema minimumValidContext $
         buildRemoteParser @_ @_ @Parse
           _rscIntroOriginal
-          _rscRemoteRelationships
-          _rscInfo
+          mempty -- remote relationships
+          remoteSchemaInfo
 
   -- The 'rawIntrospectionResult' contains the 'Bytestring' response of
   -- the introspection result of the remote server. We store this in the
   -- 'RemoteSchemaCtx' because we can use this when the 'introspect_remote_schema'
   -- is called by simple encoding the result to JSON.
-  return
-    RemoteSchemaCtx
-      { _rscPermissions = mempty,
-        ..
-      }
+  return (_rscIntroOriginal, _rscRawIntrospectionResult, remoteSchemaInfo)
   where
     -- If there is no explicit mutation or subscription root type we need to check for
     -- objects type definitions with the default names "Mutation" and "Subscription".

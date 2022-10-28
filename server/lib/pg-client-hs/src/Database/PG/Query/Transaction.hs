@@ -17,19 +17,13 @@ module Database.PG.Query.Transaction
     TxET (..),
     TxE,
     TxT,
-    Tx,
     withNotices,
     withQ,
     withQE,
-    rawQ,
     rawQE,
-    listQ,
-    listQE,
     unitQ,
     unitQE,
     multiQE,
-    multiQ,
-    discardQ,
     discardQE,
     serverVersion,
     execTx,
@@ -56,7 +50,6 @@ import Control.Monad.Trans.Reader (ReaderT (..), mapReaderT, runReaderT)
 import Data.Aeson (ToJSON (toJSON), object, (.=))
 import Data.Aeson.Text (encodeToLazyText)
 import Data.Hashable (Hashable)
-import Data.Kind (Type)
 import Data.String (IsString)
 import Data.Text (Text)
 import Database.PG.Query.Class
@@ -68,7 +61,6 @@ import Prelude
 
 -------------------------------------------------------------------------------
 
-type TxIsolation :: Type
 data TxIsolation
   = ReadCommitted
   | RepeatableRead
@@ -81,7 +73,6 @@ instance Show TxIsolation where
   show RepeatableRead = "ISOLATION LEVEL REPEATABLE READ"
   show Serializable = "ISOLATION LEVEL SERIALIZABLE"
 
-type TxAccess :: Type
 data TxAccess
   = ReadWrite
   | ReadOnly
@@ -92,10 +83,8 @@ instance Show TxAccess where
   show ReadWrite = "READ WRITE"
   show ReadOnly = "READ ONLY"
 
-type TxMode :: Type
 type TxMode = (TxIsolation, Maybe TxAccess)
 
-type TxET :: Type -> (Type -> Type) -> Type -> Type
 newtype TxET e m a = TxET
   { txHandler :: ReaderT PGConn (ExceptT e m) a
   }
@@ -123,20 +112,14 @@ instance (MonadBaseControl IO m) => MonadBaseControl IO (TxET e m) where
   liftBaseWith f = TxET $ liftBaseWith $ \run -> f (run . txHandler)
   restoreM = TxET . restoreM
 
-type TxE :: Type -> Type -> Type
 type TxE e a = TxET e IO a
 
-type TxT :: (Type -> Type) -> Type -> Type
 type TxT m a = TxET PGTxErr m a
-
-type Tx :: Type -> Type
-type Tx a = TxE PGTxErr a
 
 {-# INLINE catchE #-}
 catchE :: (Functor m) => (e -> e') -> TxET e m a -> TxET e' m a
 catchE f action = TxET $ mapReaderT (withExceptT f) $ txHandler action
 
-type PGTxErr :: Type
 data PGTxErr
   = PGTxErr !Text ![PrepArg] !Bool !PGErrInternal
   -- PGCustomErr !T.Text
@@ -164,7 +147,6 @@ instance Show PGTxErr where
 execTx :: PGConn -> TxET e m a -> ExceptT e m a
 execTx conn tx = runReaderT (txHandler tx) conn
 
-type Query :: Type
 newtype Query = Query
   { getQueryText :: Text
   }
@@ -198,14 +180,6 @@ withQE ef q r = rawQE ef q args
   where
     args = toPrepArgs r
 
-rawQ ::
-  (MonadIO m, FromRes a) =>
-  Query ->
-  [PrepArg] ->
-  Bool ->
-  TxT m a
-rawQ = rawQE id
-
 rawQE ::
   (MonadIO m, FromRes a) =>
   (PGTxErr -> e) ->
@@ -235,12 +209,6 @@ multiQE ef q = TxET $
   where
     txErrF = PGTxErr stmt [] False
     stmt = getQueryText q
-
-multiQ ::
-  (MonadIO m, FromRes a) =>
-  Query ->
-  TxT m a
-multiQ = multiQE id
 
 withNotices :: (MonadIO m) => TxT m a -> TxT m (a, [Text])
 withNotices tx = do
@@ -278,16 +246,6 @@ unitQE ::
   TxET e m ()
 unitQE = withQE
 
-discardQ ::
-  (MonadIO m, ToPrepArgs r) =>
-  Query ->
-  r ->
-  Bool ->
-  TxT m ()
-discardQ t r p = do
-  Discard () <- withQ t r p
-  return ()
-
 discardQE ::
   (MonadIO m, ToPrepArgs r) =>
   (PGTxErr -> e) ->
@@ -298,23 +256,6 @@ discardQE ::
 discardQE ef t r p = do
   Discard () <- withQE ef t r p
   return ()
-
-listQ ::
-  (MonadIO m, FromRow a, ToPrepArgs r) =>
-  Query ->
-  r ->
-  Bool ->
-  TxT m [a]
-listQ = withQ
-
-listQE ::
-  (MonadIO m, FromRow a, ToPrepArgs r) =>
-  (PGTxErr -> e) ->
-  Query ->
-  r ->
-  Bool ->
-  TxET e m [a]
-listQE = withQE
 
 serverVersion ::
   MonadIO m => TxET e m Int

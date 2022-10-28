@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { Button } from '@/new-components/Button';
+import { Analytics } from '@/features/Analytics';
 import styles from '../styles.module.scss';
 import { HerokuSession } from './types';
 import { Dispatch } from '../../../../../../types';
@@ -52,17 +53,21 @@ const Intro: React.FC<Props> = ({ session, startCreation, dispatch }) => {
           >
             <strong>Heroku</strong>
             {session ? (
-              <Button
-                size="sm"
-                onClick={() => {
-                  if (session) {
-                    startCreation();
-                  }
-                }}
-                data-trackid="data-tab-heroku-db-button"
+              <Analytics
+                name="data-tab-heroku-db-button"
+                passHtmlAttributesToChildren
               >
-                Create Database
-              </Button>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (session) {
+                      startCreation();
+                    }
+                  }}
+                >
+                  Create Database
+                </Button>
+              </Analytics>
             ) : (
               <LoginButton dispatch={dispatch} callback={startCreation}>
                 <Button size="sm">Create Database</Button>

@@ -9,6 +9,7 @@ module Test.Postgres.DefaultValuesSpec (spec) where
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphql)
 import Harness.Quoter.Graphql (graphql)
@@ -32,6 +33,11 @@ spec =
           (Fixture.fixture $ Fixture.Backend Fixture.Citus)
             { Fixture.setupTeardown = \(testEnv, _) ->
                 [ Citus.setupTablesAction schema testEnv
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnv, _) ->
+                [ Cockroach.setupTablesAction schema testEnv
                 ]
             }
         ]

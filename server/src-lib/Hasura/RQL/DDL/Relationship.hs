@@ -47,7 +47,7 @@ newtype CreateObjRel b = CreateObjRel {unCreateObjRel :: WithTable b (ObjRelDef 
 
 runCreateRelationship ::
   forall m b a.
-  (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, Backend b, BackendMetadata b) =>
+  (MonadError QErr m, CacheRWM m, ToJSON a, MetadataM m, BackendMetadata b) =>
   RelType ->
   WithTable b (RelDef a) ->
   m EncJSON

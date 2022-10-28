@@ -4,6 +4,7 @@ import { Dispatch } from '@/types';
 import { cloudDataServiceApiClient } from '@/hooks/cloudDataServiceApiClient';
 import { Api } from '@/hooks/apiUtils';
 import { HasuraMetadataV3 } from '@/metadata/types';
+import { programmaticallyTraceError } from '@/features/Analytics';
 import {
   clickRunQueryButton,
   forceGraphiQLIntrospection,
@@ -17,6 +18,7 @@ import {
   hasuraSourceCreationStartVariables,
   graphQlMutation,
 } from './constants';
+import { WizardState } from './hooks/useWizardState';
 
 export function isExperimentActive(
   experimentsData: ExperimentConfig[],
@@ -59,6 +61,22 @@ export function shouldShowOnboarding(
   return true;
 }
 
+export function getWizardState(
+  experimentsData: ExperimentConfig[],
+  experimentId: string,
+  showFamiliaritySurvey: boolean,
+  hasNeonAccess: boolean
+): WizardState {
+  if (
+    shouldShowOnboarding(experimentsData, experimentId, hasNeonAccess) &&
+    isExperimentActive(experimentsData, experimentId)
+  ) {
+    if (showFamiliaritySurvey) return 'familiarity-survey';
+    return 'landing-page';
+  }
+  return 'hidden';
+}
+
 type ResponseDataOnMutation = {
   data: {
     trackExperimentsCohortActivity: {
@@ -79,7 +97,7 @@ export const persistSkippedOnboarding = () => {
     skippedOnboardingVariables,
     cloudHeaders
   ).catch(error => {
-    // TODO throw Sentry alert
+    programmaticallyTraceError(error);
     throw error;
   });
 };
@@ -92,8 +110,8 @@ export const persistOnboardingCompletion = () => {
     onboardingCompleteVariables,
     cloudHeaders
   ).catch(error => {
-    // TODO throw Sentry alert
     console.error(error);
+    programmaticallyTraceError(error);
   });
 };
 
@@ -104,8 +122,8 @@ export const emitOnboardingEvent = (variables: Record<string, unknown>) => {
     variables,
     cloudHeaders
   ).catch(error => {
-    // TODO throw Sentry alert
     console.error(error);
+    programmaticallyTraceError(error);
   });
 };
 /**

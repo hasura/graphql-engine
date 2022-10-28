@@ -39,7 +39,7 @@ import Data.Data (Typeable)
 import Data.List.NonEmpty qualified as NonEmpty
 import Data.Text qualified as Text
 import Data.Text.Extended (ToTxt (..))
-import Data.Text.NonEmpty (NonEmptyText (unNonEmptyText))
+import Data.Text.NonEmpty (NonEmptyText, mkNonEmptyTextUnsafe)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Base.ErrorValue qualified as ErrorValue
 import Hasura.Base.ToErrorValue (ToErrorValue (..))
@@ -149,15 +149,16 @@ instance Cacheable SourceConfig where
 
 --------------------------------------------------------------------------------
 
-newtype DataConnectorName = DataConnectorName {unDataConnectorName :: NonEmptyText}
+newtype DataConnectorName = DataConnectorName {unDataConnectorName :: GQL.Name}
   deriving stock (Eq, Ord, Show, Typeable, Generic)
   deriving newtype (FromJSON, ToJSON, FromJSONKey, ToJSONKey, Hashable, ToTxt)
   deriving anyclass (Cacheable, NFData)
 
-instance Witch.From DataConnectorName NonEmptyText
+instance Witch.From DataConnectorName NonEmptyText where
+  from = mkNonEmptyTextUnsafe . GQL.unName . unDataConnectorName -- mkNonEmptyTextUnsafe is safe here since GQL.Name is never empty
 
 instance Witch.From DataConnectorName Text where
-  from = unNonEmptyText . Witch.from
+  from = GQL.unName . unDataConnectorName
 
 data DataConnectorOptions = DataConnectorOptions
   {_dcoUri :: BaseUrl}
@@ -199,6 +200,9 @@ instance Cacheable DataConnectorInfo where
 newtype TableName = TableName {unTableName :: NonEmpty Text}
   deriving stock (Data, Eq, Generic, Ord, Show)
   deriving newtype (Cacheable, Hashable, NFData, ToJSON)
+
+instance HasCodec TableName where
+  codec = dimapCodec TableName unTableName codec
 
 instance FromJSON TableName where
   parseJSON value =
@@ -245,6 +249,9 @@ newtype ColumnName = ColumnName {unColumnName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
   deriving newtype (NFData, Hashable, Cacheable, FromJSON, ToJSON, ToJSONKey, FromJSONKey)
 
+instance HasCodec ColumnName where
+  codec = dimapCodec ColumnName unColumnName codec
+
 instance Witch.From API.ColumnName ColumnName where
   from (API.ColumnName n) = ColumnName n
 
@@ -284,8 +291,8 @@ data CountAggregate
 --------------------------------------------------------------------------------
 
 data Literal
-  = ValueLiteral J.Value
-  | ArrayLiteral [J.Value]
+  = ValueLiteral ScalarType J.Value
+  | ArrayLiteral ScalarType [J.Value]
   deriving stock (Eq, Show, Generic, Ord)
   deriving anyclass (Cacheable, Hashable, NFData, ToJSON)
 

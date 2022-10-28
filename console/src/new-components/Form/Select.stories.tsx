@@ -156,6 +156,35 @@ StateWithDefaultValue.parameters = {
   },
 };
 
+export const StateLoading: ComponentStory<typeof Select> = () => {
+  const options = [
+    { value: 'value0', label: 'Value 0' },
+    { value: 'value1', label: 'Value 1', loading: true },
+    { value: 'value2', label: 'Value 2' },
+  ];
+
+  const validationSchema = z.object({});
+
+  return (
+    <Form schema={validationSchema} onSubmit={action('onSubmit')}>
+      {() => (
+        <Select
+          name="selectNames"
+          label="The select label"
+          options={options}
+          loading
+        />
+      )}
+    </Form>
+  );
+};
+StateLoading.storyName = '🔁 State - Loading';
+StateLoading.parameters = {
+  docs: {
+    source: { state: 'open' },
+  },
+};
+
 export const StateDisabled: ComponentStory<typeof Select> = () => {
   const options = [
     { value: 'value0', label: 'Value 0' },

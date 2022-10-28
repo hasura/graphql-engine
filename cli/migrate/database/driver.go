@@ -8,6 +8,8 @@ import (
 	nurl "net/url"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 var (
@@ -118,28 +120,33 @@ type Driver interface {
 
 // Open returns a new driver instance.
 func Open(url string, isCMD bool, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
+	var op errors.Op = "database.Open"
 	u, err := nurl.Parse(url)
 	if err != nil {
 		log.Debug(err)
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 
 	driversMu.RLock()
 	if u.Scheme == "" {
-		return nil, fmt.Errorf("database driver: invalid URL scheme")
+		return nil, errors.E(op, fmt.Errorf("database driver: invalid URL scheme"))
 	}
 	driversMu.RUnlock()
 
 	d, ok := drivers[u.Scheme]
 	if !ok {
-		return nil, fmt.Errorf("database driver: unknown driver %v", u.Scheme)
+		return nil, errors.E(op, fmt.Errorf("database driver: unknown driver %v", u.Scheme))
 	}
 
 	if logger == nil {
 		logger = log.New()
 	}
 
-	return d.Open(url, isCMD, logger, hasuraOpts)
+	driver, err := d.Open(url, isCMD, logger, hasuraOpts)
+	if err != nil {
+		return driver, errors.E(op, err)
+	}
+	return driver, nil
 }
 
 func Register(name string, driver Driver) {

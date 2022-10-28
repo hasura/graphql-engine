@@ -11,6 +11,8 @@
 -- Instances for types from "Hasura.Backends.MSSQL.Types.Internal" that're slow to compile.
 module Hasura.Backends.MSSQL.Types.Instances () where
 
+import Autodocodec (HasCodec (codec), dimapCodec, optionalFieldWithDefault', parseAlternative, requiredField')
+import qualified Autodocodec as AC
 import Data.Aeson.Extended
 import Data.Aeson.Types
 import Data.Text.Extended (ToTxt (..))
@@ -176,6 +178,9 @@ INSTANCE_CLUMP_3(NullsOrder)
 INSTANCE_CLUMP_3(ScalarType)
 INSTANCE_CLUMP_3(FieldName)
 
+instance HasCodec ColumnName where
+  codec = dimapCodec ColumnName columnNameText codec
+
 deriving instance FromJSON ColumnName
 
 deriving instance ToJSON ColumnName
@@ -183,6 +188,19 @@ deriving instance ToJSON ColumnName
 deriving instance ToJSON ConstraintName
 
 deriving instance ToJSON FunctionName
+
+instance HasCodec TableName where
+  codec = parseAlternative objCodec strCodec
+    where
+      objCodec =
+        AC.object "MSSQLTableName" $
+          TableName
+            <$> requiredField' "name" AC..= tableName
+            <*> optionalFieldWithDefault' "schema" "dbo" AC..= tableSchema
+      strCodec = flip TableName "dbo" <$> codec
+
+instance HasCodec SchemaName where
+  codec = dimapCodec SchemaName _unSchemaName codec
 
 instance FromJSON TableName where
   parseJSON v@(String _) =

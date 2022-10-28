@@ -1,8 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-{-# OPTIONS -Wno-redundant-constraints #-}
-
 -- | Cockroach helpers.
 module Harness.Backend.Cockroach
   ( livenessCheck,
@@ -13,6 +11,7 @@ module Harness.Backend.Cockroach
     insertTable,
     trackTable,
     dropTable,
+    dropTableIfExists,
     untrackTable,
     setup,
     teardown,
@@ -32,6 +31,12 @@ import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Data.Time (defaultTimeLocale, formatTime)
 import Database.PostgreSQL.Simple qualified as Postgres
+import Harness.Backend.Postgres qualified as Postgres
+  ( createUniqueIndexSql,
+    mkPrimaryKeySql,
+    mkReferenceSql,
+    uniqueConstraintSql,
+  )
 import Harness.Constants as Constants
 import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
@@ -39,7 +44,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (Cockroach), defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
-import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
+import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Prelude
@@ -109,7 +114,7 @@ connection_info:
 
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Cockroach backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
-createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableUniqueConstraints} = do
+createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
   run_ $
     T.unpack $
@@ -118,19 +123,14 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
           T.pack Constants.cockroachDb <> "." <> wrapIdentifier tableName,
           "(",
           commaSeparated $
-            (mkColumn <$> tableColumns)
-              <> (bool [mkPrimaryKey pk] [] (null pk))
-              <> (mkReference schemaName <$> tableReferences),
+            (mkColumnSql <$> tableColumns)
+              <> (bool [Postgres.mkPrimaryKeySql pk] [] (null pk))
+              <> (Postgres.mkReferenceSql schemaName <$> tableReferences)
+              <> map Postgres.uniqueConstraintSql tableConstraints,
           ");"
         ]
 
-  for_ tableUniqueConstraints (createUniqueConstraint tableName)
-
-createUniqueConstraint :: Text -> Schema.UniqueConstraint -> IO ()
-createUniqueConstraint tableName (Schema.UniqueConstraintColumns cols) =
-  run_ $ T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", tableName, "("] ++ [commaSeparated cols] ++ [")"]
-createUniqueConstraint tableName (Schema.UniqueConstraintExpression ex) =
-  run_ $ T.unpack $ T.unwords $ ["CREATE UNIQUE INDEX ON ", tableName, "((", ex, "))"]
+  for_ tableUniqueIndexes (run_ . Postgres.createUniqueIndexSql schemaName tableName)
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
@@ -141,38 +141,13 @@ scalarType = \case
   Schema.TGeography -> "GEOGRAPHY"
   Schema.TCustomType txt -> Schema.getBackendScalarType txt bstCockroach
 
-mkColumn :: Schema.Column -> Text
-mkColumn Schema.Column {columnName, columnType, columnNullable, columnDefault} =
+mkColumnSql :: Schema.Column -> Text
+mkColumnSql Schema.Column {columnName, columnType, columnNullable, columnDefault} =
   T.unwords
     [ wrapIdentifier columnName,
       scalarType columnType,
       bool "NOT NULL" "DEFAULT NULL" columnNullable,
       maybe "" ("DEFAULT " <>) columnDefault
-    ]
-
-mkPrimaryKey :: [Text] -> Text
-mkPrimaryKey key =
-  T.unwords
-    [ "PRIMARY KEY",
-      "(",
-      commaSeparated $ map wrapIdentifier key,
-      ")"
-    ]
-
-mkReference :: SchemaName -> Schema.Reference -> Text
-mkReference schemaName Schema.Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} =
-  T.unwords
-    [ "FOREIGN KEY",
-      "(",
-      wrapIdentifier referenceLocalColumn,
-      ")",
-      "REFERENCES",
-      unSchemaName schemaName <> "." <> wrapIdentifier referenceTargetTable,
-      "(",
-      wrapIdentifier referenceTargetColumn,
-      ")",
-      "ON DELETE CASCADE",
-      "ON UPDATE CASCADE"
     ]
 
 -- | Serialize tableData into a PL-SQL insert statement and execute it.
@@ -228,6 +203,15 @@ dropTable Schema.Table {tableName} = do
         [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
           T.pack Constants.cockroachDb <> "." <> tableName,
           ";"
+        ]
+
+dropTableIfExists :: Schema.Table -> IO ()
+dropTableIfExists Schema.Table {tableName} = do
+  run_ $
+    T.unpack $
+      T.unwords
+        [ "DROP TABLE IF EXISTS",
+          T.pack Constants.cockroachDb <> "." <> tableName
         ]
 
 -- | Post an http request to start tracking the table
@@ -286,8 +270,8 @@ setupPermissionsAction permissions env =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup "pg" permissions env
+setupPermissions permissions env = Permissions.setup Cockroach permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown "pg" permissions env
+teardownPermissions permissions env = Permissions.teardown Cockroach permissions env

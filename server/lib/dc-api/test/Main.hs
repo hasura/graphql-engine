@@ -2,7 +2,7 @@ module Main (main) where
 
 --------------------------------------------------------------------------------
 
-import Command (AgentCapabilities (..), Command (..), TestOptions (..), parseCommandLine)
+import Command (Command (..), TestOptions (..), parseCommandLine)
 import Control.Exception (throwIO)
 import Control.Monad (join, (>=>))
 import Data.Aeson.Text (encodeToLazyText)
@@ -15,9 +15,11 @@ import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.API.V0.Capabilities as API
 import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Servant.API (NamedRoutes)
-import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM, (//))
+import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM)
 import Test.CapabilitiesSpec qualified
-import Test.Data (TestData, mkTestData)
+import Test.Data (TestData, guardedCapabilities, mkTestData)
+import Test.DataExport (exportData)
+import Test.ErrorSpec qualified
 import Test.ExplainSpec qualified
 import Test.HealthSpec qualified
 import Test.Hspec (Spec)
@@ -39,8 +41,9 @@ tests :: TestData -> Client IO (NamedRoutes Routes) -> API.SourceName -> API.Con
 tests testData api sourceName agentConfig capabilities = do
   Test.HealthSpec.spec api sourceName agentConfig
   Test.CapabilitiesSpec.spec api agentConfig capabilities
-  Test.SchemaSpec.spec testData api sourceName agentConfig
+  Test.SchemaSpec.spec testData api sourceName agentConfig capabilities
   Test.QuerySpec.spec testData api sourceName agentConfig capabilities
+  Test.ErrorSpec.spec testData api sourceName agentConfig capabilities
   for_ (API._cMetrics capabilities) \m -> Test.MetricsSpec.spec api m
   for_ (API._cExplain capabilities) \_ -> Test.ExplainSpec.spec testData api sourceName agentConfig capabilities
 
@@ -50,7 +53,7 @@ main = do
   case command of
     Test testOptions@TestOptions {..} -> do
       api <- mkIOApiClient testOptions
-      agentCapabilities <- getAgentCapabilities api _toAgentCapabilities
+      agentCapabilities <- API._crCapabilities <$> guardedCapabilities api
       let testData = mkTestData _toTestConfig
       let spec = tests testData api testSourceName _toAgentConfig agentCapabilities
       case _toExportMatchStrings of
@@ -60,6 +63,8 @@ main = do
           traverse_ ((traverse_ putStrLn) . (foldPaths . extractLabels)) tree
     ExportOpenAPISpec ->
       Text.putStrLn $ encodeToLazyText openApiSchema
+    ExportData config ->
+      exportData config
 
   pure ()
 
@@ -71,11 +76,6 @@ mkIOApiClient TestOptions {..} = do
 
 throwClientError :: Either ClientError a -> IO a
 throwClientError = either throwIO pure
-
-getAgentCapabilities :: Client IO (NamedRoutes Routes) -> AgentCapabilities -> IO API.Capabilities
-getAgentCapabilities api = \case
-  AutoDetect -> API._crCapabilities <$> (api // _capabilities)
-  Explicit capabilities -> pure capabilities
 
 applyTestConfig :: Config -> TestOptions -> Config
 applyTestConfig config TestOptions {..} =

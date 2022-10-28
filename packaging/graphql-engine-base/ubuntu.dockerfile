@@ -1,6 +1,8 @@
-# DATE VERSION: 2022-09-21
-# Modify the above date version (YYYY-MM-DD) if you want to rebuild the image for security updates
-FROM ubuntu:jammy-20220815
+# DATE VERSION: 2022-10-17
+# Modify the above date version (YYYY-MM-DD) if you want to rebuild the image
+FROM ubuntu:focal-20220922
+
+### NOTE! Shared libraries here need to be kept in sync with `server-builder.dockerfile`!
 
 # TARGETPLATFORM is automatically set up by docker buildx based on the platform we are targetting for
 ARG TARGETPLATFORM
@@ -15,21 +17,25 @@ RUN set -ex; \
     apt-get update; \
     apt-get install -y apt-transport-https curl gnupg2; \
     apt-get update; \
-    apt-get install -y ca-certificates libkrb5-3 libpq5 libnuma1 unixodbc-dev libmariadb-dev-compat mariadb-client
+    apt-get install -y ca-certificates libkrb5-3 libpq5 libssl1.1 libnuma1 unixodbc-dev libmariadb-dev-compat mariadb-client
 
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ] ; then \
-      curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -; \
-      curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list > /etc/apt/sources.list.d/mssql-release.list; \
-      apt-get update; \
-      ACCEPT_EULA=Y apt-get install -y msodbcsql17; \
+RUN set -ex; \
+    curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add -; \
+    curl https://packages.microsoft.com/config/ubuntu/20.04/prod.list > /etc/apt/sources.list.d/mssql-release.list; \
+    apt-get update; \
+    ACCEPT_EULA=Y apt-get install -y msodbcsql18; \
+    if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
+      # Support the old version of the driver too, where possible.
+      # v17 is only supported on amd64.
+      ACCEPT_EULA=Y apt-get -y install msodbcsql17; \
     fi
 
 # Install pg_dump
 RUN set -ex; \
     curl -s https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -; \
-    echo 'deb http://apt.postgresql.org/pub/repos/apt jammy-pgdg main' > /etc/apt/sources.list.d/pgdg.list; \
+    echo 'deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main' > /etc/apt/sources.list.d/pgdg.list; \
     apt-get -y update; \
-    apt-get install -y postgresql-client; \
+    apt-get install -y postgresql-client-15; \
     # delete all pg tools except pg_dump to keep the image minimal
     find /usr/bin -name 'pg*' -not -path '/usr/bin/pg_dump' -delete
 

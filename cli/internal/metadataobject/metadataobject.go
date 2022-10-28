@@ -62,7 +62,7 @@ type Object interface {
 	// "remote_schemas": []yaml.Node
 	// since there is a chance that this function can return a yaml.Node. The return value is not expected to
 	// directly be unmarshalled to JSON using json.Marshal
-	Build() (map[string]interface{}, ErrParsingMetadataObject)
+	Build() (map[string]interface{}, error)
 	// Export is responsible for writing the yaml Node(s) for the metadata object
 	// to project directory
 	// Export expects a map[string]yaml.Node specifically rather than a builtin data structure like
@@ -87,17 +87,17 @@ type Object interface {
 	// We are interested in writing or transforming the JSON object received from the server in
 	// the same order to YAML files. This coupled with our requirement of NOT strongly typing metadata on CLI requires
 	// using yaml.Node to preserve the ordering.
-	Export(metadata map[string]yaml.Node) (map[string][]byte, ErrParsingMetadataObject)
+	Export(metadata map[string]yaml.Node) (map[string][]byte, error)
 	CreateFiles() error
 	// GetFiles will return an array of file paths which make up the metadata object.
 	// For example the "sources" metadata key is made up of files like
 	// databases.yaml. which then will have !include tags which will branch to include
 	// files like databases/<source-name>/tables/tables.yaml
 	// this function is expected to return the list of all these files which make up the metadata object
-	GetFiles() ([]string, ErrParsingMetadataObject)
+	GetFiles() ([]string, error)
 	// WriteDiff should be implemented such that it should write the difference
 	// between the current object and passed in object on the provided writer
-	WriteDiff(WriteDiffOpts) ErrParsingMetadataObject
+	WriteDiff(WriteDiffOpts) error
 	Key() string
 	Filename() string
 	// BaseDirectory will return the parent directory of `Filename()`

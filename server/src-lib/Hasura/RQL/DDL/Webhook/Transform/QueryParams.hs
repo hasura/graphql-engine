@@ -4,6 +4,7 @@ module Hasura.RQL.DDL.Webhook.Transform.QueryParams
   ( -- * Query transformations
     QueryParams (..),
     TransformFn (..),
+    TransformCtx (..),
     QueryParamsTransformFn (..),
   )
 where
@@ -18,11 +19,13 @@ import Data.Validation qualified as V
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
-  ( RequestTransformCtx (..),
-    TemplatingEngine,
+  ( TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
     UnescapedTemplate (..),
+  )
+import Hasura.RQL.DDL.Webhook.Transform.Request
+  ( RequestTransformCtx,
     runUnescapedRequestTemplateTransform',
     validateRequestUnescapedTemplateTransform',
   )
@@ -45,10 +48,12 @@ instance Transform QueryParams where
     deriving stock (Show, Eq, Generic)
     deriving newtype (NFData, Cacheable, FromJSON, ToJSON)
 
+  newtype TransformCtx QueryParams = TransformCtx RequestTransformCtx
+
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'applyQueryParamsTransformFn' is defined
   -- separately.
-  transform (QueryParamsTransformFn_ fn) = applyQueryParamsTransformFn fn
+  transform (QueryParamsTransformFn_ fn) (TransformCtx reqCtx) = applyQueryParamsTransformFn fn reqCtx
 
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'validateQueryParamsTransformFn' is defined
@@ -82,8 +87,11 @@ applyQueryParamsTransformFn fn context _oldQueryParams = case fn of
       for addOrReplaceParams \(rawKey, rawValue) -> do
         key <- runUnescapedRequestTemplateTransform' context rawKey
         value <- traverse (runUnescapedRequestTemplateTransform' context) rawValue
-        pure (key, value)
-    pure $ QueryParams queryParams
+        pure $
+          if key == "null" || value == Just "null"
+            then Nothing
+            else Just (key, value)
+    pure $ QueryParams (catMaybes queryParams)
 
 -- | Validate that the provided 'QueryParamsTransformFn' is correct in the
 -- context of a particular 'TemplatingEngine'.

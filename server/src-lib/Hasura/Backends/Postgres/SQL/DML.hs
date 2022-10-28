@@ -96,8 +96,12 @@ module Hasura.Backends.Postgres.SQL.DML
     simplifyBoolExp,
     textArrTypeAnn,
     textTypeAnn,
+    mkColumnAlias,
+    mkTableAlias,
     toTableAlias,
+    tableAliasToIdentifier,
     toColumnAlias,
+    tableIdentifierToColumnAlias,
   )
 where
 
@@ -106,6 +110,7 @@ import Data.Aeson.Casing qualified as J
 import Data.HashMap.Strict qualified as HM
 import Data.Int (Int64)
 import Data.String (fromString)
+import Data.Text (pack)
 import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types
 import Hasura.Incremental (Cacheable)
@@ -259,9 +264,9 @@ instance ToSQL FromExp where
   toSQL (FromExp items) =
     "FROM" <~> (", " <+> items)
 
-mkIdenFromExp :: (IsIdentifier a) => a -> FromExp
-mkIdenFromExp a =
-  FromExp [FIIdentifier $ toIdentifier a]
+mkIdenFromExp :: TableIdentifier -> FromExp
+mkIdenFromExp ident =
+  FromExp [FIIdentifier ident]
 
 mkSimpleFromExp :: QualifiedTable -> FromExp
 mkSimpleFromExp qt =
@@ -324,11 +329,11 @@ instance ToSQL Select where
 mkSIdenExp :: (IsIdentifier a) => a -> SQLExp
 mkSIdenExp = SEIdentifier . toIdentifier
 
-mkQIdenExp :: (IsIdentifier a, IsIdentifier b) => a -> b -> SQLExp
+mkQIdenExp :: (IsIdentifier b) => TableIdentifier -> b -> SQLExp
 mkQIdenExp q t = SEQIdentifier $ mkQIdentifier q t
 
 data Qual
-  = QualifiedIdentifier Identifier (Maybe TypeAnn)
+  = QualifiedIdentifier TableIdentifier (Maybe TypeAnn)
   | QualTable QualifiedTable
   | QualVar Text
   deriving (Show, Eq, Generic, Data)
@@ -348,8 +353,8 @@ instance ToSQL Qual where
   toSQL (QualTable qt) = toSQL qt
   toSQL (QualVar v) = TB.text v
 
-mkQIdentifier :: (IsIdentifier a, IsIdentifier b) => a -> b -> QIdentifier
-mkQIdentifier q t = QIdentifier (QualifiedIdentifier (toIdentifier q) Nothing) (toIdentifier t)
+mkQIdentifier :: (IsIdentifier b) => TableIdentifier -> b -> QIdentifier
+mkQIdentifier q t = QIdentifier (QualifiedIdentifier q Nothing) (toIdentifier t)
 
 mkQIdentifierTable :: (IsIdentifier a) => QualifiedTable -> a -> QIdentifier
 mkQIdentifierTable q = QIdentifier (mkQual q) . toIdentifier
@@ -503,8 +508,20 @@ instance J.ToJSON SQLExp where
 newtype ColumnAlias = ColumnAlias {getColumnAlias :: Identifier}
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
+instance IsString ColumnAlias where
+  fromString = mkColumnAlias . pack
+
+instance Semigroup ColumnAlias where
+  (ColumnAlias ca1) <> (ColumnAlias ca2) = ColumnAlias (ca1 <> ca2)
+
+mkColumnAlias :: Text -> ColumnAlias
+mkColumnAlias = ColumnAlias . Identifier
+
 instance IsIdentifier ColumnAlias where
   toIdentifier (ColumnAlias identifier) = identifier
+
+tableIdentifierToColumnAlias :: TableIdentifier -> ColumnAlias
+tableIdentifierToColumnAlias = mkColumnAlias . unTableIdentifier
 
 toColumnAlias :: (IsIdentifier a) => a -> ColumnAlias
 toColumnAlias = ColumnAlias . toIdentifier
@@ -521,9 +538,26 @@ columnAliasToSqlWithoutAs alias = toSQL (toIdentifier alias)
 newtype TableAlias = TableAlias {getTableAlias :: Identifier}
   deriving (Show, Eq, NFData, Data, Generic, Cacheable, Hashable)
 
+instance IsString TableAlias where
+  fromString = mkTableAlias . pack
+
+instance Semigroup TableAlias where
+  (TableAlias ta1) <> (TableAlias ta2) = TableAlias (ta1 <> ta2)
+
+-- | Create a table alias.
+mkTableAlias :: Text -> TableAlias
+mkTableAlias = TableAlias . Identifier
+
+-- | Create a table identifier from a table alias.
+tableAliasToIdentifier :: TableAlias -> TableIdentifier
+tableAliasToIdentifier = TableIdentifier . getIdenTxt . getTableAlias
+
 instance IsIdentifier TableAlias where
   toIdentifier (TableAlias identifier) = identifier
 
+-- TODO: Remove when we remove 'Identifier'. We should only be able to create
+-- identifiers from aliases, not aliases from identifiers. Aliases represent
+-- definition sites and identifiers usage sites.
 toTableAlias :: (IsIdentifier a) => a -> TableAlias
 toTableAlias = TableAlias . toIdentifier
 
@@ -703,7 +737,7 @@ instance ToSQL FunctionDefinitionListItem where
 --   Note: a function that returns a table (instead of a record) cannot name the types
 --         as seen in the above example.
 data FunctionAlias = FunctionAlias
-  { _faIdentifier :: TableAlias,
+  { _faIdentifier :: TableAlias, -- TODO: Rename to _faAlias
     _faDefinitionList :: Maybe [FunctionDefinitionListItem]
   }
   deriving (Show, Eq, Data, Generic)
@@ -714,9 +748,14 @@ instance Cacheable FunctionAlias
 
 instance Hashable FunctionAlias
 
-mkFunctionAlias :: TableAlias -> Maybe [(ColumnAlias, PGScalarType)] -> FunctionAlias
+functionNameToTableAlias :: QualifiedFunction -> TableAlias
+functionNameToTableAlias = mkTableAlias . qualifiedObjectToText
+
+-- | Construct a function alias which represents the "relation signature" for the function invocation,
+--   Using the function name as the relation name, and the columns as the relation schema.
+mkFunctionAlias :: QualifiedObject FunctionName -> Maybe [(ColumnAlias, PGScalarType)] -> FunctionAlias
 mkFunctionAlias alias listM =
-  FunctionAlias alias $
+  FunctionAlias (functionNameToTableAlias alias) $
     fmap (map (uncurry FunctionDefinitionListItem)) listM
 
 instance ToSQL FunctionAlias where
@@ -748,7 +787,7 @@ data FromItem
   = -- | A simple table
     FISimple QualifiedTable (Maybe TableAlias)
   | -- | An identifier (from CTEs)
-    FIIdentifier Identifier
+    FIIdentifier TableIdentifier
   | -- | A function call (that should return a relation (@SETOF@) and not a scalar)
     FIFunc FunctionExp
   | -- | @unnest@ converts (an) array(s) to a relation.

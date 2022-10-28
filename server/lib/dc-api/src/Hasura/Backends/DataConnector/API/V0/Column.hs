@@ -1,8 +1,13 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 --
 module Hasura.Backends.DataConnector.API.V0.Column
   ( ColumnInfo (..),
+    ciName,
+    ciType,
+    ciNullable,
+    ciDescription,
     ColumnName (..),
   )
 where
@@ -12,6 +17,7 @@ where
 import Autodocodec
 import Autodocodec.OpenAPI ()
 import Control.DeepSeq (NFData)
+import Control.Lens.TH (makeLenses)
 import Data.Aeson (FromJSON, FromJSONKey, ToJSON, ToJSONKey)
 import Data.Data (Data)
 import Data.Hashable (Hashable)
@@ -52,3 +58,5 @@ instance HasCodec ColumnInfo where
         <*> requiredField "type" "Column type" .= _ciType
         <*> requiredField "nullable" "Is column nullable" .= _ciNullable
         <*> optionalFieldOrNull "description" "Column description" .= _ciDescription
+
+$(makeLenses ''ColumnInfo)

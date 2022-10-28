@@ -1,12 +1,16 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
+import { useServerConfig } from '@/hooks';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
+import TimesCircleIcon from '../../Common/Icons/TimesCircle';
+import ExclamationTriangleIcon from '../../Common/Icons/ExclamationTriangle';
 import globals from '../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
+import { isProLiteConsole } from '../../../utils/proConsole';
 
 import styles from '../../Common/TableCommon/Table.module.scss';
 import {
@@ -14,7 +18,7 @@ import {
   INSECURE_TLS_ALLOW_LIST,
 } from '../../../helpers/versionUtils';
 
-interface Metadata {
+export interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
   inconsistentInheritedRoles: Record<string, unknown>[];
 }
@@ -32,6 +36,7 @@ type SectionDataKey =
   | 'about'
   | 'inherited-roles'
   | 'insecure-domain'
+  | 'prometheus-settings'
   | 'feature-flags';
 
 interface SectionData {
@@ -114,6 +119,38 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
       dataTestVal: 'insecure-domain-link',
       title: 'Insecure TLS Allow List',
     });
+
+  const { data: configData, isLoading, isError } = useServerConfig();
+  const PrometheusStateIcon = () => {
+    if (isLoading) {
+      return <span>...</span>;
+    }
+
+    if (isError) {
+      return (
+        <ExclamationTriangleIcon className="ml-sm mb-1 text-red-600 h-5 w-5" />
+      );
+    }
+
+    return configData?.is_prometheus_metrics_enabled ? (
+      <CheckIcon className="ml-sm" />
+    ) : (
+      <TimesCircleIcon className="ml-sm mb-1 h-5 w-5" />
+    );
+  };
+
+  if (isProLiteConsole(window.__env)) {
+    sectionsData.push({
+      key: 'prometheus-settings',
+      link: '/settings/prometheus-settings',
+      dataTestVal: 'prometheus-settings-link',
+      title: (
+        <span>
+          Prometheus Metrics <PrometheusStateIcon />
+        </span>
+      ),
+    });
+  }
 
   sectionsData.push({
     key: 'feature-flags',

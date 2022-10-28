@@ -189,6 +189,7 @@ export type CustomRootFields = {
   update_by_pk?: Nullable<string> | CustomRootField;
   delete?: Nullable<string> | CustomRootField;
   delete_by_pk?: Nullable<string> | CustomRootField;
+  update_many?: Nullable<string> | CustomRootField;
 };
 
 export type CustomRootField = {
@@ -239,6 +240,7 @@ export interface Table extends BaseTable {
   }[];
   citusTableType?: string;
   unique_constraints: UniqueKey[] | null;
+  is_apollo_federation_supported?: boolean;
 }
 
 export type Partition = {

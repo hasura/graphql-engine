@@ -3,6 +3,7 @@ import z from 'zod';
 import { Dialog } from '@/new-components/Dialog';
 import { Form, InputField } from '@/new-components/Form';
 import { useFireNotification } from '@/new-components/Notifications';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { useRenameQueryCollection } from '../../../QueryCollections/hooks/useRenameQueryCollection';
 
 interface QueryCollectionCreateDialogProps {
@@ -21,20 +22,25 @@ export const QueryCollectionRenameDialog: React.FC<QueryCollectionCreateDialogPr
     const { fireNotification } = useFireNotification();
 
     return (
-      <Form schema={schema} onSubmit={() => {}}>
+      <Form schema={schema} onSubmit={() => {}} className="p-4">
         {({ watch, setError, trigger }) => {
           const name = watch('name');
           return (
             <Dialog hasBackdrop title="Rename Collection" onClose={onClose}>
               <>
-                <div className="p-4">
-                  <InputField
-                    id="name"
-                    name="name"
-                    label="New Collection Name"
-                    placeholder="New Collection Name..."
-                  />
-                </div>
+                <Analytics
+                  name="QueryCollectionRenameDialog"
+                  {...REDACT_EVERYTHING}
+                >
+                  <div className="p-4">
+                    <InputField
+                      id="name"
+                      name="name"
+                      label="New Collection Name"
+                      placeholder="New Collection Name..."
+                    />
+                  </div>
+                </Analytics>
                 <Dialog.Footer
                   callToDeny="Cancel"
                   callToAction="Rename Collection"

@@ -37,7 +37,7 @@ import Hasura.RQL.Types.Allowlist (AllowlistEntry (..), MetadataAllowlist)
 import Hasura.RQL.Types.ApiLimit (ApiLimit, emptyApiLimit)
 import Hasura.RQL.Types.Backend (Backend)
 import Hasura.RQL.Types.Column (ColumnValues)
-import Hasura.RQL.Types.Common (Comment, MetricsConfig, commentToMaybeText, defaultActionTimeoutSecs, emptyMetricsConfig)
+import Hasura.RQL.Types.Common (Comment, MetricsConfig, RemoteRelationshipG (..), commentToMaybeText, defaultActionTimeoutSecs, emptyMetricsConfig)
 import Hasura.RQL.Types.CustomTypes
   ( CustomTypes (..),
     EnumTypeDefinition (..),
@@ -62,8 +62,7 @@ import Hasura.RQL.Types.Metadata.Common
     Endpoints,
     FunctionMetadata (..),
     InheritedRoles,
-    RemoteSchemaMetadata (..),
-    RemoteSchemaPermissionMetadata (..),
+    RemoteSchemaMetadata,
     RemoteSchemas,
     SourceMetadata (..),
     Sources,
@@ -86,12 +85,15 @@ import Hasura.RQL.Types.Permission
   )
 import Hasura.RQL.Types.QueryCollection (CreateCollection (..), QueryCollections)
 import Hasura.RQL.Types.Relationships.Local (RelDef (..))
-import Hasura.RQL.Types.Relationships.Remote (RemoteRelationship (..))
-import Hasura.RQL.Types.RemoteSchema (RemoteSchemaDef (..))
 import Hasura.RQL.Types.Roles (InheritedRole, Role (..))
 import Hasura.RQL.Types.ScheduledTrigger (CronTriggerMetadata (..), defaultSTRetryConf)
 import Hasura.RQL.Types.SourceCustomization (emptySourceCustomization)
 import Hasura.RQL.Types.Table (emptyTableConfig)
+import Hasura.RemoteSchema.Metadata
+  ( RemoteSchemaDef (..),
+    RemoteSchemaMetadataG (..),
+    RemoteSchemaPermissionMetadata (..),
+  )
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap

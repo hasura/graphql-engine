@@ -4,13 +4,13 @@
     X-Hasura-Role: admin
   status: 200
   response:
-    - error_code: Invalid Path
-      source_position:
+    - source_position:
         end_column: 15
         start_line: 0
         end_line: 0
         start_column: 4
-      message: '"$body.world"'
+      error_code: Attribute Error
+      message: "'Object' has no attritubte 'world'."
   query:
     type: test_webhook_transform
     args:

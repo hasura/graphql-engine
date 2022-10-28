@@ -790,24 +790,27 @@ export const getCreatePkSql = ({
 }) => `alter table "${schemaName}"."${tableName}"
     add constraint "${constraintName}"
     primary key (${selectedPkColumns.map(pkc => `"${pkc}"`).join(', ')});`;
+
+type GetAlterPkSql = {
+  schemaName: string;
+  tableName: string;
+  selectedPkColumns: string[];
+  constraintName: string;
+};
 export const getAlterPkSql = ({
   schemaName,
   tableName,
   selectedPkColumns,
   constraintName,
-}: {
-  schemaName: string;
-  tableName: string;
-  selectedPkColumns: string[];
-  constraintName: string; // compulsory for PG
-}) => `BEGIN TRANSACTION;
-ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
+}: GetAlterPkSql) => {
+  const underscoreColumnNames = selectedPkColumns.join('_');
+  const newPkConstraintName = `${tableName}_pkey_${underscoreColumnNames}`;
+  const columnsSqlList = selectedPkColumns.map(pkc => `"${pkc}"`).join(', ');
 
-ALTER TABLE "${schemaName}"."${tableName}"
-    ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
-  .map(pkc => `"${pkc}"`)
-  .join(', ')});
-COMMIT TRANSACTION;`;
+  return `
+ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
+ALTER TABLE "${schemaName}"."${tableName}" ADD CONSTRAINT "${newPkConstraintName}" PRIMARY KEY (${columnsSqlList});`;
+};
 
 const trackableFunctionsWhere = `
 AND has_variadic = FALSE

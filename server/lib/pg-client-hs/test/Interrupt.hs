@@ -2,6 +2,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use sleep" #-}
 module Interrupt (specInterrupt) where
@@ -20,7 +21,6 @@ import Control.Exception.Safe (Exception, onException, throwIO, uninterruptibleM
 import Control.Monad (liftM2, unless)
 import Data.Bifunctor (first)
 import Data.IORef (IORef, atomicModifyIORef', newIORef, readIORef)
-import Data.Kind (Type)
 import Data.Maybe (isJust)
 import Data.Time (NominalDiffTime, diffUTCTime, getCurrentTime)
 import System.Timeout (timeout)
@@ -184,17 +184,14 @@ getCancel = do
       cancelled = isJust <$> tryReadMVar c
   return (cancel, cancelled)
 
-type CancelException :: Type
 data CancelException = CancelException
   deriving stock (Eq, Show)
   deriving anyclass (Exception)
 
-type ActionException :: Type
 data ActionException = ActionException
   deriving stock (Eq, Show)
   deriving anyclass (Exception)
 
-type Log :: Type
 type Log = [(NominalDiffTime, String)]
 
 roundTo :: Int -> NominalDiffTime -> Int

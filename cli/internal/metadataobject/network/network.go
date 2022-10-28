@@ -46,7 +46,7 @@ type networkObject struct {
 	TLSAllowlist yaml.Node `yaml:"tls_allowlist,omitempty"`
 }
 
-func (o *NetworkObject) Build() (map[string]interface{}, metadataobject.ErrParsingMetadataObject) {
+func (o *NetworkObject) Build() (map[string]interface{}, error) {
 	data, err := metadataobject.ReadMetadataFile(filepath.Join(o.MetadataDir, o.Filename()))
 	if err != nil {
 		return nil, o.error(err)
@@ -59,7 +59,7 @@ func (o *NetworkObject) Build() (map[string]interface{}, metadataobject.ErrParsi
 	return map[string]interface{}{o.Key(): obj}, nil
 }
 
-func (o *NetworkObject) Export(metadata map[string]yaml.Node) (map[string][]byte, metadataobject.ErrParsingMetadataObject) {
+func (o *NetworkObject) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
 	return metadataobject.DefaultExport(o, metadata, o.error, metadataobject.DefaultObjectTypeMapping)
 }
 
@@ -71,7 +71,7 @@ func (o *NetworkObject) Filename() string {
 	return "network.yaml"
 }
 
-func (o *NetworkObject) GetFiles() ([]string, metadataobject.ErrParsingMetadataObject) {
+func (o *NetworkObject) GetFiles() ([]string, error) {
 	rootFile := filepath.Join(o.BaseDirectory(), o.Filename())
 	files, err := metadataobject.DefaultGetFiles(rootFile)
 	if err != nil {
@@ -80,7 +80,7 @@ func (o *NetworkObject) GetFiles() ([]string, metadataobject.ErrParsingMetadataO
 	return files, nil
 }
 
-func (o *NetworkObject) WriteDiff(opts metadataobject.WriteDiffOpts) metadataobject.ErrParsingMetadataObject {
+func (o *NetworkObject) WriteDiff(opts metadataobject.WriteDiffOpts) error {
 	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: o, WriteDiffOpts: opts})
 	if err != nil {
 		return o.error(err)

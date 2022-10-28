@@ -4,6 +4,7 @@ module Hasura.RQL.DDL.Webhook.Transform.Method
   ( -- * Method transformations
     Method (..),
     TransformFn (..),
+    TransformCtx (..),
     MethodTransformFn (..),
   )
 where
@@ -18,11 +19,11 @@ import Data.Validation
 import Hasura.Incremental (Cacheable)
 import Hasura.Prelude
 import Hasura.RQL.DDL.Webhook.Transform.Class
-  ( RequestTransformCtx (..),
-    TemplatingEngine,
+  ( TemplatingEngine,
     Transform (..),
     TransformErrorBundle (..),
   )
+import Hasura.RQL.DDL.Webhook.Transform.Request (RequestTransformCtx)
 
 -------------------------------------------------------------------------------
 
@@ -49,10 +50,12 @@ instance Transform Method where
     deriving stock (Eq, Generic, Show)
     deriving newtype (Cacheable, NFData, FromJSON, ToJSON)
 
+  newtype TransformCtx Method = TransformCtx RequestTransformCtx
+
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'applyMethodTransformFn' is defined
   -- separately.
-  transform (MethodTransformFn_ fn) = applyMethodTransformFn fn
+  transform (MethodTransformFn_ fn) (TransformCtx reqCtx) = applyMethodTransformFn fn reqCtx
 
   -- NOTE: GHC does not let us attach Haddock documentation to typeclass
   -- method implementations, so 'validateMethodTransformFn' is defined

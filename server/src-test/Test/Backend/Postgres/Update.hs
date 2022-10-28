@@ -61,7 +61,7 @@ runTest TestBuilder {..} =
                 }
     case Update.mkUpdateCTE @'Vanilla upd of
       (Update.Update cte) ->
-        (SI.fromText $ toSQLTxt cte) `shouldBe` SI.fromText expectedSQL
+        SI.fromText (toSQLTxt cte) `shouldBe` SI.fromText expectedSQL
       _ -> assertFailure "expected single update, got multiple updates"
 
 -- | Runs a test for /update_many/

@@ -23,7 +23,7 @@ import Data.Text.NonEmpty
 import Data.Time.Clock qualified as C
 import Database.PG.Query qualified as PG
 import Hasura.Backends.Postgres.Connection
-import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Types as Postgres
 import Hasura.Base.Error
 import Hasura.Eventing.ScheduledTrigger
 import Hasura.Prelude
@@ -45,6 +45,7 @@ import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
+import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.Backend
 
 saveMetadataToHdbTables ::
@@ -419,7 +420,7 @@ fetchMetadataFromHdbTables = liftTx do
   delPermDefs <- mkPermDefs PTDelete permissions
 
   -- Fetch all event triggers
-  eventTriggers <- PG.catchE defaultTxErrorHandler fetchEventTriggers
+  eventTriggers :: [(SchemaName, Postgres.TableName, PG.ViaJSON Value)] <- PG.catchE defaultTxErrorHandler fetchEventTriggers
   triggerMetaDefs <- mkTriggerMetaDefs eventTriggers
 
   -- Fetch all computed fields
@@ -484,7 +485,7 @@ fetchMetadataFromHdbTables = liftTx do
       return (QualifiedObject sn tn, conf)
 
     fetchTables =
-      PG.listQ
+      PG.withQ
         [PG.sql|
                 SELECT table_schema, table_name, is_enum, configuration::json
                 FROM hdb_catalog.hdb_table
@@ -495,7 +496,7 @@ fetchMetadataFromHdbTables = liftTx do
         False
 
     fetchRelationships =
-      PG.listQ
+      PG.withQ
         [PG.sql|
                 SELECT table_schema, table_name, rel_name, rel_type, rel_def::json, comment
                   FROM hdb_catalog.hdb_relationship
@@ -506,7 +507,7 @@ fetchMetadataFromHdbTables = liftTx do
         False
 
     fetchPermissions =
-      PG.listQ
+      PG.withQ
         [PG.sql|
                 SELECT table_schema, table_name, role_name, perm_type, perm_def::json, comment
                   FROM hdb_catalog.hdb_permission
@@ -517,7 +518,7 @@ fetchMetadataFromHdbTables = liftTx do
         False
 
     fetchEventTriggers =
-      PG.listQ
+      PG.withQ
         [PG.sql|
               SELECT e.schema_name, e.table_name, e.configuration::json
                FROM hdb_catalog.event_triggers e
@@ -528,7 +529,7 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchFunctions = do
       l <-
-        PG.listQ
+        PG.withQ
           [PG.sql|
                 SELECT function_schema, function_name, configuration::json
                 FROM hdb_catalog.hdb_function
@@ -547,7 +548,7 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchRemoteSchemas =
       map fromRow
-        <$> PG.listQE
+        <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
          SELECT name, definition, comment
@@ -562,7 +563,7 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchCollections =
       map fromRow
-        <$> PG.listQE
+        <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
                SELECT collection_name, collection_defn::json, comment
@@ -578,7 +579,7 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchAllowlist =
       map fromRow
-        <$> PG.listQE
+        <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
           SELECT collection_name
@@ -592,7 +593,7 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchComputedFields = do
       r <-
-        PG.listQE
+        PG.withQE
           defaultTxErrorHandler
           [PG.sql|
               SELECT table_schema, table_name, computed_field_name,
@@ -609,7 +610,7 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchCronTriggers =
       oMapFromL ctName . map uncurryCronTrigger
-        <$> PG.listQE
+        <$> PG.withQE
           defaultTxErrorHandler
           [PG.sql|
        SELECT ct.name, ct.webhook_conf, ct.cron_schedule, ct.payload,
@@ -687,7 +688,7 @@ fetchMetadataFromHdbTables = liftTx do
 
     fetchRemoteRelationships = do
       r <-
-        PG.listQ
+        PG.withQ
           [PG.sql|
                 SELECT table_schema, table_name,
                        remote_relationship_name, definition::json

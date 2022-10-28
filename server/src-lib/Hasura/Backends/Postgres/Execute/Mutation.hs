@@ -264,22 +264,22 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
     then withCheckPermission $ (first PG.getViaJSON . PG.getRow) <$> mutationTx
     else (PG.getViaJSON . runIdentity . PG.getRow) <$> mutationTx
   where
-    rawAliasIdentifier = "mutres__" <> qualifiedObjectToText qt
-    aliasIdentifier = Identifier rawAliasIdentifier
-    tabFrom = FromIdentifier $ FIIdentifier rawAliasIdentifier
+    rawAlias = S.mkTableAlias $ "mutres__" <> qualifiedObjectToText qt
+    rawIdentifier = S.tableAliasToIdentifier rawAlias
+    tabFrom = FromIdentifier $ FIIdentifier (unTableIdentifier rawIdentifier)
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
       \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
 
     sqlText = PG.fromBuilder $ toSQL selectWith
-    selectWith = S.SelectWith [(S.toTableAlias aliasIdentifier, getMutationCTE cte)] select
+    selectWith = S.SelectWith [(rawAlias, getMutationCTE cte)] select
     select =
       S.mkSelect
         { S.selExtr =
             S.Extractor extrExp Nothing :
             bool [] [S.Extractor checkErrExp Nothing] (checkPermissionRequired cte)
         }
-    checkErrExp = mkCheckErrorExp aliasIdentifier
+    checkErrExp = mkCheckErrorExp rawIdentifier
     extrExp =
       S.applyJsonBuildObj
         [ S.SELit "affected_rows",
@@ -292,7 +292,7 @@ mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
       S.SESelect $
         S.mkSelect
           { S.selExtr = [S.Extractor S.countStar Nothing],
-            S.selFrom = Just $ S.FromExp [S.FIIdentifier aliasIdentifier]
+            S.selFrom = Just $ S.FromExp [S.FIIdentifier rawIdentifier]
           }
     colSel =
       S.SESelect $

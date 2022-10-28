@@ -454,7 +454,7 @@ instance ToJSON GetEventInvocations where
         GIBEvent event ->
           scheduledEventToPairs event
             <> scheduledEventPaginationToPairs _geiPagination
-            <> (bool mempty ["get_rows_count" .= True] $ _geiGetRowsCount == IncludeRowsCount)
+            <> bool mempty ["get_rows_count" .= True] (_geiGetRowsCount == IncludeRowsCount)
 
 data ClearCronEvents
   = -- | Used to delete the cron events only of the specified cron trigger

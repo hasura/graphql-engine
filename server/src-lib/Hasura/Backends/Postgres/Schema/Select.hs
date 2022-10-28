@@ -120,7 +120,7 @@ selectFunctionAggregate mkRootFieldName sourceInfo fi@FunctionInfo {..} descript
     tableArgsParser <- tableArguments sourceInfo tableInfo
     functionArgsParser <- customSQLFunctionArgs sourceInfo fi _fiGQLAggregateName _fiGQLArgsName
     aggregateParser <- tableAggregationFields sourceInfo tableInfo
-    selectionName <- mkTypename =<< pure (applyTypeNameCaseIdentifier tCase $ mkTableAggregateTypeName tableGQLName)
+    selectionName <- mkTypename (applyTypeNameCaseIdentifier tCase $ mkTableAggregateTypeName tableGQLName)
     let aggregateFieldName = runMkRootFieldName mkRootFieldName _fiGQLAggregateName
         argsParser = liftA2 (,) functionArgsParser tableArgsParser
         aggregationParser =

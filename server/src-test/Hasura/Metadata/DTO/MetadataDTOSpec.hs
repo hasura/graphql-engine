@@ -12,7 +12,7 @@ import Data.Aeson
   )
 import Data.Aeson.QQ.Simple (aesonQQ)
 import Data.Aeson.Types (parseEither)
-import Data.Either (isLeft)
+import Data.Either (isLeft, isRight)
 import Data.Either.Combinators (fromRight')
 import Data.FileEmbed (makeRelativeToProject, strToExp)
 import Hasura.Metadata.DTO.Metadata (MetadataDTO (..))
@@ -21,8 +21,9 @@ import Hasura.Metadata.DTO.MetadataV2 (MetadataV2 (..))
 import Hasura.Metadata.DTO.MetadataV3 (MetadataV3 (..))
 import Hasura.Metadata.DTO.Placeholder (PlaceholderArray (PlaceholderArray))
 import Hasura.Prelude
-import Hasura.RQL.Types.Metadata (Metadata, metadataToDTO)
+import Hasura.RQL.Types.Metadata (Metadata, MetadataDefaults, metadataToDTO, overrideMetadataDefaults)
 import Test.Hspec
+import Test.Hspec.Expectations.Json (shouldBeJson)
 
 spec :: Spec
 spec = describe "MetadataDTO" $ do
@@ -54,6 +55,17 @@ spec = describe "MetadataDTO" $ do
       let actual = eitherDecode input :: Either String MetadataDTO
       actual `shouldBe` Right expected
 
+    it "works with defaults" $ do
+      let emptyJSON = "{\"version\": 3, \"sources\": []}"
+      let defaultJSON = "{\"backend_configs\": {\"dataconnector\": {\"sqlite\": {\"uri\": \"http://localhost:8100\"}}}}"
+      let parsed = do
+            emptyMD <- eitherDecode emptyJSON :: Either String Metadata
+            defaults <- eitherDecode defaultJSON :: Either String MetadataDefaults
+            pure (emptyMD, defaults)
+      case parsed of
+        Left e -> fail $ "Expected defaults to parse: " <> show e
+        Right (e, d) -> overrideMetadataDefaults e d `shouldNotBe` e
+
     it "fails parsing v3 on version mismatch" $ do
       let input = "{\"version\": 3, \"tables\": [] }"
       let actual = eitherDecode input :: Either String MetadataDTO
@@ -70,22 +82,19 @@ spec = describe "MetadataDTO" $ do
       let actual = eitherDecode input :: Either String MetadataDTO
       actual `shouldSatisfy` isLeft
 
-  beforeAll getMetadataFixture $ do
-    describe "v3" $ do
-      -- TODO: There are some cases where DTO serialization emits @null@ where
-      -- Metadata serialization omits the field instead. So this test doesn't
-      -- quite pass yet. This is expected to be re-enabled in an upcoming PR.
-      -- it "deserializes and re-serializes equivalently to Metadata" $ \(MetadataFixture {..}) -> do
-      --   let dto = parseEither (parseJSON @MetadataDTO) _mfJSON
-      --   let fromDto = toJSON <$> dto
-      --   fromDto `shouldSatisfy` isRight
-      --   (fromRight' fromDto) `shouldBeJson` _mfJSON
+    beforeAll getMetadataFixture $ do
+      describe "v3" $ do
+        it "deserializes and re-serializes equivalently to Metadata" $ \(MetadataFixture {..}) -> do
+          let dto = parseEither (parseJSON @MetadataDTO) _mfJSON
+          let fromDto = toJSON <$> dto
+          fromDto `shouldSatisfy` isRight
+          (fromRight' fromDto) `shouldBeJson` _mfJSON
 
-      it "converts metadata to DTO to JSON to metadata" $ \(MetadataFixture {..}) -> do
-        let dto = metadataToDTO $ _mfMetadata
-        let json = toJSON dto
-        let metadata = parseEither (parseJSON @Metadata) json
-        metadata `shouldBe` (Right _mfMetadata)
+        it "converts metadata to DTO to JSON to metadata" $ \(MetadataFixture {..}) -> do
+          let dto = metadataToDTO $ _mfMetadata
+          let json = toJSON dto
+          let metadata = parseEither (parseJSON @Metadata) json
+          metadata `shouldBe` (Right _mfMetadata)
 
 emptyMetadataV3 :: MetadataV3
 emptyMetadataV3 =

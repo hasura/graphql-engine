@@ -1,5 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import { useGetAnalyticsAttributes } from '@/features/Analytics';
 import TypeRelationship from './Components/TypeRelationship';
 
 const Relationships = ({
@@ -27,10 +28,17 @@ const Relationships = ({
     );
   });
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes(
+    'ActionsRelationships',
+    { redactText: true }
+  );
+
   return (
     <div>
       <Helmet>
-        <title data-heap-redact-text="true">{`Relationships - ${currentAction.name} - Actions | Hasura`}</title>
+        <title
+          {...titleAnalyticsAttributes}
+        >{`Relationships - ${currentAction.name} - Actions | Hasura`}</title>
       </Helmet>
       {existingRelationships}
       {objectType.kind === 'scalar' ? (

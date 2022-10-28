@@ -2,6 +2,7 @@
 
 import pytest
 
+from conftest import extract_server_address_from
 from context import PytestConf
 from remote_server import NodeGraphQL
 from validate import check_query_f
@@ -14,29 +15,35 @@ pytestmark = [
 @pytest.fixture(scope='class')
 @pytest.mark.early
 def graphql_service_1(hge_fixture_env: dict[str, str]):
-    svc = NodeGraphQL(['node', 'remote_schemas/nodejs/remote_schema_perms.js'], port=4020)
-    svc.start()
-    hge_fixture_env['GRAPHQL_SERVICE_1'] = svc.url
-    yield svc
-    svc.stop()
+    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_1')
+    server = NodeGraphQL(['node', 'remote_schemas/nodejs/remote_schema_perms.js'], port=port)
+    server.start()
+    print(f'{graphql_service_1.__name__} server started on {server.url}')
+    hge_fixture_env['GRAPHQL_SERVICE_1'] = server.url
+    yield server
+    server.stop()
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
 def graphql_service_2(hge_fixture_env: dict[str, str]):
-    svc = NodeGraphQL(['node', 'remote_schemas/nodejs/secondary_remote_schema_perms.js'], port=4021)
-    svc.start()
-    hge_fixture_env['GRAPHQL_SERVICE_2'] = svc.url
-    yield svc
-    svc.stop()
+    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_2')
+    server = NodeGraphQL(['node', 'remote_schemas/nodejs/secondary_remote_schema_perms.js'], port=port)
+    server.start()
+    print(f'{graphql_service_2.__name__} server started on {server.url}')
+    hge_fixture_env['GRAPHQL_SERVICE_2'] = server.url
+    yield server
+    server.stop()
 
 @pytest.fixture(scope='class')
 @pytest.mark.early
 def graphql_service_3(hge_fixture_env: dict[str, str]):
-    svc = NodeGraphQL(['node', 'remote_schemas/nodejs/secondary_remote_schema_perms_error.js'], port=4022)
-    svc.start()
-    hge_fixture_env['GRAPHQL_SERVICE_3'] = svc.url
-    yield svc
-    svc.stop()
+    (_, port) = extract_server_address_from('GRAPHQL_SERVICE_3')
+    server = NodeGraphQL(['node', 'remote_schemas/nodejs/secondary_remote_schema_perms_error.js'], port=port)
+    server.start()
+    print(f'{graphql_service_3.__name__} server started on {server.url}')
+    hge_fixture_env['GRAPHQL_SERVICE_3'] = server.url
+    yield server
+    server.stop()
 
 use_test_fixtures = pytest.mark.usefixtures(
     'graphql_service_1',

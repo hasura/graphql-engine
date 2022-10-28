@@ -1,8 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-{-# OPTIONS -Wno-redundant-constraints #-}
-
 -- | SQLServer helpers.
 module Harness.Backend.Sqlserver
   ( livenessCheck,
@@ -104,7 +102,8 @@ connection_info:
 
 -- | Serialize Table into a T-SQL statement, as needed, and execute it on the Sqlserver backend
 createTable :: Schema.Table -> IO ()
-createTable Schema.Table {tableUniqueConstraints = _ : _} = error "Not Implemented: SqlServer test harness support for Unique constraints"
+createTable Schema.Table {tableUniqueIndexes = _ : _} = error "Not Implemented: SqlServer test harness support for unique indexes"
+createTable Schema.Table {tableConstraints = _ : _} = error "Not Implemented: SqlServer test harness support for constraints"
 createTable Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences} = do
   run_ $
     T.unpack $
@@ -281,8 +280,8 @@ setupPermissionsAction permissions env =
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
 setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-setupPermissions permissions env = Permissions.setup "mssql" permissions env
+setupPermissions permissions env = Permissions.setup SQLServer permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
 teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
-teardownPermissions permissions env = Permissions.teardown "mssql" permissions env
+teardownPermissions permissions env = Permissions.teardown SQLServer permissions env

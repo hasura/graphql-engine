@@ -7,6 +7,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 
 {-# HLINT ignore "Use tshow" #-}
 {-# HLINT ignore "Use onLeft" #-}
@@ -63,7 +64,6 @@ import Data.Foldable (for_)
 import Data.HashTable.IO qualified as HIO
 import Data.Hashable (Hashable (hashWithSalt))
 import Data.IORef (IORef, readIORef, writeIORef)
-import Data.Kind (Type)
 import Data.Maybe (fromMaybe)
 import Data.String (IsString (fromString))
 import Data.Text (Text)
@@ -78,7 +78,6 @@ import Prelude
 
 -------------------------------------------------------------------------------
 
-type ConnOptions :: Type
 data ConnOptions = ConnOptions
   { connHost :: !String,
     connPort :: !Int,
@@ -89,26 +88,22 @@ data ConnOptions = ConnOptions
   }
   deriving stock (Eq, Read, Show)
 
-type ConnDetails :: Type
 data ConnDetails
   = CDDatabaseURI !ByteString
   | CDOptions !ConnOptions
   deriving stock (Eq, Read, Show)
 
-type ConnInfo :: Type
 data ConnInfo = ConnInfo
   { ciRetries :: !Int,
     ciDetails :: !ConnDetails
   }
   deriving stock (Eq, Read, Show)
 
-type PGConnErr :: Type
 newtype PGConnErr = PGConnErr {getConnErr :: Text}
   deriving stock (Eq, Show)
   deriving newtype (ToJSON)
   deriving anyclass (Exception)
 
-type PGExecStatus :: Type
 newtype PGExecStatus = PGExecStatus PQ.ExecStatus
   deriving stock (Eq, Show)
 
@@ -116,23 +111,17 @@ instance ToJSON PGExecStatus where
   toJSON (PGExecStatus pqStatus) =
     $(mkToJSON (aesonDrop 0 snakeCase) ''PQ.ExecStatus) pqStatus
 
-type PGRetryPolicyM :: (Type -> Type) -> Type
 type PGRetryPolicyM m = RetryPolicyM m
 
-type PGRetryPolicy :: Type
 type PGRetryPolicy = PGRetryPolicyM (ExceptT PGErrInternal IO)
 
-type PGLogEvent :: Type
 newtype PGLogEvent = PLERetryMsg Text
   deriving stock (Eq, Show)
 
-type PGLogger :: Type
 type PGLogger = PGLogEvent -> IO ()
 
-type PGError :: Type
 type PGError = Either PGErrInternal PGConnErr
 
-type PGExec :: Type -> Type
 type PGExec a = ExceptT PGError IO a
 
 throwPGIntErr ::
@@ -277,7 +266,6 @@ pgConnString (CDOptions opts) = fromString connstr
     space [] = []
     space xs = ' ' : xs
 
-type PGStmtErrDetail :: Type
 data PGStmtErrDetail = PGStmtErrDetail
   { edExecStatus :: !PGExecStatus,
     edStatusCode :: !(Maybe Text),
@@ -290,7 +278,6 @@ data PGStmtErrDetail = PGStmtErrDetail
 instance ToJSON PGStmtErrDetail where
   toJSON = genericToJSON $ aesonDrop 2 snakeCase
 
-type ResultOk :: Type
 data ResultOk
   = ResultOkEmpty !PQ.Result
   | ResultOkData !PQ.Result
@@ -384,7 +371,6 @@ assertResCmd conn mRes = do
       throwPGIntErr $
         PGIUnexpected "cmd expected; tuples found"
 
-type PGCancelErr :: Type
 newtype PGCancelErr = PGCancelErr Text
   deriving stock (Eq, Show)
   deriving anyclass (Exception)
@@ -441,7 +427,6 @@ mkPGRetryPolicy numRetries =
     limitDelay = 6 * 1000 * 1000 -- 6 seconds
     baseDelay = 100 * 1000 -- 0.1 second
 
-type PGConn :: Type
 data PGConn = PGConn
   { pgPQConn :: !PQ.Connection,
     pgAllowPrepare :: !Bool,
@@ -469,12 +454,10 @@ resetPGConn (PGConn conn _ _ _ _ ctr ht _ _) = do
   keys <- map fst <$> HIO.toList ht
   for_ keys $ HIO.delete ht
 
-type RKLookupTable :: Type
 type RKLookupTable = HIO.BasicHashTable LocalKey RemoteKey
 
 -- |
 -- Local statement key.
-type LocalKey :: Type
 data LocalKey
   = LocalKey !Template ![Word32]
   deriving stock (Eq, Show)
@@ -486,7 +469,6 @@ localKey t ol =
   where
     oidMapper (PQ.Oid x) = fromIntegral x
 
-type Template :: Type
 newtype Template = Template ByteString
   deriving stock (Eq, Show)
   deriving newtype (Hashable)
@@ -501,7 +483,6 @@ instance Hashable LocalKey where
 
 -- |
 -- Remote statement key.
-type RemoteKey :: Type
 type RemoteKey = ByteString
 
 prepare ::
@@ -530,10 +511,8 @@ prepare (PGConn conn _ _ _ _ counter table _ _) tpl@(Template tplBytes) tl = do
         writeIORef counter (succ w)
       return rk
 
-type PrepArg :: Type
 type PrepArg = (PQ.Oid, Maybe (ByteString, PQ.Format))
 
-type PGQuery :: Type -> Type
 data PGQuery a = PGQuery
   { pgqTemplate :: !Template,
     pgqArgs :: [PrepArg],
@@ -541,7 +520,6 @@ data PGQuery a = PGQuery
     pgqConv :: ResultOk -> ExceptT Text IO a
   }
 
-type PGErrInternal :: Type
 data PGErrInternal
   = PGIUnexpected !Text
   | PGIStatement !PGStmtErrDetail

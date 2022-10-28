@@ -1,4 +1,5 @@
 {-# LANGUAGE Arrows #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 -- | Description: Create/delete SQL tables to/from Hasura metadata.
 module Hasura.RQL.DDL.Schema.Table
@@ -87,14 +88,17 @@ instance (Backend b) => FromJSON (TrackTable b) where
           <*> o .:? "apollo_federation_config"
       withoutOptions = TrackTable defaultSource <$> parseJSON v <*> pure False <*> pure Nothing
 
-data SetTableIsEnum = SetTableIsEnum
+data SetTableIsEnum b = SetTableIsEnum
   { stieSource :: SourceName,
-    stieTable :: QualifiedTable,
+    stieTable :: TableName b,
     stieIsEnum :: Bool
   }
-  deriving (Show, Eq)
 
-instance FromJSON SetTableIsEnum where
+deriving instance Eq (TableName b) => Eq (SetTableIsEnum b)
+
+deriving instance Show (TableName b) => Show (SetTableIsEnum b)
+
+instance Backend b => FromJSON (SetTableIsEnum b) where
   parseJSON = withObject "SetTableIsEnum" $ \o ->
     SetTableIsEnum
       <$> o .:? "source" .!= defaultSource
@@ -270,13 +274,13 @@ runTrackTableV2Q (TrackTableV2 (TrackTable source qt isEnum apolloFedConfig) con
   trackExistingTableOrViewP1 @b source qt
   trackExistingTableOrViewP2 @b source qt isEnum config apolloFedConfig
 
-runSetExistingTableIsEnumQ :: (MonadError QErr m, CacheRWM m, MetadataM m) => SetTableIsEnum -> m EncJSON
+runSetExistingTableIsEnumQ :: forall b m. (MonadError QErr m, CacheRWM m, MetadataM m, BackendMetadata b) => SetTableIsEnum b -> m EncJSON
 runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
-  void $ askTableInfo @('Postgres 'Vanilla) source tableName -- assert that table is tracked
+  void $ askTableInfo @b source tableName -- assert that table is tracked
   buildSchemaCacheFor
-    (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @('Postgres 'Vanilla) tableName)
+    (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @b tableName)
     $ MetadataModifier $
-      tableMetadataSetter @('Postgres 'Vanilla) source tableName . tmIsEnum .~ isEnum
+      tableMetadataSetter @b source tableName . tmIsEnum .~ isEnum
   return successMsg
 
 data SetTableCustomization b = SetTableCustomization
@@ -323,7 +327,7 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields col
 
 runSetTableCustomization ::
   forall b m.
-  (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b) =>
+  (QErrM m, CacheRWM m, MetadataM m, Backend b) =>
   SetTableCustomization b ->
   m EncJSON
 runSetTableCustomization (SetTableCustomization source table config) = do
@@ -663,7 +667,7 @@ instance (Backend b) => FromJSON (SetApolloFederationConfig b) where
 
 runSetApolloFederationConfig ::
   forall b m.
-  (QErrM m, CacheRWM m, MetadataM m, Backend b, BackendMetadata b) =>
+  (QErrM m, CacheRWM m, MetadataM m, Backend b) =>
   SetApolloFederationConfig b ->
   m EncJSON
 runSetApolloFederationConfig (SetApolloFederationConfig source table apolloFedConfig) = do

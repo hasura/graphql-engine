@@ -12,9 +12,8 @@ import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended ((<<>))
-import Data.Text.NonEmpty qualified as NET
 import Hasura.Backends.DataConnector.API.V0.Capabilities (lookupComparisonInputObjectDefinition)
-import Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..))
+import Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..), columnTypeToScalarType)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Base.Error
 import Hasura.GraphQL.Parser.Class
@@ -141,7 +140,7 @@ possiblyNullable' _scalarType (GQL.Nullability isNullable)
 orderByOperators' :: RQL.SourceInfo 'DataConnector -> NamingCase -> (GQL.Name, NonEmpty (P.Definition P.EnumValueInfo, (RQL.BasicOrderType 'DataConnector, RQL.NullsOrderType 'DataConnector)))
 orderByOperators' RQL.SourceInfo {_siConfiguration} _tCase =
   let dcName = DC._scDataConnectorName _siConfiguration
-      orderBy = fromMaybe Name._order_by $ GQL.mkName $ NET.unNonEmptyText (DC.unDataConnectorName dcName) <> "_order_by"
+      orderBy = GQL.addSuffixes (DC.unDataConnectorName dcName) [$$(GQL.litSuffix "_order_by")]
    in (orderBy,) $
         -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
         NE.fromList
@@ -166,7 +165,7 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
   collapseIfNull <- GS.C.retrieve Options.soDangerousBooleanCollapse
 
   typedParser <- columnParser' columnType (GQL.Nullability False)
-  let name = P.getName typedParser <> $$(GQL.litName "_Dynamic_comparison_exp")
+  let name = GQL.addSuffixes (P.getName typedParser) [$$(GQL.litSuffix "_"), GQL.convertNameToSuffix (DC.unDataConnectorName dataConnectorName), $$(GQL.litSuffix "_comparison_exp")]
       desc =
         GQL.Description $
           "Boolean expression to compare columns of type "
@@ -195,7 +194,7 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
 
     mkListLiteral :: [RQL.ColumnValue 'DataConnector] -> IR.UnpreparedValue 'DataConnector
     mkListLiteral columnValues =
-      IR.UVLiteral . DC.ArrayLiteral $ RQL.cvValue <$> columnValues
+      IR.UVLiteral $ DC.ArrayLiteral (columnTypeToScalarType columnType) (RQL.cvValue <$> columnValues)
 
     mkCustomOperators ::
       NamingCase ->

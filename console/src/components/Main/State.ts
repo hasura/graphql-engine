@@ -58,6 +58,7 @@ export interface MainState {
         claims_namespace: string;
         claims_format: string;
       };
+      is_prometheus_metrics_enabled: boolean;
     };
     error: Error | null;
     isFetching: boolean;
@@ -101,6 +102,7 @@ const defaultState: MainState = {
         claims_namespace: '',
         claims_format: '',
       },
+      is_prometheus_metrics_enabled: true,
     },
     error: null,
     isFetching: false,

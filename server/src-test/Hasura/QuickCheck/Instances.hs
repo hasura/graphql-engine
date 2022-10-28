@@ -23,14 +23,14 @@ import Hasura.RQL.Types.Metadata.Object
   ( MetadataObjId (..),
     MetadataObject (..),
   )
-import Hasura.RQL.Types.RemoteSchema
-  ( RemoteSchemaInputValueDefinition (..),
-    RemoteSchemaIntrospection (..),
-    RemoteSchemaName (..),
-    getTypeName,
-  )
 import Hasura.RQL.Types.SchemaCache
 import Hasura.RQL.Types.Table
+import Hasura.RemoteSchema.Metadata (RemoteSchemaName (..))
+import Hasura.RemoteSchema.SchemaCache
+  ( RemoteSchemaInputValueDefinition (..),
+    RemoteSchemaIntrospection (..),
+    getTypeName,
+  )
 import Hasura.Server.Utils qualified as Utils
 import Hasura.Session (SessionVariable, mkSessionVariable)
 import Language.GraphQL.Draft.Syntax qualified as GraphQL

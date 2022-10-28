@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+
 import styles from './Support.module.scss';
 import discord from './images/discord.svg';
 import docs from './images/docs.svg';
@@ -44,66 +46,68 @@ const supportListState = [
 
 const HelpPage = () => {
   return (
-    <div
-      className={`${styles.padd_left_remove} ${styles.supportForumWrapper} container-fluid ${styles.padd_top}`}
-    >
-      <div className={styles.padd_left}>
-        <h2 className={`${styles.headerText} ${styles.inline_block}`}>
-          Support Forums
-        </h2>
-        <div className={`${styles.descriptionText} ${styles.wd60}`}>
-          {CHECK_FORUMS}
-        </div>
-        <div className={styles.supportWrapper}>
-          {supportListState.map((list, index) => {
-            return (
-              <div
-                className={`col-md-6 col-sm-6 col-xs-12 ${styles.padd_remove} ${styles.supportDisplay}`}
-              >
-                <a
-                  key={index}
-                  href={list.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.supportFlex}
+    <Analytics name="HelpPage" {...REDACT_EVERYTHING}>
+      <div
+        className={`${styles.padd_left_remove} ${styles.supportForumWrapper} container-fluid ${styles.padd_top}`}
+      >
+        <div className={styles.padd_left}>
+          <h2 className={`${styles.headerText} ${styles.inline_block}`}>
+            Support Forums
+          </h2>
+          <div className={`${styles.descriptionText} ${styles.wd60}`}>
+            {CHECK_FORUMS}
+          </div>
+          <div className={styles.supportWrapper}>
+            {supportListState.map((list, index) => {
+              return (
+                <div
+                  className={`col-md-6 col-sm-6 col-xs-12 ${styles.padd_remove} ${styles.supportDisplay}`}
                 >
-                  <div className={styles.supportList}>
-                    <div className={styles.supportBrand}>
-                      <img src={list.brand} alt={list.title} />
-                    </div>
-                    <div className={styles.supportContainer}>
-                      <div className={styles.title}>{list.title}</div>
-                      <div className={styles.descriptionText}>
-                        {list.description}
+                  <a
+                    key={index}
+                    href={list.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.supportFlex}
+                  >
+                    <div className={styles.supportList}>
+                      <div className={styles.supportBrand}>
+                        <img src={list.brand} alt={list.title} />
+                      </div>
+                      <div className={styles.supportContainer}>
+                        <div className={styles.title}>{list.title}</div>
+                        <div className={styles.descriptionText}>
+                          {list.description}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </a>
-              </div>
-            );
-          })}
-        </div>
-        <div className={`${styles.descriptionText} ${styles.wd60}`}>
-          If you would like to talk to our Product Specialists, head to our{' '}
-          <a
-            href="https://hasura.io/help"
-            // eslint-disable-next-line react/jsx-no-target-blank
-            target="_blank"
-          >
-            help page
-          </a>{' '}
-          to chat with us or{' '}
-          <a
-            href="https://calendly.com/hasura/prod-expert-call"
-            // eslint-disable-next-line react/jsx-no-target-blank
-            target="_blank"
-          >
-            set up a call
-          </a>
-          .
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+          <div className={`${styles.descriptionText} ${styles.wd60}`}>
+            If you would like to talk to our Product Specialists, head to our{' '}
+            <a
+              href="https://hasura.io/help"
+              // eslint-disable-next-line react/jsx-no-target-blank
+              target="_blank"
+            >
+              help page
+            </a>{' '}
+            to chat with us or{' '}
+            <a
+              href="https://calendly.com/hasura/prod-expert-call"
+              // eslint-disable-next-line react/jsx-no-target-blank
+              target="_blank"
+            >
+              set up a call
+            </a>
+            .
+          </div>
         </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 export default HelpPage;
