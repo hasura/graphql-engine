@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>Control.Arrow.Interpret</title><link href="linuwial.css" rel="stylesheet" type="text/css" title="Linuwial" /><link rel="stylesheet" type="text/css" href="quick-jump.css" /><link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400i,700" /><script src="haddock-bundle.min.js" async="async" type="text/javascript"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({ tex2jax: { processClass: "mathjax", ignoreClass: ".*" } });</script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script></head><body><div id="package-header"><span class="caption">graphql-engine-1.0.0: GraphQL API over Postgres</span><ul class="links" id="page-menu"><li><a href="src/Control.Arrow.Interpret.html">Source</a></li><li><a href="index.html">Contents</a></li><li><a href="doc-index.html">Index</a></li></ul></div><div id="content"><div id="module-header"><table class="info"><tr><th>Safe Haskell</th><td>None</td></tr><tr><th>Language</th><td>Haskell2010</td></tr></table><p class="caption">Control.Arrow.Interpret</p></div><div id="description"><p class="caption">Description</p><div class="doc"><h1>TL;DR</h1><p>We go from this:</p><pre>(|
+  withRecordInconsistency
+    ( (|
+        modifyErrA
+          ( do
+              (info, dependencies) &lt;- liftEitherA -&lt; buildRelInfo relDef
+              recordDependencies -&lt; (metadataObject, schemaObject, dependencies)
+              returnA -&lt; info
+          )
+      |) (addTableContext @b table . addRelationshipContext)
+    )
+  |) metadataObject</pre><p>to this:</p><pre>withRecordInconsistencyM metadataObject $ do
+  modifyErr (addTableContext @b table . addRelationshipContext) $ do
+    (info, dependencies) &lt;- liftEither $ buildRelInfo relDef
+    recordDependenciesM metadataObject schemaObject dependencies
+    return info</pre><h1>Background</h1><p>We use Haskell's <code>Arrows</code> language extension to gain some syntactic sugar when
+ working with <code><a href="file:///root/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/Control-Arrow.html#t:Arrow" title="Control.Arrow">Arrow</a></code>s. <code><a href="file:///root/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/Control-Arrow.html#t:Arrow" title="Control.Arrow">Arrow</a></code>s are a programming abstraction comparable to
+ <code>Monad</code>s.</p><p>Unfortunately the syntactic sugar provided by this language extension is not
+ very sweet.</p><p>This module allows us to sometimes avoid using <code>Arrows</code> syntax altogether,
+ without loss of functionality or correctness. It is a demo of a technique that
+ can be used to cut down the amount of <code>Arrows</code>-based code in our codebase by
+ about half.</p><h1>Approach</h1><p>Although <em>in general</em> not every <code>Monad</code> is an <code><a href="file:///root/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/Control-Arrow.html#t:Arrow" title="Control.Arrow">Arrow</a></code>, specific <code><a href="file:///root/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/Control-Arrow.html#t:Arrow" title="Control.Arrow">Arrow</a></code>
+ instantiations are exactly as powerful as their <code>Monad</code> equivalents. Otherwise
+ they wouldn't be very equivalent, would they?</p><p>Just like <code>liftEither</code> interprets the <code><code>Either</code> e</code> monad into an arbitrary
+ monad implementing <code><code>MonadError</code> e</code>, we add interpret certain concrete monads
+ such as <code><code><a href="file:///root/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/transformers-0.5.6.2/Control-Monad-Trans-Writer-CPS.html#v:Writer" title="Control.Monad.Trans.Writer.CPS">Writer</a></code> w</code> into arrows satisfying
+ constraints, in this example the ones satisfying <code><code><a href="Control-Arrow-Trans.html#t:ArrowWriter" title="Control.Arrow.Trans">ArrowWriter</a></code> w</code>.  This
+ means that the part of the code that only uses such interpretable arrow
+ effects can be written <em>monadically</em>, and then used in <em>arrow</em> constructions
+ down the line.</p><p>This approach cannot be used for arrow effects which do not have a monadic
+ equivalent. In our codebase, the only instance of this is
+ <code><code><a href="Hasura-Incremental.html#v:ArrowCache" title="Hasura.Incremental">ArrowCache</a></code> m</code>, implemented by the
+ <code><code><a href="Hasura-Incremental.html#v:Rule" title="Hasura.Incremental">Rule</a></code> m</code> arrow. So code written with
+ <code><code><a href="Hasura-Incremental.html#v:ArrowCache" title="Hasura.Incremental">ArrowCache</a></code> m</code> in the context cannot be rewritten
+ monadically using this technique.</p></div></div><div id="synopsis"><details id="syn"><summary>Synopsis</summary><ul class="details-toggle" data-details-id="syn"><li class="src short"><a href="#v:interpretWriter">interpretWriter</a> :: <a href="Control-Arrow-Trans.html#t:ArrowWriter" title="Control.Arrow.Trans">ArrowWriter</a> w arr =&gt; <a href="file:///root/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/mtl-2.2.2/Control-Monad-Writer-Lazy.html#t:Writer" title="Control.Monad.Writer.Lazy">Writer</a> w a `arr` a</li></ul></details></div><div id="interface"><h1>Documentation</h1><div class="top"><p class="src"><a id="v:interpretWriter" class="def">interpretWriter</a> :: <a href="Control-Arrow-Trans.html#t:ArrowWriter" title="Control.Arrow.Trans">ArrowWriter</a> w arr =&gt; <a href="file:///root/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/mtl-2.2.2/Control-Monad-Writer-Lazy.html#t:Writer" title="Control.Monad.Writer.Lazy">Writer</a> w a `arr` a <a href="src/Control.Arrow.Interpret.html#interpretWriter" class="link">Source</a> <a href="#v:interpretWriter" class="selflink">#</a></p><div class="doc"><p>Translate a monadic writer effect stack of a computation into arrow-based
+ effects.</p><p>NB: This is conceptually different from <code><a href="Control-Arrow-Extended.html#t:ArrowKleisli" title="Control.Arrow.Extended">ArrowKleisli</a></code>, which <em>inserts</em> a
+ single monadic effect into an arrow-based effect stack.</p><p>NB: This is conceptually different from <code><a href="file:///root/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/Control-Arrow.html#t:ArrowApply" title="Control.Arrow">ArrowApply</a></code>, which expresses that a
+ given <code><a href="file:///root/.ghcup/ghc/8.10.7/share/doc/ghc-8.10.7/html/libraries/base-4.14.3.0/Control-Arrow.html#t:Arrow" title="Control.Arrow">Arrow</a></code> <em>is</em> a Kleisli arrow.  <code>ArrowInterpret</code> has no such condition
+ on <code>arr</code>.</p></div></div></div></div><div id="footer"><p>Produced by <a href="http://www.haskell.org/haddock/">Haddock</a> version 2.24.2</p></div></body></html>
