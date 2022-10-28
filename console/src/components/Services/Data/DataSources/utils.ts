@@ -1,5 +1,17 @@
+import { Driver, getSupportedDrivers } from '@/dataSources';
+import { addSource } from './../../../../metadata/sourcesUtils';
+import { isObject, isEqual } from './../../../Common/utils/jsUtils';
 import { Table } from '../../../../dataSources/types';
-import { MetadataDataSource } from '../../../../metadata/types';
+import {
+  ConnectionParams,
+  MetadataDataSource,
+  SourceConnectionInfo,
+} from '../../../../metadata/types';
+import { connectionTypes } from './state';
+import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
+
+export const isPostgresFlavour = (driver: Driver) =>
+  driver === 'postgres' || driver === 'citus' || driver === 'cockroach';
 
 export const getErrorMessageFromMissingFields = (
   host: string,
@@ -27,7 +39,12 @@ export const getErrorMessageFromMissingFields = (
 };
 
 export const getDatasourceURL = (
-  link: string | { from_env: string } | undefined
+  kind: Driver,
+  link:
+    | string
+    | { from_env: string }
+    | { connection_parameters: ConnectionParams }
+    | undefined
 ) => {
   if (!link) {
     return '';
@@ -35,8 +52,62 @@ export const getDatasourceURL = (
   if (typeof link === 'string') {
     return link.toString();
   }
+  if ('connection_parameters' in link) {
+    return makeConnectionStringFromConnectionParams({
+      dbType: kind,
+      host: link.connection_parameters.host,
+      port: link.connection_parameters.port.toString(),
+      username: link.connection_parameters.username,
+      database: link.connection_parameters.database,
+      password: link.connection_parameters.password,
+    });
+  }
   return link.from_env.toString();
 };
+
+export const getDatasourceConnectionParams = (
+  link:
+    | string
+    | { from_env: string }
+    | { connection_parameters: ConnectionParams }
+    | undefined
+) => {
+  if (link && typeof link !== 'string' && 'connection_parameters' in link) {
+    return {
+      host: link.connection_parameters.host,
+      port: link.connection_parameters.port.toString(),
+      username: link.connection_parameters.username,
+      database: link.connection_parameters.database,
+      password: link.connection_parameters.password ?? '',
+    };
+  }
+  return undefined;
+};
+
+export function parsePgUrl(
+  url: string
+): Partial<Omit<URL, 'searchParams' | 'toJSON'>> {
+  try {
+    const protocol = new URL(url).protocol;
+    const newUrl = url.replace(protocol, 'http://');
+    const parsed = new URL(newUrl);
+    return {
+      origin: parsed.origin.replace('http:', protocol),
+      hash: parsed.hash,
+      host: parsed.host,
+      hostname: parsed.hostname,
+      port: parsed.port,
+      href: parsed.href.replace('http:', protocol),
+      password: parsed.password,
+      pathname: parsed.pathname,
+      search: parsed.search,
+      username: parsed.username,
+      protocol,
+    };
+  } catch (error) {
+    return {};
+  }
+}
 
 type TableType = Record<string, { table_type: Table['table_type'] }>;
 type SchemaType = Record<string, TableType>;
@@ -66,19 +137,109 @@ export const canReUseTableTypes = (
   );
 };
 
-export const readFile = (
-  file: File | null,
-  callback: (content: string) => void
+export type AddSourceArg = ReturnType<typeof addSource>['args'];
+
+export const dataSourceIsEqual = (
+  sourceFromMetaData: MetadataDataSource,
+  data: AddSourceArg
 ) => {
-  const reader = new FileReader();
-  reader.onload = event => {
-    const content = event.target!.result as string;
-    callback(content);
+  const ignoreFields = ['tables', 'kind', 'name', 'replace_configuration'];
+
+  const filterFields = (obj: Record<string, any>) =>
+    Object.entries(obj).reduce((acc: Record<string, any>, [key, value]) => {
+      if (value !== null && !ignoreFields.includes(key)) {
+        if (isObject(value)) {
+          acc[key] = filterFields(value);
+        } else {
+          acc[key] = value;
+        }
+      }
+      return acc;
+    }, {});
+
+  return isEqual(filterFields(sourceFromMetaData), filterFields(data));
+};
+
+type TGetReadReplicaDBUrlInfoResponse = {
+  connectionType: string;
+  envVarState?: {
+    envVar: string;
+  };
+  databaseURLState?: {
+    dbURL: string;
+    serviceAccount: string;
+    global_select_limit: number;
+    projectId: string;
+    datasets: string;
+  };
+};
+
+export const getReadReplicaDBUrlInfo = (
+  replica: SourceConnectionInfo,
+  dbType: MetadataDataSource['kind']
+): TGetReadReplicaDBUrlInfoResponse | null => {
+  const dbUrlConfig = {
+    dbURL: '',
+    serviceAccount: '',
+    global_select_limit: 1000,
+    projectId: '',
+    datasets: '',
   };
 
-  reader.onerror = event => {
-    console.error(`File could not be read! Code ${event.target!.error!.code}`);
-  };
+  if (!replica?.database_url && !replica?.connection_string) return null;
+  if (dbType === 'postgres') {
+    if (typeof replica?.database_url === 'string') {
+      return {
+        connectionType: connectionTypes.DATABASE_URL,
+        databaseURLState: {
+          ...dbUrlConfig,
+          dbURL: replica?.database_url,
+        },
+      };
+    }
+    return {
+      connectionType: connectionTypes.ENV_VAR,
+      envVarState: {
+        envVar:
+          replica?.database_url && 'from_env' in replica?.database_url
+            ? replica?.database_url?.from_env
+            : '',
+      },
+    };
+  }
+  if (dbType === 'mssql') {
+    if (typeof replica?.connection_string === 'string') {
+      return {
+        connectionType: connectionTypes.DATABASE_URL,
+        databaseURLState: {
+          ...dbUrlConfig,
+          dbURL: replica?.connection_string,
+        },
+      };
+    }
+    return {
+      connectionType: connectionTypes.ENV_VAR,
+      envVarState: {
+        envVar: replica?.connection_string?.from_env ?? '',
+      },
+    };
+  }
+  return null;
+};
 
-  if (file) reader.readAsText(file);
+export const isDBSupported = (driver: Driver, connectionType: string) => {
+  switch (connectionType) {
+    case 'CONNECTION_PARAMETERS':
+      return getSupportedDrivers('connectDbForm.connectionParameters').includes(
+        driver
+      );
+
+    case 'ENVIRONMENT_VARIABLES':
+      return getSupportedDrivers('connectDbForm.environmentVariable').includes(
+        driver
+      );
+
+    default:
+      return getSupportedDrivers('connectDbForm.databaseURL').includes(driver);
+  }
 };

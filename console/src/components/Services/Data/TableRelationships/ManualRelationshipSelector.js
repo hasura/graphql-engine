@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../../../Common/TableCommon/Table.scss';
+import styles from '../../../Common/TableCommon/Table.module.scss';
 import {
   manualRelRTableChanged,
   manualRelTypeChanged,
@@ -8,6 +8,7 @@ import {
   manualRelRSchemaChanged,
 } from './Actions';
 import { updateSchemaInfo } from '../DataActions';
+import { FaTimes } from 'react-icons/fa';
 
 const ManualRelationshipSelector = ({
   tableSchema,
@@ -203,8 +204,8 @@ const ManualRelationshipSelector = ({
             removeIcon = null;
           } else {
             removeIcon = (
-              <i
-                className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+              <FaTimes
+                className={`${styles.fontAwosomeClose} text-lg`}
                 onClick={dispatchRemoveCol}
               />
             );

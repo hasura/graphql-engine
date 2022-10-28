@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`mysql datasource tests getAlterColumnCommentSql should generate SQL for modifying column comment 1`] = `"alter table \`public\`.\`users\` modify column \`id\` Int comment '%string \\"user's comment\\" %';"`;
+
+exports[`mysql datasource tests getAlterTableCommentSql should generate SQL for modifying table comment 1`] = `"alter table \`public\`.\`users\` comment = '%string \\"user's comment\\" %';"`;

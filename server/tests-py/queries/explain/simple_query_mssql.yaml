@@ -2,19 +2,13 @@ description: Explain query
 url: /v1/graphql/explain
 status: 200
 response:
-  - field: user
-    plan:
-      - "SELECT ISNULL((SELECT [t_user1].[id] AS [id],\n       [t_user1].[name] AS [name],\n\
-        \       [t_user1].[age] AS [age]\nFROM [dbo].[user] AS [t_user1]\nFOR JSON PATH),\
-        \ '[]')"
-      - "  |--Compute Scalar(DEFINE:([Expr1003]=isnull([Expr1001],CONVERT_IMPLICIT(nvarchar(max),'[]',0))))"
-      - "       |--UDX(([t_user1].[id], [t_user1].[name], [t_user1].[age]))"
-      - "            |--Clustered Index Scan(OBJECT:([master].[dbo].[user].[PK__user__3213E83F2F718733]
-        AS [t_user1]))"
-    sql:
-      "SELECT ISNULL((SELECT [t_user1].[id] AS [id],\n       [t_user1].[name] AS\
-      \ [name],\n       [t_user1].[age] AS [age]\nFROM [dbo].[user] AS [t_user1]\nFOR\
-      \ JSON PATH), '[]')"
+- field: user
+  sql: |-
+    SELECT ISNULL((SELECT [t_user1].[id] AS [id],
+                   [t_user1].[name] AS [name],
+                   [t_user1].[age] AS [age]
+            FROM [dbo].[user] AS [t_user1]
+            FOR JSON PATH, INCLUDE_NULL_VALUES), (N''+NCHAR(91)+''+NCHAR(93)+'')) AS [root]
 query:
   query:
     query: |

@@ -1,20 +1,21 @@
 package database
 
 import (
-	"crypto/tls"
 	"io"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/require"
 )
 
 type mockDriver struct {
 	url string
 }
 
-func (m *mockDriver) Open(url string, isCmd bool, tlsConfig *tls.Config, logger *logrus.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
+func (m *mockDriver) Open(url string, isCmd bool, logger *logrus.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
 	return &mockDriver{
 		url: url,
 	}, nil
@@ -88,17 +89,15 @@ func (m *mockDriver) Query(data interface{}) error {
 }
 
 func (m *mockDriver) ResetQuery() {
-	return
 }
 
 func (m *mockDriver) Squash(list *CustomList, ret chan<- interface{}) {
-	return
 }
 
 func (m *mockDriver) EnableCheckMetadataConsistency(enabled bool) {
 }
 
-func (m *mockDriver) ExportSchemaDump(schemaName []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
+func (m *mockDriver) ExportSchemaDump(includeSchemas []string, excludeSchemas []string, sourceName string, sourceKind hasura.SourceKind) ([]byte, error) {
 	return nil, nil
 }
 
@@ -142,35 +141,38 @@ func TestOpen(t *testing.T) {
 	}()
 
 	cases := []struct {
-		url string
-		err bool
+		url       string
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"mock://user:pass@host:1337/db",
 			false,
+			require.NoError,
 		},
 		{
 			"unknown://bla",
 			true,
+			require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
+				require.IsType(t, &errors.Error{}, err)
+				e := err.(*errors.Error)
+				require.Equal(t, errors.Op("database.Open"), e.Op)
+				require.Equal(t, "database driver: unknown driver unknown", e.Err.Error())
+			}),
 		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.url, func(t *testing.T) {
-			d, err := Open(c.url, false, nil, nil, nil)
-
-			if err == nil {
-				if c.err {
-					t.Fatal("expected an error for an unknown driver")
-				} else {
-					if md, ok := d.(*mockDriver); !ok {
-						t.Fatalf("expected *mockDriver got %T", d)
-					} else if md.url != c.url {
-						t.Fatalf("expected %q got %q", c.url, md.url)
-					}
-				}
-			} else if !c.err {
-				t.Fatalf("did not expect %q", err)
+			d, err := Open(c.url, false, nil, nil)
+			c.assertErr(t, err)
+			if c.wantErr {
+				return
+			}
+			if md, ok := d.(*mockDriver); !ok {
+				t.Fatalf("expected *mockDriver got %T", d)
+			} else if md.url != c.url {
+				t.Fatalf("expected %q got %q", c.url, md.url)
 			}
 		})
 	}

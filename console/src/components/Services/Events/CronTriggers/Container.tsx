@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Helmet from 'react-helmet';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import {
   getDataEventsLandingRoute,
@@ -14,7 +15,7 @@ import { appPrefix, EVENTS_SERVICE_HEADING } from '../constants';
 import { setCurrentTrigger } from '../reducer';
 import { Triggers } from '../types';
 import { Dispatch } from '../../../../types';
-import styles from '../Events.scss';
+import styles from '../Events.module.scss';
 
 interface Props {
   triggerName: string;
@@ -36,9 +37,8 @@ const STContainer: React.FC<Props> = ({
   dispatch,
   eventsLoading,
 }) => {
-  const [triggerPresence, setTriggerPresence] = useState<TriggerPresence>(
-    'not-missing'
-  );
+  const [triggerPresence, setTriggerPresence] =
+    useState<TriggerPresence>('not-missing');
   React.useEffect(() => {
     dispatch(setCurrentTrigger(triggerName));
     return () => {
@@ -110,27 +110,29 @@ const STContainer: React.FC<Props> = ({
   );
 
   return (
-    <div
-      className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
-    >
-      <Helmet
-        title={getReactHelmetTitle(
-          `${tabInfo[tabName].display_text} - ${triggerName}`,
-          EVENTS_SERVICE_HEADING
-        )}
-      />
-      <CommonTabLayout
-        appPrefix={appPrefix}
-        currentTab={tabName}
-        heading={triggerName}
-        tabsInfo={tabInfo}
-        breadCrumbs={breadCrumbs}
-        baseUrl={getSTRoute('absolute', triggerName)}
-        showLoader={false}
-        testPrefix={`${triggerName}-container-tabs`}
-      />
-      <div className={styles.add_pad_top}>{childrenWithProps}</div>
-    </div>
+    <Analytics name="CronTriggers" {...REDACT_EVERYTHING}>
+      <div
+        className={`${styles.view_stitch_schema_wrapper} ${styles.addWrapper}`}
+      >
+        <Helmet
+          title={getReactHelmetTitle(
+            `${tabInfo[tabName].display_text} - ${triggerName}`,
+            EVENTS_SERVICE_HEADING
+          )}
+        />
+        <CommonTabLayout
+          appPrefix={appPrefix}
+          currentTab={tabName}
+          heading={triggerName}
+          tabsInfo={tabInfo}
+          breadCrumbs={breadCrumbs}
+          baseUrl={getSTRoute('absolute', triggerName)}
+          showLoader={false}
+          testPrefix={`${triggerName}-container-tabs`}
+        />
+        <div className={styles.add_pad_top}>{childrenWithProps}</div>
+      </div>
+    </Analytics>
   );
 };
 

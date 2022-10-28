@@ -93,8 +93,9 @@ response:
       custom_root_fields:
         select: test2_select
         insert: test2_insert
-      custom_column_names:
-        id: test2_id
+      column_config:
+        id:
+          custom_name: test2_id
     array_relationships:
     - name: test1_arr1
       using:
@@ -118,7 +119,7 @@ response:
     configuration:
       custom_name: user_address
       custom_root_fields: {}
-      custom_column_names: {}
+      column_config: {}
 
   functions:
   - function:

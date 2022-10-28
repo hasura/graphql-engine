@@ -1,0 +1,9 @@
+type: bulk
+args:
+
+- type: citus_run_sql
+  args:
+    source: citus
+    cascade: true
+    sql: |
+      drop table table_to_customize;

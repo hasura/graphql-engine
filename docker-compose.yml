@@ -1,0 +1,229 @@
+# This file starts up the necessary database services to test
+# graphql-engine.
+#
+# Run the following to get started:
+#
+#     docker compose up -d
+#
+# That will start up services in the background. To take them down,
+# you have to run
+#
+#     docker compose down
+#
+# If you changed DB init scripts, then you should also run:
+#
+#     docker compose down --volumes
+#
+# That'll delete the volumes. Otherwise e.g. PostgreSQL will skip
+# initializing if a DB already exists.
+#
+# If you omit -d, it'll run them all in the foreground, then you can
+# stop them with your usual control-C terminal command.
+#
+# Facts:
+#
+# * The SERVICE PORTS numbering start at 65001, 65002, etc. to avoid
+#   bother existing instances of databases.
+#
+# * The login credentials are, where possible, all "hasura" to avoid
+#   unnecessary mental overhead.
+
+version: "3.6"
+
+services:
+  mariadb:
+    image: mariadb:10.9.3
+    ports:
+      - "65001:3306"
+    environment:
+      MARIADB_USER: "hasura"
+      MARIADB_PASSWORD: "hasura"
+      MARIADB_DATABASE: "hasura"
+      MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: "true"
+      MARIADB_MYSQL_LOCALHOST_USER: "1"
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    healthcheck:
+      test:
+        - CMD
+        - /usr/local/bin/healthcheck.sh
+        - --connect
+        - --innodb_initialized
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  postgres:
+    image: postgis/postgis:15-3.3-alpine
+    command:
+      - -F # turn fsync off for speed
+      - -N 1000 # increase max connections from 100 so we can run more HGEs
+    ports:
+      - "65002:5432"
+    environment:
+      POSTGRES_USER: "hasura"
+      POSTGRES_PASSWORD: "hasura"
+      POSTGRES_DB: "hasura"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - psql -U hasura < /dev/null && sleep 5 && psql -U hasura < /dev/null
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  sqlserver:
+    # We cannot use this image on arm64, as it's not available.
+    # Instead, we use `mcr.microsoft.com/azure-sql-edge`.
+    # This uses an environment variable so it can be overridden by scripts to
+    # provide that image instead.
+    image: ${MSSQL_IMAGE:-mcr.microsoft.com/mssql/server:2019-latest}
+    ports:
+      - "65003:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "DockerComposePassword!"
+      MSSQL_SA_PASSWORD: "DockerComposePassword!"
+    volumes:
+      - mssql-data:/var/opt/mssql
+
+  # We would prefer to attach the healthcheck directly to the `sqlserver` container.
+  # However, while we can do this in the `mcr.microsoft.com/mssql/server` image,
+  # it's not possible when running on macOS, as we don't use that image, but
+  # instead `mcr.microsoft.com/azure-sql-edge`.
+  # The `mcr.microsoft.com/azure-sql-edge` image does not provide `sqlcmd`.
+  # We therefore need to run it in a separate container.
+  # We can reconsider this once the MSSQL Server image can run on arm64.
+  sqlserver-healthcheck:
+    image: mcr.microsoft.com/mssql-tools
+    command:
+      - sleep
+      - inf
+    init: true # handle signals correctly
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          /opt/mssql-tools/bin/sqlcmd -S 'sqlserver,1433' -U SA -P "DockerComposePassword!"
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    # This is commented out because this file can be extended, and dependencies don't work for extensions.
+    # Instead, ensure you also run this one.
+    # depends_on:
+    #   sqlserver:
+    #     condition: service_started
+
+    # Separated from the `sqlserver` container so we can use the `mssql-tools` image to run `sqlcmd`.
+    # `sqlcmd` is not available in the `azure-sql-edge` image on arm64, which we use for testing on macOS.
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql-tools
+    command:
+      - /init.sh
+    environment:
+      SERVER_HOST: sqlserver
+    volumes:
+      - ./docker-compose/sqlserver-init/init.sh:/init.sh
+      - ./docker-compose/sqlserver-init/init.sql:/init.sql
+    # This is commented out because this file can be extended, and dependencies don't work for extensions.
+    # Instead, ensure you also run this one.
+    # depends_on:
+    #   sqlserver:
+    #     condition: service_started
+
+  citus:
+    image: citusdata/citus:10.1@sha256:7e497e5ca18d7f2ae2a66c1d5d676b548e9221b7e6294adfb03006adad85502c
+    ports:
+      - "65004:5432"
+    environment:
+      POSTGRES_USER: "hasura"
+      POSTGRES_PASSWORD: "hasura"
+      POSTGRES_DB: "hasura"
+    volumes:
+      - citus-data:/var/lib/postgresql/data
+      - ./docker-compose/postgres/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - psql -U hasura < /dev/null && sleep 5 && psql -U hasura < /dev/null
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  cockroach:
+    image: us-docker.pkg.dev/cockroach-cloud-images/cockroachdb/cockroach:v22.2.0-beta.2-218-ga7ecaa82cf
+    command:
+      - start-single-node
+      - --insecure
+      - --accept-sql-without-tls
+    ports:
+      - "65008:26257"
+    environment:
+      COCKROACH_USER: "root"
+      COCKROACH_DATABASE: "hasura"
+    volumes:
+      - cockroach-data:/cockroach/cockroach-data
+      - ./docker-compose/cockroach/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - cockroach sql --insecure --database "hasura" --execute "SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'hasura';" | grep -q -F 'hasura'
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  dc-reference-agent:
+    build:
+      context: ./dc-agents
+      dockerfile: ./Dockerfile-reference
+    ports:
+      - "65005:8100"
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - localhost:8100/health
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  dc-sqlite-agent:
+    build:
+      context: ./dc-agents
+      dockerfile: ./Dockerfile-sqlite
+    ports:
+      - "65007:8100"
+    volumes:
+      - "./dc-agents/sqlite/test/db.chinook.sqlite:/db.chinook.sqlite"
+      - "./dc-agents/sqlite/test/db.sqlite:/db.sqlite"
+    environment:
+      METRICS: y
+      PRETTY_PRINT_LOGS: y
+      LOG_LEVEL: debug
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - -f
+        - localhost:8100/health
+      start_period: 5s
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+volumes:
+  citus-data:
+  mariadb-data:
+  mssql-data:
+  postgres-data:
+  cockroach-data:

@@ -1,0 +1,6 @@
+- name: every-second
+  webhook: https://httpbin.org/post
+  schedule: '* * * * *'
+  include_in_metadata: true
+  payload:
+    every: second

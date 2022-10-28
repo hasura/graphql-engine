@@ -3,17 +3,18 @@ import math
 import json
 import time
 
-import ruamel.yaml as yaml
 import pytest
 import jwt
 from test_subscriptions import init_ws_conn
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
+from ruamel.yaml import YAML
 
 from validate import check_query, mk_claims_with_namespace_path
 from context import PytestConf
 
+yaml=YAML(typ='safe', pure=True)
 
 if not PytestConf.config.getoption('--hge-jwt-key-file'):
     pytest.skip('--hge-jwt-key-file is missing, skipping JWT tests', allow_module_level=True)
@@ -82,7 +83,7 @@ class TestJWTExpirySkew():
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         exp = datetime.now(timezone.utc) - timedelta(seconds = 30)
         self.claims['exp'] = round(exp.timestamp())
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'data': {
@@ -107,8 +108,8 @@ class TestJWTExpirySkew():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
-        curr_time = datetime.utcnow()
+            self.conf = yaml.load(c)
+        curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=10)
         self.claims = {
             'sub': '1234567890',
@@ -118,13 +119,11 @@ class TestJWTExpirySkew():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
 
 @pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
 class TestJWTBasic():
@@ -139,7 +138,7 @@ class TestJWTBasic():
         if 'claims_namespace_path' in hge_ctx.hge_jwt_conf_dict:
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['url'] = endpoint
@@ -157,7 +156,7 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -186,7 +185,7 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -216,7 +215,7 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -245,7 +244,7 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -275,10 +274,10 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
-        exp = datetime.utcnow() - timedelta(minutes=1)
+        exp = datetime.now() - timedelta(minutes=1)
         self.claims['exp'] = round(exp.timestamp())
 
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -309,7 +308,10 @@ class TestJWTBasic():
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         wrong_key = gen_rsa_key()
-        token = jwt.encode(self.claims, wrong_key, algorithm='HS256').decode('utf-8')
+        other_algo = 'HS256'
+        if hge_ctx.hge_jwt_algo == 'HS256':
+            other_algo = 'HS384'
+        token = jwt.encode(self.claims, wrong_key, algorithm=other_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['response'] = {
@@ -343,7 +345,7 @@ class TestJWTBasic():
             claims_namespace_path = hge_ctx.hge_jwt_conf_dict['claims_namespace_path']
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['aud'] = 'hasura-test-suite'
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['url'] = endpoint
@@ -365,7 +367,7 @@ class TestJWTBasic():
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['iss'] = 'rubbish-issuer'
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         self.conf['headers'].update(authz_header)
         self.conf['url'] = endpoint
@@ -375,8 +377,8 @@ class TestJWTBasic():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
-        curr_time = datetime.utcnow()
+            self.conf = yaml.load(c)
+        curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=10)
         self.claims = {
             'sub': '1234567890',
@@ -386,13 +388,11 @@ class TestJWTBasic():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
 
 
 def gen_rsa_key():
@@ -410,8 +410,8 @@ def gen_rsa_key():
 
 class TestSubscriptionJwtExpiry(object):
 
-    def test_jwt_expiry(self, hge_ctx, ws_client):
-        curr_time = datetime.utcnow()
+    def test_jwt_expiry(self, hge_ctx, hge_key, ws_client):
+        curr_time = datetime.now()
         self.claims = {
             'sub': '1234567890',
             'name': 'John Doe',
@@ -429,11 +429,11 @@ class TestSubscriptionJwtExpiry(object):
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         exp = curr_time + timedelta(seconds=4)
         self.claims['exp'] = round(exp.timestamp())
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         authz_header = mk_authz_header(hge_ctx.hge_jwt_conf, token)
         payload = dict()
         payload['headers'] = authz_header
-        init_ws_conn(hge_ctx, ws_client, payload)
+        init_ws_conn(hge_key, ws_client, payload)
         time.sleep(6)
         assert ws_client.remote_closed == True, ws_client.remote_closed
 
@@ -458,7 +458,7 @@ class TestJwtAudienceCheck():
 
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['aud'] = audience
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
@@ -479,7 +479,7 @@ class TestJwtAudienceCheck():
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['aud'] = 'rubbish_audience'
 
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
@@ -501,8 +501,8 @@ class TestJwtAudienceCheck():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
-        curr_time = datetime.utcnow()
+            self.conf = yaml.load(c)
+        curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {
             'sub': '1234567890',
@@ -512,13 +512,11 @@ class TestJwtAudienceCheck():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
 
 @pytest.mark.parametrize('endpoint', ['/v1/graphql', '/v1alpha1/graphql'])
 class TestJwtIssuerCheck():
@@ -540,7 +538,7 @@ class TestJwtIssuerCheck():
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['iss'] = issuer
 
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         check_query(hge_ctx, self.conf, add_auth=False,claims_namespace_path=claims_namespace_path)
 
@@ -561,7 +559,7 @@ class TestJwtIssuerCheck():
         self.claims = mk_claims_with_namespace_path(self.claims,hasura_claims,claims_namespace_path)
         self.claims['iss'] = 'rubbish_issuer'
 
-        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm='RS512').decode('utf-8')
+        token = jwt.encode(self.claims, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
         self.conf['headers']['Authorization'] = 'Bearer ' + token
         self.conf['response'] = {
             'errors': [{
@@ -583,8 +581,8 @@ class TestJwtIssuerCheck():
     def transact(self, setup):
         self.dir = 'queries/graphql_query/permissions'
         with open(self.dir + '/user_select_query_unpublished_articles.yaml') as c:
-            self.conf = yaml.safe_load(c)
-        curr_time = datetime.utcnow()
+            self.conf = yaml.load(c)
+        curr_time = datetime.now()
         exp_time = curr_time + timedelta(hours=1)
         self.claims = {
             'sub': '1234567890',
@@ -594,10 +592,8 @@ class TestJwtIssuerCheck():
         }
 
     @pytest.fixture(scope='class')
-    def setup(self, request, hge_ctx):
+    def setup(self, postgis, hge_ctx):
         self.dir = 'queries/graphql_query/permissions'
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/setup.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
         yield
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')

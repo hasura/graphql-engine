@@ -1,0 +1,16 @@
+type: run_sql
+args:
+  sql: |
+      insert into editors (first_name, last_name, phone, age) values
+      ('Michael', 'Kahn', '123231321', 86),
+      ('Alan', 'Bell', '432434352', 40);
+
+      insert into authors (first_name, last_name, phone, age, followers, editor_id) values
+      ('J.K', 'Rowling', '4384251032', 55, 1000000, 1),
+      ('Paulo', 'Coelho', '3423432012', 73, 321321, 1),
+      ('Agatha', 'Christie', '998980211', 86, 432432, 2);
+
+      insert into articles ( title, content, is_published, author_id, editor_id ) values
+      ('Article Title 1', 'Article Content 1', true, 1, 1),
+      ('Article Title 2', 'Article Content 2', false, 2, 1),
+      ('Article Title 3', 'Article Content 3', true, 3, 2);

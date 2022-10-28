@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 
-import ruamel.yaml as yaml
-from ruamel.yaml.compat import ordereddict, StringIO
-from ruamel.yaml.comments import CommentedMap
-import json
+import base64
 import copy
 import graphql
-import os
-import base64
+import json
 import jsondiff
 import jwt
+import os
+import pytest
 import queue
 import random
+import ruamel.yaml as yaml
+from ruamel.yaml.comments import CommentedMap
+from ruamel.yaml.compat import ordereddict, StringIO
+import textwrap
 import warnings
-import pytest
 
-from context import GQLWsClient, PytestConf
+from context import HGECtx, PytestConf
+from fixtures.tls import TLSTrust
 
 def check_keys(keys, obj):
     for k in keys:
@@ -44,13 +46,52 @@ def validate_event_headers(ev_headers, headers):
         v = ev_headers.get(key)
         assert v == value, (key, v)
 
+def validate_removed_event_headers (ev_headers, headers):
+    for key in headers:
+        v = ev_headers.get(key)
+        assert (not v), (key, v)
 
 def validate_event_webhook(ev_webhook_path, webhook_path):
     assert ev_webhook_path == webhook_path
 
+def validate_session_variables(hge_ctx, ev, session_variables):
+    # TODO: Naveen: MSSQL ET does not yet contain session variables in it's
+    # payload body. Hence ignoring that for now. Remove this guard when payload
+    # has it
+    if (hge_ctx.backend == "postgres"):
+        assert ev['session_variables'] == session_variables, ev
+    elif (hge_ctx.backend == "mssql"):
+        with pytest.raises(KeyError):
+            assert ev['session_variables'] == session_variables, ev
+
+def validate_event(hge_ctx,
+                   trig_name,
+                   table,
+                   operation,
+                   ev_full,
+                   exp_ev_data,
+                   headers = {},
+                   webhook_path = '/',
+                   session_variables = {'x-hasura-role': 'admin'},
+                   retry = 0,
+):
+    ev = ev_full['body']['event']
+    validate_event_webhook(ev_full['path'], webhook_path)
+    validate_event_headers(ev_full['headers'], headers)
+    validate_event_payload(ev_full['body'], trig_name, table)
+    assert ev['op'] == operation, ev
+    validate_session_variables(hge_ctx, ev, session_variables)
+    assert ev['data'] == exp_ev_data, ev
+    assert ev_full['body']['delivery_info']['current_retry'] == retry
+
 # Make some assertions on a single event recorded by webhook. Waits up to 3
 # seconds by default for an event to appear
-def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
+def check_event(hge_ctx,
+                evts_webhook,
+                trig_name,
+                table,
+                operation,
+                exp_ev_data,
                 headers = {},
                 webhook_path = '/',
                 session_variables = {'x-hasura-role': 'admin'},
@@ -58,14 +99,63 @@ def check_event(hge_ctx, evts_webhook, trig_name, table, operation, exp_ev_data,
                 get_timeout = 3
 ):
     ev_full = evts_webhook.get_event(get_timeout)
+    validate_event(hge_ctx, trig_name, table, operation, ev_full, exp_ev_data, headers, webhook_path, session_variables, retry)
+
+# Compares the list of expected event data with the one received from webhook. Waits
+# up to 3 seconds by default for an event to appear.
+# This is useful when the list of events that are generated have no order, so you
+# cannot use 'check_event' to check each event one after another.
+def check_events(hge_ctx,
+                evts_webhook,
+                trig_name,
+                table,
+                operation,
+                num_of_events,
+                exp_ev_datas,
+                headers = {},
+                webhook_path = '/',
+                session_variables = {'x-hasura-role': 'admin'},
+                retry = 0,
+                get_timeout = 3
+):
+    events_payloads_webhook = []
+
+    # Get all the expected number of events
+    for i in range(num_of_events):
+        ev_full = evts_webhook.get_event(get_timeout)
+        ev_payload_data = ev_full['body']['event']['data']
+        events_payloads_webhook.append((ev_payload_data, ev_full))
+
+    # If there are still some events present in queue after we get the expected number
+    # of events, then it means some stray events got generated.
+    if (not evts_webhook.is_queue_empty()):
+        assert False, "expected number of event payload not equal to the actual number of event payload generated"
+
+    # Check if the payload we get from event webhook is present in the expected datas
+    # If no such data is present, then error else validate the data.
+    for (ev_payload_data, ev_full) in events_payloads_webhook:
+        if ev_payload_data in exp_ev_datas:
+            # Since ev_payload_data is present in exp_ev_datas, is means that it is
+            # the exp_ev_data for that particular event payload (ev_full)
+            exp_ev_data = ev_payload_data
+            validate_event(hge_ctx, trig_name, table, operation, ev_full, exp_ev_data, headers, webhook_path, session_variables, retry)
+        else:
+            assert False, ("Received event data: \n" + json.dumps(ev_payload_data) + "\n not present in expected event data from webhook")
+
+def check_event_transformed(hge_ctx,
+                            evts_webhook,
+                            exp_payload,
+                            headers = {},
+                            webhook_path = '/',
+                            session_variables = {'x-hasura-role': 'admin'},
+                            retry = 0,
+                            get_timeout = 3,
+                            removedHeaders = []):
+    ev_full = evts_webhook.get_event(get_timeout)
     validate_event_webhook(ev_full['path'], webhook_path)
     validate_event_headers(ev_full['headers'], headers)
-    validate_event_payload(ev_full['body'], trig_name, table)
-    ev = ev_full['body']['event']
-    assert ev['op'] == operation, ev
-    assert ev['session_variables'] == session_variables, ev
-    assert ev['data'] == exp_ev_data, ev
-    assert ev_full['body']['delivery_info']['current_retry'] == retry
+    validate_removed_event_headers(ev_full['headers'], removedHeaders)
+    assert ev_full['body'] == exp_payload
 
 
 def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
@@ -79,7 +169,8 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
 
     headers = {}
     if 'headers' in conf:
-        headers = conf['headers']
+        # Convert header values to strings, as the YAML parser might give us an internal class.
+        headers = {name: str(value) for name, value in conf['headers'].items()}
 
     # Test without admin secret
     code, resp, resp_hdrs = hge_ctx.anyq(conf['url'], conf['query'], headers)
@@ -94,7 +185,7 @@ def test_forbidden_when_admin_secret_reqd(hge_ctx, conf):
     })
 
     # Test with random admin secret
-    headers['X-Hasura-Admin-Secret'] = base64.b64encode(os.urandom(30))
+    headers['X-Hasura-Admin-Secret'] = base64.b64encode(os.urandom(30)).decode()
     code, resp, resp_hdrs = hge_ctx.anyq(conf['url'], conf['query'], headers)
     #assert code in [401,404], "\n" + yaml.dump({
     assert code in status, "\n" + yaml.dump({
@@ -147,11 +238,11 @@ def mk_claims_with_namespace_path(claims,hasura_claims,namespace_path):
 
 # Returns the response received and a bool indicating whether the test passed
 # or not (this will always be True unless we are `--accepting`)
-def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace_path=None):
-    hge_ctx.tests_passed = True
+def check_query(hge_ctx: HGECtx, conf, transport='http', add_auth=True, claims_namespace_path=None, gqlws=False):
     headers = {}
     if 'headers' in conf:
-        headers = conf['headers']
+        # Convert header values to strings, as the YAML parser might give us an internal class.
+        headers = {name: str(value) for name, value in conf['headers'].items()}
 
     # No headers in conf => Admin role
     # Set the X-Hasura-Role header randomly
@@ -161,7 +252,7 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
         headers['X-Hasura-Role'] = 'admin'
 
     if add_auth:
-        #Use the hasura role specified in the test case, and create a JWT token
+        # Use the hasura role specified in the test case, and create a JWT token
         if hge_ctx.hge_jwt_key is not None and len(headers) > 0 and 'X-Hasura-Role' in headers:
             hClaims = dict()
             hClaims['X-Hasura-Allowed-Roles'] = [headers['X-Hasura-Role']]
@@ -173,30 +264,25 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
                 "sub": "foo",
                 "name": "bar",
             }
-            claim = mk_claims_with_namespace_path(claim,hClaims,claims_namespace_path)
-            headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm='RS512').decode(
-                'UTF-8')
+            claim = mk_claims_with_namespace_path(claim, hClaims, claims_namespace_path)
+            headers['Authorization'] = 'Bearer ' + jwt.encode(claim, hge_ctx.hge_jwt_key, algorithm=hge_ctx.hge_jwt_algo)
 
-        #Use the hasura role specified in the test case, and create an authorization token which will be verified by webhook
-        if hge_ctx.hge_webhook is not None and len(headers) > 0:
-            if not hge_ctx.webhook_insecure:
-            #Check whether the output is also forbidden when webhook returns forbidden
+        # Use the hasura role specified in the test case, and create an authorization token which will be verified by webhook
+        if hge_ctx.webhook and len(headers) > 0:
+            if hge_ctx.webhook.tls_trust != TLSTrust.INSECURE:
+                # Check whether the output is also forbidden when webhook returns forbidden
                 test_forbidden_webhook(hge_ctx, conf)
-            headers['X-Hasura-Auth-Mode'] = 'webhook'
-            headers_new = dict()
-            headers_new['Authorization'] = 'Bearer ' + base64.b64encode(json.dumps(headers).encode('utf-8')).decode(
-                'utf-8')
-            headers = headers_new
+            headers = authorize_for_webhook(headers)
 
-        #The case as admin with admin-secret and jwt/webhook
-        elif (
-                hge_ctx.hge_webhook is not None or hge_ctx.hge_jwt_key is not None) and hge_ctx.hge_key is not None and len(
-                headers) == 0:
+        # The case as admin with admin-secret and jwt/webhook
+        elif (hge_ctx.webhook or hge_ctx.hge_jwt_key is not None) \
+             and hge_ctx.hge_key is not None \
+             and len(headers) == 0:
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
-        #The case as admin with only admin-secret
-        elif hge_ctx.hge_key is not None and hge_ctx.hge_webhook is None and hge_ctx.hge_jwt_key is None:
-            #Test whether it is forbidden when incorrect/no admin_secret is specified
+        # The case as admin with only admin-secret
+        elif hge_ctx.hge_key is not None and not hge_ctx.webhook and hge_ctx.hge_jwt_key is None:
+            # Test whether it is forbidden when incorrect/no admin_secret is specified
             test_forbidden_when_admin_secret_reqd(hge_ctx, conf)
             headers['X-Hasura-Admin-Secret'] = hge_ctx.hge_key
 
@@ -211,13 +297,20 @@ def check_query(hge_ctx, conf, transport='http', add_auth=True, claims_namespace
                                       conf['status'], conf.get('response'), conf.get('resp_headers'), body=conf.get('body'), method=conf.get('method'))
     elif transport == 'websocket':
         print('running on websocket')
-        return validate_gql_ws_q(hge_ctx, conf, headers, retry=True)
+        return validate_gql_ws_q(hge_ctx, conf, headers, retry=True, gqlws=gqlws)
     elif transport == 'subscription':
         print('running via subscription')
-        return validate_gql_ws_q(hge_ctx, conf, headers, retry=True, via_subscription=True)
+        return validate_gql_ws_q(hge_ctx, conf, headers, retry=True, via_subscription=True, gqlws=gqlws)
 
 
-def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=False):
+def authorize_for_webhook(headers: dict[str, str]) -> dict[str, str]:
+    headers['X-Hasura-Auth-Mode'] = 'webhook'
+    headers_new = dict()
+    headers_new['Authorization'] = 'Bearer ' + base64.b64encode(json.dumps(headers).encode('utf-8')).decode('utf-8')
+    return headers_new
+
+
+def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=False, gqlws=False):
     assert 'response' in conf
     assert conf['url'].endswith('/graphql') or conf['url'].endswith('/relay')
     endpoint = conf['url']
@@ -236,11 +329,20 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
         ws_client = hge_ctx.ws_client_v1alpha1
     elif endpoint == '/v1beta1/relay':
         ws_client = hge_ctx.ws_client_relay
+    elif gqlws: # for `graphQL-ws` clients
+        ws_client = hge_ctx.ws_client_graphql_ws
     else:
         ws_client = hge_ctx.ws_client
     print(ws_client.ws_url)
     if not headers or len(headers) == 0:
         ws_client.init({})
+
+    if ws_client.remote_closed or ws_client.is_closing:
+        ws_client.create_conn()
+        if not headers or len(headers) == 0 or hge_ctx.hge_key is None:
+            ws_client.init()
+        else:
+            ws_client.init_as_admin()
 
     query_resp = ws_client.send_query(query, query_id='hge_test', headers=headers, timeout=15)
     resp = next(query_resp)
@@ -253,30 +355,50 @@ def validate_gql_ws_q(hge_ctx, conf, headers, retry=False, via_subscription=Fals
             ws_client.recreate_conn()
             return validate_gql_ws_q(hge_ctx, query, headers, exp_http_response, False)
         else:
-            assert resp['type'] in ['data', 'error'], resp
+            assert resp['type'] in ['data', 'error', 'next'], resp
 
     if 'errors' in exp_http_response or 'error' in exp_http_response:
-        assert resp['type'] in ['data', 'error'], resp
+        if gqlws:
+            resp['payload'] = {'errors':resp['payload']}
+        assert resp['type'] in ['data', 'error', 'next'], resp
     else:
-        assert resp['type'] == 'data', resp
+        assert resp['type'] == 'data' or resp['type'] == 'next', resp
     assert 'payload' in resp, resp
 
     if via_subscription:
-        ws_client.send({ 'id': 'hge_test', 'type': 'stop' })
-        with pytest.raises(queue.Empty):
-            ws_client.get_ws_event(0)
+        if not gqlws:
+            ws_client.send({ 'id': 'hge_test', 'type': 'stop' })
+        else:
+            ws_client.send({ 'id': 'hge_test', 'type': 'complete' })
+        if not gqlws: # NOTE: for graphql-ws, we have some elements that are left in the queue especially after a 'next' message.
+            with pytest.raises(queue.Empty):
+                ws_client.get_ws_event(0)
     else:
         resp_done = next(query_resp)
         assert resp_done['type'] == 'complete'
 
     return assert_graphql_resp_expected(resp['payload'], exp_http_response, query, skip_if_err_msg=hge_ctx.avoid_err_msg_checks)
 
+def assert_response_code(url, query, code, exp_code, resp, body=None):
+    assert code == exp_code, \
+        f"""
+When querying {url},
+Got response code {code}, expected {exp_code}.
+
+Request query:
+{textwrap.indent(json.dumps(query, indent=2), '  ')}
+
+Request body:
+{textwrap.indent(json.dumps(body, indent=2), '  ')}
+
+Response body:
+{textwrap.indent(json.dumps(resp, indent=2), '  ')}
+        """
 
 def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response, exp_resp_hdrs, body = None, method = None):
     code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers, body, method)
-    print(headers)
-    assert code == exp_code, (code, exp_code, resp)
-    print('http resp: ', resp)
+    assert_response_code(url, query, code, exp_code, resp, body)
+
     if exp_response:
         return assert_graphql_resp_expected(resp, exp_response, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, exp_resp_hdrs=exp_resp_hdrs)
     else:
@@ -284,9 +406,8 @@ def validate_http_anyq(hge_ctx, url, query, headers, exp_code, exp_response, exp
 
 def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_code, allowed_responses, body = None, method = None):
     code, resp, resp_hdrs = hge_ctx.anyq(url, query, headers, body, method)
-    print(headers)
-    assert code == exp_code, resp
-    print('http resp: ', resp)
+    assert_response_code(url, query, code, exp_code, resp, body)
+
     if isinstance(allowed_responses, list) and len(allowed_responses) > 0:
         resp_res = {}
         test_passed = False
@@ -294,7 +415,7 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
         for response in allowed_responses:
             dict_resp = json.loads(json.dumps(response))
             exp_resp = dict_resp['response']
-            exp_resp_hdrs = dict_resp.get('resp_headers') # TODO: Should this be optional?
+            exp_resp_hdrs = dict_resp.get('resp_headers')
             resp_result, pass_test = assert_graphql_resp_expected(resp, exp_resp, query, resp_hdrs, hge_ctx.avoid_err_msg_checks, True, exp_resp_hdrs)
             if pass_test == True:
                 test_passed = True
@@ -318,6 +439,7 @@ def validate_http_anyq_with_allowed_responses(hge_ctx, url, query, headers, exp_
 def assert_graphql_resp_expected(resp_orig, exp_response_orig, query, resp_hdrs={}, skip_if_err_msg=False, skip_assertion=False, exp_resp_hdrs={}):
     print('Reponse Headers: ', resp_hdrs)
     print(exp_resp_hdrs)
+
     # Prepare actual and expected responses so comparison takes into
     # consideration only the ordering that we care about:
     resp         = collapse_order_not_selset(resp_orig,         query)
@@ -402,39 +524,35 @@ def get_conf_f(f):
     with open(f, 'r+') as c:
         return yaml.YAML().load(c)
 
-def check_query_f(hge_ctx, f, transport='http', add_auth=True):
-    print("Test file: " + f)
+def check_query_f(hge_ctx, f, transport='http', add_auth=True, gqlws = False):
     hge_ctx.may_skip_test_teardown = False
-    print ("transport="+transport)
-    with open(f, 'r+') as c:
-        # For `--accept`:
-        should_write_back = False
+    should_write_back = False
 
-        # ruamel will preserve order so that we can test the JSON ordering
-        # property conforms to YAML spec.  It also lets us write back the yaml
-        # nicely when we `--accept.`
-        yml = yaml.YAML()
+    # ruamel will preserve order so that we can test the JSON ordering
+    # property conforms to YAML spec.  It also lets us write back the yaml
+    # nicely when we `--accept.`
+    yml = yaml.YAML()
+
+    with open(f, 'r+') as c:
+        # NOTE: preserve ordering with ruamel
         conf = yml.load(c)
+
         if isinstance(conf, list):
             for ix, sconf in enumerate(conf):
-                actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth)
+                actual_resp, matched = check_query(hge_ctx, sconf, transport, add_auth, None, gqlws)
                 if PytestConf.config.getoption("--accept") and not matched:
                     conf[ix]['response'] = actual_resp
                     should_write_back = True
         else:
             if conf['status'] != 200:
                 hge_ctx.may_skip_test_teardown = True
-            actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth)
+            actual_resp, matched = check_query(hge_ctx, conf, transport, add_auth, None, gqlws)
             # If using `--accept` write the file back out with the new expected
             # response set to the actual response we got:
             if PytestConf.config.getoption("--accept") and not matched:
                 conf['response'] = actual_resp
                 should_write_back = True
 
-        # TODO only write back when this test is not xfail. I'm stumped on how
-        # best to do this. Where the 'request' fixture comes into scope we can
-        # do : `request.node.get_closest_marker("xfail")` but don't want to
-        # require that everywhere...
         if should_write_back:
             warnings.warn(
                 "\nRecording formerly failing case as correct in: " + f +
@@ -465,7 +583,7 @@ def collapse_order_not_selset(result_inp, query):
             fname = field.name.value
 
             # If field has no subfields then all its values can be recursively stripped of ordering.
-            # Also if it's an array for some reason (like in 'returning') TODO make this better
+            # Also if it's an array for some reason (like in 'returning')
             if field.selection_set is None or not isinstance(result_node[fname], (dict, list)):
               result_node[fname] = collapse(result_node[fname])
             elif isinstance(result_node[fname], list):
@@ -476,16 +594,15 @@ def collapse_order_not_selset(result_inp, query):
 
       if 'data' in result:
           go(result['data'], selset0)
-      # errors is unordered I guess
+      # errors is unordered
       if 'errors' in result:
         result['errors'] = collapse(result['errors'])
-      # and finally remove ordering at just the topmost level:
+      # and finally remove ordering at just the topmost level
       return dict(result)
     else:
-      # this isn't a graphql query, collapse ordering, I guess:
+      # this isn't a graphql query, collapse ordering
       return collapse(result_inp)
 
-  # Bail out here for any number of reasons. TODO improve me
   except Exception as e:
     print("Bailing out and collapsing all ordering, due to: ", e)
     return collapse(result)

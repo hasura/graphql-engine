@@ -2,6 +2,11 @@ import React, { useState, useEffect, useMemo } from 'react';
 import Helmet from 'react-helmet';
 import { connect, ConnectedProps } from 'react-redux';
 import { Link, RouteComponentProps } from 'react-router';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+  useGetAnalyticsAttributes,
+} from '@/features/Analytics';
 import { push } from 'react-router-redux';
 
 import globals from '../../../../../Globals';
@@ -24,7 +29,7 @@ import { fetchCustomFunction } from '../customFunctionReducer';
 import tabInfo from '../Modify/tabInfo';
 import PermissionsEditor from './PermissionsEditor';
 
-import styles from '../Modify/ModifyCustomFunction.scss';
+import styles from '../Modify/ModifyCustomFunction.module.scss';
 import { PGFunction } from '../../../../../dataSources/services/postgresql/types';
 import { getFunctionSelector } from '../../../../../metadata/selector';
 
@@ -174,40 +179,51 @@ const Permissions: React.FC<PermissionsProps> = ({
     });
   }
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes(
+    'CustomFunctionPermissions',
+    { redactText: true }
+  );
+
   return (
-    <div className={`col-xs-8 ${styles.modifyWrapper}`}>
-      <Helmet title={`Permission Custom Function - ${functionName} | Hasura`} />
-      <CommonTabLayout
-        appPrefix={urlWithSource}
-        currentTab="permissions"
-        heading={functionName}
-        tabsInfo={tabInfo}
-        breadCrumbs={breadCrumbs}
-        baseUrl={functionBaseURL}
-        showLoader={false}
-        testPrefix="functions"
-      />
-      <br />
-      <p>
-        Permissions will be inherited from the SELECT permissions of the
-        referenced table (
-        <Link
-          to={permissionTableURL}
-          data-test="custom-function-permission-link"
-          onClick={onClickPerm}
-        >
-          <b>{setOffTable}</b>
-        </Link>
-        ) by default.
-      </p>
-      <PermissionServerFlagNote isEditable={isPermissionsEditable} />
-      <br />
-      <PermissionsEditor
-        currentFunctionName={currentFunction}
-        currentSchema={currentSchema}
-        isPermissionsEditable={isPermissionsEditable}
-      />
-    </div>
+    <Analytics name="CustomFunctionPermissions" {...REDACT_EVERYTHING}>
+      <div className={`col-xs-8 ${styles.modifyWrapper}`}>
+        <Helmet>
+          <title {...titleAnalyticsAttributes}>
+            {`Permission Custom Function - ${functionName} | Hasura`}
+          </title>
+        </Helmet>
+        <CommonTabLayout
+          appPrefix={urlWithSource}
+          currentTab="permissions"
+          heading={functionName}
+          tabsInfo={tabInfo}
+          breadCrumbs={breadCrumbs}
+          baseUrl={functionBaseURL}
+          showLoader={false}
+          testPrefix="functions"
+        />
+        <br />
+        <p>
+          Permissions will be inherited from the SELECT permissions of the
+          referenced table (
+          <Link
+            to={permissionTableURL}
+            data-test="custom-function-permission-link"
+            onClick={onClickPerm}
+          >
+            <b>{setOffTable}</b>
+          </Link>
+          ) by default.
+        </p>
+        <PermissionServerFlagNote isEditable={isPermissionsEditable} />
+        <br />
+        <PermissionsEditor
+          currentFunctionName={currentFunction}
+          currentSchema={currentSchema}
+          isPermissionsEditable={isPermissionsEditable}
+        />
+      </div>
+    </Analytics>
   );
 };
 

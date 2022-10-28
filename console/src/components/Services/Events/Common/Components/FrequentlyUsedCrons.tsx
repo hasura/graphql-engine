@@ -1,6 +1,6 @@
 import React from 'react';
+import { Button } from '@/new-components/Button';
 import Dropdown from '../../../../Common/Dropdown/Dropdown';
-import Button from '../../../../Common/Button/Button';
 
 const FREQ_USED_CRONS = [
   {
@@ -49,9 +49,11 @@ const FrequentlyUsedCrons: React.FC<Props> = ({ setCron }) => {
       key="frequently-used-crons"
       keyPrefix="frequently-used-crons"
     >
-      <Button color="white" size="xs">
-        Frequently used crons
-      </Button>
+      {({ onClick }) => (
+        <Button mode="default" size="sm" onClick={onClick}>
+          Frequently used crons
+        </Button>
+      )}
     </Dropdown>
   );
 };

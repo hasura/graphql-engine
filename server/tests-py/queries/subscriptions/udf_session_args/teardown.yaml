@@ -1,0 +1,8 @@
+type: bulk
+args:
+- type: run_sql
+  args:
+    cascade: true
+    sql: |
+      drop function me(json) cascade;
+      drop table profile cascade;

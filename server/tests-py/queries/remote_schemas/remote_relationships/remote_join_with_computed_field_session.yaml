@@ -1,0 +1,24 @@
+description: Fetch remote join involving a computed field with session argument
+url: /v1/graphql
+status: 200
+headers:
+  X-Hasura-Role: admin
+  x-hasura-offset: '10'
+query:
+  query: |
+    query {
+      students{
+        id
+        name
+        grade_session
+      }
+    }
+response:
+  data:
+    students:
+    - id: 1
+      name: alice
+      grade_session: A
+    - id: 2
+      name: bob
+      grade_session: B

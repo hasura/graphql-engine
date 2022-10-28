@@ -1,11 +1,14 @@
 - name: default
+  kind: postgres
   configuration:
     connection_info:
       database_url:
         from_env: SAMPLE_APPS_DATABASE_URL
+      isolation_level: read-committed
       pool_settings:
+        connection_lifetime: 600
         idle_timeout: 180
         max_connections: 50
         retries: 1
-  tables: []
-  functions: []
+      use_prepared_statements: false
+  tables: "!include default/tables/tables.yaml"

@@ -1,0 +1,16 @@
+- description: Delete mutation for a nested role
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: author_editor_publisher
+  query:
+    query: |
+      mutation {
+        delete_articles (where: {id: {_eq: 1}}) {
+          affected_rows
+        }
+      }
+  status: 200
+  response:
+    data:
+      delete_articles:
+        affected_rows: 1

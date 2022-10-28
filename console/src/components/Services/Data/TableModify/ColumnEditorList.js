@@ -20,7 +20,6 @@ import {
 
 import GqlCompatibilityWarning from '../../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
 
-import styles from './ModifyTable.scss';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { dataSource } from '../../../../dataSources';
 
@@ -62,7 +61,6 @@ const ColumnEditorList = ({
   return columns.map((col, i) => {
     const colName = col.column_name;
     const isArrayDataType = col.data_type === dataSource.columnDataTypes.ARRAY;
-
     // todo -- create getColumnProperties utility
     const getDisplayName = () => {
       if (isArrayDataType) {
@@ -111,7 +109,7 @@ const ColumnEditorList = ({
       return (
         <GqlCompatibilityWarning
           identifier={colName}
-          className={styles.add_mar_left_small}
+          className="ml-xs"
           ifWarningCanBeFixed
         />
       );
@@ -145,14 +143,18 @@ const ColumnEditorList = ({
 
       const keyPropertiesString = propertiesList.join(', ');
 
-      propertiesDisplay.push(<i key={'props'}>{keyPropertiesString}</i>);
-
-      propertiesDisplay.push(<br key={'br1'} />);
+      propertiesDisplay.push(
+        <span className="ml-xs font-normal" key={'props'}>
+          {keyPropertiesString}
+        </span>
+      );
 
       propertiesDisplay.push(
-        <span key={'comment'} className={styles.text_gray}>
-          {columnProperties.comment && `${columnProperties.comment}`}
-        </span>
+        <div>
+          <span key={'comment'} className="text-gray-600 text-sm">
+            {columnProperties.comment && `${columnProperties.comment}`}
+          </span>
+        </div>
       );
 
       return propertiesDisplay;
@@ -161,14 +163,12 @@ const ColumnEditorList = ({
     const collapsedLabel = () => {
       return (
         <div key={colName}>
-          <b>
-            {colName}
-            <i>
-              {columnProperties.customFieldName &&
-                ` → ${columnProperties.customFieldName}`}
-            </i>
-          </b>{' '}
-          {gqlCompatibilityWarning()} - {keyProperties()}
+          <span className="font-semibold">{colName}</span>
+          <span className="mr-xs">
+            {columnProperties.customFieldName &&
+              ` → ${columnProperties.customFieldName}`}
+          </span>
+          - {gqlCompatibilityWarning()} {keyProperties()}
         </div>
       );
     };
@@ -265,7 +265,7 @@ const ColumnEditorList = ({
           saveFunc={onSubmit}
           readOnlyMode={readOnlyMode}
           removeFunc={columnProperties.pkConstraint ? null : onDelete}
-          collapsedClass={styles.display_flex}
+          collapsedClass="flex items-center"
           expandedLabel={expandedLabel}
           collapsedLabel={collapsedLabel}
           expandCallback={editorExpandCallback}

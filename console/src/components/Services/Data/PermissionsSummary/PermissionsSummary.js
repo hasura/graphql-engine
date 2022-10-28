@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
+import { Button } from '@/new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
-import Button from '../../../Common/Button/Button';
 
-import styles from './PermissionsSummary.scss';
+import styles from './PermissionsSummary.module.scss';
 
 import { getTablePermissionsRoute } from '../../../Common/utils/routesUtils';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
@@ -37,6 +38,7 @@ import {
 import Header from './Header';
 import RolesHeader from './RolesHeader';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
+import { FaPencilAlt, FaPlus } from 'react-icons/fa';
 
 class PermissionsSummary extends Component {
   initState = {
@@ -147,10 +149,10 @@ class PermissionsSummary extends Component {
       );
     };
 
-    const getActionIcon = (faIconType, onClick = null) => {
+    const getActionIcon = (onClick = null) => {
       return (
-        <i
-          className={`fa ${faIconType} ${styles.actionIcon}`}
+        <FaPencilAlt
+          className={styles.actionIcon}
           aria-hidden="true"
           onClick={onClick}
         />
@@ -158,7 +160,7 @@ class PermissionsSummary extends Component {
     };
 
     const getEditIcon = () => {
-      return getActionIcon('fa-pencil');
+      return getActionIcon();
     };
 
     // ------------------------------------------------------------------------------
@@ -890,14 +892,12 @@ class PermissionsSummary extends Component {
               onChange={setNewRole}
             />
             <Button
-              color="white"
-              size="xs"
-              onClick={addNewRole}
               title="Create new role"
+              size="sm"
+              icon={<FaPlus />}
+              onClick={addNewRole}
               className={styles.add_mar_left_mid}
-            >
-              <i className="fa fa-plus" aria-hidden="true" />
-            </Button>
+            />
           </div>
         );
       };
@@ -989,12 +989,13 @@ class PermissionsSummary extends Component {
           className={`${styles.clear_fix} ${styles.padd_left} ${styles.fit_content}`}
         >
           <Helmet title="Permissions Summary | Hasura" />
-          <div className={styles.add_mar_bottom}>
-            <h2 className={styles.heading_text}>
-              Permissions summary - {currentSchema}
-            </h2>
-          </div>
-
+          <Analytics name="PermissionsSummary" {...REDACT_EVERYTHING}>
+            <div className={styles.add_mar_bottom}>
+              <h2 className={styles.heading_text}>
+                Permissions summary - {currentSchema}
+              </h2>
+            </div>
+          </Analytics>
           {getTable()}
 
           {getCopyModal()}

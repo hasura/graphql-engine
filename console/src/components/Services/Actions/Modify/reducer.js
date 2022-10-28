@@ -6,6 +6,12 @@ export const setModifyState = state => ({
   state,
 });
 
+const SET_ACTION_TIMEOUT = 'Actions/Add/SET_ACTION_TIMEOUT';
+export const setActionTimeout = timeout => ({
+  type: SET_ACTION_TIMEOUT,
+  timeout,
+});
+
 const SET_ACTION_HANDLER = 'Actions/Modify/SET_ACTION_HANDLER';
 export const setActionHandler = handler => ({
   type: SET_ACTION_HANDLER,
@@ -58,6 +64,11 @@ const reducer = (state = defaultState, action) => {
     case SET_MODIFY_STATE:
       return {
         ...action.state,
+      };
+    case SET_ACTION_TIMEOUT:
+      return {
+        ...state,
+        timeout: action.timeout,
       };
     case SET_ACTION_HANDLER:
       return {

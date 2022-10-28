@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/internal/metadatautil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 
 	"github.com/pkg/errors"
 
 	"github.com/gin-contrib/cors"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/migrate/api"
-	_ "github.com/hasura/graphql-engine/cli/migrate/database/hasuradb"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/api"
+	_ "github.com/hasura/graphql-engine/cli/v2/migrate/database/hasuradb"
 	"github.com/sirupsen/logrus"
 )
 

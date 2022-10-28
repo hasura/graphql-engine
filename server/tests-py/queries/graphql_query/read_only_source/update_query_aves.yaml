@@ -1,0 +1,23 @@
+description: GraphQL mutation which fails on a read-only source
+url: /v1/graphql
+status: 200
+response:
+  errors:
+  - extensions:
+      path: $
+      code: unexpected
+    message: database query error
+query:
+  operationName: updateBirds
+  query: |
+    mutation updateBirds {
+      update_aves(
+        _set:{name: "Long-tailed Shrike"}
+        where: {id: {_eq: 1}}
+      ) {
+        returning {
+          id
+          name
+        }
+      }
+    }

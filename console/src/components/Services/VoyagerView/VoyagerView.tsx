@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import { Connect } from 'react-redux';
 import { GraphQLVoyager } from 'graphql-voyager';
+import 'graphql-voyager/dist/voyager.css';
+
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import Endpoints from '../../../Endpoints';
-import '../../../../node_modules/graphql-voyager/dist/voyager.css';
 import './voyagerView.css';
 import requestAction from '../../../utils/requestAction';
 import { Dispatch, ReduxState } from '../../../types';
@@ -36,12 +38,16 @@ class VoyagerView extends Component<Props, ReduxState> {
       body: JSON.stringify({ query }),
     });
 
-  render() {
+  override render() {
     return (
-      <GraphQLVoyager
-        introspection={this.introspectionProvider}
-        workerURI="https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.27/dist/voyager.worker.min.js"
-      />
+      <Analytics name="VoyagerView" {...REDACT_EVERYTHING}>
+        <div>
+          <GraphQLVoyager
+            introspection={this.introspectionProvider}
+            workerURI="https://cdn.jsdelivr.net/npm/graphql-voyager@1.0.0-rc.27/dist/voyager.worker.min.js"
+          />
+        </div>
+      </Analytics>
     );
   }
 }

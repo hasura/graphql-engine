@@ -1,0 +1,11 @@
+version: 2
+tables:
+- table:
+    schema: public
+    name: t1
+- table:
+    schema: public
+    name: t2
+- table:
+    schema: public
+    name: t3

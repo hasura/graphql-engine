@@ -1,17 +1,17 @@
 package restendpoints
 
 import (
+	"bytes"
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+
 	"github.com/sirupsen/logrus"
 
-	"github.com/hasura/graphql-engine/cli"
-	"gopkg.in/yaml.v2"
-)
-
-const (
-	MetadataFilename string = "rest_endpoints.yaml"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"gopkg.in/yaml.v3"
 )
 
 type RestEndpointsConfig struct {
@@ -27,61 +27,82 @@ func New(ec *cli.ExecutionContext, baseDir string) *RestEndpointsConfig {
 	}
 }
 
-func (t *RestEndpointsConfig) Validate() error {
+func (re *RestEndpointsConfig) Validate() error {
 	return nil
 }
 
-func (t *RestEndpointsConfig) CreateFiles() error {
+func (re *RestEndpointsConfig) CreateFiles() error {
+	var op errors.Op = "restendpoints.RestEndpointsConfig.CreateFiles"
 	v := make([]interface{}, 0)
-	data, err := yaml.Marshal(v)
+	buf := new(bytes.Buffer)
+	err := metadataobject.GetEncoder(buf).Encode(v)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
-	err = ioutil.WriteFile(filepath.Join(t.MetadataDir, MetadataFilename), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(re.MetadataDir, re.Filename()), buf.Bytes(), 0644)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }
 
-func (t *RestEndpointsConfig) Build(metadata *yaml.MapSlice) error {
-	data, err := ioutil.ReadFile(filepath.Join(t.MetadataDir, MetadataFilename))
+func (re *RestEndpointsConfig) Build() (map[string]interface{}, error) {
+	var op errors.Op = "restendpoints.RestEndpointsConfig.Build"
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(re.MetadataDir, re.Filename()))
 	if err != nil {
-		return err
+		return nil, errors.E(op, re.error(err))
 	}
-	item := yaml.MapItem{
-		Key:   "rest_endpoints",
-		Value: []yaml.MapSlice{},
-	}
-	err = yaml.Unmarshal(data, &item.Value)
+	var obj []yaml.Node
+	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return err
+		return nil, errors.E(op, errors.KindBadInput, re.error(err))
 	}
-	*metadata = append(*metadata, item)
+	if len(obj) == 0 {
+		return nil, nil
+	}
+	return map[string]interface{}{re.Key(): obj}, nil
+}
+
+func (re *RestEndpointsConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
+	var op errors.Op = "restendpoints.RestEndpointsConfig.Export"
+	b, err := metadataobject.DefaultExport(re, metadata, re.error, metadataobject.DefaultObjectTypeSequence)
+	if err != nil {
+		return nil, errors.E(op, err)
+	}
+	return b, nil
+}
+
+func (re *RestEndpointsConfig) Key() string {
+	return metadataobject.RestEndpointsKey
+}
+
+func (re *RestEndpointsConfig) Filename() string {
+	return "rest_endpoints.yaml"
+}
+
+func (re *RestEndpointsConfig) GetFiles() ([]string, error) {
+	var op errors.Op = "restendpoints.RestEndpointsConfig.GetFiles"
+	rootFile := filepath.Join(re.BaseDirectory(), re.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, errors.E(op, re.error(err))
+	}
+	return files, nil
+}
+
+func (re *RestEndpointsConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
+	var op errors.Op = "restendpoints.RestEndpointsConfig.WriteDiff"
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: re, WriteDiffOpts: opts})
+	if err != nil {
+		return errors.E(op, re.error(err))
+	}
 	return nil
 }
 
-func (t *RestEndpointsConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
-	var restEndpoints interface{}
-	for _, item := range metadata {
-		k, ok := item.Key.(string)
-		if !ok || k != "rest_endpoints" {
-			continue
-		}
-		restEndpoints = item.Value
-	}
-	if restEndpoints == nil {
-		restEndpoints = make([]interface{}, 0)
-	}
-	data, err := yaml.Marshal(restEndpoints)
-	if err != nil {
-		return nil, err
-	}
-	return map[string][]byte{
-		filepath.Join(t.MetadataDir, MetadataFilename): data,
-	}, nil
+func (re *RestEndpointsConfig) BaseDirectory() string {
+	return re.MetadataDir
 }
 
-func (t *RestEndpointsConfig) Name() string {
-	return "rest_endpoints"
+func (re *RestEndpointsConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(re, err, additionalContext...)
 }

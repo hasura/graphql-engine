@@ -1,0 +1,45 @@
+description: Updated numerics data using _inc operator
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      update_numerics(
+        where: {id: {_eq: 1}}
+        _inc: {
+          numeric_col: -1.1
+          decimal_col: -1.1
+          int_col: -1
+          smallint_col: -1
+          float_col: -1.1
+          real_col: -1.1
+          bigint_col: -1
+          tinyint_col: -1
+        }
+      ){
+        affected_rows
+        returning{
+          numeric_col
+          decimal_col
+          int_col
+          smallint_col
+          float_col
+          real_col
+          bigint_col
+          tinyint_col
+        }
+      }
+    }
+response:
+  data:
+    update_numerics:
+      affected_rows: 1
+      returning:
+      - numeric_col: 0
+        decimal_col: 122
+        int_col: 2147483646
+        smallint_col: 3276
+        float_col: -306.87
+        real_col: -37.919998
+        bigint_col: 9223372036854775806
+        tinyint_col: 253

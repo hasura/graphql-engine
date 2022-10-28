@@ -5,15 +5,16 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, testutil.HasuraVersion)
+	port, teardown := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardown()
 	type fields struct {
 		Client *httpc.Client
@@ -23,11 +24,12 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
 		args hasura.V2ReplaceMetadataArgs
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    hasura.V2ReplaceMetadataResponse
-		wantErr bool
+		name      string
+		fields    fields
+		args      args
+		want      hasura.V2ReplaceMetadataResponse
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
 			"can replace with inconsistent metadata",
@@ -86,8 +88,9 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
                 "schema": "default",
                 "name": "test"
             },
-            "reason": "no such table/view exists in source: \"default.test\"",
-            "type": "table"
+	        "name":"table default.test in source default",
+	        "reason":"Inconsistent object: no such table/view exists in source: \"default.test\"",
+	        "type":"table"
         }
     ]
 }`
@@ -96,6 +99,7 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
 				return v2ReplaceMetadataResponse
 			}(),
 			false,
+			require.NoError,
 		},
 
 		{
@@ -149,6 +153,7 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
 				return v2ReplaceMetadataResponse
 			}(),
 			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -158,13 +163,10 @@ func TestClientCommonMetadataOps_V2ReplaceMetadata(t *testing.T) {
 				path:   tt.fields.path,
 			}
 			got, err := c.V2ReplaceMetadata(tt.args.args)
+			tt.assertErr(t, err)
 			if !tt.wantErr {
-				assert.NoError(t, err)
 				assert.Equal(t, tt.want, *got)
-			} else {
-				assert.Error(t, err)
 			}
-
 		})
 	}
 }

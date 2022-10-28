@@ -1,0 +1,125 @@
+---
+sidebar_position: 8
+---
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+# GraphiQL IDE
+
+We use graphiql editor wherever applicable for example showcase throughout docs.
+
+A `GraphiQLIDE` component is already created with the required custom logic. So, use `GraphiQLIDE` just like any other
+React component.
+
+- Use a tab-width of 2 for nesting the requests and responses for optimal use of the space and maintaining consistency.
+- Nest query arguments for logical readability. Unfortunately, GraphiQL prettify does not do a good job of doing this by
+default.
+- Ensure that the order of fields in the responses is the same as in the requests for better readability.
+
+Use it as follows:
+
+```jsx
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+<GraphiQLIDE
+  query={`query {
+  author_by_pk(id: 1) {
+    id
+    name
+  }
+}`}
+  response={`{
+  "data": {
+    "author_by_pk": {
+      "id": 1,
+      "name": "Justin"
+    }
+  }
+}`}
+/>;
+```
+
+```jsx
+
+// highlight-start
+import GraphiQLIDE from '@site/src/components/GraphiQLIDE';
+
+<GraphiQLIDE
+  query={`query get_authors_in_pincode ($jsonFilter: jsonb){
+// highlight-end
+    authors(
+      where: {
+        address: {_contains: $jsonFilter }
+      }
+    ) {
+      id
+      name
+      address
+    }
+  }`}
+  // highlight-next-line
+  variables={`{
+    "jsonFilter": {
+      "pincode": 560095
+    }
+  }`}
+  // highlight-next-line
+  response={`{
+    "data": {
+      "authors": [
+        {
+          "id": 1,
+          "name": "Ash",
+          "address": {
+            "street_address": "161, 19th Main Road, Koramangala 6th Block",
+            "city": "Bengaluru",
+            "state": "Karnataka",
+            "pincode": 560095,
+            "phone": "9090909090",
+          }
+        }
+      ]
+    }
+  }`}
+/>
+```
+
+## Result in UI
+
+Below is how it should look in UI.
+<GraphiQLIDE
+  query={`query get_authors_in_pincode ($jsonFilter: jsonb){
+    authors(
+      where: {
+        address: {_contains: $jsonFilter }
+      }
+    ) {
+      id
+      name
+      address
+    }
+  }`}
+  variables={`{
+    "jsonFilter": {
+      "pincode": 560095
+    }
+  }`}
+  response={`{
+    "data": {
+      "authors": [
+        {
+          "id": 1,
+          "name": "Ash",
+          "address": {
+            "street_address": "161, 19th Main Road, Koramangala 6th Block",
+            "city": "Bengaluru",
+            "state": "Karnataka",
+            "pincode": 560095,
+            "phone": "9090909090",
+          }
+        }
+      ]
+    }
+  }`}
+/>

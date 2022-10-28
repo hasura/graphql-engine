@@ -4,7 +4,6 @@ import TableColumn from './TableColumn';
 
 const TableColumns = props => {
   const { columns } = props;
-  const styles = require('../../../Common/TableCommon/Table.scss');
   const cols = columns.map((column, i) => {
     return (
       <TableColumn
@@ -16,12 +15,7 @@ const TableColumns = props => {
       />
     );
   });
-  return [
-    <h4 key="table_columns_header" className={styles.subheading_text}>
-      Columns
-    </h4>,
-    <div key="table_colums_value">{cols}</div>,
-  ];
+  return [<div key="table_colums_value">{cols}</div>];
 };
 
 TableColumns.propTypes = {

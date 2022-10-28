@@ -1,156 +1,217 @@
+{-# LANGUAGE UndecidableInstances #-}
+
 module Main (main) where
 
-import           Hasura.Prelude
-
-import           Control.Concurrent.MVar
-import           Control.Natural                    ((:~>) (..))
-import           Data.Time.Clock                    (getCurrentTime)
-import           Data.URL.Template
-import           Options.Applicative
-import           System.Environment                 (getEnvironment)
-import           System.Exit                        (exitFailure)
-import           Test.Hspec
-
-import qualified Data.Aeson                         as A
-import qualified Data.ByteString.Lazy.Char8         as BL
-import qualified Data.Environment                   as Env
-import qualified Database.PG.Query                  as Q
-import qualified Network.HTTP.Client                as HTTP
-import qualified Network.HTTP.Client.TLS            as HTTP
-import qualified Test.Hspec.Runner                  as Hspec
-
-import           Hasura.RQL.DDL.Schema.Cache
-import           Hasura.RQL.DDL.Schema.Cache.Common
-import           Hasura.RQL.DDL.Schema.Source
-import           Hasura.RQL.Types
-import           Hasura.Server.Init
-import           Hasura.Server.Migrate
-import           Hasura.Server.Types
-import           Hasura.Server.Version
-
-import qualified Data.NonNegativeIntSpec            as NonNegetiveIntSpec
-import qualified Data.Parser.CacheControlSpec       as CacheControlParser
-import qualified Data.Parser.JSONPathSpec           as JsonPath
-import qualified Data.Parser.URLTemplate            as URLTemplate
-import qualified Data.TimeSpec                      as TimeSpec
-import qualified Hasura.IncrementalSpec             as IncrementalSpec
--- import qualified Hasura.RQL.MetadataSpec      as MetadataSpec
-import qualified Hasura.CacheBoundedSpec            as CacheBoundedSpec
-import qualified Hasura.EventingSpec                as EventingSpec
-import qualified Hasura.RQL.Types.EndpointSpec      as EndpointSpec
-import qualified Hasura.SQL.WKTSpec                 as WKTSpec
-import qualified Hasura.Server.AuthSpec             as AuthSpec
-import qualified Hasura.Server.MigrateSpec          as MigrateSpec
-import qualified Hasura.Server.TelemetrySpec        as TelemetrySpec
+import Control.Concurrent.MVar
+import Control.Natural ((:~>) (..))
+import Data.Aeson qualified as A
+import Data.ByteString.Lazy.Char8 qualified as BL
+import Data.ByteString.Lazy.UTF8 qualified as LBS
+import Data.Environment qualified as Env
+import Data.Time.Clock (getCurrentTime)
+import Data.URL.Template
+import Database.MSSQL.TransactionSuite qualified as TransactionSuite
+import Database.PG.Query qualified as PG
+import Discover qualified
+import Hasura.App
+  ( PGMetadataStorageAppT (..),
+    mkMSSQLSourceResolver,
+    mkPgSourceResolver,
+  )
+import Hasura.Backends.Postgres.Connection.MonadTx
+import Hasura.Backends.Postgres.Connection.Settings
+import Hasura.Backends.Postgres.Execute.Types
+import Hasura.EventTriggerCleanupSuite qualified as EventTriggerCleanupSuite
+import Hasura.GraphQL.Schema.Options qualified as Options
+import Hasura.Logging
+import Hasura.Metadata.Class
+import Hasura.Prelude
+import Hasura.RQL.DDL.Schema.Cache
+import Hasura.RQL.DDL.Schema.Cache.Common
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Metadata (emptyMetadataDefaults)
+import Hasura.RQL.Types.ResizePool
+import Hasura.RQL.Types.SchemaCache.Build
+import Hasura.Server.Init
+import Hasura.Server.Migrate
+import Hasura.Server.MigrateSuite qualified as MigrateSuite
+import Hasura.Server.Types
+import Hasura.StreamingSubscriptionSuite qualified as StreamingSubscriptionSuite
+import Network.HTTP.Client qualified as HTTP
+import Network.HTTP.Client.TLS qualified as HTTP
+import Options.Applicative
+import System.Environment (getEnvironment)
+import System.Exit (exitFailure)
+import Test.Hspec
+import Test.Hspec.Runner qualified as Hspec
 
 data TestSuites
-  = AllSuites !(Maybe URLTemplate)
-  -- ^ Run all test suites. It probably doesn't make sense to be able to specify additional
-  -- hspec args here.
-  | SingleSuite ![String] !TestSuite
-  -- ^ Args to pass through to hspec (as if from 'getArgs'), and the specific suite to run.
+  = -- | Run all test suites. It probably doesn't make sense to be able to specify additional
+    -- hspec args here.
+    AllSuites
+  | -- | Args to pass through to hspec (as if from 'getArgs'), and the specific suite to run.
+    SingleSuite ![String] !TestSuite
 
 data TestSuite
   = UnitSuite
-  | PostgresSuite !(Maybe URLTemplate)
+  | PostgresSuite
+  | MSSQLSuite
 
 main :: IO ()
-main = withVersion $$(getVersionFromEnvironment) $ parseArgs >>= \case
-  AllSuites pgConnOptions -> do
-    postgresSpecs <- buildPostgresSpecs pgConnOptions
-    runHspec [] (unitSpecs *> postgresSpecs)
-  SingleSuite hspecArgs suite -> runHspec hspecArgs =<< case suite of
-    UnitSuite                   -> pure unitSpecs
-    PostgresSuite pgConnOptions -> buildPostgresSpecs pgConnOptions
+main = do
+  parseArgs >>= \case
+    AllSuites -> do
+      streamingSubscriptionSuite <- StreamingSubscriptionSuite.buildStreamingSubscriptionSuite
+      eventTriggerLogCleanupSuite <- EventTriggerCleanupSuite.buildEventTriggerCleanupSuite
+      postgresSpecs <- buildPostgresSpecs
+      mssqlSpecs <- buildMSSQLSpecs
+      runHspec [] (Discover.spec *> postgresSpecs *> mssqlSpecs *> streamingSubscriptionSuite *> eventTriggerLogCleanupSuite)
+    SingleSuite hspecArgs suite -> do
+      runHspec hspecArgs =<< case suite of
+        UnitSuite -> pure Discover.spec
+        PostgresSuite -> buildPostgresSpecs
+        MSSQLSuite -> buildMSSQLSpecs
 
-unitSpecs :: Spec
-unitSpecs = do
-  describe "Data.Parser.CacheControl" CacheControlParser.spec
-  describe "Data.Parser.URLTemplate" URLTemplate.spec
-  describe "Data.Parser.JSONPath" JsonPath.spec
-  describe "Hasura.Incremental" IncrementalSpec.spec
-  -- describe "Hasura.RQL.Metadata" MetadataSpec.spec -- Commenting until optimizing the test in CI
-  describe "Data.Time" TimeSpec.spec
-  describe "Data.NonNegativeInt" NonNegetiveIntSpec.spec
-  describe "Hasura.Server.Telemetry" TelemetrySpec.spec
-  describe "Hasura.Server.Auth" AuthSpec.spec
-  describe "Hasura.Cache.Bounded" CacheBoundedSpec.spec
-  describe "Hasura.RQL.Types.Endpoint" EndpointSpec.spec
-  describe "Hasura.SQL.WKT" WKTSpec.spec
-  describe "Hasura.Eventing" EventingSpec.spec
+buildMSSQLSpecs :: IO (SpecWith ())
+buildMSSQLSpecs = do
+  env <- liftIO getEnvironment
+  connStr <- flip onLeft printErrExit $
+    runWithEnv env $ do
+      let envVar = fst mssqlConnectionString
+      maybeV <- considerEnv envVar
+      onNothing maybeV $
+        throwError $
+          "Expected: " <> envVar
 
-buildPostgresSpecs :: HasVersion => Maybe URLTemplate -> IO Spec
-buildPostgresSpecs maybeUrlTemplate = do
+  -- We use "suite" to denote a set of tests that can't (yet) be detected and
+  -- run by @hspec-discover@.
+  pure $ describe "Database.MSSQL.TransactionSuite" $ TransactionSuite.suite connStr
+
+mssqlConnectionString :: (String, String)
+mssqlConnectionString =
+  ( "HASURA_MSSQL_CONN_STR",
+    "SQL Server database connection string. Example DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost,1433;Uid=user;Pwd=pass;Encrypt=optional"
+  )
+
+buildPostgresSpecs :: IO Spec
+buildPostgresSpecs = do
   env <- getEnvironment
   let envMap = Env.mkEnvironment env
 
-  pgUrlTemplate <- flip onLeft printErrExit $ runWithEnv env $ do
-                   let envVar = fst databaseUrlEnv
-                   maybeV <- withEnv maybeUrlTemplate envVar
-                   onNothing maybeV $ throwError $
-                               "Expected: --database-url or " <> envVar
+  pgUrlText <- flip onLeft printErrExit $
+    runWithEnv env $ do
+      let envVar = _envVar databaseUrlOption
+      maybeV <- considerEnv envVar
+      onNothing maybeV $
+        throwError $
+          "Expected: " <> envVar
 
-  pgUrlText <- flip onLeft printErrExit $ renderURLTemplate envMap pgUrlTemplate
-  let pgConnInfo = Q.ConnInfo 1 $ Q.CDDatabaseURI $ txtToBs pgUrlText
-      urlConf = UrlValue $ InputWebhook pgUrlTemplate
+  let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
+      urlConf = UrlValue $ InputWebhook $ mkPlainURLTemplate pgUrlText
       sourceConnInfo =
-        PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True Q.ReadCommitted
-      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing
+        PostgresSourceConnInfo urlConf (Just setPostgresPoolSettings) True PG.ReadCommitted Nothing
+      sourceConfig = PostgresConnConfiguration sourceConnInfo Nothing defaultPostgresExtensionsSchema
 
-  pgPool <- Q.initPGPool pgConnInfo Q.defaultConnParams { Q.cpConns = 1 } print
-  let pgContext = mkPGExecCtx Q.Serializable pgPool
+  pgPool <- PG.initPGPool pgConnInfo PG.defaultConnParams {PG.cpConns = 1} print
+  let pgContext = mkPGExecCtx PG.Serializable pgPool NeverResizePool
+
+      logger :: Logger Hasura = Logger $ \l -> do
+        let (logLevel, logType :: EngineLogType Hasura, logDetail) = toEngineLog l
+        t <- liftIO $ getFormattedTime Nothing
+        liftIO $ putStrLn $ LBS.toString $ A.encode $ EngineLog t logLevel logType logDetail
 
       setupCacheRef = do
         httpManager <- HTTP.newManager HTTP.tlsManagerSettings
-        let sqlGenCtx = SQLGenCtx False False
+        let sqlGenCtx =
+              SQLGenCtx
+                Options.Don'tStringifyNumbers
+                Options.Don'tDangerouslyCollapseBooleans
+                Options.Don'tOptimizePermissionFilters
+                Options.EnableBigQueryStringNumericInput
             maintenanceMode = MaintenanceModeDisabled
+            readOnlyMode = ReadOnlyModeDisabled
             serverConfigCtx =
-              ServerConfigCtx FunctionPermissionsInferred RemoteSchemaPermsDisabled sqlGenCtx maintenanceMode mempty
-            cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) serverConfigCtx
+              ServerConfigCtx
+                Options.InferFunctionPermissions
+                Options.DisableRemoteSchemaPermissions
+                sqlGenCtx
+                maintenanceMode
+                mempty
+                EventingEnabled
+                readOnlyMode
+                Nothing -- We are not testing the naming convention here, so defaulting to hasura-default
+                emptyMetadataDefaults
+            cacheBuildParams = CacheBuildParams httpManager (mkPgSourceResolver print) mkMSSQLSourceResolver serverConfigCtx
+            pgLogger = print
 
-            run :: CacheBuild a -> IO a
+            run :: MetadataStorageT (PGMetadataStorageAppT CacheBuild) a -> IO a
             run =
-              runCacheBuild cacheBuildParams
-              >>> runExceptT
-              >=> flip onLeft printErrJExit
+              runMetadataStorageT
+                >>> flip runPGMetadataStorageAppT (pgPool, pgLogger)
+                >>> runCacheBuild cacheBuildParams
+                >>> runExceptT
+                >=> flip onLeft printErrJExit
+                >=> flip onLeft printErrJExit
 
         (metadata, schemaCache) <- run do
-          metadata <- snd <$> (liftEitherM . runExceptT . runLazyTx pgContext Q.ReadWrite)
-                      (migrateCatalog (Just sourceConfig) maintenanceMode =<< liftIO getCurrentTime)
-          schemaCache <- buildRebuildableSchemaCache envMap metadata
+          metadata <-
+            snd
+              <$> (liftEitherM . runExceptT . runTx pgContext PG.ReadWrite)
+                (migrateCatalog (Just sourceConfig) defaultPostgresExtensionsSchema maintenanceMode =<< liftIO getCurrentTime)
+          schemaCache <- lift $ lift $ buildRebuildableSchemaCache logger envMap metadata
           pure (metadata, schemaCache)
 
         cacheRef <- newMVar schemaCache
-        pure $ NT (run . flip MigrateSpec.runCacheRefT cacheRef . fmap fst . runMetadataT metadata)
+        pure $ NT (run . flip MigrateSuite.runCacheRefT cacheRef . fmap fst . runMetadataT metadata emptyMetadataDefaults)
 
-  pure $ beforeAll setupCacheRef $
-    describe "Hasura.Server.Migrate" $ MigrateSpec.spec sourceConfig pgContext pgConnInfo
+  -- We use "suite" to denote a set of tests that can't (yet) be detected and
+  -- run by @hspec-discover@.
+  streamingSubscriptionSuite <- StreamingSubscriptionSuite.buildStreamingSubscriptionSuite
+  eventTriggerLogCleanupSuite <- EventTriggerCleanupSuite.buildEventTriggerCleanupSuite
+
+  pure $ do
+    describe "Migrate suite" $
+      beforeAll setupCacheRef $
+        describe "Hasura.Server.Migrate" $
+          MigrateSuite.suite sourceConfig pgContext pgConnInfo
+    describe "Streaming subscription suite" $ streamingSubscriptionSuite
+    describe "Event trigger log cleanup suite" $ eventTriggerLogCleanupSuite
 
 parseArgs :: IO TestSuites
-parseArgs = execParser $ info (helper <*> (parseNoCommand <|> parseSubCommand)) $
-  fullDesc <> header "Hasura GraphQL Engine test suite"
+parseArgs =
+  execParser $
+    info (helper <*> (parseNoCommand <|> parseSubCommand)) $
+      fullDesc <> header "Hasura GraphQL Engine test suite"
   where
-    parseDbUrlTemplate =
-      parseDatabaseUrl <|> (fmap rawConnDetailsToUrl <$> parseRawConnDetails)
-    parseNoCommand = AllSuites <$> parseDbUrlTemplate
+    parseNoCommand = pure AllSuites
     parseSubCommand = SingleSuite <$> parseHspecPassThroughArgs <*> subCmd
       where
-        subCmd = subparser $ mconcat
-          [ command "unit" $ info (pure UnitSuite) $
-              progDesc "Only run unit tests"
-          , command "postgres" $ info (helper <*> (PostgresSuite <$> parseDbUrlTemplate)) $
-              progDesc "Only run Postgres integration tests"
-          ]
+        subCmd =
+          subparser $
+            mconcat
+              [ command "unit" $
+                  info (pure UnitSuite) $
+                    progDesc "Only run unit tests",
+                command "postgres" $
+                  info (pure PostgresSuite) $
+                    progDesc "Only run Postgres integration tests",
+                command "mssql" $
+                  info (pure MSSQLSuite) $
+                    progDesc "Only run SQL Server unit tests"
+              ]
         -- Add additional arguments and tweak as needed:
         hspecArgs = ["match", "skip"]
         -- parse to a list of arguments as they'd appear from 'getArgs':
         parseHspecPassThroughArgs :: Parser [String]
-        parseHspecPassThroughArgs = fmap concat $ for hspecArgs $ \nm->
-          fmap (maybe [] (\a -> ["--"<>nm , a])) $ optional $
-            strOption ( long nm <>
-                        metavar "<PATTERN>" <>
-                        help "Flag passed through to hspec (see hspec docs)." )
-
+        parseHspecPassThroughArgs = fmap concat $
+          for hspecArgs $ \nm ->
+            fmap (maybe [] (\a -> ["--" <> nm, a])) $
+              optional $
+                strOption
+                  ( long nm
+                      <> metavar "<PATTERN>"
+                      <> help "Flag passed through to hspec (see hspec docs)."
+                  )
 
 runHspec :: [String] -> Spec -> IO ()
 runHspec hspecArgs m = do

@@ -1,15 +1,16 @@
 package commands
 
 import (
+	"fmt"
+	"net/url"
 	"os"
-	"sync"
 
-	"github.com/hasura/graphql-engine/cli/internal/scripts"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/pkg/console"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/pkg/console"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -17,6 +18,7 @@ import (
 
 // NewConsoleCmd returns the console command
 func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
+	var apiHost string
 	v := viper.New()
 	opts := &ConsoleOptions{
 		EC: ec,
@@ -52,12 +54,25 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if cmd.Flags().Changed("api-host") {
+				var err error
+				opts.APIHost, err = url.ParseRequestURI(apiHost)
+				if err != nil {
+					return fmt.Errorf("expected a valid url for --api-host, parsing error: %w", err)
+				}
+			} else {
+				opts.APIHost = &url.URL{
+					Scheme: "http",
+					Host:   opts.Address,
+				}
+			}
 			return opts.Run()
 		},
 	}
 	f := consoleCmd.Flags()
 
 	f.StringVar(&opts.APIPort, "api-port", "9693", "port for serving migrate api")
+	f.StringVar(&apiHost, "api-host", "http://localhost", "(PREVIEW: usage may change in future) host serving migrate api")
 	f.StringVar(&opts.ConsolePort, "console-port", "9695", "port for serving console")
 	f.StringVar(&opts.Address, "address", "localhost", "address to serve console and migration API from")
 	f.BoolVar(&opts.DontOpenBrowser, "no-browser", false, "do not automatically open console in browser")
@@ -68,7 +83,9 @@ func NewConsoleCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
 	f.String("access-key", "", "access key for Hasura GraphQL engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
 
@@ -86,12 +103,11 @@ type ConsoleOptions struct {
 	EC *cli.ExecutionContext
 
 	APIPort     string
+	APIHost     *url.URL
 	ConsolePort string
 	Address     string
 
 	DontOpenBrowser bool
-
-	WG *sync.WaitGroup
 
 	StaticDir       string
 	Browser         string
@@ -106,15 +122,15 @@ func (o *ConsoleOptions) Run() error {
 		return errors.New("cannot validate version, object is nil")
 	}
 
-	apiServer, err := console.NewAPIServer(o.Address, o.APIPort, o.EC)
+	apiServer, err := console.NewAPIServer(o.APIHost.Host, o.APIPort, o.EC)
 	if err != nil {
 		return err
 	}
 
 	// Setup console server
-	const basePath = "/pkg/console/templates/gohtml/"
+	const basePath = "templates/gohtml/"
 	const templateFilename = "console.gohtml"
-	templateProvider := console.NewDefaultTemplateProvider(basePath, templateFilename)
+	templateProvider := console.NewDefaultTemplateProvider(basePath, templateFilename, console.ConsoleFS)
 	consoleTemplateVersion := templateProvider.GetTemplateVersion(o.EC.Version)
 	consoleAssetsVersion := templateProvider.GetAssetsVersion(o.EC.Version)
 	o.EC.Logger.Debugf("rendering console template [%s] with assets [%s]", consoleTemplateVersion, consoleAssetsVersion)
@@ -125,7 +141,7 @@ func (o *ConsoleOptions) Run() error {
 	}
 
 	consoleRouter, err := console.BuildConsoleRouter(templateProvider, consoleTemplateVersion, o.StaticDir, gin.H{
-		"apiHost":              "http://" + o.Address,
+		"apiHost":              o.APIHost.String(),
 		"apiPort":              o.APIPort,
 		"cliVersion":           o.EC.Version.GetCLIVersion(),
 		"serverVersion":        o.EC.Version.GetServerVersion(),
@@ -158,7 +174,6 @@ func (o *ConsoleOptions) Run() error {
 		TemplateProvider: templateProvider,
 	})
 
-	o.WG = new(sync.WaitGroup)
 	// start console and API HTTP Servers
 	serveOpts := &console.ServeOpts{
 		APIServer:               apiServer,
@@ -171,7 +186,6 @@ func (o *ConsoleOptions) Run() error {
 		Address:                 o.Address,
 		SignalChanConsoleServer: o.ConsoleServerInterruptSignal,
 		SignalChanAPIServer:     o.APIServerInterruptSignal,
-		WG:                      o.WG,
 	}
 
 	return console.Serve(serveOpts)

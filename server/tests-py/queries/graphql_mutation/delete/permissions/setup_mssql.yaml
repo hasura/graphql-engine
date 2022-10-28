@@ -1,0 +1,172 @@
+type: bulk
+args:
+
+# Author table
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: author
+
+# Article table
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: article
+
+
+# Object relationship
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+# Array relationship
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id
+
+# Prevent deletion if payments to the author is not yet done
+- type: mssql_create_delete_permission
+  args:
+    source: mssql
+    table: author
+    role: user
+    permission:
+      filter:
+        $and:
+          - id: X-HASURA-USER-ID
+          - payments_done:
+              _eq: 1
+
+# Author select permission for user
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: author
+    role: user
+    permission:
+      columns: [id, name, payments_done]
+      filter:
+        id: X-HASURA-USER-ID
+
+# A user can delete only his articles
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: article
+    role: user
+    permission:
+      columns:
+      - id
+      - title
+      - content
+      - author_id
+      filter:
+        $and:
+          - author_id: X-HASURA-USER-ID
+
+# A user can delete only his articles
+- type: mssql_create_delete_permission
+  args:
+    source: mssql
+    table: article
+    role: user
+    permission:
+      filter:
+        $and:
+          - author_id: X-HASURA-USER-ID
+
+# Create resident table
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: resident
+
+- type: mssql_create_delete_permission
+  args:
+    source: mssql
+    table: resident
+    role: resident
+    permission:
+      filter:
+        id: X-Hasura-Resident-Id
+
+- type: mssql_create_delete_permission
+  args:
+    source: mssql
+    table: resident
+    role: agent
+    permission:
+      filter:
+        id:
+          $in: X-Hasura-Allowed-Resident-Ids
+
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: resident
+    role: agent
+    permission:
+      columns:
+      - id
+      - name
+      - age
+      filter:
+        id:
+          $in: X-Hasura-Allowed-Resident-Ids
+
+# Tables to test '_exist' field
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: user
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: account
+
+- type: mssql_create_delete_permission
+  args:
+    source: mssql
+    table: account
+    role: user
+    permission:
+      filter:
+        _exists:
+          _table: user
+          _where:
+            id: X-Hasura-User-Id
+            is_admin:
+              _eq: 1
+
+- type: mssql_create_select_permission
+  args:
+    source: mssql
+    table: account
+    role: user
+    permission:
+      columns:
+      - id
+      - account_no
+      filter:
+        _exists:
+          _table: user
+          _where:
+            id: X-Hasura-User-Id
+            is_admin:
+              _eq: 1

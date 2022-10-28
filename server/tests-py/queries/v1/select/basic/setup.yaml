@@ -1,15 +1,14 @@
 type: bulk
 args:
 
-#Author table
-
 - type: run_sql
   args:
     sql: |
-      create table author(
-          id serial primary key, 
-          name text unique
+      CREATE TABLE author (
+          id SERIAL PRIMARY KEY,
+          name TEXT UNIQUE
       );
+
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,
@@ -18,12 +17,14 @@ args:
         is_published BOOLEAN,
         published_on TIMESTAMP
       );
-      insert into author (name)
-      values
+
+      INSERT INTO author (name)
+      VALUES
       ('Author 1'),
-      ('Author 2') ;
-      insert into article (title,content,author_id,is_published)
-      values
+      ('Author 2');
+
+      INSERT INTO article (title,content,author_id,is_published)
+      VALUES
       (
         'Article 1',
         'Sample article content 1',
@@ -42,6 +43,7 @@ args:
         2,
         true
       );
+
       CREATE TABLE "user" (
         id BIGSERIAL PRIMARY KEY,
         name TEXT NOT NULL,
@@ -53,13 +55,25 @@ args:
     schema: public
     name: author
 
-#Article table
 - type: track_table
   args:
     schema: public
     name: article
 
-#Object relationship
+- type: track_table
+  args:
+    schema: public
+    name: user
+
+- type: insert
+  args:
+    table: user
+    objects:
+    - name: User 1
+      number: '123456789'
+    - name: User 2
+      number: '123456780'
+
 - type: create_object_relationship
   args:
     table: article
@@ -67,7 +81,6 @@ args:
     using:
       foreign_key_constraint_on: author_id
 
-#Array relationship
 - type: create_array_relationship
   args:
     table: author
@@ -77,17 +90,11 @@ args:
         table: article
         column: author_id
 
-
-#Insert values
-- type: track_table
+- type: create_select_permission
   args:
-    schema: public
-    name: user
-- type: insert
-  args:
-    table: user
-    objects:
-    - name: User 1
-      number: '123456789'
-    - name: User 2
-      number: '123456780'
+    table: author
+    role: user
+    permission:
+      columns:
+        - name
+      filter: {}

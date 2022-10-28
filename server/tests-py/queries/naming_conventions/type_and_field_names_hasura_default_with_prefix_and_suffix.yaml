@@ -1,0 +1,213 @@
+- description: PG add source
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_add_source
+    args:
+      name: pg1
+      configuration:
+        connection_info:
+          database_url:
+            from_env: HASURA_GRAPHQL_PG_SOURCE_URL_1
+          pool_settings:
+            max_connections: 50
+            idle_timeout: 180
+            retries:
+      customization:
+        root_fields:
+          prefix: test_
+          suffix: _query
+        naming_convention: hasura-default
+
+- description: create table 1
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        create table author_local(
+            id serial primary key,
+            name text unique
+        );
+        INSERT INTO author_local (name)
+          VALUES ('Author 1'), ('Author 2');
+
+- description: track table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_table
+    args:
+      table: author_local
+      source: pg1
+
+- description: Simple GraphQL query to fetch items from the source table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      test_author_local_query:
+        - id: 1
+          name: "Author 1"
+          __typename: author_local
+        - id: 2
+          name: "Author 2"
+          __typename: author_local
+  query:
+    query: |
+      query {
+        test_author_local_query {
+          id
+          name
+          __typename
+        }
+      }
+
+- description: Simple GraphQL query with field aliases to fetch items from the source table
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      a:
+        - b: 1
+          c: "Author 1"
+          d: author_local
+        - b: 2
+          c: "Author 2"
+          d: author_local
+  query:
+    query: |
+      query {
+        a: test_author_local_query {
+          b: id
+          c: name
+          d: __typename
+        }
+      }
+
+- description: Lookup by pk
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      test_author_local_by_pk_query:
+        id: 1
+        name: "Author 1"
+        __typename: author_local
+  query:
+    query: |
+      query {
+        test_author_local_by_pk_query(id: 1) {
+          id
+          name
+          __typename
+        }
+      }
+
+- description: Aggregate
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      test_author_local_aggregate_query:
+        __typename: author_local_aggregate
+        aggregate:
+          __typename: author_local_aggregate_fields
+          count: 1
+  query:
+    query: |
+      query MyQuery {
+        test_author_local_aggregate_query(where: {name: {_eq: "Author 2"}}) {
+          __typename
+          aggregate {
+            __typename
+            count
+          }
+        }
+      }
+
+- description: Insert
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      test_insert_author_local_query:
+        __typename: author_local_mutation_response
+        returning:
+          - __typename: author_local
+            id: 3
+            name: Author 3
+  query:
+    query: |
+      mutation MyMutation {
+        test_insert_author_local_query(objects: {name: "Author 3", id: 3}) {
+          __typename
+          returning {
+            __typename
+            id
+            name
+          }
+        }
+      }
+
+- description: Delete by pk
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      test_delete_author_local_by_pk_query:
+        __typename: author_local
+        id: 3
+        name: Author 3
+  query:
+    query: |
+      mutation MyMutation {
+        test_delete_author_local_by_pk_query(id: 3) {
+          __typename
+          id
+          name
+        }
+      }
+
+- description: untrack table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_table
+    args:
+      table: author_local
+      source: pg1
+
+- description: drop table
+  url: /v1/query
+  status: 200
+  response:
+    result_type: CommandOk
+    result:
+  query:
+    type: run_sql
+    args:
+      source: pg1
+      sql: |
+        drop table author_local;
+
+- description: PG Drop Source 1
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_drop_source
+    args:
+      name: pg1

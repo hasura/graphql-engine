@@ -1,49 +1,47 @@
-{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
-module Wrk.Server
-where
+{-# LANGUAGE RecordWildCards #-}
 
-import           Wrk.Server.Types
+module Wrk.Server where
 
-import           Control.Applicative          (liftA2, many, (<|>))
-import           Control.Concurrent           (forkIO)
-import           Control.Lens                 ((&), (^.), (^?), (.~))
-import           Control.Monad                (forever, unless, void, when)
-import           Control.Monad.Except         (MonadError, runExceptT, throwError)
-import           Control.Monad.IO.Class       (MonadIO, liftIO)
-import           Data.Text.Encoding           (encodeUtf8)
-import           System.Environment           (lookupEnv, setEnv)
-import           System.FilePath.Posix        (takeDirectory)
-
-import qualified Control.Concurrent.STM       as STM
+import Control.Applicative (liftA2, many, (<|>))
+import Control.Concurrent (forkIO)
+import qualified Control.Concurrent.STM as STM
 import qualified Control.Concurrent.STM.TMVar as TMVar
-import qualified Control.Exception            as E
-import qualified Data.Aeson                   as J
-import qualified Data.Aeson.Lens              as J
-import qualified Data.Attoparsec.Text         as AT
-import qualified Data.ByteString.Lazy         as BL
-import qualified Data.ByteString.Lazy.Char8   as BLC
-import qualified Data.CaseInsensitive         as CI
-import qualified Data.Default                 as Def
-import qualified Data.Text                    as T
-import qualified Data.Text.IO                 as T
-import qualified Data.Text.Read               as T
-import qualified Network.WebSockets           as WS
-import qualified Network.Wreq                 as NW
-import qualified System.Directory             as Dir
-import qualified System.Exit                  as SE
-import qualified System.Process               as Proc
+import qualified Control.Exception as E
+import Control.Lens ((&), (.~), (^.), (^?))
+import Control.Monad (forever, unless, void, when)
+import Control.Monad.Except (MonadError, runExceptT, throwError)
+import Control.Monad.IO.Class (MonadIO, liftIO)
+import qualified Data.Aeson as J
+import qualified Data.Aeson.Lens as J
+import qualified Data.Attoparsec.Text as AT
+import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Lazy.Char8 as BLC
+import qualified Data.CaseInsensitive as CI
+import qualified Data.Default as Def
+import qualified Data.Text as T
+import Data.Text.Encoding (encodeUtf8)
+import qualified Data.Text.IO as T
+import qualified Data.Text.Read as T
+import qualified Network.WebSockets as WS
+import qualified Network.Wreq as NW
+import qualified System.Directory as Dir
+import System.Environment (lookupEnv, setEnv)
+import qualified System.Exit as SE
+import System.FilePath.Posix (takeDirectory)
+import qualified System.Process as Proc
+import Wrk.Server.Types
 
 benchWsApp :: TMVar.TMVar () -> WS.ServerApp
 benchWsApp lock pending = do
- conn <- WS.acceptRequest pending
- WS.withPingThread conn 30 (return ()) $
-   forever $ do
-     msg <- WS.receiveData conn
-     fork_ $ processReq conn msg lock
- where
-   fork_ = void . forkIO
+  conn <- WS.acceptRequest pending
+  WS.withPingThread conn 30 (return ()) $
+    forever $ do
+      msg <- WS.receiveData conn
+      fork_ $ processReq conn msg lock
+  where
+    fork_ = void . forkIO
 
 processReq :: WS.Connection -> BLC.ByteString -> TMVar.TMVar () -> IO ()
 processReq conn msg lock = do
@@ -58,11 +56,14 @@ processReq conn msg lock = do
       resIOE <- E.try f
       return $ either (Left . ioExToErr) id resIOE
     ioExToErr :: E.SomeException -> ErrorMessage
-    ioExToErr e = ErrorMessage $ J.object ["IOError" J..= show e ]
+    ioExToErr e = ErrorMessage $ J.object ["IOError" J..= show e]
 
-processReq' :: (MonadIO m, MonadError ErrorMessage m)
-  => WS.Connection -> BL.ByteString -> TMVar.TMVar ()
-  -> m (BenchConf, BenchResult)
+processReq' ::
+  (MonadIO m, MonadError ErrorMessage m) =>
+  WS.Connection ->
+  BL.ByteString ->
+  TMVar.TMVar () ->
+  m (BenchConf, BenchResult)
 processReq' conn msg lock = do
   conf <- parseIncomingMsg
   res <- withLock $ runBench conn conf
@@ -78,49 +79,57 @@ processReq' conn msg lock = do
     releaseLock = STM.atomically $ TMVar.takeTMVar lock
     atomic_ = liftIO . STM.atomically
 
-runBench :: (MonadIO m, MonadError ErrorMessage m)
-  => WS.Connection -> BenchConf -> m BenchResult
-runBench conn conf= do
+runBench ::
+  (MonadIO m, MonadError ErrorMessage m) =>
+  WS.Connection ->
+  BenchConf ->
+  m BenchResult
+runBench conn conf = do
   sendStartMsg
   result <- case conf of
-    BCWrk args  -> BRWrk <$> runWrkBench args
+    BCWrk args -> BRWrk <$> runWrkBench args
     BCWrk2 args -> BRWrk2 <$> runWrk2Bench args
   void sendFinishMsg
   return result
   where
-     sendStartMsg = sendJson $ BMStart conf
-     sendFinishMsg = sendJson $ BMFinish conf
-     sendJson = liftIO . WS.sendTextData conn . J.encode
+    sendStartMsg = sendJson $ BMStart conf
+    sendFinishMsg = sendJson $ BMFinish conf
+    sendJson = liftIO . WS.sendTextData conn . J.encode
 
-runWrkBench :: (MonadIO m, MonadError ErrorMessage m)
- => WrkBenchArgs -> m WrkResultOut
-runWrkBench args@WrkBenchArgs{..} = do
-   _ <- liftIO $ runQueryOnce -- run the GraphQL query once to ensure there are no errors
-   script <- liftIO wrkScript
-   liftIO $ setLuaEnv $ show script
-   (exitCode, _, stderr) <- liftIO $ Proc.readProcessWithExitCode "wrk" (wrkArgs script) ""
-   liftIO $ putStr stderr
-   case exitCode of
-      SE.ExitSuccess   -> wrkResult stderr
-      SE.ExitFailure _ -> throwError $ ErrorMessage $ J.toJSON $ "Failed with error " <> stderr
-   where
-     runQueryOnce = runQuery wbaGraphqlUrl wbaQuery wbaAuth
-     wrkResult stderr = jsonDecode $ BLC.pack stderr
-     wrkArgs script = toArgsList (`notElem` ["query","graphql-url"]) args <> luaScriptArgs script
-     luaScriptArgs script = ["-s", show script, wbaGraphqlUrl, T.unpack $ getQuery wbaQuery] <> authHeader
-     wrkScript = maybe Def.def WrkScript <$> lookupEnv "HASURA_BENCH_WRK_LUA_SCRIPT"
-     authHeader = maybe [] (\AuthHeader{..} -> map T.unpack [ahKey, ahValue]) wbaAuth
+runWrkBench ::
+  (MonadIO m, MonadError ErrorMessage m) =>
+  WrkBenchArgs ->
+  m WrkResultOut
+runWrkBench args@WrkBenchArgs {..} = do
+  _ <- liftIO $ runQueryOnce -- run the GraphQL query once to ensure there are no errors
+  script <- liftIO wrkScript
+  liftIO $ setLuaEnv $ show script
+  (exitCode, _, stderr) <- liftIO $ Proc.readProcessWithExitCode "wrk" (wrkArgs script) ""
+  liftIO $ putStr stderr
+  case exitCode of
+    SE.ExitSuccess -> wrkResult stderr
+    SE.ExitFailure _ -> throwError $ ErrorMessage $ J.toJSON $ "Failed with error " <> stderr
+  where
+    runQueryOnce = runQuery wbaGraphqlUrl wbaQuery wbaAuth
+    wrkResult stderr = jsonDecode $ BLC.pack stderr
+    wrkArgs script = toArgsList (`notElem` ["query", "graphql-url"]) args <> luaScriptArgs script
+    luaScriptArgs script = ["-s", show script, wbaGraphqlUrl, T.unpack $ getQuery wbaQuery] <> authHeader
+    wrkScript = maybe Def.def WrkScript <$> lookupEnv "HASURA_BENCH_WRK_LUA_SCRIPT"
+    authHeader = maybe [] (\AuthHeader {..} -> map T.unpack [ahKey, ahValue]) wbaAuth
 
 setLuaEnv :: FilePath -> IO ()
 setLuaEnv wrkScript = do
   setEnv "LUA_PATH" $ "/usr/share/lua/5.1/?.lua;" <> wrkScriptDir <> "/?.lua"
   setEnv "LUA_CPATH" "/usr/lib/lua/5.1/?.so;/usr/lib/x86_64-linux-gnu/lua/5.1/?.so;;"
-  where wrkScriptDir = takeDirectory wrkScript
+  where
+    wrkScriptDir = takeDirectory wrkScript
 
 -- TODO duration cannot be less than 10 seconds
-runWrk2Bench :: (MonadIO m, MonadError ErrorMessage m)
-  => Wrk2BenchArgs -> m Wrk2ResultOut
-runWrk2Bench args@Wrk2BenchArgs{..} = do
+runWrk2Bench ::
+  (MonadIO m, MonadError ErrorMessage m) =>
+  Wrk2BenchArgs ->
+  m Wrk2ResultOut
+runWrk2Bench args@Wrk2BenchArgs {..} = do
   _ <- liftIO runQueryOnce -- run the GraphQL query once to ensure there are no errors
   liftIO $ Dir.createDirectoryIfMissing True resultsDir
   script <- liftIO wrk2Script
@@ -128,54 +137,59 @@ runWrk2Bench args@Wrk2BenchArgs{..} = do
   (exitCode, stdout, stderr) <- liftIO $ Proc.readProcessWithExitCode "wrk2" (wrk2Args script) ""
   liftIO $ putStr stdout
   case exitCode of
-    SE.ExitSuccess   -> wrk2Result stdout
-    SE.ExitFailure e -> throwError $ ErrorMessage $ J.toJSON $
-      "wrk2 exited with ExitCode" <> show e <> "\nError: " <> stderr
-   where
-     runQueryOnce = runQuery w2baGraphqlUrl w2baQuery w2baAuth
-     wrk2Result stdout = do
-       resultStr <- liftIO $ BLC.readFile summaryFile
-       -- Read summary from summary file
-       resultIn <- jsonDecode resultStr
-       -- Parse histogram values from stdout
-       histogram <- eitherToMonadErr (ErrorMessage . J.toJSON) $ AT.parseOnly histogramParser $ T.pack stdout
-       -- Read latency values from latencies-file
-       strLatencies <- liftIO $ T.lines <$> T.readFile latenciesFile
-       -- Convert to number from string
-       numLatencies <- eitherToMonadErr asErrMessage $
-         mapM ( fmap (/1000.0) . readDoubleT) strLatencies
-       return $ makeResultOut resultIn histogram numLatencies
+    SE.ExitSuccess -> wrk2Result stdout
+    SE.ExitFailure e ->
+      throwError $
+        ErrorMessage $
+          J.toJSON $
+            "wrk2 exited with ExitCode" <> show e <> "\nError: " <> stderr
+  where
+    runQueryOnce = runQuery w2baGraphqlUrl w2baQuery w2baAuth
+    wrk2Result stdout = do
+      resultStr <- liftIO $ BLC.readFile summaryFile
+      -- Read summary from summary file
+      resultIn <- jsonDecode resultStr
+      -- Parse histogram values from stdout
+      histogram <- eitherToMonadErr (ErrorMessage . J.toJSON) $ AT.parseOnly histogramParser $ T.pack stdout
+      -- Read latency values from latencies-file
+      strLatencies <- liftIO $ T.lines <$> T.readFile latenciesFile
+      -- Convert to number from string
+      numLatencies <-
+        eitherToMonadErr asErrMessage $
+          mapM (fmap (/ 1000.0) . readDoubleT) strLatencies
+      return $ makeResultOut resultIn histogram numLatencies
 
-     makeResultOut (Wrk2ResultIn summ reqSumm latSumm) hist latVals =
-       Wrk2ResultOut summ reqSumm $ LatencyResultOut latVals hist latSumm
+    makeResultOut (Wrk2ResultIn summ reqSumm latSumm) hist latVals =
+      Wrk2ResultOut summ reqSumm $ LatencyResultOut latVals hist latSumm
 
-     wrk2Args script = toArgsList (`notElem` ["query","graphql_url"]) args <> ["--latency"] <> luaScriptArgs script
-     luaScriptArgs script = ["-s", show script] <> [ w2baGraphqlUrl, query, resultsDir] <> authHeaderArgs
-     query = T.unpack $ getQuery w2baQuery
-     resultsDir = "/tmp/results"
-     latenciesFile = resultsDir <> "/latencies"
-     summaryFile = resultsDir <> "/summary.json"
-     authHeaderArgs = maybe [] (\AuthHeader{..} -> map T.unpack [ahKey, ahValue]) w2baAuth
-     wrk2Script = maybe Def.def Wrk2Script <$> lookupEnv "HASURA_BENCH_WRK2_LUA_SCRIPT"
+    wrk2Args script = toArgsList (`notElem` ["query", "graphql_url"]) args <> ["--latency"] <> luaScriptArgs script
+    luaScriptArgs script = ["-s", show script] <> [w2baGraphqlUrl, query, resultsDir] <> authHeaderArgs
+    query = T.unpack $ getQuery w2baQuery
+    resultsDir = "/tmp/results"
+    latenciesFile = resultsDir <> "/latencies"
+    summaryFile = resultsDir <> "/summary.json"
+    authHeaderArgs = maybe [] (\AuthHeader {..} -> map T.unpack [ahKey, ahValue]) w2baAuth
+    wrk2Script = maybe Def.def Wrk2Script <$> lookupEnv "HASURA_BENCH_WRK2_LUA_SCRIPT"
 
 runQuery :: GraphQLURL -> Query -> Maybe AuthHeader -> IO BLC.ByteString
 runQuery url query authHeaders = do
-  resp <- NW.postWith queryHeaders url $ J.object [ "query" J..= getQuery query ]
+  resp <- NW.postWith queryHeaders url $ J.object ["query" J..= getQuery query]
   let err = foldl1 (<|>) $ map (\x -> resp ^? NW.responseBody . J.key x) ["errors", "error"]
-  maybe (return $ resp ^. NW.responseBody) (fail . BLC.unpack . J.encode ) err
+  maybe (return $ resp ^. NW.responseBody) (fail . BLC.unpack . J.encode) err
   where
-    queryHeaders = maybe NW.defaults (\AuthHeader{..} -> NW.defaults & NW.header (CI.mk $ encodeUtf8 ahKey) .~ [encodeUtf8 ahValue] ) authHeaders
+    queryHeaders = maybe NW.defaults (\AuthHeader {..} -> NW.defaults & NW.header (CI.mk $ encodeUtf8 ahKey) .~ [encodeUtf8 ahValue]) authHeaders
 
 simpleIntrospectQuery :: Query
-simpleIntrospectQuery = Query "\
-   \ query foo { \
-   \   __schema { \
-   \     queryType { \
-   \       kind \
-   \     } \
-   \   } \
-   \ }"
-
+simpleIntrospectQuery =
+  Query
+    "\
+    \ query foo { \
+    \   __schema { \
+    \     queryType { \
+    \       kind \
+    \     } \
+    \   } \
+    \ }"
 
 jsonDecode :: (J.FromJSON a, MonadError ErrorMessage m) => BLC.ByteString -> m a
 jsonDecode = eitherToMonadErr (ErrorMessage . J.toJSON) . J.eitherDecode
@@ -211,15 +225,18 @@ histogramParser = do
     parseHistogramRows = many parseHistogramRow
 
     parseHistogramSummary = do
-      (mean, stdDev) <- collectSummaryPairs
-        ("Mean", AT.double, "StdDeviation", AT.double)
-      (maxVal, tc) <- collectSummaryPairs
-        ("Max",  AT.double, "Total count" , AT.decimal)
-      (bkts, subBkts) <- collectSummaryPairs
-        ("Buckets", AT.decimal, "SubBuckets", AT.decimal)
+      (mean, stdDev) <-
+        collectSummaryPairs
+          ("Mean", AT.double, "StdDeviation", AT.double)
+      (maxVal, tc) <-
+        collectSummaryPairs
+          ("Max", AT.double, "Total count", AT.decimal)
+      (bkts, subBkts) <-
+        collectSummaryPairs
+          ("Buckets", AT.decimal, "SubBuckets", AT.decimal)
       return $ HistogramSummary mean stdDev maxVal tc bkts subBkts
 
-    collectSummaryPairs (name1,parser1,name2,parser2) = do
+    collectSummaryPairs (name1, parser1, name2, parser2) = do
       _ <- AT.string ("#[" <> name1) AT.<?> ("1. Parse  " <> T.unpack name1)
       void spacedEqualTo AT.<?> ("2. Parse  " <> T.unpack name1)
       d1 <- parser1

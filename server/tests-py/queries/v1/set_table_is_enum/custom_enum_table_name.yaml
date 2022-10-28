@@ -1,0 +1,102 @@
+- description: set custom name for enum table
+  url: /v1/query
+  status: 200
+  response:
+    message: success
+  query:
+    type: set_table_customization
+    args:
+      source: default
+      table: colors
+      configuration:
+        custom_name: customized_colors_table
+
+- description: Check that marking a table as an enum changed the schema
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      employees:
+        fields:
+        - name: favorite_color
+          type:
+            ofType:
+              name: customized_colors_table_enum
+        - name: gets_paid_on
+          type:
+            ofType:
+              name: String
+        - name: id
+          type:
+            ofType:
+              name: Int
+        - name: name
+          type:
+            ofType:
+              name: String
+  query:
+    query: |
+      {
+        employees: __type(name: "employees") {
+          fields {
+            name
+            type {
+              ofType {
+                name
+              }
+            }
+          }
+        }
+      }
+
+- description: unset custom name for enum table
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_set_table_customization
+    args:
+      source: default
+      table: colors
+      configuration:
+        custom_name: null
+
+- description: Check the schema
+  url: /v1/graphql
+  status: 200
+  response:
+    data:
+      employees:
+        fields:
+        - name: favorite_color
+          type:
+            ofType:
+              name: colors_enum
+        - name: gets_paid_on
+          type:
+            ofType:
+              name: String
+        - name: id
+          type:
+            ofType:
+              name: Int
+        - name: name
+          type:
+            ofType:
+              name: String
+
+  query:
+    query: |
+      {
+        employees: __type(name: "employees") {
+          fields {
+            name
+            type {
+              ofType {
+                name
+              }
+            }
+          }
+        }
+      }

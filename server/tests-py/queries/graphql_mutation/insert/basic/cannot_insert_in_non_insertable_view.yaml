@@ -3,10 +3,10 @@
   status: 200
   response:
     errors:
-    - extensions:
-        path: $.selectionSet.insert_person_const_view
-        code: validation-failed
-      message: "field \"insert_person_const_view\" not found in type: 'mutation_root'"
+      - extensions:
+          path: $.selectionSet.insert_person_const_view
+          code: validation-failed
+        message: "field 'insert_person_const_view' not found in type: 'mutation_root'"
 
   query:
     query: |

@@ -4,16 +4,16 @@ args:
   args:
     name: user
     definition:
-      url: http://localhost:5000/user-graphql
+      url: "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/user-graphql"
 
 - type: add_remote_schema
   args:
     name: character-iface
     definition:
-      url: http://localhost:5000/character-iface-graphql
+      url: "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/character-iface-graphql"
 
 - type: add_remote_schema
   args:
     name: union
     definition:
-      url: http://localhost:5000/union-graphql
+      url: "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/union-graphql"

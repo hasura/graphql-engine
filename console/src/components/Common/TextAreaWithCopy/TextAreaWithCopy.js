@@ -1,7 +1,10 @@
 import React from 'react';
+import { FaCopy } from 'react-icons/fa';
+
 import sqlFormatter from 'sql-formatter';
 import hljs from 'highlight.js';
 import PropTypes from 'prop-types';
+import style from './TextAreaWithCopy.module.scss';
 
 class TextAreaWithCopy extends React.Component {
   copyToClip(id, e) {
@@ -54,15 +57,8 @@ class TextAreaWithCopy extends React.Component {
   }
 
   render() {
-    const style = require('./TextAreaWithCopy.scss');
-
-    const {
-      copyText,
-      toolTipClass,
-      id,
-      containerId,
-      textLanguage,
-    } = this.props;
+    const { copyText, toolTipClass, id, containerId, textLanguage } =
+      this.props;
 
     const renderSimpleValue = () => {
       return (
@@ -131,8 +127,7 @@ class TextAreaWithCopy extends React.Component {
             >
               Copy
             </span>
-            <i
-              className={'fa fa-copy'}
+            <FaCopy
               onClick={this.copyToClip.bind(this, id)}
               onMouseLeave={this.resetCopy.bind(this, id)}
             />

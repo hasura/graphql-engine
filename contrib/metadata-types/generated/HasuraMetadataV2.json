@@ -1612,16 +1612,19 @@
                 },
                 "permissions": {
                     "description": "Permissions of the action",
-                    "type": "object",
-                    "properties": {
-                        "role": {
-                            "type": "string",
-                            "title": "role"
-                        }
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "role": {
+                                "type": "string",
+                                "title": "role"
+                            }
+                        },
+                        "required": [
+                            "role"
+                        ]
                     },
-                    "required": [
-                        "role"
-                    ],
                     "title": "permissions"
                 }
             },

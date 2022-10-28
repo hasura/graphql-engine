@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router';
+import { FaSearch } from 'react-icons/fa';
 
-import Button from '../../Button/Button';
-import styles from './LeftSubSidebar.scss';
+import { Button } from '@/new-components/Button';
+import { Analytics } from '@/features/Analytics';
+import styles from './LeftSubSidebar.module.scss';
 
 interface Props extends React.ComponentProps<'div'> {
   showAddBtn: boolean;
@@ -10,6 +12,7 @@ interface Props extends React.ComponentProps<'div'> {
   heading: string;
   addLink: string;
   addLabel: string;
+  addTrackId: string;
   addTestString: string;
   childListTestString: string;
 }
@@ -21,6 +24,7 @@ const LeftSubSidebar: React.FC<Props> = props => {
     heading,
     addLink,
     addLabel,
+    addTrackId,
     addTestString,
     children,
     childListTestString,
@@ -35,9 +39,11 @@ const LeftSubSidebar: React.FC<Props> = props => {
           className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
         >
           <Link className={styles.padd_remove_full} to={addLink}>
-            <Button size="xs" color="white" data-test={addTestString}>
-              {addLabel}
-            </Button>
+            <Analytics name={addTrackId} passHtmlAttributesToChildren>
+              <Button size="sm" mode="default" data-test={addTestString}>
+                {addLabel}
+              </Button>
+            </Analytics>
           </Link>
         </div>
       );
@@ -53,7 +59,7 @@ const LeftSubSidebar: React.FC<Props> = props => {
           <div
             className={`${styles.sidebarSearch} form-group col-xs-12 ${styles.padd_remove}`}
           >
-            <i className="fa fa-search" aria-hidden="true" />
+            <FaSearch aria-hidden="true" />
             {searchInput}
           </div>
         )}

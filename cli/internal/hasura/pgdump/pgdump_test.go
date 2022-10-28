@@ -4,20 +4,20 @@ import (
 	"io/ioutil"
 	"testing"
 
-	pg "github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/postgres"
+	pg "github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 func TestClient_Send(t *testing.T) {
-	portHasuraV13, teardown13 := testutil.StartHasura(t, "v1.3.3")
+	portHasuraV13, teardown13 := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown13()
-	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraVersion)
+	portHasuraLatest, teardownLatest := testutil.StartHasura(t, testutil.HasuraDockerImage)
 	defer teardownLatest()
 	type fields struct {
 		Client *httpc.Client
@@ -42,14 +42,15 @@ func TestClient_Send(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr bool
+		name      string
+		fields    fields
+		args      args
+		want      string
+		wantErr   bool
+		assertErr require.ErrorAssertionFunc
 	}{
 		{
-			"can make a pg_dump v1.3.3",
+			"can make a pg_dump hasura/graphql-engine:v1.3.3",
 			fields{
 				Client: testutil.NewHttpcClient(t, portHasuraV13, nil),
 				path:   "/v1alpha1/pg_dump",
@@ -65,9 +66,10 @@ func TestClient_Send(t *testing.T) {
     id1 numeric NOT NULL,
     id2 numeric NOT NULL
 );
-ALTER TABLE public.test OWNER TO postgres;
+ALTER TABLE public.test OWNER TO test;
 `,
 			false,
+			require.NoError,
 		},
 		{
 			"can make a pg_dump on latest",
@@ -87,9 +89,10 @@ CREATE TABLE public.test (
     id1 numeric NOT NULL,
     id2 numeric NOT NULL
 );
-ALTER TABLE public.test OWNER TO postgres;
+ALTER TABLE public.test OWNER TO test;
 `,
 			false,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -99,10 +102,8 @@ ALTER TABLE public.test OWNER TO postgres;
 				path:   tt.fields.path,
 			}
 			got, err := c.Send(tt.args.request)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
+			tt.assertErr(t, err)
+			if !tt.wantErr {
 				gotb, err := ioutil.ReadAll(got)
 				require.NoError(t, err)
 				require.Equal(t, tt.want, string(gotb))

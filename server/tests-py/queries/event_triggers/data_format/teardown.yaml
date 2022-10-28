@@ -1,0 +1,16 @@
+type: bulk
+args:
+- type: delete_event_trigger
+  args:
+    name: bigint_all
+- type: run_sql
+  args:
+    sql: |
+      drop table hge_tests.test_bigint;
+- type: delete_event_trigger
+  args:
+    name: geojson_all
+- type: run_sql
+  args:
+    sql: |
+      drop table hge_tests.test_geojson;

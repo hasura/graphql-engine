@@ -31,7 +31,9 @@ Contentful remote schema is added as part of the migration. Configure the enviro
 Execute the following command inside `hasura` to apply the migrations
 
 ```bash
+hasura metadata apply
 hasura migrate apply
+hasura metadata reload
 ```
 
 This will create all the necessary tables, relationships and remote joins.

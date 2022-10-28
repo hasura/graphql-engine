@@ -1,19 +1,24 @@
+import pickBy from 'lodash.pickby';
+import produce from 'immer';
 import { Driver, getSupportedDrivers } from '../../../../dataSources';
 import { makeConnectionStringFromConnectionParams } from './ManageDBUtils';
-import { addDataSource } from '../../../../metadata/actions';
+import { addDataSource, renameDataSource } from '../../../../metadata/actions';
 import { Dispatch } from '../../../../types';
-import { SourceConnectionInfo } from '../../../../metadata/types';
+import {
+  SourceConnectionInfo,
+  ConnectionPoolSettings,
+  SSLModeOptions,
+  SSLConfigOptions,
+  IsolationLevelOptions,
+  GraphQLFieldCustomization,
+  NamingConventionOptions,
+} from '../../../../metadata/types';
+import { isPostgresFlavour } from './utils';
 
 export const connectionTypes = {
   DATABASE_URL: 'DATABASE_URL',
   CONNECTION_PARAMS: 'CONNECTION_PARAMETERS',
   ENV_VAR: 'ENVIRONMENT_VARIABLES',
-};
-
-type ConnectionSettings = {
-  max_connections?: number;
-  idle_timeout?: number;
-  retries?: number;
 };
 
 type ConnectionParams = {
@@ -30,36 +35,49 @@ export type ConnectDBState = {
   connectionParamState: ConnectionParams;
   databaseURLState: {
     dbURL: string;
-    serviceAccountFile: string;
+    serviceAccount: string;
+    global_select_limit: number;
     projectId: string;
     datasets: string;
   };
   envVarState: {
     envVar: string;
   };
-  connectionSettings: ConnectionSettings;
+  extensionsSchema?: string;
+  connectionSettings?: ConnectionPoolSettings;
+  sslConfiguration?: SSLConfigOptions;
+  isolationLevel?: IsolationLevelOptions;
+  preparedStatements?: boolean;
+  customization?: GraphQLFieldCustomization;
+};
+
+const defaultConnectionParamState = {
+  host: '',
+  port: '',
+  username: '',
+  password: '',
+  database: '',
 };
 
 export const defaultState: ConnectDBState = {
   displayName: '',
   dbType: 'postgres',
-  connectionParamState: {
-    host: '',
-    port: '',
-    username: '',
-    password: '',
-    database: '',
-  },
+  connectionParamState: defaultConnectionParamState,
   databaseURLState: {
     dbURL: '',
-    serviceAccountFile: '',
+    serviceAccount: '',
+    global_select_limit: 1000,
     projectId: '',
     datasets: '',
   },
   envVarState: {
     envVar: '',
   },
-  connectionSettings: {},
+  preparedStatements: false,
+  isolationLevel: 'read-committed',
+  customization: {
+    namingConvention: 'hasura-default',
+  },
 };
 
 type DefaultStateProps = {
@@ -68,6 +86,7 @@ type DefaultStateProps = {
     envVar?: string;
     dbName?: string;
   };
+  extensionsSchema?: string;
 };
 
 export const getDefaultState = (props?: DefaultStateProps): ConnectDBState => {
@@ -81,23 +100,51 @@ export const getDefaultState = (props?: DefaultStateProps): ConnectDBState => {
     envVarState: {
       envVar: props?.dbConnection.envVar || '',
     },
+    ...(props?.extensionsSchema && {
+      extensionsSchema: props?.extensionsSchema,
+    }),
   };
 };
 
 const setNumberFromString = (str: string) => {
-  return parseInt(str.trim(), 10);
+  return str ? parseInt(str.trim(), 10) : undefined;
 };
+
+const setDataFromEnv = (str: string) => {
+  return str
+    ? {
+        from_env: str,
+      }
+    : undefined;
+};
+
+const checkUndef = (obj?: Record<string, any>) =>
+  obj && Object.values(obj).some(el => el !== undefined && el !== null);
+
+const checkEmpty = (obj?: Record<string, any>) =>
+  obj && Object.keys(obj).length !== 0 && checkUndef(obj);
 
 export const connectDataSource = (
   dispatch: Dispatch,
   typeConnection: string,
   currentState: ConnectDBState,
   cb: () => void,
-  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[]
+  replicas?: Omit<
+    SourceConnectionInfo,
+    | 'connection_string'
+    | 'use_prepared_statements'
+    | 'ssl_configuration'
+    | 'isolation_level'
+  >[],
+  isEditState = false,
+  isRenameSource = false,
+  currentName = '',
+  shouldShowNotification = true
 ) => {
+  let connectionParams: ConnectionParams | undefined;
   let databaseURL: string | { from_env: string } =
     currentState.dbType === 'bigquery'
-      ? currentState.databaseURLState.serviceAccountFile.trim()
+      ? currentState.databaseURLState.serviceAccount.trim()
       : currentState.databaseURLState.dbURL.trim();
   if (
     typeConnection === connectionTypes.ENV_VAR &&
@@ -108,35 +155,78 @@ export const connectDataSource = (
     databaseURL = { from_env: currentState.envVarState.envVar.trim() };
   } else if (
     typeConnection === connectionTypes.CONNECTION_PARAMS &&
+    currentState.dbType !== 'bigquery' &&
     getSupportedDrivers('connectDbForm.connectionParameters').includes(
       currentState.dbType
     )
   ) {
+    if (isPostgresFlavour(currentState.dbType)) {
+      connectionParams = currentState.connectionParamState;
+    }
     databaseURL = makeConnectionStringFromConnectionParams({
       dbType: currentState.dbType,
       ...currentState.connectionParamState,
     });
   }
-
-  return dispatch(
-    addDataSource(
-      {
-        driver: currentState.dbType,
-        payload: {
-          name: currentState.displayName.trim(),
-          dbUrl: databaseURL,
-          connection_pool_settings: currentState.connectionSettings,
-          bigQuery: {
-            projectId: currentState.databaseURLState.projectId,
-            datasets: currentState.databaseURLState.datasets,
-          },
-        },
+  const data = {
+    driver: currentState.dbType,
+    payload: {
+      name: currentState.displayName.trim(),
+      dbUrl: databaseURL,
+      connection_parameters: connectionParams
+        ? {
+            ...connectionParams,
+            port: Number(connectionParams?.port),
+          }
+        : undefined,
+      replace_configuration: isEditState,
+      bigQuery: {
+        projectId: currentState.databaseURLState.projectId,
+        datasets: currentState.databaseURLState.datasets,
+        global_select_limit: currentState.databaseURLState.global_select_limit,
       },
-      cb,
-      replicas
-    )
-  );
+      ...(checkEmpty(currentState.connectionSettings) && {
+        connection_pool_settings: currentState.connectionSettings,
+      }),
+      ...(checkEmpty(currentState.sslConfiguration) && {
+        sslConfiguration: currentState.sslConfiguration,
+      }),
+      ...(currentState.extensionsSchema &&
+        currentState.extensionsSchema !== '' && {
+          extensionsSchema: currentState.extensionsSchema,
+        }),
+      preparedStatements: currentState.preparedStatements,
+      isolationLevel: currentState.isolationLevel,
+      ...(checkEmpty(currentState.customization) && {
+        customization: {
+          ...(checkEmpty(currentState.customization?.rootFields) && {
+            rootFields: currentState.customization?.rootFields,
+          }),
+          ...(checkEmpty(currentState.customization?.typeNames) && {
+            typeNames: currentState.customization?.typeNames,
+          }),
+          namingConvention: currentState.customization?.namingConvention,
+        },
+      }),
+    },
+  };
+
+  if (isRenameSource) {
+    return dispatch(
+      renameDataSource(
+        data,
+        cb,
+        { name: currentName, isRenameSource },
+        replicas
+      )
+    );
+  }
+
+  return dispatch(addDataSource(data, cb, replicas, shouldShowNotification));
 };
+
+export const removeEmptyValues = (obj: any) =>
+  pickBy(obj, value => value !== '');
 
 export type ConnectDBActions =
   | {
@@ -145,12 +235,21 @@ export type ConnectDBActions =
         name: string;
         driver: Driver;
         databaseUrl: string;
-        connectionSettings: ConnectionSettings;
+        connectionParamState?: ConnectionParams;
+        extensionsSchema?: string;
+        connectionSettings?: ConnectionPoolSettings;
+        preparedStatements: boolean;
+        isolationLevel: IsolationLevelOptions;
+        sslConfiguration?: SSLConfigOptions;
+        customization?: GraphQLFieldCustomization;
       };
     }
+  | { type: 'UPDATE_PARAM_STATE'; data: ConnectionParams }
   | { type: 'UPDATE_DISPLAY_NAME'; data: string }
   | { type: 'UPDATE_DB_URL'; data: string }
-  | { type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT_FILE'; data: string }
+  | { type: 'UPDATE_EXTENSIONS_SCHEMA'; data?: string }
+  | { type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT'; data: string }
+  | { type: 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT'; data: number }
   | { type: 'UPDATE_DB_BIGQUERY_PROJECT_ID'; data: string }
   | { type: 'UPDATE_DB_BIGQUERY_DATASETS'; data: string }
   | { type: 'UPDATE_DB_URL_ENV_VAR'; data: string }
@@ -160,11 +259,30 @@ export type ConnectDBActions =
   | { type: 'UPDATE_DB_PASSWORD'; data: string }
   | { type: 'UPDATE_DB_DATABASE_NAME'; data: string }
   | { type: 'UPDATE_MAX_CONNECTIONS'; data: string }
+  | { type: 'UPDATE_TOTAL_MAX_CONNECTIONS'; data: string }
   | { type: 'UPDATE_RETRIES'; data: string }
   | { type: 'UPDATE_IDLE_TIMEOUT'; data: string }
+  | { type: 'UPDATE_POOL_TIMEOUT'; data: string }
+  | { type: 'UPDATE_CONNECTION_LIFETIME'; data: string }
   | { type: 'UPDATE_DB_DRIVER'; data: Driver }
-  | { type: 'UPDATE_CONNECTION_SETTINGS'; data: ConnectionSettings }
-  | { type: 'RESET_INPUT_STATE' };
+  | { type: 'UPDATE_CONNECTION_SETTINGS'; data: ConnectionPoolSettings }
+  | { type: 'UPDATE_SSL_MODE'; data: SSLModeOptions }
+  | { type: 'UPDATE_SSL_ROOT_CERT'; data: string }
+  | { type: 'UPDATE_SSL_CERT'; data: string }
+  | { type: 'UPDATE_SSL_KEY'; data: string }
+  | { type: 'UPDATE_SSL_PASSWORD'; data: string }
+  | { type: 'UPDATE_PREPARED_STATEMENTS'; data: boolean }
+  | { type: 'UPDATE_ISOLATION_LEVEL'; data: IsolationLevelOptions }
+  | { type: 'RESET_INPUT_STATE' }
+  | {
+      type: 'UPDATE_CUSTOMIZATION_NAMING_CONVENTION';
+      data: NamingConventionOptions;
+    }
+  | { type: 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_NAMESPACE'; data: string }
+  | { type: 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_PREFIX'; data: string }
+  | { type: 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_SUFFIX'; data: string }
+  | { type: 'UPDATE_CUSTOMIZATION_TYPE_NAMES_PREFIX'; data: string }
+  | { type: 'UPDATE_CUSTOMIZATION_TYPE_NAMES_SUFFIX'; data: string };
 
 export const connectDBReducer = (
   state: ConnectDBState,
@@ -180,7 +298,19 @@ export const connectDBReducer = (
           ...state.databaseURLState,
           dbURL: action.data.databaseUrl,
         },
+        connectionParamState:
+          action.data.connectionParamState || defaultConnectionParamState,
         connectionSettings: action.data.connectionSettings,
+        preparedStatements: action.data.preparedStatements,
+        isolationLevel: action.data.isolationLevel,
+        sslConfiguration: action.data.sslConfiguration,
+        customization: action.data?.customization,
+        extensionsSchema: action.data?.extensionsSchema,
+      };
+    case 'UPDATE_PARAM_STATE':
+      return {
+        ...state,
+        connectionParamState: action.data,
       };
     case 'UPDATE_DISPLAY_NAME':
       return {
@@ -259,6 +389,13 @@ export const connectDBReducer = (
           max_connections: setNumberFromString(action.data),
         },
       };
+    case 'UPDATE_TOTAL_MAX_CONNECTIONS':
+      return produce(state, (draft: ConnectDBState) => {
+        draft.connectionSettings = state.connectionSettings ?? {};
+        draft.connectionSettings.total_max_connections = setNumberFromString(
+          action.data
+        );
+      });
     case 'UPDATE_RETRIES':
       return {
         ...state,
@@ -275,18 +412,97 @@ export const connectDBReducer = (
           idle_timeout: setNumberFromString(action.data),
         },
       };
+    case 'UPDATE_POOL_TIMEOUT':
+      return {
+        ...state,
+        connectionSettings: {
+          ...state.connectionSettings,
+          pool_timeout: setNumberFromString(action.data),
+        },
+      };
+    case 'UPDATE_CONNECTION_LIFETIME':
+      return {
+        ...state,
+        connectionSettings: {
+          ...state.connectionSettings,
+          connection_lifetime: setNumberFromString(action.data),
+        },
+      };
     case 'UPDATE_CONNECTION_SETTINGS':
       return {
         ...state,
         connectionSettings: action.data,
       };
-    case 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT_FILE':
+    case 'UPDATE_SSL_MODE':
+      return {
+        ...state,
+        sslConfiguration: {
+          ...state.sslConfiguration,
+          sslmode: action.data,
+        },
+      };
+    case 'UPDATE_SSL_ROOT_CERT':
+      return {
+        ...state,
+        sslConfiguration: {
+          ...state.sslConfiguration,
+          sslrootcert: setDataFromEnv(action.data),
+        },
+      };
+    case 'UPDATE_SSL_CERT':
+      return {
+        ...state,
+        sslConfiguration: {
+          ...state.sslConfiguration,
+          sslcert: setDataFromEnv(action.data),
+        },
+      };
+    case 'UPDATE_SSL_KEY':
+      return {
+        ...state,
+        sslConfiguration: {
+          ...state.sslConfiguration,
+          sslkey: setDataFromEnv(action.data),
+        },
+      };
+    case 'UPDATE_SSL_PASSWORD':
+      return {
+        ...state,
+        sslConfiguration: {
+          ...state.sslConfiguration,
+          sslpassword: setDataFromEnv(action.data),
+        },
+      };
+    case 'UPDATE_ISOLATION_LEVEL':
+      return {
+        ...state,
+        isolationLevel: action.data,
+      };
+    case 'UPDATE_PREPARED_STATEMENTS':
+      return {
+        ...state,
+        preparedStatements: action.data,
+      };
+    case 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT':
       return {
         ...state,
         databaseURLState: {
           ...state.databaseURLState,
-          serviceAccountFile: action.data,
+          serviceAccount: action.data,
         },
+      };
+    case 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT':
+      return {
+        ...state,
+        databaseURLState: {
+          ...state.databaseURLState,
+          global_select_limit: action.data,
+        },
+      };
+    case 'UPDATE_EXTENSIONS_SCHEMA':
+      return {
+        ...state,
+        extensionsSchema: action.data,
       };
     case 'UPDATE_DB_BIGQUERY_DATASETS':
       return {
@@ -302,6 +518,79 @@ export const connectDBReducer = (
         databaseURLState: {
           ...state.databaseURLState,
           projectId: action.data,
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_NAMING_CONVENTION':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          namingConvention: action.data,
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_NAMESPACE':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          rootFields: {
+            ...removeEmptyValues({
+              ...(state.customization?.rootFields || {}),
+              namespace: action.data,
+            }),
+          },
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_PREFIX':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          rootFields: {
+            ...removeEmptyValues({
+              ...(state.customization?.rootFields || {}),
+              prefix: action.data,
+            }),
+          },
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_ROOT_FIELDS_SUFFIX':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          rootFields: {
+            ...removeEmptyValues({
+              ...(state.customization?.rootFields || {}),
+              suffix: action.data,
+            }),
+          },
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_TYPE_NAMES_PREFIX':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          typeNames: {
+            ...removeEmptyValues({
+              ...(state.customization?.typeNames || {}),
+              prefix: action.data,
+            }),
+          },
+        },
+      };
+    case 'UPDATE_CUSTOMIZATION_TYPE_NAMES_SUFFIX':
+      return {
+        ...state,
+        customization: {
+          ...state.customization,
+          typeNames: {
+            ...removeEmptyValues({
+              ...(state.customization?.typeNames || {}),
+              suffix: action.data,
+            }),
+          },
         },
       };
     default:
@@ -332,16 +621,24 @@ export interface ResetReadReplicaState {
   type: 'RESET_READ_REPLICA_STATE';
 }
 
+export interface SetReadReplicaState {
+  type: 'SET_REPLICA_STATE';
+  data: ExtendedConnectDBState[];
+}
+
 export type ReadReplicaActions =
   | AddReadReplicaToState
   | RemoveReadReplicaFromState
-  | ResetReadReplicaState;
+  | ResetReadReplicaState
+  | SetReadReplicaState;
 
 export const readReplicaReducer = (
   state: ReadReplicaState,
   action: ReadReplicaActions
 ): ReadReplicaState => {
   switch (action.type) {
+    case 'SET_REPLICA_STATE':
+      return action.data ?? [];
     case 'ADD_READ_REPLICA':
       return [...state, action.data];
     case 'REMOVE_READ_REPLICA':
@@ -371,13 +668,17 @@ export const makeReadReplicaConnectionObject = (
   }
 
   const pool_settings: any = {};
-  if (stateVal.connectionSettings.max_connections) {
+  if (stateVal.connectionSettings?.max_connections) {
     pool_settings.max_connections = stateVal.connectionSettings.max_connections;
   }
-  if (stateVal.connectionSettings.idle_timeout) {
+  if (stateVal.connectionSettings?.total_max_connections) {
+    pool_settings.total_max_connections =
+      stateVal.connectionSettings.total_max_connections;
+  }
+  if (stateVal.connectionSettings?.idle_timeout) {
     pool_settings.idle_timeout = stateVal.connectionSettings.idle_timeout;
   }
-  if (stateVal.connectionSettings.retries) {
+  if (stateVal.connectionSettings?.retries) {
     pool_settings.retries = stateVal.connectionSettings.retries;
   }
 

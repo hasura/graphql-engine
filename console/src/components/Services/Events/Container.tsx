@@ -1,11 +1,12 @@
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
 import LeftSidebar from './Sidebar';
-import styles from '../../Common/TableCommon/Table.scss';
+import styles from '../../Common/TableCommon/Table.module.scss';
 import {
   ADHOC_EVENTS_HEADING,
   DATA_EVENTS_HEADING,
@@ -24,17 +25,27 @@ import { findEventTrigger, findScheduledTrigger } from './utils';
 import { ReduxState } from '../../../types';
 
 import { mapDispatchToPropsEmpty } from '../../Common/utils/reactUtils';
-import { getEventTriggers, getCronTriggers } from '../../../metadata/selector';
+import { getEventTriggers } from '../../../metadata/selector';
+import { useGetCronTriggers } from './CronTriggers/Hooks/useGetCronTriggers';
 
 interface Props extends InjectedProps {}
 
 const Container: React.FC<Props> = props => {
+  const { data: cronTriggers, isLoading, error } = useGetCronTriggers();
+  if (isLoading) {
+    return <span>Loading...</span>;
+  }
+  if (!cronTriggers) {
+    return <span>Could not find any cron triggers</span>;
+  }
+  if (error) {
+    return <span>There was an error, please try again later</span>;
+  }
   const {
     children,
     pathname: currentLocation,
     triggerName: currentTriggerName,
     eventTriggers,
-    cronTriggers,
   } = props;
 
   let currentEventTrigger;
@@ -52,65 +63,70 @@ const Container: React.FC<Props> = props => {
   }
 
   const sidebarContent = (
-    <ul>
-      <li
-        role="presentation"
-        className={isDataEventsRoute(currentLocation) ? styles.active : ''}
-      >
-        {/* <li role="presentation" className={styles.active}>
+    <Analytics name="EventsSidebar" {...REDACT_EVERYTHING}>
+      <ul>
+        <li
+          role="presentation"
+          className={isDataEventsRoute(currentLocation) ? styles.active : ''}
+        >
+          {/* <li role="presentation" className={styles.active}>
           <Link
             className={styles.linkBorder}
             style={{
               paddingRight: '20px',
             }}
-          >
+            >
 
+            </Link>
+          </li> */}
+          <Link className={styles.linkBorder} to={getDataEventsLandingRoute()}>
+            {DATA_EVENTS_HEADING}
           </Link>
-        </li> */}
-        <Link className={styles.linkBorder} to={getDataEventsLandingRoute()}>
-          {DATA_EVENTS_HEADING}
-        </Link>
 
-        {isDataEventsRoute(currentLocation) ? (
-          <LeftSidebar
-            triggers={eventTriggers}
-            service="data"
-            currentTrigger={currentEventTrigger}
-          />
-        ) : null}
-      </li>
-      <li
-        role="presentation"
-        className={isScheduledEventsRoute(currentLocation) ? styles.active : ''}
-      >
-        <Link
-          className={styles.linkBorder}
-          to={getScheduledEventsLandingRoute()}
+          {isDataEventsRoute(currentLocation) ? (
+            <LeftSidebar
+              triggers={eventTriggers}
+              service="data"
+              currentTrigger={currentEventTrigger}
+            />
+          ) : null}
+        </li>
+        <li
+          role="presentation"
+          className={
+            isScheduledEventsRoute(currentLocation) ? styles.active : ''
+          }
         >
-          {CRON_EVENTS_HEADING}
-        </Link>
-        {isScheduledEventsRoute(currentLocation) ? (
-          <LeftSidebar
-            triggers={cronTriggers}
-            service="cron"
-            currentTrigger={currentScheduledTrigger}
-          />
-        ) : null}
-      </li>
-      <li
-        role="presentation"
-        className={
-          isAdhocScheduledEventRoute(currentLocation) ? styles.active : ''
-        }
-      >
-        <Link
-          className={styles.linkBorder}
-          to={getAdhocEventsRoute('absolute', '')}
+          <Link
+            className={styles.linkBorder}
+            to={getScheduledEventsLandingRoute()}
+          >
+            {CRON_EVENTS_HEADING}
+          </Link>
+          {isScheduledEventsRoute(currentLocation) ? (
+            <LeftSidebar
+              triggers={cronTriggers}
+              service="cron"
+              currentTrigger={currentScheduledTrigger}
+            />
+          ) : null}
+        </li>
+        <li
+          role="presentation"
+          className={
+            isAdhocScheduledEventRoute(currentLocation) ? styles.active : ''
+          }
         >
-          {ADHOC_EVENTS_HEADING}
-        </Link>
-      </li>
-    </ul>
+          <Link
+            className={styles.linkBorder}
+            data-test="one-off-trigger"
+            to={getAdhocEventsRoute('absolute', '')}
+          >
+            {ADHOC_EVENTS_HEADING}
+          </Link>
+        </li>
+      </ul>
+    </Analytics>
   );
 
   const helmetTitle = 'Triggers | Hasura';
@@ -135,7 +151,6 @@ const mapStateToProps = (state: ReduxState, ownProps: ExternalProps) => {
   return {
     ...state.events,
     eventTriggers: getEventTriggers(state),
-    cronTriggers: getCronTriggers(state),
     pathname: ownProps.location.pathname,
     triggerName: ownProps.params.triggerName,
   };

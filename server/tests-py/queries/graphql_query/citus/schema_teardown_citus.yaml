@@ -1,0 +1,21 @@
+type: bulk
+args:
+
+# first, drop functions to avoid 'cannot drop due to the following dependent objects' error.
+- type: citus_run_sql
+  args:
+    source: citus
+    sql: |
+      drop function search_disasters_sql;
+      drop function search_disasters_plpgsql;
+
+- type: citus_run_sql
+  args:
+    source: citus
+    sql: |
+      drop table article cascade;
+      drop table author cascade;
+      drop table country cascade;
+      drop table state cascade;
+      drop table disaster cascade;
+      drop table disaster_affected_state cascade;

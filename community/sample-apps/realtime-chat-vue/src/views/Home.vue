@@ -5,7 +5,7 @@
           <div class="hasura-logo">
             <img src="https://graphql-engine-cdn.hasura.io/img/powered_by_hasura_black.svg" @click="windowOpen" alt="Powered by Hasura"/>
             &nbsp; | &nbsp;
-            <a href="https://realtime-chat.demo.hasura.app/console" target="_blank" rel="noopener noreferrer">
+            <a href="https://realtime-chat.demo.hasura.io/console" target="_blank" rel="noopener noreferrer">
               Backend
             </a>
             &nbsp; | &nbsp;

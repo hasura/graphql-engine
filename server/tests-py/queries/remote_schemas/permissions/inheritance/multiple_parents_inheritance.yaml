@@ -1,0 +1,19 @@
+description: Some of the parent roles having not exactly same permissions but having the relevant parts as equal, the permission should be inherited successfully
+url: /v1/graphql
+headers:
+  X-Hasura-Role: inherited_role1
+  X-Hasura-User-Id: '1'
+status: 200
+query:
+  query: |
+    query {
+      hello
+      user {
+        user_id
+      }
+    }
+response:
+  data:
+    hello: world
+    user:
+      user_id: 1

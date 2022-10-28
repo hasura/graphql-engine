@@ -1,26 +1,47 @@
--- | A module that defines the current catalog version and nothing else. This is necessary to
--- circumvent the unfortunate “GHC stage restriction,” which prevents us from using a binding in a
--- compile-time splice unless it is defined in a different module. The actual migration code is in
--- "Hasura.Server.Migrate".
 module Hasura.Server.Migrate.Version
-  ( latestCatalogVersion
-  , latestCatalogVersionString
-  ) where
+  ( MetadataCatalogVersion (..),
+    SourceCatalogVersion (..),
+  )
+where
 
-import           Hasura.Prelude
+import Data.List (isPrefixOf)
+import Hasura.Prelude
+import Hasura.SQL.Backend (BackendType)
+import Language.Haskell.TH.Lift (Lift)
 
-import qualified Data.Text                  as T
-import qualified Language.Haskell.TH.Syntax as TH
+-- | Represents the catalog version. This is stored in the database and then
+-- compared with the latest version on startup.
+data MetadataCatalogVersion
+  = -- | A typical catalog version.
+    MetadataCatalogVersion Int
+  | -- | Maintained for compatibility with catalog version 0.8.
+    MetadataCatalogVersion08
+  deriving stock (Eq, Lift)
 
-import           Data.FileEmbed             (embedStringFile, makeRelativeToProject)
+instance Ord MetadataCatalogVersion where
+  compare = compare `on` toFloat
+    where
+      toFloat :: MetadataCatalogVersion -> Float
+      toFloat (MetadataCatalogVersion v) = fromIntegral v
+      toFloat MetadataCatalogVersion08 = 0.8
 
--- | The current catalog schema version. We store this in a file
--- because we want to append the current verson to the catalog_versions file
--- when tagging a new release, in @tag-release.sh@.
-latestCatalogVersion :: Integer
-latestCatalogVersion =
-  $(do let s = $(makeRelativeToProject "src-rsr/catalog_version.txt" >>= embedStringFile)
-       TH.lift (read s :: Integer))
+instance Enum MetadataCatalogVersion where
+  toEnum = MetadataCatalogVersion
+  fromEnum (MetadataCatalogVersion v) = v
+  fromEnum MetadataCatalogVersion08 = error "Cannot enumerate unstable catalog versions."
 
-latestCatalogVersionString :: Text
-latestCatalogVersionString = T.pack $ show latestCatalogVersion
+instance Show MetadataCatalogVersion where
+  show (MetadataCatalogVersion v) = show v
+  show MetadataCatalogVersion08 = "0.8"
+
+instance Read MetadataCatalogVersion where
+  readsPrec prec s
+    | "0.8" `isPrefixOf` s =
+      [(MetadataCatalogVersion08, drop 3 s)]
+    | otherwise =
+      map (first MetadataCatalogVersion) $ filter ((>= 0) . fst) $ readsPrec @Int prec s
+
+-- | This is the source catalog version, used when deciding whether to (re-)create event triggers.
+newtype SourceCatalogVersion (backend :: BackendType) = SourceCatalogVersion Int
+  deriving newtype (Eq, Enum, Show, Read)
+  deriving stock (Lift)

@@ -1,10 +1,11 @@
 import React from 'react';
-import Button from '../../../../Common/Button/Button';
+import { useQueryClient } from 'react-query';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Button } from '@/new-components/Button';
 import { useScheduledTrigger } from '../state';
 import { ScheduledTrigger } from '../../types';
 import { Dispatch } from '../../../../../types';
 import { parseServerScheduledTrigger } from '../utils';
-import styles from '../../Events.scss';
 import CronTriggerFrom from '../../Common/Components/CronTriggerForm';
 import { saveScheduledTrigger, deleteScheduledTrigger } from '../../ServerIO';
 
@@ -16,6 +17,7 @@ type Props = {
 const Modify: React.FC<Props> = props => {
   const { dispatch, currentTrigger } = props;
   const { state, setState } = useScheduledTrigger();
+  const queryClient = useQueryClient();
 
   React.useEffect(() => {
     if (currentTrigger) {
@@ -27,10 +29,10 @@ const Modify: React.FC<Props> = props => {
   if (!currentTrigger) {
     return null;
   }
-
   const deleteFunc = () => {
     const requestCallback = () => {
       setState.loading('delete', false);
+      queryClient.refetchQueries(['cronTrigger'], { active: true });
     };
     setState.loading('delete', true);
     dispatch(
@@ -55,29 +57,33 @@ const Modify: React.FC<Props> = props => {
   };
 
   return (
-    <div className={styles.add_mar_bottom}>
-      <CronTriggerFrom state={state} setState={setState} />
-      <div>
-        <Button
-          onClick={onSave}
-          color="yellow"
-          size="sm"
-          disabled={state.loading.modify}
-          className={`${styles.add_mar_right}`}
-        >
-          {state.loading.modify ? 'Saving...' : 'Save'}
-        </Button>
-        <Button
-          onClick={deleteFunc}
-          color="red"
-          size="sm"
-          disabled={state.loading.delete}
-          className={`${styles.add_mar_right}`}
-        >
-          {state.loading.delete ? 'Deleting...' : 'Delete'}
-        </Button>
+    <Analytics name="ScheduledTriggerModify" {...REDACT_EVERYTHING}>
+      <div className="mb-md">
+        <CronTriggerFrom state={state} setState={setState} />
+        <div className="flex">
+          <div className="mr-md">
+            <Button
+              onClick={onSave}
+              mode="primary"
+              disabled={state.loading.modify}
+              loadingText="Saving..."
+              isLoading={state.loading.modify}
+            >
+              Save
+            </Button>
+          </div>
+          <div className="mr-md">
+            <Button
+              onClick={deleteFunc}
+              mode="destructive"
+              disabled={state.loading.delete}
+            >
+              {state.loading.delete ? 'Deleting...' : 'Delete'}
+            </Button>
+          </div>
+        </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 

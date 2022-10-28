@@ -3,8 +3,9 @@ import React from 'react';
 import { getPlaceholder } from '../../utils';
 import JsonInput from '../../../../Common/CustomInputTypes/JsonInput';
 import TextInput from '../../../../Common/CustomInputTypes/TextInput';
-import styles from '../../../../Common/TableCommon/Table.scss';
+import styles from '../../../../Common/TableCommon/Table.module.scss';
 import { dataSource } from '../../../../../dataSources';
+import { onClick } from './typedInputUtils/onClick';
 
 export const TypedInput = ({
   enumOptions,
@@ -31,13 +32,6 @@ export const TypedInput = ({
       return prevValue === null ? '' : prevValue;
     }
     return '';
-  };
-
-  const onClick = e => {
-    e.target
-      .closest('.radio-inline')
-      .querySelector('input[type="radio"]').checked = true;
-    e.target.focus();
   };
 
   const standardInputProps = {

@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+PARAMS=""
+BACKEND="${BACKEND:-postgres}"
+
+die_backends() {
+cat <<EOL
+Invalid --backend argument. Available backends:
+  postgres (default)
+  bigquery
+  citus
+  mssql
+  mysql
+
+EOL
+exit 1
+}
+
+while (( "$#" )); do
+  case "$1" in
+    --backend)
+      if [ -n "$2" ] && [ "${2:0:1}" != "-" ]; then
+        BACKEND=$2
+        shift 2
+      fi
+      ;;
+    *) # preserve positional arguments
+      PARAMS="$PARAMS $1"
+      shift
+      ;;
+  esac
+done
+
+# validate backend argument
+case "$BACKEND" in
+  postgres)
+  ;;
+  bigquery)
+    source "scripts/bigquery.sh"
+
+    verify_bigquery_pytest_env
+  ;;
+  citus)
+  ;;
+  mssql)
+  ;;
+  mysql)
+  ;;
+  *)
+    die_backends
+  ;;
+esac
+
+# set positional arguments in their proper place
+eval set -- "$PARAMS"
+export BACKEND

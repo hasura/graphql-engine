@@ -37,3 +37,5 @@ response:
       articles:
       - title: Title 3
         id: '3'
+      - title: Title 4
+        id: '4'

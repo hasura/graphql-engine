@@ -1,5 +1,6 @@
 import React, { useReducer } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { FaPencilAlt } from 'react-icons/fa';
 
 import {
   getFunctions,
@@ -22,7 +23,7 @@ import {
 } from '../../../../../../metadata/types';
 import Tooltip from '../../../../../Common/Tooltip/Tooltip';
 
-import styles from '../../../../../Common/Permissions/PermissionStyles.scss';
+import styles from '../../../../../Common/Permissions/PermissionStyles.module.scss';
 
 const getFunctionPermissions = (
   allFunctions: InjectedProps['allFunctions'],
@@ -148,7 +149,7 @@ const getPermissionAccessString = (permissionSymbol: JSX.Element) => {
 
 const EditIcon = () => (
   <span className={styles.editPermsIcon}>
-    <i className="fa fa-pencil" aria-hidden="true" />
+    <FaPencilAlt aria-hidden="true" />
   </span>
 );
 

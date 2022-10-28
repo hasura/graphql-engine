@@ -5,19 +5,23 @@
   status: 400
   response:
     internal:
-    - definition:
-        schema: public
-        name: stable_func1
-      reason: 'in function "stable_func1": the function "stable_func1" cannot be tracked
-        because the function was requested to be exposed as a mutation, but is not
-        marked VOLATILE. Maybe the function was given the wrong volatility when it
-        was defined?'
-      type: function
+      - definition:
+          schema: public
+          name: stable_func1
+        reason:
+          'Inconsistent object: in function "stable_func1": the function "stable_func1"
+          cannot be tracked because the function was requested to be exposed as a mutation,
+          but is not marked VOLATILE. Maybe the function was given the wrong volatility
+          when it was defined?'
+        name: function stable_func1 in source default
+        type: function
     path: $.args
-    error: 'in function "stable_func1": the function "stable_func1" cannot be tracked
-      because the function was requested to be exposed as a mutation, but is not marked
-      VOLATILE. Maybe the function was given the wrong volatility when it was defined?'
-    code: constraint-violation
+    error:
+      'Inconsistent object: in function "stable_func1": the function "stable_func1"
+      cannot be tracked because the function was requested to be exposed as a mutation,
+      but is not marked VOLATILE. Maybe the function was given the wrong volatility
+      when it was defined?'
+    code: invalid-configuration
   query:
     version: 2
     type: track_function
@@ -25,4 +29,3 @@
       function: stable_func1
       configuration:
         exposed_as: mutation
-

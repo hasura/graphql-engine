@@ -1,60 +1,62 @@
+-- | Postgres Execute Mutation
+--
+-- Generic combinators for translating and excecuting IR mutation statements.
+-- Used by the specific mutation modules, e.g. 'Hasura.Backends.Postgres.Execute.Insert'.
+--
+-- See 'Hasura.Backends.Postgres.Instances.Execute'.
 module Hasura.Backends.Postgres.Execute.Mutation
-  ( MutationRemoteJoinCtx
-  , MutateResp(..)
-  --
-  , execDeleteQuery
-  , execInsertQuery
-  , execUpdateQuery
-  --
-  , executeMutationOutputQuery
-  , mutateAndFetchCols
-  ) where
+  ( MutateResp (..),
+    --
+    execDeleteQuery,
+    execInsertQuery,
+    execUpdateQuery,
+    --
+    executeMutationOutputQuery,
+    mutateAndFetchCols,
+  )
+where
 
-import           Hasura.Prelude
+import Data.Aeson
+import Data.Sequence qualified as DS
+import Database.PG.Query qualified as PG
+import Hasura.Backends.Postgres.Connection
+import Hasura.Backends.Postgres.SQL.DML qualified as S
+import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.SQL.Value
+import Hasura.Backends.Postgres.Translate.Delete
+import Hasura.Backends.Postgres.Translate.Insert
+import Hasura.Backends.Postgres.Translate.Mutation
+import Hasura.Backends.Postgres.Translate.Returning
+import Hasura.Backends.Postgres.Translate.Select
+import Hasura.Backends.Postgres.Translate.Update
+import Hasura.Base.Error
+import Hasura.EncJSON
+import Hasura.GraphQL.Schema.NamingCase (NamingCase)
+import Hasura.GraphQL.Schema.Options qualified as Options
+import Hasura.Prelude
+import Hasura.QueryTags
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.Delete
+import Hasura.RQL.IR.Insert
+import Hasura.RQL.IR.Returning
+import Hasura.RQL.IR.Select
+import Hasura.RQL.IR.Update
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common
+import Hasura.SQL.Backend
+import Hasura.SQL.Types
+import Hasura.Session
 
-import qualified Data.Environment                             as Env
-import qualified Data.Sequence                                as DS
-import qualified Database.PG.Query                            as Q
-import qualified Network.HTTP.Client                          as HTTP
-import qualified Network.HTTP.Types                           as N
+data MutateResp (b :: BackendType) a = MutateResp
+  { _mrAffectedRows :: Int,
+    _mrReturningColumns :: [ColumnValues b a]
+  }
+  deriving (Generic)
 
-import           Data.Aeson
-
-import qualified Hasura.Backends.Postgres.SQL.DML             as S
-import qualified Hasura.Tracing                               as Tracing
-
-import           Hasura.Backends.Postgres.Connection
-import           Hasura.Backends.Postgres.Execute.RemoteJoin
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.SQL.Value
-import           Hasura.Backends.Postgres.Translate.Delete
-import           Hasura.Backends.Postgres.Translate.Insert
-import           Hasura.Backends.Postgres.Translate.Mutation
-import           Hasura.Backends.Postgres.Translate.Returning
-import           Hasura.Backends.Postgres.Translate.Select
-import           Hasura.Backends.Postgres.Translate.Update
-import           Hasura.Base.Error
-import           Hasura.EncJSON
-import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.IR.Delete
-import           Hasura.RQL.IR.Insert
-import           Hasura.RQL.IR.Returning
-import           Hasura.RQL.IR.Select
-import           Hasura.RQL.IR.Update
-import           Hasura.RQL.Instances                         ()
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
-import           Hasura.Server.Version                        (HasVersion)
-import           Hasura.Session
-
-
-data MutateResp (b :: BackendType) a
-  = MutateResp
-  { _mrAffectedRows     :: !Int
-  , _mrReturningColumns :: ![ColumnValues b a]
-  } deriving (Generic)
 deriving instance (Backend b, Show a) => Show (MutateResp b a)
-deriving instance (Backend b, Eq   a) => Eq   (MutateResp b a)
+
+deriving instance (Backend b, Eq a) => Eq (MutateResp b a)
 
 instance (Backend b, ToJSON a) => ToJSON (MutateResp b a) where
   toJSON = genericToJSON hasuraJSON
@@ -62,121 +64,109 @@ instance (Backend b, ToJSON a) => ToJSON (MutateResp b a) where
 instance (Backend b, FromJSON a) => FromJSON (MutateResp b a) where
   parseJSON = genericParseJSON hasuraJSON
 
-
-type MutationRemoteJoinCtx = (HTTP.Manager, [N.Header], UserInfo)
-
-data Mutation (b :: BackendType)
-  = Mutation
-  { _mTable       :: !QualifiedTable
-  , _mQuery       :: !(MutationCTE, DS.Seq Q.PrepArg)
-  , _mOutput      :: !(MutationOutput b)
-  , _mCols        :: ![ColumnInfo b]
-  , _mRemoteJoins :: !(Maybe (RemoteJoins b, MutationRemoteJoinCtx))
-  , _mStrfyNum    :: !Bool
+data Mutation (b :: BackendType) = Mutation
+  { _mTable :: QualifiedTable,
+    _mQuery :: (MutationCTE, DS.Seq PG.PrepArg),
+    _mOutput :: MutationOutput b,
+    _mCols :: [ColumnInfo b],
+    _mStrfyNum :: Options.StringifyNumbers,
+    _mNamingConvention :: Maybe NamingCase
   }
 
-mkMutation
-  :: Backend ('Postgres pgKind)
-  => Maybe MutationRemoteJoinCtx
-  -> QualifiedTable
-  -> (MutationCTE, DS.Seq Q.PrepArg)
-  -> MutationOutput ('Postgres pgKind)
-  -> [ColumnInfo ('Postgres pgKind)]
-  -> Bool
-  -> Mutation ('Postgres pgKind)
-mkMutation ctx table query output' allCols strfyNum =
-  let (output, remoteJoins) = getRemoteJoinsMutationOutput output'
-      remoteJoinsCtx = (,) <$> remoteJoins <*> ctx
-  in Mutation table query output allCols remoteJoinsCtx strfyNum
+mkMutation ::
+  UserInfo ->
+  QualifiedTable ->
+  (MutationCTE, DS.Seq PG.PrepArg) ->
+  MutationOutput ('Postgres pgKind) ->
+  [ColumnInfo ('Postgres pgKind)] ->
+  Options.StringifyNumbers ->
+  Maybe NamingCase ->
+  Mutation ('Postgres pgKind)
+mkMutation _userInfo table query output allCols strfyNum tCase =
+  Mutation table query output allCols strfyNum tCase
 
-runMutation
-  ::
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
-  , Backend ('Postgres pgKind)
-  )
-  => Env.Environment
-  -> Mutation ('Postgres pgKind)
-  -> m EncJSON
-runMutation env mut =
-  bool (mutateAndReturn env mut) (mutateAndSel env mut) $
+runMutation ::
+  ( MonadTx m,
+    Backend ('Postgres pgKind),
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
+  ) =>
+  Mutation ('Postgres pgKind) ->
+  m EncJSON
+runMutation mut =
+  bool (mutateAndReturn mut) (mutateAndSel mut) $
     hasNestedFld $ _mOutput mut
 
-mutateAndReturn
-  ::
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
-  , Backend ('Postgres pgKind)
-  )
-  => Env.Environment
-  -> Mutation ('Postgres pgKind)
-  -> m EncJSON
-mutateAndReturn env (Mutation qt (cte, p) mutationOutput allCols remoteJoins strfyNum) =
-  executeMutationOutputQuery env qt allCols Nothing cte mutationOutput strfyNum (toList p) remoteJoins
+mutateAndReturn ::
+  ( MonadTx m,
+    Backend ('Postgres pgKind),
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
+  ) =>
+  Mutation ('Postgres pgKind) ->
+  m EncJSON
+mutateAndReturn (Mutation qt (cte, p) mutationOutput allCols strfyNum tCase) =
+  executeMutationOutputQuery qt allCols Nothing cte mutationOutput strfyNum tCase (toList p)
 
-
-execUpdateQuery
-  ::
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
-  , Backend ('Postgres pgKind)
-  )
-  => Env.Environment
-  -> Bool
-  -> Maybe MutationRemoteJoinCtx
-  -> (AnnUpd ('Postgres pgKind), DS.Seq Q.PrepArg)
-  -> m EncJSON
-execUpdateQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (uqp1Table u) (MCCheckConstraint updateCTE, p)
-                (uqp1Output u) (uqp1AllCols u) strfyNum
+execUpdateQuery ::
+  forall pgKind m.
+  ( MonadTx m,
+    Backend ('Postgres pgKind),
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
+  ) =>
+  Options.StringifyNumbers ->
+  Maybe NamingCase ->
+  UserInfo ->
+  (AnnotatedUpdate ('Postgres pgKind), DS.Seq PG.PrepArg) ->
+  m EncJSON
+execUpdateQuery strfyNum tCase userInfo (u, p) =
+  case updateCTE of
+    Update singleUpdate -> runCTE singleUpdate
+    MultiUpdate ctes -> encJFromList <$> traverse runCTE ctes
   where
+    updateCTE :: UpdateCTE
     updateCTE = mkUpdateCTE u
 
-execDeleteQuery
-  ::
-  ( HasVersion
-  , MonadTx m
-  , MonadIO m
-  , Tracing.MonadTrace m
-  , Backend ('Postgres pgKind)
-  )
-  => Env.Environment
-  -> Bool
-  -> Maybe MutationRemoteJoinCtx
-  -> (AnnDel ('Postgres pgKind), DS.Seq Q.PrepArg)
-  -> m EncJSON
-execDeleteQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env $ mkMutation remoteJoinCtx (dqp1Table u) (MCDelete delete, p)
-                (dqp1Output u) (dqp1AllCols u) strfyNum
+    runCTE :: S.TopLevelCTE -> m EncJSON
+    runCTE cte =
+      runMutation
+        (mkMutation userInfo (_auTable u) (MCCheckConstraint cte, p) (_auOutput u) (_auAllCols u) strfyNum tCase)
+
+execDeleteQuery ::
+  forall pgKind m.
+  ( MonadTx m,
+    Backend ('Postgres pgKind),
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
+  ) =>
+  Options.StringifyNumbers ->
+  Maybe NamingCase ->
+  UserInfo ->
+  (AnnDel ('Postgres pgKind), DS.Seq PG.PrepArg) ->
+  m EncJSON
+execDeleteQuery strfyNum tCase userInfo (u, p) =
+  runMutation
+    (mkMutation userInfo (_adTable u) (MCDelete delete, p) (_adOutput u) (_adAllCols u) strfyNum tCase)
   where
     delete = mkDelete u
 
-execInsertQuery
-  :: ( HasVersion
-     , MonadTx m
-     , MonadIO m
-     , Tracing.MonadTrace m
-     , Backend ('Postgres pgKind)
-     )
-  => Env.Environment
-  -> Bool
-  -> Maybe MutationRemoteJoinCtx
-  -> (InsertQueryP1 ('Postgres pgKind), DS.Seq Q.PrepArg)
-  -> m EncJSON
-execInsertQuery env strfyNum remoteJoinCtx (u, p) =
-  runMutation env
-     $ mkMutation remoteJoinCtx (iqp1Table u) (MCCheckConstraint insertCTE, p)
-                (iqp1Output u) (iqp1AllCols u) strfyNum
+execInsertQuery ::
+  ( MonadTx m,
+    Backend ('Postgres pgKind),
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
+  ) =>
+  Options.StringifyNumbers ->
+  Maybe NamingCase ->
+  UserInfo ->
+  (InsertQueryP1 ('Postgres pgKind), DS.Seq PG.PrepArg) ->
+  m EncJSON
+execInsertQuery strfyNum tCase userInfo (u, p) =
+  runMutation
+    (mkMutation userInfo (iqp1Table u) (MCCheckConstraint insertCTE, p) (iqp1Output u) (iqp1AllCols u) strfyNum tCase)
   where
     insertCTE = mkInsertCTE u
-
-
 
 {- Note: [Prepared statements in Mutations]
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -192,106 +182,119 @@ shouldn't be affected but updates and delete mutations with complex boolean
 conditions **might** see some degradation.
 -}
 
-mutateAndSel
-  :: forall pgKind m
-   . ( HasVersion
-     , MonadTx m
-     , MonadIO m
-     , Tracing.MonadTrace m
-     , Backend ('Postgres pgKind)
-     )
-  => Env.Environment
-  -> Mutation ('Postgres pgKind)
-  -> m EncJSON
-mutateAndSel env (Mutation qt q mutationOutput allCols remoteJoins strfyNum) = do
+mutateAndSel ::
+  forall pgKind m.
+  ( MonadTx m,
+    Backend ('Postgres pgKind),
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
+  ) =>
+  Mutation ('Postgres pgKind) ->
+  m EncJSON
+mutateAndSel (Mutation qt q mutationOutput allCols strfyNum tCase) = do
   -- Perform mutation and fetch unique columns
-  MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum
+  MutateResp _ columnVals <- liftTx $ mutateAndFetchCols qt allCols q strfyNum tCase
   select <- mkSelectExpFromColumnValues qt allCols columnVals
   -- Perform select query and fetch returning fields
-  executeMutationOutputQuery env qt allCols Nothing
-    (MCSelectValues select) mutationOutput strfyNum [] remoteJoins
+  executeMutationOutputQuery
+    qt
+    allCols
+    Nothing
+    (MCSelectValues select)
+    mutationOutput
+    strfyNum
+    tCase
+    []
 
 withCheckPermission :: (MonadError QErr m) => m (a, Bool) -> m a
 withCheckPermission sqlTx = do
   (rawResponse, checkConstraint) <- sqlTx
-  unless checkConstraint $ throw400 PermissionError $
-    "check constraint of an insert/update permission has failed"
+  unless checkConstraint $
+    throw400 PermissionError $
+      "check constraint of an insert/update permission has failed"
   pure rawResponse
 
-executeMutationOutputQuery
-  :: forall pgKind m
-   . ( HasVersion
-     , MonadTx m
-     , MonadIO m
-     , Tracing.MonadTrace m
-     , Backend ('Postgres pgKind)
-     )
-  => Env.Environment
-  -> QualifiedTable
-  -> [ColumnInfo ('Postgres pgKind)]
-  -> Maybe Int
-  -> MutationCTE
-  -> MutationOutput ('Postgres pgKind)
-  -> Bool
-  -> [Q.PrepArg] -- ^ Prepared params
-  -> Maybe (RemoteJoins ('Postgres pgKind), MutationRemoteJoinCtx)  -- ^ Remote joins context
-  -> m EncJSON
-executeMutationOutputQuery env qt allCols preCalAffRows cte mutOutput strfyNum prepArgs maybeRJ = do
-  let queryTx :: Q.FromRes a => m a
+executeMutationOutputQuery ::
+  forall pgKind m.
+  ( MonadTx m,
+    Backend ('Postgres pgKind),
+    PostgresAnnotatedFieldJSON pgKind,
+    MonadReader QueryTagsComment m
+  ) =>
+  QualifiedTable ->
+  [ColumnInfo ('Postgres pgKind)] ->
+  Maybe Int ->
+  MutationCTE ->
+  MutationOutput ('Postgres pgKind) ->
+  Options.StringifyNumbers ->
+  Maybe NamingCase ->
+  -- | Prepared params
+  [PG.PrepArg] ->
+  m EncJSON
+executeMutationOutputQuery qt allCols preCalAffRows cte mutOutput strfyNum tCase prepArgs = do
+  queryTags <- ask
+  let queryTx :: PG.FromRes a => m a
       queryTx = do
-        let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum
-            query = Q.fromBuilder $ toSQL selectWith
+        let selectWith = mkMutationOutputExp qt allCols preCalAffRows cte mutOutput strfyNum tCase
+            query = PG.fromBuilder $ toSQL selectWith
+            queryWithQueryTags = query {PG.getQueryText = (PG.getQueryText query) <> (_unQueryTagsComment queryTags)}
         -- See Note [Prepared statements in Mutations]
-        liftTx (Q.rawQE dmlTxErrorHandler query prepArgs False)
-
-  rawResponse <-
-    if checkPermissionRequired cte
-      then withCheckPermission $ Q.getRow <$> queryTx
-      else (runIdentity . Q.getRow) <$> queryTx
-  case maybeRJ of
-    Nothing -> pure $ encJFromLBS rawResponse
-    Just (remoteJoins, (httpManager, reqHeaders, userInfo)) ->
-      processRemoteJoins env httpManager reqHeaders userInfo rawResponse remoteJoins
-
-mutateAndFetchCols
-  :: forall pgKind
-   . Backend ('Postgres pgKind)
-  => QualifiedTable
-  -> [ColumnInfo ('Postgres pgKind)]
-  -> (MutationCTE, DS.Seq Q.PrepArg)
-  -> Bool
-  -> Q.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
-mutateAndFetchCols qt cols (cte, p) strfyNum = do
-  let mutationTx :: Q.FromRes a => Q.TxE QErr a
-      mutationTx =
-        -- See Note [Prepared statements in Mutations]
-        Q.rawQE dmlTxErrorHandler sqlText (toList p) False
+        liftTx (PG.rawQE dmlTxErrorHandler queryWithQueryTags prepArgs False)
 
   if checkPermissionRequired cte
-    then withCheckPermission $ (first Q.getAltJ . Q.getRow) <$> mutationTx
-    else (Q.getAltJ . runIdentity . Q.getRow) <$> mutationTx
+    then withCheckPermission $ PG.getRow <$> queryTx
+    else runIdentity . PG.getRow <$> queryTx
+
+mutateAndFetchCols ::
+  forall pgKind.
+  (Backend ('Postgres pgKind), PostgresAnnotatedFieldJSON pgKind) =>
+  QualifiedTable ->
+  [ColumnInfo ('Postgres pgKind)] ->
+  (MutationCTE, DS.Seq PG.PrepArg) ->
+  Options.StringifyNumbers ->
+  Maybe NamingCase ->
+  PG.TxE QErr (MutateResp ('Postgres pgKind) TxtEncodedVal)
+mutateAndFetchCols qt cols (cte, p) strfyNum tCase = do
+  let mutationTx :: PG.FromRes a => PG.TxE QErr a
+      mutationTx =
+        -- See Note [Prepared statements in Mutations]
+        PG.rawQE dmlTxErrorHandler sqlText (toList p) False
+
+  if checkPermissionRequired cte
+    then withCheckPermission $ (first PG.getViaJSON . PG.getRow) <$> mutationTx
+    else (PG.getViaJSON . runIdentity . PG.getRow) <$> mutationTx
   where
-    aliasIdentifier = Identifier $ qualifiedObjectToText qt <> "__mutation_result"
-    tabFrom = FromIdentifier aliasIdentifier
+    rawAlias = S.mkTableAlias $ "mutres__" <> qualifiedObjectToText qt
+    rawIdentifier = S.tableAliasToIdentifier rawAlias
+    tabFrom = FromIdentifier $ FIIdentifier (unTableIdentifier rawIdentifier)
     tabPerm = TablePerm annBoolExpTrue Nothing
     selFlds = flip map cols $
-              \ci -> (fromCol @('Postgres pgKind) $ pgiColumn ci, mkAnnColumnFieldAsText ci)
+      \ci -> (fromCol @('Postgres pgKind) $ ciColumn ci, mkAnnColumnFieldAsText ci)
 
-    sqlText = Q.fromBuilder $ toSQL selectWith
-    selectWith = S.SelectWith [(S.Alias aliasIdentifier, getMutationCTE cte)] select
-    select = S.mkSelect { S.selExtr = S.Extractor extrExp Nothing
-                                      : bool [] [S.Extractor checkErrExp Nothing] (checkPermissionRequired cte)
-                        }
-    checkErrExp = mkCheckErrorExp aliasIdentifier
-    extrExp = S.applyJsonBuildObj
-              [ S.SELit "affected_rows", affRowsSel
-              , S.SELit "returning_columns", colSel
-              ]
-
-    affRowsSel = S.SESelect $
+    sqlText = PG.fromBuilder $ toSQL selectWith
+    selectWith = S.SelectWith [(rawAlias, getMutationCTE cte)] select
+    select =
       S.mkSelect
-      { S.selExtr = [S.Extractor S.countStar Nothing]
-      , S.selFrom = Just $ S.FromExp [S.FIIdentifier aliasIdentifier]
-      }
-    colSel = S.SESelect $ mkSQLSelect JASMultipleRows $
-             AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum
+        { S.selExtr =
+            S.Extractor extrExp Nothing :
+            bool [] [S.Extractor checkErrExp Nothing] (checkPermissionRequired cte)
+        }
+    checkErrExp = mkCheckErrorExp rawIdentifier
+    extrExp =
+      S.applyJsonBuildObj
+        [ S.SELit "affected_rows",
+          affRowsSel,
+          S.SELit "returning_columns",
+          colSel
+        ]
+
+    affRowsSel =
+      S.SESelect $
+        S.mkSelect
+          { S.selExtr = [S.Extractor S.countStar Nothing],
+            S.selFrom = Just $ S.FromExp [S.FIIdentifier rawIdentifier]
+          }
+    colSel =
+      S.SESelect $
+        mkSQLSelect JASMultipleRows $
+          AnnSelectG selFlds tabFrom tabPerm noSelectArgs strfyNum tCase

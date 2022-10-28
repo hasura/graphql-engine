@@ -1,0 +1,21 @@
+description: Fetch tracks order by their size which is a computed field
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    query {
+      Track(order_by: {size: desc}, limit: 2){
+        name
+        bytes
+        size
+      }
+    }
+response:
+  data:
+    Track:
+    - name: Restless
+      bytes: 9836284
+      size: 9
+    - name: Mistress
+      bytes: 7521946
+      size: 7

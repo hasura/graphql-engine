@@ -74,7 +74,7 @@ module QuickType
     , InputArgument (..)
     , HasuraMetadataV2 (..)
     , Header (..)
-    , Permissions (..)
+    , Permission (..)
     , Definition (..)
     , RemoteFieldValue (..)
     , ActionDefinitionType (..)
@@ -203,7 +203,7 @@ data Action = Action
     { commentAction :: Maybe Text
     , definitionAction :: ActionDefinition
     , nameAction :: Text
-    , permissionsAction :: Maybe Permissions
+    , permissionsAction :: Maybe (Vector Permission)
     } deriving (Show)
 
 {-| Definition of the action
@@ -259,9 +259,8 @@ data Header = Header
     , valueFromEnvHeader :: Maybe Text
     } deriving (Show)
 
-{-| Permissions of the action -}
-data Permissions = Permissions
-    { rolePermissions :: Text
+data Permission = Permission
+    { rolePermission :: Text
     } deriving (Show)
 
 {-|
@@ -1497,14 +1496,14 @@ instance FromJSON Header where
         <*> v .:? "value"
         <*> v .:? "value_from_env"
 
-instance ToJSON Permissions where
-    toJSON (Permissions rolePermissions) =
+instance ToJSON Permission where
+    toJSON (Permission rolePermission) =
         object
-        [ "role" .= rolePermissions
+        [ "role" .= rolePermission
         ]
 
-instance FromJSON Permissions where
-    parseJSON (Object v) = Permissions
+instance FromJSON Permission where
+    parseJSON (Object v) = Permission
         <$> v .: "role"
 
 instance ToJSON AllowList where

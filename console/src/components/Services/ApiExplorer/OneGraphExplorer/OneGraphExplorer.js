@@ -14,10 +14,8 @@ import {
 import { getGraphiQLQueryFromLocalStorage } from '../GraphiQLWrapper/utils';
 import { getRemoteQueries } from '../Actions';
 import { getHeadersAsJSON } from '../utils';
-
 import '../GraphiQLWrapper/GraphiQL.css';
 import './OneGraphExplorer.css';
-import styles from '../ApiExplorer.scss';
 import Spinner from '../../../Common/Spinner/Spinner';
 import {
   showErrorNotification,
@@ -31,7 +29,7 @@ class OneGraphExplorer extends React.Component {
     explorerWidth: getExplorerWidth(),
     explorerClientX: null,
     schema: null,
-    query: undefined,
+    query: this.props.query || '',
     isResizing: false,
     previousIntrospectionHeaders: [],
   };
@@ -49,6 +47,7 @@ class OneGraphExplorer extends React.Component {
       this.introspect();
       return;
     }
+
     if (!headerFocus && !loading) {
       if (
         JSON.stringify(headers) !== JSON.stringify(previousIntrospectionHeaders)
@@ -56,29 +55,46 @@ class OneGraphExplorer extends React.Component {
         this.introspect();
       }
     }
+
+    // introspect by force if toggled through Redux
+    if (
+      this.props.forceIntrospectAt &&
+      this.props.forceIntrospectAt != prevProps.forceIntrospectAt
+    ) {
+      this.introspect();
+      return;
+    }
+
+    // set query in graphiql through Redux
+    if (this.props.query != prevProps.query) {
+      // eslint-disable-next-line react/no-did-update-set-state
+      this.setState({ query: this.props.query });
+    }
   }
 
   setPersistedQuery() {
     const { urlParams, numberOfTables, dispatch } = this.props;
 
     const queryFile = urlParams ? urlParams.query_file : null;
-
+    const localStorageQuery = getGraphiQLQueryFromLocalStorage();
     if (queryFile) {
       getRemoteQueries(
         queryFile,
         remoteQuery => this.setState({ query: remoteQuery }),
         dispatch
       );
-    } else if (numberOfTables === 0) {
+    } else if (numberOfTables === 0 && !localStorageQuery) {
+      // when there are no tables and nothing in the localstorage, show the following comment in the graphiQL
       const NO_TABLES_MESSAGE = `# Looks like you do not have any tables.
 # Click on the "Data" tab on top to create tables
 # Try out GraphQL queries here after you create tables
 `;
+      // FIX ME : this message will be shown, whenever there are no tables tracked and nothing in history (LS),
+      // there could still be a possibility when there are no tables but remote schemas even then this message will be shown only for the first time
+      // after that when the user type something, the LS gets populated and this message will not be shown afterwards
 
       this.setState({ query: NO_TABLES_MESSAGE });
     } else {
-      const localStorageQuery = getGraphiQLQueryFromLocalStorage();
-
       if (localStorageQuery) {
         if (localStorageQuery.includes('do not have')) {
           const FRESH_GRAPHQL_MSG = '# Try out GraphQL queries here\n';
@@ -139,7 +155,7 @@ class OneGraphExplorer extends React.Component {
               `We are not able to render GraphiQL Explorer and Docs.
               You should still be able to try out your API from the GraphiQL Editor.`,
               null,
-              <p style={{ paddingTop: '10px', margin: '0' }}>
+              <p className="pt-sm m-0">
                 Please report an issue on our{' '}
                 <a
                   target="_blank"
@@ -222,13 +238,8 @@ class OneGraphExplorer extends React.Component {
   };
 
   render() {
-    const {
-      schema,
-      explorerOpen,
-      query,
-      explorerWidth,
-      isResizing,
-    } = this.state;
+    const { schema, explorerOpen, query, explorerWidth, isResizing } =
+      this.state;
 
     const { renderGraphiql } = this.props;
 
@@ -260,10 +271,7 @@ class OneGraphExplorer extends React.Component {
         <div className="gqlexplorer">
           {this.props.loading ? (
             <div
-              className={`${styles.height100} ${styles.display_flex}`}
-              style={{
-                width: explorerWidth,
-              }}
+              className={`h-full flex w-[${String(explorerWidth) || '300'}px]`}
             >
               <Spinner />
             </div>

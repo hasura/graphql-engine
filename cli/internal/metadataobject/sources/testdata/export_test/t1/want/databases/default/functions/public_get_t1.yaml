@@ -1,0 +1,9 @@
+function:
+  schema: public
+  name: get_t1
+some_amazing_stuff:
+  test1: test
+  test2: test
+xyz_test:
+  test1: test
+  test2: test

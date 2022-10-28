@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { push } from 'react-router-redux';
 import GraphiQL from 'graphiql';
 import { connect } from 'react-redux';
+import { FaCheckCircle } from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import GraphiQLErrorBoundary from './GraphiQLErrorBoundary';
 import OneGraphExplorer from '../OneGraphExplorer/OneGraphExplorer';
@@ -12,19 +12,18 @@ import {
   persistCodeExporterOpen,
 } from '../OneGraphExplorer/utils';
 
-import {
-  clearCodeMirrorHints,
-  setQueryVariableSectionHeight,
-  copyToClipboard,
-} from './utils';
+import { clearCodeMirrorHints, setQueryVariableSectionHeight } from './utils';
+import { generateRandomString } from '../../../Services/Data/DataSources/CreateDataSource/utils';
 import { analyzeFetcher, graphQLFetcherFinal } from '../Actions';
 import { parse as sdlParse, print } from 'graphql';
 import deriveAction from '../../../../shared/utils/deriveAction';
 import {
   getActionDefinitionSdl,
   getTypesSdl,
+  toggleCacheDirective,
 } from '../../../../shared/utils/sdlUtils';
 import { showErrorNotification } from '../../Common/Notification';
+import ToolTip from '../../../Common/Tooltip/Tooltip';
 import { getActionsCreateRoute } from '../../../Common/utils/routesUtils';
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import {
@@ -34,12 +33,15 @@ import {
 } from '../../Actions/Add/reducer';
 import { getGraphQLEndpoint } from '../utils';
 import snippets from './snippets';
+import { canAccessCacheButton } from '@/utils/permissions';
 
 import 'graphiql/graphiql.css';
-import './GraphiQL.css';
 import 'graphiql-code-exporter/CodeExporter.css';
 import _push from '../../Data/push';
 import { isQueryValid } from '../Rest/utils';
+import { LS_KEYS, setLSItem } from '@/utils/localStorage';
+import { CodeExporterEventTracer } from './CodeExporterEventTracer';
+import { trackGraphiQlToolbarButtonClick } from '../customAnalyticsEvents';
 
 class GraphiQLWrapper extends Component {
   constructor(props) {
@@ -50,6 +52,7 @@ class GraphiQLWrapper extends Component {
       onBoardingEnabled: false,
       copyButtonText: 'Copy',
       codeExporterOpen: false,
+      requestTrackingId: null,
     };
   }
 
@@ -67,6 +70,8 @@ class GraphiQLWrapper extends Component {
   }
 
   _handleToggleCodeExporter = () => {
+    trackGraphiQlToolbarButtonClick('Code Exporter');
+
     const nextState = !this.state.codeExporterOpen;
 
     persistCodeExporterOpen(nextState);
@@ -75,8 +80,6 @@ class GraphiQLWrapper extends Component {
   };
 
   render() {
-    const styles = require('../../../Common/Common.scss');
-
     const {
       numberOfTables,
       urlParams,
@@ -84,19 +87,28 @@ class GraphiQLWrapper extends Component {
       dispatch,
       mode,
       loading,
+      query: queryFromProps,
+      forceIntrospectAt,
     } = this.props;
-    const { codeExporterOpen } = this.state;
+    const { codeExporterOpen, requestTrackingId } = this.state;
     const graphqlNetworkData = this.props.data;
+    const { responseTime, responseSize, isResponseCached, responseTrackingId } =
+      this.props.response;
+
     const graphQLFetcher = graphQLParams => {
       if (headerFocus) {
         return null;
       }
 
+      const trackingId = generateRandomString();
+      this.setState({ requestTrackingId: trackingId });
+
       return graphQLFetcherFinal(
         graphQLParams,
         getGraphQLEndpoint(mode),
         graphqlNetworkData.headers,
-        dispatch
+        dispatch,
+        trackingId
       );
     };
 
@@ -108,33 +120,24 @@ class GraphiQLWrapper extends Component {
     let graphiqlContext;
 
     const handleClickPrettifyButton = () => {
+      trackGraphiQlToolbarButtonClick('Prettify');
+
       const editor = graphiqlContext.getQueryEditor();
       const currentText = editor.getValue();
       const prettyText = print(sdlParse(currentText));
       editor.setValue(prettyText);
     };
 
-    const handleCopyQuery = () => {
-      const editor = graphiqlContext.getQueryEditor();
-      const query = editor.getValue();
-
-      if (!query) {
-        return;
-      }
-      copyToClipboard(query);
-      this.setState({ copyButtonText: 'Copied' });
-      setTimeout(() => {
-        this.setState({ copyButtonText: 'Copy' });
-      }, 1500);
-    };
-
     const handleToggleHistory = () => {
+      trackGraphiQlToolbarButtonClick('History');
       graphiqlContext.setState(prevState => ({
         historyPaneOpen: !prevState.historyPaneOpen,
       }));
     };
 
     const deriveActionFromOperation = () => {
+      trackGraphiQlToolbarButtonClick('Derive action');
+
       const { schema, query } = graphiqlContext.state;
       if (!schema) return;
       if (!query) return;
@@ -165,11 +168,12 @@ class GraphiQLWrapper extends Component {
       );
       dispatch(setTypeDefinition(typesSdl, null, null, sdlParse(typesSdl)));
       dispatch(setDerivedActionParentOperation(query.trim()));
-      dispatch(push(getActionsCreateRoute()));
+      dispatch(_push(getActionsCreateRoute()));
     };
 
     const routeToREST = gqlProps => () => {
       const { query, schema } = graphiqlContext.state;
+      setLSItem(LS_KEYS.graphiqlQuery, query);
       if (!query || !schema || !gqlProps.query || !isQueryValid(query)) {
         dispatch(
           showErrorNotification(
@@ -181,6 +185,50 @@ class GraphiQLWrapper extends Component {
       }
       dispatch(_push('/api/rest/create'));
     };
+
+    const _toggleCacheDirective = () => {
+      trackGraphiQlToolbarButtonClick('Cache');
+
+      const editor = graphiqlContext.getQueryEditor();
+      const operationString = editor.getValue();
+      const cacheToggledOperationString = toggleCacheDirective(operationString);
+      editor.setValue(cacheToggledOperationString);
+    };
+
+    const renderGraphiqlFooter = responseTime &&
+      responseTrackingId === requestTrackingId && (
+        <GraphiQL.Footer>
+          <div className="flex items-center sticky bottom-0 w-full z-[100] p-sm bg-[#eeeeee]">
+            <span className="text-xs text-[#777777] font-semibold mr-sm uppercase">
+              Response Time
+            </span>
+            <span className="text-sm text-black mr-md">{responseTime} ms</span>
+            {responseSize && (
+              <>
+                <span className="text-xs text-[#777777] mr-sm uppercase font-semibold">
+                  Response Size
+                </span>
+                <span className="text-sm text-black mr-md">
+                  {responseSize} bytes
+                </span>
+              </>
+            )}
+            {isResponseCached && (
+              <>
+                <span className="text-xs text-[#777777] font-semibold mr-sm uppercase">
+                  Cached
+                </span>
+                <ToolTip
+                  message="This query response was cached using the @cached directive"
+                  placement="top"
+                  tooltipStyle="text-[#777] ml-sm mr-xs"
+                />
+                <FaCheckCircle className="text-[#008000]" />
+              </>
+            )}
+          </div>
+        </GraphiQL.Footer>
+      );
 
     const renderGraphiql = graphiqlProps => {
       const voyagerUrl = graphqlNetworkData.consoleUrl + '/voyager-view';
@@ -203,14 +251,18 @@ class GraphiQLWrapper extends Component {
             onClick: handleToggleHistory,
           },
           {
-            label: this.state.copyButtonText,
-            title: 'Copy Query',
-            onClick: handleCopyQuery,
-          },
-          {
             label: 'Explorer',
             title: 'Toggle Explorer',
-            onClick: graphiqlProps.toggleExplorer,
+            onClick: () => {
+              trackGraphiQlToolbarButtonClick('Explorer');
+              graphiqlProps.toggleExplorer();
+            },
+          },
+          {
+            label: 'Cache',
+            title: 'Cache the response of this query',
+            onClick: _toggleCacheDirective,
+            hide: !canAccessCacheButton(),
           },
           {
             label: 'Code Exporter',
@@ -218,15 +270,12 @@ class GraphiQLWrapper extends Component {
             onClick: this._handleToggleCodeExporter,
           },
           {
-            label: 'Voyager',
-            title: 'GraphQL Voyager',
-            onClick: () => window.open(voyagerUrl, '_blank'),
-            icon: <i className="fa fa-external-link" aria-hidden="true" />,
-          },
-          {
             label: 'REST',
             title: 'REST Endpoints',
-            onClick: routeToREST(graphiqlProps),
+            onClick: () => {
+              trackGraphiQlToolbarButtonClick('REST');
+              routeToREST(graphiqlProps);
+            },
           },
         ];
         if (mode === 'graphql') {
@@ -236,13 +285,16 @@ class GraphiQLWrapper extends Component {
             onClick: deriveActionFromOperation,
           });
         }
-        return buttons.map(b => {
-          return <GraphiQL.Button key={b.label} {...b} />;
-        });
+        return buttons
+          .filter(b => !b.hide)
+          .map(b => {
+            return <GraphiQL.Button key={b.label} {...b} />;
+          });
       };
 
       return (
         <>
+          <CodeExporterEventTracer />
           <GraphiQL
             {...graphiqlProps}
             ref={c => {
@@ -261,6 +313,7 @@ class GraphiQLWrapper extends Component {
                 {...analyzerProps}
               />
             </GraphiQL.Toolbar>
+            {renderGraphiqlFooter}
           </GraphiQL>
           {codeExporterOpen ? (
             <CodeExporter
@@ -276,13 +329,10 @@ class GraphiQLWrapper extends Component {
 
     return (
       <GraphiQLErrorBoundary>
-        <div
-          className={`react-container-graphql ${styles.wd100} ${styles.height100} ${styles.box_shadow}`}
-        >
+        <div className="w-full h-full border overflow-hidden rounded border-gray-300">
           <OneGraphExplorer
             renderGraphiql={renderGraphiql}
             endpoint={getGraphQLEndpoint(mode)}
-            dispatch={dispatch}
             headers={graphqlNetworkData.headers}
             headersInitialised={graphqlNetworkData.headersInitialised}
             headerFocus={headerFocus}
@@ -291,6 +341,8 @@ class GraphiQLWrapper extends Component {
             numberOfTables={numberOfTables}
             dispatch={dispatch}
             mode={mode}
+            forceIntrospectAt={forceIntrospectAt}
+            query={queryFromProps}
           />
         </div>
       </GraphiQLErrorBoundary>
@@ -304,11 +356,15 @@ GraphiQLWrapper.propTypes = {
   numberOfTables: PropTypes.number.isRequired,
   headerFocus: PropTypes.bool.isRequired,
   urlParams: PropTypes.object.isRequired,
+  response: PropTypes.object,
+  query: PropTypes.string,
 };
 
 const mapStateToProps = state => ({
   mode: state.apiexplorer.mode,
   loading: state.apiexplorer.loading,
+  query: state.apiexplorer.graphiql.query,
+  forceIntrospectAt: state.apiexplorer.graphiql.forceIntrospectAt,
 });
 
 const GraphiQLWrapperConnected = connect(mapStateToProps)(GraphiQLWrapper);

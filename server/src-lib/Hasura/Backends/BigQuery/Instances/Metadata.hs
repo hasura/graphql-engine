@@ -1,25 +1,24 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
--- |
+module Hasura.Backends.BigQuery.Instances.Metadata () where
 
-module Hasura.Backends.BigQuery.Instances.Metadata where
-
-import qualified Hasura.Backends.BigQuery.DDL         as BigQuery
-
-import           Hasura.RQL.Types.Metadata.Backend
-import           Hasura.SQL.Backend
-
+import Hasura.Backends.BigQuery.DDL qualified as BigQuery
+import Hasura.Base.Error (Code (UnexpectedPayload), throw400)
+import Hasura.Prelude
+import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (RETDoNothing))
+import Hasura.RQL.Types.Metadata.Backend
+import Hasura.SQL.Backend
 
 instance BackendMetadata 'BigQuery where
-  buildComputedFieldInfo     = BigQuery.buildComputedFieldInfo
-  buildRemoteFieldInfo       = BigQuery.buildRemoteFieldInfo
+  prepareCatalog _ = pure RETDoNothing
+  buildComputedFieldInfo = BigQuery.buildComputedFieldInfo
   fetchAndValidateEnumValues = BigQuery.fetchAndValidateEnumValues
-  resolveSourceConfig        = BigQuery.resolveSourceConfig
-  resolveDatabaseMetadata    = BigQuery.resolveSource
-  createTableEventTrigger    = BigQuery.createTableEventTrigger
-  buildEventTriggerInfo      = BigQuery.buildEventTriggerInfo
-  parseBoolExpOperations     = BigQuery.parseBoolExpOperations
-  buildFunctionInfo          = BigQuery.buildFunctionInfo
+  resolveSourceConfig = BigQuery.resolveSourceConfig
+  resolveDatabaseMetadata _ = BigQuery.resolveSource
+  parseBoolExpOperations = BigQuery.parseBoolExpOperations
+  buildFunctionInfo = BigQuery.buildFunctionInfo
   updateColumnInEventTrigger = BigQuery.updateColumnInEventTrigger
-  parseCollectableType       = BigQuery.parseCollectableType
-  postDropSourceHook         = BigQuery.postDropSourceHook
+  parseCollectableType = BigQuery.parseCollectableType
+  postDropSourceHook = BigQuery.postDropSourceHook
+  buildComputedFieldBooleanExp _ _ _ _ _ _ =
+    throw400 UnexpectedPayload "Computed fields are not supported in boolean expressions"

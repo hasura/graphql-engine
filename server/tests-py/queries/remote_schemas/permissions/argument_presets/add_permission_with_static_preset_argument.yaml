@@ -37,6 +37,11 @@ args:
        eq : String
      }
 
+     input IncludeInpObj {
+       id: [Int] @preset(value: [1,2,3])
+       name: [String]
+     }
+
      type Photo {
        height : Int
        width  : Int
@@ -49,7 +54,7 @@ args:
 
      type Query {
        hello: String
-       messages(where: MessageWhereInpObj @preset(value: {id: {eq: 1}})): [Message]
+       messages(where: MessageWhereInpObj @preset(value: {id: {eq: 1}}), includes: IncludeInpObj): [Message]
        user(user_id: Int! @preset(value: 2)): User
        users(user_ids: [Int]!): [User]
        message(id: Int!) : Message

@@ -1,26 +1,26 @@
 package v1query
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/postgres"
-	pg "github.com/hasura/graphql-engine/cli/internal/hasura/sourceops/postgres"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
+	pg "github.com/hasura/graphql-engine/cli/v2/internal/hasura/sourceops/postgres"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura/commonmetadata"
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura/commonmetadata"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestClient_Send(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, "v1.3.3")
+	port, teardown := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown()
 	type fields struct {
 		Client                       *httpc.Client
@@ -36,18 +36,15 @@ func TestClient_Send(t *testing.T) {
 		fields               fields
 		args                 args
 		wantJSONResponseBody string
-		wantErr              bool
+		assertResponse       assert.ComparisonAssertionFunc
+		wantCode             int
+		assertResponseCode   assert.ComparisonAssertionFunc
+		wantErr              require.ErrorAssertionFunc
 	}{
 		{
 			"can send a request",
 			fields{
-				Client: func() *httpc.Client {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
-					return c
-				}(),
+				Client:                       testutil.NewHttpcClient(t, port, nil),
 				path:                         "v1/query",
 				HasuraDatabaseRequests:       nil,
 				HasuraCommonMetadataRequests: nil,
@@ -62,7 +59,34 @@ func TestClient_Send(t *testing.T) {
   "version": 2,
   "tables": []
 }`,
-			false,
+			assert.ComparisonAssertionFunc(func(tt assert.TestingT, i1, i2 interface{}, i3 ...interface{}) bool {
+				return assert.JSONEq(t, i1.(string), i2.(string))
+			}),
+			http.StatusOK,
+			assert.Equal,
+			require.NoError,
+		},
+		{
+			"can return right error type",
+			fields{
+				Client:                       testutil.NewHttpcClient(t, port, nil),
+				path:                         "v1/query",
+				HasuraDatabaseRequests:       nil,
+				HasuraCommonMetadataRequests: nil,
+			},
+			args{
+				body: map[string]string{
+					"type": "export_metadata2",
+					"args": "this is not expected",
+				},
+			},
+			"",
+			assert.ComparisonAssertionFunc(func(tt assert.TestingT, _, _ interface{}, _ ...interface{}) bool {
+				return true
+			}),
+			http.StatusBadRequest,
+			assert.Equal,
+			require.NoError,
 		},
 	}
 	for _, tt := range tests {
@@ -74,23 +98,20 @@ func TestClient_Send(t *testing.T) {
 				ClientCommonMetadataOps: tt.fields.HasuraCommonMetadataRequests,
 			}
 			resp, gotResponseBody, err := c.Send(tt.args.body)
-			if (err != nil) != tt.wantErr {
-				t.Fatalf("Send() error = %v, wantErr %v", err, tt.wantErr)
-			}
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusOK, resp.StatusCode)
+			tt.wantErr(t, err)
+
+			tt.assertResponseCode(t, tt.wantCode, resp.StatusCode)
 
 			b, err := ioutil.ReadAll(gotResponseBody)
-			if err != nil {
-				t.Fatal(err)
-			}
-			assert.Equal(t, tt.wantJSONResponseBody, string(b))
+			assert.NoError(t, err)
+
+			tt.assertResponse(t, tt.wantJSONResponseBody, string(b))
 		})
 	}
 }
 
 func TestClient_Bulk(t *testing.T) {
-	port, teardown := testutil.StartHasura(t, "v1.3.3")
+	port, teardown := testutil.StartHasura(t, "hasura/graphql-engine:v1.3.3")
 	defer teardown()
 	type fields struct {
 		Client                  *httpc.Client
@@ -102,23 +123,19 @@ func TestClient_Bulk(t *testing.T) {
 		args []hasura.RequestBody
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr bool
+		name           string
+		fields         fields
+		args           args
+		want           string
+		assertResponse require.ComparisonAssertionFunc
+		assertErr      require.ErrorAssertionFunc
+		wantErr        bool
 	}{
 		{
 			"can send a bulk request",
 			fields{
-				Client: func() *httpc.Client {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
-					return c
-				}(),
-				path: "v1/query",
+				Client: testutil.NewHttpcClient(t, port, nil),
+				path:   "v1/query",
 			},
 			args{
 				args: []hasura.RequestBody{
@@ -162,19 +179,18 @@ func TestClient_Bulk(t *testing.T) {
     ]
   }
 ]`,
+			require.ComparisonAssertionFunc(
+				func(tt require.TestingT, i1, i2 interface{}, i3 ...interface{}) {
+					require.JSONEq(tt, i1.(string), i2.(string))
+				}),
+			require.NoError,
 			false,
 		},
 		{
 			"can throw error on a bad request",
 			fields{
-				Client: func() *httpc.Client {
-					c, err := httpc.New(nil, fmt.Sprintf("http://localhost:%s/", port), nil)
-					if err != nil {
-						t.Fatal(err)
-					}
-					return c
-				}(),
-				path: "v1/query",
+				Client: testutil.NewHttpcClient(t, port, nil),
+				path:   "v1/query",
 			},
 			args{
 				args: []hasura.RequestBody{
@@ -195,6 +211,14 @@ func TestClient_Bulk(t *testing.T) {
 				},
 			},
 			``,
+			require.Equal,
+			require.ErrorAssertionFunc(
+				func(tt require.TestingT, err error, i ...interface{}) {
+					require.IsType(t, &errors.Error{}, err)
+					require.Equal(tt, errors.KindHasuraAPI.String(), errors.GetKind(err).String())
+					require.Equal(tt, errors.Op("v1query.Client.Bulk"), err.(*errors.Error).Op)
+					require.Contains(tt, err.(*errors.Error).Err.Error(), "bulk request failed:")
+				}),
 			true,
 		},
 	}
@@ -207,13 +231,12 @@ func TestClient_Bulk(t *testing.T) {
 				ClientCommonMetadataOps: tt.fields.ClientCommonMetadataOps,
 			}
 			got, err := c.Bulk(tt.args.args)
-			if tt.wantErr {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
+			tt.assertErr(t, err)
+			if !tt.wantErr {
 				gotb, err := ioutil.ReadAll(got)
 				require.NoError(t, err)
-				require.Equal(t, tt.want, string(gotb))
+				require.NotNil(t, got)
+				tt.assertResponse(t, tt.want, string(gotb))
 			}
 		})
 	}

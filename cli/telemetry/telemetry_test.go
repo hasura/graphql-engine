@@ -3,8 +3,8 @@ package telemetry_test
 import (
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/telemetry"
-	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/hasura/graphql-engine/cli/v2/telemetry"
+	"github.com/hasura/graphql-engine/cli/v2/version"
 )
 
 func TestBeamDev(t *testing.T) {

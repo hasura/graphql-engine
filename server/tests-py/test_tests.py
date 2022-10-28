@@ -3,18 +3,18 @@
 # This module is for tests that validate our tests or test framework, make sure
 # tests are running correctly, or test our python test helpers.
 
+import itertools
+from typing import Any, Generic, Optional, TypeVar
 import pytest
-from validate import (
-    check_query_f,
-    collapse_order_not_selset,
-    validate_http_anyq_with_allowed_responses,
-)
 from ruamel.yaml.comments import CommentedMap
+
+from validate import  check_query_f, collapse_order_not_selset, validate_http_anyq_with_allowed_responses
+
 
 usefixtures = pytest.mark.usefixtures
 
 
-@usefixtures("per_class_tests_db_state")
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestTests1:
     """
     Test various things about our test framework code. Validate that tests work
@@ -44,7 +44,7 @@ class TestTests1:
         """We can detect bad ordering of selection set"""
         check_query_f(hge_ctx, 'test_tests/select_query_author_by_pkey_bad_ordering.yaml', 'http')
         #
-        # E           AssertionError: 
+        # E           AssertionError:
         # E           expected:
         # E             data:
         # E               author_by_pk:
@@ -64,7 +64,7 @@ class TestTests1:
         return 'queries/graphql_query/basic'
 
 
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestTests2:
     """
     Test various things about our test framework code. Validate that tests work
@@ -77,7 +77,7 @@ class TestTests2:
         """We can detect bad ordering of selection set"""
         check_query_f(hge_ctx, 'test_tests/user_can_query_jsonb_values_filter_bad_order.yaml', 'http')
         #
-        # E           AssertionError: 
+        # E           AssertionError:
         # E           expected:
         # E             data:
         # E               jsonb_table:
@@ -113,15 +113,15 @@ class TestTests2:
         # (CommentedMap is ruamel.yaml's OrderedMap that also preserves
         # format):
         fully_ordered_result = \
-            CommentedMap([('data', 
+            CommentedMap([('data',
                 CommentedMap([
                     ('thing1', "thing1"),
                     ('jsonb_table', [
                         CommentedMap([
-                            ('id', 1), 
+                            ('id', 1),
                             ('jsonb_col', CommentedMap([('age', 7), ('name', 'Hasura')]))]),
                         CommentedMap([
-                            ('id', 2), 
+                            ('id', 2),
                             ('jsonb_col', CommentedMap([('age', 8), ('name', 'Rawkz')]))]),
                     ]),
                     ('thing2', CommentedMap([("a",1), ("b",2), ("c",3)])),
@@ -131,15 +131,15 @@ class TestTests2:
 
         # We expect to have discarded ordering of leaves not in selset:
         relevant_ordered_result_expected = \
-            dict([('data', 
+            dict([('data',
                 CommentedMap([
                     ('thing1', "thing1"),
                     ('jsonb_table', [
                         CommentedMap([
-                            ('id', 1), 
+                            ('id', 1),
                             ('jsonb_col', dict([('age', 7), ('name', 'Hasura')]))]),
                         CommentedMap([
-                            ('id', 2), 
+                            ('id', 2),
                             ('jsonb_col', dict([('age', 8), ('name', 'Rawkz')]))]),
                     ]),
                     ('thing2', dict([("a",1), ("b",2), ("c",3)])),
@@ -154,7 +154,7 @@ class TestTests2:
         assert CommentedMap([("a", "a"), ("b", "b")]) ==         dict([("b", "b"), ("a", "a")])
         assert CommentedMap([("a", "a"), ("b", "b")]) != CommentedMap([("b", "b"), ("a", "a")])
         assert         dict([           ("x", CommentedMap([("a", "a"), ("b", CommentedMap([("b1", "b1"), ("b2", "b2")]))])), ("y","y"),]) == \
-               CommentedMap([("y","y"), ("x",         dict([("a", "a"), ("b", CommentedMap([("b1", "b1"), ("b2", "b2")]))])), ])
+               CommentedMap([("y","y"), ("x",         dict([("a", "a"), ("b", CommentedMap([("b1", "b1"), ("b2", "b2")]))])), ])  # type: ignore
 
     def test_tests_ordering_differences_correctly_ignored(self, hge_ctx):
         """
@@ -166,7 +166,7 @@ class TestTests2:
     @classmethod
     def dir(cls):
         return 'queries/graphql_query/permissions'
-    
+
 @usefixtures("per_class_tests_db_state")
 class TestTests3:
 
@@ -194,7 +194,7 @@ class TestTests3:
             print("FAIL!")
             assert 0, "Test failure, occurs as expected"
         # It reaches here only if the exception wasn't caught, in which case
-        # this current test should fail  
+        # this current test should fail
 
     """
       This test case is about testing validate_http_anyq_with_allowed_responses
@@ -246,10 +246,149 @@ class TestTests3:
         except:
             print("FAIL!")
             assert 0, "Test failed, as expected"
-            
-            
+
+
 
     # Re-use setup and teardown from where we adapted this test case:
     @classmethod
     def dir(cls):
         return "queries/graphql_mutation/insert/constraints"
+
+
+class TestParameterizedFixtures:
+    '''
+    The following tests were an attempt to figure out how to convey information
+    between fixtures when one of them is parameterized, and we have "soft"
+    dependencies between fixtures—that is, B doesn't explicitly depend on A, but
+    rather, A mutates a value provided by C, that B then uses.
+
+    Unfortunately, there doesn't seem to be a way to do this reliably (see the
+    `xfail` markers below). Preserving this as documentation.
+    '''
+
+    # We use `itertools.count` as a simple way to create mutation that's shared across tests.
+    # This allows us to test the parameterization is working.
+
+    def test_simple_parameterized_fixture(self, simple_parameterized_fixture: int, count=itertools.count()):
+        assert simple_parameterized_fixture == next(count)
+
+    def test_parameterized_fixture_with_mark(self, request: pytest.FixtureRequest, parameterized_fixture_with_mark: int):
+        marker = request.node.get_closest_marker('value')
+        assert marker is not None
+        assert parameterized_fixture_with_mark == marker.args[0]
+
+    # Does not actually work; see below for `xfail` markers.
+    def test_parameterized_fixture_mutating_value_used_in_another_fixture(self, parameterized_fixture_that_mutates: str, fixture_using_mutable_value: str):
+        assert parameterized_fixture_that_mutates == fixture_using_mutable_value
+
+    @pytest.mark.xfail(reason='The marker never makes it to the fixture.')
+    @pytest.mark.parametrize(
+        'value',
+        [
+            pytest.param(0, marks=pytest.mark.value(0)),
+            pytest.param(1, marks=pytest.mark.value(1)),
+            pytest.param(2, marks=pytest.mark.value(2)),
+        ]
+    )
+    def test_parameterized_test_using_marks_with_a_fixture(self, value: int, fixture_returning_mark: int):
+        assert value == fixture_returning_mark
+
+    @pytest.mark.parametrize(
+        'fixture_returning_indirect_param',
+        [
+            pytest.param(0),
+            pytest.param(1),
+            pytest.param(2),
+        ],
+        indirect=True,
+    )
+    def test_parameterized_test_using_indirect_fixture(self, fixture_returning_indirect_param: int, count=itertools.count()):
+        assert fixture_returning_indirect_param == next(count)
+
+    @pytest.mark.usefixtures('fixture_returning_indirect_param')
+    def test_using_indirect_fixture_without_param(self, fixture_returning_indirect_param: Any):
+        assert fixture_returning_indirect_param is None
+
+    @pytest.mark.xfail(reason='`fixture_using_mutable_value` is only instantiated once.')
+    @pytest.mark.parametrize(
+        'fixture_mutating_with_indirect_param',
+        [
+            pytest.param(9),
+            pytest.param(8),
+            pytest.param(7),
+        ],
+        indirect=True,
+    )
+    def test_parameterized_test_using_indirect_fixture_and_mutation(self, fixture_mutating_with_indirect_param: int, fixture_using_mutable_value: int):
+        assert fixture_mutating_with_indirect_param == fixture_using_mutable_value
+
+
+T = TypeVar('T')
+
+
+class MutableValue(Generic[T]):
+    value: Optional[T] = None
+
+    def get(self) -> T:
+        if self.value is None:
+            raise IndexError('Value is None')
+        return self.value
+
+    def set(self, new_value: T):
+        self.value = new_value
+
+
+@pytest.fixture(scope='class')
+def mutable_value() -> MutableValue[str]:
+    return MutableValue()
+
+
+@pytest.fixture(scope='class', params=[0, 1, 2])
+def simple_parameterized_fixture(request: pytest.FixtureRequest) -> int:
+    return request.param
+
+
+@pytest.fixture(scope='class', params=[
+    pytest.param(0, marks=pytest.mark.value(0)),
+    pytest.param(1, marks=pytest.mark.value(1)),
+    pytest.param(2, marks=pytest.mark.value(2)),
+])
+def parameterized_fixture_with_mark(request: pytest.FixtureRequest) -> int:
+    return request.param
+
+
+@pytest.fixture(scope='class', params=[
+    'A',
+    pytest.param('B', marks=pytest.mark.xfail(reason='`fixture_using_mutable_value` is only instantiated once.')),
+    pytest.param('C', marks=pytest.mark.xfail(reason='`fixture_using_mutable_value` is only instantiated once.')),
+])
+def parameterized_fixture_that_mutates(request: pytest.FixtureRequest, mutable_value: MutableValue[str]) -> str:
+    mutable_value.set(request.param)
+    return request.param
+
+
+@pytest.fixture(scope='class')
+def fixture_using_mutable_value(mutable_value: MutableValue[T]) -> T:
+    return mutable_value.get()
+
+
+@pytest.fixture(scope='class')
+def fixture_returning_mark(request: pytest.FixtureRequest) -> Any:
+    marker = request.node.get_closest_marker('value')
+    assert marker is not None
+    return marker.args[0]
+
+
+@pytest.fixture(scope='class')
+def fixture_returning_indirect_param(request: pytest.FixtureRequest) -> Any:
+    if 'param' not in dir(request):
+        return None
+    return request.param
+
+
+@pytest.fixture(scope='class')
+def fixture_mutating_with_indirect_param(request: pytest.FixtureRequest, mutable_value: MutableValue[Any]) -> Any:
+    if 'param' not in dir(request):
+        return
+    mutable_value.set(request.param)
+    return request.param

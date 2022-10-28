@@ -26,7 +26,7 @@ args:
     delete:
       columns: '*'
     enable_manual: true
-    webhook: http://127.0.0.1:5592
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}"
 - type: create_event_trigger
   args:
     name: t1_disabled
@@ -40,4 +40,4 @@ args:
     delete:
       columns: '*'
     enable_manual: false
-    webhook: http://127.0.0.1:5592
+    webhook: "{{EVENT_WEBHOOK_HANDLER}}"

@@ -4,7 +4,6 @@ import Pen from './Pen';
 import { useDebouncedEffect } from '../../../../hooks/useDebounceEffect';
 import { isNumberString } from '../../../Common/utils/jsUtils';
 import { ArgTreeType } from './types';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 
 interface RSPInputProps {
   k: string;
@@ -13,7 +12,32 @@ interface RSPInputProps {
   v: GraphQLInputField;
   setArgVal: (v: Record<string, unknown>) => void;
   setEditMode: (b: boolean) => void;
+  isFirstLevelInputObjPreset?: boolean;
 }
+
+type EffectArg = {
+  v: RSPInputProps['v'];
+  localValue: ReactText;
+  setArgVal: RSPInputProps['setArgVal'];
+};
+
+export const rspInputEffect = ({ v, localValue, setArgVal }: EffectArg) => {
+  if (
+    (v?.type?.inspect() === 'Int' || v?.type?.inspect() === 'Int!') &&
+    localValue &&
+    isNumberString(localValue)
+  ) {
+    if (localValue === '0') {
+      setArgVal({ [v?.name]: 0 });
+      return;
+    }
+    setArgVal({ [v?.name]: Number(localValue) });
+    return;
+  }
+
+  setArgVal({ [v?.name]: localValue });
+};
+
 const RSPInputComponent: React.FC<RSPInputProps> = ({
   k,
   editMode,
@@ -21,6 +45,7 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
   setArgVal,
   v,
   setEditMode,
+  isFirstLevelInputObjPreset,
 }) => {
   const isSessionvar = () => {
     if (
@@ -42,22 +67,9 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
     if (editMode && inputRef && inputRef.current) inputRef.current.focus();
   }, [editMode]);
 
-  useDebouncedEffect(
-    () => {
-      if (
-        (v?.type?.inspect() === 'Int' || v?.type?.inspect() === 'Int!') &&
-        localValue &&
-        isNumberString(localValue)
-      ) {
-        if (localValue === '0') return setArgVal({ [v?.name]: 0 });
-        return setArgVal({ [v?.name]: Number(localValue) });
-      }
-
-      setArgVal({ [v?.name]: localValue });
-    },
-    500,
-    [localValue]
-  );
+  useDebouncedEffect(() => rspInputEffect({ v, localValue, setArgVal }), 500, [
+    localValue,
+  ]);
 
   const toggleSessionVariable = (e: React.MouseEvent) => {
     const input = e.target as HTMLButtonElement;
@@ -66,7 +78,7 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
 
   return (
     <>
-      <label htmlFor={k}> {k}:</label>
+      {!isFirstLevelInputObjPreset ? <label htmlFor={k}> {k}:</label> : null}
       {editMode ? (
         <>
           <input
@@ -84,7 +96,7 @@ const RSPInputComponent: React.FC<RSPInputProps> = ({
             <button
               value="X-Hasura-User-Id"
               onClick={toggleSessionVariable}
-              className={styles.sessionVarButton}
+              className="text-green-600 cursor-pointer text-xs font-bold"
             >
               [X-Hasura-User-Id]
             </button>

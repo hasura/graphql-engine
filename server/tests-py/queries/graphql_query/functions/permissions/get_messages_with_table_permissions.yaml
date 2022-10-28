@@ -1,0 +1,49 @@
+- description: Query a table that has custom row permissions containing a root object reference ($)
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '2'
+  response:
+    data:
+      message:
+        - content: content 2
+        - content: content 3
+  query:
+    query: |
+      query {
+        message {
+          content
+        }
+      }
+
+# This is needed to be able to access the function itself
+- description: Add permissions to the function
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_create_function_permission
+    args:
+      role: user
+      function: get_messages
+
+- description: Query a function which references a table that has custom row permissions containing a root object reference ($)
+  url: /v1/graphql
+  status: 200
+  headers:
+    X-Hasura-Role: user
+    X-Hasura-User-Id: '2'
+  response:
+    data:
+      get_messages:
+        - content: content 2
+        - content: content 3
+  query:
+    query: |
+      query {
+        get_messages {
+          content
+        }
+      }

@@ -26,15 +26,20 @@ export const isInbuiltType = typename => {
   return !!inbuiltTypes[typename];
 };
 
-export const generateActionDefinition = ({
-  arguments: args,
-  outputType,
-  kind = 'synchronous',
-  handler,
-  actionType,
-  headers,
-  forwardClientHeaders,
-}) => {
+export const generateActionDefinition = (
+  {
+    arguments: args,
+    outputType,
+    kind = 'synchronous',
+    handler,
+    actionType,
+    headers,
+    forwardClientHeaders,
+    timeout,
+  },
+  requestTransform,
+  responseTransform
+) => {
   return {
     arguments: filterNameLessTypeLess(args),
     kind,
@@ -43,6 +48,9 @@ export const generateActionDefinition = ({
     type: actionType,
     headers: transformHeaders(headers),
     forward_client_headers: forwardClientHeaders,
+    timeout,
+    request_transform: requestTransform ?? null,
+    response_transform: responseTransform ?? null,
   };
 };
 

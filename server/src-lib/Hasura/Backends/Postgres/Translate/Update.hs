@@ -1,55 +1,108 @@
+-- | Postgres Translate Update
+--
+-- Translates IR update to Postgres-specific SQL UPDATE statements.
 module Hasura.Backends.Postgres.Translate.Update
-  ( mkUpdateCTE
-  ) where
+  ( mkUpdateCTE,
+    UpdateCTE (..),
+  )
+where
 
-import           Hasura.Prelude
+import Data.HashMap.Strict qualified as Map
+import Hasura.Backends.Postgres.SQL.DML qualified as S
+import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.Translate.BoolExp
+import Hasura.Backends.Postgres.Translate.Insert
+import Hasura.Backends.Postgres.Translate.Returning
+import Hasura.Backends.Postgres.Types.Update
+import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.Update
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.SQL.Backend
+import Hasura.SQL.Types
 
-import qualified Hasura.Backends.Postgres.SQL.DML             as S
+data UpdateCTE
+  = -- | Used for /update_table/ and /update_table_by_pk/.
+    Update S.TopLevelCTE
+  | -- | Used for /update_table_many/.
+    MultiUpdate [S.TopLevelCTE]
 
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.Translate.BoolExp
-import           Hasura.Backends.Postgres.Translate.Insert
-import           Hasura.Backends.Postgres.Translate.Returning
-import           Hasura.RQL.IR.Update
-import           Hasura.RQL.Types
-import           Hasura.SQL.Types
+-- | Create the update CTE.
+mkUpdateCTE ::
+  forall pgKind.
+  Backend ('Postgres pgKind) =>
+  AnnotatedUpdate ('Postgres pgKind) ->
+  UpdateCTE
+mkUpdateCTE (AnnotatedUpdateG tn (permFltr, wc) chk backendUpdate _ columnsInfo _tCase) =
+  case backendUpdate of
+    BackendUpdate opExps ->
+      Update $ S.CTEUpdate update
+      where
+        update =
+          S.SQLUpdate
+            { upTable = tn,
+              upSet =
+                S.SetExp $ map (expandOperator columnsInfo) (Map.toList opExps),
+              upFrom = Nothing,
+              upWhere =
+                Just
+                  . S.WhereFrag
+                  . S.simplifyBoolExp
+                  . toSQLBoolExp (S.QualTable tn)
+                  $ andAnnBoolExps permFltr wc,
+              upRet =
+                Just $
+                  S.RetExp
+                    [ S.selectStar,
+                      asCheckErrorExtractor $
+                        insertCheckConstraint $
+                          toSQLBoolExp (S.QualTable tn) chk
+                    ]
+            }
+    BackendMultiRowUpdate updates ->
+      MultiUpdate $ translateUpdate <$> updates
+      where
+        translateUpdate :: MultiRowUpdate pgKind S.SQLExp -> S.TopLevelCTE
+        translateUpdate MultiRowUpdate {..} =
+          S.CTEUpdate
+            S.SQLUpdate
+              { upTable = tn,
+                upSet =
+                  S.SetExp $ map (expandOperator columnsInfo) (Map.toList mruExpression),
+                upFrom = Nothing,
+                upWhere =
+                  Just
+                    . S.WhereFrag
+                    . S.simplifyBoolExp
+                    $ toSQLBoolExp (S.QualTable tn) mruWhere,
+                upRet =
+                  Just $
+                    S.RetExp
+                      [ S.selectStar,
+                        asCheckErrorExtractor
+                          . insertCheckConstraint
+                          $ toSQLBoolExp (S.QualTable tn) chk
+                      ]
+              }
 
-
-mkUpdateCTE
-  :: Backend ('Postgres pgKind)
-  => AnnUpd ('Postgres pgKind)
-  -> S.CTE
-mkUpdateCTE (AnnUpd tn opExps (permFltr, wc) chk _ columnsInfo) =
-  S.CTEUpdate update
-  where
-    update =
-      S.SQLUpdate tn setExp Nothing tableFltr
-        . Just
-        . S.RetExp
-        $ [ S.selectStar
-          , asCheckErrorExtractor $ insertCheckConstraint checkExpr
-          ]
-    setExp    = S.SetExp $ map (expandOperator columnsInfo) opExps
-    tableFltr = Just $ S.WhereFrag tableFltrExpr
-    tableFltrExpr = toSQLBoolExp (S.QualTable tn) $ andAnnBoolExps permFltr wc
-    checkExpr = toSQLBoolExp (S.QualTable tn) chk
-
-expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdOpExpG S.SQLExp) -> S.SetExpItem
-expandOperator infos (column, op) = S.SetExpItem $ (column,) $ case op of
-  UpdSet          e -> e
-  UpdInc          e -> S.mkSQLOpExp S.incOp               identifier (asNum  e)
-  UpdAppend       e -> S.mkSQLOpExp S.jsonbConcatOp       identifier (asJSON e)
-  UpdPrepend      e -> S.mkSQLOpExp S.jsonbConcatOp       (asJSON e) identifier
-  UpdDeleteKey    e -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asText e)
-  UpdDeleteElem   e -> S.mkSQLOpExp S.jsonbDeleteOp       identifier (asInt  e)
-  UpdDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
+expandOperator :: [ColumnInfo ('Postgres pgKind)] -> (PGCol, UpdateOpExpression S.SQLExp) -> S.SetExpItem
+expandOperator infos (column, op) = S.SetExpItem $
+  (column,) $ case op of
+    UpdateSet e -> e
+    UpdateInc e -> S.mkSQLOpExp S.incOp identifier (asNum e)
+    UpdateAppend e -> S.mkSQLOpExp S.jsonbConcatOp identifier (asJSON e)
+    UpdatePrepend e -> S.mkSQLOpExp S.jsonbConcatOp (asJSON e) identifier
+    UpdateDeleteKey e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asText e)
+    UpdateDeleteElem e -> S.mkSQLOpExp S.jsonbDeleteOp identifier (asInt e)
+    UpdateDeleteAtPath a -> S.mkSQLOpExp S.jsonbDeleteAtPathOp identifier (asArray a)
   where
     identifier = S.SEIdentifier $ toIdentifier column
-    asInt  e   = S.SETyAnn e S.intTypeAnn
-    asText e   = S.SETyAnn e S.textTypeAnn
-    asJSON e   = S.SETyAnn e S.jsonbTypeAnn
-    asArray a  = S.SETyAnn (S.SEArray a) S.textArrTypeAnn
-    asNum  e   = S.SETyAnn e $
-      case find (\info -> pgiColumn info == column) infos <&> pgiType of
+    asInt e = S.SETyAnn e S.intTypeAnn
+    asText e = S.SETyAnn e S.textTypeAnn
+    asJSON e = S.SETyAnn e S.jsonbTypeAnn
+    asArray a = S.SETyAnn (S.SEArray a) S.textArrTypeAnn
+    asNum e = S.SETyAnn e $
+      case find (\info -> ciColumn info == column) infos <&> ciType of
         Just (ColumnScalar s) -> S.mkTypeAnn $ CollectableTypeScalar s
-        _                     -> S.numericTypeAnn
+        _ -> S.numericTypeAnn

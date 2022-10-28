@@ -1,13 +1,15 @@
 package tables
 
 import (
+	"io/ioutil"
 	"testing"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/sirupsen/logrus"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func TestV3MetadataTableConfig_Export(t *testing.T) {
@@ -15,16 +17,18 @@ func TestV3MetadataTableConfig_Export(t *testing.T) {
 		TableConfig *TableConfig
 	}
 	type args struct {
-		metadata yaml.MapSlice
+		metadata map[string]yaml.Node
 	}
 	tests := []struct {
+		id      string
 		name    string
 		fields  fields
 		args    args
-		want    map[string]string
+		want    map[string][]byte
 		wantErr bool
 	}{
 		{
+			id:   "t1",
 			name: "can build tables from v3 metadata",
 			fields: fields{
 				TableConfig: &TableConfig{
@@ -33,26 +37,26 @@ func TestV3MetadataTableConfig_Export(t *testing.T) {
 				},
 			},
 			args: args{
-				metadata: func() yaml.MapSlice {
-					metadata := `
-sources:
--  name: default
-   tables:
-     - table:
-         name: "test"
-     - table:
-         name: "test"
-`
-					var v yaml.MapSlice
-					assert.NoError(t, yaml.Unmarshal([]byte(metadata), &v))
+				metadata: func() map[string]yaml.Node {
+					bs, err := ioutil.ReadFile("testdata/v3_export_test/t1/metadata.json")
+					assert.NoError(t, err)
+					yamlbs, err := metadatautil.JSONToYAML(bs)
+					assert.NoError(t, err)
+					var v map[string]yaml.Node
+					assert.NoError(t, yaml.Unmarshal(yamlbs, &v))
 					return v
 				}(),
 			},
-			want: map[string]string{
-				"testdata/metadata/tables.yaml": "- table:\n    name: test\n- table:\n    name: test\n",
+			want: map[string][]byte{
+				"testdata/metadata/tables.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/v3_export_test/t1/want.tables.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
 			},
 		},
 		{
+			id:   "t2",
 			name: "can build metadata when tables is empty",
 			fields: fields{
 				TableConfig: &TableConfig{
@@ -61,21 +65,26 @@ sources:
 				},
 			},
 			args: args{
-				metadata: func() yaml.MapSlice {
-					metadata := `
-sources:
--  name: default
-`
-					var v yaml.MapSlice
-					assert.NoError(t, yaml.Unmarshal([]byte(metadata), &v))
+				metadata: func() map[string]yaml.Node {
+					bs, err := ioutil.ReadFile("testdata/v3_export_test/t2/metadata.json")
+					assert.NoError(t, err)
+					yamlbs, err := metadatautil.JSONToYAML(bs)
+					assert.NoError(t, err)
+					var v map[string]yaml.Node
+					assert.NoError(t, yaml.Unmarshal(yamlbs, &v))
 					return v
 				}(),
 			},
-			want: map[string]string{
-				"testdata/metadata/tables.yaml": "[]\n",
+			want: map[string][]byte{
+				"testdata/metadata/tables.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/v3_export_test/t2/want.tables.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
 			},
 		},
 		{
+			id:   "t3",
 			name: "can build metadata when sources is not present",
 			fields: fields{
 				TableConfig: &TableConfig{
@@ -84,15 +93,22 @@ sources:
 				},
 			},
 			args: args{
-				metadata: func() yaml.MapSlice {
-					metadata := ``
-					var v yaml.MapSlice
-					assert.NoError(t, yaml.Unmarshal([]byte(metadata), &v))
+				metadata: func() map[string]yaml.Node {
+					bs, err := ioutil.ReadFile("testdata/v3_export_test/t3/metadata.json")
+					assert.NoError(t, err)
+					yamlbs, err := metadatautil.JSONToYAML(bs)
+					assert.NoError(t, err)
+					var v map[string]yaml.Node
+					assert.NoError(t, yaml.Unmarshal(yamlbs, &v))
 					return v
 				}(),
 			},
-			want: map[string]string{
-				"testdata/metadata/tables.yaml": "[]\n",
+			want: map[string][]byte{
+				"testdata/metadata/tables.yaml": func() []byte {
+					bs, err := ioutil.ReadFile("testdata/v3_export_test/t3/want.tables.yaml")
+					assert.NoError(t, err)
+					return bs
+				}(),
 			},
 		},
 	}
@@ -102,15 +118,17 @@ sources:
 				TableConfig: tt.fields.TableConfig,
 			}
 			got, err := tc.Export(tt.args.metadata)
-			if (err != nil) != tt.wantErr {
-				t.Fatalf("Export() error = %v, wantErr %v", err, tt.wantErr)
-				return
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				for k, v := range got {
+					assert.Contains(t, tt.want, k)
+					// uncomment to update golden files
+					//assert.NoError(t, ioutil.WriteFile(fmt.Sprintf("testdata/v3_export_test/%v/want.%v", tt.id, filepath.Base(k)), v, os.ModePerm))
+
+					assert.Equalf(t, string(tt.want[k]), string(v), "%v", k)
+				}
 			}
-			var gotS = map[string]string{}
-			for k, v := range got {
-				gotS[k] = string(v)
-			}
-			assert.Equal(t, tt.want, gotS)
 		})
 	}
 }

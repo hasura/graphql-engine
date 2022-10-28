@@ -1,10 +1,12 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Helmet from 'react-helmet';
-import { push } from 'react-router-redux';
 import { Link } from 'react-router';
 
-import Button from '../../../Common/Button/Button';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Button } from '@/new-components/Button';
+import { BsBoxArrowUpRight } from 'react-icons/bs';
+import _push from '../push';
 import {
   setTableName,
   addExistingTableSql,
@@ -41,12 +43,18 @@ import { getConfirmation } from '../../../Common/utils/jsUtils';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import RawSqlButton from '../Common/Components/RawSqlButton';
-import styles from '../../../Common/Common.scss';
+import styles from '../../../Common/Common.module.scss';
 import { getConsistentFunctions } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { TrackableFunctionsList } from './FunctionsList';
 import { getTrackableFunctions } from './utils';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
+import { FaCog, FaDatabase, FaFolder, FaPlusCircle } from 'react-icons/fa';
+import { TableTrackingCustomizationModalContainer } from './tableTrackCustomization/TableTrackingCustomizationContainer';
+import { modalKeySelector } from '../../../../store/modal/modal.selectors';
+import { showModal, hideModal } from '../../../../store/modal/modal.actions';
+import { TableTrackingCustomizationModalKey } from '@/store/modal/modal.constants';
+import { EmptyState } from './components/EmptyState/EmptyState';
 
 const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   const successCb = () => {
@@ -60,11 +68,10 @@ const DeleteSchemaButton = ({ dispatch, migrationMode, currentDataSource }) => {
   return (
     migrationMode && (
       <Button
-        color="white"
-        size="xs"
-        onClick={handleDelete}
+        size="sm"
         title="Delete current schema"
-        style={{ marginRight: '20px', maxHeight: '22px' }}
+        onClick={handleDelete}
+        style={{ marginRight: '20px' }}
       >
         Delete Schema
       </Button>
@@ -86,16 +93,14 @@ const OpenCreateSection = React.forwardRef(
         />
       </div>
       <Button
-        color="white"
-        size="xs"
+        size="sm"
         onClick={handleCreate}
         className={styles.add_mar_left_mid}
       >
         Create New Schema
       </Button>
       <Button
-        color="white"
-        size="xs"
+        size="sm"
         onClick={handleCancelCreate}
         className={styles.add_mar_left_mid}
       >
@@ -106,7 +111,7 @@ const OpenCreateSection = React.forwardRef(
 );
 
 const ClosedCreateSection = ({ onClick }) => (
-  <Button color="white" size="xs" onClick={onClick} title="Create new schema">
+  <Button size="sm" onClick={onClick} title="Create new schema">
     Create New Schema
   </Button>
 );
@@ -151,9 +156,7 @@ const SchemaPermissionsButton = ({ schema, source }) => (
     to={getSchemaPermissionsRoute(schema, source)}
     style={{ marginLeft: '20px' }}
   >
-    <Button color="white" size="xs">
-      Show Permissions Summary
-    </Button>
+    <Button size="sm">Show Permissions Summary</Button>
   </Link>
 );
 
@@ -166,14 +169,19 @@ class Schema extends Component {
       createSchemaOpen: false,
       schemaNameEdit: '',
       loadingSchemas: false,
+      isTrackTableCustomizing: false,
     };
 
     this.props.dispatch(fetchFunctionInit());
-    this.props.dispatch(
-      updateSchemaInfo({ schemas: [this.props.currentSchema] })
-    );
+    this.props.dispatch(updateSchemaInfo({ schemas: this.props.schemaList }));
 
     this.schemaNameInputRef = React.createRef(null);
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.currentSchema !== this.props.currentSchema) {
+      this.props.dispatch(updateSchemaInfo({ schemas: this.props.schemaList }));
+    }
   }
 
   cancelCreateNewSchema = () => {
@@ -184,6 +192,10 @@ class Schema extends Component {
 
   onCreateNewClick = () => {
     this.setState({ createSchemaOpen: true });
+  };
+
+  setCustomizedTableName = tableName => {
+    this.setState({ customizedTableName: tableName });
   };
 
   onChangeSchemaName = e => {
@@ -224,6 +236,9 @@ class Schema extends Component {
       nonTrackableFunctions,
       trackedFunctions,
       currentDataSource,
+      modalKey,
+      showTableTrackingModal,
+      hideTableTrackingModal,
     } = this.props;
 
     const getSectionHeading = (headingText, tooltip, actionElement = null) => {
@@ -248,7 +263,7 @@ class Schema extends Component {
       functionsList,
       trackedFunctions
     );
-    const getCreateBtn = () => {
+    const getCreateBtn = (size = 'md') => {
       let createBtn = null;
 
       if (migrationMode && isFeatureSupported('tables.create.enabled')) {
@@ -256,20 +271,27 @@ class Schema extends Component {
           e.preventDefault();
 
           dispatch(
-            push(getSchemaAddTableRoute(currentSchema, currentDataSource))
+            _push(getSchemaAddTableRoute(currentSchema, currentDataSource))
           );
         };
 
         createBtn = (
-          <Button
-            data-test="data-create-table"
-            color="yellow"
-            size="sm"
-            className={styles.add_mar_left}
-            onClick={handleClick}
+          <Analytics
+            name="data-tab-create-table-button"
+            passHtmlAttributesToChildren
           >
-            Create Table
-          </Button>
+            <Button
+              mode="primary"
+              size={size}
+              className="p-0 m-0 ml-sm"
+              data-test="data-create-table"
+              onClick={handleClick}
+              iconPosition="start"
+              icon={<FaPlusCircle className="h-3" />}
+            >
+              Create Table
+            </Button>
+          </Analytics>
         );
       }
 
@@ -336,14 +358,18 @@ class Schema extends Component {
 
         if (allUntrackedTables.length > 0) {
           trackAllBtn = (
-            <Button
-              className={`${styles.display_inline}`}
-              color="white"
-              size="xs"
-              onClick={trackAllTables}
+            <Analytics
+              name="data-tab-track-all-button"
+              passHtmlAttributesToChildren
             >
-              Track All
-            </Button>
+              <Button
+                size="sm"
+                className={`${styles.display_inline}`}
+                onClick={trackAllTables}
+              >
+                Track All
+              </Button>
+            </Analytics>
           );
         }
 
@@ -369,23 +395,41 @@ class Schema extends Component {
               const handleTrackTable = e => {
                 e.preventDefault();
 
+                this.setCustomizedTableName(tableName);
                 dispatch(setTableName(tableName));
                 dispatch(addExistingTableSql());
+              };
+
+              const onCustomizeTableButtonClick = () => {
+                this.setCustomizedTableName(tableName);
+                showTableTrackingModal();
               };
 
               return (
                 <div
                   className={`${styles.display_inline} ${styles.add_mar_right}`}
                 >
-                  <Button
-                    data-test={`add-track-table-${tableName}`}
-                    className={`${styles.display_inline}`}
-                    color="white"
-                    size="xs"
-                    onClick={handleTrackTable}
+                  <Analytics
+                    name="data-tab-track-table-button"
+                    passHtmlAttributesToChildren
                   >
-                    Track
-                  </Button>
+                    <Button
+                      size="sm"
+                      className={`${styles.display_inline}`}
+                      data-test={`add-track-table-${tableName}`}
+                      onClick={handleTrackTable}
+                    >
+                      Track
+                    </Button>
+                  </Analytics>
+
+                  <Button
+                    title="customize table before tracking"
+                    size="sm"
+                    icon={<FaCog />}
+                    className={`ml-2 ${styles.display_inline}`}
+                    onClick={onCustomizeTableButtonClick}
+                  />
                 </div>
               );
             };
@@ -452,11 +496,10 @@ class Schema extends Component {
         if (untrackedRelations.length > 0) {
           trackAllBtn = (
             <Button
-              onClick={trackAllRelations}
+              size="sm"
               className={`${styles.display_inline}`}
-              color="white"
-              size="xs"
               data-test="track-all-relationships"
+              onClick={trackAllRelations}
             >
               Track All
             </Button>
@@ -493,9 +536,8 @@ class Schema extends Component {
                   className={`${styles.display_inline} ${styles.add_mar_right}`}
                 >
                   <Button
+                    size="sm"
                     className={styles.display_inline}
-                    color="white"
-                    size="xs"
                     onClick={handleTrackRel}
                   >
                     Track
@@ -572,6 +614,7 @@ class Schema extends Component {
                   funcs={trackableFuncs}
                   readOnlyMode={readOnlyMode}
                   source={currentDataSource}
+                  allSchemas={schema}
                 />
               ) : (
                 `Currently unsupported for ${(
@@ -645,46 +688,97 @@ class Schema extends Component {
       );
     };
 
-    return (
-      <RightContainer>
-        <div className={`container-fluid ${styles.padd_left_remove}`}>
-          <div className={styles.padd_left}>
-            <Helmet title="Schema - Data | Hasura" />
-            <BreadCrumb
-              breadCrumbs={[
-                { url: `/data`, title: 'Data' },
-                {
-                  url: getDataSourceBaseRoute(currentDataSource),
-                  title: currentDataSource,
-                  prefix: <i className="fa fa-database" />,
-                },
-                {
-                  url: getSchemaBaseRoute(currentSchema, currentDataSource),
-                  title: currentSchema,
-                  prefix: <i className="fa fa-folder" />,
-                },
+    const getContent = () => {
+      if (
+        getSchemaTables(schema, currentSchema).length === 0 &&
+        currentDriver !== 'bigquery'
+      ) {
+        return (
+          <>
+            <h2 className={`text-3xl font-bold display-inline`}>
+              {currentSchema}
+            </h2>
+            <hr className="my-md" />
+            <EmptyState
+              title="It looks like you don't currently have any tables in your schema"
+              subtitle="Need help getting started?"
+              buttons={[
+                <Button
+                  onClick={() => {
+                    window.open(
+                      'https://hasura.io/docs/latest/getting-started/getting-started-cloud/#step-4-try-out-hasura'
+                    );
+                  }}
+                  size="sm"
+                  iconPosition="end"
+                  icon={<BsBoxArrowUpRight className="h-3" />}
+                >
+                  Learn more about creating tables
+                </Button>,
+                getCreateBtn('sm'),
               ]}
             />
-            <div className={styles.display_flex}>
-              <h2 className={`${styles.headerText} ${styles.display_inline}`}>
-                {currentSchema}
-              </h2>
-              {getCreateBtn()}
-            </div>
-            <hr />
-            {getCurrentSchemaSection()}
-            <hr />
-            {getUntrackedTablesSection()}
-            {isFeatureSupported('tables.relationships.track') &&
-              getUntrackedRelationsSection()}
-            {getUntrackedFunctionsSection(
-              isFeatureSupported('functions.track.enabled')
-            )}
-            {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
-              getNonTrackableFunctionsSection()}
-            <hr />
+          </>
+        );
+      }
+      return (
+        <>
+          <div className="flex">
+            <h2 className={`text-3xl font-bold display-inline`}>
+              {currentSchema}
+            </h2>
+            {getCreateBtn()}
           </div>
-        </div>
+          <hr className="my-md" />
+          {getCurrentSchemaSection()}
+          <hr className="my-md" />
+          {getUntrackedTablesSection()}
+          {isFeatureSupported('tables.relationships.track') &&
+            getUntrackedRelationsSection()}
+          {getUntrackedFunctionsSection(
+            isFeatureSupported('functions.track.enabled')
+          )}
+          {isFeatureSupported('functions.nonTrackableFunctions.enabled') &&
+            getNonTrackableFunctionsSection()}
+          <hr className="my-md" />
+        </>
+      );
+    };
+
+    return (
+      <RightContainer>
+        {modalKey === TableTrackingCustomizationModalKey && (
+          <TableTrackingCustomizationModalContainer
+            onClose={() => hideTableTrackingModal()}
+            tableName={this.state.customizedTableName}
+            dataSource={currentDataSource}
+            schema={currentSchema}
+            driver={currentDriver}
+          />
+        )}
+        <Analytics name="Schema" {...REDACT_EVERYTHING}>
+          <div className={`container-fluid ${styles.padd_left_remove}`}>
+            <div className={styles.padd_left}>
+              <Helmet title="Schema - Data | Hasura" />
+              <BreadCrumb
+                breadCrumbs={[
+                  { url: `/data`, title: 'Data' },
+                  {
+                    url: getDataSourceBaseRoute(currentDataSource),
+                    title: currentDataSource,
+                    prefix: <FaDatabase />,
+                  },
+                  {
+                    url: getSchemaBaseRoute(currentSchema, currentDataSource),
+                    title: currentSchema,
+                    prefix: <FaFolder />,
+                  },
+                ]}
+              />
+              {getContent()}
+            </div>
+          </div>
+        </Analytics>
       </RightContainer>
     );
   }
@@ -697,6 +791,13 @@ Schema.propTypes = {
   currentSchema: PropTypes.string.isRequired,
   dispatch: PropTypes.func.isRequired,
 };
+
+const mapDispatchToProps = dispatch => ({
+  showTableTrackingModal: () =>
+    dispatch(showModal(TableTrackingCustomizationModalKey)),
+  hideTableTrackingModal: () => dispatch(hideModal()),
+  dispatch: dispatch,
+});
 
 const mapStateToProps = state => ({
   schema: state.tables.allSchemas,
@@ -711,8 +812,10 @@ const mapStateToProps = state => ({
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   metadata: state.metadata.metadataObject,
   currentDataSource: state.tables.currentDataSource,
+  modalKey: modalKeySelector(state),
 });
 
-const schemaConnector = connect => connect(mapStateToProps)(Schema);
+const schemaConnector = connect =>
+  connect(mapStateToProps, mapDispatchToProps)(Schema);
 
 export default schemaConnector;

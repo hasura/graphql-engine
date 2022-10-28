@@ -1,0 +1,11 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      drop table hge_tests.test_t1
+      drop table hge_tests.test_t2
+      drop table hge_tests.test_t3
+      drop schema hge_tests

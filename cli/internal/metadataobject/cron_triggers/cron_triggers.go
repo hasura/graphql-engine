@@ -4,16 +4,14 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/version"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
 
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2/version"
+
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
-)
-
-const (
-	fileName    string = "cron_triggers.yaml"
-	metadataKey        = "cron_triggers"
+	"gopkg.in/yaml.v3"
 )
 
 type CronTriggers struct {
@@ -36,65 +34,73 @@ func (c *CronTriggers) Validate() error {
 }
 
 func (c *CronTriggers) CreateFiles() error {
+	var op errors.Op = "crontriggers.CronTriggers.CreateFiles"
 	v := make([]interface{}, 0)
 	data, err := yaml.Marshal(v)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
-	err = ioutil.WriteFile(filepath.Join(c.MetadataDir, fileName), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(c.MetadataDir, c.Filename()), data, 0644)
 	if err != nil {
-		return err
+		return errors.E(op, err)
 	}
 	return nil
 }
 
-func (c *CronTriggers) Build(metadata *yaml.MapSlice) error {
-	if !c.serverFeatureFlags.HasCronTriggers {
-		c.logger.WithField("metadata_plugin", "cron_triggers").Warnf("Skipping building %s", fileName)
-		return nil
-	}
-	data, err := ioutil.ReadFile(filepath.Join(c.MetadataDir, fileName))
+func (c *CronTriggers) Build() (map[string]interface{}, error) {
+	var op errors.Op = "crontriggers.CronTriggers.Build"
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(c.MetadataDir, c.Filename()))
 	if err != nil {
-		return err
+		return nil, errors.E(op, c.error(err))
 	}
+	var obj []yaml.Node
+	err = yaml.Unmarshal(data, &obj)
+	if err != nil {
+		return nil, errors.E(op, errors.KindBadInput, c.error(err))
+	}
+	return map[string]interface{}{c.Key(): obj}, nil
+}
 
-	item := yaml.MapItem{
-		Key:   metadataKey,
-		Value: []yaml.MapSlice{},
-	}
-	err = yaml.Unmarshal(data, &item.Value)
+func (c *CronTriggers) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
+	var op errors.Op = "crontriggers.CronTriggers.Export"
+	b, err := metadataobject.DefaultExport(c, metadata, c.error, metadataobject.DefaultObjectTypeSequence)
 	if err != nil {
-		return err
+		return nil, errors.E(op, err)
 	}
-	*metadata = append(*metadata, item)
+	return b, nil
+}
+
+func (c *CronTriggers) Key() string {
+	return metadataobject.CronTriggersKey
+}
+
+func (c *CronTriggers) Filename() string {
+	return "cron_triggers.yaml"
+}
+
+func (c *CronTriggers) GetFiles() ([]string, error) {
+	var op errors.Op = "crontriggers.CronTriggers.GetFiles"
+	rootFile := filepath.Join(c.BaseDirectory(), c.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, errors.E(op, c.error(err))
+	}
+	return files, nil
+}
+
+func (c *CronTriggers) WriteDiff(opts metadataobject.WriteDiffOpts) error {
+	var op errors.Op = "crontriggers.CronTriggers.WriteDiff"
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: c, WriteDiffOpts: opts})
+	if err != nil {
+		return errors.E(op, c.error(err))
+	}
 	return nil
 }
 
-func (c *CronTriggers) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
-	if !c.serverFeatureFlags.HasCronTriggers {
-		c.logger.Debugf("Skipping creating %s", fileName)
-		return make(map[string][]byte), nil
-	}
-	var cronTriggers interface{}
-	for _, item := range metadata {
-		k, ok := item.Key.(string)
-		if !ok || k != metadataKey {
-			continue
-		}
-		cronTriggers = item.Value
-	}
-	if cronTriggers == nil {
-		cronTriggers = make([]interface{}, 0)
-	}
-	data, err := yaml.Marshal(cronTriggers)
-	if err != nil {
-		return nil, err
-	}
-	return map[string][]byte{
-		filepath.Join(c.MetadataDir, fileName): data,
-	}, nil
+func (c *CronTriggers) BaseDirectory() string {
+	return c.MetadataDir
 }
 
-func (c *CronTriggers) Name() string {
-	return metadataKey
+func (c *CronTriggers) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(c, err, additionalContext...)
 }

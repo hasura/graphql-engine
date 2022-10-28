@@ -2,7 +2,6 @@ const { ApolloServer, ApolloError } = require('apollo-server');
 const gql = require('graphql-tag');
 const { print } = require('graphql');
 
-
 const allMessages = [
     { id: 1, name: "alice", msg: "You win!"},
     { id: 2, name: "bob", msg: "You lose!"},
@@ -10,13 +9,12 @@ const allMessages = [
 ];
 
 const typeDefs = gql`
-
   type User {
     user_id: Int
     userMessages(whered: MessageWhereInpObj, includes: IncludeInpObj): [Message]
     gimmeText(text: String): String
   }
-
+  
   interface Communication {
     id: Int!
     msg: String!
@@ -94,7 +92,6 @@ const typeDefs = gql`
 `;
 
 const resolvers = {
-
     User: {
         userMessages: (parent, { whered, includes }) => {
             var result = allMessages.filter(m => m.id == parent.user_id);

@@ -1,21 +1,10 @@
 import React from 'react';
-import CommonTabLayout from '../../../Common/Layout/CommonTabLayout/CommonTabLayout';
-import { NotFoundError } from '../../../Error/PageNotFound';
-import { appPrefix } from '../constants';
-import styles from '../RemoteSchema.scss';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { RemoteSchema } from '../../../../metadata/types';
+import { NotFoundError } from '../../../Error/PageNotFound';
+import { Tabs } from '../Common/Tabs';
+import { appPrefix } from '../constants';
 
-const tabInfo = {
-  details: {
-    display_text: 'Details',
-  },
-  modify: {
-    display_text: 'Modify',
-  },
-  permissions: {
-    display_text: 'Permissions',
-  },
-};
 export type RSPWrapperProps = {
   params: { remoteSchemaName: string };
   allRemoteSchemas?: RemoteSchema[];
@@ -68,19 +57,18 @@ const RSPWrapper: React.FC<RSPWrapperProps> = ({
 
   return (
     <>
-      <CommonTabLayout
+      <Tabs
         appPrefix={appPrefix}
         currentTab={tabName}
         heading={remoteSchemaName}
-        tabsInfo={tabInfo}
         breadCrumbs={breadCrumbs}
         baseUrl={`${appPrefix}/manage/${remoteSchemaName}`}
         showLoader={false}
         testPrefix="remote-schema-container-tabs"
       />
-      <div className={styles.add_pad_top}>
-        {permissionRenderer(currentRemoteSchema)}
-      </div>
+      <Analytics name="RemoteSchemaPermission" {...REDACT_EVERYTHING}>
+        <div className="pt-md">{permissionRenderer(currentRemoteSchema)}</div>
+      </Analytics>
     </>
   );
 };

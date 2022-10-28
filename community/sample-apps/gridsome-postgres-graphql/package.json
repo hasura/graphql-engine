@@ -9,6 +9,6 @@
   },
   "dependencies": {
     "@gridsome/source-graphql": "^0.1.0",
-    "gridsome": "^0.6.0"
+    "gridsome": "^0.7.23"
   }
 }

@@ -3,10 +3,10 @@ url: /v1/graphql
 status: 200
 response:
   errors:
-  - extensions:
-      path: "$.selectionSet.update_author.args.where"
-      code: "validation-failed"
-    message: expected an object for type "author_bool_exp", but found null
+    - extensions:
+        path: "$.selectionSet.update_author.args.where"
+        code: "validation-failed"
+      message: expected an object for type 'author_bool_exp', but found null
 query:
   query: |
     mutation update_author {

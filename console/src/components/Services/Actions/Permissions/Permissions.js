@@ -1,11 +1,17 @@
 import React from 'react';
+import { FaPencilAlt } from 'react-icons/fa';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+  useGetAnalyticsAttributes,
+} from '@/features/Analytics';
 import { getActionPermissions, findActionPermission } from '../utils';
 import Helmet from 'react-helmet';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
 import { permOpenEdit, permCloseEdit, permSetRoleName } from './reducer';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
+import styles from '../../../Common/Permissions/PermissionStyles.module.scss';
 import PermissionEditor from './PermissionEditor';
 import { setDefaults } from './reducer';
 
@@ -55,7 +61,7 @@ const Permissions = ({
       const getEditIcon = () => {
         return (
           <span className={styles.editPermsIcon}>
-            <i className="fa fa-pencil" aria-hidden="true" />
+            <FaPencilAlt aria-hidden="true" />
           </span>
         );
       };
@@ -88,11 +94,12 @@ const Permissions = ({
           if (role !== 'admin' && !readOnlyMode) {
             editIcon = getEditIcon();
 
+            className += styles.clickableCell;
+
             if (isCurrEdit) {
               onClick = dispatchCloseEdit;
               className += ` ${styles.currEdit}`;
             } else {
-              className += styles.clickableCell;
               onClick = dispatchOpenEdit(queryType);
             }
           }
@@ -161,23 +168,32 @@ const Permissions = ({
     );
   };
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes(
+    'ActionPermissions',
+    { redactText: true }
+  );
+
   return (
-    <div>
-      <Helmet
-        title={`Permissions - ${currentAction.name} - Actions | Hasura`}
-      />
-      {getPermissionsTable()}
-      <div className={`${styles.add_mar_bottom}`}>
-        {!readOnlyMode && (
-          <PermissionEditor
-            permissionEdit={permissionEdit}
-            dispatch={dispatch}
-            isFetching={isFetching}
-            isEditing={isEditing}
-          />
-        )}
+    <Analytics name="ActionPermissions" {...REDACT_EVERYTHING}>
+      <div>
+        <Helmet>
+          <title
+            {...titleAnalyticsAttributes}
+          >{`Permissions - ${currentAction.name} - Actions | Hasura`}</title>
+        </Helmet>
+        {getPermissionsTable()}
+        <div className={`${styles.add_mar_bottom}`}>
+          {!readOnlyMode && (
+            <PermissionEditor
+              permissionEdit={permissionEdit}
+              dispatch={dispatch}
+              isFetching={isFetching}
+              isEditing={isEditing}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </Analytics>
   );
 };
 

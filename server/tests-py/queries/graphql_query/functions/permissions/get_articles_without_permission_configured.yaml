@@ -8,7 +8,7 @@ response:
     - extensions:
         path: $.selectionSet.get_articles
         code: validation-failed
-      message: "field \"get_articles\" not found in type: 'query_root'"
+      message: "field 'get_articles' not found in type: 'query_root'"
 query:
   query: |
     query {

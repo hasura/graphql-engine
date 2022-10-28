@@ -1,5 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+
+import {
+  FeatureFlagToast,
+  useFeatureFlags,
+  availableFeatureFlagIds,
+} from '@/features/FeatureFlags';
+import { DatabaseRelationshipsTab } from '@/features/DataRelationships';
+import { Button } from '@/new-components/Button';
 import TableHeader from '../TableCommon/TableHeader';
 import {
   addNewRelClicked,
@@ -9,13 +18,13 @@ import {
   resetRelationshipForm,
   formRelName,
   getExistingFieldsMap,
+  resetManualRelationshipForm,
 } from './Actions';
 import { showErrorNotification } from '../../Common/Notification';
 import { setTable } from '../DataActions';
 import gqlPattern, { gqlRelErrorNotif } from '../Common/GraphQLValidation';
 import { getRelDef, getObjArrRelList } from './utils';
 
-import Button from '../../../Common/Button/Button';
 import ToolTip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import AddManualRelationship from './AddManualRelationship';
@@ -23,12 +32,18 @@ import RemoteRelationships from './RemoteRelationships/RemoteRelationships';
 import suggestedRelationshipsRaw from './autoRelations';
 import RelationshipEditor from './RelationshipEditor';
 import { NotFoundError } from '../../../Error/PageNotFound';
-import styles from '../TableModify/ModifyTable.scss';
-import tableStyles from '../../../Common/TableCommon/TableStyles.scss';
-import { findAllFromRel, isFeatureSupported } from '../../../../dataSources';
+import styles from '../TableModify/ModifyTable.module.scss';
+import tableStyles from '../../../Common/TableCommon/TableStyles.module.scss';
+import {
+  currentDriver,
+  findAllFromRel,
+  isFeatureSupported,
+} from '../../../../dataSources';
 import { getRemoteSchemasSelector } from '../../../../metadata/selector';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import FeatureDisabled from '../FeatureDisabled';
+import { RemoteDbRelationships } from './RemoteDbRelationships/RemoteDbRelationships';
+import { areTablesEqual } from '@/features/RelationshipsTable/utils';
 
 const addRelationshipCellView = (
   dispatch,
@@ -77,8 +92,7 @@ const addRelationshipCellView = (
       <div className={styles.textNoNewLine}>
         {selectedRelationship === rel ? null : (
           <Button
-            size="xs"
-            color="yellow"
+            mode="primary"
             onClick={onAdd}
             data-test={
               relMetaData[0] === 'object'
@@ -106,8 +120,7 @@ const addRelationshipCellView = (
             &nbsp;
             <Button
               type="submit"
-              color="yellow"
-              size="xs"
+              mode="primary"
               data-test={
                 relMetaData[0] === 'object'
                   ? `obj-rel-save-${relMetaData[1]}`
@@ -134,11 +147,9 @@ const AddRelationship = ({
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
 
-  const suggestedRelationshipsData = suggestedRelationshipsRaw(
-    tableName,
-    allSchemas,
-    currentSchema
-  );
+  const suggestedRelationshipsData = useMemo(() => {
+    return suggestedRelationshipsRaw(tableName, allSchemas, currentSchema);
+  }, [tableName, allSchemas, currentSchema]);
 
   if (
     suggestedRelationshipsData.objectRel.length < 1 &&
@@ -283,7 +294,6 @@ const AddRelationship = ({
       </div>
       <Button
         className="hide"
-        color="white"
         size="sm"
         onClick={e => {
           e.preventDefault();
@@ -310,18 +320,36 @@ const Relationships = ({
   manualRelAdd,
   currentSchema,
   migrationMode,
+  allFunctions,
   schemaList,
   readOnlyMode,
   currentSource,
+  source,
 }) => {
   useEffect(() => {
     dispatch(resetRelationshipForm());
+    dispatch(resetManualRelationshipForm());
     dispatch(setTable(tableName));
   }, []);
 
   const tableSchema = allSchemas.find(
     t => t.table_name === tableName && t.table_schema === currentSchema
   );
+
+  /**
+   * Metadata table object - this is the "table" that needs to be passed for all our new components
+   * The existing `NormalizedTable` stuff has to be phased out slowly
+   * */
+  const table = source.tables.find(t => {
+    return areTablesEqual(t.table, {
+      table_schema: tableSchema.table_schema,
+      table_name: tableSchema.table_name,
+    });
+  });
+
+  const { data: featureFlagsData, isLoading: isFeatureFlagsLoading } =
+    useFeatureFlags();
+  if (isFeatureFlagsLoading) return <div>Loading...</div>;
 
   if (!isFeatureSupported('tables.relationships.enabled')) {
     return (
@@ -336,6 +364,26 @@ const Relationships = ({
   if (!tableSchema && isFeatureSupported('tables.relationships.enabled')) {
     // throw a 404 exception
     throw new NotFoundError();
+  }
+
+  const newRelationshipsTabIsEnabled =
+    featureFlagsData &&
+    featureFlagsData?.length > 0 &&
+    featureFlagsData.find(
+      featureFlag =>
+        featureFlag.id === availableFeatureFlagIds.relationshipTabTablesId
+    )?.state?.enabled;
+
+  if (newRelationshipsTabIsEnabled) {
+    return (
+      <DatabaseRelationshipsTab
+        table={tableSchema}
+        metadataTable={table.table}
+        driver={currentDriver}
+        currentSource={currentSource}
+        migrationMode={migrationMode}
+      />
+    );
   }
 
   let alert = null;
@@ -448,7 +496,6 @@ const Relationships = ({
       addRelSection = (
         <Button
           type="submit"
-          color="white"
           size="sm"
           onClick={() => {
             dispatch(addNewRelClicked());
@@ -462,46 +509,76 @@ const Relationships = ({
     return addRelSection;
   };
 
-  const existingRemoteRelationships = tableSchema.remote_relationships;
+  const existingRemoteRelationships =
+    tableSchema?.remote_relationships?.filter(
+      field =>
+        'remote_schema' in field.definition ||
+        'to_remote_schema' in field.definition
+    ) ?? [];
 
   return (
-    <RightContainer>
-      <div className={`${styles.container} container-fluid`}>
-        <TableHeader
-          dispatch={dispatch}
-          table={tableSchema}
-          source={currentSource}
-          tabName="relationships"
-          migrationMode={migrationMode}
-        />
-        <br />
-        <div className={`${styles.padd_left_remove} container-fluid`}>
-          <div
-            className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
-          >
-            <h4 className={styles.subheading_text}>
-              Table Relationships
-              <ToolTip message={'Relationships to tables / views'} />
-              &nbsp;
-              <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
-            </h4>
-            {addedRelationshipsView}
-            {getAddRelSection()}
-          </div>
-          {isFeatureSupported('tables.relationships.remoteRelationships') ? (
-            <div className={`${styles.padd_left_remove} col-xs-10 col-md-10`}>
-              <RemoteRelationships
-                relationships={existingRemoteRelationships}
-                reduxDispatch={dispatch}
-                table={tableSchema}
-                remoteSchemas={remoteSchemas}
-              />
+    <>
+      <RightContainer>
+        <Analytics name="Relationships" {...REDACT_EVERYTHING}>
+          <div className={`${styles.container} container-fluid`}>
+            <TableHeader
+              dispatch={dispatch}
+              table={tableSchema}
+              source={currentSource}
+              tabName="relationships"
+              migrationMode={migrationMode}
+            />
+            <br />
+            <div className={`${styles.padd_left_remove} container-fluid`}>
+              <div
+                className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
+              >
+                <h4 className={styles.subheading_text}>
+                  Table Relationships
+                  <ToolTip message={'Relationships to tables / views'} />
+                  &nbsp;
+                  <KnowMoreLink href="https://hasura.io/docs/latest/graphql/core/schema/table-relationships/index.html" />
+                </h4>
+                {addedRelationshipsView}
+                {getAddRelSection()}
+              </div>
+              {isFeatureSupported(
+                'tables.relationships.remoteDbRelationships.hostSource'
+              ) ? (
+                <div
+                  className={`${styles.padd_left_remove} col-xs-10 col-md-10 ${styles.add_mar_bottom}`}
+                >
+                  <RemoteDbRelationships
+                    tableSchema={tableSchema}
+                    reduxDispatch={dispatch}
+                    currentSource={currentSource}
+                  />
+                </div>
+              ) : null}
+              {isFeatureSupported(
+                'tables.relationships.remoteRelationships'
+              ) ? (
+                <div
+                  className={`${styles.padd_left_remove} col-xs-10 col-md-10`}
+                >
+                  <RemoteRelationships
+                    relationships={existingRemoteRelationships}
+                    reduxDispatch={dispatch}
+                    table={tableSchema}
+                    allFunctions={allFunctions}
+                    remoteSchemas={remoteSchemas}
+                  />
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
-        <div className={`${styles.fixed} hidden`}>{alert}</div>
-      </div>
-    </RightContainer>
+            <div className={`${styles.fixed} hidden`}>{alert}</div>
+          </div>
+        </Analytics>
+      </RightContainer>
+      <FeatureFlagToast
+        flagId={availableFeatureFlagIds.relationshipTabTablesId}
+      />
+    </>
   );
 };
 
@@ -518,24 +595,35 @@ Relationships.propTypes = {
   ongoingRequest: PropTypes.bool.isRequired,
   lastError: PropTypes.object,
   lastFormError: PropTypes.object,
+  allFunctions: PropTypes.array.isRequired,
   lastSuccess: PropTypes.bool,
   dispatch: PropTypes.func.isRequired,
   remoteSchemas: PropTypes.array.isRequired,
 };
 
-const mapStateToProps = (state, ownProps) => ({
-  tableName: ownProps.params.table,
-  allSchemas: state.tables.allSchemas,
-  currentSchema: state.tables.currentSchema,
-  migrationMode: state.main.migrationMode,
-  readOnlyMode: state.main.readOnlyMode,
-  serverVersion: state.main.serverVersion,
-  schemaList: state.tables.schemaList,
-  remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
-  adminHeaders: state.tables.dataHeaders,
-  currentSource: state.tables.currentDataSource,
-  ...state.tables.modify,
-});
+const mapStateToProps = (state, ownProps) => {
+  const {
+    nonTrackablePostgresFunctions: nonTrackableFns,
+    postgresFunctions: trackedFns,
+  } = state.tables;
+  return {
+    tableName: ownProps.params.table,
+    allSchemas: state.tables.allSchemas,
+    currentSchema: state.tables.currentSchema,
+    migrationMode: state.main.migrationMode,
+    readOnlyMode: state.main.readOnlyMode,
+    serverVersion: state.main.serverVersion,
+    schemaList: state.tables.schemaList,
+    allFunctions: nonTrackableFns?.concat(trackedFns ?? []) ?? [],
+    remoteSchemas: getRemoteSchemasSelector(state).map(schema => schema.name),
+    adminHeaders: state.tables.dataHeaders,
+    currentSource: state.tables.currentDataSource,
+    source: state.metadata.metadataObject.sources.find(
+      s => s.name === state.tables.currentDataSource
+    ),
+    ...state.tables.modify,
+  };
+};
 
 const relationshipsConnector = connect =>
   connect(mapStateToProps)(Relationships);

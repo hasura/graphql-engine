@@ -1,9 +1,17 @@
+import { MetadataResponse } from '@/features/MetadataAPI';
 import requestAction from '../utils/requestAction';
 import Endpoints, { globalCookiePolicy } from '../Endpoints';
 import {
+  ConnectionParams,
+  ConnectionPoolSettings,
+  HasuraMetadataV2,
   HasuraMetadataV3,
+  InconsistentObject,
+  IsolationLevelOptions,
+  MetadataDataSource,
   RestEndpointEntry,
   SourceConnectionInfo,
+  SSLConfigOptions,
 } from './types';
 import {
   showSuccessNotification,
@@ -23,6 +31,10 @@ import {
   updateAllowedQueryQuery,
   allowedQueriesCollection,
   addAllowedQuery,
+  getSourceFromInconistentObjects,
+  getRemoteSchemaNameFromInconsistentObjects,
+  addInsecureDomainQuery,
+  deleteDomain,
 } from './utils';
 import {
   makeMigrationCall,
@@ -45,8 +57,13 @@ import { Driver, setDriver } from '../dataSources';
 import { addSource, removeSource, reloadSource } from './sourcesUtils';
 import { getDataSources } from './selector';
 import { FixMe, ReduxState, Thunk } from '../types';
-import { getConfirmation } from '../components/Common/utils/jsUtils';
+import {
+  getConfirmation,
+  isConsoleError,
+} from '../components/Common/utils/jsUtils';
 import _push from '../components/Services/Data/push';
+import { dataSourceIsEqual } from '../components/Services/Data/DataSources/utils';
+import { getSourceDriver } from '../components/Services/Data/utils';
 
 export interface ExportMetadataSuccess {
   type: 'Metadata/EXPORT_METADATA_SUCCESS';
@@ -67,7 +84,7 @@ export interface ExportMetadataRequest {
 
 export interface LoadInconsistentObjectsSuccess {
   type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_SUCCESS';
-  data: any;
+  data: InconsistentObject[];
 }
 export interface LoadInconsistentObjectsRequest {
   type: 'Metadata/LOAD_INCONSISTENT_OBJECTS_REQUEST';
@@ -118,15 +135,17 @@ export interface AddDataSourceRequest {
     payload: {
       name: string;
       dbUrl: string | { from_env: string };
-      connection_pool_settings: {
-        max_connections?: number;
-        idle_timeout?: number; // in seconds
-        retries?: number;
-      };
+      connection_pool_settings?: ConnectionPoolSettings;
+      replace_configuration?: boolean;
       bigQuery: {
         projectId: string;
         datasets: string;
+        global_select_limit: number;
       };
+      connection_parameters?: ConnectionParams;
+      sslConfiguration?: SSLConfigOptions;
+      preparedStatements?: boolean;
+      isolationLevel?: IsolationLevelOptions;
     };
   };
 }
@@ -180,6 +199,25 @@ export interface UpdateInheritedRole {
   };
 }
 
+export interface UpdateAPILimits {
+  type: 'Metadata/UPDATE_API_LIMITS';
+  data: {
+    disabled: boolean;
+    node_limit?: {
+      global?: number;
+      per_role?: Record<string, number>;
+    };
+    depth_limit?: {
+      global?: number;
+      per_role?: Record<string, number>;
+    };
+    batch_limit?: {
+      global?: number;
+      per_role?: Record<string, number>;
+    };
+  };
+}
+
 export type MetadataActions =
   | ExportMetadataSuccess
   | ExportMetadataError
@@ -204,60 +242,64 @@ export type MetadataActions =
   | AddInheritedRole
   | DeleteInheritedRole
   | UpdateInheritedRole
+  | UpdateAPILimits
   | { type: typeof UPDATE_CURRENT_DATA_SOURCE; source: string };
 
-export const exportMetadata = (
-  successCb?: (data: HasuraMetadataV3, resourceVersion?: number) => void,
-  errorCb?: (err: string) => void
-): Thunk<Promise<ReduxState | void>, MetadataActions> => (
-  dispatch,
-  getState
-) => {
-  const { dataHeaders } = getState().tables;
+export const exportMetadata =
+  (
+    successCb?: (data: MetadataResponse) => void,
+    errorCb?: (err: string) => void
+  ): Thunk<Promise<ReduxState | void>, MetadataActions> =>
+  (dispatch, getState) => {
+    const { dataHeaders } = getState().tables;
 
-  const query = exportMetadataQuery;
+    const query = exportMetadataQuery;
 
-  const options = {
-    method: 'POST',
-    headers: dataHeaders,
-    body: JSON.stringify(query),
-  };
+    const options = {
+      method: 'POST',
+      headers: dataHeaders,
+      body: JSON.stringify(query),
+    };
 
-  return dispatch(requestAction(Endpoints.metadata, options))
-    .then(data => {
-      dispatch({
-        type: 'Metadata/EXPORT_METADATA_SUCCESS',
-        data,
+    return dispatch(requestAction(Endpoints.metadata, options))
+      .then(data => {
+        dispatch({
+          type: 'Metadata/EXPORT_METADATA_SUCCESS',
+          data,
+        });
+        if (successCb) successCb(data);
+        return getState();
+      })
+      .catch(err => {
+        if (errorCb) errorCb(err);
       });
-      if (successCb) successCb(data);
-      return getState();
-    })
-    .catch(err => {
-      if (errorCb) errorCb(err);
-    });
-};
-
-export const addDataSource = (
-  data: AddDataSourceRequest['data'],
-  successCb: () => void,
-  replicas?: Omit<SourceConnectionInfo, 'connection_string'>[],
-  skipNotification = false
-): Thunk<Promise<void | ReduxState>, MetadataActions> => (
-  dispatch,
-  getState
-) => {
-  const { dataHeaders } = getState().tables;
-
-  const query = addSource(data.driver, data.payload, replicas);
-
-  const options = {
-    method: 'POST',
-    headers: dataHeaders,
-    body: JSON.stringify(query),
   };
 
-  return dispatch(requestAction(Endpoints.metadata, options))
-    .then(() => {
+export const addDataSource =
+  (
+    data: AddDataSourceRequest['data'],
+    successCb?: () => void,
+    replicas?: Omit<
+      SourceConnectionInfo,
+      | 'connection_string'
+      | 'use_prepared_statements'
+      | 'ssl_configuration'
+      | 'isolation_level'
+    >[],
+    shouldShowNotifications = true
+  ): Thunk<Promise<void | ReduxState>, MetadataActions> =>
+  (dispatch, getState) => {
+    const upQuery = addSource(data.driver, data.payload, replicas);
+    const isEdit = data.payload.replace_configuration;
+    const migrationName = isEdit ? `update_data_source` : `add_data_source`;
+    const requestMsg = isEdit
+      ? 'Updating data source...'
+      : 'Adding data source...';
+    const errorMsg = isEdit
+      ? 'Updating data source failed'
+      : 'Adding data source failed';
+
+    const onSuccess = () => {
       dispatch({
         type: UPDATE_CURRENT_DATA_SOURCE,
         source: data.payload.name,
@@ -269,239 +311,366 @@ export const addDataSource = (
       };
       return dispatch(exportMetadata()).then(() => {
         dispatch(fetchDataInit(data.payload.name, data.driver));
-        if (!skipNotification) {
+        if (shouldShowNotifications) {
           dispatch(
             showNotification(
               {
-                title: 'Database added successfully!',
+                title: `Data source ${
+                  !isEdit ? 'added' : 'updated'
+                } successfully!`,
                 level: 'success',
                 autoDismiss: 0,
-                action: {
+                alternateActionButtonProps: {
                   label: 'View Database',
-                  callback: onButtonClick,
+                  onClick: onButtonClick,
+                  trackId: 'data-tab-view-database-notification-button-add-db',
                 },
               },
               'success'
             )
           );
         }
-        successCb();
+        if (successCb) successCb();
         return getState();
       });
-    })
-    .catch(err => {
+    };
+
+    const onError = (err: Record<string, any>) => {
       console.error(err);
-      dispatch(_push('/data/manage/connect'));
-      if (!skipNotification) {
-        dispatch(showErrorNotification('Add data source failed', null, err));
+      if (!isEdit) {
+        dispatch(_push('/data/manage/connect'));
       }
       return err;
-    });
-};
+    };
 
-export const removeDataSource = (
-  data: RemoveDataSourceRequest['data'],
-  skipNotification = false
-): Thunk<Promise<void | ReduxState>, MetadataActions> => (
-  dispatch,
-  getState
-) => {
-  const { dataHeaders, currentDataSource } = getState().tables;
-  const sources = getDataSources(getState()).filter(s => s.name !== data.name);
-
-  const query = removeSource(data.driver, data.name);
-
-  const options = {
-    method: 'POST',
-    headers: dataHeaders,
-    body: JSON.stringify(query),
+    return makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      undefined,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      undefined,
+      errorMsg,
+      false,
+      false,
+      false,
+      data.payload.name,
+      shouldShowNotifications
+    );
   };
 
-  return dispatch(requestAction(Endpoints.metadata, options))
-    .then(() => {
+export const renameDataSource =
+  (
+    data: AddDataSourceRequest['data'],
+    successCb: () => void,
+    renameData: {
+      isRenameSource: boolean;
+      name: string;
+    },
+    replicas?: Omit<
+      SourceConnectionInfo,
+      'connection_string' | 'use_prepared_statements' | 'isolation_level'
+    >[]
+  ): Thunk<Promise<void | ReduxState>, MetadataActions> =>
+  (dispatch, getState) => {
+    const { isRenameSource, name } = renameData;
+    const { metadata } = getState();
+    const { sources } = metadata.metadataObject ?? {};
+    const currentSource = sources?.find(s => s.name === name);
+    const isEdit = data.payload.replace_configuration;
+    const addQuery = addSource(data.driver, data.payload, replicas);
+    const renameQuery = {
+      type: 'rename_source',
+      args: {
+        name,
+        new_name: data.payload.name,
+      },
+    };
+
+    const isOnlyRename = !!(
+      currentSource &&
+      dataSourceIsEqual(currentSource, addQuery.args) &&
+      isRenameSource
+    );
+
+    const upQueries = [];
+    upQueries.push(renameQuery);
+    if (!isOnlyRename) upQueries.push(addQuery);
+
+    const migrationName = `update_data_source`;
+    const requestMsg = 'Updating data source...';
+    const errorMsg = 'Updating data source failed';
+
+    const onSuccess = () => {
+      dispatch({
+        type: UPDATE_CURRENT_DATA_SOURCE,
+        source: data.payload.name,
+      });
+      setDriver(data.driver);
+      const onButtonClick = () => {
+        if (data.payload.name)
+          dispatch(_push(`/data/${data.payload.name}/schema`));
+      };
+      return dispatch(exportMetadata())
+        .then(() => {
+          dispatch(fetchDataInit(data.payload.name, data.driver));
+          dispatch(
+            showNotification(
+              {
+                title: `Data source updated successfully!`,
+                level: 'success',
+                autoDismiss: 0,
+                alternateActionButtonProps: {
+                  label: 'View Database',
+                  onClick: onButtonClick,
+                  trackId:
+                    'data-tab-view-database-notification-button-rename-db',
+                },
+              },
+              'success'
+            )
+          );
+          successCb();
+          return getState();
+        })
+        .catch(console.error);
+    };
+
+    const onError = (err: Record<string, any>) => {
+      console.error(err);
+      if (!isEdit) {
+        dispatch(_push('/data/manage/connect'));
+      }
+      return err;
+    };
+
+    return makeMigrationCall(
+      dispatch,
+      getState,
+      upQueries,
+      undefined,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      undefined,
+      errorMsg,
+      true
+    );
+  };
+
+export const removeDataSource =
+  (
+    data: RemoveDataSourceRequest['data']
+  ): Thunk<Promise<void | ReduxState>, MetadataActions> =>
+  (dispatch, getState) => {
+    const { currentDataSource } = getState().tables;
+    const sources = getDataSources(getState()).filter(
+      s => s.name !== data.name
+    );
+    const upQuery = removeSource(data.driver, data.name);
+
+    const migrationName = `remove_data_source`;
+    const requestMsg = 'Removing data source...';
+    const successMsg = 'Data source removed successfully';
+    const errorMsg = 'Removing data source failed';
+
+    const onSuccess = () => {
       if (currentDataSource === data.name) {
         dispatch({
           type: UPDATE_CURRENT_DATA_SOURCE,
           source: sources.length ? sources[0].name : '',
         });
       }
-      if (!skipNotification) {
-        dispatch(showSuccessNotification('Data source removed successfully!'));
-      }
-      dispatch(exportMetadata());
-      return getState();
-    })
-    .catch(err => {
-      console.error(err);
-      if (!skipNotification) {
-        dispatch(showErrorNotification('Remove data source failed', null, err));
-      }
-      return err;
-    });
-};
-
-export const editDataSource = (
-  oldName: string | undefined,
-  data: AddDataSourceRequest['data'],
-  onSuccessCb: () => void
-): Thunk<Promise<void | ReduxState>, MetadataActions> => dispatch => {
-  return dispatch(
-    removeDataSource(
-      { driver: data.driver, name: oldName ?? data.payload.name },
-      true
-    )
-  )
-    .then(() => {
-      // FIXME?: There might be a problem when or if the metadata is inconsistent,
-      // we should be providing a better error message for the same
-      dispatch(
-        addDataSource(
-          data,
-          () => {
-            dispatch(
-              showSuccessNotification(
-                'Successfully updated datasource details.'
-              )
-            );
-            onSuccessCb();
-          },
-          [],
-          true
-        )
-      ).catch(err => {
-        console.error(err);
-        dispatch(
-          showErrorNotification(
-            'Failed to edit data source',
-            'There was a problem in editing the details of the datasource'
-          )
-        );
+      dispatch(exportMetadata()).then(() => {
+        const newSourceName = sources.length ? sources[0].name : '';
+        if (newSourceName) {
+          const driver = getSourceDriver(sources, newSourceName);
+          setDriver(driver);
+          dispatch(fetchDataInit(newSourceName, driver));
+        }
       });
-    })
-    .catch(err => {
+      return getState();
+    };
+
+    const onError = (err: Record<string, any>) => {
       console.error(err);
-      dispatch(
-        showErrorNotification(
-          'Failed to edit data source',
-          'There was a problem in editing the details of the datasource'
-        )
-      );
-    });
-};
-
-export const replaceMetadata = (
-  newMetadata: HasuraMetadataV3,
-  successCb: () => void,
-  errorCb: () => void
-): Thunk<void, MetadataActions> => (dispatch, getState) => {
-  const exportSuccessCb = (oldMetadata: HasuraMetadataV3) => {
-    const upQuery = generateReplaceMetadataQuery(newMetadata);
-    const downQuery = generateReplaceMetadataQuery(oldMetadata);
-
-    const migrationName = 'replace_metadata';
-
-    const requestMsg = 'Importing metadata...';
-    const successMsg = 'Metadata imported';
-    const errorMsg = 'Failed importing metadata';
-
-    const customOnSuccess = () => {
-      if (successCb) successCb();
-      dispatch(exportMetadata());
-    };
-    const customOnError = () => {
-      if (errorCb) errorCb();
+      return err;
     };
 
-    makeMigrationCall(
+    return makeMigrationCall(
       dispatch,
       getState,
       [upQuery],
-      [downQuery],
+      undefined,
       migrationName,
-      customOnSuccess,
-      customOnError,
+      onSuccess,
+      onError,
       requestMsg,
       successMsg,
-      errorMsg
+      errorMsg,
+      true
     );
   };
 
-  const exportErrorCb = () => {
-    if (errorCb) errorCb();
+export const replaceMetadata =
+  (
+    newMetadata: HasuraMetadataV2 | MetadataResponse,
+    successCb: () => void,
+    errorCb: () => void
+  ): Thunk<void, MetadataActions> =>
+  (dispatch, getState) => {
+    const exportSuccessCb = (oldMetadata: {
+      resource_version: number;
+      metadata: HasuraMetadataV3;
+    }) => {
+      const metadata =
+        'version' in newMetadata ? newMetadata : newMetadata.metadata;
+      const upQuery = generateReplaceMetadataQuery(metadata);
+      const downQuery = generateReplaceMetadataQuery(oldMetadata.metadata);
 
-    dispatch(
-      showErrorNotification(
-        'Metadata import failed',
-        'Failed to get the existing metadata from the server'
-      )
+      const migrationName = 'replace_metadata';
+
+      const requestMsg = 'Importing metadata...';
+      const successMsg = 'Metadata imported';
+      const errorMsg = 'Failed importing metadata';
+
+      const customOnSuccess = () => {
+        if (successCb) successCb();
+
+        const updateCurrentDataSource = (newState: MetadataResponse) => {
+          const currentSource = newState.metadata.sources.find(
+            (x: MetadataDataSource) =>
+              x.name === getState().tables.currentDataSource
+          );
+
+          if (!currentSource && newState.metadata.sources?.[0]) {
+            dispatch({
+              type: UPDATE_CURRENT_DATA_SOURCE,
+              source: newState.metadata.sources[0].name,
+            });
+            setDriver(newState.metadata.sources[0].kind ?? 'postgres');
+            dispatch(
+              fetchDataInit(
+                newState.metadata.sources[0].name,
+                newState.metadata.sources[0].kind
+              )
+            );
+          }
+        };
+
+        const onError = (err: string) => {
+          dispatch(
+            showErrorNotification('Metadata reset failed', null, { error: err })
+          );
+        };
+
+        dispatch(exportMetadata(updateCurrentDataSource, onError));
+      };
+      const customOnError = () => {
+        if (errorCb) errorCb();
+      };
+
+      makeMigrationCall(
+        dispatch,
+        getState,
+        [upQuery],
+        [downQuery],
+        migrationName,
+        customOnSuccess,
+        customOnError,
+        requestMsg,
+        successMsg,
+        errorMsg,
+        true
+      );
+    };
+
+    const exportErrorCb = () => {
+      if (errorCb) errorCb();
+
+      dispatch(
+        showErrorNotification(
+          'Metadata import failed',
+          'Failed to get the existing metadata from the server'
+        )
+      );
+    };
+
+    dispatch(exportMetadata(exportSuccessCb, exportErrorCb));
+  };
+
+export const resetMetadata =
+  (
+    successCb: () => void,
+    errorCb: (err: string) => void
+  ): Thunk<void, MetadataActions> =>
+  (dispatch, getState) => {
+    const headers = getState().tables.dataHeaders;
+
+    const options = {
+      method: 'POST',
+      credentials: globalCookiePolicy,
+      headers: headers || {},
+      body: JSON.stringify(resetMetadataQuery),
+    };
+
+    return dispatch(
+      requestAction(Endpoints.metadata, options as RequestInit)
+    ).then(
+      () => {
+        dispatch({ type: UPDATE_CURRENT_DATA_SOURCE, source: '' });
+        dispatch(exportMetadata());
+        if (successCb) {
+          successCb();
+        }
+        dispatch(showSuccessNotification('Metadata reset successfully!'));
+      },
+      error => {
+        console.error(error);
+        dispatch(showErrorNotification('Metadata reset failed', null, error));
+        if (errorCb) {
+          errorCb(error);
+        }
+      }
     );
   };
 
-  dispatch(exportMetadata(exportSuccessCb, exportErrorCb));
-};
-
-export const resetMetadata = (
-  successCb: () => void,
-  errorCb: (err: string) => void
-): Thunk<void, MetadataActions> => (dispatch, getState) => {
-  const headers = getState().tables.dataHeaders;
-
-  const options = {
-    method: 'POST',
-    credentials: globalCookiePolicy,
-    headers: headers || {},
-    body: JSON.stringify(resetMetadataQuery),
-  };
-
-  return dispatch(
-    requestAction(Endpoints.metadata, options as RequestInit)
-  ).then(
-    () => {
-      dispatch({ type: UPDATE_CURRENT_DATA_SOURCE, source: '' });
-      dispatch(exportMetadata());
-      if (successCb) {
-        successCb();
+export const replaceMetadataFromFile =
+  (
+    fileContent: string,
+    successCb: () => void,
+    errorCb: () => void
+  ): Thunk<void, MetadataActions> =>
+  dispatch => {
+    let parsedFileContent;
+    try {
+      parsedFileContent = JSON.parse(fileContent);
+    } catch (e) {
+      if (isConsoleError(e)) {
+        dispatch(
+          showErrorNotification('Error parsing metadata file', e.toString())
+        );
       }
-      dispatch(showSuccessNotification('Metadata reset successfully!'));
-    },
-    error => {
-      console.error(error);
-      dispatch(showErrorNotification('Metadata reset failed', null, error));
-      if (errorCb) {
-        errorCb(error);
-      }
+
+      if (errorCb) errorCb();
+
+      return;
     }
-  );
-};
 
-export const replaceMetadataFromFile = (
-  fileContent: string,
-  successCb: () => void,
-  errorCb: () => void
-): Thunk<void, MetadataActions> => dispatch => {
-  let parsedFileContent;
-  try {
-    parsedFileContent = JSON.parse(fileContent);
-  } catch (e) {
-    dispatch(
-      showErrorNotification('Error parsing metadata file', e.toString())
-    );
+    const onSuccess = () => {
+      if (successCb) successCb();
+    };
 
-    if (errorCb) errorCb();
+    const onError = () => {
+      if (errorCb) errorCb();
+    };
 
-    return;
-  }
-
-  const onSuccess = () => {
-    if (successCb) successCb();
+    dispatch(replaceMetadata(parsedFileContent, onSuccess, onError));
   };
-
-  const onError = () => {
-    if (errorCb) errorCb();
-  };
-
-  dispatch(replaceMetadata(parsedFileContent, onSuccess, onError));
-};
 
 const handleInconsistentObjects = (
   inconsistentObjects: any[]
@@ -530,19 +699,48 @@ export const loadInconsistentObjects = (
   reloadConfig: {
     shouldReloadMetadata?: boolean;
     shouldReloadRemoteSchemas?: boolean;
+    shouldReloadAllSources?: boolean;
   },
   successCb?: () => void,
   failureCb?: (error: string) => void
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
+    const inconsistentObjectsInMetadata =
+      getState().metadata.inconsistentObjects;
+
+    const inconsistentSources = getSourceFromInconistentObjects(
+      inconsistentObjectsInMetadata
+    );
+    const inconsistentRemoteSchemas =
+      getRemoteSchemaNameFromInconsistentObjects(inconsistentObjectsInMetadata);
+
     const headers = getState().tables.dataHeaders;
     const source = getState().tables.currentDataSource;
-    const { shouldReloadMetadata, shouldReloadRemoteSchemas } = reloadConfig;
+    const {
+      shouldReloadMetadata,
+      shouldReloadRemoteSchemas,
+      shouldReloadAllSources,
+    } = reloadConfig;
+
+    let reloadSources: string[] | boolean = [];
+    if (shouldReloadAllSources) {
+      reloadSources = true;
+    } else if (inconsistentSources.length) {
+      reloadSources = inconsistentSources;
+    }
+
+    let reloadRemoteSchemas: string[] | boolean = [];
+    if (shouldReloadRemoteSchemas) {
+      reloadRemoteSchemas = true;
+    } else if (inconsistentRemoteSchemas.length) {
+      reloadRemoteSchemas = inconsistentRemoteSchemas;
+    }
 
     const loadQuery = shouldReloadMetadata
       ? getReloadCacheAndGetInconsistentObjectsQuery(
-          !!shouldReloadRemoteSchemas,
-          source
+          reloadRemoteSchemas,
+          source,
+          reloadSources
         )
       : inconsistentObjectsQuery;
 
@@ -581,34 +779,33 @@ export const loadInconsistentObjects = (
     );
   };
 };
-export const reloadDataSource = (
-  data: ReloadDataSourceRequest['data']
-): Thunk<Promise<void | ReduxState>, MetadataActions> => (
-  dispatch,
-  getState
-) => {
-  const { dataHeaders } = getState().tables;
+export const reloadDataSource =
+  (
+    data: ReloadDataSourceRequest['data']
+  ): Thunk<Promise<void | ReduxState>, MetadataActions> =>
+  (dispatch, getState) => {
+    const { dataHeaders } = getState().tables;
 
-  const query = reloadSource(data.name);
+    const query = reloadSource(data.name);
 
-  const options = {
-    method: 'POST',
-    headers: dataHeaders,
-    body: JSON.stringify(query),
+    const options = {
+      method: 'POST',
+      headers: dataHeaders,
+      body: JSON.stringify(query),
+    };
+
+    return dispatch(requestAction(Endpoints.metadata, options))
+      .then(() => {
+        dispatch(showSuccessNotification('Data source reloaded successfully!'));
+        dispatch(exportMetadata());
+        dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
+        return getState();
+      })
+      .catch(err => {
+        console.error(err);
+        dispatch(showErrorNotification('Reload data source failed', null, err));
+      });
   };
-
-  return dispatch(requestAction(Endpoints.metadata, options))
-    .then(() => {
-      dispatch(showSuccessNotification('Data source reloaded successfully!'));
-      dispatch(exportMetadata());
-      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
-      return getState();
-    })
-    .catch(err => {
-      console.error(err);
-      dispatch(showErrorNotification('Reload data source failed', null, err));
-    });
-};
 export const reloadRemoteSchema = (
   remoteSchemaName: string,
   successCb: () => void,
@@ -658,6 +855,7 @@ export const reloadRemoteSchema = (
 
 export const reloadMetadata = (
   shouldReloadRemoteSchemas: boolean,
+  shouldReloadAllSources: boolean,
   successCb: () => void,
   failureCb: () => void
 ): Thunk<void, MetadataActions> => {
@@ -667,6 +865,7 @@ export const reloadMetadata = (
         {
           shouldReloadMetadata: true,
           shouldReloadRemoteSchemas,
+          shouldReloadAllSources,
         },
         successCb,
         failureCb
@@ -887,10 +1086,75 @@ export const addAllowedQueries = (
   };
 };
 
+export const addInsecureDomain = (
+  host: string,
+  callback: any
+): Thunk<void, MetadataActions> => {
+  return (dispatch, getState) => {
+    if (!host.trim().length) {
+      dispatch(showErrorNotification('No domain found'));
+
+      return;
+    }
+    const upQuery = addInsecureDomainQuery(host);
+    const migrationName = `add_insecure_tls_domains`;
+    const requestMsg = 'Adding domain to insecure TLS allow list...';
+    const successMsg = `Domain added to insecure TLS allow list successfully`;
+    const errorMsg = 'Adding domain to insecure TLS allow list failed';
+
+    const onSuccess = () => {
+      callback();
+    };
+
+    const onError = () => {};
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      undefined,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
+export const deleteInsecureDomain = (
+  host: string
+): Thunk<void, MetadataActions> => {
+  return (dispatch, getState) => {
+    const upQuery = deleteDomain(host);
+    const migrationName = `delete_insecure_domain`;
+    const requestMsg = 'Deleting Insecure domain...';
+    const successMsg = 'Domain deleted!';
+    const errorMsg = 'Deleting domain failed!';
+
+    const onSuccess = () => {};
+
+    const onError = () => {};
+
+    makeMigrationCall(
+      dispatch,
+      getState,
+      [upQuery],
+      undefined,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };
+};
+
 export const addInheritedRoleAction = (
   role_name: string,
   role_set: string[],
-  callback?: any
+  callback?: () => void
 ): Thunk<void, MetadataActions> => {
   return (dispatch, getState) => {
     const upQuery = addInheritedRole(role_name, role_set);
@@ -905,10 +1169,13 @@ export const addInheritedRoleAction = (
         type: 'Metadata/ADD_INHERITED_ROLE',
         data: { role_name, role_set },
       });
-      callback();
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
+      if (callback) callback();
     };
 
-    const onError = () => {};
+    const onError = () => {
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
+    };
 
     makeMigrationCall(
       dispatch,
@@ -939,12 +1206,15 @@ export const deleteInheritedRoleAction = (
 
     const onSuccess = () => {
       dispatch({ type: 'Metadata/DELETE_INHERITED_ROLE', data: role_name });
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
       if (callback) {
         callback();
       }
     };
 
-    const onError = () => {};
+    const onError = () => {
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
+    };
 
     makeMigrationCall(
       dispatch,
@@ -979,12 +1249,15 @@ export const updateInheritedRoleAction = (
         type: 'Metadata/UPDATE_INHERITED_ROLE',
         data: { role_name, role_set },
       });
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
       if (callback) {
         callback();
       }
     };
 
-    const onError = () => {};
+    const onError = () => {
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
+    };
 
     makeMigrationCall(
       dispatch,
@@ -1001,233 +1274,236 @@ export const updateInheritedRoleAction = (
   };
 };
 
-export const addRESTEndpoint = (
-  queryObj: RestEndpointEntry,
-  request: string,
-  successCb?: () => void,
-  errorCb?: () => void
-): Thunk<Promise<void | ReduxState>, MetadataActions> => (
-  dispatch,
-  getState
-) => {
-  const { currentDataSource } = getState().tables;
-  const { metadataObject } = getState().metadata;
-  const upQueries = [];
-  const downQueries = [];
+export const addRESTEndpoint =
+  (
+    queryObj: RestEndpointEntry,
+    request: string,
+    successCb?: () => void,
+    errorCb?: () => void
+  ): Thunk<Promise<void | ReduxState>, MetadataActions> =>
+  (dispatch, getState) => {
+    const { currentDataSource } = getState().tables;
+    const { metadataObject } = getState().metadata;
+    const upQueries = [];
+    const downQueries = [];
 
-  const consoleCollection = metadataObject?.query_collections?.find(
-    collection => collection.name === allowedQueriesCollection
-  );
-
-  if (!consoleCollection) {
-    upQueries.push(
-      ...createAllowListQuery(
-        [{ name: queryObj.name, query: request }],
-        currentDataSource
-      ).args
+    const consoleCollection = metadataObject?.query_collections?.find(
+      collection => collection.name === allowedQueriesCollection
     );
-    downQueries.push(deleteAllowListQuery().args);
-  } else {
-    upQueries.push(addAllowedQuery({ name: queryObj.name, query: request }));
-    downQueries.push(deleteAllowedQueryQuery(queryObj.name));
-  }
 
-  // the REST endpoint based requests
-  const upQuery = createRESTEndpointQuery(queryObj);
-  const downQuery = dropRESTEndpointQuery(queryObj.url);
-
-  upQueries.push(upQuery);
-  downQueries.push(downQuery);
-
-  const migrationName = `create_rest_endpoint_${queryObj.url}`;
-  const requestMsg = `Creating REST endpoint ${queryObj.name}`;
-  const successMsg = 'Successfully created REST endpoint';
-  const errorMsg = 'Error creating REST endpoint';
-
-  const onSuccess = () => {
-    if (successCb) {
-      successCb();
+    if (!consoleCollection) {
+      upQueries.push(
+        ...createAllowListQuery(
+          [{ name: queryObj.name, query: request }],
+          currentDataSource
+        ).args
+      );
+      downQueries.push(deleteAllowListQuery().args);
+    } else {
+      upQueries.push(addAllowedQuery({ name: queryObj.name, query: request }));
+      downQueries.push(deleteAllowedQueryQuery(queryObj.name));
     }
-    dispatch(exportMetadata());
-  };
-  const onError = () => {
-    if (errorCb) {
-      errorCb();
-    }
-  };
 
-  return makeMigrationCall(
-    dispatch,
-    getState,
-    upQueries,
-    downQueries,
-    migrationName,
-    onSuccess,
-    onError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
+    // the REST endpoint based requests
+    const upQuery = createRESTEndpointQuery(queryObj);
+    const downQuery = dropRESTEndpointQuery(queryObj.url);
 
-export const dropRESTEndpoint = (
-  endpointName: string,
-  request: string,
-  successCb?: () => void,
-  errorCb?: () => void
-): Thunk<Promise<void | ReduxState>, MetadataActions> => (
-  dispatch,
-  getState
-) => {
-  const currentRESTEndpoints = getState().metadata.metadataObject
-    ?.rest_endpoints;
+    upQueries.push(upQuery);
+    downQueries.push(downQuery);
 
-  if (!currentRESTEndpoints) {
-    dispatch(
-      showErrorNotification(
-        "Deletion of REST endpoint isn't possible.",
-        'Your metadata seems to be empty!'
-      )
+    const migrationName = `create_rest_endpoint_${queryObj.url}`;
+    const requestMsg = `Creating REST endpoint ${queryObj.name}`;
+    const successMsg = 'Successfully created REST endpoint';
+    const errorMsg = 'Error creating REST endpoint';
+
+    const onSuccess = () => {
+      if (successCb) {
+        successCb();
+      }
+      dispatch(exportMetadata());
+    };
+    const onError = () => {
+      if (errorCb) {
+        errorCb();
+      }
+    };
+
+    return makeMigrationCall(
+      dispatch,
+      getState,
+      upQueries,
+      downQueries,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
     );
-    return;
-  }
+  };
 
-  const currentObj = currentRESTEndpoints.find(re => re.name === endpointName);
+export const dropRESTEndpoint =
+  (
+    endpointName: string,
+    request: string,
+    successCb?: () => void,
+    errorCb?: () => void
+  ): Thunk<Promise<void | ReduxState>, MetadataActions> =>
+  (dispatch, getState) => {
+    const currentRESTEndpoints =
+      getState().metadata.metadataObject?.rest_endpoints;
 
-  if (!currentObj) {
-    dispatch(
-      showErrorNotification(
-        "Deletion of REST endpoint isn't possible.",
-        `We could not find the endpoint ${endpointName} to delete`
-      )
+    if (!currentRESTEndpoints) {
+      dispatch(
+        showErrorNotification(
+          "Deletion of REST endpoint isn't possible.",
+          'Your metadata seems to be empty!'
+        )
+      );
+      return;
+    }
+
+    const currentObj = currentRESTEndpoints.find(
+      re => re.name === endpointName
     );
-    return;
-  }
 
-  const confirmation = getConfirmation(
-    `You want to delete the endpoint: ${endpointName}`
-  );
-
-  if (!confirmation) {
-    return;
-  }
-
-  const upQueries = [
-    dropRESTEndpointQuery(endpointName),
-    deleteAllowedQueryQuery(endpointName),
-  ];
-  const downQueries = [
-    addAllowedQuery({ name: endpointName, query: request }),
-    createRESTEndpointQuery(currentObj),
-  ];
-
-  const migrationName = `drop_rest_endpoint_${endpointName}`;
-  const requestMsg = `Dropping REST endpoint ${currentObj.name}`;
-  const successMsg = 'Successfully dropped REST endpoint';
-  const errorMsg = 'Error dropping REST endpoint';
-
-  const onSuccess = () => {
-    if (successCb) {
-      successCb();
+    if (!currentObj) {
+      dispatch(
+        showErrorNotification(
+          "Deletion of REST endpoint isn't possible.",
+          `We could not find the endpoint ${endpointName} to delete`
+        )
+      );
+      return;
     }
-    dispatch(exportMetadata());
-  };
-  const onError = () => {
-    if (errorCb) {
-      errorCb();
-    }
-  };
 
-  return makeMigrationCall(
-    dispatch,
-    getState,
-    upQueries,
-    downQueries,
-    migrationName,
-    onSuccess,
-    onError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
-
-export const editRESTEndpoint = (
-  oldQueryObj: RestEndpointEntry,
-  newQueryObj: RestEndpointEntry,
-  request: string,
-  successCb?: () => void,
-  errorCb?: () => void
-): Thunk<Promise<void | ReduxState>, MetadataActions> => (
-  dispatch,
-  getState
-) => {
-  const currentEndpoints = getState().metadata.metadataObject?.rest_endpoints;
-
-  if (!currentEndpoints) {
-    dispatch(
-      showErrorNotification(
-        "Editing this REST endpoint isn't possible.",
-        'Your metadata seems to be empty!'
-      )
+    const confirmation = getConfirmation(
+      `You want to delete the endpoint: ${endpointName}`
     );
-    return;
-  }
 
-  const dropOldQueryFromCollection = deleteAllowedQueryQuery(oldQueryObj.name);
-  const addNewQueryToCollection = addAllowedQuery({
-    name: newQueryObj.name,
-    query: request,
-  });
-
-  const dropNewQueryFromCollection = deleteAllowedQueryQuery(newQueryObj.name);
-  const addOldQueryToCollection = addAllowedQuery({
-    name: oldQueryObj.name,
-    query: request,
-  });
-
-  const upQueries = [
-    dropRESTEndpointQuery(oldQueryObj.name),
-    dropOldQueryFromCollection,
-    addNewQueryToCollection,
-    createRESTEndpointQuery(newQueryObj),
-  ];
-
-  const downQueries = [
-    dropRESTEndpointQuery(newQueryObj.name),
-    dropNewQueryFromCollection,
-    addOldQueryToCollection,
-    createRESTEndpointQuery(oldQueryObj),
-  ];
-
-  const migrationName = `edit_rest_endpoint_${newQueryObj.url}_${newQueryObj.name}`;
-  const requestMsg = `Editing REST endpoint ${oldQueryObj.name}`;
-  const successMsg = 'Successfully edited REST endpoint';
-  const errorMsg = 'Error editing REST endpoint';
-
-  const onSuccess = () => {
-    if (successCb) {
-      successCb();
+    if (!confirmation) {
+      return;
     }
-    dispatch(exportMetadata());
-  };
-  const onError = () => {
-    if (errorCb) {
-      errorCb();
-    }
-    dispatch(exportMetadata());
+
+    const upQueries = [
+      dropRESTEndpointQuery(endpointName),
+      deleteAllowedQueryQuery(endpointName),
+    ];
+    const downQueries = [
+      addAllowedQuery({ name: endpointName, query: request }),
+      createRESTEndpointQuery(currentObj),
+    ];
+
+    const migrationName = `drop_rest_endpoint_${endpointName}`;
+    const requestMsg = `Dropping REST endpoint ${currentObj.name}`;
+    const successMsg = 'Successfully dropped REST endpoint';
+    const errorMsg = 'Error dropping REST endpoint';
+
+    const onSuccess = () => {
+      if (successCb) {
+        successCb();
+      }
+      dispatch(exportMetadata());
+    };
+    const onError = () => {
+      if (errorCb) {
+        errorCb();
+      }
+    };
+
+    return makeMigrationCall(
+      dispatch,
+      getState,
+      upQueries,
+      downQueries,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
   };
 
-  return makeMigrationCall(
-    dispatch,
-    getState,
-    upQueries,
-    downQueries,
-    migrationName,
-    onSuccess,
-    onError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
+export const editRESTEndpoint =
+  (
+    oldQueryObj: RestEndpointEntry,
+    newQueryObj: RestEndpointEntry,
+    request: string,
+    successCb?: () => void,
+    errorCb?: () => void
+  ): Thunk<Promise<void | ReduxState>, MetadataActions> =>
+  (dispatch, getState) => {
+    const currentEndpoints = getState().metadata.metadataObject?.rest_endpoints;
+
+    if (!currentEndpoints) {
+      dispatch(
+        showErrorNotification(
+          "Editing this REST endpoint isn't possible.",
+          'Your metadata seems to be empty!'
+        )
+      );
+      return;
+    }
+
+    const dropOldQueryFromCollection = deleteAllowedQueryQuery(
+      oldQueryObj.name
+    );
+    const addNewQueryToCollection = addAllowedQuery({
+      name: newQueryObj.name,
+      query: request,
+    });
+
+    const dropNewQueryFromCollection = deleteAllowedQueryQuery(
+      newQueryObj.name
+    );
+    const addOldQueryToCollection = addAllowedQuery({
+      name: oldQueryObj.name,
+      query: request,
+    });
+
+    const upQueries = [
+      dropRESTEndpointQuery(oldQueryObj.name),
+      dropOldQueryFromCollection,
+      addNewQueryToCollection,
+      createRESTEndpointQuery(newQueryObj),
+    ];
+
+    const downQueries = [
+      dropRESTEndpointQuery(newQueryObj.name),
+      dropNewQueryFromCollection,
+      addOldQueryToCollection,
+      createRESTEndpointQuery(oldQueryObj),
+    ];
+
+    const migrationName = `edit_rest_endpoint_${newQueryObj.url}_${newQueryObj.name}`;
+    const requestMsg = `Editing REST endpoint ${oldQueryObj.name}`;
+    const successMsg = 'Successfully edited REST endpoint';
+    const errorMsg = 'Error editing REST endpoint';
+
+    const onSuccess = () => {
+      if (successCb) {
+        successCb();
+      }
+      dispatch(exportMetadata());
+    };
+    const onError = () => {
+      if (errorCb) {
+        errorCb();
+      }
+      dispatch(exportMetadata());
+    };
+
+    return makeMigrationCall(
+      dispatch,
+      getState,
+      upQueries,
+      downQueries,
+      migrationName,
+      onSuccess,
+      onError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
+  };

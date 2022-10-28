@@ -6,7 +6,7 @@ from context import PytestConf
 import redis
 
 @pytest.mark.parametrize("transport", ['http'])
-@pytest.mark.usefixtures('per_class_tests_db_state')
+@pytest.mark.usefixtures('postgis', 'per_class_tests_db_state')
 class TestCustomEndpoints:
     def flushRedis(self):
         # TODO: Move this into setup/teardown
@@ -19,6 +19,9 @@ class TestCustomEndpoints:
 
     def test_missing_endpoint(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_missing.yaml', transport)
+
+    def test_endpoint_as_user_err(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/endpoint_as_user_err.yaml', transport)
 
     def test_simple_endpoint(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_simple.yaml', transport)
@@ -36,6 +39,9 @@ class TestCustomEndpoints:
 
     def test_endpoint_with_body_arg(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_with_body_arg.yaml', transport)
+
+    def test_endpoint_with_body_list_arg(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/endpoint_with_list_arg.yaml', transport)
 
     def test_endpoint_with_query_arg_url_encoded(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_with_query_arg_url_encoded.yaml', transport)
@@ -78,3 +84,9 @@ class TestCustomEndpoints:
 
     def test_endpoint_subscription(self, hge_ctx, transport):
         check_query_f(hge_ctx, self.dir() + '/endpoint_subscription.yaml', transport)
+
+    def test_query_validation(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/endpoint_query_validation.yaml', transport)
+
+    def test_endpoint_with_pg_date_url_variable(self, hge_ctx, transport):
+        check_query_f(hge_ctx, self.dir() + '/endpoint_pg_date_url_variable.yaml', transport)

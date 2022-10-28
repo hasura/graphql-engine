@@ -16,4 +16,4 @@ response:
   - extensions:
       path: $.selectionSet.node.args.id
       code: validation-failed
-    message: 'the node id is invalid: Error in $: unsupported GUID version: 2.0'
+    message: 'invalid node id: Error in $: unsupported GUID version: 2.0'

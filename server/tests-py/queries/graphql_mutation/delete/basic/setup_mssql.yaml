@@ -1,0 +1,40 @@
+type: bulk
+args:
+
+# track tables
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: test_types
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: author
+
+- type: mssql_track_table
+  args:
+    source: mssql
+    table:
+      name: article
+
+# create relationships
+- type: mssql_create_object_relationship
+  args:
+    source: mssql
+    table: article
+    name: author
+    using:
+      foreign_key_constraint_on: author_id
+
+- type: mssql_create_array_relationship
+  args:
+    source: mssql
+    table: author
+    name: articles
+    using:
+      foreign_key_constraint_on:
+        table: article
+        column: author_id

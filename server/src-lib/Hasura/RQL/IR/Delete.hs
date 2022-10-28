@@ -1,34 +1,44 @@
-module Hasura.RQL.IR.Delete where
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-import           Hasura.Prelude
+module Hasura.RQL.IR.Delete
+  ( AnnDel,
+    AnnDelG (..),
+    adTable,
+    adWhere,
+    adOutput,
+    adAllCols,
+    adNamingConvention,
+  )
+where
 
-import           Hasura.RQL.IR.BoolExp
-import           Hasura.RQL.IR.Returning
-import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Column
-import           Hasura.SQL.Backend
+import Control.Lens.TH (makeLenses)
+import Data.Kind (Type)
+import Hasura.GraphQL.Schema.NamingCase (NamingCase)
+import Hasura.Prelude
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.IR.Returning
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Column
+import Hasura.SQL.Backend
 
-
-data AnnDelG (b :: BackendType) v
-  = AnnDel
-  { dqp1Table   :: !(TableName b)
-  , dqp1Where   :: !(AnnBoolExp b v, AnnBoolExp b v)
-  , dqp1Output  :: !(MutationOutputG b v)
-  , dqp1AllCols :: ![ColumnInfo b]
+data AnnDelG (b :: BackendType) (r :: Type) v = AnnDel
+  { _adTable :: TableName b,
+    _adWhere :: (AnnBoolExp b v, AnnBoolExp b v),
+    _adOutput :: MutationOutputG b r v,
+    _adAllCols :: [ColumnInfo b],
+    _adNamingConvention :: Maybe NamingCase
   }
+  deriving (Functor, Foldable, Traversable)
 
-type AnnDel b = AnnDelG b (SQLExpression b)
+type AnnDel b = AnnDelG b Void (SQLExpression b)
 
-traverseAnnDel
-  :: forall backend f a b
-   . (Applicative f, Backend backend)
-  => (a -> f b)
-  -> AnnDelG backend a
-  -> f (AnnDelG backend b)
-traverseAnnDel f annUpd =
-  AnnDel tn
-  <$> ((,) <$> traverseAnnBoolExp f whr <*> traverseAnnBoolExp f fltr)
-  <*> traverseMutationOutput f mutOutput
-  <*> pure allCols
-  where
-    AnnDel tn (whr, fltr) mutOutput allCols = annUpd
+deriving instance
+  ( Backend b,
+    Show (AnnBoolExp b a),
+    Show (MutationOutputG b r a),
+    Show a
+  ) =>
+  Show (AnnDelG b r a)
+
+$(makeLenses ''AnnDelG)

@@ -7,11 +7,11 @@ import React, {
   useEffect,
 } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { canAccessReadReplica } from '@/utils/permissions';
 
 import Tabbed from './TabbedDataSourceConnection';
 import { ReduxState } from '../../../../types';
 import { mapDispatchToPropsEmpty } from '../../../Common/utils/reactUtils';
-import Button from '../../../Common/Button';
 import { showErrorNotification } from '../../Common/Notification';
 import _push from '../push';
 import {
@@ -22,12 +22,18 @@ import {
   readReplicaReducer,
   defaultState,
   makeReadReplicaConnectionObject,
+  ExtendedConnectDBState,
 } from './state';
-import { getDatasourceURL, getErrorMessageFromMissingFields } from './utils';
-import ConnectDatabaseForm from './ConnectDBForm';
+import {
+  getDatasourceConnectionParams,
+  getDatasourceURL,
+  getErrorMessageFromMissingFields,
+  getReadReplicaDBUrlInfo,
+  parsePgUrl,
+} from './utils';
 import ReadReplicaForm from './ReadReplicaForm';
-
-import styles from './DataSources.scss';
+import EditDataSource from './EditDataSource';
+import DataSourceFormWrapper from './DataSourceFormWrapper';
 import { getSupportedDrivers } from '../../../../dataSources';
 
 interface ConnectDatabaseProps extends InjectedProps {}
@@ -52,15 +58,13 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
     readReplicaReducer,
     []
   );
-  const [
-    connectDBStateForReadReplica,
-    connectDBReadReplicaDispatch,
-  ] = useReducer(connectDBReducer, defaultState);
+  const [connectDBStateForReadReplica, connectDBReadReplicaDispatch] =
+    useReducer(connectDBReducer, defaultState);
   const [readReplicaConnectionType, updateReadReplicaConnectionType] = useState(
     connectionTypes.DATABASE_URL
   );
 
-  const { sources = [], pathname = '' } = props;
+  const { sources = [], pathname } = props;
   const isEditState =
     pathname.includes('edit') || pathname.indexOf('edit') !== -1;
   const paths = pathname.split('/');
@@ -71,19 +75,134 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
 
   useEffect(() => {
     if (isEditState && currentSourceInfo) {
+      const connectionInfo = currentSourceInfo.configuration?.connection_info;
+      const databaseUrl =
+        connectionInfo?.database_url || connectionInfo?.connection_string;
       connectDBDispatch({
         type: 'INIT',
         data: {
           name: currentSourceInfo.name,
           driver: currentSourceInfo.kind ?? 'postgres',
           databaseUrl: getDatasourceURL(
-            currentSourceInfo?.configuration?.connection_info?.database_url
+            currentSourceInfo.kind,
+            databaseUrl ?? connectionInfo?.connection_string
           ),
-          connectionSettings:
-            currentSourceInfo.configuration?.connection_info?.pool_settings ??
-            {},
+          connectionParamState: getDatasourceConnectionParams(databaseUrl),
+          connectionSettings: connectionInfo?.pool_settings,
+          preparedStatements: connectionInfo?.use_prepared_statements ?? false,
+          isolationLevel: connectionInfo?.isolation_level ?? 'read-committed',
+          sslConfiguration: connectionInfo?.ssl_configuration,
+          extensionsSchema: currentSourceInfo.configuration?.extensions_schema,
+          customization: {
+            rootFields: currentSourceInfo?.customization?.root_fields,
+            typeNames: currentSourceInfo?.customization?.type_names,
+            namingConvention:
+              currentSourceInfo?.customization?.naming_convention,
+          },
         },
       });
+
+      const existingReadReplicas: ExtendedConnectDBState[] | [] = (
+        currentSourceInfo.configuration?.read_replicas ?? []
+      ).map(replica => {
+        const dbType = currentSourceInfo.kind ?? 'postgres';
+        const replicaDBUrlInfo = getReadReplicaDBUrlInfo(replica, dbType);
+        return {
+          chosenConnectionType:
+            replicaDBUrlInfo?.connectionType || connectionTypes.DATABASE_URL,
+          displayName: '',
+          dbType,
+          connectionParamState: {
+            host: '',
+            port: '',
+            username: '',
+            password: '',
+            database: '',
+          },
+          databaseURLState: replicaDBUrlInfo?.databaseURLState ?? {
+            dbURL: '',
+            serviceAccount: '',
+            global_select_limit: 1000,
+            projectId: '',
+            datasets: '',
+          },
+          envVarState: replicaDBUrlInfo?.envVarState ?? {
+            envVar: '',
+          },
+          preparedStatements: replica.use_prepared_statements ?? false,
+          isolationLevel: replica.isolation_level ?? 'read-committed',
+          connectionSettings: replica?.pool_settings,
+        };
+      });
+      readReplicaDispatch({
+        type: 'SET_REPLICA_STATE',
+        data: existingReadReplicas,
+      });
+
+      if (
+        typeof databaseUrl === 'string' &&
+        currentSourceInfo.kind === 'postgres'
+      ) {
+        const p = parsePgUrl(databaseUrl);
+        connectDBDispatch({
+          type: 'UPDATE_PARAM_STATE',
+          data: {
+            host: p.host?.replace(/:\d*$/, '') ?? '',
+            port: p.port ?? '',
+            database: p.pathname?.slice(1) ?? '',
+            username: p.username ?? '',
+            password: p.password ?? '',
+          },
+        });
+      }
+
+      if (
+        databaseUrl &&
+        typeof databaseUrl !== 'string' &&
+        'from_env' in databaseUrl &&
+        databaseUrl?.from_env
+      ) {
+        changeConnectionType(connectionTypes.ENV_VAR);
+        connectDBDispatch({
+          type: 'UPDATE_DB_URL_ENV_VAR',
+          data: databaseUrl.from_env,
+        });
+        connectDBDispatch({
+          type: 'UPDATE_DB_URL',
+          data: '',
+        });
+      }
+
+      if (currentSourceInfo?.kind === 'bigquery') {
+        const conf = currentSourceInfo.configuration;
+        connectDBDispatch({
+          type: 'UPDATE_DB_BIGQUERY_DATASETS',
+          data: conf?.datasets?.join(', ') ?? '',
+        });
+        connectDBDispatch({
+          type: 'UPDATE_DB_BIGQUERY_PROJECT_ID',
+          data: conf?.project_id ?? '',
+        });
+        if (conf?.global_select_limit) {
+          connectDBDispatch({
+            type: 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT',
+            data: +conf?.global_select_limit,
+          });
+        }
+        if (conf?.service_account?.from_env) {
+          changeConnectionType(connectionTypes.ENV_VAR);
+          connectDBDispatch({
+            type: 'UPDATE_DB_URL_ENV_VAR',
+            data: conf?.service_account?.from_env,
+          });
+        } else {
+          changeConnectionType(connectionTypes.CONNECTION_PARAMS);
+          connectDBDispatch({
+            type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT',
+            data: JSON.stringify(conf?.service_account, null, 2) ?? '{}',
+          });
+        }
+      }
     }
   }, [isEditState, currentSourceInfo]);
 
@@ -99,6 +218,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
 
   const onSuccessConnectDBCb = () => {
     setLoading(false);
+
     resetState();
     // route to manage page
     dispatch(_push('/data/manage'));
@@ -115,14 +235,13 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       return;
     }
 
-    if (isEditState) {
-      // TODO: server to provide API
-    }
-
     // TODO: check if permitted, if not pass undefined
     const read_replicas = readReplicasState.map(replica =>
       makeReadReplicaConnectionObject(replica)
     );
+
+    const isRenameSource =
+      isEditState && editSourceName !== connectDBInputState.displayName.trim();
 
     if (
       connectionType === connectionTypes.DATABASE_URL ||
@@ -148,7 +267,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         connectionTypes.DATABASE_URL,
         connectDBInputState,
         onSuccessConnectDBCb,
-        read_replicas
+        read_replicas,
+        isEditState,
+        isRenameSource,
+        editSourceName
       )
         .then(() => setLoading(false))
         .catch(() => setLoading(false));
@@ -175,7 +297,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
         connectionTypes.ENV_VAR,
         connectDBInputState,
         onSuccessConnectDBCb,
-        read_replicas
+        read_replicas,
+        isEditState,
+        isRenameSource,
+        editSourceName
       )
         .then(() => setLoading(false))
         .catch(() => setLoading(false));
@@ -184,12 +309,8 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
 
     // construct the connection string from connection params and
     // make the same call as done for connection of type DATABASE_URL
-    const {
-      host,
-      port,
-      username,
-      database,
-    } = connectDBInputState.connectionParamState;
+    const { host, port, username, database } =
+      connectDBInputState.connectionParamState;
 
     if (connectDBInputState.dbType !== 'bigquery') {
       if (!host || !port || !username || !database) {
@@ -211,7 +332,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       connectionTypes.CONNECTION_PARAMS,
       connectDBInputState,
       onSuccessConnectDBCb,
-      read_replicas
+      read_replicas,
+      isEditState,
+      isRenameSource,
+      editSourceName
     )
       .then(() => setLoading(false))
       .catch(() => setLoading(false));
@@ -235,6 +359,10 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
       type: 'UPDATE_DISPLAY_NAME',
       data: `read-replica-${indexForName}`,
     });
+    connectDBReadReplicaDispatch({
+      type: 'UPDATE_DB_DRIVER',
+      data: connectDBInputState.dbType,
+    });
   };
 
   const onClickCancelOnReadReplicaForm = () =>
@@ -255,23 +383,59 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
     });
   };
 
-  return (
-    <Tabbed tabName="connect">
-      <form
-        onSubmit={onSubmit}
-        className={`${styles.connect_db_content} ${styles.connect_form_width}`}
-      >
-        <ConnectDatabaseForm
+  if (isEditState) {
+    return (
+      <EditDataSource>
+        <DataSourceFormWrapper
           connectionDBState={connectDBInputState}
           connectionDBStateDispatch={connectDBDispatch}
           connectionTypeState={connectionType}
           updateConnectionTypeRadio={onChangeConnectionType}
-        />
+          changeConnectionType={changeConnectionType}
+          isEditState={isEditState}
+          loading={loading}
+          onSubmit={onSubmit}
+          title="Edit Data Source"
+        >
+          {/* Should be rendered only on Pro and Cloud Console */}
+          {getSupportedDrivers('connectDbForm.read_replicas.edit').includes(
+            connectDBInputState.dbType
+          ) &&
+            canAccessReadReplica() && (
+              <ReadReplicaForm
+                readReplicaState={readReplicasState}
+                readReplicaDispatch={readReplicaDispatch}
+                connectDBState={connectDBStateForReadReplica}
+                connectDBStateDispatch={connectDBReadReplicaDispatch}
+                readReplicaConnectionType={readReplicaConnectionType}
+                updateReadReplicaConnectionType={updateRadioForReadReplica}
+                onClickAddReadReplicaCb={onClickAddReadReplica}
+                onClickCancelOnReadReplicaCb={onClickCancelOnReadReplicaForm}
+                onClickSaveReadReplicaCb={onClickSaveReadReplicaForm}
+              />
+            )}
+        </DataSourceFormWrapper>
+      </EditDataSource>
+    );
+  }
+
+  return (
+    <Tabbed tabName="connect">
+      <DataSourceFormWrapper
+        connectionDBState={connectDBInputState}
+        connectionDBStateDispatch={connectDBDispatch}
+        connectionTypeState={connectionType}
+        updateConnectionTypeRadio={onChangeConnectionType}
+        changeConnectionType={changeConnectionType}
+        isEditState={isEditState}
+        loading={loading}
+        onSubmit={onSubmit}
+      >
         {/* Should be rendered only on Pro and Cloud Console */}
-        {getSupportedDrivers('connectDbForm.read_replicas').includes(
+        {getSupportedDrivers('connectDbForm.read_replicas.create').includes(
           connectDBInputState.dbType
         ) &&
-          (window.__env.consoleId || window.__env.userRole) && (
+          canAccessReadReplica() && (
             <ReadReplicaForm
               readReplicaState={readReplicasState}
               readReplicaDispatch={readReplicaDispatch}
@@ -284,23 +448,7 @@ const ConnectDatabase: React.FC<ConnectDatabaseProps> = props => {
               onClickSaveReadReplicaCb={onClickSaveReadReplicaForm}
             />
           )}
-
-        <div className={styles.add_button_layout}>
-          <Button
-            size="large"
-            color="yellow"
-            type="submit"
-            style={{
-              width: '70%',
-              ...(loading && { cursor: 'progress' }),
-            }}
-            disabled={loading}
-            data-test="connect-database-btn"
-          >
-            {!isEditState ? 'Connect Database' : 'Edit Connection'}
-          </Button>
-        </div>
-      </form>
+      </DataSourceFormWrapper>
     </Tabbed>
   );
 };
@@ -311,7 +459,7 @@ const mapStateToProps = (state: ReduxState) => {
     currentSchema: state.tables.currentSchema,
     sources: state.metadata.metadataObject?.sources ?? [],
     dbConnection: state.tables.dbConnection,
-    pathname: state?.routing?.locationBeforeTransitions?.pathname,
+    pathname: state?.routing?.locationBeforeTransitions?.pathname ?? '',
   };
 };
 

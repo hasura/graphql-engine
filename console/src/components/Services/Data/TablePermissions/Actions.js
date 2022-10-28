@@ -1,3 +1,4 @@
+import produce from 'immer';
 import { defaultPermissionsState, defaultQueryPermissions } from '../DataState';
 import { getEdForm, getIngForm } from '../utils';
 import { makeMigrationCall } from '../DataActions';
@@ -10,19 +11,24 @@ import {
   getQualifiedTableDef,
 } from '../../../../dataSources';
 import { capitalize } from '../../../Common/utils/jsUtils';
-import { exportMetadata } from '../../../../metadata/actions';
+import {
+  exportMetadata,
+  loadInconsistentObjects,
+} from '../../../../metadata/actions';
 import {
   getCreatePermissionQuery,
   getDropPermissionQuery,
 } from '../../../../metadata/queryUtils';
 import Migration from '../../../../utils/migration/Migration';
 import { currentDriver } from '../../../../dataSources';
+import { getNewRootPermissionState } from './utils';
 
 export const PERM_OPEN_EDIT = 'ModifyTable/PERM_OPEN_EDIT';
 export const PERM_SET_FILTER_TYPE = 'ModifyTable/PERM_SET_FILTER_TYPE';
 export const PERM_SET_FILTER = 'ModifyTable/PERM_SET_FILTER';
 export const PERM_SET_FILTER_SAME_AS = 'ModifyTable/PERM_SET_FILTER_SAME_AS';
 export const PERM_TOGGLE_FIELD = 'ModifyTable/PERM_TOGGLE_FIELD';
+export const PERM_TOGGLE_SELECT_FIELD = 'ModifyTable/PERM_TOGGLE_SELECT_FIELD';
 export const PERM_TOGGLE_ALL_FIELDS = 'ModifyTable/PERM_TOGGLE_ALL_FIELDS';
 export const PERM_ALLOW_ALL = 'ModifyTable/PERM_ALLOW_ALL';
 export const PERM_TOGGLE_ENABLE_LIMIT = 'ModifyTable/PERM_TOGGLE_ENABLE_LIMIT';
@@ -43,6 +49,11 @@ export const PERM_RESET_APPLY_SAME = 'ModifyTable/PERM_RESET_APPLY_SAME';
 export const PERM_SET_APPLY_SAME_PERM = 'ModifyTable/PERM_SET_APPLY_SAME_PERM';
 export const PERM_DEL_APPLY_SAME_PERM = 'ModifyTable/PERM_DEL_APPLY_SAME_PERM';
 export const PERM_TOGGLE_BACKEND_ONLY = 'ModifyTable/PERM_TOGGLE_BACKEND_ONLY';
+
+export const PERM_UPDATE_QUERY_ROOT_FIELDS =
+  'ModifyTable/PERM_UPDATE_QUERY_ROOT_FIELDS';
+export const PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS =
+  'ModifyTable/PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS';
 
 export const X_HASURA_CONST = 'x-hasura-';
 
@@ -76,6 +87,11 @@ const permSetFilterSameAs = (filter, filterType) => ({
 });
 const permToggleField = (fieldType, fieldName) => ({
   type: PERM_TOGGLE_FIELD,
+  fieldType,
+  fieldName,
+});
+const permToggleSelectField = (fieldType, fieldName) => ({
+  type: PERM_TOGGLE_SELECT_FIELD,
   fieldType,
   fieldName,
 });
@@ -117,7 +133,6 @@ const permSetBulkSelect = (isChecked, selectedRole) => {
 };
 const permSetApplySamePerm = (index, key, value) => {
   const data = { index, key, value };
-
   return dispatch => {
     dispatch({ type: PERM_SET_APPLY_SAME_PERM, data: data });
   };
@@ -166,9 +181,32 @@ const getBasePermissionsState = (tableSchema, role, query, isNewRole) => {
   return _permissions;
 };
 
+export const modifyRootPermissionState = (
+  state,
+  permission,
+  hasSelectedPrimaryKey
+) => {
+  const subscription_root_fields = state.select?.subscription_root_fields;
+  const query_root_fields = state.select?.query_root_fields;
+
+  return produce(state, draft => {
+    if (query_root_fields !== null)
+      draft.select.query_root_fields = getNewRootPermissionState(
+        query_root_fields,
+        permission,
+        hasSelectedPrimaryKey
+      );
+    if (subscription_root_fields !== null)
+      draft.select.subscription_root_fields = getNewRootPermissionState(
+        subscription_root_fields,
+        permission,
+        hasSelectedPrimaryKey
+      );
+  });
+};
+
 const updatePermissionsState = (permissions, key, value) => {
   const _permissions = JSON.parse(JSON.stringify(permissions));
-
   const query = permissions.query;
 
   _permissions[query] =
@@ -410,7 +448,6 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
     const currentSchema = getState().tables.currentSchema;
     const currentDataSource = getState().tables.currentDataSource;
     const permissionsState = getState().tables.modify.permissionsState;
-
     const table = tableSchema.table_name;
     const currentQueryType = permissionsState.query;
     const toBeAppliedPermission = permissionsState[currentQueryType];
@@ -439,12 +476,15 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
 
     const permissionsUpQueries = [];
     const permissionsDownQueries = [];
-
     permApplyToList.map(applyTo => {
       const currTableSchema = findTable(
         allSchemas,
         generateTableDef(applyTo.table, currentSchema)
       );
+      const permTableSchema = {
+        name: currTableSchema.table_name,
+        schema: currTableSchema.table_schema,
+      };
 
       const currentPermPermission = currTableSchema.permissions.find(
         el => el.role_name === applyTo.role
@@ -489,14 +529,14 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
       // now add normal create and drop permissions
       const createQuery = getCreatePermissionQuery(
         applyTo.action,
-        tableDef,
+        permTableSchema,
         applyTo.role,
         sanitizedPermission,
         currentDataSource
       );
       const deleteQuery = getDropPermissionQuery(
         applyTo.action,
-        tableDef,
+        permTableSchema,
         applyTo.role,
         currentDataSource
       );
@@ -536,7 +576,7 @@ const applySamePermissionsBulk = (tableSchema, arePermissionsModified) => {
 };
 
 export const isQueryTypeBackendOnlyCompatible = queryType => {
-  return queryType === 'insert';
+  return ['insert', 'update', 'delete'].includes(queryType);
 };
 
 const copyRolePermissions = (
@@ -751,7 +791,6 @@ const permChangePermissions = changeType => {
     if (query === 'select' && !limitEnabled) {
       delete permissionsState[query].limit;
     }
-
     const tableDef = getQualifiedTableDef(
       {
         name: table,
@@ -822,6 +861,8 @@ const permChangePermissions = changeType => {
       dispatch(permSetRoleName(''));
       dispatch(permCloseEdit());
       dispatch(exportMetadata());
+
+      dispatch(loadInconsistentObjects({ shouldReloadMetadata: false }));
     };
     const customOnError = () => {};
 
@@ -846,6 +887,7 @@ export {
   permSetFilter,
   permSetFilterSameAs,
   permToggleField,
+  permToggleSelectField,
   permToggleAllFields,
   permCloseEdit,
   permSetRoleName,

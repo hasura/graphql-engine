@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 
 import { uploadFile } from '../../../Common/utils/jsUtils';
 import { replaceMetadataFromFile } from '../../../../metadata/actions';
@@ -33,8 +33,6 @@ class ImportMetadata extends Component {
   }
 
   render() {
-    const styles = require('../Settings.scss');
-
     const { isImporting } = this.state;
 
     const handleImport = e => {
@@ -44,14 +42,15 @@ class ImportMetadata extends Component {
     };
 
     return (
-      <div className={styles.display_inline}>
+      <div className="inline-block">
         <Button
           data-test="data-import-metadata"
           size="sm"
-          color="white"
+          isLoading={isImporting}
+          loadingText="Importing..."
           onClick={handleImport}
         >
-          {isImporting ? 'Importing...' : 'Import metadata'}
+          Import metadata
         </Button>
       </div>
     );

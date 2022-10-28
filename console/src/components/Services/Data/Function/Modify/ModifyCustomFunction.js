@@ -1,14 +1,21 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
+import {
+  Analytics,
+  REDACT_EVERYTHING,
+  getAnalyticsAttributes,
+} from '@/features/Analytics';
+import { Button } from '@/new-components/Button';
 import CommonTabLayout from '../../../../Common/Layout/CommonTabLayout/CommonTabLayout';
 import tabInfo from './tabInfo';
 import globals from '../../../../../Globals';
-import Button from '../../../../Common/Button/Button';
-import styles from './ModifyCustomFunction.scss';
+import styles from './ModifyCustomFunction.module.scss';
 import TextAreaWithCopy from '../../../../Common/TextAreaWithCopy/TextAreaWithCopy';
+import FunctionCommentEditor from './FunctionCommentEditor';
 import {
   fetchCustomFunction,
   unTrackCustomFunction,
@@ -23,7 +30,8 @@ import {
 } from '../../../../Common/utils/routesUtils';
 import SessionVarSection from './SessionVarSection';
 import RawSqlButton from '../../Common/Components/RawSqlButton';
-import { connect } from 'react-redux';
+
+import { isFeatureSupported } from '@/dataSources';
 
 export const pageTitle = 'Custom Function';
 
@@ -36,12 +44,10 @@ class ModifyCustomFunction extends React.Component {
       funcFetchCompleted: false,
     };
 
-    this.handleUntrackCustomFunction = this.handleUntrackCustomFunction.bind(
-      this
-    );
-    this.handleDeleteCustomFunction = this.handleDeleteCustomFunction.bind(
-      this
-    );
+    this.handleUntrackCustomFunction =
+      this.handleUntrackCustomFunction.bind(this);
+    this.handleDeleteCustomFunction =
+      this.handleDeleteCustomFunction.bind(this);
     this.urlWithSource = `/data/${props.currentSource}`;
     this.prefixUrl = globals.urlPrefix + this.urlWithSource;
     this.urlWithSchema = `/data/${props.currentSource}/schema/${props.currentSchema}`;
@@ -122,6 +128,8 @@ class ModifyCustomFunction extends React.Component {
       functionSchema: schema,
       functionName,
       functionDefinition,
+      functionComment,
+      isEditingComment,
       isRequesting,
       isDeleting,
       isUntracking,
@@ -150,7 +158,7 @@ class ModifyCustomFunction extends React.Component {
       return (
         <div className={styles.commonBtn}>
           <Button
-            color="white"
+            mode="default"
             className={styles.add_mar_right}
             onClick={this.handleUntrackCustomFunction}
             disabled={loading}
@@ -161,12 +169,13 @@ class ModifyCustomFunction extends React.Component {
               : 'Untrack Function'}
           </Button>
           <Button
-            color="red"
+            mode="destructive"
             onClick={this.handleDeleteCustomFunction}
             data-test={'custom-function-edit-delete-btn'}
-            disabled={loading}
+            isLoading={loading}
+            loadingText="Deleting Function..."
           >
-            {loading?.isDeleting ? 'Deleting Function...' : 'Delete Function'}
+            Delete Function
           </Button>
           {this.state.deleteConfirmationError ? (
             <span
@@ -205,57 +214,82 @@ class ModifyCustomFunction extends React.Component {
       });
     }
 
-    return (
-      <div className={'col-xs-8' + ' ' + styles.modifyWrapper}>
-        <Helmet
-          title={`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}
-        />
-        <CommonTabLayout
-          appPrefix={this.urlWithSource}
-          currentTab="modify"
-          heading={functionName}
-          tabsInfo={tabInfo}
-          breadCrumbs={breadCrumbs}
-          baseUrl={functionBaseUrl}
-          showLoader={isFetching}
-          testPrefix={'functions'}
-        />
-        <br />
-        <div className={`${styles.display_flex}`}>
-          <h4 className={styles.subheading_text}>
-            Function Definition:
-            <span className={styles.add_mar_left}>
-              <RawSqlButton
-                className={styles.add_mar_right}
-                sql={functionDefinition}
-                dispatch={dispatch}
-                data-test="modify-view"
-                source={currentSource}
-              >
-                Modify
-              </RawSqlButton>
-            </span>
-          </h4>
-        </div>
+    const titleAnalyticsAttributes = getAnalyticsAttributes(
+      'ModifyCustomFunction',
+      { redactText: true }
+    );
 
-        <div className={styles.sqlBlock}>
-          <TextAreaWithCopy
-            copyText={functionDefinition}
-            textLanguage={'sql'}
-            id="copyCustomFunctionSQL"
+    return (
+      <Analytics name="ModifyCustomFunction" {...REDACT_EVERYTHING}>
+        <div>
+          <Helmet>
+            <title
+              {...titleAnalyticsAttributes}
+            >{`Edit ${pageTitle} - ${functionName} - ${pageTitle}s | Hasura`}</title>
+          </Helmet>
+          <CommonTabLayout
+            appPrefix={this.urlWithSource}
+            currentTab="modify"
+            heading={functionName}
+            tabsInfo={tabInfo}
+            breadCrumbs={breadCrumbs}
+            baseUrl={functionBaseUrl}
+            showLoader={isFetching}
+            testPrefix={'functions'}
           />
+
+          <br />
+          {isFeatureSupported('functions.modify.comments.view') && (
+            <div className="w-full sm:w-6/12 mb-lg">
+              <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+                Function Comments
+              </h4>
+
+              <FunctionCommentEditor
+                isEditing={isEditingComment}
+                defaultValue={functionComment}
+                dispatch={dispatch}
+                readOnly={!isFeatureSupported('functions.modify.comments.edit')}
+              />
+            </div>
+          )}
+
+          <div className="w-full sm:w-6/12 mb-md">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              Function Definition:
+              <span className="ml-xs">
+                <RawSqlButton
+                  sql={functionDefinition}
+                  dispatch={dispatch}
+                  data-test="modify-view"
+                  source={currentSource}
+                >
+                  Modify
+                </RawSqlButton>
+              </span>
+            </h4>
+
+            <div className={styles.sqlBlock}>
+              <TextAreaWithCopy
+                copyText={functionDefinition}
+                textLanguage={'sql'}
+                id="copyCustomFunctionSQL"
+              />
+            </div>
+          </div>
+
+          <div className="w-full sm:w-6/12 mb-md">
+            <SessionVarSection
+              key={functionName}
+              functionName={functionName}
+              configuration={configuration}
+              loading={loading}
+              onSessVarUpdate={this.onSessVarUpdate}
+            />
+            {migrationMode ? [generateMigrateBtns()] : null}
+          </div>
         </div>
-        <SessionVarSection
-          key={functionName}
-          functionName={functionName}
-          configuration={configuration}
-          loading={loading}
-          onSessVarUpdate={this.onSessVarUpdate}
-        />
-        {migrationMode
-          ? [<hr key="modify-custom-function-divider" />, generateMigrateBtns()]
-          : null}
-      </div>
+      </Analytics>
     );
   }
 }
@@ -270,8 +304,7 @@ const mapStateToProps = state => ({
 });
 
 const modifyCustomFnConnector = connect(mapStateToProps);
-const ConnectedModifyCustomFunction = modifyCustomFnConnector(
-  ModifyCustomFunction
-);
+const ConnectedModifyCustomFunction =
+  modifyCustomFnConnector(ModifyCustomFunction);
 
 export default ConnectedModifyCustomFunction;

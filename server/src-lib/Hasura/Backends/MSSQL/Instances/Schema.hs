@@ -1,450 +1,422 @@
+{-# LANGUAGE ApplicativeDo #-}
+{-# LANGUAGE TemplateHaskellQuotes #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
+-- | MSSQL Instances Schema
+--
+-- Defines a 'Hasura.GraphQL.Schema.Backend.BackendSchema' type class instance for MSSQL.
 module Hasura.Backends.MSSQL.Instances.Schema () where
 
-import           Hasura.Prelude
-
-
-import qualified Data.HashMap.Strict                   as Map
-import qualified Data.List.NonEmpty                    as NE
-import qualified Database.ODBC.SQLServer               as ODBC
-import qualified Language.GraphQL.Draft.Syntax         as G
-
-import           Data.Has
-import           Data.Text.Encoding                    (encodeUtf8)
-import           Data.Text.Extended
-
-import qualified Hasura.Backends.MSSQL.Types           as MSSQL
-import qualified Hasura.GraphQL.Parser                 as P
-import qualified Hasura.GraphQL.Schema.Build           as GSB
-import qualified Hasura.RQL.IR.Select                  as IR
-import qualified Hasura.RQL.IR.Update                  as IR
-
-import           Hasura.Base.Error
-import           Hasura.GraphQL.Context
-import           Hasura.GraphQL.Parser                 hiding (EnumValueInfo, field)
-import           Hasura.GraphQL.Parser.Internal.Parser hiding (field)
-import           Hasura.GraphQL.Schema.Backend
-import           Hasura.GraphQL.Schema.BoolExp
-import           Hasura.GraphQL.Schema.Common
-import           Hasura.RQL.Types
-
+import Data.Char qualified as Char
+import Data.Has
+import Data.HashMap.Strict qualified as Map
+import Data.List.NonEmpty qualified as NE
+import Data.Text qualified as T
+import Data.Text.Casing qualified as C
+import Data.Text.Encoding as TE
+import Data.Text.Extended
+import Database.ODBC.SQLServer qualified as ODBC
+import Hasura.Backends.MSSQL.Schema.IfMatched
+import Hasura.Backends.MSSQL.Types.Insert (BackendInsert (..))
+import Hasura.Backends.MSSQL.Types.Internal qualified as MSSQL
+import Hasura.Backends.MSSQL.Types.Update (BackendUpdate (..), UpdateOperator (..))
+import Hasura.Base.Error
+import Hasura.Base.ErrorMessage (toErrorMessage)
+import Hasura.GraphQL.Schema.Backend
+import Hasura.GraphQL.Schema.BoolExp
+import Hasura.GraphQL.Schema.Build qualified as GSB
+import Hasura.GraphQL.Schema.Common
+import Hasura.GraphQL.Schema.NamingCase
+import Hasura.GraphQL.Schema.Options qualified as Options
+import Hasura.GraphQL.Schema.Parser
+  ( FieldParser,
+    InputFieldsParser,
+    Kind (..),
+    MonadParse,
+    Parser,
+  )
+import Hasura.GraphQL.Schema.Parser qualified as P
+import Hasura.GraphQL.Schema.Select
+import Hasura.GraphQL.Schema.Update qualified as SU
+import Hasura.Name qualified as Name
+import Hasura.Prelude
+import Hasura.RQL.IR
+import Hasura.RQL.IR.Select qualified as IR
+import Hasura.RQL.Types.Backend hiding (BackendInsert)
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization (MkRootFieldName (..))
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
+import Language.GraphQL.Draft.Syntax qualified as G
 
 ----------------------------------------------------------------
--- BackendSchema instance
+
+-- * BackendSchema instance
 
 instance BackendSchema 'MSSQL where
   -- top level parsers
-  buildTableQueryFields          = GSB.buildTableQueryFields
-  buildTableRelayQueryFields     = msBuildTableRelayQueryFields
-  buildTableInsertMutationFields = msBuildTableInsertMutationFields
+  buildTableQueryAndSubscriptionFields = GSB.buildTableQueryAndSubscriptionFields
+  buildTableRelayQueryFields _ _ _ _ _ _ = pure []
+  buildTableStreamingSubscriptionFields = GSB.buildTableStreamingSubscriptionFields
+  buildTableInsertMutationFields = GSB.buildTableInsertMutationFields backendInsertParser
+  buildTableDeleteMutationFields = GSB.buildTableDeleteMutationFields
   buildTableUpdateMutationFields = msBuildTableUpdateMutationFields
-  buildTableDeleteMutationFields = msBuildTableDeleteMutationFields
-  buildFunctionQueryFields       = msBuildFunctionQueryFields
-  buildFunctionRelayQueryFields  = msBuildFunctionRelayQueryFields
-  buildFunctionMutationFields    = msBuildFunctionMutationFields
+
+  buildFunctionQueryFields _ _ _ _ _ = pure []
+  buildFunctionRelayQueryFields _ _ _ _ _ _ = pure []
+  buildFunctionMutationFields _ _ _ _ _ = pure []
+
   -- backend extensions
-  relayExtension    = const Nothing
-  nodesAggExtension = const $ Just ()
-  -- indivdual components
-  columnParser              = msColumnParser
-  jsonPathArg               = msJsonPathArg
-  orderByOperators          = msOrderByOperators
-  comparisonExps            = msComparisonExps
-  updateOperators           = msUpdateOperators
-  offsetParser              = msOffsetParser
-  mkCountType               = msMkCountType
+  relayExtension = Nothing
+  nodesAggExtension = Just ()
+  streamSubscriptionExtension = Nothing
+
+  -- When we support nested inserts, we also need to ensure we limit ourselves
+  -- to inserting into tables whch supports inserts:
+  {-
+    import Hasura.GraphQL.Schema.Mutation qualified as GSB
+
+    runMaybeT $ do
+      let otherTableName = riRTable relationshipInfo
+      otherTableInfo <- lift $ askTableInfo sourceName otherTableName
+      guard (supportsInserts otherTableInfo)
+  -}
+  mkRelationshipParser _ _ = pure Nothing
+
+  -- individual components
+  columnParser = msColumnParser
+  enumParser = msEnumParser
+  possiblyNullable = msPossiblyNullable
+  scalarSelectionArgumentsParser _ = pure Nothing
+  orderByOperators _sourceInfo = msOrderByOperators
+  comparisonExps = const msComparisonExps
+  countTypeInput = msCountTypeInput
   aggregateOrderByCountType = MSSQL.IntegerType
-  computedField             = msComputedField
-  node                      = msNode
-  tableDistinctOn           = msTableDistinctOn
-  remoteRelationshipField   = msRemoteRelationshipField
-  -- SQL literals
-  columnDefaultValue = msColumnDefaultValue
+  computedField _ _ _ _ = pure Nothing
 
-
-----------------------------------------------------------------
--- Top level parsers
-
-msBuildTableRelayQueryFields
-  :: MonadBuildSchema 'MSSQL r m n
-  => SourceName
-  -> SourceConfig 'MSSQL
-  -> TableName    'MSSQL
-  -> TableInfo    'MSSQL
-  -> G.Name
-  -> NESeq (ColumnInfo 'MSSQL)
-  -> SelPermInfo  'MSSQL
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
-msBuildTableRelayQueryFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _pkeyColumns _selPerms =
-  pure Nothing
-
-msBuildTableInsertMutationFields
-  :: MonadBuildSchema 'MSSQL r m n
-  => SourceName
-  -> SourceConfig 'MSSQL
-  -> TableName 'MSSQL
-  -> TableInfo 'MSSQL
-  -> G.Name
-  -> InsPermInfo 'MSSQL
-  -> Maybe (SelPermInfo 'MSSQL)
-  -> Maybe (UpdPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildTableInsertMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _insPerms _selPerms _updPerms =
-  pure []
-
-msBuildTableUpdateMutationFields
-  :: MonadBuildSchema 'MSSQL r m n
-  => SourceName
-  -> SourceConfig 'MSSQL
-  -> TableName 'MSSQL
-  -> TableInfo 'MSSQL
-  -> G.Name
-  -> UpdPermInfo 'MSSQL
-  -> Maybe (SelPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildTableUpdateMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _updPerns _selPerms =
-  pure []
-
-msBuildTableDeleteMutationFields
-  :: MonadBuildSchema 'MSSQL r m n
-  => SourceName
-  -> SourceConfig 'MSSQL
-  -> TableName 'MSSQL
-  -> TableInfo 'MSSQL
-  -> G.Name
-  -> DelPermInfo 'MSSQL
-  -> Maybe (SelPermInfo 'MSSQL)
-  -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildTableDeleteMutationFields _sourceName _sourceInfo _tableName _tableInfo _gqlName _delPerns _selPerms =
-  pure []
-
-msBuildFunctionQueryFields
-    :: MonadBuildSchema 'MSSQL r m n
-    => SourceName
-    -> SourceConfig 'MSSQL
-    -> FunctionName 'MSSQL
-    -> FunctionInfo 'MSSQL
-    -> TableName 'MSSQL
-    -> SelPermInfo 'MSSQL
-    -> m [FieldParser n (QueryRootField UnpreparedValue)]
-msBuildFunctionQueryFields _ _ _ _ _ _ =
-  pure []
-
-msBuildFunctionRelayQueryFields
-  :: MonadBuildSchema 'MSSQL r m n
-  => SourceName
-  -> SourceConfig 'MSSQL
-  -> FunctionName 'MSSQL
-  -> FunctionInfo 'MSSQL
-  -> TableName    'MSSQL
-  -> NESeq (ColumnInfo 'MSSQL)
-  -> SelPermInfo  'MSSQL
-  -> m (Maybe (FieldParser n (QueryRootField UnpreparedValue)))
-msBuildFunctionRelayQueryFields _sourceName _sourceInfo _functionName _functionInfo _tableName _pkeyColumns _selPerms =
-  pure Nothing
-
-msBuildFunctionMutationFields
-    :: MonadBuildSchema 'MSSQL r m n
-    => SourceName
-    -> SourceConfig 'MSSQL
-    -> FunctionName 'MSSQL
-    -> FunctionInfo 'MSSQL
-    -> TableName 'MSSQL
-    -> SelPermInfo 'MSSQL
-    -> m [FieldParser n (MutationRootField UnpreparedValue)]
-msBuildFunctionMutationFields _ _ _ _ _ _ =
-  pure []
-
-mkMSSQLScalarTypeName :: MonadError QErr m => MSSQL.ScalarType -> m G.Name
-mkMSSQLScalarTypeName = \case
-  MSSQL.WcharType    -> pure stringScalar
-  MSSQL.WvarcharType -> pure stringScalar
-  MSSQL.WtextType    -> pure stringScalar
-  MSSQL.FloatType    -> pure floatScalar
-  -- integer types
-  MSSQL.IntegerType  -> pure intScalar
-  -- boolean type
-  MSSQL.BitType      -> pure boolScalar
-  scalarType -> G.mkName (MSSQL.scalarTypeDBName scalarType) `onNothing` throw400 ValidationFailed
-    ("cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
-    <> "valid GraphQL identifier")
+instance BackendTableSelectSchema 'MSSQL where
+  tableArguments = msTableArgs
+  selectTable = defaultSelectTable
+  selectTableAggregate = defaultSelectTableAggregate
+  tableSelectionSet = defaultTableSelectionSet
 
 ----------------------------------------------------------------
--- Individual components
 
-msColumnParser
-  :: (MonadSchema n m, MonadError QErr m)
-  => ColumnType 'MSSQL
-  -> G.Nullability
-  -> m (Parser 'Both n (Opaque (ColumnValue 'MSSQL)))
-msColumnParser columnType (G.Nullability isNullable) =
-  opaque . fmap (ColumnValue columnType) <$> case columnType of
-    ColumnScalar scalarType -> possiblyNullable scalarType <$> case scalarType of
-      -- bytestring
-      MSSQL.CharType     -> pure $ ODBC.ByteStringValue . encodeUtf8 <$> P.string
-      MSSQL.VarcharType  -> pure $ ODBC.ByteStringValue . encodeUtf8 <$> P.string
+-- * Top level parsers
 
-      -- text
-      MSSQL.WcharType    -> pure $ ODBC.TextValue <$> P.string
-      MSSQL.WvarcharType -> pure $ ODBC.TextValue <$> P.string
-      MSSQL.WtextType    -> pure $ ODBC.TextValue <$> P.string
-      MSSQL.TextType     -> pure $ ODBC.TextValue <$> P.string
+backendInsertParser ::
+  forall m r n.
+  MonadBuildSchema 'MSSQL r m n =>
+  SourceInfo 'MSSQL ->
+  TableInfo 'MSSQL ->
+  SchemaT r m (InputFieldsParser n (BackendInsert (UnpreparedValue 'MSSQL)))
+backendInsertParser sourceName tableInfo = do
+  ifMatched <- ifMatchedFieldParser sourceName tableInfo
+  let _biIdentityColumns = _tciExtraTableMetadata $ _tiCoreInfo tableInfo
+  pure $ do
+    _biIfMatched <- ifMatched
+    pure $ BackendInsert {..}
 
-      -- integer
-      MSSQL.IntegerType  -> pure $ ODBC.IntValue . fromIntegral <$> P.int
-      MSSQL.SmallintType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
-      MSSQL.BigintType   -> pure $ ODBC.IntValue . fromIntegral <$> P.int
-      MSSQL.TinyintType  -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+msBuildTableUpdateMutationFields ::
+  MonadBuildSchema 'MSSQL r m n =>
+  MkRootFieldName ->
+  Scenario ->
+  SourceInfo 'MSSQL ->
+  TableName 'MSSQL ->
+  TableInfo 'MSSQL ->
+  C.GQLNameIdentifier ->
+  SchemaT r m [FieldParser n (AnnotatedUpdateG 'MSSQL (RemoteRelationshipField UnpreparedValue) (UnpreparedValue 'MSSQL))]
+msBuildTableUpdateMutationFields mkRootFieldName scenario sourceName tableName tableInfo gqlName = do
+  roleName <- retrieve scRole
+  fieldParsers <- runMaybeT do
+    updatePerms <- hoistMaybe $ _permUpd $ getRolePermInfo roleName tableInfo
+    let mkBackendUpdate backendUpdateTableInfo =
+          (fmap . fmap) BackendUpdate $
+            SU.buildUpdateOperators
+              (UpdateSet <$> SU.presetColumns updatePerms)
+              [ UpdateSet <$> SU.setOp,
+                UpdateInc <$> SU.incOp
+              ]
+              backendUpdateTableInfo
+    lift $
+      GSB.buildTableUpdateMutationFields
+        mkBackendUpdate
+        mkRootFieldName
+        scenario
+        sourceName
+        tableName
+        tableInfo
+        gqlName
+  pure . fold @Maybe @[_] $ fieldParsers
 
-      -- float
-      MSSQL.NumericType  -> pure $ ODBC.DoubleValue <$> P.float
-      MSSQL.DecimalType  -> pure $ ODBC.DoubleValue <$> P.float
-      MSSQL.FloatType    -> pure $ ODBC.DoubleValue <$> P.float
-      MSSQL.RealType     -> pure $ ODBC.DoubleValue <$> P.float
+----------------------------------------------------------------
 
-      -- boolean
-      MSSQL.BitType      -> pure $ ODBC.BoolValue <$> P.boolean
-      _                  -> do
-        name <- mkMSSQLScalarTypeName scalarType
-        let schemaType = P.NonNullable $ P.TNamed $ P.mkDefinition name Nothing P.TIScalar
-        pure $ Parser
-          { pType = schemaType
-          , pParser =
-              valueToJSON (P.toGraphQLType schemaType) >=>
-              either (parseErrorWith ParseFailed . qeError) pure . (MSSQL.parseScalarValue scalarType)
-          }
-    ColumnEnumReference (EnumReference tableName enumValues) ->
-      case nonEmpty (Map.toList enumValues) of
-        Just enumValuesList -> do
-          tableGQLName <- tableGraphQLName @'MSSQL tableName `onLeft` throwError
-          let enumName = tableGQLName <> $$(G.litName "_enum")
-          pure $ possiblyNullable MSSQL.VarcharType $ P.enum enumName Nothing (mkEnumValue <$> enumValuesList)
-        Nothing -> throw400 ValidationFailed "empty enum values"
+-- * Table arguments
+
+msTableArgs ::
+  forall r m n.
+  MonadBuildSchema 'MSSQL r m n =>
+  SourceInfo 'MSSQL ->
+  TableInfo 'MSSQL ->
+  SchemaT r m (InputFieldsParser n (IR.SelectArgsG 'MSSQL (UnpreparedValue 'MSSQL)))
+msTableArgs sourceName tableInfo = do
+  whereParser <- tableWhereArg sourceName tableInfo
+  orderByParser <- tableOrderByArg sourceName tableInfo
+  pure do
+    whereArg <- whereParser
+    orderByArg <- orderByParser
+    limitArg <- tableLimitArg
+    offsetArg <- tableOffsetArg
+    pure $
+      IR.SelectArgs
+        { IR._saWhere = whereArg,
+          IR._saOrderBy = orderByArg,
+          IR._saLimit = limitArg,
+          IR._saOffset = offsetArg,
+          -- not supported on MSSQL for now
+          IR._saDistinct = Nothing
+        }
+
+----------------------------------------------------------------
+
+-- * Individual components
+
+msColumnParser ::
+  MonadBuildSchema 'MSSQL r m n =>
+  ColumnType 'MSSQL ->
+  G.Nullability ->
+  SchemaT r m (Parser 'Both n (ValueWithOrigin (ColumnValue 'MSSQL)))
+msColumnParser columnType nullability = case columnType of
+  -- TODO: the mapping here is not consistent with mkMSSQLScalarTypeName. For
+  -- example, exposing all the float types as a GraphQL Float type is
+  -- incorrect, similarly exposing all the integer types as a GraphQL Int
+  ColumnScalar scalarType ->
+    P.memoizeOn 'msColumnParser (scalarType, nullability) $
+      peelWithOrigin . fmap (ColumnValue columnType) . msPossiblyNullable scalarType nullability
+        <$> case scalarType of
+          -- text
+          MSSQL.CharType -> pure $ mkCharValue <$> P.string
+          MSSQL.VarcharType -> pure $ mkCharValue <$> P.string
+          MSSQL.WcharType -> pure $ ODBC.TextValue <$> P.string
+          MSSQL.WvarcharType -> pure $ ODBC.TextValue <$> P.string
+          MSSQL.WtextType -> pure $ ODBC.TextValue <$> P.string
+          MSSQL.TextType -> pure $ ODBC.TextValue <$> P.string
+          -- integer
+          MSSQL.IntegerType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+          MSSQL.SmallintType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+          MSSQL.BigintType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+          MSSQL.TinyintType -> pure $ ODBC.IntValue . fromIntegral <$> P.int
+          -- float
+          MSSQL.NumericType -> pure $ ODBC.DoubleValue <$> P.float
+          MSSQL.DecimalType -> pure $ ODBC.DoubleValue <$> P.float
+          MSSQL.FloatType -> pure $ ODBC.DoubleValue <$> P.float
+          MSSQL.RealType -> pure $ ODBC.DoubleValue <$> P.float
+          -- boolean
+          MSSQL.BitType -> pure $ ODBC.BoolValue <$> P.boolean
+          _ -> do
+            name <- MSSQL.mkMSSQLScalarTypeName scalarType
+            let schemaType = P.TNamed P.NonNullable $ P.Definition name Nothing Nothing [] P.TIScalar
+            pure $
+              P.Parser
+                { pType = schemaType,
+                  pParser =
+                    P.valueToJSON (P.toGraphQLType schemaType)
+                      >=> either (P.parseErrorWith P.ParseFailed . toErrorMessage . qeError) pure . (MSSQL.parseScalarValue scalarType)
+                }
+  ColumnEnumReference (EnumReference tableName enumValues customTableName) ->
+    case nonEmpty (Map.toList enumValues) of
+      Just enumValuesList ->
+        peelWithOrigin . fmap (ColumnValue columnType)
+          <$> msEnumParser tableName enumValuesList customTableName nullability
+      Nothing -> throw400 ValidationFailed "empty enum values"
   where
-    -- Sadly, this combinator is not sound in general, so we can’t export it
-    -- for general-purpose use. If we did, someone could write this:
+    -- CHAR/VARCHAR in MSSQL _can_ represent the full UCS (Universal Coded Character Set),
+    -- but might not always if the collation used is not UTF-8 enabled
+    -- https://docs.microsoft.com/en-us/sql/t-sql/data-types/char-and-varchar-transact-sql?view=sql-server-ver16
     --
-    --   mkParameter <$> opaque do
-    --     n <- int
-    --     pure (mkIntColumnValue (n + 1))
+    -- NCHAR/NVARCHAR in MSSQL are always able to represent the full UCS
+    -- https://docs.microsoft.com/en-us/sql/t-sql/data-types/nchar-and-nvarchar-transact-sql?view=sql-server-ver16
     --
-    -- Now we’d end up with a UVParameter that has a variable in it, so we’d
-    -- parameterize over it. But when we’d reuse the plan, we wouldn’t know to
-    -- increment the value by 1, so we’d use the wrong value!
+    -- We'd prefer to encode as CHAR/VARCHAR literals to CHAR/VARCHAR columns, as this
+    -- means better index performance, BUT as we don't know what the collation
+    -- the column is set to (an example is 'SQL_Latin1_General_CP437_BIN') and thus
+    -- what characters are available in order to do this safely.
     --
-    -- We could theoretically solve this by retaining a reference to the parser
-    -- itself and re-parsing each new value, using the saved parser, which
-    -- would admittedly be neat. But it’s more complicated, and it isn’t clear
-    -- that it would actually be useful, so for now we don’t support it.
-    opaque :: MonadParse m => Parser 'Both m a -> Parser 'Both m (Opaque a)
-    opaque parser = parser
-      { pParser = \case
-          P.GraphQLValue (G.VVariable var@Variable{ vInfo, vValue }) -> do
-            typeCheck False (P.toGraphQLType $ pType parser) var
-            P.mkOpaque (Just vInfo) <$> pParser parser (absurd <$> vValue)
-          value -> P.mkOpaque Nothing <$> pParser parser value
-      }
-    possiblyNullable _scalarType
-      | isNullable = fmap (fromMaybe ODBC.NullValue) . P.nullable
-      | otherwise  = id
+    -- Therefore, we are conservative and only convert on the HGE side when the
+    -- characters are all ASCII and guaranteed to be in the target character
+    -- set, if not we pass an NCHAR/NVARCHAR and let MSSQL implicitly convert it.
+
+    -- resolves https://github.com/hasura/graphql-engine/issues/8735
+    mkCharValue :: Text -> ODBC.Value
+    mkCharValue txt =
+      if T.all Char.isAscii txt
+        then ODBC.ByteStringValue (TE.encodeUtf8 txt) -- an ODBC.ByteStringValue becomes a VARCHAR
+        else ODBC.TextValue txt -- an ODBC.TextValue becomes an NVARCHAR
+
+msEnumParser ::
+  MonadBuildSchema 'MSSQL r m n =>
+  TableName 'MSSQL ->
+  NonEmpty (EnumValue, EnumValueInfo) ->
+  Maybe G.Name ->
+  G.Nullability ->
+  SchemaT r m (Parser 'Both n (ScalarValue 'MSSQL))
+msEnumParser tableName enumValues customTableName nullability = do
+  enumName <- mkEnumTypeName @'MSSQL tableName customTableName
+  pure $ msPossiblyNullable MSSQL.VarcharType nullability $ P.enum enumName Nothing (mkEnumValue <$> enumValues)
+  where
     mkEnumValue :: (EnumValue, EnumValueInfo) -> (P.Definition P.EnumValueInfo, ScalarValue 'MSSQL)
     mkEnumValue (EnumValue value, EnumValueInfo description) =
-      ( P.mkDefinition value (G.Description <$> description) P.EnumValueInfo
-      , ODBC.TextValue $ G.unName value
+      ( P.Definition value (G.Description <$> description) Nothing [] P.EnumValueInfo,
+        ODBC.TextValue $ G.unName value
       )
 
-msJsonPathArg
-  :: MonadParse n
-  => ColumnType 'MSSQL
-  -> InputFieldsParser n (Maybe (IR.ColumnOp 'MSSQL))
-msJsonPathArg _columnType = pure Nothing
+msPossiblyNullable ::
+  (MonadParse m) =>
+  ScalarType 'MSSQL ->
+  G.Nullability ->
+  Parser 'Both m (ScalarValue 'MSSQL) ->
+  Parser 'Both m (ScalarValue 'MSSQL)
+msPossiblyNullable _scalarType (G.Nullability isNullable)
+  | isNullable = fmap (fromMaybe ODBC.NullValue) . P.nullable
+  | otherwise = id
 
-msOrderByOperators
-  :: NonEmpty
-      ( Definition P.EnumValueInfo
-      , (BasicOrderType 'MSSQL, NullsOrderType 'MSSQL)
+msOrderByOperators ::
+  NamingCase ->
+  ( G.Name,
+    NonEmpty
+      ( P.Definition P.EnumValueInfo,
+        (BasicOrderType 'MSSQL, NullsOrderType 'MSSQL)
       )
-msOrderByOperators = NE.fromList
-  [ ( define $$(G.litName "asc") "in ascending order, nulls first"
-    , (MSSQL.AscOrder, MSSQL.NullsFirst)
-    )
-  , ( define $$(G.litName "asc_nulls_first") "in ascending order, nulls first"
-    , (MSSQL.AscOrder, MSSQL.NullsFirst)
-    )
-  , ( define $$(G.litName "asc_nulls_last") "in ascending order, nulls last"
-    , (MSSQL.AscOrder, MSSQL.NullsLast)
-    )
-  , ( define $$(G.litName "desc") "in descending order, nulls last"
-    , (MSSQL.DescOrder, MSSQL.NullsLast)
-    )
-  , ( define $$(G.litName "desc_nulls_first") "in descending order, nulls first"
-    , (MSSQL.DescOrder, MSSQL.NullsFirst)
-    )
-  , ( define $$(G.litName "desc_nulls_last") "in descending order, nulls last"
-    , (MSSQL.DescOrder, MSSQL.NullsLast)
-    )
-  ]
+  )
+msOrderByOperators _tCase =
+  (Name._order_by,) $
+    -- NOTE: NamingCase is not being used here as we don't support naming conventions for this DB
+    NE.fromList
+      [ ( define Name._asc "in ascending order, nulls first",
+          (MSSQL.AscOrder, MSSQL.NullsFirst)
+        ),
+        ( define Name._asc_nulls_first "in ascending order, nulls first",
+          (MSSQL.AscOrder, MSSQL.NullsFirst)
+        ),
+        ( define Name._asc_nulls_last "in ascending order, nulls last",
+          (MSSQL.AscOrder, MSSQL.NullsLast)
+        ),
+        ( define Name._desc "in descending order, nulls last",
+          (MSSQL.DescOrder, MSSQL.NullsLast)
+        ),
+        ( define Name._desc_nulls_first "in descending order, nulls first",
+          (MSSQL.DescOrder, MSSQL.NullsFirst)
+        ),
+        ( define Name._desc_nulls_last "in descending order, nulls last",
+          (MSSQL.DescOrder, MSSQL.NullsLast)
+        )
+      ]
   where
-    define name desc = P.mkDefinition name (Just desc) P.EnumValueInfo
+    define name desc = P.Definition name (Just desc) Nothing [] P.EnumValueInfo
 
-msComparisonExps
-  :: forall m n r
-   . ( BackendSchema 'MSSQL
-     , MonadSchema n m
-     , MonadError QErr m
-     , MonadReader r m
-     , Has QueryContext r
-     )
-  => ColumnType 'MSSQL
-  -> m (Parser 'Input n [ComparisonExp 'MSSQL])
+msComparisonExps ::
+  forall m n r.
+  MonadBuildSchema 'MSSQL r m n =>
+  ColumnType 'MSSQL ->
+  SchemaT r m (Parser 'Input n [ComparisonExp 'MSSQL])
 msComparisonExps = P.memoize 'comparisonExps \columnType -> do
   -- see Note [Columns in comparison expression are never nullable]
-  collapseIfNull <- asks $ qcDangerousBooleanCollapse . getter
+  collapseIfNull <- retrieve Options.soDangerousBooleanCollapse
 
   -- parsers used for individual values
-  typedParser        <- columnParser columnType (G.Nullability False)
-  nullableTextParser <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability True)
-  textParser         <- columnParser (ColumnScalar @'MSSQL MSSQL.VarcharType) (G.Nullability False)
-  let
-    columnListParser = P.list typedParser `P.bind` traverse P.openOpaque
-    textListParser   = P.list textParser  `P.bind` traverse P.openOpaque
+  typedParser <- columnParser columnType (G.Nullability False)
+  let columnListParser = fmap openValueOrigin <$> P.list typedParser
 
   -- field info
-  let
-    name = P.getName typedParser <> $$(G.litName "_MSSQL_comparison_exp")
-    desc = G.Description $ "Boolean expression to compare columns of type "
-      <>  P.getName typedParser
-      <<> ". All fields are combined with logical 'AND'."
+  let name = P.getName typedParser <> Name.__MSSQL_comparison_exp
+      desc =
+        G.Description $
+          "Boolean expression to compare columns of type "
+            <> P.getName typedParser
+            <<> ". All fields are combined with logical 'AND'."
 
-  pure $ P.object name (Just desc) $ fmap catMaybes $ sequenceA $ concat
-    [
-    -- Common ops for all types
-      equalityOperators
-        collapseIfNull
-        (mkParameter <$> typedParser)
-        (mkListLiteral <$> columnListParser)
-    , comparisonOperators
-        collapseIfNull
-        (mkParameter <$> typedParser)
+  -- Naming convention
+  tCase <- asks getter
 
-    -- Ops for String like types
-    , guard (isScalarColumnWhere (`elem` MSSQL.stringTypes) columnType) *>
-      [ P.fieldOptional $$(G.litName "_like")
-        (Just "does the column match the given pattern")
-        (ALIKE     . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_nlike")
-        (Just "does the column NOT match the given pattern")
-        (ANLIKE    . mkParameter <$> typedParser)
-      ]
-
-    -- Ops for Geometry/Geography types
-    , guard (isScalarColumnWhere (`elem` MSSQL.geoTypes) columnType) *>
-      [ P.fieldOptional $$(G.litName "_st_contains")
-        (Just "does the column contain the given value")
-        (ABackendSpecific . MSSQL.ASTContains   . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_equals")
-        (Just "is the column equal to given value (directionality is ignored)")
-        (ABackendSpecific . MSSQL.ASTEquals     . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_intersects")
-        (Just "does the column spatially intersect the given value")
-        (ABackendSpecific . MSSQL.ASTIntersects . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_overlaps")
-        (Just "does the column 'spatially overlap' (intersect but not completely contain) the given value")
-        (ABackendSpecific . MSSQL.ASTOverlaps   . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_within")
-        (Just "is the column contained in the given value")
-        (ABackendSpecific . MSSQL.ASTWithin     . mkParameter <$> typedParser)
-      ]
-
-    -- Ops for Geometry types
-    , guard (isScalarColumnWhere (MSSQL.GeometryType ==) columnType) *>
-      [ P.fieldOptional $$(G.litName "_st_crosses")
-        (Just "does the column cross the given geometry value")
-        (ABackendSpecific . MSSQL.ASTCrosses . mkParameter <$> typedParser)
-      , P.fieldOptional $$(G.litName "_st_touches")
-        (Just "does the column have at least one point in common with the given geometry value")
-        (ABackendSpecific . MSSQL.ASTTouches . mkParameter <$> typedParser)
-      ]
-    ]
+  pure $
+    P.object name (Just desc) $
+      fmap catMaybes $
+        sequenceA $
+          concat
+            [ -- Common ops for all types
+              equalityOperators
+                tCase
+                collapseIfNull
+                (mkParameter <$> typedParser)
+                (mkListLiteral <$> columnListParser),
+              comparisonOperators
+                tCase
+                collapseIfNull
+                (mkParameter <$> typedParser),
+              -- Ops for String like types
+              guard (isScalarColumnWhere (`elem` MSSQL.stringTypes) columnType)
+                *> [ P.fieldOptional
+                       Name.__like
+                       (Just "does the column match the given pattern")
+                       (ALIKE . mkParameter <$> typedParser),
+                     P.fieldOptional
+                       Name.__nlike
+                       (Just "does the column NOT match the given pattern")
+                       (ANLIKE . mkParameter <$> typedParser)
+                   ],
+              -- Ops for Geometry/Geography types
+              guard (isScalarColumnWhere (`elem` MSSQL.geoTypes) columnType)
+                *> [ P.fieldOptional
+                       Name.__st_contains
+                       (Just "does the column contain the given value")
+                       (ABackendSpecific . MSSQL.ASTContains . mkParameter <$> typedParser),
+                     P.fieldOptional
+                       Name.__st_equals
+                       (Just "is the column equal to given value (directionality is ignored)")
+                       (ABackendSpecific . MSSQL.ASTEquals . mkParameter <$> typedParser),
+                     P.fieldOptional
+                       Name.__st_intersects
+                       (Just "does the column spatially intersect the given value")
+                       (ABackendSpecific . MSSQL.ASTIntersects . mkParameter <$> typedParser),
+                     P.fieldOptional
+                       Name.__st_overlaps
+                       (Just "does the column 'spatially overlap' (intersect but not completely contain) the given value")
+                       (ABackendSpecific . MSSQL.ASTOverlaps . mkParameter <$> typedParser),
+                     P.fieldOptional
+                       Name.__st_within
+                       (Just "is the column contained in the given value")
+                       (ABackendSpecific . MSSQL.ASTWithin . mkParameter <$> typedParser)
+                   ],
+              -- Ops for Geometry types
+              guard (isScalarColumnWhere (MSSQL.GeometryType ==) columnType)
+                *> [ P.fieldOptional
+                       Name.__st_crosses
+                       (Just "does the column cross the given geometry value")
+                       (ABackendSpecific . MSSQL.ASTCrosses . mkParameter <$> typedParser),
+                     P.fieldOptional
+                       Name.__st_touches
+                       (Just "does the column have at least one point in common with the given geometry value")
+                       (ABackendSpecific . MSSQL.ASTTouches . mkParameter <$> typedParser)
+                   ]
+            ]
   where
     mkListLiteral :: [ColumnValue 'MSSQL] -> UnpreparedValue 'MSSQL
     mkListLiteral =
-      P.UVLiteral . MSSQL.ListExpression . fmap (MSSQL.ValueExpression . cvValue)
+      UVLiteral . MSSQL.ListExpression . fmap (MSSQL.ValueExpression . cvValue)
 
-msOffsetParser :: MonadParse n => Parser 'Both n (SQLExpression 'MSSQL)
-msOffsetParser = MSSQL.ValueExpression . ODBC.IntValue . fromIntegral <$> P.int
-
-msMkCountType
-  :: Maybe Bool
-  -- ^ distinct values
-  -> Maybe [Column 'MSSQL]
-  -> CountType 'MSSQL
-msMkCountType _           Nothing     = MSSQL.StarCountable
-msMkCountType (Just True) (Just cols) =
-  maybe MSSQL.StarCountable MSSQL.DistinctCountable $ nonEmpty cols
-msMkCountType _           (Just cols) =
-  maybe MSSQL.StarCountable MSSQL.NonNullFieldCountable $ nonEmpty cols
-
--- | Argument to distinct select on columns returned from table selection
--- > distinct_on: [table_select_column!]
-msTableDistinctOn
-  -- :: forall m n. (BackendSchema 'MSSQL, MonadSchema n m, MonadTableInfo r m, MonadRole r m)
-  :: Applicative m
-  => Applicative n
-  => TableName 'MSSQL
-  -> SelPermInfo 'MSSQL
-  -> m (InputFieldsParser n (Maybe (XDistinct 'MSSQL, NonEmpty (Column 'MSSQL))))
-msTableDistinctOn _table _selectPermissions = pure (pure Nothing)
-
--- | Various update operators
-msUpdateOperators
-  -- :: forall m n r. (MonadSchema n m, MonadTableInfo r m)
-  :: Applicative m
-  => TableName 'MSSQL         -- ^ qualified name of the table
-  -> UpdPermInfo 'MSSQL       -- ^ update permissions of the table
-  -> m (Maybe (InputFieldsParser n [(Column 'MSSQL, IR.UpdOpExpG (UnpreparedValue 'MSSQL))]))
-msUpdateOperators _table _updatePermissions = pure Nothing
-
--- | Computed field parser.
--- Currently unsupported: returns Nothing for now.
-msComputedField
-  :: MonadBuildSchema 'MSSQL r m n
-  => ComputedFieldInfo 'MSSQL
-  -> SelPermInfo 'MSSQL
-  -> m (Maybe (FieldParser n (AnnotatedField 'MSSQL)))
-msComputedField _fieldInfo _selectPemissions = pure Nothing
-
--- | Remote join field parser.
--- Currently unsupported: returns Nothing for now.
-msRemoteRelationshipField
-  :: MonadBuildSchema 'MSSQL r m n
-  => RemoteFieldInfo 'MSSQL
-  -> m (Maybe [FieldParser n (AnnotatedField 'MSSQL)])
-msRemoteRelationshipField _remoteFieldInfo = pure Nothing
-
--- | The 'node' root field of a Relay request. Relay is currently unsupported on MSSQL,
--- meaning this parser will never be called: any attempt to create this parser should
--- therefore fail.
-msNode
-  :: MonadBuildSchema 'MSSQL r m n
-  => m ( Parser 'Output n
-         ( HashMap
-           ( TableName 'MSSQL)
-           ( SourceName, SourceConfig 'MSSQL
-           , SelPermInfo 'MSSQL
-           , PrimaryKeyColumns 'MSSQL
-           , AnnotatedFields 'MSSQL
-           )
-         )
-       )
-msNode = throw500 "MSSQL does not support relay; `node` should never be exposed in the schema."
-
-
-----------------------------------------------------------------
--- SQL literals
-
--- FIXME: this is nonsensical for MSSQL, we'll need to adjust the corresponding mutation
--- and its representation.
-msColumnDefaultValue :: Column 'MSSQL -> SQLExpression 'MSSQL
-msColumnDefaultValue = const $ MSSQL.ValueExpression ODBC.NullValue
+msCountTypeInput ::
+  MonadParse n =>
+  Maybe (Parser 'Both n (Column 'MSSQL)) ->
+  InputFieldsParser n (IR.CountDistinct -> CountType 'MSSQL)
+msCountTypeInput = \case
+  Just columnEnum -> do
+    column <- P.fieldOptional Name._column Nothing columnEnum
+    pure $ flip mkCountType column
+  Nothing -> pure $ flip mkCountType Nothing
+  where
+    mkCountType :: IR.CountDistinct -> Maybe (Column 'MSSQL) -> CountType 'MSSQL
+    mkCountType _ Nothing = MSSQL.StarCountable
+    mkCountType IR.SelectCountDistinct (Just col) = MSSQL.DistinctCountable col
+    mkCountType IR.SelectCountNonDistinct (Just col) = MSSQL.NonNullFieldCountable col

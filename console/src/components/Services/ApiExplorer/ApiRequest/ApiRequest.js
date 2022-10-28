@@ -1,7 +1,16 @@
 import React, { Component } from 'react';
+import {
+  FaCheck,
+  FaEye,
+  FaQuestionCircle,
+  FaSpinner,
+  FaTimes,
+  FaUserSecret,
+} from 'react-icons/fa';
 import PropTypes from 'prop-types';
 import jwt from 'jsonwebtoken';
 
+import { Button } from '@/new-components/Button';
 import TextAreaWithCopy from '../../../Common/TextAreaWithCopy/TextAreaWithCopy';
 import Modal from '../../../Common/Modal/Modal';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
@@ -38,7 +47,6 @@ import {
 } from './utils';
 import { getGraphQLEndpoint } from '../utils';
 
-import styles from '../ApiExplorer.scss';
 import {
   getLSItem,
   removeLSItem,
@@ -56,8 +64,8 @@ import {
 
 const ActionIcon = ({ message, dataHeaderID }) => (
   <Tooltip placement="left" message={message}>
-    <i
-      className={`${styles.headerInfoIcon} fa fa-question-circle`}
+    <FaQuestionCircle
+      className="cursor-pointer mr-sm"
       data-header-id={dataHeaderID}
       aria-hidden="true"
     />
@@ -225,10 +233,8 @@ class ApiRequest extends Component {
 
     const { is_jwt_set: isJWTSet = false } = this.props.serverConfig;
 
-    const {
-      error: tokenAnalyzeError,
-      serverResp: tokenAnalyzeResp,
-    } = tokenInfo;
+    const { error: tokenAnalyzeError, serverResp: tokenAnalyzeResp } =
+      tokenInfo;
 
     const getGraphQLEndpointBar = () => {
       const { endpointSectionIsOpen } = this.state;
@@ -255,59 +261,38 @@ class ApiRequest extends Component {
           toggleHandler={toggleHandler}
           useDefaultTitleStyle
         >
-          <div
-            id="stickyHeader"
-            className={
-              styles.apiPostRequestWrapper +
-              ' ' +
-              styles.wd100 +
-              ' ' +
-              styles.stickyHeader
-            }
-          >
-            <div
-              className={`col-xs-12 ${styles.padd_remove} ${styles.add_mar_bottom_mid}`}
-            >
-              <div
-                className={
-                  'input-group ' +
-                  styles.inputGroupWrapper +
-                  ' ' +
-                  styles.cursorNotAllowed
-                }
-              >
-                <div className={'input-group-btn ' + styles.inputGroupBtn}>
-                  <button type="button" className={'btn btn-default'}>
-                    {this.props.method}
-                  </button>
-                </div>
+          <div className="bg-[#f8fafb] pt-sm w-full top-0 z-20">
+            <div className={'flex mb-md'}>
+              <div className="flex items-center w-full">
+                <Button type="button">{this.props.method}</Button>
                 <input
                   value={getGraphQLEndpoint(mode)}
                   type="text"
                   readOnly
-                  className={styles.inputGroupInput + ' form-control '}
+                  className="flex-1 min-w-0 block w-full px-3 py-2 h-input rounded-r border-gray-300"
                 />
               </div>
-            </div>
-            <div
-              className={`${styles.display_flex} ${styles.graphiqlModeToggle} ${styles.cursorPointer}`}
-              onClick={toggleGraphiqlMode}
-            >
-              <Toggle
-                checked={mode === 'relay'}
-                className={`${styles.display_flex} ${styles.add_mar_right_mid}`}
-                readOnly
-                disabled={loading}
-                icons={false}
-              />
-              <span className={styles.add_mar_right_mid}>Relay API</span>
-              <Tooltip
-                id="relay-mode-toggle"
-                placement="left"
-                message={
-                  'Toggle to point this GraphiQL to a relay-compliant GraphQL API served at /v1beta1/relay'
-                }
-              />
+
+              <div
+                className="flex items-center ml-md cursor-pointer"
+                onClick={toggleGraphiqlMode}
+              >
+                <Toggle
+                  checked={mode === 'relay'}
+                  className="flex mr-md"
+                  readOnly
+                  disabled={loading}
+                  icons={false}
+                />
+                <span className="whitespace-nowrap">Relay API</span>
+                <Tooltip
+                  id="relay-mode-toggle"
+                  placement="left"
+                  message={
+                    'Toggle to point this GraphiQL to a relay-compliant GraphQL API served at /v1beta1/relay'
+                  }
+                />
+              </div>
             </div>
           </div>
         </CollapsibleToggle>
@@ -364,24 +349,22 @@ class ApiRequest extends Component {
 
             if (!header.isNewHeader) {
               headerActiveCheckbox = (
-                <td>
+                <td className="text-center">
                   <input
                     type="checkbox"
                     name="sponsored"
-                    className={styles.common_checkbox + ' common_checkbox'}
+                    className="legacy-input-fix mt-xs"
                     id={i + 1}
                     checked={header.isActive}
                     data-header-id={i}
                     onChange={onHeaderValueChanged}
                     data-element-name="isActive"
                   />
-                  <label
-                    htmlFor={i + 1}
-                    className={
-                      styles.common_checkbox_label + ' common_checkbox_label'
-                    }
-                  />
                 </td>
+              );
+            } else {
+              headerActiveCheckbox = (
+                <td className="border-t border-gray-200" />
               );
             }
 
@@ -395,22 +378,15 @@ class ApiRequest extends Component {
           const getHeaderKey = () => {
             let className = '';
             if (header.isNewHeader) {
-              className =
-                styles.border_right +
-                ' ' +
-                styles.tableTdLeft +
-                ' ' +
-                styles.borderTop +
-                ' ' +
-                styles.tableEnterKey;
+              className = 'border-r border-t border-gray-200';
             } else {
-              className = styles.border_right;
+              className = 'border-r border-gray-200';
             }
 
             return (
-              <td colSpan={getColSpan()} className={className}>
+              <td className={className}>
                 <input
-                  className={'form-control ' + styles.responseTableInput}
+                  className="w-full border-0 outline-none focus:ring-0 focus:outline-none"
                   value={header.key || ''}
                   disabled={header.isDisabled === true}
                   data-header-id={i}
@@ -429,12 +405,7 @@ class ApiRequest extends Component {
           const getHeaderValue = () => {
             let className = '';
             if (header.isNewHeader) {
-              className =
-                styles.borderTop +
-                ' ' +
-                styles.tableEnterKey +
-                ' ' +
-                styles.tableLastTd;
+              className = 'border-t border-gray-200';
             }
 
             let type = 'text';
@@ -445,7 +416,7 @@ class ApiRequest extends Component {
             return (
               <td colSpan={getColSpan()} className={className}>
                 <input
-                  className={'form-control ' + styles.responseTableInput}
+                  className="w-full border-0 focus:ring-0 focus:outline-none"
                   value={header.value || ''}
                   disabled={header.isDisabled === true}
                   data-header-id={i}
@@ -471,8 +442,8 @@ class ApiRequest extends Component {
                   placement="left"
                   message="Show admin secret"
                 >
-                  <i
-                    className={styles.showAdminSecret + ' fa fa-eye'}
+                  <FaEye
+                    className="cursor-pointer mr-sm"
                     data-header-id={i}
                     aria-hidden="true"
                     onClick={onShowAdminSecretClicked}
@@ -495,16 +466,12 @@ class ApiRequest extends Component {
 
               if (isAnalyzingToken && analyzingHeaderRow === i) {
                 analyzeIcon = (
-                  <i
-                    className={
-                      styles.showInspectorLoading + ' fa fa-spinner fa-spin'
-                    }
-                  />
+                  <FaSpinner className="cursor-pointer mr-sm animate-spin" />
                 );
               } else {
                 analyzeIcon = (
-                  <i
-                    className={styles.showInspector + ' fa fa-user-secret'}
+                  <FaUserSecret
+                    className="cursor-pointer mr-sm"
                     token={token}
                     data-header-index={i}
                     onClick={this.analyzeBearerToken}
@@ -532,8 +499,8 @@ class ApiRequest extends Component {
 
           const getHeaderRemoveBtn = () => {
             return (
-              <i
-                className={styles.closeHeader + ' fa fa-times'}
+              <FaTimes
+                className="cursor-pointer mr-md"
                 data-header-id={i}
                 aria-hidden="true"
                 onClick={onDeleteHeaderClicked}
@@ -546,22 +513,24 @@ class ApiRequest extends Component {
 
             if (!header.isNewHeader) {
               headerActions = (
-                <td>
-                  {getHeaderAdminVal()}
-                  {getJWTInspectorIcon()}
-                  {getHeaderRemoveBtn()}
-                  {isClientName && (
-                    <ActionIcon
-                      message="Hasura client name is a header that indicates where the request is being made from. This is used by GraphQL Engine for providing detailed metrics."
-                      dataHeaderID={i}
-                    />
-                  )}
-                  {isCollaboratorToken && (
-                    <ActionIcon
-                      message="Hasura collaborator token is an admin-secret alternative when you login using Hasura. This is used by GraphQL Engine to authorise your requests."
-                      dataHeaderID={i}
-                    />
-                  )}
+                <td className="text-right">
+                  <div className="flex justify-end items-center">
+                    {getHeaderAdminVal()}
+                    {getJWTInspectorIcon()}
+                    {isClientName && (
+                      <ActionIcon
+                        message="Hasura client name is a header that indicates where the request is being made from. This is used by GraphQL Engine for providing detailed metrics."
+                        dataHeaderID={i}
+                      />
+                    )}
+                    {isCollaboratorToken && (
+                      <ActionIcon
+                        message="Hasura collaborator token is an admin-secret alternative when you login using Hasura. This is used by GraphQL Engine to authorise your requests."
+                        dataHeaderID={i}
+                      />
+                    )}
+                    {getHeaderRemoveBtn()}
+                  </div>
                 </td>
               );
             }
@@ -596,33 +565,25 @@ class ApiRequest extends Component {
           toggleHandler={toggleHandler}
           useDefaultTitleStyle
         >
-          <div className={styles.responseTable + ' ' + styles.remove_all_pad}>
-            <table
-              className={
-                'table ' + styles.tableBorder + ' ' + styles.remove_margin
-              }
-            >
+          <div className="mt-md overflow-x-auto border border-gray-300 rounded">
+            <table className="min-w-full divide-y divide-gray-200">
               <thead>
-                <tr>
-                  <th className={styles.wd4 + ' ' + styles.headerHeading} />
+                <tr className="bg-gray-50">
                   <th
-                    className={
-                      styles.wd48 +
-                      ' ' +
-                      styles.border_right +
-                      ' ' +
-                      styles.headerHeading
-                    }
+                    className={`w-16 px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider align-center`}
                   >
+                    Enable
+                  </th>
+                  <th className="px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
                     Key
                   </th>
-                  <th className={styles.wd48 + ' ' + styles.headerHeading}>
+                  <th className="px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider">
                     Value
                   </th>
-                  <th className={styles.wd4 + ' ' + styles.headerHeading} />
+                  <th className="w-16 px-sm py-xs max-w-xs text-left text-sm font-semibold bg-gray-50 text-gray-600 uppercase tracking-wider" />
                 </tr>
               </thead>
-              <tbody>{getHeaderRows()}</tbody>
+              <tbody className="bg-white">{getHeaderRows()}</tbody>
             </table>
           </div>
         </CollapsibleToggle>
@@ -633,7 +594,11 @@ class ApiRequest extends Component {
       switch (this.props.bodyType) {
         case 'graphql':
           return (
-            <div className={styles.apiRequestBody}>
+            <div
+              className={
+                'h-[calc(100vh-450px)] min-h-[500px] mt-[20px] mb-[50px] resize-y overflow-auto'
+              }
+            >
               <GraphiQLWrapper
                 mode={mode}
                 data={this.props}
@@ -641,6 +606,7 @@ class ApiRequest extends Component {
                 dispatch={this.props.dispatch}
                 headerFocus={this.props.headerFocus}
                 urlParams={this.props.urlParams}
+                response={this.props.explorerData.response}
               />
             </div>
           );
@@ -682,15 +648,15 @@ class ApiRequest extends Component {
                   id="tooltip-jwt-validity-status"
                   message="Valid JWT token"
                 >
-                  <span className={styles.valid_jwt_token}>
-                    <i className="fa fa-check" />
+                  <span className="text-[#28a745]">
+                    <FaCheck />
                   </span>
                 </Tooltip>
               );
             case !tokenVerified && JWTError.length > 0:
               return (
-                <span className={styles.invalid_jwt_icon}>
-                  <i className="fa fa-times" />
+                <span className="text-[#dc3545]">
+                  <FaTimes />
                 </span>
               );
             default:
@@ -701,7 +667,7 @@ class ApiRequest extends Component {
         const getJWTFailMessage = () => {
           if (!tokenVerified && JWTError.length > 0) {
             return (
-              <div className={styles.jwt_verification_fail_message}>
+              <div className={'bg-[#e53935] py-sm px-sm text-white rounded-md'}>
                 {JWTError}
               </div>
             );
@@ -747,7 +713,12 @@ class ApiRequest extends Component {
 
           return [
             <br key="hasura_claim_element_break" />,
-            <span key="hasura_claim_label" className={styles.analyzerLabel}>
+            <span
+              key="hasura_claim_label"
+              className={
+                'uppercase m-0 text-black pb-sm border-b border-[#9b9b9b80]'
+              }
+            >
               Hasura Claims:
               <span>hasura headers</span>
             </span>,
@@ -769,15 +740,23 @@ class ApiRequest extends Component {
         } else {
           analyzeBearerBody = (
             <div>
-              <span className={styles.analyzerLabel}>
+              <span
+                className={
+                  'uppercase m-0 text-black pb-sm border-b border-[#9b9b9b80]'
+                }
+              >
                 Token Validity:
-                <span className={styles.token_validity}>
+                <span className="text-md">
                   {generateJWTVerificationStatus()}
                 </span>
               </span>
               {getJWTFailMessage() || <br />}
               {getHasuraClaims() || <br />}
-              <span className={styles.analyzerLabel}>
+              <span
+                className={
+                  'uppercase m-0 text-black pb-sm border-b border-[#9b9b9b80]'
+                }
+              >
                 Header:
                 <span>Algorithm & Token Type</span>
               </span>
@@ -788,7 +767,11 @@ class ApiRequest extends Component {
                 containerId="headerCopyBlock"
               />
               <br />
-              <span className={styles.analyzerLabel}>
+              <span
+                className={
+                  'uppercase m-0 text-black pb-sm border-b border-[#9b9b9b80]'
+                }
+              >
                 Full Payload:
                 <span>Data</span>
               </span>
@@ -813,7 +796,7 @@ class ApiRequest extends Component {
             Object.keys(tokenAnalyzeResp).length > 0
           }
           onClose={this.onAnalyzeBearerClose}
-          customClass={styles.analyzerBearerModal}
+          customClass={'w-[768]'}
           title={tokenAnalyzeError ? 'Error decoding JWT' : 'Decoded JWT'}
         >
           {getAnalyzeBearerBody()}
@@ -822,13 +805,11 @@ class ApiRequest extends Component {
     };
 
     return (
-      <div
-        className={`${styles.apiRequestWrapper} ${styles.height100} ${styles.flexColumn}`}
-      >
+      <div className={`h-full flex flex-col pt-md`}>
         {getGraphQLEndpointBar()}
         {getHeaderTable()}
         {getRequestBody()}
-        {isJWTSet && getAnalyzeTokenModal()}
+        {getAnalyzeTokenModal()}
       </div>
     );
   }

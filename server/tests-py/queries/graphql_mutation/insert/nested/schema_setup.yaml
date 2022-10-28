@@ -6,12 +6,32 @@ args:
 - type: run_sql
   args:
     sql: |
-      create table author(
+      -- Use identity columns if PG version 10 or later
+      CREATE FUNCTION create_author() RETURNS int AS
+      $$
+      BEGIN
+      IF current_setting('server_version_num')::int >= 100000
+      THEN
+      execute $c$create table author(
+          id int generated always as identity primary key,
+          name text unique,
+          is_registered boolean not null default false,
+          emails text[] not null default '{}'::text[]
+      )$c$;
+      ELSE
+      execute $c$ create table author(
           id serial primary key,
           name text unique,
           is_registered boolean not null default false,
           emails text[] not null default '{}'::text[]
-      );
+      )$c$;
+      END IF;
+      RETURN 0;
+      END;
+      $$ LANGUAGE plpgsql;
+
+      select from create_author();
+
       CREATE TABLE article (
         id SERIAL PRIMARY KEY,
         title TEXT,

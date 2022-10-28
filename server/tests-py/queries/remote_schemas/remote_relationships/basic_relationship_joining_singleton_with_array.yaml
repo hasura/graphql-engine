@@ -3,7 +3,7 @@ url: /v1/graphql
 status: 200
 response:
   data:
-    profiles:
+    custom_profiles:
       - id: 1
         remoteUsers:
         - user_id: 1
@@ -13,7 +13,7 @@ response:
 query:
   query: |
     query {
-      profiles(where:{ id: { _eq: 1}}) {
+      custom_profiles(where:{ id: { _eq: 1}}) {
         id
         remoteUsers {
           user_id

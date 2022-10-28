@@ -1,31 +1,26 @@
-import pytest
-import time
-import json
 import http
+import http.server
+import json
+import pytest
 import queue
-import socket
-from context import (
-    HGECtx,
-    HGECtxError,
-    ActionsWebhookServer,
-    EvtsWebhookServer,
-    HGECtxGQLServer,
-    GQLWsClient,
-    PytestConf,
-)
 import threading
-import random
-from datetime import datetime
-import sys
-import os
-from collections import OrderedDict
-from validate import check_query
 
-if not PytestConf.config.getoption("--test-webhook-request-context"):
-    pytest.skip("--test-webhook-https-request-context flag is missing, skipping tests", allow_module_level=True)
+from conftest import extract_server_address_from
+
+
+class QueryEchoWebhookServer(http.server.HTTPServer):
+    def __init__(self, server_address):
+        # TODO why maxsize=1
+        self.resp_queue = queue.Queue(maxsize=1)
+        super().__init__(server_address, QueryEchoWebhookHandler)
+
+    def get_event(self, timeout):
+        return self.resp_queue.get(timeout=timeout)
 
 
 class QueryEchoWebhookHandler(http.server.BaseHTTPRequestHandler):
+    server: QueryEchoWebhookServer
+
     def do_GET(self):
         self.log_message("get")
         self.send_response(http.HTTPStatus.OK)
@@ -36,55 +31,41 @@ class QueryEchoWebhookHandler(http.server.BaseHTTPRequestHandler):
         content_len = self.headers.get("Content-Length")
         req_body = self.rfile.read(int(content_len)).decode("utf-8")
         req_json = json.loads(req_body)
-        req_headers = self.headers
         print(json.dumps(req_json))
         user_id_header = req_json["headers"]["auth-user-id"]
-        req_path = self.path
-        h = {
+        user_vars = {
             "x-hasura-role":"user",
             "x-hasura-user-id": user_id_header
         }
         self.send_response(http.HTTPStatus.OK)
         self.send_header('Content-Type', 'application/json')
         self.end_headers()
-        self.server.resp_queue.put({"request": req_json["request"]})
-        self.wfile.write(json.dumps(h).encode('utf-8'))
+        self.server.resp_queue.put({
+            "request": req_json["request"],
+            "headers": user_vars,
+        })
+        self.wfile.write(json.dumps(user_vars).encode('utf-8'))
 
 
-class QueryEchoWebhookServer(http.server.HTTPServer):
-    def __init__(self, server_address):
-        # TODO why maxsize=1
-        self.resp_queue = queue.Queue(maxsize=1)
-        super().__init__(server_address, QueryEchoWebhookHandler)
-
-    def server_bind(self):
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.server_address)
-
-    def get_event(self, timeout):
-        return self.resp_queue.get(timeout=timeout)
-
-    def teardown(self):
-        self.evt_trggr_httpd.shutdown()
-        self.evt_trggr_httpd.server_close()
-        graphql_server.stop_server(self.graphql_server)
-        self.gql_srvr_thread.join()
-        self.evt_trggr_web_server.join()
+@pytest.fixture(scope='class')
+@pytest.mark.early
+def query_echo_webhook(hge_fixture_env: dict[str, str]):
+    server_address = extract_server_address_from('HASURA_GRAPHQL_AUTH_HOOK')
+    server = QueryEchoWebhookServer(server_address)
+    thread = threading.Thread(target=server.serve_forever)
+    thread.start()
+    url = f'http://{server.server_address[0]}:{server.server_address[1]}'
+    print(f'{query_echo_webhook.__name__} server started on {url}')
+    hge_fixture_env['HASURA_GRAPHQL_AUTH_HOOK'] = url + '/'
+    hge_fixture_env['HASURA_GRAPHQL_AUTH_HOOK_MODE'] = 'POST'
+    yield server
+    server.shutdown()
+    server.server_close()
+    thread.join()
 
 
-@pytest.fixture(scope="class")
-def query_echo_webhook(request):
-    # TODO(swann): is this the right port?
-    webhook_httpd = QueryEchoWebhookServer(server_address=("127.0.0.1", 5594))
-    web_server = threading.Thread(target=webhook_httpd.serve_forever)
-    web_server.start()
-    yield webhook_httpd
-    webhook_httpd.shutdown()
-    webhook_httpd.server_close()
-    web_server.join()
-
-
-@pytest.mark.usefixtures("per_method_tests_db_state")
+@pytest.mark.usefixtures('per_method_tests_db_state')
+@pytest.mark.admin_secret
 class TestWebhookRequestContext(object):
     @classmethod
     def dir(cls):
@@ -109,8 +90,22 @@ class TestWebhookRequestContext(object):
         assert code == 200, resp
 
         ev_full = query_echo_webhook.get_event(3)
-        exp_result = {"request": query_obj}
         assert ev_full['request'] == query_obj
+
+    def test_query_invalid(self, hge_ctx, query_echo_webhook):
+        """
+        Even when an invalid query is sent, the webhook should still resolve
+        the user id header correctly
+        """
+        query_obj = "invalid-query"
+        user_id_header = '1'
+        headers = dict()
+        headers['auth-user-id'] = user_id_header
+        code, resp, _ = hge_ctx.anyq('/v1/graphql', query_obj, headers)
+        assert code == 200, resp
+
+        ev_full = query_echo_webhook.get_event(3)
+        assert ev_full['headers']['x-hasura-user-id'] == user_id_header
 
     def test_mutation_with_vars(self, hge_ctx, query_echo_webhook):
         query = """

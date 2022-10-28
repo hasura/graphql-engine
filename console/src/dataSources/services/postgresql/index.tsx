@@ -1,15 +1,28 @@
 import React from 'react';
+import { isEnvironmentSupportMultiTenantConnectionPooling } from '@/utils/proConsole';
+import { DeepRequired } from 'ts-essentials';
+
 import {
   Table,
   TableColumn,
   ComputedField,
   SupportedFeaturesType,
   BaseTableColumn,
+  ViolationActions,
+  IndexType,
+  NormalizedTable,
 } from '../../types';
 import { QUERY_TYPES, Operations } from '../../common';
 import { PGFunction } from './types';
-import { DataSourcesAPI, ColumnsInfoResult } from '../..';
-import { generateTableRowRequest } from './utils';
+import { DataSourcesAPI, ColumnsInfoResult, currentDriver } from '../..';
+import {
+  generateTableRowRequest,
+  generateInsertRequest,
+  generateRowsCountRequest,
+  generateEditRowRequest,
+  generateDeleteRowRequest,
+  generateBulkDeleteRowRequest,
+} from './utils';
 import {
   getFetchTablesListQuery,
   fetchColumnTypesQuery,
@@ -34,7 +47,6 @@ import {
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNotNullSql,
-  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNotNullSql,
   getAlterColumnTypeSql,
@@ -44,6 +56,7 @@ import {
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getAlterPkSql,
   getFunctionDefinitionSql,
   primaryKeysInfoSql,
   checkConstraintsSql,
@@ -53,11 +66,23 @@ import {
   deleteFunctionSql,
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
+  tableIndexSql,
+  getCreateIndexSql,
+  getDropIndexSql,
   getTableInfo,
   getDatabaseVersionSql,
+  schemaListQuery,
+  getAlterTableCommentSql,
+  getAlterColumnCommentSql,
+  getAlterViewCommentSql,
+  getAlterFunctionCommentSql,
+  getDataTriggerInvocations,
+  getDataTriggerLogsCountQuery,
+  getDataTriggerLogsQuery,
 } from './sqlUtils';
+import globals from '../../../Globals';
 
-export const isTable = (table: Table) => {
+export const isTable = (table: Table | NormalizedTable) => {
   return (
     table.table_type === 'TABLE' ||
     table.table_type === 'PARTITIONED TABLE' ||
@@ -71,7 +96,7 @@ export const displayTableName = (table: Table) => {
   return isTable(table) ? <span>{tableName}</span> : <i>{tableName}</i>;
 };
 
-export const getTableSupportedQueries = (table: Table) => {
+export const getTableSupportedQueries = (table: NormalizedTable) => {
   let supportedQueryTypes: Operations[];
 
   if (isTable(table)) {
@@ -199,7 +224,7 @@ export const findFunction = (
 };
 
 export const getGroupedTableComputedFields = (
-  table: Table,
+  computed_fields: ComputedField[],
   allFunctions: PGFunction[]
 ) => {
   const groupedComputedFields: {
@@ -207,7 +232,7 @@ export const getGroupedTableComputedFields = (
     table: ComputedField[];
   } = { scalar: [], table: [] };
 
-  table.computed_fields.forEach(computedField => {
+  computed_fields?.forEach(computedField => {
     const computedFieldFnDef = computedField.definition.function;
     const computedFieldFn = findFunction(
       allFunctions,
@@ -225,10 +250,66 @@ export const getGroupedTableComputedFields = (
   return groupedComputedFields;
 };
 
+export const getComputedFieldFunction = (
+  computedField: ComputedField,
+  allFunctions: PGFunction[]
+) => {
+  const computedFieldFnDef = computedField.definition.function;
+  return findFunction(
+    allFunctions,
+    computedFieldFnDef.name,
+    computedFieldFnDef.schema
+  );
+};
+
+// Return only the computed fields that do not require extra arguments i.e. only table_row arg and session_arg allowed
+// If only one arg present, check if is table_row arg
+// If two args present, check if one is table_row arg and other is session_arg
+export const getComputedFieldsWithoutArgs = (
+  computedFields: ComputedField[],
+  allFunctions: PGFunction[],
+  tableName: string
+) => {
+  return computedFields.filter(computedField => {
+    const computedFieldFunc = getComputedFieldFunction(
+      computedField,
+      allFunctions
+    );
+
+    const computedFieldInputArgTypes = computedFieldFunc?.input_arg_types;
+    const computedFieldInputArgNames = computedFieldFunc?.input_arg_names;
+
+    if (computedFieldInputArgTypes?.length === 1) {
+      if (computedFieldInputArgTypes[0].name === tableName) {
+        return true;
+      }
+    } else if (
+      computedFieldInputArgTypes?.length === 2 &&
+      computedFieldInputArgNames?.length === 2
+    ) {
+      const sessionArgumentName = computedField?.definition?.session_argument;
+
+      if (
+        computedFieldInputArgTypes[0].name === tableName &&
+        computedFieldInputArgNames[1] === sessionArgumentName
+      ) {
+        return true;
+      } else if (
+        computedFieldInputArgTypes[1].name === tableName &&
+        computedFieldInputArgNames[0] === sessionArgumentName
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  });
+};
+
 const schemaListSql = (
   schemas?: string[]
 ) => `SELECT schema_name FROM information_schema.schemata WHERE
-schema_name NOT IN ('information_schema', 'pg_catalog', 'hdb_catalog', 'hdb_views', 'pg_temp_1', 'pg_toast_temp_1', 'pg_toast')
+schema_name NOT IN ('information_schema', 'hdb_catalog', 'hdb_views', '_timescaledb_internal') AND schema_name NOT LIKE 'pg\\_%'
 ${schemas?.length ? ` AND schema_name IN (${schemas.join(',')})` : ''}
 ORDER BY schema_name ASC;`;
 
@@ -237,13 +318,27 @@ const getAdditionalColumnsInfoQuerySql = (
 ) => `SELECT column_name, table_name, is_generated, is_identity, identity_generation
   FROM information_schema.columns where table_schema = '${schemaName}';`;
 
+type PostgresIsGenerated = 'ALWAYS' | 'NEVER';
+type CockroachDBIsGenerated = 'YES' | 'NO';
+
 type ColumnsInfoPayload = {
   column_name: string;
   table_name: string;
-  is_generated: string;
-  is_identity: string;
+  is_generated: PostgresIsGenerated | CockroachDBIsGenerated;
+  is_identity: 'YES' | 'NO';
   identity_generation: 'ALWAYS' | 'BY DEFAULT' | null;
 };
+
+const isColumnGenerated = (isGenerated: ColumnsInfoPayload['is_generated']) => {
+  if (currentDriver === 'cockroach') {
+    return isGenerated === 'YES';
+  }
+
+  return isGenerated === 'ALWAYS';
+};
+
+const isColumnIdentity = (isIdentity: ColumnsInfoPayload['is_identity']) =>
+  isIdentity === 'YES';
 
 const parseColumnsInfoResult = (data: string[][]) => {
   const formattedData: ColumnsInfoPayload[] = data.slice(1).map(
@@ -261,7 +356,8 @@ const parseColumnsInfoResult = (data: string[][]) => {
   formattedData
     .filter(
       (info: ColumnsInfoPayload) =>
-        info.is_generated !== 'NEVER' || info.is_identity !== 'NO'
+        isColumnGenerated(info.is_generated) ||
+        !isColumnIdentity(info.is_identity)
     )
     .forEach(
       ({
@@ -276,8 +372,8 @@ const parseColumnsInfoResult = (data: string[][]) => {
           [table_name]: {
             ...columnsInfo[table_name],
             [column_name]: {
-              is_generated: is_generated !== 'NEVER',
-              is_identity: is_identity !== 'NO',
+              is_generated: isColumnGenerated(is_generated),
+              is_identity: isColumnIdentity(is_identity),
               identity_generation,
             },
           },
@@ -426,7 +522,8 @@ export const isColTypeString = (colType: string) =>
 
 const dependencyErrorCode = '2BP01'; // pg dependent error > https://www.postgresql.org/docs/current/errcodes-appendix.html
 
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<tableWithSchema>\"?\w+\"?)|(?<table>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim; // eslint-disable-line
+const createSQLRegex =
+  /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<nameWithSchema>\"?\w+\"?)|(?<name>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim; // eslint-disable-line
 
 const isTimeoutError = (error: {
   code: string;
@@ -503,9 +600,36 @@ const permissionColumnDataTypes = {
   user_defined: [], // default for all other types
 };
 
-export const supportedFeatures: SupportedFeaturesType = {
+const indexFormToolTips = {
+  unique:
+    'Causes the system to check for duplicate values in the table when the index is created (if data already exist) and each time data is added',
+  indexName:
+    'The name of the index to be created. No schema name can be included here; the index is always created in the same schema as its parent table',
+  indexType:
+    'Only B-Tree, GiST, GIN and BRIN support multi-column indexes on PostgreSQL',
+  indexColumns:
+    'In PostgreSQL, at most 32 fields can be provided while creating an index',
+};
+
+const indexTypes: Record<string, IndexType> = {
+  BRIN: 'brin',
+  'SP-GIST': 'spgist',
+  GiST: 'gist',
+  HASH: 'hash',
+  'B-Tree': 'btree',
+  GIN: 'gin',
+};
+
+const supportedIndex = {
+  multiColumn: ['brin', 'gist', 'btree', 'gin'],
+  singleColumn: ['hash', 'spgist'],
+};
+export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   driver: {
     name: 'postgres',
+    fetchVersion: {
+      enabled: true,
+    },
   },
   schemas: {
     create: {
@@ -518,28 +642,56 @@ export const supportedFeatures: SupportedFeaturesType = {
   tables: {
     create: {
       enabled: true,
+      frequentlyUsedColumns: true,
+      columnTypeSelector: true,
     },
     browse: {
       enabled: true,
-      aggregation: true,
+      aggregation: false,
+      customPagination: true,
+      deleteRow: true,
+      editRow: true,
+      bulkRowSelect: true,
     },
     insert: {
       enabled: true,
     },
     modify: {
+      readOnly: false,
       enabled: true,
-      comments: true,
-      columns: true,
-      columns_edit: true,
+      editableTableName: true,
+      comments: {
+        view: true,
+        edit: true,
+      },
+      columns: {
+        view: true,
+        edit: true,
+        graphqlFieldName: true,
+        frequentlyUsedColumns: true,
+      },
       computedFields: true,
-      primaryKeys: true,
-      primaryKeys_edit: true,
-      foreginKeys: true,
-      foreginKeys_edit: true,
-      uniqueKeys: true,
-      uniqueKeys_edit: true,
+      primaryKeys: {
+        view: true,
+        edit: true,
+      },
+      foreignKeys: {
+        view: true,
+        edit: true,
+      },
+      uniqueKeys: {
+        view: true,
+        edit: true,
+      },
       triggers: true,
-      checkConstraints: true,
+      checkConstraints: {
+        view: true,
+        edit: true,
+      },
+      indexes: {
+        view: true,
+        edit: true,
+      },
       customGqlRoot: true,
       setAsEnum: true,
       untrack: true,
@@ -547,11 +699,16 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     relationships: {
       enabled: true,
+      remoteDbRelationships: {
+        hostSource: true,
+        referenceSource: true,
+      },
       remoteRelationships: true,
       track: true,
     },
     permissions: {
       enabled: true,
+      aggregation: true,
     },
     track: {
       enabled: false,
@@ -564,6 +721,13 @@ export const supportedFeatures: SupportedFeaturesType = {
     },
     nonTrackableFunctions: {
       enabled: true,
+    },
+    modify: {
+      enabled: true,
+      comments: {
+        view: true,
+        edit: true,
+      },
     },
   },
   events: {
@@ -579,15 +743,41 @@ export const supportedFeatures: SupportedFeaturesType = {
   rawSQL: {
     enabled: true,
     tracking: true,
+    statementTimeout: false,
   },
   connectDbForm: {
     enabled: true,
     connectionParameters: true,
     databaseURL: true,
     environmentVariable: true,
-    read_replicas: true,
+    read_replicas: {
+      create: true,
+      edit: true,
+    },
+    prepared_statements: true,
+    isolation_level: true,
+    connectionSettings: true,
+    cumulativeMaxConnections:
+      isEnvironmentSupportMultiTenantConnectionPooling(globals),
+    retries: true,
+    extensions_schema: true,
+    pool_timeout: true,
+    connection_lifetime: true,
+    namingConvention: true,
+    ssl_certificates:
+      globals.consoleType === 'cloud' ||
+      globals.consoleType === 'pro' ||
+      globals.consoleType === 'pro-lite',
   },
 };
+
+const violationActions: ViolationActions[] = [
+  'restrict',
+  'no action',
+  'cascade',
+  'set null',
+  'set default',
+];
 
 const defaultRedirectSchema = 'public';
 
@@ -653,7 +843,6 @@ export const postgres: DataSourcesAPI = {
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNotNullSql,
-  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNotNullSql,
   getAlterColumnTypeSql,
@@ -663,6 +852,7 @@ export const postgres: DataSourcesAPI = {
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getAlterPkSql,
   getFunctionDefinitionSql,
   primaryKeysInfoSql,
   checkConstraintsSql,
@@ -673,6 +863,12 @@ export const postgres: DataSourcesAPI = {
   deleteFunctionSql,
   getEventInvocationInfoByIDSql,
   getDatabaseInfo,
+  tableIndexSql,
+  createIndexSql: getCreateIndexSql,
+  dropIndexSql: getDropIndexSql,
+  indexFormToolTips,
+  indexTypes,
+  supportedIndex,
   getTableInfo,
   operators,
   generateTableRowRequest,
@@ -680,8 +876,21 @@ export const postgres: DataSourcesAPI = {
   permissionColumnDataTypes,
   viewsSupported: true,
   supportedColumnOperators: null,
-  aggregationPermissionsAllowed: true,
   supportedFeatures,
+  violationActions,
   defaultRedirectSchema,
+  generateInsertRequest,
+  generateRowsCountRequest,
   getPartitionDetailsSql,
+  generateEditRowRequest,
+  generateDeleteRowRequest,
+  generateBulkDeleteRowRequest,
+  schemaListQuery,
+  getAlterTableCommentSql,
+  getAlterColumnCommentSql,
+  getAlterViewCommentSql,
+  getAlterFunctionCommentSql,
+  getDataTriggerInvocations,
+  getDataTriggerLogsCountQuery,
+  getDataTriggerLogsQuery,
 };

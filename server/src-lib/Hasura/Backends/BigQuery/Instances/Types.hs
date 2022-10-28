@@ -1,56 +1,55 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Hasura.Backends.BigQuery.Instances.Types where
+module Hasura.Backends.BigQuery.Instances.Types () where
 
-import           Hasura.Prelude
-
-import qualified Language.GraphQL.Draft.Syntax    as G
-import qualified Text.Builder                     as TB
-
-import           Data.Aeson
-import           Data.Functor.Const
-import           Hasura.SQL.Types
-
-import qualified Hasura.Backends.BigQuery.Source  as BigQuery
-import qualified Hasura.Backends.BigQuery.ToQuery as BigQuery (fromExpression, toTextPretty)
-import qualified Hasura.Backends.BigQuery.Types   as BigQuery
-
-import           Hasura.Base.Error
-import           Hasura.RQL.DDL.Headers           ()
-import           Hasura.RQL.Types.Backend
-import           Hasura.SQL.Backend
-
-
-instance ToSQL BigQuery.Expression where
-  toSQL = TB.text . BigQuery.toTextPretty . BigQuery.fromExpression
+import Data.Aeson
+import Data.Text.Casing (GQLNameIdentifier)
+import Data.Text.Casing qualified as C
+import Hasura.Backends.BigQuery.Meta qualified as BigQuery
+import Hasura.Backends.BigQuery.Source qualified as BigQuery
+import Hasura.Backends.BigQuery.ToQuery ()
+import Hasura.Backends.BigQuery.Types qualified as BigQuery
+import Hasura.Base.Error
+import Hasura.Prelude
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.ResizePool (ServerReplicas)
+import Hasura.SQL.Backend
+import Language.GraphQL.Draft.Syntax qualified as G
 
 instance Backend 'BigQuery where
-  type SourceConfig            'BigQuery = BigQuery.BigQuerySourceConfig
+  type BackendConfig 'BigQuery = ()
+  type BackendInfo 'BigQuery = ()
+  type SourceConfig 'BigQuery = BigQuery.BigQuerySourceConfig
   type SourceConnConfiguration 'BigQuery = BigQuery.BigQueryConnSourceConfig
-  type Identifier              'BigQuery = Void
-  type Alias                   'BigQuery = BigQuery.EntityAlias
-  type TableName               'BigQuery = BigQuery.TableName
-  type FunctionName            'BigQuery = BigQuery.FunctionName
-  type FunctionArgType         'BigQuery = Void
-  type ConstraintName          'BigQuery = Void
-  type BasicOrderType          'BigQuery = BigQuery.Order
-  type NullsOrderType          'BigQuery = BigQuery.NullsOrder
-  type CountType               'BigQuery = BigQuery.Countable BigQuery.ColumnName
-  type Column                  'BigQuery = BigQuery.ColumnName
-  type ScalarValue             'BigQuery = BigQuery.Value
-  type ScalarType              'BigQuery = BigQuery.ScalarType
-  type SQLExpression           'BigQuery = BigQuery.Expression
-  type SQLOperator             'BigQuery = BigQuery.Op
-  type BooleanOperators 'BigQuery = Const Void
-  type XComputedField          'BigQuery = Void
-  type XRemoteField            'BigQuery = Void
+  type TableName 'BigQuery = BigQuery.TableName
+  type FunctionName 'BigQuery = BigQuery.FunctionName
+  type RawFunctionInfo 'BigQuery = BigQuery.RestRoutine
+  type FunctionArgument 'BigQuery = BigQuery.FunctionArgument
+  type ConstraintName 'BigQuery = Void
+  type BasicOrderType 'BigQuery = BigQuery.Order
+  type NullsOrderType 'BigQuery = BigQuery.NullsOrder
+  type CountType 'BigQuery = BigQuery.Countable BigQuery.ColumnName
+  type Column 'BigQuery = BigQuery.ColumnName
+  type ScalarValue 'BigQuery = BigQuery.Value
+  type ScalarType 'BigQuery = BigQuery.ScalarType
+  type SQLExpression 'BigQuery = BigQuery.Expression
+  type ScalarSelectionArguments 'BigQuery = Void
+  type BooleanOperators 'BigQuery = BigQuery.BooleanOperators
+  type ComputedFieldDefinition 'BigQuery = BigQuery.ComputedFieldDefinition
+  type FunctionArgumentExp 'BigQuery = BigQuery.ArgumentExp
+  type ComputedFieldImplicitArguments 'BigQuery = BigQuery.ComputedFieldImplicitArguments
+  type ComputedFieldReturn 'BigQuery = BigQuery.ComputedFieldReturn
 
-  type XRelay                  'BigQuery = Void
-  type XNodesAgg               'BigQuery = XEnable
-  type XDistinct               'BigQuery = Void
+  type XStreamingSubscription 'BigQuery = XDisable
+  type XComputedField 'BigQuery = XEnable
+  type XRelay 'BigQuery = XDisable
+  type XNodesAgg 'BigQuery = XEnable
+  type XNestedInserts 'BigQuery = XDisable
+  type XStreamingSubscription 'BigQuery = XDisable
 
-  functionArgScalarType :: FunctionArgType 'BigQuery -> ScalarType 'BigQuery
-  functionArgScalarType = absurd
+  type ExtraTableMetadata 'BigQuery = ()
+
+  type HealthCheckTest 'BigQuery = Void
 
   isComparableType :: ScalarType 'BigQuery -> Bool
   isComparableType = BigQuery.isComparableType
@@ -71,7 +70,11 @@ instance Backend 'BigQuery where
   functionToTable = error "functionToTable"
 
   tableToFunction :: TableName 'BigQuery -> FunctionName 'BigQuery
-  tableToFunction = coerce . BigQuery.tableName
+  tableToFunction BigQuery.TableName {..} =
+    BigQuery.FunctionName
+      { functionName = tableName,
+        functionNameSchema = Just tableNameSchema
+      }
 
   tableGraphQLName :: TableName 'BigQuery -> Either QErr G.Name
   tableGraphQLName = BigQuery.getGQLTableName
@@ -79,8 +82,33 @@ instance Backend 'BigQuery where
   functionGraphQLName :: FunctionName 'BigQuery -> Either QErr G.Name
   functionGraphQLName = error "functionGraphQLName"
 
-  scalarTypeGraphQLName :: ScalarType 'BigQuery -> Either QErr G.Name
-  scalarTypeGraphQLName = error "scalarTypeGraphQLName"
-
   snakeCaseTableName :: TableName 'BigQuery -> Text
-  snakeCaseTableName = error "snakeCaseTableName"
+  snakeCaseTableName BigQuery.TableName {tableName, tableNameSchema} =
+    tableNameSchema <> "_" <> tableName
+
+  getTableIdentifier :: TableName 'BigQuery -> Either QErr GQLNameIdentifier
+  getTableIdentifier tName = do
+    gqlTableName <- BigQuery.getGQLTableName tName
+    pure $ C.fromAutogeneratedName gqlTableName
+
+  namingConventionSupport :: SupportedNamingCase
+  namingConventionSupport = OnlyHasuraCase
+
+  computedFieldFunction :: ComputedFieldDefinition 'BigQuery -> FunctionName 'BigQuery
+  computedFieldFunction = BigQuery._bqcfdFunction
+
+  computedFieldReturnType :: ComputedFieldReturn 'BigQuery -> ComputedFieldReturnType 'BigQuery
+  computedFieldReturnType = \case
+    BigQuery.ReturnExistingTable tableName -> ReturnsTable tableName
+    BigQuery.ReturnTableSchema _ -> ReturnsOthers
+
+  fromComputedFieldImplicitArguments :: v -> ComputedFieldImplicitArguments 'BigQuery -> [FunctionArgumentExp 'BigQuery v]
+  fromComputedFieldImplicitArguments _ _ =
+    -- As of now, computed fields are not supported in boolean and order by expressions.
+    -- We don't have to generate arguments expression from implicit arguments.
+    []
+
+  resizeSourcePools :: SourceConfig 'BigQuery -> ServerReplicas -> IO ()
+  resizeSourcePools _sourceConfig _serverReplicas =
+    -- BigQuery does not posses connection pooling
+    pure ()

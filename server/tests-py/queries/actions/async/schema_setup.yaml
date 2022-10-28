@@ -29,6 +29,14 @@ args:
         remote_table: user
         field_mapping:
           id: id
+    - name: UserIdObj
+      fields:
+      - name: id
+        type: Int
+    - name: UserIdNested
+      fields:
+      - name: userObj
+        type: UserIdObj
 
 - type: create_action
   args:
@@ -41,7 +49,7 @@ args:
       - name: name
         type: String!
       output_type: UserId
-      handler: http://127.0.0.1:5593/create-user
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
 
 - type: create_action_permission
   args:
@@ -50,3 +58,41 @@ args:
     definition:
       select:
         filter: {}
+
+- type: create_action
+  args:
+    name: create_user_transformed
+    definition:
+      kind: asynchronous
+      arguments:
+      - name: email
+        type: String!
+      - name: name
+        type: String!
+      output_type: UserId
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
+      request_transform:
+        version: 2
+        template_engine: Kriti
+        body:
+          action: transform
+          template: |
+            {
+              "input": {
+                "email": "foo@bar.com",
+                "name": "notClarke"
+              }
+            }
+
+- type: create_action
+  args:
+    name: create_user_nested
+    definition:
+      kind: asynchronous
+      arguments:
+      - name: email
+        type: String!
+      - name: name
+        type: String!
+      output_type: UserIdNested
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user-nested"

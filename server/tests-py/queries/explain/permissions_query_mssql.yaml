@@ -2,25 +2,20 @@ description: Explain query with permissions
 url: /v1/graphql/explain
 status: 200
 response:
-  - field: user
-    plan:
-      - "SELECT ISNULL((SELECT [t_user1].[id] AS [id],\n       [t_user1].[name] AS [name],\n\
-        \       [t_user1].[age] AS [age]\nFROM [dbo].[user] AS [t_user1]\nWHERE ((((([t_user1].[id])\
-        \ = ((N'1')))\n       OR ((([t_user1].[id]) IS NULL)\n      AND (((N'1')) IS NULL)))))\n\
-        FOR JSON PATH), '[]')"
-      - "  |--Compute Scalar(DEFINE:([Expr1003]=isnull([Expr1001],CONVERT_IMPLICIT(nvarchar(max),'[]',0))))"
-      - "       |--UDX(([t_user1].[id], [t_user1].[name], [t_user1].[age]))"
-      - "            |--Clustered Index Seek(OBJECT:([master].[dbo].[user].[PK__user__3213E83F2F718733]
-        AS [t_user1]), SEEK:([t_user1].[id]=(1)) ORDERED FORWARD)"
-    sql:
-      "SELECT ISNULL((SELECT [t_user1].[id] AS [id],\n       [t_user1].[name] AS\
-      \ [name],\n       [t_user1].[age] AS [age]\nFROM [dbo].[user] AS [t_user1]\nWHERE\
-      \ ((((([t_user1].[id]) = ((N'1')))\n       OR ((([t_user1].[id]) IS NULL)\n  \
-      \    AND (((N'1')) IS NULL)))))\nFOR JSON PATH), '[]')"
+- field: user
+  sql: |-
+    SELECT ISNULL((SELECT [t_user1].[id] AS [id],
+                   [t_user1].[name] AS [name],
+                   [t_user1].[age] AS [age]
+            FROM [dbo].[user] AS [t_user1]
+            WHERE ((((([t_user1].[id]) = (CAST(CAST((N'1') AS nvarchar(max)) AS int)))
+                  OR ((([t_user1].[id]) IS NULL)
+                  AND ((CAST(CAST((N'1') AS nvarchar(max)) AS int)) IS NULL)))))
+            FOR JSON PATH, INCLUDE_NULL_VALUES), (N''+NCHAR(91)+''+NCHAR(93)+'')) AS [root]
 query:
   user:
     X-Hasura-Role: user
-    X-Hasura-User-Id: "1"
+    X-Hasura-User-Id: '1'
   query:
     query: |
       query {

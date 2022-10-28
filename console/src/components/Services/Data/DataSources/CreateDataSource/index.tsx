@@ -1,44 +1,46 @@
 import * as React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { isCloudConsole } from '@/utils/cloudConsole';
 import Globals from '../../../../../Globals';
-import Heroku from './Heroku';
-import { HerokuSession } from './Heroku/types';
 import { ReduxState } from '../../../../../types';
-import styles from './styles.scss';
+import styles from './styles.module.scss';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
 import Tabbed from '../TabbedDataSourceConnection';
 import { NotFoundError } from '../../../../Error/PageNotFound';
 import { getDataSources } from '../../../../../metadata/selector';
+import { HerokuBanner } from './Neon/components/HerokuBanner/Banner';
+import { Neon } from './Neon';
 
 interface Props extends InjectedProps {}
 
-const CreateDataSource: React.FC<Props> = ({
-  herokuSession,
-  dispatch,
-  allDataSources,
-}) => {
-  if (!Globals.herokuOAuthClientId || !Globals.hasuraCloudTenantId) {
+const CreateDataSource: React.FC<Props> = ({ dispatch, allDataSources }) => {
+  // this condition fails for everything other than a Hasura Cloud project
+  if (!isCloudConsole(Globals)) {
     throw new NotFoundError();
   }
 
   return (
     <Tabbed tabName="create">
-      <div className={styles.connect_db_content}>
-        <div className={`${styles.container}`}>
-          <Heroku
-            session={herokuSession}
-            dispatch={dispatch}
-            allDataSources={allDataSources}
-          />
+      <Analytics name="CreateDataSource" {...REDACT_EVERYTHING}>
+        <div className={styles.connect_db_content}>
+          <div className={`${styles.container} mb-md`}>
+            <div className="w-full mb-md">
+              <Neon
+                allDatabases={allDataSources.map(d => d.name)}
+                dispatch={dispatch}
+              />
+            </div>
+            <HerokuBanner />
+          </div>
         </div>
-      </div>
+      </Analytics>
     </Tabbed>
   );
 };
 
 const mapStateToProps = (state: ReduxState) => {
   return {
-    herokuSession: state.main.heroku.session as HerokuSession | undefined,
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
     allDataSources: getDataSources(state),

@@ -30,7 +30,7 @@
     - extensions:
         path: $.selectionSet.volatile_func1
         code: validation-failed
-      message: "field \"volatile_func1\" not found in type: 'mutation_root'"
+      message: "field 'volatile_func1' not found in type: 'mutation_root'"
 
 # In the future we may want to return an informational warning in these cases,
 # as this is a footgun

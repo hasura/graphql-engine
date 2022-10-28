@@ -1,0 +1,68 @@
+---
+sidebar_label: Managing Seeds
+sidebar_position: 5
+description: Create and apply Hasura Seeds
+keywords:
+  - hasura
+  - migration
+  - seed data
+---
+
+# Creating a Hasura Seed data Migration
+
+## Use case
+
+It's often useful to add some initial Seed data into your database as part of the initialization process, with
+Hasura Seeds you can do that. This is particularly useful for adding a testing user or to pre-populate values if you
+have set a table in Hasura as an enum table to expose it as GraphQL enums in the GraphQL API.
+
+## Create a Hasura Seed file
+
+You can use the Hasura CLI to automatically create Seed files for you based on the data which is already in a table
+in a database.
+
+```bash
+hasura seed create myAuthorsSeed --from-table author
+```
+
+Select the database containing the table you've specified.
+
+```text
+? Select a database to use
+```
+
+CLI will log
+
+```text
+INFO created seed file successfully     file=/Users/me/myDemoProject/seeds/default/1656499378904_myAuthorsSeed.sql
+```
+
+If you open the file created you will see standard pure SQL insert statements with the data contained in the database.
+Eg:
+
+```sql
+SET check_function_bodies = false;
+INSERT INTO public.author (id, name) VALUES ('1', 'Woolf');
+INSERT INTO public.author (id, name) VALUES ('2', 'Tolkien');
+INSERT INTO public.author (id, name) VALUES ('3', 'Austen');
+INSERT INTO public.author (id, name) VALUES ('4', 'Orwell');
+```
+
+## Apply a Hasura Seed file
+
+To apply a seeds file to your Hasura instance you can use the `apply` Hasura CLI command. Eg:
+
+```bash
+hasura seed apply --file 1656499378904_myNewAuthorsSeed.sql
+```
+
+If you do not specify a database with the `--database-name` flag then the CLI will prompt you to choose the database
+to apply the seeds to and as long as there are no conflicts and the SQL executes successfully to input the data then
+the CLI will log:
+
+```text
+INFO Seeds planted
+```
+
+Success!
+

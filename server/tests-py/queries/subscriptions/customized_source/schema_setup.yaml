@@ -1,0 +1,10 @@
+type: run_sql
+args:
+  source: pg1
+  sql: |
+    create table author(
+        id serial primary key,
+        name text unique
+    );
+    INSERT INTO author (name)
+      VALUES ('Author 1'), ('Author 2');

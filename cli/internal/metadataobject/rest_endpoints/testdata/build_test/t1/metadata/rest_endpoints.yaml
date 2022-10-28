@@ -1,0 +1,8 @@
+- definition:
+    query:
+      collection_name: allowed-queries
+      query_name: getAlbum
+  url: get_album/:id
+  methods:
+    - GET
+  name: getAlbum

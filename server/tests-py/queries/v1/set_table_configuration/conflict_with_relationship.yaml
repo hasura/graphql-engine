@@ -3,22 +3,24 @@ url: /v1/query
 status: 400
 response:
   internal:
-  - definition:
-      using:
-        foreign_key_constraint_on:
-          column: author_id
-          table:
-            schema: public
-            name: article
-      name: articles
-      source: default
-      comment:
-      table:
-        schema: public
-        name: author
-    reason: field definition conflicts with custom field name for postgres column
-      "name"
-    type: array_relation
+    - definition:
+        using:
+          foreign_key_constraint_on:
+            column: author_id
+            table:
+              schema: public
+              name: article
+        name: articles
+        source: default
+        comment:
+        table:
+          schema: public
+          name: author
+      reason:
+        'Inconsistent object: field definition conflicts with custom field name
+        for postgres column "name"'
+      name: array_relation articles in table author in source default
+      type: array_relation
   path: $.args
   error: cannot continue due to new inconsistent metadata
   code: unexpected
@@ -28,6 +30,8 @@ query:
     table: author
     configuration:
       custom_root_fields: {}
-      custom_column_names:
-        name: articles
-        age: articles_aggregate
+      column_config:
+        name:
+          custom_name: articles
+        age:
+          custom_name: articles_aggregate

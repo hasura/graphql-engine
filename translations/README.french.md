@@ -122,20 +122,20 @@ Consultez toutes les applications d'example dans le répertoire
 
 - Application de messagerie de groupe développée avec React, incluant un indicateur de frappe, les utilisateurs connectés & les
   notifications de nouveaux messages.
-  - [Essayez la](https://realtime-chat.demo.hasura.app/)
+  - [Essayez la](https://realtime-chat.demo.hasura.io/)
   - [Tutoriel](../community/sample-apps/realtime-chat)
-  - [Explorez les APIs](https://realtime-chat.demo.hasura.app/console)
+  - [Explorez les APIs](https://realtime-chat.demo.hasura.io/console)
 
 - Application de localisation en temps-réel montrant un véhicule dont les coordonnées GPS évoluent
   se déplacer sur une carte.
-  - [Essayez la](https://realtime-location-tracking.demo.hasura.app/)
+  - [Essayez la](https://realtime-location-tracking.demo.hasura.io/)
   - [Tutoriel](../community/sample-apps/realtime-location-tracking)
-  - [Explorez les APIs](https://realtime-location-tracking.demo.hasura.app/console)
+  - [Explorez les APIs](https://realtime-location-tracking.demo.hasura.io/console)
 
 - Un tableau de bord temps-réel pour l'aggrégation de données en constante évolution.
-  - [Essayez la](https://realtime-poll.demo.hasura.app/)
+  - [Essayez la](https://realtime-poll.demo.hasura.io/)
   - [Tutoriel](../community/sample-apps/realtime-poll)
-  - [Explorez les APIs](https://realtime-poll.demo.hasura.app/console)
+  - [Explorez les APIs](https://realtime-poll.demo.hasura.io/console)
 
 ### Vidéos
 

@@ -5,30 +5,27 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/internal/testutil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/testutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	. "github.com/onsi/gomega/gbytes"
 	. "github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("metadata_diff", func() {
+var _ = Describe("hasura metadata diff", func() {
 
-	var dirName string
-	var session *Session
+	var projectDirectory string
 	var teardown func()
 	BeforeEach(func() {
-		dirName = testutil.RandDirName()
-		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraVersion)
+		projectDirectory = testutil.RandDirName()
+		hgeEndPort, teardownHGE := testutil.StartHasura(GinkgoT(), testutil.HasuraDockerImage)
 		hgeEndpoint := fmt.Sprintf("http://0.0.0.0:%s", hgeEndPort)
 		testutil.RunCommandAndSucceed(testutil.CmdOpts{
-			Args: []string{"init", dirName},
+			Args: []string{"init", projectDirectory},
 		})
-		editEndpointInConfig(filepath.Join(dirName, defaultConfigFilename), hgeEndpoint)
+		editEndpointInConfig(filepath.Join(projectDirectory, defaultConfigFilename), hgeEndpoint)
 
 		teardown = func() {
-			session.Kill()
-			os.RemoveAll(dirName)
+			os.RemoveAll(projectDirectory)
 			teardownHGE()
 		}
 	})
@@ -39,14 +36,44 @@ var _ = Describe("metadata_diff", func() {
 
 	Context("metadata diff test", func() {
 		It("should output diff between metadata on server and local project", func() {
+			session := testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "diff"},
+				WorkingDirectory: projectDirectory,
+			})
+			Eventually(session, timeout).Should(Exit(0))
+			stdout := session.Out.Contents()
+			Expect(stdout).Should(ContainSubstring("kind: postgres"))
+			Expect(stdout).Should(ContainSubstring("name: default"))
+
+			editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.yaml")
 			session = testutil.Hasura(testutil.CmdOpts{
 				Args:             []string{"metadata", "diff"},
-				WorkingDirectory: dirName,
+				WorkingDirectory: projectDirectory,
 			})
+			Eventually(session, timeout).Should(Exit(0))
+			stdout = session.Out.Contents()
+			Expect(stdout).Should(ContainSubstring("sources"))
+			Expect(stdout).Should(ContainSubstring("kind: postgres"))
+			Expect(stdout).Should(ContainSubstring("name: default"))
+			Expect(stdout).Should(ContainSubstring("tables: []"))
 
-			Eventually(session, 60*40).Should(Say(".*rest_endpoints*."))
-			Eventually(session, 60*40).Should(Say(".*sources*."))
-			Eventually(session, 60*40).Should(Exit(0))
+			editMetadataFileInConfig(filepath.Join(projectDirectory, defaultConfigFilename), "metadata.json")
+			session = testutil.Hasura(testutil.CmdOpts{
+				Args:             []string{"metadata", "diff", "--no-color"},
+				WorkingDirectory: projectDirectory,
+			})
+			Eventually(session, timeout).Should(Exit(0))
+			stdout = session.Out.Contents()
+			want := `-  "version": 3,
+-  "sources": [
+-    {
+-      "name": "default",
+-      "kind": "postgres",
+-      "tables": [],
+-      "configuration": {
+`
+
+			Expect(stdout).Should(ContainSubstring(want))
 		})
 	})
 })

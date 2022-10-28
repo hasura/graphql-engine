@@ -1,3 +1,4 @@
+import Migration from '@/utils/migration/Migration';
 import { dataSource } from '../../../../dataSources';
 import Endpoints, { globalCookiePolicy } from '../../../../Endpoints';
 import { exportMetadata } from '../../../../metadata/actions';
@@ -47,6 +48,12 @@ const PERMISSION_CUSTOM_FUNCTION_DROP_SUCCESS =
 const PERMISSION_CUSTOM_FUNCTION_DROP_FAIL =
   '@customFunction/PERMISSION_CUSTOM_FUNCTION_DROP_FAIL';
 
+const FUNCTION_COMMENT_SET_SUCCESS =
+  '@customFunction/FUNCTION_COMMENT_SET_SUCCESS';
+const CUSTOM_FUNCTION_COMMENT_EDITING =
+  '@customFunction/CUSTOM_FUNCTION_COMMENT_EDITING';
+const FUNCTION_COMMENT_SET_FAIL = '@customFunction/FUNCTION_COMMENT_SET_FAIL';
+
 /* Action creators */
 const fetchCustomFunction = (functionName, schema, source) => {
   return (dispatch, getState) => {
@@ -54,7 +61,9 @@ const fetchCustomFunction = (functionName, schema, source) => {
     if (!dataSource.getFunctionDefinitionSql) return;
     const fetchCustomFunctionDefinition = getRunSqlQuery(
       dataSource.getFunctionDefinitionSql(schema, functionName),
-      source
+      source,
+      false,
+      true
     );
 
     const options = {
@@ -260,43 +269,52 @@ const updateSessVar = session_argument => {
   };
 };
 
-const setFunctionPermission = (userRole, onSuccessCb) => (
-  dispatch,
-  getState
-) => {
-  const { currentDataSource, currentSchema } = getState().tables;
+const setEditing = editing => dispatch =>
+  dispatch({ type: CUSTOM_FUNCTION_COMMENT_EDITING, data: editing });
+
+const saveFunctionComment = updatedComment => (dispatch, getState) => {
+  const source = getState().tables.currentDataSource;
+  const { currentSchema } = getState().tables;
   const { functionName } = getState().functions;
-  const currentFunction = { schema: currentSchema, name: functionName };
 
-  const upQuery = createFunctionPermissionQuery(
-    currentDataSource,
-    currentFunction,
-    userRole
-  );
-  const downQuery = dropFunctionPermissionQuery(
-    currentDataSource,
-    currentFunction,
-    userRole
+  const upQuery = dataSource.getAlterFunctionCommentSql({
+    functionName,
+    schemaName: currentSchema,
+    comment: updatedComment ?? null,
+  });
+  const downQuery = dataSource.getAlterFunctionCommentSql({
+    functionName,
+    schemaName: currentSchema,
+    comment: null,
+  });
+
+  const migration = new Migration();
+  migration.add(
+    getRunSqlQuery(upQuery, source),
+    getRunSqlQuery(downQuery, source)
   );
 
-  const migrationName = `set_permission_role_${userRole}_function_${functionName}`;
-  const requestMsg = `Setting permisions for ${userRole} role on ${functionName}`;
-  const successMsg = `Successfully set permissions for ${userRole}`;
-  const errorMsg = `Failed to set permissions for ${userRole}`;
+  const migrationName =
+    'alter_function_' + currentSchema + '_' + functionName + '_update_comment';
+  const requestMsg = 'Updating Comment...';
+  const successMsg = 'Comment Updated';
+  const errorMsg = 'Updating comment failed';
 
   const customOnSuccess = () => {
-    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_SET_SUCCESS });
-    dispatch(exportMetadata(onSuccessCb));
+    dispatch({
+      type: FUNCTION_COMMENT_SET_SUCCESS,
+      data: { functionComment: updatedComment },
+    });
   };
 
   const customOnError = err => {
-    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_SET_FAIL, data: err });
+    dispatch({ type: FUNCTION_COMMENT_SET_FAIL, data: err });
   };
 
   return dispatch(
     makeRequest(
-      [upQuery],
-      [downQuery],
+      migration.upMigration,
+      migration.downMigration,
       migrationName,
       customOnSuccess,
       customOnError,
@@ -307,52 +325,95 @@ const setFunctionPermission = (userRole, onSuccessCb) => (
   );
 };
 
-const dropFunctionPermission = (userRole, onSuccessCb) => (
-  dispatch,
-  getState
-) => {
-  const { currentDataSource, currentSchema } = getState().tables;
-  const { functionName } = getState().functions;
-  const currentFunction = { schema: currentSchema, name: functionName };
+const setFunctionPermission =
+  (userRole, onSuccessCb) => (dispatch, getState) => {
+    const { currentDataSource, currentSchema } = getState().tables;
+    const { functionName } = getState().functions;
+    const currentFunction = { schema: currentSchema, name: functionName };
 
-  const upQuery = dropFunctionPermissionQuery(
-    currentDataSource,
-    currentFunction,
-    userRole
-  );
-  const downQuery = createFunctionPermissionQuery(
-    currentDataSource,
-    currentFunction,
-    userRole
-  );
+    const upQuery = createFunctionPermissionQuery(
+      currentDataSource,
+      currentFunction,
+      userRole
+    );
+    const downQuery = dropFunctionPermissionQuery(
+      currentDataSource,
+      currentFunction,
+      userRole
+    );
 
-  const migrationName = `drop_permission_role_${userRole}_function_${functionName}`;
-  const requestMsg = `Dropping permisions for ${userRole} role on ${functionName}`;
-  const successMsg = `Successfully dropped permissions for ${userRole}`;
-  const errorMsg = `Failed to drop permissions for ${userRole}`;
+    const migrationName = `set_permission_role_${userRole}_function_${functionName}`;
+    const requestMsg = `Setting permisions for ${userRole} role on ${functionName}`;
+    const successMsg = `Successfully set permissions for ${userRole}`;
+    const errorMsg = `Failed to set permissions for ${userRole}`;
 
-  const customOnSuccess = () => {
-    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_DROP_SUCCESS });
-    dispatch(exportMetadata(onSuccessCb));
+    const customOnSuccess = () => {
+      dispatch({ type: PERMISSION_CUSTOM_FUNCTION_SET_SUCCESS });
+      dispatch(exportMetadata(onSuccessCb));
+    };
+
+    const customOnError = err => {
+      dispatch({ type: PERMISSION_CUSTOM_FUNCTION_SET_FAIL, data: err });
+    };
+
+    return dispatch(
+      makeRequest(
+        [upQuery],
+        [downQuery],
+        migrationName,
+        customOnSuccess,
+        customOnError,
+        requestMsg,
+        successMsg,
+        errorMsg
+      )
+    );
   };
 
-  const customOnError = err => {
-    dispatch({ type: PERMISSION_CUSTOM_FUNCTION_DROP_FAIL, data: err });
-  };
+const dropFunctionPermission =
+  (userRole, onSuccessCb) => (dispatch, getState) => {
+    const { currentDataSource, currentSchema } = getState().tables;
+    const { functionName } = getState().functions;
+    const currentFunction = { schema: currentSchema, name: functionName };
 
-  return dispatch(
-    makeRequest(
-      [upQuery],
-      [downQuery],
-      migrationName,
-      customOnSuccess,
-      customOnError,
-      requestMsg,
-      successMsg,
-      errorMsg
-    )
-  );
-};
+    const upQuery = dropFunctionPermissionQuery(
+      currentDataSource,
+      currentFunction,
+      userRole
+    );
+    const downQuery = createFunctionPermissionQuery(
+      currentDataSource,
+      currentFunction,
+      userRole
+    );
+
+    const migrationName = `drop_permission_role_${userRole}_function_${functionName}`;
+    const requestMsg = `Dropping permisions for ${userRole} role on ${functionName}`;
+    const successMsg = `Successfully dropped permissions for ${userRole}`;
+    const errorMsg = `Failed to drop permissions for ${userRole}`;
+
+    const customOnSuccess = () => {
+      dispatch({ type: PERMISSION_CUSTOM_FUNCTION_DROP_SUCCESS });
+      dispatch(exportMetadata(onSuccessCb));
+    };
+
+    const customOnError = err => {
+      dispatch({ type: PERMISSION_CUSTOM_FUNCTION_DROP_FAIL, data: err });
+    };
+
+    return dispatch(
+      makeRequest(
+        [upQuery],
+        [downQuery],
+        migrationName,
+        customOnSuccess,
+        customOnError,
+        requestMsg,
+        successMsg,
+        errorMsg
+      )
+    );
+  };
 
 /* Reducer */
 const customFunctionReducer = (state = functionData, action) => {
@@ -375,6 +436,7 @@ const customFunctionReducer = (state = functionData, action) => {
         setOffTableSchema: action?.data?.return_type_schema || null,
         inputArgNames: action?.data?.input_arg_names || null,
         inputArgTypes: action?.data?.input_arg_types || null,
+        functionComment: action?.data?.comment || '',
         isFetching: false,
         isUpdating: false,
         isFetchError: null,
@@ -451,6 +513,16 @@ const customFunctionReducer = (state = functionData, action) => {
         isPermissionDrop: false,
         isError: action.data,
       };
+    case CUSTOM_FUNCTION_COMMENT_EDITING:
+      return { ...state, isEditingComment: action?.data };
+    case FUNCTION_COMMENT_SET_SUCCESS:
+      return {
+        ...state,
+        isEditingComment: false,
+        functionComment: action?.data?.functionComment,
+      };
+    case FUNCTION_COMMENT_SET_FAIL:
+      return { ...state, isEditingComment: false, isError: action?.data };
     default:
       return state;
   }
@@ -459,7 +531,9 @@ const customFunctionReducer = (state = functionData, action) => {
 export {
   deleteFunction,
   dropFunctionPermission,
+  saveFunctionComment,
   fetchCustomFunction,
+  setEditing,
   RESET,
   setFunctionPermission,
   unTrackCustomFunction,

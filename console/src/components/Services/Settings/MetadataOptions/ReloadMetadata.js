@@ -1,21 +1,22 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Button from '../../../Common/Button/Button';
 
+import { Button } from '@/new-components/Button';
+import { IconTooltip } from '@/new-components/Tooltip';
 import {
   showSuccessNotification,
   showErrorNotification,
 } from '../../Common/Notification';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
-import metaDataStyles from '../Settings.scss';
 import { reloadMetadata } from '../../../../metadata/actions';
+import { focusYellowRing } from '../../Data/constants';
 
 class ReloadMetadata extends Component {
   constructor(props) {
     super(props);
     this.state = {
       isReloading: false,
-      shouldReloadRemoteSchemas: props.shouldReloadRemoteSchemas || false,
+      shouldReloadRemoteSchemas: false,
+      shouldReloadAllSources: false,
     };
   }
 
@@ -25,14 +26,20 @@ class ReloadMetadata extends Component {
     }));
   };
 
+  toggleShouldReloadAllSources = () => {
+    this.setState(state => ({
+      shouldReloadAllSources: !state.shouldReloadAllSources,
+    }));
+  };
+
   render() {
     const {
       dispatch,
       btnTooltipMessage,
-      tooltipStyle,
       showReloadRemoteSchemas = true,
     } = this.props;
-    const { isReloading, shouldReloadRemoteSchemas } = this.state;
+    const { isReloading, shouldReloadRemoteSchemas, shouldReloadAllSources } =
+      this.state;
 
     const reloadMetadataAndLoadInconsistentMetadata = e => {
       e.preventDefault();
@@ -42,6 +49,7 @@ class ReloadMetadata extends Component {
       dispatch(
         reloadMetadata(
           shouldReloadRemoteSchemas,
+          shouldReloadAllSources,
           () => {
             dispatch(showSuccessNotification('Metadata reloaded'));
             this.setState({ isReloading: false });
@@ -58,24 +66,20 @@ class ReloadMetadata extends Component {
 
     const buttonText = isReloading ? 'Reloading' : 'Reload';
     return (
-      <>
+      <div className="flex items-center gap-6">
         <Button
           data-test="data-reload-metadata"
-          color="white"
           size="sm"
           disabled={this.state.isReloading}
           onClick={reloadMetadataAndLoadInconsistentMetadata}
-          className={`${metaDataStyles.add_mar_right_mid}`}
         >
           {this.props.buttonText || buttonText}
         </Button>
-        {btnTooltipMessage && (
-          <Tooltip message={btnTooltipMessage} tooltipStyle={tooltipStyle} />
-        )}
+        {btnTooltipMessage && <IconTooltip message={btnTooltipMessage} />}
         {showReloadRemoteSchemas && (
-          <>
+          <div className="items-center flex">
             <label
-              className={`${metaDataStyles.cursorPointer} ${metaDataStyles.add_mar_right_small} ${metaDataStyles.add_mar_left_small}`}
+              className="cursor-pointer flex items-center"
               disabled={this.state.isReloading}
             >
               <input
@@ -83,14 +87,30 @@ class ReloadMetadata extends Component {
                 onChange={this.toggleShouldReloadRemoteSchemas}
                 checked={shouldReloadRemoteSchemas}
                 readOnly
-                className={`${metaDataStyles.add_mar_right_small} ${metaDataStyles.cursorPointer}`}
+                className={`cursor-pointer ${focusYellowRing} rounded-sm !mr-1 !mt-0`}
               />
               Reload all remote schemas
             </label>
-            <Tooltip message="Check this if you have inconsistent remote schemas or if your remote schema has changed." />
-          </>
+            <IconTooltip message="Check this if you have inconsistent remote schemas or if your remote schema has changed." />
+          </div>
         )}
-      </>
+        <div className="items-center flex">
+          <label
+            className="cursor-pointer flex items-center"
+            disabled={this.state.isReloading}
+          >
+            <input
+              type="checkbox"
+              onChange={this.toggleShouldReloadAllSources}
+              checked={shouldReloadAllSources}
+              readOnly
+              className={`cursor-pointer ${focusYellowRing} rounded-sm !mr-1 !mt-0`}
+            />
+            Reload all databases
+          </label>
+          <IconTooltip message="Check this if you have inconsistent databases." />
+        </div>
+      </div>
     );
   }
 }

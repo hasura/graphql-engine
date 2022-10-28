@@ -1,1 +1,0 @@
-CREATE TABLE "author"("id" serial NOT NULL, PRIMARY KEY ("id") )

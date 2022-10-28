@@ -36,6 +36,7 @@ export const removeLSItem = (key: string) => {
   }
 
   window.localStorage.removeItem(key);
+  return true;
 };
 
 type expiryValue = {
@@ -87,6 +88,7 @@ export const LS_KEYS = {
   dataPageSizeKey: 'data:pageSize',
   derivedActions: 'actions:derivedActions',
   graphiqlQuery: 'graphiql:query',
+  graphiqlVariables: 'graphiql:variables',
   loveConsent: 'console:loveIcon',
   oneGraphExplorerCodeExporterOpen: 'graphiql:codeExporterOpen',
   oneGraphExplorerOpen: 'graphiql:explorerOpen',
@@ -96,6 +98,12 @@ export const LS_KEYS = {
   rawSqlStatementTimeout: 'rawSql:rawSqlStatementTimeout',
   showConsoleOnboarding: 'console:showConsoleOnboarding',
   versionUpdateCheckLastClosed: 'console:versionUpdateCheckLastClosed',
+  vpcBannerLastDismissed: 'console:vpcBannerLastDismissed',
+  webhookTransformEnvVars: 'console:webhookTransformEnvVars',
+  featureFlag: 'console:featureFlag',
+  permissionConfirmationModalStatus:
+    'console:permissionConfirmationModalStatus',
+  neonCallbackSearch: 'neon:authCallbackSearch',
 };
 
 export const clearGraphiqlLS = () => {

@@ -59,4 +59,4 @@
     - extensions:
         path: $.selectionSet.add_to_score
         code: validation-failed
-      message: "field \"add_to_score\" not found in type: 'query_root'"
+      message: "field 'add_to_score' not found in type: 'query_root'"

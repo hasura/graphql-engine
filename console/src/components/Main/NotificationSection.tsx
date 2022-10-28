@@ -1,5 +1,7 @@
 import React, { ComponentProps } from 'react';
 import { connect, ConnectedProps } from 'react-redux';
+import { FaArrowRight, FaBell, FaTimes } from 'react-icons/fa';
+import { Button } from '@/new-components/Button';
 
 import { Box, Flex, Heading, Text, Badge } from '../UIKit/atoms';
 import {
@@ -8,7 +10,7 @@ import {
   NotificationScope,
   ConsoleScope,
 } from './ConsoleNotification';
-import styles from './Main.scss';
+import styles from './Main.module.scss';
 import useOnClickOutside from '../../hooks/useOnClickOutside';
 import { ReduxState } from '../../types';
 import { versionGT, checkStableVersion } from '../../helpers/versionUtils';
@@ -17,7 +19,6 @@ import {
   setPreReleaseNotificationOptOutInDB,
   updateConsoleNotificationsState,
 } from '../../telemetry/Actions';
-import Button from '../Common/Button';
 import {
   getReadAllNotificationsState,
   getConsoleScope,
@@ -191,7 +192,7 @@ const Notification: React.FC<UpdateProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  <i className={`fa fa-arrow-right ${styles.linkArrow}`} />
+                  <FaArrowRight className={styles.linkArrow} />
                 </a>
               </div>
             ) : null}
@@ -494,7 +495,7 @@ const HasuraNotifications: React.FC<
   dispatch,
 }) => {
   // eslint-disable-next-line no-underscore-dangle
-  const consoleId = window.__env.consoleId;
+  const consoleId = window.__env?.consoleId;
   const consoleNotificationsLength = consoleNotifications?.length || 0;
   const consoleScope = getConsoleScope(serverVersion, consoleId);
 
@@ -503,9 +504,8 @@ const HasuraNotifications: React.FC<
 
   const pagination = useNotificationsPagination(consoleNotifications.length);
   const [latestVersion, setLatestVersion] = React.useState(serverVersion);
-  const [displayNewVersionUpdate, setDisplayNewVersionUpdate] = React.useState(
-    false
-  );
+  const [displayNewVersionUpdate, setDisplayNewVersionUpdate] =
+    React.useState(false);
 
   const [opened, updateOpenState] = React.useState(false);
   const [numberNotifications, updateNumberNotifications] = React.useState(0);
@@ -729,7 +729,7 @@ const HasuraNotifications: React.FC<
         onClick={onClickNotificationButton}
         ref={wrapperRef}
       >
-        <i className={`fa fa-bell ${styles.bellIcon}`} />
+        <FaBell className={styles.bellIcon} />
         <ToReadBadge
           numberNotifications={numberNotifications}
           show={showBadge || !!fixedVersion}
@@ -757,13 +757,13 @@ const HasuraNotifications: React.FC<
             disabled={!numberNotifications || !consoleNotifications.length}
             className={styles.markAllAsReadBtn}
           >
-            mark all as read
+            Mark all as read
           </Button>
           <div
             className={styles.closeNotificationIcon}
             onClick={onClickOutside}
           >
-            <i className="fa fa-times" />
+            <FaTimes />
           </div>
         </Flex>
         <Box className={styles.notificationsContainer}>

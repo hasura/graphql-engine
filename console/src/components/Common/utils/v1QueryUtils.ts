@@ -1,12 +1,35 @@
-import { currentDriver, dataSource, terminateSql } from '../../../dataSources';
+import {
+  currentDriver,
+  dataSource,
+  Driver,
+  terminateSql,
+} from '../../../dataSources';
 import { QualifiedTable } from '../../../metadata/types';
 import { Nullable } from './tsUtils';
 import { ConsoleScope } from '../../Main/ConsoleNotification';
 import { BaseTableColumn } from '../../../dataSources/types';
+import { sqlEscapeText } from '../../../dataSources/services/postgresql/sqlUtils';
 import { FixMe } from '../../../types';
+import {
+  checkFeatureSupport,
+  READ_ONLY_RUN_SQL_QUERIES,
+} from '../../../helpers/versionUtils';
 
 export type OrderByType = 'asc' | 'desc';
 export type OrderByNulls = 'first' | 'last';
+type AllowedRunSQLKeys =
+  | 'mssql_run_sql'
+  | 'bigquery_run_sql'
+  | 'citus_run_sql'
+  | 'mysql_run_sql'
+  | 'run_sql'
+  | 'cockroach_run_sql';
+
+export const getRunSqlType = (driver: Driver): AllowedRunSQLKeys => {
+  if (driver === 'postgres') return 'run_sql';
+
+  return `${driver}_run_sql`;
+};
 
 export const getRunSqlQuery = (
   sql: string,
@@ -15,18 +38,13 @@ export const getRunSqlQuery = (
   read_only = false,
   driver = currentDriver
 ) => {
-  let type = 'run_sql';
-  if (driver === 'mssql' || driver === 'bigquery') {
-    type = `${driver}_run_sql`;
-  }
-
   return {
-    type,
+    type: getRunSqlType(driver),
     args: {
       source,
       sql: terminateSql(sql),
       cascade,
-      read_only,
+      read_only: read_only && !!checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES),
     },
   };
 };
@@ -46,7 +64,7 @@ export const convertPGValue = (
   }
 
   if (typeof value === 'string') {
-    return `'${value}'`;
+    return sqlEscapeText(value);
   }
 
   if (
@@ -163,7 +181,12 @@ type ColumnExpValue = Record<validOperators | string, any>;
 type ColumnExp = Record<string, ColumnExpValue>;
 type BoolExp = AndExp | OrExp | NotExp | ColumnExp;
 
-export type WhereClause = BoolExp | Record<string, any>;
+type ColumnName = string;
+type Operator = string;
+type ClauseValue = string | string[] | number | number[];
+type OperatorValue = Record<Operator, ClauseValue>;
+export type WhereClauseRecord = Record<ColumnName, OperatorValue>;
+export type WhereClause = BoolExp | WhereClauseRecord;
 
 export const makeOrderBy = (
   column: string,

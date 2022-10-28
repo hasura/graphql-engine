@@ -5,11 +5,11 @@ selected_input_language: Typescript
 # Glob patterns for the target input files of selected language
 input_files:
   # Paths can be either a string, or an array of strings
-  JsonSchema: './src/types/**.schema.json'
-  Typescript: './src/types/**.ts'
+  # JsonSchema: './src/types/**.schema.json'
+  Typescript: "./src/types/**.ts"
 
 # Output file directory
-output_directory: './generated'
+output_directory: "./generated"
 
 # Quicktype config per-language
 # Config is an object of type "rendererOptions"
@@ -32,10 +32,10 @@ quicktype_config:
   # objective-c: ~
   # pike: ~
   python:
-    python-version: '3.7'
+    python-version: "3.7"
   # ruby: ~
   # rust: ~
   schema: ~
   # swift: ~
-  typescript:
-    # just-types: true
+  # typescript:
+  # just-types: true

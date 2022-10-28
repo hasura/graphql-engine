@@ -1,27 +1,24 @@
 import React from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import ExportMetadata from './ExportMetadata';
 import ImportMetadata from './ImportMetadata';
 import ReloadMetadata from './ReloadMetadata';
 import ResetMetadata from './ResetMetadata';
 
 const MetadataOptions = props => {
-  const styles = require('../Settings.scss');
-
   const getMetadataImportExportSection = () => {
     return (
       <div>
-        <div className={styles.intro_note}>
-          <h4>Import/Export metadata</h4>
-          <div className={styles.content_width}>
-            Get Hasura metadata as JSON.
-          </div>
+        <div className="mb-md mt-sm pt-sm">
+          <h4 className="text-lg font-bold">Import/Export metadata</h4>
+          <div className="w-8/12 mt-sm">Get Hasura metadata as JSON.</div>
         </div>
 
-        <div className={styles.display_inline}>
+        <div className="inline-block">
           <ExportMetadata {...props} />
         </div>
 
-        <div className={styles.display_inline}>
+        <div className="inline-block">
           <ImportMetadata {...props} />
         </div>
       </div>
@@ -31,21 +28,21 @@ const MetadataOptions = props => {
   const getMetadataUpdateSection = () => {
     return (
       <div>
-        <div key="meta_data_1" className={styles.intro_note}>
-          <h4>Reload metadata</h4>
-          <div className={styles.content_width}>
-            Refresh Hasura metadata, typically required if you have changed the
-            underlying database or if you have updated your remote schemas.
+        <div key="meta_data_1" className="mb-md mt-md ">
+          <h4 className="text-lg font-bold">Reload metadata</h4>
+          <div className="w-8/12 mt-sm">
+            Refresh Hasura metadata, typically required if you have changes in
+            the underlying databases or if you have updated your remote schemas.
           </div>
         </div>
 
-        <div key="meta_data_2">
+        <div key="meta_data_2" className="flex">
           <ReloadMetadata {...props} />
         </div>
 
-        <div key="meta_data_3" className={styles.intro_note}>
-          <h4>Reset metadata</h4>
-          <div className={styles.content_width}>
+        <div key="meta_data_3" className="mb-md mt-md pt-sm">
+          <h4 className="text-lg font-bold">Reset metadata</h4>
+          <div className="w-8/12 mt-sm">
             Permanently clear GraphQL Engine's metadata and configure it from
             scratch (tracking relevant tables and relationships). This process
             is not reversible.
@@ -60,31 +57,29 @@ const MetadataOptions = props => {
   };
 
   return (
-    <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top} ${styles.metadata_wrapper} container-fluid`}
-    >
-      <div className={styles.subHeader}>
-        <h2 className={styles.headerText}>Hasura Metadata Actions</h2>
-      </div>
-      <div className={styles.add_mar_top}>
-        <div className={styles.content_width}>
-          Hasura metadata stores information about your tables, relationships,
-          permissions, etc. that is used to generate the GraphQL schema and
-          API.&nbsp;
-          <a
-            href="https://hasura.io/docs/latest/graphql/core/how-it-works/metadata-schema.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <i>(Read more)</i>
-          </a>
+    <Analytics name="MetadataOptions" {...REDACT_EVERYTHING}>
+      <div className={`clear-both pl-md mt-md mb-md`}>
+        <h2 className="text-xl font-bold">Hasura Metadata Actions</h2>
+        <div className="mt-xs">
+          <div className="w-8/12">
+            Hasura metadata stores information about your tables, relationships,
+            permissions, etc. that is used to generate the GraphQL schema and
+            API.&nbsp;
+            <a
+              href="https://hasura.io/docs/latest/graphql/core/how-it-works/metadata-schema.html"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <i>(Read more)</i>
+            </a>
+          </div>
+
+          {getMetadataImportExportSection()}
+
+          {getMetadataUpdateSection()}
         </div>
-
-        {getMetadataImportExportSection()}
-
-        {getMetadataUpdateSection()}
       </div>
-    </div>
+    </Analytics>
   );
 };
 

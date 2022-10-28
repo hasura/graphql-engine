@@ -9,8 +9,6 @@ import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import { showSuccessNotification } from '../../Common/Notification';
 import { getUkeyPkeyConfig, getKeyDef } from '../Common/Components/utils';
 
-import styles from './ModifyTable.scss';
-
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
 const PrimaryKeyEditor = ({
@@ -50,9 +48,11 @@ const PrimaryKeyEditor = ({
     );
   }
 
-  const pkEditorCollapsedLabel = () => (
-    <div>{pkConfigText ? pkConfigText : 'No primary key'}</div>
-  );
+  const pkEditorCollapsedLabel = () => {
+    if (pkConfigText) {
+      return <div className="text-gray-600">{pkConfigText}</div>;
+    }
+  };
 
   // label next to the button when the editor is expanded
   const pkEditorExpandedLabel = () => (
@@ -62,7 +62,7 @@ const PrimaryKeyEditor = ({
   // expanded editor content
   const pkEditorExpanded = () => (
     <div>
-      <div className={`${styles.add_mar_top_small} ${styles.add_mar_bottom}`}>
+      <div className="mt-xs mb-xs">
         <PrimaryKeySelector
           dispatch={dispatch}
           setPk={setPrimaryKeys}
@@ -113,7 +113,7 @@ const PrimaryKeyEditor = ({
   };
 
   // Toggle button text when the editor is expanded and collapsed
-  const expandButtonText = pkConfigText ? 'Edit' : 'Add';
+  const expandButtonText = pkConfigText ? 'Edit' : 'Add primary key';
   const collapsedButtonText = pkConfigText ? 'Close' : 'Cancel';
 
   // Wrap inside an expandable editor

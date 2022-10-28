@@ -1,17 +1,15 @@
 module Hasura.SQL.WKT
-  ( ToWKT(..)
-  , WKT(..)
-  ) where
+  ( ToWKT (..),
+    WKT (..),
+  )
+where
 
-import           Hasura.Prelude
+import Data.List (intersperse)
+import Hasura.Base.Error qualified as E
+import Hasura.Prelude
+import Hasura.SQL.GeoJSON qualified as G
 
-import           Data.List          (intersperse)
-
-import qualified Hasura.Base.Error  as E
-import qualified Hasura.SQL.GeoJSON as G
-
-
-newtype WKT = WKT { getWKT :: Text }
+newtype WKT = WKT {getWKT :: Text}
 
 class ToWKT a where
   toWKT :: a -> Either E.QErr WKT
@@ -44,28 +42,28 @@ instance ToWKT G.MultiPolygon where
     mkWKT "MULTIPOLYGON"
       . fmap (mconcat . intersperse ", ")
       . traverse
-          (fmap (parens . mconcat . intersperse ", ")
+        ( fmap (parens . mconcat . intersperse ", ")
             . traverse (fmap parens . linearRingToText)
             . G.unPolygon
-          )
+        )
       . G.unMultiPolygon
 
 instance ToWKT G.GeometryCollection where
   toWKT =
     mkWKT "GEOMETRYCOLLECTION"
-       . fmap (mconcat . intersperse ", ")
-       . traverse (fmap getWKT . toWKT . G._gwcGeom)
-       . G.unGeometryCollection
+      . fmap (mconcat . intersperse ", ")
+      . traverse (fmap getWKT . toWKT . G._gwcGeom)
+      . G.unGeometryCollection
 
 instance ToWKT G.Geometry where
   toWKT =
     \case
-      G.GPoint p              -> toWKT p
-      G.GMultiPoint m         -> toWKT m
-      G.GLineString l         -> toWKT l
-      G.GMultiLineString m    -> toWKT m
-      G.GPolygon p            -> toWKT p
-      G.GMultiPolygon m       -> toWKT m
+      G.GPoint p -> toWKT p
+      G.GMultiPoint m -> toWKT m
+      G.GLineString l -> toWKT l
+      G.GMultiLineString m -> toWKT m
+      G.GPolygon p -> toWKT p
+      G.GMultiPolygon m -> toWKT m
       G.GGeometryCollection g -> toWKT g
 
 instance ToWKT G.GeometryWithCRS where
@@ -87,7 +85,7 @@ positionToText :: G.Position -> Either E.QErr Text
 positionToText (G.Position x y mz) =
   case mz of
     Nothing -> pure $ tshow x <> " " <> tshow y
-    Just _  -> Left $ E.err400 E.ParseFailed "3 dimmensional coordinates are not supported"
+    Just _ -> Left $ E.err400 E.ParseFailed "3 dimmensional coordinates are not supported"
 
 lineStringToText :: G.LineString -> Either E.QErr Text
 lineStringToText (G.LineString ls1 ls2 lsRest) = commaSeparated (ls1 : ls2 : lsRest)

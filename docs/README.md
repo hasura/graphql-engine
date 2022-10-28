@@ -1,13 +1,14 @@
-# Hasura GraphQL Engine Docs
+# README.md
 
-The documentation accompanying the Hasura GraphQL engine is written with
-[Sphinx](http://www.sphinx-doc.org/en/master/) and deployed to
-[hasura.io/docs](https://hasura.io/docs).
+## Info
 
-## Contributing
+The most up-to-date information for the docs site can be found on our wiki. You can access the wiki on the
+[live docs site](https://hasura.io/docs/wiki/), or [directly within this repository](wiki/index.mdx).
 
-Check out the [contributing](CONTRIBUTING.md) guide for more details.
+## Quick Links
 
-## License
-
-The source code in this directory are under [MIT License](../LICENSE-community).
+- I want to contribute! [[live](https://hasura.io/docs/wiki/contributions/) / [in-repo](wiki/contributions.mdx)]
+- I have questions about page structure...? [[live](https://hasura.io/docs/wiki/page-structure/) /
+  [in-repo](wiki/docusaurus-mdx-guide/page-structure.mdx)]
+- How does Docusaurus work? [[live](https://hasura.io/docs/wiki/working-with-docusaurus/) /
+  [in-repo](wiki/working-with-docusaurus.mdx)]

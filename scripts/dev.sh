@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1091 # We do not want Shellcheck to validate that sourced scripts are present.
+
 set -euo pipefail
 shopt -s globstar
 
@@ -10,8 +12,8 @@ shopt -s globstar
 #    document describing how to do various dev tasks (or worse yet, not writing
 #    one), make it runnable
 #
-# This makes use of 'cabal.project.dev-sh*' files when building. See
-# 'cabal.project.dev-sh.local'.
+# This makes use of 'cabal/dev-sh.project' files when building.
+# See 'cabal/dev-sh.project.local' for details.
 #
 # The configuration for the containers of each backend is stored in
 # separate files, see files in 'scripts/containers'
@@ -50,6 +52,10 @@ Available COMMANDs:
     Launch a Citus single-node container suitable for use with graphql-engine,
     watch its logs, clean up nicely after
 
+  mysql
+    Launch a MySQL container suitable for use with graphql-engine, watch its
+    logs, clean up nicely after
+
   test [--integration [pytest_args...] | --unit | --hlint]
     Run the unit and integration tests, handling spinning up all dependencies.
     This will force a recompile. A combined code coverage report will be
@@ -58,6 +64,9 @@ Available COMMANDs:
     respective flags. With '--integration' any arguments that follow will be
     passed to the pytest invocation. Run the hlint code linter individually
     using '--hlint'.
+
+    For unit tests, you can limit the number of tests by using
+    'test --unit --match "runTx" mssql'
 
 EOL
 exit 1
@@ -71,10 +80,6 @@ try_jq() {
     cat
   fi
 }
-
-# Bump this to:
-#  - force a reinstall of python dependencies, etc.
-DEVSH_VERSION=1.4
 
 case "${1-}" in
   graphql-engine)
@@ -96,9 +101,12 @@ case "${1-}" in
   ;;
   citus)
   ;;
+  mysql)
+  ;;
   test)
     case "${2-}" in
       --unit)
+      UNIT_TEST_ARGS=( "${@:3}" )
       RUN_INTEGRATION_TESTS=false
       RUN_UNIT_TESTS=true
       RUN_HLINT=false
@@ -108,6 +116,7 @@ case "${1-}" in
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=false
       RUN_HLINT=false
+      source scripts/parse-pytest-backend
       ;;
       --hlint)
       RUN_INTEGRATION_TESTS=false
@@ -118,6 +127,7 @@ case "${1-}" in
       RUN_INTEGRATION_TESTS=true
       RUN_UNIT_TESTS=true
       RUN_HLINT=true
+      BACKEND="postgres"
       ;;
       *)
       die_usage
@@ -136,19 +146,29 @@ MODE="$1"
 PROJECT_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." >/dev/null 2>&1 && pwd )"   # ... https://stackoverflow.com/a/246128/176841
 cd "$PROJECT_ROOT"
 
+# In CI we use the get version script to actually populate the version number
+# that will be compiled into the server. For local development we use this
+# magic number, which means we won't recompile unnecessarily. This number also
+# gets explicitly ignored in the version test in integration tests.
+echo '12345' > "$PROJECT_ROOT/server/CURRENT_VERSION"
+
 # Use pyenv if available to set an appropriate python version that will work with pytests etc.
+# Note: this does not help at all on 'nix' environments since 'pyenv' is not
+# something you normally use under nix.
 if command -v pyenv >/dev/null; then
-  # For now I guess use the greatest python3 >= 3.5
-  v=$(pyenv versions --bare | (grep  '^ *3' || true) | awk '{if($1>=3.5)print$1}' | tail -n1)
-  if [ -z "$v" ]; then
-    echo_error 'Please `pyenv install` a version of python >= 3.5 so we can use it'
+  # Use the latest version of Python installed with `pyenv`.
+  # Ensure that it is at least v3.9, so that generic types are fully supported.
+  v="$(pyenv versions --bare | (grep  '^ *3' || true) | awk '$1 >= 3.9 { print $1 }' | tail -n1)"
+  if [[ -z "$v" ]]; then
+    # shellcheck disable=SC2016
+    echo_error 'Please `pyenv install` a version of python >= 3.9 so we can use it'
     exit 2
   fi
-  echo_pretty "Pyenv found. Using python version: $v"
+  echo_pretty "Pyenv found. Using Python version: $v"
   export PYENV_VERSION=$v
   python3 --version
 else
-  echo_warn "Pyenv not installed. Proceeding with system python version: $(python3 --version)"
+  echo_warn "Pyenv not installed. Proceeding with Python from the path, version: $(python3 --version)"
 fi
 
 
@@ -157,12 +177,15 @@ fi
 ####################################
 
 source scripts/containers/postgres
-source scripts/containers/mssql
+source scripts/containers/mssql.sh
 source scripts/containers/citus
+source scripts/containers/mysql.sh
+source scripts/data-sources-util.sh
 
 PG_RUNNING=0
 MSSQL_RUNNING=0
 CITUS_RUNNING=0
+MYSQL_RUNNING=0
 
 function cleanup {
   echo
@@ -175,6 +198,7 @@ function cleanup {
   if [    $PG_RUNNING -eq 1 ]; then    pg_cleanup; fi
   if [ $MSSQL_RUNNING -eq 1 ]; then mssql_cleanup; fi
   if [ $CITUS_RUNNING -eq 1 ]; then citus_cleanup; fi
+  if [ $MYSQL_RUNNING -eq 1 ]; then mysql_cleanup; fi
 
   echo_pretty "Done"
 }
@@ -182,39 +206,64 @@ function cleanup {
 trap cleanup EXIT
 
 function pg_start() {
-  pg_launch_container
-  PG_RUNNING=1
-  pg_wait
+  if [ $PG_RUNNING -eq 0 ]; then
+    pg_launch_container
+    PG_RUNNING=1
+    pg_wait
+  fi
 }
 
 function mssql_start() {
-  mssql_launch_container
-  MSSQL_RUNNING=1
-  mssql_wait
+  if [ $MSSQL_RUNNING -eq 0 ]; then
+    mssql_launch_container
+    MSSQL_RUNNING=1
+    if [[ "$(uname -m)" == 'arm64' ]]; then
+      # mssql_wait uses the tool sqlcmd to wait for a database connection which unfortunately
+      # is not available for the azure-sql-edge docker image - which is the only image from microsoft
+      # that runs on M1 computers. So we sleep for 20 seconds, cross fingers and hope for the best
+      # see https://github.com/microsoft/mssql-docker/issues/668
+
+      echo "Sleeping for 20 sec while mssql comes up..."
+      sleep 20
+    else
+      mssql_wait
+    fi
+  fi
 }
 
 function citus_start() {
-  citus_launch_container
-  CITUS_RUNNING=1
-  citus_wait
+  if [ $CITUS_RUNNING -eq 0 ]; then
+    citus_launch_container
+    CITUS_RUNNING=1
+    citus_wait
+  fi
 }
 
-# This is just a faster version of
-#    mssql_start
-#    pg_start
-#    citus_start
-function all_dbs_start() {
-  # start all
-  mssql_launch_container
-  MSSQL_RUNNING=1
-  pg_launch_container
-  PG_RUNNING=1
-  citus_launch_container
-  CITUS_RUNNING=1
-  # wait for all
-  pg_wait
-  mssql_wait
-  citus_wait
+function mysql_start() {
+  if [ $MYSQL_RUNNING -eq 0 ]; then
+    mysql_launch_container
+    MYSQL_RUNNING=1
+    mysql_wait
+  fi
+}
+
+function start_dbs() {
+  # always launch the postgres container
+  pg_start
+
+  case "$BACKEND" in
+    citus)
+      citus_start
+    ;;
+    mssql)
+      mssql_start
+    ;;
+    mysql)
+      mysql_start
+    ;;
+    # bigquery deliberately omitted as its test setup is atypical. See:
+    # https://github.com/hasura/graphql-engine/blob/master/server/py-tests/README.md#running-bigquery-tests
+  esac
 }
 
 
@@ -223,7 +272,7 @@ function all_dbs_start() {
 #################################
 
 if [ "$MODE" = "graphql-engine" ]; then
-  cd "$PROJECT_ROOT/server"
+  cd "$PROJECT_ROOT"
   # Existing tix files for a different hge binary will cause issues:
   rm -f graphql-engine.tix
 
@@ -232,10 +281,12 @@ if [ "$MODE" = "graphql-engine" ]; then
     echo
     # Generate coverage, which can be useful for debugging or understanding
     if command -v hpc >/dev/null && command -v jq >/dev/null ; then
-      # Get the appropriate mix dir (the newest one). This way this hopefully
-      # works when cabal.project.dev-sh.local is edited to turn on optimizations.
+      # Get the appropriate mix dir (the newest one); this way this hopefully
+      # works when 'cabal/dev-sh.project.local' is edited to turn on
+      # optimizations.
+      #
       # See also: https://hackage.haskell.org/package/cabal-plan
-      distdir=$(cat dist-newstyle/cache/plan.json | jq -r '."install-plan"[] | select(."id" == "graphql-engine-1.0.0-inplace")? | ."dist-dir"')
+      distdir=$(jq -r '."install-plan"[] | select(."id" == "graphql-engine-1.0.0-inplace")? | ."dist-dir"' dist-newstyle/cache/plan.json)
       hpcdir="$distdir/hpc/dyn/mix/graphql-engine-1.0.0"
       echo_pretty "Generating code coverage report..."
       COVERAGE_DIR="dist-newstyle/dev.sh-coverage"
@@ -267,11 +318,6 @@ if [ "$MODE" = "graphql-engine" ]; then
   export HASURA_GRAPHQL_DATABASE_URL=${HASURA_GRAPHQL_DATABASE_URL-$PG_DB_URL}
   export HASURA_GRAPHQL_SERVER_PORT=${HASURA_GRAPHQL_SERVER_PORT-8181}
 
-  export HASURA_BIGQUERY_SERVICE_ACCOUNT="<<<SERVICE_ACCOUNT_FILE_CONTENTS>>>" # `cat ../SERVICE_ACCOUNT_FILE.json`
-  export HASURA_BIGQUERY_PROJECT_ID="<<<PROJECT_ID>>>"
-  export HASURA_BIGQUERY_DATASETS="<<<CSV_DATASETS>>>"
-
-
   echo_pretty "We will connect to postgres at '$HASURA_GRAPHQL_DATABASE_URL'"
   echo_pretty "If you haven't overridden HASURA_GRAPHQL_DATABASE_URL, you can"
   echo_pretty "launch a fresh postgres container for us to connect to, in a"
@@ -279,17 +325,17 @@ if [ "$MODE" = "graphql-engine" ]; then
   echo_pretty "    $ $0 postgres"
   echo_pretty ""
 
-  RUN_INVOCATION=(cabal new-run --project-file=cabal.project.dev-sh --RTS --
+  RUN_INVOCATION=(cabal new-run --project-file=cabal/dev-sh.project --RTS --
     exe:graphql-engine +RTS -N -T -s -RTS serve
     --enable-console --console-assets-dir "$PROJECT_ROOT/console/static/dist"
     )
 
   echo_pretty 'About to do:'
-  echo_pretty '    $ cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine'
+  echo_pretty '    $ cabal new-build --project-file=cabal/dev-sh.project exe:graphql-engine'
   echo_pretty "    $ ${RUN_INVOCATION[*]}"
   echo_pretty ''
 
-  cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine
+  cabal new-build --project-file=cabal/dev-sh.project exe:graphql-engine
 
   # We assume a PG is *already running*, and therefore bypass the
   # cleanup mechanism previously set.
@@ -370,7 +416,7 @@ elif [ "$MODE" = "mssql" ]; then
   echo_pretty "    $ $MSSQL_DOCKER -i <import_file>"
   echo_pretty ""
   echo_pretty "Here is the database URL:"
-  echo_pretty "    $MSSQL_DB_URL"
+  echo_pretty "    $MSSQL_CONN_STR"
   echo_pretty ""
   docker logs -f --tail=0 "$MSSQL_CONTAINER_NAME"
 
@@ -392,12 +438,29 @@ elif [ "$MODE" = "citus" ]; then
   echo_pretty ""
   docker logs -f --tail=0 "$CITUS_CONTAINER_NAME"
 
+#################################
+###      MySQL Container      ###
+#################################
+
+elif [ "$MODE" = "mysql" ]; then
+  mysql_start
+  echo_pretty "MYSQL logs will start to show up in realtime here. Press CTRL-C to exit and "
+  echo_pretty "shutdown this container."
+  echo_pretty ""
+  echo_pretty "You can use the following to connect to the running instance:"
+  echo_pretty "    $ $MYSQL_DOCKER"
+  echo_pretty ""
+  echo_pretty "If you want to import a SQL file into MYSQL:"
+  echo_pretty "    $ $MYSQL_DOCKER -i <import_file>"
+  echo_pretty ""
+  docker logs -f --tail=0 "$MYSQL_CONTAINER_NAME"
+
 
 elif [ "$MODE" = "test" ]; then
   ########################################
   ###     Integration / unit tests     ###
   ########################################
-  cd "$PROJECT_ROOT/server"
+  cd "$PROJECT_ROOT"
 
   # Until we can use a real webserver for TestEventFlood, limit concurrency
   export HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE=8
@@ -407,29 +470,49 @@ elif [ "$MODE" = "test" ]; then
 
   # Various tests take some configuration from the environment; set these up here:
   export EVENT_WEBHOOK_HEADER="MyEnvValue"
-  export WEBHOOK_FROM_ENV="http://127.0.0.1:5592"
-  export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://127.0.0.1:5594"
-  export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://127.0.0.1:5000"
+  export EVENT_WEBHOOK_HANDLER="http://localhost:5592"
+  export ACTION_WEBHOOK_HANDLER="http://localhost:5593"
+  export SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN="http://localhost:5594"
+  export REMOTE_SCHEMAS_WEBHOOK_DOMAIN="http://localhost:5000"
+  export GRAPHQL_SERVICE_HANDLER="http://localhost:4001"
+  export GRAPHQL_SERVICE_1="http://localhost:4020"
+  export GRAPHQL_SERVICE_2="http://localhost:4021"
+  export GRAPHQL_SERVICE_3="http://localhost:4022"
 
-  # It's better UX to build first (possibly failing) before trying to launch
-  # PG, but make sure that new-run uses the exact same build plan, else we risk
-  # rebuilding twice... ugh
-  cabal new-build --project-file=cabal.project.dev-sh exe:graphql-engine test:graphql-engine-tests
   if [ "$RUN_INTEGRATION_TESTS" = true ]; then
-    all_dbs_start
-  else
-    # unit tests just need access to a postgres instance:
-    pg_start
+    # It's better UX to build first (possibly failing) before trying to launch
+    # PG, but make sure that new-run uses the exact same build plan, else we risk
+    # rebuilding twice... ugh
+    # Formerly this was a `cabal build` but mixing cabal build and cabal run
+    # seems to conflict now, causing re-linking, haddock runs, etc. Instead do a
+    # `graphql-engine version` to trigger build
+    cabal run \
+      --project-file=cabal/dev-sh.project \
+      -- exe:graphql-engine \
+        --metadata-database-url="$PG_DB_URL" \
+        version
+    start_dbs
   fi
 
   if [ "$RUN_UNIT_TESTS" = true ]; then
     echo_pretty "Running Haskell test suite"
-    HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" cabal new-run --project-file=cabal.project.dev-sh -- test:graphql-engine-tests
+
+    # unit tests need access to postgres and mssql instances:
+    mssql_start
+    pg_start
+
+    echo "${UNIT_TEST_ARGS[@]}"
+    HASURA_GRAPHQL_DATABASE_URL="$PG_DB_URL" \
+      HASURA_MSSQL_CONN_STR="$MSSQL_CONN_STR" \
+      cabal run \
+        --project-file=cabal/dev-sh.project \
+        test:graphql-engine-tests \
+        -- "${UNIT_TEST_ARGS[@]}"
   fi
 
   if [ "$RUN_HLINT" = true ]; then
     if command -v hlint >/dev/null; then
-      (cd "$PROJECT_ROOT/server" && hlint src-*)
+      hlint "${PROJECT_ROOT}/server/src-"*
     else
       echo_warn "hlint is not installed: skipping"
     fi
@@ -444,16 +527,18 @@ elif [ "$MODE" = "test" ]; then
     # are defined.
     export HASURA_GRAPHQL_PG_SOURCE_URL_1=${HASURA_GRAPHQL_PG_SOURCE_URL_1-$PG_DB_URL}
     export HASURA_GRAPHQL_PG_SOURCE_URL_2=${HASURA_GRAPHQL_PG_SOURCE_URL_2-$PG_DB_URL}
+    export HASURA_GRAPHQL_MSSQL_SOURCE_URL=$MSSQL_CONN_STR
+    export HGE_URL="http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT"
 
     # Using --metadata-database-url flag to test multiple backends
     #       HASURA_GRAPHQL_PG_SOURCE_URL_* For a couple multi-source pytests:
-    HASURA_GRAPHQL_PG_SOURCE_URL_1="$PG_DB_URL" \
-    HASURA_GRAPHQL_PG_SOURCE_URL_2="$PG_DB_URL" \
-    cabal new-run --project-file=cabal.project.dev-sh -- exe:graphql-engine \
-      --metadata-database-url="$PG_DB_URL" serve \
-      --stringify-numeric-types \
-      --enable-console \
-      --console-assets-dir ../console/static/dist \
+    cabal new-run \
+      --project-file=cabal/dev-sh.project \
+      -- exe:graphql-engine \
+        --metadata-database-url="$PG_DB_URL" serve \
+        --stringify-numeric-types \
+        --enable-console \
+        --console-assets-dir ../console/static/dist \
       &> "$GRAPHQL_ENGINE_TEST_LOG" & GRAPHQL_ENGINE_PID=$!
 
     echo -n "Waiting for graphql-engine"
@@ -466,76 +551,32 @@ elif [ "$MODE" = "test" ]; then
       fi
     done
 
-    echo ""
     echo " Ok"
 
-    METADATA_URL=http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT/v1/metadata
+    add_sources $HASURA_GRAPHQL_SERVER_PORT
 
-    echo ""
-    echo "Adding Postgres source"
-    curl "$METADATA_URL" \
-    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$PG_DB_URL"'","pool_settings":{}}}}}'
+    TEST_DIR="server/tests-py"
 
-    echo ""
-    echo "Adding SQL Server source"
-    curl "$METADATA_URL" \
-    --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'","pool_settings":{}}}}}'
+    # Install and load Python test dependencies
+    PY_VENV="${TEST_DIR}/.hasura-dev-python-venv"
+    make "$PY_VENV"
+    source "${PY_VENV}/bin/activate"
 
-    echo ""
-    echo "Sources added:"
-    curl "$METADATA_URL" --data-raw '{"type":"export_metadata","args":{}}'
+    # Install node.js test dependencies
+    make "${TEST_DIR}/node_modules"
 
-    cd "$PROJECT_ROOT/server/tests-py"
-
-    ## Install misc test dependencies:
-    if [ ! -d "node_modules" ]; then
-      npm_config_loglevel=error npm install remote_schemas/nodejs/
-    else
-      echo_pretty "It looks like node dependencies have been installed already. Skipping."
-      echo_pretty "If things fail please run this and try again"
-      echo_pretty "  $ rm -r \"$PROJECT_ROOT/server/tests-py/node_modules\""
-    fi
-
-    ### Check for and install dependencies in venv
-    PY_VENV=.hasura-dev-python-venv
-    DEVSH_VERSION_FILE=.devsh_version
-    # Do we need to force reinstall?
-    if [ "$DEVSH_VERSION" = "$(cat $DEVSH_VERSION_FILE 2>/dev/null || true)" ]; then
-      true # ok
-    else
-      echo_warn 'dev.sh version was bumped or fresh install. Forcing reinstallation of dependencies.'
-      rm -rf "$PY_VENV"
-      echo "$DEVSH_VERSION" > "$DEVSH_VERSION_FILE"
-    fi
-    set +u  # for venv activate
-    if [ ! -d "$PY_VENV" ]; then
-      python3 -m venv "$PY_VENV"
-      source "$PY_VENV/bin/activate"
-      pip3 install wheel
-      # If the maintainer of this script or pytests needs to change dependencies:
-      #  - alter requirements-top-level.txt as needed
-      #  - delete requirements.txt
-      #  - run this script, then check in the new frozen requirements.txt
-      if [ -f requirements.txt ]; then
-        pip3 install -r requirements.txt
-      else
-        pip3 install -r requirements-top-level.txt
-        pip3 freeze > requirements.txt
-      fi
-    else
-      echo_pretty "It looks like python dependencies have been installed already. Skipping."
-      echo_pretty "If things fail please run this and try again"
-      echo_pretty "  $ rm -r \"$PROJECT_ROOT/server/tests-py/$PY_VENV\""
-
-      source "$PY_VENV/bin/activate"
-    fi
+    cd "$TEST_DIR"
 
     # TODO MAYBE: fix deprecation warnings, make them an error
-    if ! pytest -W ignore::DeprecationWarning --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT --pg-urls "$PG_DB_URL" --durations=20 "${PYTEST_ARGS[@]}"; then
+    if ! pytest \
+          --hge-urls http://127.0.0.1:$HASURA_GRAPHQL_SERVER_PORT \
+          --pg-urls "$PG_DB_URL" \
+          --assert=plain \
+          "${PYTEST_ARGS[@]}"
+    then
       echo_error "^^^ graphql-engine logs from failed test run can be inspected at: $GRAPHQL_ENGINE_TEST_LOG"
     fi
     deactivate  # python venv
-    set -u
 
     cd "$PROJECT_ROOT/server"
     # Kill the cabal new-run and its children. INT so we get hpc report:

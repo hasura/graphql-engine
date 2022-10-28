@@ -5,16 +5,16 @@ import {
   ETOperationColumn,
   EventTrigger,
   RetryConf,
+  DatabaseInfo,
+  EventTriggerAutoCleanup,
 } from '../types';
 import { Header, defaultHeader } from '../../../Common/Headers/Headers';
 import {
   parseServerWebhook,
   parseEventTriggerOperations,
   getETOperationColumns,
-  findETTable,
 } from '../utils';
 import { parseServerHeaders } from '../../../Common/Headers/utils';
-import { Table } from '../../../../dataSources/types';
 import { generateTableDef } from '../../../../dataSources';
 import { QualifiedTable } from '../../../../metadata/types';
 
@@ -27,13 +27,15 @@ export type LocalEventTriggerState = {
   retryConf: RetryConf;
   headers: Header[];
   source: string;
+  isAllColumnChecked: boolean;
+  cleanupConfig: EventTriggerAutoCleanup;
 };
 
-const defaultState: LocalEventTriggerState = {
+export const defaultState: LocalEventTriggerState = {
   name: '',
   table: {
     name: '',
-    schema: 'public',
+    schema: '',
   },
   operations: {
     insert: false,
@@ -53,12 +55,20 @@ const defaultState: LocalEventTriggerState = {
   },
   headers: [defaultHeader],
   source: '',
+  isAllColumnChecked: true,
+  cleanupConfig: {
+    schedule: '0 0 * * *',
+    batch_size: 10000,
+    clear_older_than: 168,
+    timeout: 60,
+    clean_invocation_logs: false,
+    paused: true,
+  },
 };
 
 export const parseServerETDefinition = (
   eventTrigger?: EventTrigger,
-  table?: Table,
-  source?: string
+  databaseInfo?: DatabaseInfo
 ): LocalEventTriggerState => {
   if (!eventTrigger) {
     return defaultState;
@@ -71,21 +81,26 @@ export const parseServerETDefinition = (
     eventTrigger.table_name,
     eventTrigger.schema_name
   );
+  const columnInfo =
+    databaseInfo?.[eventTrigger.schema_name]?.[eventTrigger.table_name] ?? [];
 
   return {
     name: eventTrigger.name,
-    source: source ?? '',
+    source: eventTrigger.source ?? '',
     table: etTableDef,
     operations: parseEventTriggerOperations(etDef),
-    operationColumns: table
+    operationColumns: databaseInfo
       ? getETOperationColumns(
           etDef.update ? etDef.update.columns : [],
-          table.columns
+          columnInfo
         )
       : [],
     webhook: parseServerWebhook(etConf.webhook, etConf.webhook_from_env),
     retryConf: etConf.retry_conf,
     headers: parseServerHeaders(eventTrigger.configuration.headers),
+    isAllColumnChecked: etDef?.update?.columns === '*',
+    cleanupConfig:
+      eventTrigger.configuration?.cleanup_config ?? defaultState.cleanupConfig,
   };
 };
 
@@ -118,6 +133,11 @@ export const useEventTrigger = (initState?: LocalEventTriggerState) => {
             newTableDef = {
               ...newTableDef,
               name: tableName,
+            };
+          } else if (!tableName && !schemaName) {
+            newTableDef = {
+              name: '',
+              schema: '',
             };
           }
           return {
@@ -161,26 +181,30 @@ export const useEventTrigger = (initState?: LocalEventTriggerState) => {
       bulk: (s: LocalEventTriggerState) => {
         setState(s);
       },
+      toggleAllColumnChecked: () => {
+        setState(s => ({
+          ...s,
+          isAllColumnChecked: !s.isAllColumnChecked,
+        }));
+      },
+      cleanupConfig: (cleanupConfig: EventTriggerAutoCleanup) => {
+        setState(s => ({
+          ...s,
+          cleanupConfig,
+        }));
+      },
     },
   };
 };
 
 export const useEventTriggerModify = (
   eventTrigger: EventTrigger,
-  allTables: Table[],
-  source: string
+  databaseInfo: DatabaseInfo
 ) => {
-  const table = findETTable(eventTrigger, allTables);
   const { state, setState } = useEventTrigger(
-    parseServerETDefinition(eventTrigger, table, source)
+    parseServerETDefinition(eventTrigger, databaseInfo)
   );
 
-  React.useEffect(() => {
-    if (allTables.length) {
-      const etTable = findETTable(eventTrigger, allTables);
-      setState.bulk(parseServerETDefinition(eventTrigger, etTable, source));
-    }
-  }, [allTables]);
   return {
     state,
     setState,

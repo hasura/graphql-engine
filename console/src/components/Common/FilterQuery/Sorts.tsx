@@ -1,7 +1,8 @@
 import React from 'react';
+import { FaTimes } from 'react-icons/fa';
 import { OrderBy } from '../utils/v1QueryUtils';
 
-import styles from './FilterQuery.scss';
+import styles from './FilterQuery.module.scss';
 import { BaseTable } from '../../../dataSources/types';
 
 type Props = {
@@ -79,11 +80,7 @@ const Sorts: React.FC<Props> = props => {
             </div>
             <div className="text-center col-xs-1">
               {sorts.length === i + 1 ? null : (
-                <i
-                  className="fa fa-times"
-                  onClick={removeSort}
-                  data-test={`clear-filter-${i}`}
-                />
+                <FaTimes onClick={removeSort} data-test={`clear-filter-${i}`} />
               )}
             </div>
           </div>

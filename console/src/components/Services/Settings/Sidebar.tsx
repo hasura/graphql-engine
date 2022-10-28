@@ -1,17 +1,26 @@
 /* eslint-disable no-underscore-dangle */
 import React from 'react';
 import { Link, RouteComponentProps } from 'react-router';
+import { useServerConfig } from '@/hooks';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import CheckIcon from '../../Common/Icons/Check';
 import CrossIcon from '../../Common/Icons/Cross';
+import TimesCircleIcon from '../../Common/Icons/TimesCircle';
+import ExclamationTriangleIcon from '../../Common/Icons/ExclamationTriangle';
 import globals from '../../../Globals';
 import { CLI_CONSOLE_MODE } from '../../../constants';
 import { getAdminSecret } from '../ApiExplorer/ApiRequest/utils';
+import { isProLiteConsole } from '../../../utils/proConsole';
 
-import styles from '../../Common/TableCommon/Table.scss';
+import styles from '../../Common/TableCommon/Table.module.scss';
+import {
+  checkFeatureSupport,
+  INSECURE_TLS_ALLOW_LIST,
+} from '../../../helpers/versionUtils';
 
-interface Metadata {
+export interface Metadata {
   inconsistentObjects: Record<string, unknown>[];
+  inconsistentInheritedRoles: Record<string, unknown>[];
 }
 
 type SidebarProps = {
@@ -25,7 +34,10 @@ type SectionDataKey =
   | 'allow-list'
   | 'logout'
   | 'about'
-  | 'inherited-roles';
+  | 'inherited-roles'
+  | 'insecure-domain'
+  | 'prometheus-settings'
+  | 'feature-flags';
 
 interface SectionData {
   key: SectionDataKey;
@@ -45,7 +57,12 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
   });
 
   const consistentIcon =
-    metadata.inconsistentObjects.length === 0 ? <CheckIcon /> : <CrossIcon />;
+    metadata.inconsistentObjects.length === 0 &&
+    metadata.inconsistentInheritedRoles.length === 0 ? (
+      <CheckIcon />
+    ) : (
+      <CrossIcon />
+    );
 
   sectionsData.push({
     key: 'status',
@@ -61,7 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
 
   sectionsData.push({
     key: 'allow-list',
-    link: '/settings/allow-list',
+    link: '/api/allow-list',
     dataTestVal: 'allow-list-link',
     title: 'Allow List',
   });
@@ -93,6 +110,53 @@ const Sidebar: React.FC<SidebarProps> = ({ location, metadata }) => {
     link: '/settings/inherited-roles',
     dataTestVal: 'inherited-roles-link',
     title: 'Inherited Roles',
+  });
+
+  if (checkFeatureSupport(INSECURE_TLS_ALLOW_LIST))
+    sectionsData.push({
+      key: 'insecure-domain',
+      link: '/settings/insecure-domain',
+      dataTestVal: 'insecure-domain-link',
+      title: 'Insecure TLS Allow List',
+    });
+
+  const { data: configData, isLoading, isError } = useServerConfig();
+  const PrometheusStateIcon = () => {
+    if (isLoading) {
+      return <span>...</span>;
+    }
+
+    if (isError) {
+      return (
+        <ExclamationTriangleIcon className="ml-sm mb-1 text-red-600 h-5 w-5" />
+      );
+    }
+
+    return configData?.is_prometheus_metrics_enabled ? (
+      <CheckIcon className="ml-sm" />
+    ) : (
+      <TimesCircleIcon className="ml-sm mb-1 h-5 w-5" />
+    );
+  };
+
+  if (isProLiteConsole(window.__env)) {
+    sectionsData.push({
+      key: 'prometheus-settings',
+      link: '/settings/prometheus-settings',
+      dataTestVal: 'prometheus-settings-link',
+      title: (
+        <span>
+          Prometheus Metrics <PrometheusStateIcon />
+        </span>
+      ),
+    });
+  }
+
+  sectionsData.push({
+    key: 'feature-flags',
+    link: '/settings/feature-flags',
+    dataTestVal: 'feature-flags-link',
+    title: 'Feature Flags',
   });
 
   const currentLocation = location.pathname;

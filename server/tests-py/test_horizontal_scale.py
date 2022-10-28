@@ -1,15 +1,18 @@
 import pytest
-import ruamel.yaml as yaml
 import time
+import json
 import jsondiff
 from context import PytestConf
+from ruamel.yaml import YAML
+
+yaml=YAML(typ='safe', pure=True)
 
 
 if not PytestConf.config.getoption("--test-hge-scale-url"):
     pytest.skip("--test-hge-scale-url flag is missing, skipping tests", allow_module_level=True)
 
 
-class TestHorizantalScaleBasic():
+class TestHorizontalScaleBasic():
     servers = {}
 
     @pytest.fixture(autouse=True, scope='class')
@@ -18,12 +21,11 @@ class TestHorizantalScaleBasic():
         self.servers['2'] = hge_ctx.hge_scale_url
         yield
         # teardown
-        st_code, resp = hge_ctx.v1q_f(self.dir() + '/teardown.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir() + '/teardown.yaml')
 
     def test_horizontal_scale_basic(self, hge_ctx):
         with open(self.dir() + "/steps.yaml") as c:
-            conf = yaml.safe_load(c)
+            conf = yaml.load(c)
 
         assert isinstance(conf, list) == True, 'Not a list'
         for _, step in enumerate(conf):
@@ -32,9 +34,10 @@ class TestHorizantalScaleBasic():
                 self.servers[step['operation']['server']] + "/v1/query",
                 json=step['operation']['query']
             )
-            st_code = response.status_code
             resp = response.json()
-            assert st_code == 200, resp
+            assert \
+                response.status_code == 200, \
+                f'Expected {response.status_code} to be 200. Response:\n{json.dumps(resp, indent=2)}'
 
             # wait for 20 sec
             time.sleep(20)
@@ -43,9 +46,10 @@ class TestHorizantalScaleBasic():
                 self.servers[step['validate']['server']] + "/v1alpha1/graphql",
                 json=step['validate']['query']
             )
-            st_code = response.status_code
             resp = response.json()
-            assert st_code == 200, resp
+            assert \
+                response.status_code == 200, \
+                f'Expected {response.status_code} to be 200. Response:\n{json.dumps(resp, indent=2)}'
 
             if 'response' in step['validate']:
                 assert resp == step['validate']['response'], yaml.dump({

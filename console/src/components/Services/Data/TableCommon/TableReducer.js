@@ -1,3 +1,5 @@
+import produce from 'immer';
+
 import { defaultModifyState, defaultPermissionsState } from '../DataState';
 
 import { MAKE_REQUEST, REQUEST_SUCCESS, REQUEST_ERROR } from '../DataActions';
@@ -21,6 +23,9 @@ import {
   TOGGLE_ENUM,
   TOGGLE_ENUM_SUCCESS,
   TOGGLE_ENUM_FAILURE,
+  TOGGLE_APOLLO_FEDERATION,
+  TOGGLE_APOLLO_FEDERATION_SUCCESS,
+  TOGGLE_APOLLO_FEDERATION_FAILURE,
   MODIFY_ROOT_FIELD,
   MODIFY_TABLE_CUSTOM_NAME,
   SET_CHECK_CONSTRAINTS,
@@ -50,6 +55,7 @@ import {
   PERM_SET_FILTER,
   PERM_SET_FILTER_SAME_AS,
   PERM_TOGGLE_FIELD,
+  PERM_TOGGLE_SELECT_FIELD,
   PERM_TOGGLE_ALL_FIELDS,
   PERM_ALLOW_ALL,
   PERM_TOGGLE_MODIFY_LIMIT,
@@ -76,12 +82,18 @@ import {
   updateApplySamePerms,
   DELETE_PRESET,
   SET_PRESET_VALUE,
+  PERM_UPDATE_QUERY_ROOT_FIELDS,
+  PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS,
+  modifyRootPermissionState,
 } from '../TablePermissions/Actions';
-import { getDefaultFilterType } from '../TablePermissions/utils';
+import {
+  getDefaultFilterType,
+  getPrimaryKeysFromTable,
+  hasSelectPrimaryKey,
+} from '../TablePermissions/utils';
 
 const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
   const modifyState = JSON.parse(JSON.stringify(modifyStateOrig));
-
   switch (action.type) {
     case RESET:
       return { ...defaultModifyState };
@@ -162,6 +174,7 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           rSchema: selectedRel.rSchema,
           rcol: selectedRel.rcol,
           isUnique: selectedRel.isUnique,
+          isPrimary: selectedRel.isPrimary,
         },
       };
     case REL_RESET:
@@ -307,16 +320,19 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       };
 
     case PERM_TOGGLE_ALLOW_AGGREGATION:
-      return {
-        ...modifyState,
-        permissionsState: {
-          ...updatePermissionsState(
-            modifyState.permissionsState,
-            'allow_aggregations',
-            action.data
-          ),
-        },
-      };
+      return produce(modifyState, draft => {
+        const newPermissionsState = updatePermissionsState(
+          modifyState.permissionsState,
+          'allow_aggregations',
+          action.data
+        );
+
+        draft.permissionsState = modifyRootPermissionState(
+          newPermissionsState,
+          'select_aggregate',
+          action.data
+        );
+      });
 
     case PERM_TOGGLE_MODIFY_LIMIT:
       return {
@@ -401,6 +417,30 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
       });
 
       return returnState;
+
+    case PERM_TOGGLE_SELECT_FIELD:
+      const tablePrimaryKeys = getPrimaryKeysFromTable(schemas, modifyState);
+      return produce(modifyState, draft => {
+        const newPermissionsState = updatePermissionsState(
+          modifyState.permissionsState,
+          action.fieldType,
+          toggleField(
+            modifyState.permissionsState[modifyState.permissionsState.query],
+            action.fieldName,
+            action.fieldType
+          )
+        );
+
+        const hasSelectedPrimaryKey = hasSelectPrimaryKey(
+          tablePrimaryKeys,
+          newPermissionsState?.select?.columns
+        );
+        draft.permissionsState = modifyRootPermissionState(
+          newPermissionsState,
+          'select_by_pk',
+          hasSelectedPrimaryKey
+        );
+      });
 
     case PERM_TOGGLE_FIELD:
       return {
@@ -623,6 +663,29 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
           loading: false,
         },
       };
+
+    case TOGGLE_APOLLO_FEDERATION:
+      return {
+        ...modifyState,
+        tableApolloFederation: {
+          loading: true,
+        },
+      };
+    case TOGGLE_APOLLO_FEDERATION_FAILURE:
+      return {
+        ...modifyState,
+        tableApolloFederation: {
+          loading: false,
+          error: action.error,
+        },
+      };
+    case TOGGLE_APOLLO_FEDERATION_SUCCESS:
+      return {
+        ...modifyState,
+        tableApolloFederation: {
+          loading: false,
+        },
+      };
     case MODIFY_TABLE_CUSTOM_NAME:
       return {
         ...modifyState,
@@ -638,6 +701,15 @@ const modifyReducer = (tableName, schemas, modifyStateOrig, action) => {
         ...modifyState,
         checkConstraintsModify: action.constraints,
       };
+    case PERM_UPDATE_QUERY_ROOT_FIELDS:
+      return produce(modifyState, draft => {
+        draft.permissionsState.select.query_root_fields = action.value;
+      });
+    case PERM_UPDATE_SUBSCRIPTION_ROOT_FIELDS:
+      return produce(modifyState, draft => {
+        draft.permissionsState.select.subscription_root_fields = action.value;
+      });
+
     default:
       return modifyState;
   }

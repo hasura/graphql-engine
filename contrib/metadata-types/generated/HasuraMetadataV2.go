@@ -1005,7 +1005,7 @@ type Action struct {
 	Comment     *string          `json:"comment,omitempty"`    // Comment
 	Definition  ActionDefinition `json:"definition"`           // Definition of the action
 	Name        string           `json:"name"`                 // Name of the action
-	Permissions *Permissions     `json:"permissions,omitempty"`// Permissions of the action
+	Permissions []Permission     `json:"permissions,omitempty"`// Permissions of the action
 }
 
 // Definition of the action
@@ -1040,8 +1040,7 @@ type Header struct {
 	ValueFromEnv *string `json:"value_from_env,omitempty"`// Name of the environment variable which holds the value of the header
 }
 
-// Permissions of the action
-type Permissions struct {
+type Permission struct {
 	Role string `json:"role"`
 }
 
@@ -1436,11 +1435,11 @@ type SelectPermissionEntry struct {
 //
 // https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/permission.html#selectpermission
 type SelectPermission struct {
-	AllowAggregations *bool                  `json:"allow_aggregations,omitempty"`// Toggle allowing aggregate queries
-	Columns           *EventTriggerColumns   `json:"columns"`                     // Only these columns are selectable (or all when '*' is specified)
-	ComputedFields    []string               `json:"computed_fields,omitempty"`   // Only these computed fields are selectable
-	Filter            map[string]interface{} `json:"filter,omitempty"`            // Only the rows where this precondition holds true are selectable
-	Limit             *int64                 `json:"limit,omitempty"`             // The maximum number of rows that can be returned
+	AllowAggregations *bool                `json:"allow_aggregations,omitempty"`// Toggle allowing aggregate queries
+	Columns           *EventTriggerColumns `json:"columns"`                     // Only these columns are selectable (or all when '*' is specified)
+	ComputedFields    []string             `json:"computed_fields,omitempty"`   // Only these computed fields are selectable
+	Filter            map[string]*Filter   `json:"filter,omitempty"`            // Only the rows where this precondition holds true are selectable
+	Limit             *int64               `json:"limit,omitempty"`             // The maximum number of rows that can be returned
 }
 
 //

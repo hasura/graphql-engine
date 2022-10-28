@@ -1,11 +1,11 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 import { Link } from 'react-router';
-import PropTypes from 'prop-types';
-
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import LeftContainer from '../../Common/Layout/LeftContainer/LeftContainer';
 import PageContainer from '../../Common/Layout/PageContainer/PageContainer';
+import styles from '../../Common/TableCommon/Table.module.scss';
 import RemoteSchemaSubSidebar from './RemoteSchemaSubSidebar';
-import styles from '../../Common/TableCommon/Table.scss';
 
 class RemoteSchemaPageContainer extends React.Component {
   render() {
@@ -14,21 +14,23 @@ class RemoteSchemaPageContainer extends React.Component {
     const currentLocation = location.pathname;
 
     const sidebarContent = (
-      <ul>
-        <li
-          role="presentation"
-          className={
-            currentLocation.includes('remote-schemas/manage')
-              ? styles.active
-              : ''
-          }
-        >
-          <Link className={styles.linkBorder} to={appPrefix + '/manage'}>
-            Manage
-          </Link>
-          <RemoteSchemaSubSidebar {...this.props} />
-        </li>
-      </ul>
+      <Analytics name="RemoteSchemaPageContainer" {...REDACT_EVERYTHING}>
+        <ul>
+          <li
+            role="presentation"
+            className={
+              currentLocation.includes('remote-schemas/manage')
+                ? styles.active
+                : ''
+            }
+          >
+            <Link className={styles.linkBorder} to={appPrefix + '/manage'}>
+              Manage
+            </Link>
+            <RemoteSchemaSubSidebar {...this.props} />
+          </li>
+        </ul>
+      </Analytics>
     );
 
     const helmet = 'Remote Schemas | Hasura';
@@ -36,9 +38,11 @@ class RemoteSchemaPageContainer extends React.Component {
     const leftContainer = <LeftContainer>{sidebarContent}</LeftContainer>;
 
     return (
-      <PageContainer helmet={helmet} leftContainer={leftContainer}>
-        {children}
-      </PageContainer>
+      <>
+        <PageContainer helmet={helmet} leftContainer={leftContainer}>
+          {children}
+        </PageContainer>
+      </>
     );
   }
 }

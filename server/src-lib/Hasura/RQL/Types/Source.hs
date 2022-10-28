@@ -1,41 +1,90 @@
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Hasura.RQL.Types.Source where
+module Hasura.RQL.Types.Source
+  ( -- * Metadata
+    SourceInfo (..),
+    BackendSourceInfo,
+    SourceCache,
+    unsafeSourceConfiguration,
+    unsafeSourceFunctions,
+    unsafeSourceInfo,
+    unsafeSourceName,
+    unsafeSourceTables,
+    siConfiguration,
+    siFunctions,
+    siName,
+    siQueryTagsConfig,
+    siTables,
+    siCustomization,
 
-import           Hasura.Prelude
+    -- * Schema cache
+    ResolvedSource (..),
+    ScalarMap (..),
 
-import qualified Data.HashMap.Strict                 as M
+    -- * Source resolver
+    SourceResolver,
+    MonadResolveSource (..),
+    MaintenanceModeVersion (..),
 
-import           Control.Lens
-import           Data.Aeson.Extended
-import           Data.Aeson.TH
+    -- * Health check
+    SourceHealthCheckInfo (..),
+    BackendSourceHealthCheckInfo,
+    SourceHealthCheckCache,
+  )
+where
 
-import qualified Hasura.SQL.AnyBackend               as AB
-import qualified Hasura.Tracing                      as Tracing
+import Control.Lens hiding ((.=))
+import Data.Aeson.Extended
+import Database.PG.Query qualified as PG
+import Hasura.Base.Error
+import Hasura.Logging qualified as L
+import Hasura.Prelude
+import Hasura.RQL.Types.Backend
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.Function
+import Hasura.RQL.Types.HealthCheck
+import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.QueryTags
+import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table
+import Hasura.SQL.AnyBackend qualified as AB
+import Hasura.SQL.Backend
+import Hasura.SQL.Tag
+import Hasura.Tracing qualified as Tracing
+import Language.GraphQL.Draft.Syntax qualified as G
 
-import           Hasura.Backends.Postgres.Connection
-import           Hasura.Base.Error
-import           Hasura.RQL.IR.BoolExp
-import           Hasura.RQL.Types.Backend
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Function
-import           Hasura.RQL.Types.Instances          ()
-import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Backend
-import           Hasura.SQL.Tag
-import           Hasura.Session
+--------------------------------------------------------------------------------
+-- Metadata
 
+data SourceInfo b = SourceInfo
+  { _siName :: SourceName,
+    _siTables :: TableCache b,
+    _siFunctions :: FunctionCache b,
+    _siConfiguration :: ~(SourceConfig b),
+    _siQueryTagsConfig :: Maybe QueryTagsConfig,
+    _siCustomization :: ResolvedSourceCustomization
+  }
 
-data SourceInfo b
-  = SourceInfo
-  { _siName          :: !SourceName
-  , _siTables        :: !(TableCache b)
-  , _siFunctions     :: !(FunctionCache b)
-  , _siConfiguration :: !(SourceConfig b)
-  } deriving (Generic)
 $(makeLenses ''SourceInfo)
-instance (Backend b, ToJSONKeyValue (BooleanOperators b (PartialSQLExp b))) => ToJSON (SourceInfo b) where
-  toJSON = genericToJSON hasuraJSON
+
+instance
+  ( Backend b,
+    ToJSON (TableCache b),
+    ToJSON (FunctionCache b),
+    ToJSON (QueryTagsConfig),
+    ToJSON (SourceCustomization)
+  ) =>
+  ToJSON (SourceInfo b)
+  where
+  toJSON (SourceInfo {..}) =
+    object
+      [ "name" .= _siName,
+        "tables" .= _siTables,
+        "functions" .= _siFunctions,
+        "configuration" .= _siConfiguration,
+        "query_tags_config" .= _siQueryTagsConfig
+      ]
 
 type BackendSourceInfo = AB.AnyBackend SourceInfo
 
@@ -54,7 +103,7 @@ unsafeSourceInfo = AB.unpackAnyBackend
 unsafeSourceName :: BackendSourceInfo -> SourceName
 unsafeSourceName bsi = AB.dispatchAnyBackend @Backend bsi go
   where
-    go (SourceInfo name _ _ _) = name
+    go (SourceInfo name _ _ _ _ _) = name
 
 unsafeSourceTables :: forall b. HasTag b => BackendSourceInfo -> Maybe (TableCache b)
 unsafeSourceTables = fmap _siTables . unsafeSourceInfo @b
@@ -65,74 +114,85 @@ unsafeSourceFunctions = fmap _siFunctions . unsafeSourceInfo @b
 unsafeSourceConfiguration :: forall b. HasTag b => BackendSourceInfo -> Maybe (SourceConfig b)
 unsafeSourceConfiguration = fmap _siConfiguration . unsafeSourceInfo @b
 
-getTableRoles :: BackendSourceInfo -> [RoleName]
-getTableRoles bsi = AB.dispatchAnyBackend @Backend bsi go
-  where
-    go si = M.keys . _tiRolePermInfoMap =<< M.elems (_siTables si)
-
+--------------------------------------------------------------------------------
+-- Schema cache
 
 -- | Contains Postgres connection configuration and essential metadata from the
 -- database to build schema cache for tables and function.
-data ResolvedSource b
-  = ResolvedSource
-  { _rsConfig    :: !(SourceConfig b)
-  , _rsTables    :: !(DBTablesMetadata b)
-  , _rsFunctions :: !(DBFunctionsMetadata b)
-  , _rsPgScalars :: !(HashSet (ScalarType b))
-  } deriving (Eq)
+data ResolvedSource b = ResolvedSource
+  { _rsConfig :: SourceConfig b,
+    _rsCustomization :: SourceTypeCustomization,
+    _rsTables :: DBTablesMetadata b,
+    _rsFunctions :: DBFunctionsMetadata b,
+    _rsScalars :: ScalarMap b
+  }
 
-type SourceTables b = HashMap SourceName (TableCache b)
+instance (L.ToEngineLog (ResolvedSource b) L.Hasura) where
+  toEngineLog _ = (L.LevelDebug, L.ELTStartup, toJSON rsLog)
+    where
+      rsLog =
+        object
+          [ "kind" .= ("resolve_source" :: Text),
+            "info" .= ("Successfully resolved source" :: Text)
+          ]
 
-type SourceResolver =
-  SourceName -> PostgresConnConfiguration -> IO (Either QErr (SourceConfig ('Postgres 'Vanilla)))
+-- | A map from GraphQL name to equivalent scalar type for a given backend.
+data ScalarMap b where
+  ScalarMap :: Backend b => HashMap G.Name (ScalarType b) -> ScalarMap b
+
+instance Backend b => Semigroup (ScalarMap b) where
+  ScalarMap s1 <> ScalarMap s2 = ScalarMap $ s1 <> s2
+
+instance Backend b => Monoid (ScalarMap b) where
+  mempty = ScalarMap mempty
+
+--------------------------------------------------------------------------------
+-- Source resolver
+
+-- | FIXME: this should be either in 'BackendMetadata', or into a new dedicated
+-- 'BackendResolve', instead of listing backends explicitly. It could also be
+-- moved to the app level.
+type SourceResolver b =
+  SourceName -> SourceConnConfiguration b -> IO (Either QErr (SourceConfig b))
 
 class (Monad m) => MonadResolveSource m where
-  getSourceResolver :: m SourceResolver
+  getPGSourceResolver :: m (SourceResolver ('Postgres 'Vanilla))
+  getMSSQLSourceResolver :: m (SourceResolver 'MSSQL)
 
 instance (MonadResolveSource m) => MonadResolveSource (ExceptT e m) where
-  getSourceResolver = lift getSourceResolver
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
 instance (MonadResolveSource m) => MonadResolveSource (ReaderT r m) where
-  getSourceResolver = lift getSourceResolver
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
 instance (MonadResolveSource m) => MonadResolveSource (Tracing.TraceT m) where
-  getSourceResolver = lift getSourceResolver
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
-instance (MonadResolveSource m) => MonadResolveSource (LazyTxT QErr m) where
-  getSourceResolver = lift getSourceResolver
+instance (MonadResolveSource m) => MonadResolveSource (PG.TxET QErr m) where
+  getPGSourceResolver = lift getPGSourceResolver
+  getMSSQLSourceResolver = lift getMSSQLSourceResolver
 
--- Metadata API related types
-data AddSource b
-  = AddSource
-  { _asName                 :: !SourceName
-  , _asConfiguration        :: !(SourceConnConfiguration b)
-  , _asReplaceConfiguration :: !Bool
-  } deriving (Generic)
-deriving instance (Backend b) => Show (AddSource b)
-deriving instance (Backend b) => Eq (AddSource b)
-
-instance (Backend b) => ToJSON (AddSource b) where
-  toJSON = genericToJSON hasuraJSON
-
-instance (Backend b) => FromJSON (AddSource b) where
-  parseJSON = withObject "Object" $ \o ->
-    AddSource
-      <$> o .: "name"
-      <*> o .: "configuration"
-      <*> o .:? "replace_configuration" .!= False
-
-data DropSource
-  = DropSource
-  { _dsName    :: !SourceName
-  , _dsCascade :: !Bool
-  } deriving (Show, Eq)
-$(deriveToJSON hasuraJSON ''DropSource)
-
-instance FromJSON DropSource where
-  parseJSON = withObject "Object" $ \o ->
-    DropSource <$> o .: "name" <*> o .:? "cascade" .!= False
-
-newtype PostgresSourceName =
-  PostgresSourceName {_psnName :: SourceName}
+-- FIXME: why is this here?
+data MaintenanceModeVersion
+  = -- | should correspond to the source catalog version from which the user
+    -- is migrating from
+    PreviousMMVersion
+  | -- | should correspond to the latest source catalog version
+    CurrentMMVersion
   deriving (Show, Eq)
-$(deriveJSON hasuraJSON ''PostgresSourceName)
+
+-------------------------------------------------------------------------------
+-- Source health check
+
+data SourceHealthCheckInfo b = SourceHealthCheckInfo
+  { _shciName :: SourceName,
+    _shciConnection :: SourceConnConfiguration b,
+    _shciHealthCheck :: HealthCheckConfig b
+  }
+
+type BackendSourceHealthCheckInfo = AB.AnyBackend SourceHealthCheckInfo
+
+type SourceHealthCheckCache = HashMap SourceName BackendSourceHealthCheckInfo

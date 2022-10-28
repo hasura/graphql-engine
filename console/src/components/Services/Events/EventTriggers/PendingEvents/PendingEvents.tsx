@@ -16,7 +16,7 @@ import {
 interface Props extends EventsLogsInjectedProps {}
 
 const PendingEvents: React.FC<Props> = props => {
-  const { dispatch, triggerName, readOnlyMode, currentSource } = props;
+  const { dispatch, triggerName, currentTrigger, readOnlyMode } = props;
 
   const renderRows: FilterRenderProp = (
     rows,
@@ -33,6 +33,7 @@ const PendingEvents: React.FC<Props> = props => {
       runQuery={runQuery}
       columns={['id', 'delivered', 'created_at', 'tries']}
       identifier={triggerName}
+      triggerType="data"
     />
   );
 
@@ -62,7 +63,7 @@ const PendingEvents: React.FC<Props> = props => {
         triggerName={triggerName}
         triggerOp="pending"
         triggerType="data"
-        currentSource={currentSource}
+        currentSource={currentTrigger.source}
       />
     </React.Fragment>
   );

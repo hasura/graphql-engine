@@ -1,8 +1,10 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import { FaTimes } from 'react-icons/fa';
 
 import { generateHeaderSyms } from './HeaderReducer';
 import DropdownButton from '../../DropdownButton/DropdownButton';
+import styles from './Header.module.scss';
 
 class Header extends React.Component {
   constructor(props) {
@@ -99,7 +101,6 @@ class Header extends React.Component {
   }
 
   render() {
-    const styles = require('./Header.scss');
     const { isDisabled } = this.props;
     const generateHeaderHtml = this.props.headers.map((h, i) => {
       const getTitle = this.getTitle(this.props.typeOptions, h.type);
@@ -187,8 +188,8 @@ class Header extends React.Component {
           />
           */}
           {i !== this.props.headers.length - 1 && !isDisabled ? (
-            <i
-              className={styles.fontAwosomeClose + ' fa-lg fa fa-times'}
+            <FaTimes
+              className={styles.fontAwosomeClose + ' h-lg w-lg'}
               onClick={this.deleteHeader.bind(this)}
               data-index-id={i}
             />

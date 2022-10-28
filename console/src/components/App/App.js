@@ -9,7 +9,8 @@ import ErrorBoundary from '../Error/ErrorBoundary';
 import { telemetryNotificationShown } from '../../telemetry/Actions';
 import { showTelemetryNotification } from '../../telemetry/Notifications';
 import globals from '../../Globals';
-import styles from './App.scss';
+import styles from './App.module.scss';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 import { theme } from '../UIKit/theme';
 

@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"github.com/hasura/graphql-engine/cli"
+	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/spf13/cobra"
 )
 

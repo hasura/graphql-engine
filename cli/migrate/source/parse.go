@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strconv"
 
-	yaml "github.com/ghodss/yaml"
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 

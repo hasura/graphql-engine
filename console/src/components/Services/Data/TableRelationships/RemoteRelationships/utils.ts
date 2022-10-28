@@ -18,6 +18,7 @@ import {
 } from '../../../../Common/utils/jsUtils';
 import { getUnderlyingType } from '../../../../../shared/utils/graphqlSchemaUtils';
 import { QualifiedTable } from '../../../../../metadata/types';
+import { currentDriver } from '../../../../../dataSources';
 
 export type ArgValueKind = 'column' | 'static';
 export type ArgValue = {
@@ -72,7 +73,7 @@ export type RemoteRelationship = {
 };
 
 // Server Type
-type RemoteRelationshipFieldServer = {
+export type RemoteRelationshipFieldServer = {
   field?: Record<string, RemoteRelationshipFieldServer>;
   arguments: Record<string, any>;
 };
@@ -183,10 +184,40 @@ const serialiseRemoteField = (
   }
 };
 
+/**
+ * Please remove the NewRemoteSchemaRelationship type and the isNewRemoteSchemaRelashionship type guard when we retire the old relationships UI
+ */
+type NewRemoteSchemaRelationship = {
+  remote_relationship_name: string;
+  definition: {
+    to_remote_schema: {
+      remote_field: Record<string, RemoteRelationshipFieldServer>;
+      remote_schema: string;
+      lhs_fields: string[];
+    };
+  };
+  table_name: string;
+  table_schema: string;
+};
+
+const isNewRemoteSchemaRelashionship = (
+  relationship: RemoteRelationshipServer | NewRemoteSchemaRelationship
+): relationship is NewRemoteSchemaRelationship =>
+  'to_remote_schema' in relationship.definition;
+
 export const parseRemoteRelationship = (
-  relationship: RemoteRelationshipServer
+  relationship: RemoteRelationshipServer | NewRemoteSchemaRelationship
 ): RemoteRelationship => {
-  const remoteField = relationship.definition.remote_field;
+  /**
+   * This is a hotfix to allow the old relationship UI to read objects that are created by the new DB-to-RS API payload.
+   * This case is not possible via a console workflow, but it can happen if users use the API to directly create the relationship
+   * The new relationship UI can handle this backcompatiblity, until then this is just a temp fix. This definition along with all of the old
+   * UI will be removed once the new UI is stable.
+   */
+  const remoteField = isNewRemoteSchemaRelashionship(relationship)
+    ? relationship.definition.to_remote_schema.remote_field
+    : relationship.definition.remote_field;
+
   const allRemoteFields: RemoteField[] = [];
   Object.keys(remoteField).forEach(fieldName => {
     serialiseRemoteField(
@@ -199,7 +230,9 @@ export const parseRemoteRelationship = (
   });
   return {
     name: relationship.remote_relationship_name,
-    remoteSchema: relationship.definition.remote_schema,
+    remoteSchema: isNewRemoteSchemaRelashionship(relationship)
+      ? relationship.definition.to_remote_schema.remote_schema
+      : relationship.definition.remote_schema,
     table: {
       name: relationship.table_name,
       schema: relationship.table_schema,
@@ -332,7 +365,6 @@ export const getRemoteRelPayload = (
     });
     return Object.keys(obj).length ? obj : undefined;
   };
-
   return {
     name: relationship.name,
     remote_schema: relationship.remoteSchema,
@@ -340,8 +372,11 @@ export const getRemoteRelPayload = (
     hasura_fields: hasuraFields
       .map(f => f.substr(1))
       .filter((v, i, s) => s.indexOf(v) === i),
-    table: relationship.table,
-  };
+    table:
+      currentDriver === 'bigquery'
+        ? { dataset: relationship.table.schema, name: relationship.table.name }
+        : relationship.table,
+  } as any;
 };
 
 const isFieldChecked = (

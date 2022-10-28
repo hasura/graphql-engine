@@ -34,8 +34,15 @@ class TestV1General:
 @usefixtures('per_class_tests_db_state')
 class TestV1SelectBasic:
 
-    def test_select_query_author(self, hge_ctx):
+    def test_select_query_author_with_admin_role(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/select_article.yaml')
+
+    # TODO: fix these tests for JWT tests
+    # def test_select_query_author_with_user_role_success(self, hge_ctx):
+    #     check_query_f(hge_ctx, self.dir() + '/select_article_role_success.yaml')
+
+    # def test_select_query_author_with_user_role_failure(self, hge_ctx):
+    #     check_query_f(hge_ctx, self.dir() + '/select_article_role_error.yaml')
 
     def test_nested_select_article_author(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/nested_select_query_article_author.yaml')
@@ -216,7 +223,7 @@ class TestV1SelectBoolExpJSONB:
     def dir(cls):
         return 'queries/v1/select/boolexp/jsonb'
 
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestV1SelectBoolExpPostGIS:
 
     def test_query_st_equals(self, hge_ctx):
@@ -256,7 +263,7 @@ class TestV1SelectBoolExpPostGIS:
     def dir(cls):
         return 'queries/v1/select/boolexp/postgis'
 
-@usefixtures('per_class_tests_db_state')
+@usefixtures('postgis', 'per_class_tests_db_state')
 class TestV1SelectPermissions:
 
     def test_user_select_unpublished_articles(self, hge_ctx):
@@ -498,6 +505,11 @@ class TestRunSQL:
         check_query_f(hge_ctx, self.dir() + '/sql_select_query.yaml')
         hge_ctx.may_skip_test_teardown = True
 
+    # TODO: create a v2 query tests module
+    def test_select_query_v2(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_select_query_v2.yaml')
+        hge_ctx.may_skip_test_teardown = True
+
     def test_select_query_read_only(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_select_query_read_only.yaml')
         hge_ctx.may_skip_test_teardown = True
@@ -511,6 +523,10 @@ class TestRunSQL:
 
     def test_sql_query_as_user_error(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_query_as_user_error.yaml')
+
+    # TODO: create a v2 query tests module
+    def test_sql_query_as_user_error_v2(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/sql_query_as_user_error_v2.yaml')
 
     def test_sql_rename_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/sql_rename_table.yaml')
@@ -535,7 +551,6 @@ class TestRunSQL:
     @classmethod
     def dir(cls):
         return "queries/v1/run_sql"
-
 
 @usefixtures('per_method_tests_db_state')
 class TestRelationships:
@@ -569,6 +584,9 @@ class TestRelationships:
 
     def test_array_relationship_manual(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/array_relationship_manual.yaml')
+
+    def test_object_relationship_one_to_one(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/object_relationship_one_to_one.yaml')
 
     @classmethod
     def dir(cls):
@@ -631,6 +649,7 @@ class TestCreatePermission:
         return "queries/v1/permissions"
 
 # All these tests fail. So it should be fine to not have a cleanup after tests
+@pytest.mark.hge_env('EVENT_WEBHOOK_HEADER', 'MyEnvValue')
 class TestNonEmptyText:
 
     def test_create_event_trigger(self, hge_ctx):
@@ -672,6 +691,9 @@ class TestSetTableIsEnum:
 
     def test_relationship_with_inconsistent_enum_table(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + '/relationship_with_inconsistent_enum_table.yaml')
+
+    def test_custom_enum_table_name(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + '/custom_enum_table_name.yaml')
 
 # regression test for issue #3759
 @usefixtures('per_method_tests_db_state')
@@ -738,6 +760,9 @@ class TestSetTableCustomization:
 
     def test_conflicting_custom_table_name(self, hge_ctx):
         check_query_f(hge_ctx, self.dir() + "/fail_conflicting_custom_table_name.yaml")
+
+    def test_use_deprecated_custom_column_names(self, hge_ctx):
+        check_query_f(hge_ctx, self.dir() + "/use_deprecated_custom_column_names.yaml")
 
 @usefixtures('per_method_tests_db_state')
 class TestComputedFields:

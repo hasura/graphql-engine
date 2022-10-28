@@ -1,20 +1,25 @@
-module Hasura.RQL.DDL.GraphqlSchemaIntrospection where
+module Hasura.RQL.DDL.GraphqlSchemaIntrospection
+  ( runSetGraphqlSchemaIntrospectionOptions,
+  )
+where
 
-import           Hasura.Prelude
+import Control.Lens ((.~))
+import Hasura.Base.Error
+import Hasura.EncJSON
+import Hasura.Prelude
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.GraphqlSchemaIntrospection
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.Metadata.Instances ()
+import Hasura.RQL.Types.SchemaCache.Build
 
-import           Control.Lens      ((.~))
-
-import           Hasura.Base.Error
-import           Hasura.EncJSON
-import           Hasura.RQL.Types
-
-
-runSetGraphqlSchemaIntrospectionOptions
-  :: (MonadError QErr m, MetadataM m, CacheRWM m)
-  => SetGraphqlIntrospectionOptions -> m EncJSON
+runSetGraphqlSchemaIntrospectionOptions ::
+  (MonadError QErr m, MetadataM m, CacheRWM m) =>
+  SetGraphqlIntrospectionOptions ->
+  m EncJSON
 runSetGraphqlSchemaIntrospectionOptions introspectionOptions = do
-  withNewInconsistentObjsCheck
-    $ buildSchemaCache
-    $ MetadataModifier
-    $ metaSetGraphqlIntrospectionOptions .~ introspectionOptions
+  withNewInconsistentObjsCheck $
+    buildSchemaCache $
+      MetadataModifier $
+        metaSetGraphqlIntrospectionOptions .~ introspectionOptions
   return successMsg

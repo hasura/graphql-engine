@@ -1,10 +1,17 @@
 import React from 'react';
 
-import OverlayTrigger from 'react-bootstrap/lib/OverlayTrigger';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { Tooltip } from '@/new-components/Tooltip';
+import {
+  FaCloud,
+  FaCog,
+  FaCogs,
+  FaDatabase,
+  FaExclamationCircle,
+  FaFlask,
+  FaPlug,
+} from 'react-icons/fa';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
-
 import { HASURA_COLLABORATOR_TOKEN } from '../../constants';
 import globals from '../../Globals';
 import { versionGT } from '../../helpers/versionUtils';
@@ -20,6 +27,7 @@ import {
 } from '../Common/utils/routesUtils';
 import { getPathRoot } from '../Common/utils/urlUtils';
 import WarningSymbol from '../Common/WarningSymbol/WarningSymbol';
+import _push from '../Services/Data/push';
 import {
   emitProClickedEvent,
   featureCompatibilityInit,
@@ -32,7 +40,7 @@ import { Help, ProPopup } from './components/';
 import { UpdateVersion } from './components/UpdateVersion';
 import logo from './images/white-logo.svg';
 import LoveSection from './LoveSection';
-import styles from './Main.scss';
+import styles from './Main.module.scss';
 import NotificationSection from './NotificationSection';
 import * as tooltips from './Tooltips';
 import {
@@ -42,6 +50,7 @@ import {
   setLoveConsentState,
   setProClickState,
 } from './utils';
+import { isBlockActive } from './Main.utils';
 
 export const updateRequestHeaders = props => {
   const { requestHeaders, dispatch } = props;
@@ -68,6 +77,56 @@ export const updateRequestHeaders = props => {
       }
     }
   }
+};
+
+const getSettingsSelectedMarker = pathname => {
+  const currentActiveBlock = getPathRoot(pathname);
+
+  if (currentActiveBlock === 'settings') {
+    return <span className={styles.selected} />;
+  }
+
+  return null;
+};
+
+const getSidebarItem = (
+  title,
+  icon,
+  tooltipText,
+  path,
+  appPrefix,
+  pathname,
+  isDefault = false
+) => {
+  const itemTooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
+  const block = getPathRoot(path);
+
+  const isCurrentBlockActive = isBlockActive({
+    blockPath: path,
+    isDefaultBlock: isDefault,
+    pathname,
+  });
+
+  const className = isCurrentBlockActive ? styles.navSideBarActive : '';
+
+  return (
+    <li>
+      <Tooltip side="right" tooltipContentChildren={itemTooltip}>
+        <Link
+          className={className}
+          to={appPrefix + path}
+          data-test={`${title.toLowerCase()}-tab-link`}
+        >
+          <div className={styles.iconCenter} data-test={block}>
+            {React.createElement(icon, {
+              'aria-hidden': true,
+            })}
+          </div>
+          <p className="uppercase">{title}</p>
+        </Link>
+      </Tooltip>
+    </li>
+  );
 };
 
 class Main extends React.Component {
@@ -127,6 +186,12 @@ class Main extends React.Component {
   handleMetadataRedirect() {
     if (this.props.metadata.inconsistentObjects.length > 0) {
       this.props.dispatch(redirectToMetadataStatus());
+    }
+    if (
+      this.props.metadata.inconsistentInheritedRoles.length > 0 &&
+      !this.props.inconsistentInheritedRole
+    ) {
+      this.props.dispatch(_push(`/settings/metadata-status`));
     }
   }
 
@@ -229,15 +294,15 @@ class Main extends React.Component {
   render() {
     const {
       children,
-      location,
-      migrationModeProgress,
-      currentSchema,
-      serverVersion,
-      metadata,
       console_opts,
+      currentSchema,
       currentSource,
       dispatch,
+      metadata,
+      migrationModeProgress,
+      pathname,
       schemaList,
+      serverVersion,
     } = this.props;
 
     const {
@@ -246,9 +311,6 @@ class Main extends React.Component {
     } = this.state;
 
     const appPrefix = '';
-
-    const currentLocation = location.pathname;
-    const currentActiveBlock = getPathRoot(currentLocation);
 
     const getMainContent = () => {
       let mainContent = null;
@@ -266,27 +328,17 @@ class Main extends React.Component {
       return mainContent;
     };
 
-    const getSettingsSelectedMarker = () => {
-      let metadataSelectedMarker = null;
-
-      if (currentActiveBlock === 'settings') {
-        metadataSelectedMarker = <span className={styles.selected} />;
-      }
-
-      return metadataSelectedMarker;
-    };
-
     const getMetadataStatusIcon = () => {
       if (metadata.inconsistentObjects.length === 0) {
-        return <i className={styles.question + ' fa fa-cog'} />;
+        return <FaCog size="1.3rem" className={styles.question} />;
       }
       return (
         <div className={styles.question}>
-          <i className={'fa fa-cog'} />
+          <FaCog size="2rem" />
           <div className={styles.overlappingExclamation}>
             <div className={styles.iconWhiteBackground} />
             <div>
-              <i className={'fa fa-exclamation-circle'} />
+              <FaExclamationCircle />
             </div>
           </div>
         </div>
@@ -319,38 +371,7 @@ class Main extends React.Component {
       return adminSecretHtml;
     };
 
-    const getSidebarItem = (
-      title,
-      icon,
-      tooltipText,
-      path,
-      isDefault = false
-    ) => {
-      const itemTooltip = <Tooltip id={tooltipText}>{tooltipText}</Tooltip>;
-
-      const block = getPathRoot(path);
-
-      return (
-        <OverlayTrigger placement="right" overlay={itemTooltip}>
-          <li>
-            <Link
-              className={
-                currentActiveBlock === block ||
-                (isDefault && currentActiveBlock === '')
-                  ? styles.navSideBarActive
-                  : ''
-              }
-              to={appPrefix + path}
-            >
-              <div className={styles.iconCenter} data-test={block}>
-                <i className={`fa ${icon}`} aria-hidden="true" />
-              </div>
-              <p>{title}</p>
-            </Link>
-          </li>
-        </OverlayTrigger>
-      );
-    };
+    const currentActiveBlock = getPathRoot(pathname);
 
     return (
       <div className={styles.container}>
@@ -377,38 +398,48 @@ class Main extends React.Component {
               <ul className={styles.sidebarItems}>
                 {getSidebarItem(
                   'API',
-                  'fa-flask',
+                  FaFlask,
                   tooltips.apiExplorer,
                   '/api/api-explorer',
+                  appPrefix,
+                  pathname,
                   true
                 )}
                 {getSidebarItem(
                   'Data',
-                  'fa-database',
+                  FaDatabase,
                   tooltips.data,
                   currentSource
                     ? schemaList.length
                       ? getSchemaBaseRoute(currentSchema, currentSource)
                       : getDataSourceBaseRoute(currentSource)
-                    : '/data'
+                    : '/data',
+                  appPrefix,
+                  pathname
                 )}
                 {getSidebarItem(
                   'Actions',
-                  'fa-cogs',
+                  FaCogs,
                   tooltips.actions,
-                  '/actions/manage/actions'
+                  '/actions/manage/actions',
+                  appPrefix,
+                  pathname
                 )}
                 {getSidebarItem(
                   'Remote Schemas',
-                  'fa-plug',
+                  FaPlug,
                   tooltips.remoteSchema,
-                  '/remote-schemas/manage/schemas'
+                  '/remote-schemas/manage/schemas',
+                  appPrefix,
+                  pathname
                 )}{' '}
                 {getSidebarItem(
                   'Events',
-                  'fa-cloud',
+                  FaCloud,
                   tooltips.events,
-                  '/events/data/manage'
+                  '/events/data/manage',
+                  appPrefix,
+                  pathname
                 )}
               </ul>
             </div>
@@ -435,7 +466,7 @@ class Main extends React.Component {
               <Link to="/settings">
                 <div className={styles.headerRightNavbarBtn}>
                   {getMetadataStatusIcon()}
-                  {getSettingsSelectedMarker()}
+                  {getSettingsSelectedMarker(pathname)}
                 </div>
               </Link>
               <Help isSelected={currentActiveBlock === 'support'} />
@@ -447,7 +478,9 @@ class Main extends React.Component {
               {!this.state.loveConsentState.isDismissed ? (
                 <div
                   id="dropdown_wrapper"
-                  className={`${this.state.isLoveSectionOpen ? 'open' : ''}`}
+                  className={`self-stretch ${
+                    this.state.isLoveSectionOpen ? 'open' : ''
+                  }`}
                 >
                   <LoveSection
                     closeLoveSection={this.closeLoveSection}
@@ -460,6 +493,7 @@ class Main extends React.Component {
           <div className={styles.main + ' container-fluid'}>
             {getMainContent()}
           </div>
+
           <UpdateVersion
             closeUpdateBanner={this.closeUpdateBanner}
             dispatch={this.props.dispatch}
@@ -475,13 +509,15 @@ const mapStateToProps = (state, ownProps) => {
   return {
     ...state.main,
     header: state.header,
-    pathname: ownProps.location.pathname,
     currentSchema: state.tables.currentSchema,
     currentSource: state.tables.currentDataSource,
     metadata: state.metadata,
     console_opts: state.telemetry.console_opts,
     requestHeaders: state.tables.dataHeaders,
     schemaList: state.tables.schemaList,
+    pathname: ownProps.location.pathname,
+    inconsistentInheritedRole:
+      state.tables.modify.permissionsState.inconsistentInhertiedRole,
   };
 };
 

@@ -4,7 +4,7 @@ import BreadCrumb, {
   BreadCrumb as BreadCrumbType,
 } from '../BreadCrumb/BreadCrumb';
 import Tabs, { Tabs as TabsType } from '../ReusableTabs/ReusableTabs';
-import styles from './CommonTabLayout.scss';
+import styles from './CommonTabLayout.module.scss';
 
 type Props = {
   breadCrumbs: BreadCrumbType[];
@@ -15,6 +15,7 @@ type Props = {
   baseUrl: string;
   showLoader: boolean;
   testPrefix: string;
+  subHeading?: React.ReactNode;
 };
 
 const CommonTabLayout: React.FC<Props> = props => {
@@ -27,14 +28,16 @@ const CommonTabLayout: React.FC<Props> = props => {
     baseUrl,
     showLoader,
     testPrefix,
+    subHeading,
   } = props;
 
   return (
     <div className={styles.subHeader}>
-      <BreadCrumb breadCrumbs={breadCrumbs} />
+      {breadCrumbs.length ? <BreadCrumb breadCrumbs={breadCrumbs} /> : null}
       <h2 className={`${styles.heading_text} ${styles.set_line_height}`}>
         {heading || ''}
       </h2>
+      {subHeading || null}
       <Tabs
         appPrefix={appPrefix}
         tabName={currentTab}

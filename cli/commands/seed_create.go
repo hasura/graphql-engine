@@ -7,15 +7,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hasura/graphql-engine/cli/internal/hasura"
+	"github.com/hasura/graphql-engine/cli/v2/internal/hasura"
 
 	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject/actions/editor"
-	"github.com/hasura/graphql-engine/cli/seed"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/editor"
+	"github.com/hasura/graphql-engine/cli/v2/seed"
 )
 
 type SeedNewOptions struct {
@@ -50,7 +50,25 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Args:         cobra.ExactArgs(1),
 		SilenceUsage: false,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			return ec.Validate()
+			if err := validateConfigV3Prechecks(cmd, ec); err != nil {
+				return err
+			}
+			if ec.Config.Version < cli.V3 {
+				return nil
+			}
+
+			if err := databaseChooser(ec); err != nil {
+				return err
+			}
+
+			if err := validateSourceInfo(ec); err != nil {
+				return err
+			}
+			// check if seed ops are supported for the database
+			if !seed.IsSeedsSupported(ec.Source.Kind) {
+				return fmt.Errorf("seed operations on database %s of kind %s is not supported", ec.Source.Name, ec.Source.Kind)
+			}
+			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.SeedName = args[0]
@@ -65,7 +83,7 @@ func newSeedCreateCmd(ec *cli.ExecutionContext) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringArrayVar(&opts.FromTableNames, "from-table", []string{}, "name of table from which seed file has to be initialized")
+	cmd.Flags().StringArrayVar(&opts.FromTableNames, "from-table", []string{}, "name of table from which seed file has to be initialized. e.g. table1, myschema1.table1")
 
 	return cmd
 }
@@ -87,7 +105,7 @@ func (o *SeedNewOptions) Run() error {
 		var body []byte
 		if len(o.FromTableNames) > 0 {
 			if o.Source.Kind != hasura.SourceKindPG && o.EC.Config.Version >= cli.V3 {
-				return fmt.Errorf("--from-table is supported only for postgres sources")
+				return fmt.Errorf("--from-table is supported only for postgres databases")
 			}
 			// Send the query
 			bodyReader, err := o.Driver.ExportDatadump(o.FromTableNames, o.Source.Name)

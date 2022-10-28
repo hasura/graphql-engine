@@ -1,5 +1,4 @@
 import React from 'react';
-import styles from '../../Actions.scss';
 import {
   updateSchemaInfo,
   getDatabaseSchemasInfo,
@@ -17,8 +16,8 @@ import {
 } from '../../Common/stateDefaults';
 import { addActionRel, removeActionRel } from '../../ServerIO';
 import { showErrorNotification } from '../../../Common/Notification';
-import tableStyles from '../../../../Common/TableCommon/TableStyles.scss';
 import { getSupportedDrivers } from '../../../../../dataSources';
+import { inputStyles } from '../../constants';
 
 const RelationshipEditor = ({
   objectType,
@@ -132,14 +131,14 @@ const RelationshipEditor = ({
       ? 'A relationship cannot be renamed. Please drop and re-create if you really must.'
       : undefined;
     return (
-      <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
+      <div className={`mb-5`}>
+        <div className={`mb-2.5`}>
           <b>Relationship Name:</b>
         </div>
         <input
           onChange={setRelName}
           type="text"
-          className={`${styles.select} form-control ${styles.add_pad_left}`}
+          className={inputStyles}
           placeholder="Enter relationship name"
           data-test="rel-name"
           title={relNameInputTitle}
@@ -152,13 +151,13 @@ const RelationshipEditor = ({
   // rel type select
   const relTypeSelect = () => {
     return (
-      <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
+      <div className={`mb-5`}>
+        <div className={`mb-2.5`}>
           <b>Relationship Type:</b>
         </div>
         <select
           value={type}
-          className={`${styles.select} form-control ${styles.add_pad_left}`}
+          className={inputStyles}
           data-test={'manual-relationship-type'}
           onChange={setRelType}
         >
@@ -180,12 +179,12 @@ const RelationshipEditor = ({
 
   const refDbSelect = () => {
     return (
-      <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
+      <div className="mb-5">
+        <div className="mb-2.5">
           <b>Database:</b>
         </div>
         <select
-          className={`${styles.select} form-control ${styles.add_pad_left}`}
+          className={inputStyles}
           data-test={'manual-relationship-db-choice'}
           onChange={setDatabase}
           disabled={!name || existingRelConfig}
@@ -211,13 +210,13 @@ const RelationshipEditor = ({
   const refSchemaSelect = () => {
     const orderedSchemaList = Object.keys(currentDatabaseInfo).sort();
     return (
-      <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
+      <div className="mb-5">
+        <div className="mb-2.5">
           <b>Reference Schema:</b>
         </div>
         <select
           value={refSchema}
-          className={`${styles.select} form-control ${styles.add_pad_left}`}
+          className={inputStyles}
           data-test={'manual-relationship-ref-schema'}
           onChange={setRelRefSchema}
           disabled={!name || !refDb}
@@ -239,13 +238,13 @@ const RelationshipEditor = ({
 
   const refTableSelect = () => {
     return (
-      <div className={`${styles.add_mar_bottom}`}>
-        <div className={`${styles.add_mar_bottom_mid}`}>
+      <div className="mb-5">
+        <div className="mb-2.5">
           <b>Reference Table:</b>
         </div>
         <select
           value={refTable}
-          className={`${styles.select} form-control ${styles.add_pad_left}`}
+          className={inputStyles}
           data-test={'manual-relationship-ref-table'}
           onChange={setRelRefTable}
           disabled={!refSchema}
@@ -271,12 +270,12 @@ const RelationshipEditor = ({
   // field mapping array builder
   const relFieldMappings = () => {
     return (
-      <div className={`${styles.add_mar_bottom}`}>
-        <div className={`row ${styles.add_mar_bottom_mid}`}>
-          <div className={`col-sm-4 ${styles.add_mar_right}`}>
+      <div className="mb-5 flex flex-col">
+        <div className="mb-2.5 flex flex-row">
+          <div className="mr-5 w-1/3">
             <b>From:</b>
           </div>
-          <div className={`col-sm-4 ${styles.add_mar_right}`}>
+          <div className="w-1/3mr-5">
             <b>To:</b>
           </div>
         </div>
@@ -317,7 +316,7 @@ const RelationshipEditor = ({
           } else {
             removeIcon = (
               <i
-                className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+                className="w-2.5 cursor-pointer fa-lg fa fa-times"
                 onClick={removeField}
               />
             );
@@ -330,13 +329,10 @@ const RelationshipEditor = ({
             : undefined;
 
           return (
-            <div
-              className={`row ${styles.add_mar_bottom_mid} ${styles.display_flex}`}
-              key={`fk-col-${i}`}
-            >
-              <div className={`col-sm-4 ${styles.add_mar_right}`}>
+            <div className="flex-row mb-2.5 flex" key={`fk-col-${i}`}>
+              <div className="w-1/3 mr-5">
                 <select
-                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
+                  className={inputStyles}
                   value={field}
                   onChange={setField}
                   data-test={`manual-relationship-lcol-${i}`}
@@ -357,9 +353,9 @@ const RelationshipEditor = ({
                   })}
                 </select>
               </div>
-              <div className={'col-sm-4'}>
+              <div className="w-1/3">
                 <select
-                  className={`form-control ${styles.select} ${styles.wd100Percent}`}
+                  className={inputStyles}
                   value={refColumn}
                   onChange={setColumn}
                   disabled={!refTable}
@@ -373,16 +369,19 @@ const RelationshipEditor = ({
                   )}
                   {currentDatabaseInfo[refSchema] &&
                     currentDatabaseInfo[refSchema][refTable] &&
-                    currentDatabaseInfo[refSchema][refTable].map(rcOpt => {
+                    currentDatabaseInfo[refSchema][refTable].map(columnInfo => {
                       return (
-                        <option key={rcOpt} value={rcOpt}>
-                          {rcOpt}
+                        <option
+                          key={columnInfo?.columnName}
+                          value={columnInfo?.columnName}
+                        >
+                          {columnInfo?.columnName}
                         </option>
                       );
                     })}
                 </select>
               </div>
-              <div>{removeIcon}</div>
+              <div className="self-center">{removeIcon}</div>
             </div>
           );
         })}
@@ -403,14 +402,8 @@ const RelationshipEditor = ({
 };
 
 const RelEditor = props => {
-  const {
-    dispatch,
-    relConfig,
-    objectType,
-    isNew,
-    readOnlyMode,
-    dataSources,
-  } = props;
+  const { dispatch, relConfig, objectType, isNew, readOnlyMode, dataSources } =
+    props;
 
   const [relConfigState, setRelConfigState] = React.useState(null);
 
@@ -420,7 +413,7 @@ const RelEditor = props => {
     return (
       <div>
         <b>{relConfig.name}</b>
-        <div className={tableStyles.relationshipTopPadding}>
+        <div className={'pt-2.5'}>
           {getRelDef({ ...relConfig, typename: objectType.name })}
         </div>
       </div>
@@ -489,7 +482,6 @@ const RelEditor = props => {
     <ExpandableEditor
       collapseCallback={collapseCallback}
       editorExpanded={expandedContent}
-      expandButtonText={expandButtonText}
       collapsedLabel={collapsedLabel}
       property={'relationship'}
       service="actions"
@@ -497,7 +489,7 @@ const RelEditor = props => {
       removeFunc={removeFunc}
       expandButtonText={expandButtonText}
       collapseButtonText={collapseButtonText}
-      readOnlyMode={readOnlyMode}
+      readOnlyMode={readOnlyMode || objectType.kind === 'scalar'}
     />
   );
 };

@@ -1,0 +1,11 @@
+description: Empty schemas have a placeholder query.
+url: /v1/graphql
+status: 200
+response:
+  data:
+    no_queries_available: "There are no queries available to the current role. Either there are no sources or remote schemas configured, or the current role doesn't have the required permissions."
+query:
+  query: |
+    query {
+      no_queries_available
+    }

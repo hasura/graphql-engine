@@ -1,0 +1,20 @@
+description: Explain query with limit
+url: /v1/graphql/explain
+status: 200
+query:
+  query:
+    query: |
+      query {
+        article(limit: 2){
+          id
+          title
+          content
+        }
+      }
+response:
+- field: article
+  sql: "SELECT  coalesce(json_agg(\"root\" ), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT\
+    \  \"_e\"  FROM  (SELECT  \"_root.base\".\"id\" AS \"id\", \"_root.base\".\"title\"\
+    \ AS \"title\", \"_root.base\".\"content\" AS \"content\"       ) AS \"_e\"  \
+    \    ) ) AS \"root\" FROM  (SELECT  *  FROM \"public\".\"article\"  WHERE ('true')\
+    \    LIMIT 2 ) AS \"_root.base\"      ) AS \"_root\"      "

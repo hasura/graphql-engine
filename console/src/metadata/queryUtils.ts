@@ -1,12 +1,17 @@
+import defaultState from '@/components/Services/Events/EventTriggers/state';
 import {
+  ColumnConfig,
   CustomRootFields,
   ActionDefinition,
   CustomTypes,
   QualifiedTable,
   QualifiedTableBigQuery,
-  HasuraMetadataV3,
   QualifiedFunction,
   RestEndpointEntry,
+  RemoteSchemaDef,
+  RequestTransform,
+  HasuraMetadataV2,
+  HasuraMetadataV3,
 } from './types';
 import { transformHeaders } from '../components/Common/Headers/utils';
 import { LocalEventTriggerState } from '../components/Services/Events/EventTriggers/state';
@@ -21,11 +26,13 @@ import { Nullable } from '../components/Common/utils/tsUtils';
 
 export const metadataQueryTypes = [
   'add_source',
+  'update_source',
   'drop_source',
   'reload_source',
   'track_table',
   'untrack_table',
   'set_table_is_enum',
+  'set_apollo_federation_config',
   'track_function',
   'untrack_function',
   'create_object_relationship',
@@ -54,6 +61,7 @@ export const metadataQueryTypes = [
   'get_inconsistent_metadata',
   'drop_inconsistent_metadata',
   'add_remote_schema',
+  'update_remote_schema',
   'remove_remote_schema',
   'reload_remote_schema',
   'introspect_remote_schema',
@@ -63,6 +71,7 @@ export const metadataQueryTypes = [
   'add_existing_table_or_view',
   'create_query_collection',
   'drop_query_collection',
+  'rename_query_collection',
   'add_query_to_collection',
   'drop_query_from_collection',
   'add_collection_to_allowlist',
@@ -89,6 +98,10 @@ export const metadataQueryTypes = [
   'drop_function_permission',
   'create_rest_endpoint',
   'drop_rest_endpoint',
+  'add_host_to_tls_allowlist',
+  'drop_host_from_tls_allowlist',
+  'dc_add_agent',
+  'dc_delete_agent',
 ] as const;
 
 export type MetadataQueryType = typeof metadataQueryTypes[number];
@@ -126,6 +139,12 @@ export const getMetadataQuery = (
     case 'bigquery':
       prefix = 'bigquery_';
       break;
+    case 'citus':
+      prefix = 'citus_';
+      break;
+    case 'cockroach':
+      prefix = 'cockroach_';
+      break;
     case 'postgres':
     default:
       prefix = 'pg_';
@@ -134,6 +153,35 @@ export const getMetadataQuery = (
     type: `${prefix}${type}`,
     args: { ...args, source },
   };
+};
+
+export type DataSourceDriver =
+  | 'postgres'
+  | 'mysql'
+  | 'mssql'
+  | 'bigquery'
+  | 'citus';
+
+export const getDataSourcePrefix = (driver: DataSourceDriver) => {
+  let prefix = '';
+  switch (driver) {
+    case 'mysql':
+      prefix = 'mysql_';
+      break;
+    case 'mssql':
+      prefix = 'mssql_';
+      break;
+    case 'bigquery':
+      prefix = 'bigquery_';
+      break;
+    case 'citus':
+      prefix = 'citus_';
+      break;
+    case 'postgres':
+    default:
+      prefix = 'pg_';
+  }
+  return prefix;
 };
 
 export const getCreatePermissionQuery = (
@@ -222,7 +270,7 @@ export const generateCreateActionQuery = (
 export const getSetCustomRootFieldsQuery = (
   tableDef: QualifiedTable,
   rootFields: CustomRootFields,
-  customColumnNames: Record<string, string>,
+  columnConfig: ColumnConfig,
   customTableName: string | null,
   source: string
 ) => {
@@ -234,7 +282,7 @@ export const getSetCustomRootFieldsQuery = (
     configuration: {
       custom_name: customNameValue,
       custom_root_fields: rootFields,
-      custom_column_names: customColumnNames,
+      column_config: columnConfig,
     },
   });
 };
@@ -269,7 +317,8 @@ export const getCreateActionPermissionQuery = (
 export const getUpdateActionQuery = (
   def: ActionDefinition,
   actionName: string,
-  actionComment: string
+  actionComment: string,
+  request_transform: RequestTransform
 ) => {
   return {
     type: 'update_action',
@@ -277,6 +326,7 @@ export const getUpdateActionQuery = (
       name: actionName,
       definition: def,
       comment: actionComment,
+      request_transform,
     },
   };
 };
@@ -305,6 +355,19 @@ export const getSetTableEnumQuery = (
   });
 };
 
+export const getSetTableApolloFederationQuery = (
+  tableDef: QualifiedTable,
+  isApolloFederationSupported: boolean,
+  source: string
+) => {
+  return getMetadataQuery('set_apollo_federation_config', source, {
+    table: tableDef,
+    apollo_federation_config: isApolloFederationSupported
+      ? { enable: 'v1' }
+      : null,
+  });
+};
+
 export const getTrackTableQuery = ({
   tableDef,
   source,
@@ -319,11 +382,16 @@ export const getTrackTableQuery = ({
   customColumnNames?: Record<string, string>;
 }) => {
   const configuration: Partial<{
-    custom_column_names: Record<string, string>;
+    column_config: ColumnConfig;
     custom_name: string;
   }> = {};
   if (!isEmpty(customColumnNames)) {
-    configuration.custom_column_names = customColumnNames;
+    const newColumnConfigs = Object.entries(customColumnNames || {}).map(
+      ([column, columnCustomName]) => ({
+        [column]: { custom_name: columnCustomName },
+      })
+    );
+    configuration.column_config = Object.assign({}, ...newColumnConfigs);
   }
   if (customName) {
     configuration.custom_name = customName;
@@ -381,10 +449,14 @@ export const dropInconsistentObjectsQuery = {
   args: {},
 };
 
-export const getReloadMetadataQuery = (shouldReloadRemoteSchemas: boolean) => ({
+export const getReloadMetadataQuery = (
+  shouldReloadRemoteSchemas: boolean | string[],
+  shouldReloadSources?: boolean | string[]
+) => ({
   type: 'reload_metadata',
   args: {
-    reload_remote_schemas: shouldReloadRemoteSchemas,
+    reload_sources: shouldReloadSources ?? [],
+    reload_remote_schemas: shouldReloadRemoteSchemas ?? [],
   },
 });
 
@@ -404,10 +476,10 @@ export const exportMetadataQuery = {
 };
 
 export const generateReplaceMetadataQuery = (
-  metadataJson: HasuraMetadataV3
+  metadata: HasuraMetadataV3 | HasuraMetadataV2
 ) => ({
   type: 'replace_metadata',
-  args: metadataJson,
+  args: metadata,
 });
 
 export const resetMetadataQuery = {
@@ -417,47 +489,65 @@ export const resetMetadataQuery = {
 
 export const generateCreateEventTriggerQuery = (
   state: LocalEventTriggerState,
-  source: string,
-  replace = false
+  source: { name: string; driver: Driver },
+  replace = false,
+  requestTransform?: RequestTransform
 ) =>
-  getMetadataQuery('create_event_trigger', source, {
-    name: state.name.trim(),
-    table: state.table,
-    webhook:
-      state.webhook.type === 'static' ? state.webhook.value.trim() : null,
-    webhook_from_env:
-      state.webhook.type === 'env' ? state.webhook.value.trim() : null,
-    insert: state.operations.insert
-      ? {
-          columns: '*',
-        }
-      : null,
-    update: state.operations.update
-      ? {
-          columns: state.operationColumns
-            .filter(c => !!c.enabled)
-            .map(c => c.name),
-        }
-      : null,
-    delete: state.operations.delete
-      ? {
-          columns: '*',
-        }
-      : null,
-    enable_manual: state.operations.enable_manual,
-    retry_conf: state.retryConf,
-    headers: transformHeaders(state.headers),
-    replace,
-  });
+  getMetadataQuery(
+    'create_event_trigger',
+    source.name,
+    {
+      name: state.name.trim(),
+      table: state.table,
+      webhook:
+        state.webhook.type === 'static' ? state.webhook.value.trim() : null,
+      webhook_from_env:
+        state.webhook.type === 'env' ? state.webhook.value.trim() : null,
+      insert: state.operations.insert
+        ? {
+            columns: '*',
+          }
+        : null,
+      update: state.operations.update
+        ? {
+            columns: state.isAllColumnChecked
+              ? '*'
+              : state.operationColumns
+                  .filter(c => !!c.enabled)
+                  .map(c => c.name),
+          }
+        : null,
+      delete: state.operations.delete
+        ? {
+            columns: '*',
+          }
+        : null,
+      enable_manual: state.operations.enable_manual,
+      retry_conf: state.retryConf,
+      headers: transformHeaders(state.headers),
+      cleanup_config: {
+        ...defaultState.cleanupConfig,
+        ...state.cleanupConfig,
+      },
+      replace,
+      request_transform: requestTransform,
+    },
+    source.driver
+  );
 
-export const getDropEventTriggerQuery = (name: string, source: string) => ({
-  // Not supported for MySQL
-  type: 'pg_delete_event_trigger',
-  args: {
-    source,
-    name: name.trim(),
-  },
-});
+export const getDropEventTriggerQuery = (
+  name: string,
+  source: { name: string; driver: Driver }
+) =>
+  getMetadataQuery(
+    'delete_event_trigger',
+    source.name,
+    {
+      source: source.name,
+      name: name.trim(),
+    },
+    source.driver
+  );
 
 export const generateCreateScheduledTriggerQuery = (
   state: LocalScheduledTriggerState,
@@ -528,6 +618,9 @@ export const getRedeliverDataEventQuery = (
     event_id: eventId,
   });
 
+// this function returns the payload in old format,
+// please note that there is also a new format for local table to remote schema relationship
+// https://gist.github.com/0x777/e9c21e846507c6123cfb7a40c64d5772
 export const getSaveRemoteRelQuery = (
   args: RemoteRelationshipPayload,
   isNew: boolean,
@@ -601,7 +694,8 @@ export const getUntrackFunctionQuery = (
   name: string,
   schema: string,
   source: string
-) => getMetadataQuery('untrack_function', source, { name, schema });
+) =>
+  getMetadataQuery('untrack_function', source, { function: { name, schema } });
 
 export const getRenameRelationshipQuery = (
   table: QualifiedTable,
@@ -647,6 +741,60 @@ export const getCreateArrayRelationshipQuery = (
     using: {},
   });
 
+export const getSaveRemoteDbRelationshipQuery = (
+  isObjRel: boolean,
+  tableName: string,
+  name: string,
+  remoteTable: Record<string, string>,
+  columnMapping: Record<string, string>,
+  source: string,
+  rSource: string,
+  isNew: boolean,
+  driver: string,
+  schema: string
+) => {
+  const args = {
+    source,
+    name,
+    table:
+      currentDriver !== 'bigquery'
+        ? { name: tableName, schema }
+        : { name: tableName, dataset: schema },
+    definition: {
+      to_source: {
+        source: rSource,
+        table:
+          driver !== 'bigquery'
+            ? remoteTable
+            : { name: remoteTable.name, dataset: remoteTable.schema },
+        relationship_type: isObjRel ? 'object' : 'array',
+        field_mapping: columnMapping,
+      },
+    },
+  };
+
+  return getMetadataQuery(
+    isNew ? 'create_remote_relationship' : 'update_remote_relationship',
+    source,
+    args
+  );
+};
+
+export const getDropRemoteDbRelationshipQuery = (
+  name: string,
+  tableName: string,
+  source: string,
+  schema: string
+) =>
+  getMetadataQuery('delete_remote_relationship', source, {
+    name,
+    table:
+      currentDriver !== 'bigquery'
+        ? { name: tableName, schema }
+        : { name: tableName, dataset: schema },
+    source,
+  });
+
 export const getAddRelationshipQuery = (
   isObjRel: boolean,
   table: QualifiedTable,
@@ -688,7 +836,7 @@ export const getConsoleStateQuery = {
   args: {},
 };
 
-export type SupportedEvents = 'cron' | 'one_off';
+export type SupportedEvents = 'cron' | 'one_off' | 'data';
 
 export const getEventInvocationsLogByID = (
   type: SupportedEvents,
@@ -698,6 +846,7 @@ export const getEventInvocationsLogByID = (
   args: {
     type,
     event_id,
+    get_rows_count: false,
   },
 });
 
@@ -729,6 +878,7 @@ export const getEventInvocations = (
       ...query.args,
       limit,
       offset,
+      get_rows_count: false,
     },
   };
 };
@@ -776,6 +926,7 @@ export const getScheduledEvents = (
       ...query.args,
       limit,
       offset,
+      get_rows_count: false,
     },
   };
 };
@@ -823,5 +974,26 @@ export const createRESTEndpointQuery = (args: RestEndpointEntry) => ({
 
 export const dropRESTEndpointQuery = (name: string) => ({
   type: 'drop_rest_endpoint',
+  args: { name },
+});
+
+const getMetadataQueryForRemoteSchema =
+  (queryName: 'add' | 'update') =>
+  (name: string, definition: RemoteSchemaDef, comment?: string) => ({
+    type: `${queryName}_remote_schema` as MetadataQueryType,
+    args: {
+      name,
+      definition,
+      comment: comment ?? null,
+    },
+  });
+
+export const addRemoteSchemaQuery = getMetadataQueryForRemoteSchema('add');
+
+export const updateRemoteSchemaQuery =
+  getMetadataQueryForRemoteSchema('update');
+
+export const removeRemoteSchemaQuery = (name: string) => ({
+  type: 'remove_remote_schema',
   args: { name },
 });

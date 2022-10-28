@@ -1,5 +1,6 @@
 import React from 'react';
 import Helmet from 'react-helmet';
+import { useGetAnalyticsAttributes } from '@/features/Analytics';
 import TypeRelationship from './Components/TypeRelationship';
 
 const Relationships = ({
@@ -27,12 +28,24 @@ const Relationships = ({
     );
   });
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes(
+    'ActionsRelationships',
+    { redactText: true }
+  );
+
   return (
     <div>
-      <Helmet
-        title={`Relationships - ${currentAction.name} - Actions | Hasura`}
-      />
+      <Helmet>
+        <title
+          {...titleAnalyticsAttributes}
+        >{`Relationships - ${currentAction.name} - Actions | Hasura`}</title>
+      </Helmet>
       {existingRelationships}
+      {objectType.kind === 'scalar' ? (
+        <div className="mb-sm text-gray-600 test-sm">
+          Action relationships with scalar output types are not possible{' '}
+        </div>
+      ) : null}
       <TypeRelationship
         dispatch={dispatch}
         objectType={objectType}

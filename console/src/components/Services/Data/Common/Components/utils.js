@@ -33,8 +33,8 @@ export const getForeignKeyConfig = (foreignKey, orderedColumns) => {
   return `${lCol} → ${refTableName} . ${rCol}`;
 };
 
-export const getExistingFKConstraints = (tableSchema, orderedColumns) => {
-  return tableSchema.foreign_key_constraints.map(fkc => {
+export const getExistingFKConstraints = (tableSchema, orderedColumns) =>
+  (tableSchema?.foreign_key_constraints || []).map(fkc => {
     const fk = {};
     fk.refTableName = fkc.ref_table;
     fk.refSchemaName = fkc.ref_table_table_schema;
@@ -48,7 +48,6 @@ export const getExistingFKConstraints = (tableSchema, orderedColumns) => {
     fk.colMappings.push({ column: '', refColumn: '' });
     return fk;
   });
-};
 
 export const generateFKConstraintName = (
   tableName,
@@ -109,20 +108,4 @@ export const getKeyDef = (config, constraintName) => {
       <b>{config}</b>
     </div>
   );
-};
-
-export const getRootFieldLabel = rfType => {
-  const labels = {
-    custom_name: 'Custom Table Name',
-    select: 'Select',
-    select_by_pk: 'Select by PK',
-    select_aggregate: 'Select Aggregate',
-    insert: 'Insert',
-    insert_one: 'Insert One',
-    update: 'Update',
-    update_by_pk: 'Update by PK',
-    delete: 'Delete',
-    delete_by_pk: 'Delete by PK',
-  };
-  return labels[rfType];
 };

@@ -5,7 +5,7 @@ status: 200
 query:
   query: |
     query {
-      profiles_connection{
+      custom_profiles_connection{
         edges{
           node{
             id
@@ -21,7 +21,7 @@ query:
     }
 response:
   errors:
-  - extensions:
-      path: $.selectionSet.profiles_connection.selectionSet.edges.selectionSet.node.selectionSet.messageBasic
-      code: validation-failed
-    message: "field \"messageBasic\" not found in type: 'profiles'"
+    - extensions:
+        path: $.selectionSet.custom_profiles_connection.selectionSet.edges.selectionSet.node.selectionSet.messageBasic
+        code: validation-failed
+      message: "field 'messageBasic' not found in type: 'custom_profiles'"

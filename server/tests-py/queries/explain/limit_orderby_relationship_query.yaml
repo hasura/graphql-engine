@@ -1,0 +1,26 @@
+description: Explain query with limit and order by with an object relationship's column
+url: /v1/graphql/explain
+status: 200
+query:
+  query:
+    query: |
+      query {
+        article(limit: 2, order_by: {author: {id: desc}}){
+          id
+          title
+          content
+        }
+      }
+response:
+- field: article
+  sql: "SELECT  coalesce(json_agg(\"root\" ORDER BY \"root.or.author.pg.id\" DESC\
+    \ NULLS FIRST), '[]' ) AS \"root\" FROM  (SELECT  row_to_json((SELECT  \"_e\"\
+    \  FROM  (SELECT  \"_root.base\".\"id\" AS \"id\", \"_root.base\".\"title\" AS\
+    \ \"title\", \"_root.base\".\"content\" AS \"content\"       ) AS \"_e\"     \
+    \ ) ) AS \"root\", \"_root.or.author\".\"root.or.author.pg.id\" AS \"root.or.author.pg.id\"\
+    \ FROM  (SELECT  *  FROM \"public\".\"article\"  WHERE ('true')     ) AS \"_root.base\"\
+    \ LEFT OUTER JOIN LATERAL (SELECT  \"_root.or.author.base\".\"id\" AS \"root.or.author.pg.id\"\
+    \ FROM  (SELECT  *  FROM \"public\".\"author\"  WHERE ((\"_root.base\".\"author_id\"\
+    ) = (\"id\"))    LIMIT 1 ) AS \"_root.or.author.base\"      ) AS \"_root.or.author\"\
+    \ ON ('true')    ORDER BY \"root.or.author.pg.id\" DESC NULLS FIRST LIMIT 2 )\
+    \ AS \"_root\"      "

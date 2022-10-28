@@ -4,14 +4,15 @@ import Helmet from 'react-helmet';
 import AceEditor from 'react-ace';
 import 'brace/mode/sql';
 
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Button } from '@/new-components/Button';
 import Modal from '../../../Common/Modal/Modal';
-import Button from '../../../Common/Button/Button';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
 import KnowMoreLink from '../../../Common/KnowMoreLink/KnowMoreLink';
 import Alert from '../../../Common/Alert';
 import StatementTimeout from './StatementTimeout';
-import { parseCreateSQL } from './utils';
-import styles from '../../../Common/TableCommon/Table.scss';
+import { parseCreateSQL, removeCommentsSQL } from './utils';
+import styles from '../../../Common/TableCommon/Table.module.scss';
 import {
   executeSQL,
   SET_SQL,
@@ -27,12 +28,28 @@ import {
 } from '../../../Common/AceEditor/utils';
 import { CLI_CONSOLE_MODE } from '../../../../constants';
 import NotesSection from './molecules/NotesSection';
+import ResultTable from './ResultTable';
 import { getLSItem, setLSItem, LS_KEYS } from '../../../../utils/localStorage';
 import DropDownSelector from './DropDownSelector';
 import { getSourceDriver } from '../utils';
 import { getDataSources } from '../../../../metadata/selector';
 import { services } from '../../../../dataSources/services';
-import { isFeatureSupported } from '../../../../dataSources';
+import { isFeatureSupported, setDriver } from '../../../../dataSources';
+import { fetchDataInit, UPDATE_CURRENT_DATA_SOURCE } from '../DataActions';
+import { unsupportedRawSQLDrivers } from './utils';
+import { nativeDrivers } from '@/features/DataSource';
+import { useRunSQL } from './hooks/useRunSQL';
+import { useFireNotification } from '@/new-components/Notifications';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags';
+
+const checkChangeLang = (sql, selectedDriver) => {
+  return (
+    !sql?.match(/(?:\$\$\s+)?language\s+plpgsql/i) && selectedDriver === 'citus'
+  );
+};
 
 /**
  * # RawSQL React FC
@@ -71,9 +88,24 @@ const RawSQL = ({
   isTableTrackChecked,
   migrationMode,
   allSchemas,
-  sources,
+  // sources,
   currentDataSource,
+  metadataSources,
 }) => {
+  const { enabled: areGDCFeaturesEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.gdcId
+  );
+  const { fireNotification } = useFireNotification();
+  const { fetchRunSQLResult, data, isLoading } = useRunSQL({
+    onError: err => {
+      fireNotification({
+        type: 'error',
+        title: 'failed to run SQL statement',
+        message: err?.message,
+      });
+    },
+  });
+
   const [statementTimeout, setStatementTimeout] = useState(
     Number(getLSItem(LS_KEYS.rawSqlStatementTimeout)) || 10
   );
@@ -81,15 +113,36 @@ const RawSQL = ({
   const [sqlText, onChangeSQLText] = useState(sql);
 
   const [selectedDatabase, setSelectedDatabase] = useState(currentDataSource);
-  const [selectedDriver, setSelectedDriver] = useState('postgres');
+  const [selectedDriver, setSelectedDriver] = useState(null);
+  const [suggestLangChange, setSuggestLangChange] = useState(false);
 
   useEffect(() => {
-    const driver = getSourceDriver(sources, selectedDatabase);
+    const driver = getSourceDriver(metadataSources, selectedDatabase);
     setSelectedDriver(driver);
-    if (driver !== 'postgres') setStatementTimeout(null);
-  }, [selectedDatabase, sources]);
+
+    if (!nativeDrivers.includes(driver)) {
+      setStatementTimeout(null);
+      return;
+    }
+
+    if (!isFeatureSupported('rawSQL.statementTimeout'))
+      setStatementTimeout(null);
+  }, [selectedDatabase, metadataSources]);
 
   const dropDownSelectorValueChange = value => {
+    const driver = getSourceDriver(metadataSources, value);
+    if (!nativeDrivers.includes(driver)) {
+      setSelectedDatabase(value);
+      return;
+    }
+
+    dispatch({
+      type: UPDATE_CURRENT_DATA_SOURCE,
+      source: value,
+    });
+    setDriver(driver);
+    dispatch(fetchDataInit(value, driver));
+
     setSelectedDatabase(value);
   };
 
@@ -106,7 +159,24 @@ const RawSQL = ({
     };
   }, [dispatch, sql, sqlText]);
 
+  useEffect(() => {
+    if (checkChangeLang(sql, selectedDriver)) {
+      setSuggestLangChange(true);
+    } else {
+      setSuggestLangChange(false);
+    }
+  }, [sql, selectedDriver]);
+
   const submitSQL = () => {
+    if (!nativeDrivers.includes(selectedDriver)) {
+      fetchRunSQLResult({
+        driver: selectedDriver,
+        dataSourceName: selectedDatabase,
+        sql: sqlText,
+      });
+      return;
+    }
+
     if (!sqlText) {
       setLSItem(LS_KEYS.rawSQLKey, '');
       return;
@@ -120,7 +190,7 @@ const RawSQL = ({
       const isMigration = checkboxElem ? checkboxElem.checked : false;
       const textboxElem = document.getElementById('migration-name');
       let migrationName = textboxElem ? textboxElem.value : '';
-      if (isMigration && migrationName.length === 0) {
+      if (isMigration && migrationName?.length === 0) {
         migrationName = 'run_sql_migration';
       }
       if (!isMigration && globals.consoleMode === CLI_CONSOLE_MODE) {
@@ -178,46 +248,49 @@ const RawSQL = ({
 
   const getSQLSection = () => {
     const handleSQLChange = val => {
+      const cleanSql = removeCommentsSQL(val);
       onChangeSQLText(val);
       dispatch({ type: SET_SQL, data: val });
 
       // set migration checkbox true
-      if (services[selectedDriver].checkSchemaModification(val)) {
+      if (services[selectedDriver].checkSchemaModification(cleanSql)) {
         dispatch({ type: SET_MIGRATION_CHECKED, data: true });
       } else {
         dispatch({ type: SET_MIGRATION_CHECKED, data: false });
       }
 
-      // set track this checkbox true
-      const objects = parseCreateSQL(val, selectedDriver);
-      if (objects.length) {
-        let allObjectsTrackable = true;
+      // set track this checkbox true if tracking is supported for the driver
+      if (isFeatureSupported('rawSQL.tracking')) {
+        const objects = parseCreateSQL(cleanSql, selectedDriver);
+        if (objects?.length) {
+          let allObjectsTrackable = true;
 
-        const trackedObjectNames = allSchemas.map(schema => {
-          return [schema.table_schema, schema.table_name].join('.');
-        });
+          const trackedObjectNames = allSchemas.map(schema => {
+            return [schema.table_schema, schema.table_name].join('.');
+          });
 
-        allObjectsTrackable = objects.every(object => {
-          if (object.type === 'function') {
-            return false;
+          allObjectsTrackable = objects.every(object => {
+            if (object.type === 'function') {
+              return false;
+            }
+
+            const objectName = [object.schema, object.name].join('.');
+
+            if (trackedObjectNames.includes(objectName)) {
+              return false;
+            }
+
+            return true;
+          });
+
+          if (allObjectsTrackable) {
+            dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
+          } else {
+            dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
           }
-
-          const objectName = [object.schema, object.name].join('.');
-
-          if (trackedObjectNames.includes(objectName)) {
-            return false;
-          }
-
-          return true;
-        });
-
-        if (allObjectsTrackable) {
-          dispatch({ type: SET_TRACK_TABLE_CHECKED, data: true });
         } else {
           dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
         }
-      } else {
-        dispatch({ type: SET_TRACK_TABLE_CHECKED, data: false });
       }
     };
 
@@ -253,57 +326,13 @@ const RawSQL = ({
     );
   };
 
-  const getResultTable = () => {
-    let resultTable = null;
-
-    if (resultType && resultType !== 'command') {
-      const getTableHeadings = () => {
-        return resultHeaders.map((columnName, i) => (
-          <th key={i}>{columnName}</th>
-        ));
-      };
-
-      const getRows = () => {
-        return result.map((row, i) => (
-          <tr key={i}>
-            {row.map((columnValue, j) => (
-              <td key={j}>{columnValue}</td>
-            ))}
-          </tr>
-        ));
-      };
-
-      resultTable = (
-        <div
-          className={`${styles.addCol} col-xs-12 ${styles.padd_left_remove}`}
-        >
-          <h4 className={styles.subheading_text}>SQL Result:</h4>
-          <div className={styles.tableContainer}>
-            <table
-              className={`table table-bordered table-striped table-hover ${styles.table} `}
-            >
-              <thead>
-                <tr>{getTableHeadings()}</tr>
-              </thead>
-              <tbody>{getRows()}</tbody>
-            </table>
-          </div>
-          <br />
-          <br />
-        </div>
-      );
-    }
-
-    return resultTable;
-  };
-
   const getMetadataCascadeSection = () => {
     return (
       <div className={styles.add_mar_top_small}>
         <label>
           <input
             checked={isCascadeChecked}
-            className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
             id="cascade-checkbox"
             type="checkbox"
             onChange={() => {
@@ -334,19 +363,18 @@ const RawSQL = ({
 
     return (
       <div className={styles.add_mar_top}>
-        {isFeatureSupported('rawSQL.tracking') && (
-          <label>
-            <input
-              checked={isTableTrackChecked}
-              className={`${styles.add_mar_right_small} ${styles.cursorPointer}`}
-              id="track-checkbox"
-              type="checkbox"
-              onChange={dispatchTrackThis}
-              data-test="raw-sql-track-check"
-            />
-            Track this
-          </label>
-        )}
+        <label>
+          <input
+            checked={isTableTrackChecked}
+            className={`${styles.add_mar_right_small} ${styles.cursorPointer} legacy-input-fix`}
+            id="track-checkbox"
+            type="checkbox"
+            disabled={checkChangeLang()}
+            onChange={dispatchTrackThis}
+            data-test="raw-sql-track-check"
+          />
+          Track this
+        </label>
         <Tooltip
           message={
             'If you are creating tables, views or functions, checking this will also expose them over the GraphQL API as top level fields'
@@ -379,7 +407,7 @@ const RawSQL = ({
           <label>
             <input
               checked={isMigrationChecked}
-              className={styles.add_mar_right_small}
+              className={`${styles.add_mar_right_small} legacy-input-fix`}
               id="migration-checkbox"
               type="checkbox"
               onChange={dispatchIsMigration}
@@ -447,81 +475,118 @@ const RawSQL = ({
   };
 
   return (
-    <div
-      className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
-    >
-      <Helmet title="Run SQL - Data | Hasura" />
-      <div className={styles.subHeader}>
-        <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
-          Raw SQL
-        </h2>
-        <div className="clearfix" />
-      </div>
-      <div className={styles.add_mar_top}>
-        <div className={`${styles.padd_left_remove} col-xs-8`}>
-          <NotesSection />
+    <Analytics name="RawSQL" {...REDACT_EVERYTHING}>
+      <div
+        className={`${styles.clear_fix} ${styles.padd_left} ${styles.padd_top}`}
+      >
+        <Helmet title="Run SQL - Data | Hasura" />
+        <div className={styles.subHeader}>
+          <h2 className={`${styles.heading_text} ${styles.remove_pad_bottom}`}>
+            Raw SQL
+          </h2>
+          <div className="clearfix" />
         </div>
-        <div className={`${styles.padd_left_remove} col-xs-8`}>
-          <label>
-            <b>Database</b>
-          </label>{' '}
-          <DropDownSelector
-            options={sources.map(source => source.name)}
-            defaultValue={currentDataSource}
-            onChange={dropDownSelectorValueChange}
-          />
-        </div>
-        <div className={`${styles.padd_left_remove} col-xs-10`}>
-          {getSQLSection()}
-        </div>
-
-        <div
-          className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
-        >
-          {getTrackThisSection()}
-          {getMetadataCascadeSection()}
-          {getMigrationSection()}
-
-          {selectedDriver === 'postgres' && (
-            <StatementTimeout
-              statementTimeout={statementTimeout}
-              isMigrationChecked={
-                globals.consoleMode === CLI_CONSOLE_MODE && isMigrationChecked
-              }
-              updateStatementTimeout={updateStatementTimeout}
+        <div className={styles.add_mar_top}>
+          <div className={`${styles.padd_left_remove} col-xs-8`}>
+            <NotesSection suggestLangChange={suggestLangChange} />
+          </div>
+          <div className={`${styles.padd_left_remove} col-xs-8`}>
+            <label>
+              <b>Database</b>
+            </label>{' '}
+            <DropDownSelector
+              options={metadataSources
+                .filter(source => {
+                  if (areGDCFeaturesEnabled) return source;
+                  return nativeDrivers.includes(source.kind);
+                })
+                .map(source => ({
+                  name: source.name,
+                  driver: source.kind,
+                }))}
+              defaultValue={currentDataSource}
+              onChange={dropDownSelectorValueChange}
             />
-          )}
-          <Button
-            type="submit"
-            className={styles.add_mar_top}
-            onClick={submitSQL}
-            color="yellow"
-            size="sm"
-            data-test="run-sql"
-            disabled={!sqlText.length}
-          >
-            Run!
-          </Button>
-        </div>
+          </div>
+          <div className={`${styles.padd_left_remove} col-xs-10`}>
+            {getSQLSection()}
+          </div>
 
-        <div className="hidden col-xs-4">
-          <div className={`${styles.padd_left_remove} col-xs-12`}>
-            {ongoingRequest && <Alert type="warning" text="Running..." />}
-            {lastError && (
-              <Alert
-                type="danger"
-                text={`Error: ${JSON.stringify(lastError)}`}
+          <div
+            className={`${styles.padd_left_remove} ${styles.add_mar_bottom} col-xs-8`}
+          >
+            {unsupportedRawSQLDrivers.includes(selectedDriver) ? null : (
+              <>
+                {isFeatureSupported('rawSQL.tracking')
+                  ? getTrackThisSection()
+                  : null}
+                {getMetadataCascadeSection()}
+                {getMigrationSection()}
+              </>
+            )}
+
+            {isFeatureSupported('rawSQL.statementTimeout') && (
+              <StatementTimeout
+                statementTimeout={statementTimeout}
+                isMigrationChecked={
+                  globals.consoleMode === CLI_CONSOLE_MODE && isMigrationChecked
+                }
+                updateStatementTimeout={updateStatementTimeout}
               />
             )}
-            {lastSuccess && <Alert type="success" text="Executed Query" />};
+            <Button
+              type="submit"
+              className={styles.add_mar_top}
+              onClick={submitSQL}
+              mode="primary"
+              data-test="run-sql"
+              disabled={
+                !sqlText?.length ||
+                unsupportedRawSQLDrivers.includes(selectedDriver)
+              }
+              isLoading={isLoading}
+            >
+              Run!
+            </Button>
+          </div>
+
+          <div className="hidden col-xs-4">
+            <div className={`${styles.padd_left_remove} col-xs-12`}>
+              {ongoingRequest && <Alert type="warning" text="Running..." />}
+              {lastError && (
+                <Alert
+                  type="danger"
+                  text={`Error: ${JSON.stringify(lastError)}`}
+                />
+              )}
+              {lastSuccess && <Alert type="success" text="Executed Query" />};
+            </div>
           </div>
         </div>
+
+        {getMigrationWarningModal()}
+
+        {nativeDrivers.includes(selectedDriver) ? (
+          <div className={styles.add_mar_bottom}>
+            {resultType &&
+              resultType !== 'command' &&
+              result &&
+              result?.length > 0 && (
+                <ResultTable rows={result} headers={resultHeaders} />
+              )}
+          </div>
+        ) : (
+          <div className={styles.add_mar_bottom}>
+            {data && data.result?.length > 0 && (
+              <ResultTable
+                rows={data.result.slice(1)}
+                headers={data.result[0]}
+              />
+            )}
+          </div>
+        )}
       </div>
-
-      {getMigrationWarningModal()}
-
-      <div className={styles.add_mar_bottom}>{getResultTable()}</div>
-    </div>
+    </Analytics>
   );
 };
 
@@ -551,6 +616,7 @@ const mapStateToProps = state => ({
   serverVersion: state.main.serverVersion ? state.main.serverVersion : '',
   sources: getDataSources(state),
   currentDataSource: state.tables.currentDataSource,
+  metadataSources: state.metadata.metadataObject.sources,
 });
 
 const rawSQLConnector = connect => connect(mapStateToProps)(RawSQL);

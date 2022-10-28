@@ -1,11 +1,6 @@
-// Remove the apollo-boost import and change to this:
-import ApolloClient from "apollo-client";
-// Setup the network "links"
-import { WebSocketLink } from 'apollo-link-ws';
-import { HttpLink } from 'apollo-link-http';
-import { split } from 'apollo-link';
-import { getMainDefinition } from 'apollo-utilities';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient, InMemoryCache, split, HttpLink } from "@apollo/client";
+import { getMainDefinition  } from "@apollo/client/utilities";
+import { WebSocketLink } from "@apollo/client/link/ws";
 import { wsurl, httpurl } from './constants';
 
 const wsLink = new WebSocketLink({
@@ -14,6 +9,7 @@ const wsLink = new WebSocketLink({
     reconnect: true
   }
 });
+
 const httpLink = new HttpLink({
   uri: httpurl,
 });

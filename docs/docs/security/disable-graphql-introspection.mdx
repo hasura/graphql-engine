@@ -1,0 +1,37 @@
+---
+description: Hasura Cloud Standard and Hasura Enterprise disable GraphQL introspection
+title: 'Cloud Standard & EE: Disable GraphQL introspection'
+keywords:
+  - hasura
+  - docs
+  - cloud
+  - enterprise
+  - security
+  - introspection
+  - disable
+  - GraphQL
+sidebar_position: 3
+sidebar_label: Disable GraphQL introspection
+sidebar_class_name: cloud-and-enterprise-icon
+---
+
+import Thumbnail from '@site/src/components/Thumbnail';
+import HeadingIcon from '@site/src/components/HeadingIcon';
+
+# Disable GraphQL introspection
+
+<div className='badge badge--primary heading-badge'>Available on: Cloud, Enterprise Edition</div>
+
+## Introduction
+
+The GraphQL engine by default enables
+[GraphQL Schema Introspection](https://spec.graphql.org/June2018/#sec-Schema-Introspection) which gives full information
+about the schema and may not be desired in production.
+
+To avoid this, you can disable GraphQL introspection on a per-role basis.
+
+## Disabling GraphQL introspection for a role
+
+Introspection can be disabled for a role as shown below:
+
+<Thumbnail src='/img/security/disable-introspection.png' alt='Hasura Cloud Console Schema Introspection tab' />

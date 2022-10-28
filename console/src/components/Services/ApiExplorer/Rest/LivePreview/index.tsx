@@ -1,5 +1,7 @@
 import React, { ChangeEvent, useReducer, useCallback, Dispatch } from 'react';
+import { FaPlay, FaPlusCircle } from 'react-icons/fa';
 
+import { Button } from '@/new-components/Button';
 import {
   composeEndpoint,
   getCurrentPageHost,
@@ -8,7 +10,7 @@ import {
   parseEndpoints,
   parseQueryVariables,
   VariableData,
-  supportedNumericTypes,
+  getRequestBody,
 } from '../utils';
 import {
   HeaderStateAction,
@@ -16,8 +18,7 @@ import {
   requestLoadingStateReducer,
   variableStateReducer,
 } from './reducer';
-import Button from '../../../../Common/Button';
-import { defaultLoadingState, HeaderState, VariableState } from './state';
+import { defaultLoadingState, HeaderState } from './state';
 import RequestHeadersContainer from './Headers';
 import RequestVariablesContainer from './Variables';
 import {
@@ -26,8 +27,6 @@ import {
 } from '../../../../../metadata/types';
 import Spinner from '../../../../Common/Spinner/Spinner';
 import CollapsibleToggle from './CollapsibleToggle';
-
-import styles from '../RESTStyles.scss';
 
 interface EndpointState extends RestEndpointEntry {
   currentQuery: string;
@@ -75,52 +74,24 @@ const collectHeaders = (allHeaders: HeaderState[]) =>
     };
   }, {});
 
-const getValueWithType = (variableData: VariableState) => {
-  if (variableData.type === 'Boolean') {
-    if (variableData.value.trim().toLowerCase() === 'false') {
-      return false;
-    }
-    // NOTE: since everything that's not empty is considered as truthy
-    return true;
-  }
-
-  if (supportedNumericTypes.includes(variableData.type)) {
-    return Number(variableData.value);
-  }
-
-  return variableData.value?.trim()?.toString();
-};
-
-const composeRequestBody = (allVariables: VariableState[]) => {
-  const vars = allVariables.reduce(
-    (acc, variableData) => ({
-      ...acc,
-      [variableData.name]: getValueWithType(variableData),
-    }),
-    {}
-  );
-
-  return JSON.stringify(vars);
-};
-
 // in the spirit of DRY
-const updateHeaderTextValues = (
-  type: HeaderStateAction['type'],
-  dispatch: Dispatch<HeaderStateAction>
-) => (index: number) => (e: ChangeEvent<HTMLInputElement>) => {
-  if (
-    type !== 'RequestHeaders/SET_HEADER_KEY_TEXT' &&
-    type !== 'RequestHeaders/SET_HEADER_VALUE_TEXT'
-  ) {
-    return;
-  }
+const updateHeaderTextValues =
+  (type: HeaderStateAction['type'], dispatch: Dispatch<HeaderStateAction>) =>
+  (index: number) =>
+  (e: ChangeEvent<HTMLInputElement>) => {
+    if (
+      type !== 'RequestHeaders/SET_HEADER_KEY_TEXT' &&
+      type !== 'RequestHeaders/SET_HEADER_VALUE_TEXT'
+    ) {
+      return;
+    }
 
-  dispatch({
-    type,
-    index,
-    data: e.target.value,
-  });
-};
+    dispatch({
+      type,
+      index,
+      data: e.target.value,
+    });
+  };
 
 const getRequestMethod = (supportedMethods: AllowedRESTMethods[]) => {
   const filteredMethods = supportedMethods.filter(method => method !== 'GET');
@@ -177,15 +148,14 @@ const LivePreview: React.FC<LivePreviewProps> = ({
     });
   };
 
-  const updateVariableText = (name: string) => (
-    e: ChangeEvent<HTMLInputElement>
-  ) => {
-    variableDispatch({
-      type: 'RequestVariables/SET_HEADER_VALUE_TEXT',
-      data: e.target.value,
-      name,
-    });
-  };
+  const updateVariableText =
+    (name: string) => (e: ChangeEvent<HTMLInputElement>) => {
+      variableDispatch({
+        type: 'RequestVariables/SET_HEADER_VALUE_TEXT',
+        data: e.target.value,
+        name,
+      });
+    };
 
   const onClickAddHeader = () => {
     headerDispatch({
@@ -201,34 +171,30 @@ const LivePreview: React.FC<LivePreviewProps> = ({
   };
 
   const runQuery = useCallback(() => {
-    let requestURL = pageHost;
     const requestHeaders = collectHeaders(headerState);
     const requestMethod = getRequestMethod(endpointState.methods);
-    let body;
 
     const parsedEndpoint = parseEndpoints(endpointState.url);
     if (!parsedEndpoint) {
       // should never happen, because empty endpoints are not allowed
       return;
     }
-
     const urlQueryVariables = parsedEndpoint.filter(
       path => path.type === 'variable'
     );
-    if (urlQueryVariables.length || variableState.length) {
-      // TODO: check this conditional
-      if (requestMethod !== 'GET' && !urlQueryVariables.length) {
-        body = composeRequestBody(variableState);
-      } else {
-        const currentPageHost = getCurrentPageHost();
-        requestURL = `${currentPageHost}/api/rest/${composeEndpoint(
+
+    const body = getRequestBody({
+      urlQueryVariables,
+      variableState,
+    });
+
+    const requestURL = urlQueryVariables.length
+      ? `${getCurrentPageHost()}/api/rest/${composeEndpoint(
           parsedEndpoint,
           variableState,
           endpointState.url
-        )}`;
-        body = undefined;
-      }
-    }
+        )}`
+      : pageHost;
 
     progressDispatch({
       type: 'RequestLoadingState/SET_LOADING_STATE',
@@ -260,9 +226,9 @@ const LivePreview: React.FC<LivePreviewProps> = ({
   ]);
 
   return (
-    <div className={styles.rest_live_layout}>
-      <h3 className={styles.rest_live_header}>Preview Request</h3>
-      <div className={styles.rest_preview_req_header_layout}>
+    <div className="flex flex-col pb-md text-center">
+      <h3 className="text-lg font-bold">Preview Request</h3>
+      <div className="my-md w-full">
         <CollapsibleToggle
           title="Request Headers"
           state={headerState}
@@ -277,15 +243,17 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           />
           <Button
             size="sm"
+            icon={<FaPlusCircle />}
+            iconPosition="start"
             onClick={onClickAddHeader}
-            className={styles.float_right}
+            className="float-right"
           >
-            <i className={`fa fa-plus-circle ${styles.icon_margin}`} />
             Add Header
           </Button>
         </CollapsibleToggle>
       </div>
-      <div className={styles.rest_preview_req_var_layout}>
+      <p>here</p>
+      <div className="w-full">
         <CollapsibleToggle
           title="Request Variables"
           state={variableState}
@@ -297,27 +265,27 @@ const LivePreview: React.FC<LivePreviewProps> = ({
           />
         </CollapsibleToggle>
       </div>
-      <div className={styles.rest_preview_req_var_layout}>
-        <hr />
+      <div className="mb-sm w-full">
+        <hr className="my-md" />
         <Button
-          size="sm"
+          size="md"
+          mode="primary"
           onClick={runQuery}
-          color="yellow"
-          className={styles.float_right}
+          className="float-right"
         >
-          <i className={`fa fa-play ${styles.icon_margin}`} />
+          <FaPlay className="mr-xs" />
           Run Request
         </Button>
       </div>
-      <div className={styles.rest_preview_show_response}>
+      <div className="w-full">
         {progressState.isLoading ? <Spinner /> : null}
         {progressState?.data && (
-          <pre className={styles.live_preview_pre}>
+          <pre className="h-[200] overflow-scroll text-left">
             {JSON.stringify(progressState.data, null, 4)}
           </pre>
         )}
         {progressState?.error && (
-          <div className={styles.rest_preview_error_display}>
+          <div className="w-full border border-gray-500 rounded-sm p-sm pt-md">
             <b>Error Message: </b> {progressState?.error?.message}
             <div>
               <b>Error Status code: </b>

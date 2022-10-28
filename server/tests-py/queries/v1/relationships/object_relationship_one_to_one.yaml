@@ -7,47 +7,35 @@
   query:
     type: create_object_relationship
     args:
-      table: article
-      name: author
+      table: author
+      name: details
       using:
         foreign_key_constraint_on:
-          table: author
+          table: author_details
           column: author_id
 
-- description: Nested select on article
+- description: Nested select
   url: /v1/query
   status: 200
   response:
     - id: 1
-      title: Article 1
-      content: Sample article content 1
-      author:
-        id: 1
-        name: Author 1
+      name: Author 1
+      details:
+        email: "author1@authors.com"
     - id: 2
-      title: Article 2
-      content: Sample article content 2
-      author:
-        id: 1
-        name: Author 1
-    - id: 3
-      title: Article 3
-      content: Sample article content 3
-      author:
-        id: 2
-        name: Author 2
+      name: Author 2
+      details:
+        email: "author2@authors.com"
   query:
     type: select
     args:
-      table: article
+      table: author
       columns:
         - id
-        - title
-        - content
-        - name: author
+        - name
+        - name: details
           columns:
-          - id
-          - name
+          - email
 
 - description: Drop object relationship
   url: /v1/query
@@ -57,5 +45,5 @@
   query:
     type: drop_relationship
     args:
-      table: article
-      relationship: author
+      table: author
+      relationship: details

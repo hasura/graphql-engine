@@ -1,5 +1,6 @@
 import * as React from 'react';
-import styles from '../styles.scss';
+import { FaCircleNotch } from 'react-icons/fa';
+import styles from '../styles.module.scss';
 import { HerokuSession } from './types';
 import {
   useHerokuDBCreation,
@@ -39,9 +40,8 @@ const DBCreation: React.FC<Props> = ({
   );
   const [isSettingEnvVar, setIsSettingEnvVar] = React.useState(false);
   const [createdEnvVar, setCreatedEnvVar] = React.useState('');
-  const [isConnectingDataSource, setIsConnectingDataSource] = React.useState(
-    false
-  );
+  const [isConnectingDataSource, setIsConnectingDataSource] =
+    React.useState(false);
   const loading = inProgress || isSettingEnvVar || isConnectingDataSource;
   const herokuButtonClassName = loading
     ? `${styles.herokuButtonBoxDisabled} ${styles.add_mar_bottom}`
@@ -78,6 +78,7 @@ const DBCreation: React.FC<Props> = ({
                   envVar,
                   dbName,
                 },
+                extensionsSchema: 'heroku_ext',
               }),
               () => {
                 startHerokuDBURLSync(envVar, appName, appID);
@@ -143,7 +144,7 @@ const DBCreation: React.FC<Props> = ({
       </div>
       <div className={`${styles.display_flex} ${styles.add_mar_bottom_mid}`}>
         <p>
-          <i className="fa fa-circle-o-notch fa-spin" aria-hidden="true" />
+          <FaCircleNotch className="animate-spin" aria-hidden="true" />
           &nbsp;{statusText}
         </p>
       </div>

@@ -9,14 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hasura/graphql-engine/cli/commands"
+	"github.com/hasura/graphql-engine/cli/v2/commands"
 
 	"github.com/spf13/afero"
 
-	"github.com/hasura/graphql-engine/cli/seed"
+	"github.com/hasura/graphql-engine/cli/v2/seed"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/util"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -73,6 +73,7 @@ func TestSeedsCreateCmd(t *testing.T, ec *cli.ExecutionContext) {
 			// Do a regex match for filename returned
 			// check if it is in required format
 			var re = regexp.MustCompile(`^([a-z]+\/)([0-9]+)\_(.+)(\.sql)$`)
+			*gotFilename = filepath.ToSlash(*gotFilename)
 			regexGroups := re.FindStringSubmatch(*gotFilename)
 
 			// Since filename has to be in form

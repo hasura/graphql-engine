@@ -1,7 +1,6 @@
 package database
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io"
 	"sync"
@@ -9,6 +8,8 @@ import (
 	nurl "net/url"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 var (
@@ -44,7 +45,7 @@ type Driver interface {
 	// Open returns a new driver instance configured with parameters
 	// coming from the URL string. Migrate will call this function
 	// only once per instance.
-	Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error)
+	Open(url string, isCMD bool, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error)
 
 	// Close closes the underlying database instance managed by the driver.
 	// Migrate will call this function only once per instance.
@@ -78,9 +79,6 @@ type Driver interface {
 	// version must be >= -1. -1 means NilVersion.
 	SetVersion(version int64, dirty bool) error
 
-	// SetVersion saves version and dirty state.
-	// Migrate will call this function before and after each call to Run.
-	// version must be >= -1. -1 means NilVersion.
 	RemoveVersion(version int64) error
 
 	// Version returns the currently active version and if the database is dirty.
@@ -121,29 +119,34 @@ type Driver interface {
 }
 
 // Open returns a new driver instance.
-func Open(url string, isCMD bool, tlsConfig *tls.Config, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
+func Open(url string, isCMD bool, logger *log.Logger, hasuraOpts *HasuraOpts) (Driver, error) {
+	var op errors.Op = "database.Open"
 	u, err := nurl.Parse(url)
 	if err != nil {
 		log.Debug(err)
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 
 	driversMu.RLock()
 	if u.Scheme == "" {
-		return nil, fmt.Errorf("database driver: invalid URL scheme")
+		return nil, errors.E(op, fmt.Errorf("database driver: invalid URL scheme"))
 	}
 	driversMu.RUnlock()
 
 	d, ok := drivers[u.Scheme]
 	if !ok {
-		return nil, fmt.Errorf("database driver: unknown driver %v", u.Scheme)
+		return nil, errors.E(op, fmt.Errorf("database driver: unknown driver %v", u.Scheme))
 	}
 
 	if logger == nil {
 		logger = log.New()
 	}
 
-	return d.Open(url, isCMD, tlsConfig, logger, hasuraOpts)
+	driver, err := d.Open(url, isCMD, logger, hasuraOpts)
+	if err != nil {
+		return driver, errors.E(op, err)
+	}
+	return driver, nil
 }
 
 func Register(name string, driver Driver) {

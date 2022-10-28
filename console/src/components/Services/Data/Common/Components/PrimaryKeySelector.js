@@ -1,5 +1,6 @@
 import React from 'react';
-import styles from '../../../../Common/TableCommon/Table.scss';
+import { FaTimes } from 'react-icons/fa';
+import { inputStyles } from '../../constants';
 
 const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
   const numPks = primaryKeys.length;
@@ -46,11 +47,11 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
 
       // show remove icon for all columns except last
       if (i + 1 === numPks) {
-        removeIcon = null;
+        removeIcon = <div className="ml-sm w-4" />;
       } else {
         removeIcon = (
-          <i
-            className={`${styles.fontAwosomeClose} fa-lg fa fa-times`}
+          <FaTimes
+            className="ml-sm w-4 cursor-pointer"
             data-test={`remove-pk-column-${i}`}
             onClick={dispatchRemove}
           />
@@ -58,10 +59,10 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
       }
 
       return (
-        <div key={i} className={`form-group ${styles.pkEditorWrapper}`}>
+        <div key={i} className="flex items-center">
           <select
             value={pk || ''}
-            className={`${styles.select} ${styles.sample} form-control ${styles.add_pad_left}`}
+            className={`w-full ${inputStyles} pd-sm`}
             onChange={dispatchSet}
             data-test={`primary-key-select-${i}`}
           >
@@ -83,7 +84,7 @@ const PrimaryKeySelector = ({ primaryKeys, columns, setPk, dispatch }) => {
       );
     });
   };
-  return <div>{pkEditors()}</div>;
+  return <div className="space-y-md">{pkEditors()}</div>;
 };
 
 export default PrimaryKeySelector;

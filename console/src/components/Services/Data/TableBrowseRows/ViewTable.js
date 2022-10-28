@@ -1,17 +1,13 @@
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { vSetDefaults, vMakeTableRequests } from './ViewActions';
 import { setTable } from '../DataActions';
 import TableHeader from '../TableCommon/TableHeader';
 import ViewRows from './ViewRows';
 import { NotFoundError } from '../../../Error/PageNotFound';
 import { exists } from '../../../Common/utils/jsUtils';
-import {
-  currentDriver,
-  dataSource,
-  isFeatureSupported,
-} from '../../../../dataSources';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import { RightContainer } from '../../../Common/Layout/RightContainer';
 import { getPersistedPageSize } from './tableUtils';
 import { getManualEventsTriggers } from '../../../../metadata/selector';
@@ -114,11 +110,9 @@ class ViewTable extends Component {
       s => s.table_name === tableName && s.table_schema === currentSchema
     );
 
-    if (!tableSchema && currentDriver === 'postgres') {
+    if (!tableSchema) {
       throw new NotFoundError();
     }
-
-    const styles = require('../../../Common/Common.scss');
 
     // Is this a view
     const isView = !dataSource.isTable(tableSchema);
@@ -169,21 +163,30 @@ class ViewTable extends Component {
     );
 
     let comment = null;
+
     if (tableSchema.comment) {
       comment = (
-        <div className={styles.add_mar_top}>
-          <div className={styles.commentText + ' alert alert-warning'}>
+        <Analytics name="DataTableComment" {...REDACT_EVERYTHING}>
+          <div
+            className={
+              'sm:max-w-xl rounded bg-secondary-light border border-gray-300 border-l-4 border-l-secondary py-sm px-md mt-lg'
+            }
+          >
             {tableSchema.comment}
           </div>
-        </div>
+        </Analytics>
       );
     }
 
     return (
       <RightContainer>
-        {header}
+        <Analytics name="DataTableViewRows" {...REDACT_EVERYTHING}>
+          {header}
+        </Analytics>
         {comment}
-        <div>{viewRows}</div>
+        <Analytics name="DataTableViewRows" {...REDACT_EVERYTHING}>
+          {viewRows}
+        </Analytics>
       </RightContainer>
     );
   }

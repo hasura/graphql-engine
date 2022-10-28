@@ -1,6 +1,5 @@
 import React from 'react';
-import Button from '../../Button/Button';
-import styles from './Editor.scss';
+import { Button } from '@/new-components/Button';
 
 class Editor extends React.Component {
   static getDerivedStateFromProps(nextProps, state) {
@@ -50,9 +49,9 @@ class Editor extends React.Component {
 
     return (
       <Button
-        className={`${styles.add_mar_small}`}
-        color="white"
-        size="xs"
+        mode="default"
+        size="sm"
+        className="mr-sm"
         data-test={`${service}-${isEditing ? 'close' : 'edit'}-${property}`}
         onClick={this.toggleEditor}
         disabled={readOnlyMode}
@@ -63,18 +62,19 @@ class Editor extends React.Component {
   };
 
   saveButton = saveFunc => {
-    const { service, property, ongoingRequest, saveButtonColor } = this.props;
+    const { service, property, ongoingRequest } = this.props;
     const isProcessing = ongoingRequest === property;
     const saveWithToggle = () => saveFunc(this.toggleEditor);
     return (
       <Button
         type="submit"
-        color={saveButtonColor || 'yellow'}
+        mode="primary"
+        isLoading={isProcessing}
+        loadingText="Saving..."
         size="sm"
-        className={styles.add_mar_right}
+        className="mr-sm"
         onClick={saveWithToggle}
         data-test={`${service}-${property}-save`}
-        disabled={isProcessing}
       >
         {this.props.saveButtonText || 'Save'}
       </Button>
@@ -82,17 +82,18 @@ class Editor extends React.Component {
   };
 
   removeButton = removeFunc => {
-    const { service, property, ongoingRequest, removeButtonColor } = this.props;
+    const { service, property, ongoingRequest } = this.props;
     const isProcessing = ongoingRequest === property;
     const removeWithToggle = () => removeFunc(this.toggleEditor);
     return (
       <Button
         type="submit"
-        color={removeButtonColor || 'red'}
+        mode="destructive"
+        isLoading={isProcessing}
+        loadingText="Removing..."
         size="sm"
         onClick={removeWithToggle}
         data-test={`${service}-${property}-remove`}
-        disabled={isProcessing}
       >
         {this.props.removeButtonText || 'Remove'}
       </Button>
@@ -102,7 +103,7 @@ class Editor extends React.Component {
   actionButtons = () => {
     const { saveFunc, removeFunc } = this.props;
     return (
-      <div>
+      <div className="flex items-center mt-sm">
         {saveFunc && this.saveButton(saveFunc)}
         {removeFunc && this.removeButton(removeFunc)}
       </div>
@@ -125,36 +126,30 @@ class Editor extends React.Component {
     let actionButtons;
 
     if (isEditing) {
-      editorClass = styles.editorExpanded;
+      editorClass = 'block rounded bg-white border border-gray-300 p-md mb-sm';
       editorLabel = expandedLabel && expandedLabel();
       actionButtons = this.actionButtons();
 
       if (editorExpanded) {
-        editorContent = (
-          <div className={styles.editorContent}>{editorExpanded()}</div>
-        );
+        editorContent = <div>{editorExpanded()}</div>;
       }
     } else {
-      editorClass = styles.editorCollapsed;
+      editorClass = 'block';
       editorLabel = collapsedLabel && collapsedLabel();
 
       if (editorCollapsed) {
-        editorContent = (
-          <div className={styles.editorContent}>{editorCollapsed()}</div>
-        );
+        editorContent = <div>{editorCollapsed()}</div>;
       }
     }
 
     return (
-      <div className={editorClass}>
-        <div className={styles.display_flex + ' ' + styles.add_mar_bottom_mid}>
+      <div className={`space-y-md ${editorClass}`}>
+        <div className="mb-sm flex items-center">
           {this.toggleButton()}
           {editorLabel}
         </div>
         {editorContent}
-        <div className={styles.add_mar_top_small}>
-          {!readOnlyMode && actionButtons}
-        </div>
+        {!readOnlyMode && actionButtons}
       </div>
     );
   }

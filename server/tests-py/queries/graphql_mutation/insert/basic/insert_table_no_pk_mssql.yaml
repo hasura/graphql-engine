@@ -1,0 +1,21 @@
+description: Try inserting into table having no primary key
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      insert_table_no_pk(objects: {name: "Foo"}){
+        affected_rows
+        returning{
+          id
+          name
+        }
+      }
+    }
+response:
+  data:
+    insert_table_no_pk:
+      affected_rows: 1
+      returning:
+      - id: 1
+        name: Foo

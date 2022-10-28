@@ -52,6 +52,18 @@ args:
       - name: age
         type: Int
 
+    - name: IntentionalErrorInput
+      fields:
+      - name: message
+        type: String!
+      - name: code
+        type: String
+      - name: extensions
+        type: json
+    
+    scalars:
+    - name: myCustomScalar
+
     objects:
     - name: UserId
       fields:
@@ -69,12 +81,140 @@ args:
         field_mapping:
           id: user_id
 
+    - name: UserId2
+      fields:
+      - name: id
+        type: Int!
+
     - name: OutObject
       fields:
       - name: id
         type: ID! # For issue https://github.com/hasura/graphql-engine/issues/4061
       - name: name
         type: String
+
+    - name: Headers
+      fields:
+      - name: name
+        type: String!
+      - name: value
+        type: String!
+
+    - name: OutHeaders
+      fields:
+      - name: headers
+        type: '[Headers]'
+
+    - name: OutObjectTransformed
+      fields:
+      - name: foo
+        type: ID!
+      - name: bar
+        type: String
+    
+    - name: OutObjectScalarTransformed
+      fields:
+      - name: foo
+        type: String!
+
+    - name: Address
+      fields:
+      - name: city
+        type: String
+      - name: country
+        type: String
+
+    - name: NestedOutObject
+      fields:
+      - name: id
+        type: Int!
+      - name: user_id
+        type: UserId2
+      - name: address
+        type: Address
+      - name: addresses
+        type: '[Address]'
+
+    - name: NestedOutObjectTransformed
+      fields:
+      - name: uid
+        type: ID!
+      - name: city0
+        type: String
+      - name: country0
+        type: String
+      - name: other_addresses
+        type: '[Address]'
+
+    - name: NestedJoinObject
+      fields:
+      - name: id
+        type: Int!
+      - name: user_id
+        type: UserId
+      - name: address
+        type: Address
+      - name: addresses
+        type: '[Address]'
+
+    - name: DirectRecursiveType
+      fields:
+      - name: id
+        type: Int!
+      - name: this
+        type: DirectRecursiveType
+
+    - name: ListRecursiveType
+      fields:
+      - name: id
+        type: Int!
+      - name: these
+        type: '[ListRecursiveType]'
+
+    - name: MutuallyRecursiveTypeA
+      fields:
+      - name: id
+        type: Int!
+      - name: that
+        type: MutuallyRecursiveTypeB
+
+    - name: MutuallyRecursiveTypeB
+      fields:
+      - name: id
+        type: Int!
+      - name: other
+        type: MutuallyRecursiveTypeA
+
+    - name: Recursive
+      fields:
+      - name: direct
+        type: DirectRecursiveType
+      - name: list
+        type: ListRecursiveType
+      - name: mutual
+        type: MutuallyRecursiveTypeA
+
+    - name: NullableResp
+      fields:
+      - name: id
+        type: Int!
+
+    - name: ResultIdList
+      fields:
+      - name: result_ids
+        type: '[Int!]!'
+
+    - name: Result
+      fields:
+      - name: id
+        type: Int!
+
+    - name: TypedNestedNull
+      fields:
+      - name: id
+        type: ID!
+      - name: child
+        type: TypedNestedNull
 
 - type: create_action
   args:
@@ -87,7 +227,7 @@ args:
       - name: name
         type: String!
       output_type: UserId
-      handler: http://127.0.0.1:5593/create-user
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/create-user"
 
 - type: create_action
   args:
@@ -98,7 +238,7 @@ args:
       - name: users
         type: '[UserInput!]!'
       output_type: '[UserId]'
-      handler: http://127.0.0.1:5593/create-users
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/create-users"
 
 - type: create_action
   args:
@@ -109,7 +249,83 @@ args:
       - name: arg
         type: InObject!
       output_type: OutObject
-      handler: http://127.0.0.1:5593/mirror-action
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-action"
+
+- type: create_action
+  args:
+    name: mirror_transformed
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObject
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-action"
+
+- type: update_action
+  args:
+    name: mirror_transformed
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObject
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-action"
+      request_transform:
+        version: 2
+        template_engine: Kriti
+        body:
+          action: transform
+          template: |
+            {
+              "input": {
+                "arg": {
+                  "id": {{ $body.input.arg.name }},
+                  "name": {{ $body.input.arg.id }}
+                }
+              }
+            }
+
+- type: create_action
+  args:
+    name: mirror_transformed_output
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObjectTransformed
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-action"
+
+- type: update_action
+  args:
+    name: mirror_transformed_output
+    definition:
+      kind: synchronous
+      arguments:
+      - name: arg
+        type: InObject!
+      output_type: OutObjectTransformed
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-action"
+      response_transform:
+        version: 2
+        template_engine: Kriti
+        body:
+          action: transform
+          template: |
+            {
+              "foo": {{ $body.id }},
+              "bar": {{ $body.name }}
+            }
+
+- type: create_action
+  args:
+    name: mirror_headers
+    definition:
+      type: query
+      output_type: OutHeaders
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/mirror-headers"
 
 - type: create_action
   args:
@@ -120,7 +336,62 @@ args:
       - name: email
         type: String!
       output_type: UserId!
-      handler: http://127.0.0.1:5593/get-user-by-email
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email"
+
+- type: create_action
+  args:
+    name: get_user_by_email_nested
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: NestedOutObject!
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email-nested"
+
+- type: create_action
+  args:
+    name: get_user_by_email_nested_transformed
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: NestedOutObjectTransformed!
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email-nested"
+      response_transform:
+        version: 2
+        template_engine: Kriti
+        body:
+          action: transform
+          template: |
+            {
+              "uid": {{ $body.user_id.id }},
+              "city0": {{ $body.addresses[0].city }},
+              "country0": {{ $body.addresses[0].country }},
+              "other_addresses":
+                {{ range i, x := $body.addresses }}
+                  {{ if i > 0 }}
+                    {
+                      "city": {{ x.city }},
+                      "country": {{ x.country }}
+                    }
+                  {{ else }}
+                    null
+                  {{ end }}
+                {{ end }}
+            }
+
+- type: create_action
+  args:
+    name: get_user_by_email_nested_join
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: NestedJoinObject!
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-user-by-email-nested"
 
 - type: create_action
   args:
@@ -131,7 +402,93 @@ args:
       - name: email
         type: String!
       output_type: '[UserId]!'
-      handler: http://127.0.0.1:5593/get-users-by-email
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-users-by-email"
+
+- type: create_action
+  args:
+    name: get_users_by_email_nested
+    definition:
+      type: query
+      arguments:
+      - name: email
+        type: String!
+      output_type: '[NestedOutObject]!'
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-users-by-email-nested"
+
+- type: create_action
+  args:
+    name: intentional_error
+    definition:
+      type: query
+      arguments:
+      - name: blob
+        type: IntentionalErrorInput!
+      # this can be anything, since this action never succeeds
+      output_type: '[UserId]!'
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/intentional-error"
+
+- type: create_action
+  args:
+    name: null_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: NullableResp
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/null-response"
+
+- type: create_action
+  args:
+    name: scalar_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: String!
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/scalar-response"
+
+- type: create_action
+  args:
+    name: pgscalar_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: json!
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/json-response"
+
+- type: create_action
+  args:
+    name: custom_scalar_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: myCustomScalar!
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/json-response"
+
+- type: create_action
+  args:
+    name: scalar_array_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: '[String]!'
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/scalar-array-response"
+
+- type: create_action
+  args:
+    name: custom_scalar_array_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: '[myCustomScalar!]!'
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/custom-scalar-array-response"
+
+- type: create_action
+  args:
+    name: custom_scalar_nested_array_response
+    definition:
+      kind: synchronous
+      arguments:
+      output_type: '[[myCustomScalar!]]!'
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/custom-scalar-array-response"
 
 - type: create_select_permission
   args:
@@ -149,3 +506,54 @@ args:
   args:
     action: get_user_by_email
     role: user
+
+- type: create_action
+  args:
+    name: recursive_output
+    definition:
+      type: query
+      output_type: Recursive
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/recursive-output"
+
+- type: create_action
+  args:
+    name: result_list
+    definition:
+      type: query
+      output_type: 'ResultIdList'
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-results"
+
+- type: create_action
+  args:
+    name: results
+    definition:
+      type: query
+      output_type: '[Result]'
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/get-results"
+      response_transform:
+        version: 2
+        template_engine: Kriti
+        body:
+          action: transform
+          template: |
+            {{ range i, x := $body.result_ids }}
+              {
+                "id": {{ x }}
+              }
+            {{ end }}
+
+- type: create_action
+  args:
+    name: typed_nested_null
+    definition:
+      type: query
+      output_type: TypedNestedNull!
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/typed-nested-null"
+
+- type: create_action
+  args:
+    name: typed_nested_null_wrong_field
+    definition:
+      type: query
+      output_type: TypedNestedNull!
+      handler: "{{ACTION_WEBHOOK_HANDLER}}/typed-nested-null-wrong-field"

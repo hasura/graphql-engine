@@ -11,6 +11,8 @@ const rqlQueryTypes = [
   'update',
   'run_sql',
   'mssql_run_sql',
+  'citus_run_sql',
+  'cockroach_run_sql',
 ];
 
 type Query = {
@@ -32,7 +34,7 @@ const returnMigrateUrl = (migrationMode: boolean, upQueries?: Query[]) => {
   upQueries.forEach(query => {
     let type = '';
     if (query.type === 'bulk') {
-      type = query.args[0].type;
+      type = query?.args?.[0]?.type;
     } else {
       type = query.type;
     }

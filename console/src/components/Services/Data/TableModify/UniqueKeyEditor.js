@@ -85,9 +85,6 @@ const UniqueKeyEditor = ({
     // label text when unique key is collapsed
     const collapsedLabel = () => {
       if (isLast) {
-        if (numUniqueKeys === 1) {
-          return 'No unique keys';
-        }
         return null;
       }
 
@@ -155,7 +152,8 @@ const UniqueKeyEditor = ({
       expandButtonText = 'Edit';
       collapseButtonText = 'Close';
     } else {
-      expandButtonText = numUniqueKeys === 1 ? 'Add' : 'Add a new unique key';
+      expandButtonText =
+        numUniqueKeys === 1 ? 'Add a unique key' : 'Add a new unique key';
       collapseButtonText = 'Cancel';
     }
 

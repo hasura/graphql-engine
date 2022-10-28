@@ -4,43 +4,37 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
-
+import { FaTimes } from 'react-icons/fa';
+import { Button } from '@/new-components/Button';
 import { FilterTableProps, GridHeadingProps } from './types';
 import { ordinalColSort } from '../../../Data/utils';
-import styles from '../../Events.scss';
 import EventsSubTable from './EventsSubTable';
 import ExpanderButton from './ExpanderButton';
 import { sanitiseRow } from '../../utils';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { getEventStatusIcon, getEventDeliveryIcon } from './utils';
-import Button from '../../../../Common/Button';
 import { SupportedEvents } from '../../../../../metadata/queryUtils';
+import { PaginationWithOnlyNav } from '../../../../../new-components/PaginationWithOnlyNav/PaginationWithOnlyNav';
 
 type CancelButtonProps = {
   id: string;
   onClickHandler: (e: React.MouseEvent) => void;
 };
-
 const CancelEventButton: React.FC<CancelButtonProps> = ({
   id,
   onClickHandler,
 }) => (
-  <Button
-    key={id}
-    className={styles.add_mar_right_small}
-    onClick={onClickHandler}
-    color="white"
-    size="xs"
-    title="Cancel Event"
-    onMouseDown={e => {
-      e.preventDefault();
-    }}
-  >
-    <i className="fa fa-close" />
-  </Button>
+  <div className="mr-2">
+    <Button
+      key={id}
+      onClick={onClickHandler}
+      size="sm"
+      title="Cancel Event"
+      icon={<FaTimes />}
+    />
+  </div>
 );
-
 interface Props extends FilterTableProps {
   onCancelEvent?: (
     id: string,
@@ -49,11 +43,9 @@ interface Props extends FilterTableProps {
   ) => void;
   triggerType?: SupportedEvents;
 }
-
 const EventsTable: React.FC<Props> = props => {
   const {
     rows,
-    count,
     filterState,
     runQuery,
     columns,
@@ -61,21 +53,12 @@ const EventsTable: React.FC<Props> = props => {
     onCancelEvent,
     triggerType,
   } = props;
-
-  const [currentPage, setCurrentPage] = React.useState(0);
-  const [pageSize, setPageSize] = React.useState(filterState.limit ?? 10);
-
-  if (!rows.length) {
-    return <div className={styles.add_mar_top}>No data available</div>;
-  }
-
+  const [, setCurrentPage] = React.useState(0);
+  const [, setPageSize] = React.useState(filterState.limit ?? 10);
   const sortedColumns = columns.sort(ordinalColSort);
-
   let shouldSortColumn = true;
-
   const sortByColumn = (col: string) => {
     // Remove all the existing order_bys
-
     const existingColSort = filterState.sorts.find(s => s.column === col);
     if (existingColSort && existingColSort.type === 'asc') {
       runQuery({
@@ -87,7 +70,6 @@ const EventsTable: React.FC<Props> = props => {
       });
     }
   };
-
   const changePage = (page: number) => {
     if (filterState.offset !== page * filterState.limit) {
       setCurrentPage(page);
@@ -96,7 +78,6 @@ const EventsTable: React.FC<Props> = props => {
       });
     }
   };
-
   const changePageSize = (size: number) => {
     if (filterState.limit !== size) {
       setPageSize(size);
@@ -105,7 +86,6 @@ const EventsTable: React.FC<Props> = props => {
       });
     }
   };
-
   const onCancelHandler = (
     id: string,
     scheduled_time: string | Date | number
@@ -114,9 +94,9 @@ const EventsTable: React.FC<Props> = props => {
       onCancelEvent(id, scheduled_time, runQuery);
     }
   };
-
   const expanderActions: GridHeadingProps = {
     expander: true,
+    width: 128,
     Header: '',
     accessor: 'expander',
     Expander: ({ isExpanded, viewIndex }) => {
@@ -126,9 +106,8 @@ const EventsTable: React.FC<Props> = props => {
           {columns.includes('actions') && (
             <CancelEventButton
               id={row.id}
-              onClickHandler={event => {
+              onClickHandler={() => {
                 onCancelHandler(row.id, row.scheduled_time);
-                event.stopPropagation();
               }}
             />
           )}
@@ -137,9 +116,7 @@ const EventsTable: React.FC<Props> = props => {
       );
     },
   };
-
   const gridHeadings = [expanderActions];
-
   sortedColumns.forEach(column => {
     if (column !== 'actions') {
       gridHeadings.push({
@@ -148,14 +125,8 @@ const EventsTable: React.FC<Props> = props => {
       });
     }
   });
-
-  const invocationColumns = ['status', 'invoid', 'created_at'];
-  const invocationDataTriggerColumns = [
-    'status',
-    'invocation_id',
-    'created_at',
-  ];
-
+  const invocationColumns = ['status', 'id', 'created_at'];
+  const invocationDataTriggerColumns = ['status', 'id', 'created_at'];
   const invocationGridHeadings: GridHeadingProps[] = [expanderActions];
   const addToGridHeadings = (headAccArr: string[]) => {
     headAccArr.forEach(column => {
@@ -165,13 +136,11 @@ const EventsTable: React.FC<Props> = props => {
       });
     });
   };
-
   if (triggerType) {
     addToGridHeadings(invocationColumns);
   } else {
     addToGridHeadings(invocationDataTriggerColumns);
   }
-
   const rowsFormatted = rows.map(row => {
     const formattedRow = Object.keys(row).reduce((fr, col) => {
       return {
@@ -191,7 +160,6 @@ const EventsTable: React.FC<Props> = props => {
       ) : undefined,
     };
   });
-
   const getTheadThProps: ComponentPropsGetterC = (
     finalState,
     some,
@@ -209,7 +177,6 @@ const EventsTable: React.FC<Props> = props => {
       shouldSortColumn = true;
     },
   });
-
   const getResizerProps: ComponentPropsGetter0 = (
     finalState,
     none,
@@ -222,17 +189,6 @@ const EventsTable: React.FC<Props> = props => {
     },
   });
 
-  const getNumOfPages = (
-    currentPageSize: number,
-    currentCount: number | undefined,
-    currentRowData: Record<string, any>[]
-  ) => {
-    if (currentCount) {
-      return Math.ceil(currentCount / currentPageSize);
-    }
-    return Math.ceil(currentRowData.length / currentPageSize);
-  };
-
   return (
     <ReactTable
       className="-highlight"
@@ -242,15 +198,24 @@ const EventsTable: React.FC<Props> = props => {
       resizable
       manual
       onPageChange={changePage}
-      page={currentPage}
-      pages={getNumOfPages(pageSize, count, rowsFormatted)}
-      showPagination={count ? count > 10 : false}
+      page={Math.floor(filterState.offset / filterState.limit)}
+      pageSize={filterState?.limit}
       onPageSizeChange={changePageSize}
       sortable={false}
       minRows={0}
       getTheadThProps={getTheadThProps}
       getResizerProps={getResizerProps}
+      showPagination
       defaultPageSize={10}
+      PaginationComponent={() => (
+        <PaginationWithOnlyNav
+          offset={filterState.offset}
+          limit={filterState.limit}
+          changePage={changePage}
+          changePageSize={changePageSize}
+          rows={rows}
+        />
+      )}
       SubComponent={row => {
         const currentRow = rows[row.index];
         if (triggerType) {
@@ -272,7 +237,7 @@ const EventsTable: React.FC<Props> = props => {
           invocationDataTriggerColumns.forEach(col => {
             newRow[col] = (
               <div
-                className={styles.tableCellCenterAlignedOverflow}
+                className="text-center overflow-hidden"
                 key={`${identifier}-${col}-${row.index}`}
               >
                 {sanitiseRow(col, r)}
@@ -293,5 +258,4 @@ const EventsTable: React.FC<Props> = props => {
     />
   );
 };
-
 export default EventsTable;

@@ -4,13 +4,13 @@
   response:
     message: success
   query:
-    type: set_table_configuration
+    type: set_table_customization
     args:
       table: author
       configuration:
         custom_name: author_alias
         custom_root_fields: {}
-        custom_column_names: {}
+        column_config: {}
 
 - description: Check that above query has changed the schema
   url: /v1/graphql

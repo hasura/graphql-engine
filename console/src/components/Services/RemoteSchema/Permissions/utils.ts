@@ -16,9 +16,16 @@ import {
   GraphQLList,
   GraphQLInputFieldMap,
   GraphQLFieldMap,
-  ValueNode,
   GraphQLInputType,
   buildSchema,
+  GraphQLUnionType,
+  InputObjectTypeDefinitionNode,
+  IntValueNode,
+  FloatValueNode,
+  StringValueNode,
+  BooleanValueNode,
+  EnumValueNode,
+  GraphQLInterfaceType,
 } from 'graphql';
 import {
   isJsonString,
@@ -168,6 +175,10 @@ export const getTree = (
     return Object.values(introspectionSchemaFields).map(
       ({ name, args: argArray, type, ...rest }: any) => {
         let checked = false;
+        const parentName =
+          typeS === 'QUERY'
+            ? `type ${introspectionSchema?.getQueryType()?.name}`
+            : `type ${introspectionSchema?.getMutationType()?.name}`;
         const args = argArray.reduce((p: ArgTreeType, c: FieldType) => {
           return { ...p, [c.name]: { ...c } };
         }, {});
@@ -178,7 +189,14 @@ export const getTree = (
         ) {
           checked = true;
         }
-        return { name, checked, args, return: type.toString(), ...rest };
+        return {
+          name,
+          checked,
+          args,
+          return: type.toString(),
+          parentName,
+          ...rest,
+        };
       }
     );
   }
@@ -215,6 +233,8 @@ export const getType = (
   const scalarTypes: RemoteSchemaFields[] = [];
   const inputObjectTypes: RemoteSchemaFields[] = [];
   const objectTypes: RemoteSchemaFields[] = [];
+  const unionTypes: RemoteSchemaFields[] = [];
+  const interfaceTypes: RemoteSchemaFields[] = [];
 
   Object.entries(introspectionSchemaFields).forEach(([key, value]: any) => {
     if (
@@ -222,7 +242,9 @@ export const getType = (
         value instanceof GraphQLObjectType ||
         value instanceof GraphQLInputObjectType ||
         value instanceof GraphQLEnumType ||
-        value instanceof GraphQLScalarType
+        value instanceof GraphQLScalarType ||
+        value instanceof GraphQLUnionType ||
+        value instanceof GraphQLInterfaceType
       )
     )
       return;
@@ -276,6 +298,13 @@ export const getType = (
       scalarTypes.push(type);
     } else if (value instanceof GraphQLObjectType) {
       type.name = `type ${name}`;
+      if (value.getInterfaces().length) {
+        const implementsString = value
+          .getInterfaces()
+          .map((i: any) => i.name)
+          .join('& ');
+        type.name = `type ${name} implements ${implementsString}`;
+      }
     } else if (value instanceof GraphQLInputObjectType) {
       type.name = `input ${name}`;
     }
@@ -316,6 +345,15 @@ export const getType = (
         if (v.defaultValue !== undefined) {
           field.defaultValue = v.defaultValue;
         }
+        if (value instanceof GraphQLInputObjectType) {
+          field.args = { [k]: v };
+          field.isInputObjectType = true;
+          field.parentName = type.name;
+        } else if (v.args?.length) {
+          field.args = v.args.reduce((p: ArgTreeType, c: FieldType) => {
+            return { ...p, [c.name]: { ...c } };
+          }, {});
+        }
         childArray.push(field);
       });
 
@@ -323,8 +361,89 @@ export const getType = (
       if (value instanceof GraphQLObjectType) objectTypes.push(type);
       if (value instanceof GraphQLInputObjectType) inputObjectTypes.push(type);
     }
+
+    if (value instanceof GraphQLUnionType) {
+      let isFieldPresent = true;
+      let permissionsTypesVal: any;
+
+      // Check if the type is present in the permission schema coming from user.
+      if (permissionsSchema !== null && permissionsSchemaFields !== null) {
+        if (key in permissionsSchemaFields) {
+          permissionsTypesVal = permissionsSchemaFields[key].getTypes();
+        } else {
+          isFieldPresent = false;
+        }
+      }
+
+      type.name = `union ${name}`;
+      const childArray: CustomFieldType[] = [];
+      const typesVal = value.getTypes();
+      Object.entries(typesVal).forEach(([k, v]) => {
+        let checked = false;
+        if (
+          permissionsSchema !== null &&
+          isFieldPresent &&
+          k in permissionsTypesVal
+        ) {
+          checked = true;
+        }
+        const field: CustomFieldType = {
+          name: v.name,
+          checked,
+          return: v.name,
+        };
+        childArray.push(field);
+      });
+
+      type.children = childArray;
+      unionTypes.push(type);
+    }
+
+    if (value instanceof GraphQLInterfaceType) {
+      let isFieldPresent = true;
+      let permissionsFieldVal: GraphQLFieldMap<any, any, any> = {};
+
+      // Check if the type is present in the permission schema coming from user.
+      if (permissionsSchema !== null && permissionsSchemaFields !== null) {
+        if (key in permissionsSchemaFields) {
+          permissionsFieldVal = permissionsSchemaFields[key].getFields();
+        } else {
+          isFieldPresent = false;
+        }
+      }
+
+      type.name = `interface ${name}`;
+      const childArray: CustomFieldType[] = [];
+      const fieldVal = value.getFields();
+      Object.entries(fieldVal).forEach(([k, v]) => {
+        let checked = false;
+        if (
+          permissionsSchema !== null &&
+          isFieldPresent &&
+          k in permissionsFieldVal
+        ) {
+          checked = true;
+        }
+        const field: CustomFieldType = {
+          name: v.name,
+          checked,
+          return: v.type.toString(),
+        };
+        childArray.push(field);
+      });
+
+      type.children = childArray;
+      interfaceTypes.push(type);
+    }
   });
-  return [...objectTypes, ...inputObjectTypes, ...enumTypes, ...scalarTypes];
+  return [
+    ...objectTypes,
+    ...inputObjectTypes,
+    ...unionTypes,
+    ...enumTypes,
+    ...scalarTypes,
+    ...interfaceTypes,
+  ];
 };
 
 export const getRemoteSchemaFields = (
@@ -391,6 +510,11 @@ const isList = (gqlArg: GraphQLInputField, value: string) =>
 const serialiseArgs = (args: ArgTreeType, argDef: GraphQLInputField) => {
   let res = '{';
   const { children } = getChildArguments(argDef);
+
+  if (args === null) {
+    return 'null';
+  }
+
   Object.entries(args).forEach(([key, value]) => {
     if (isEmpty(value) || isEmpty(children)) {
       return;
@@ -449,7 +573,7 @@ const isEnumType = (type: GraphQLInputType): boolean => {
 };
 
 // Check if type belongs to default gql scalar types
-const checkDefaultGQLScalarType = (typeName: string): boolean => {
+export const checkDefaultGQLScalarType = (typeName: string): boolean => {
   const gqlDefaultTypes = ['Boolean', 'Float', 'String', 'Int', 'ID'];
   if (gqlDefaultTypes.indexOf(typeName) > -1) return true;
   return false;
@@ -458,6 +582,45 @@ const checkDefaultGQLScalarType = (typeName: string): boolean => {
 const checkEmptyType = (type: RemoteSchemaFields) => {
   const isChecked = (element: FieldType | CustomFieldType) => element.checked;
   if (type.children) return type.children.some(isChecked);
+  return undefined;
+};
+
+interface FormatParamArgs {
+  argName: ArgTreeType | string;
+  arg: GraphQLInputField;
+}
+
+const checkIsEnum = (
+  argName: ArgTreeType | string,
+  argType: GraphQLInputType
+) => {
+  const isEnum =
+    argName &&
+    typeof argName === 'string' &&
+    !argName.toLowerCase().startsWith('x-hasura') &&
+    isEnumType(argType);
+  return isEnum;
+};
+
+const formatArg = ({ argName, arg }: FormatParamArgs): string | undefined => {
+  const isEnum = checkIsEnum(argName, arg.type);
+
+  if (typeof argName === 'object') {
+    if (Array.isArray(argName)) {
+      const argList = argName.map(argListItem =>
+        formatArg({ arg, argName: argListItem })
+      );
+
+      return `[${argList.join(',')}]`;
+    }
+    return serialiseArgs(argName, arg);
+  }
+
+  if (typeof argName === 'number' || isEnum) {
+    return `${argName}`;
+  }
+
+  return `"${argName}"`;
 };
 
 /**
@@ -483,6 +646,18 @@ const getSDLField = (
     return `${result}\n`;
   }
 
+  // add union fields to SDL
+  if (typeName.startsWith('union') && type.children) {
+    result = `${typeName} =`;
+    type.children.forEach(t => {
+      if (t.checked) {
+        result = `${result} ${t.name} |`;
+      }
+    });
+    result = result.substring(0, result.length - 1);
+    return `${result}\n`;
+  }
+
   // add other fields to SDL
   result = `${typeName}{`;
 
@@ -491,41 +666,37 @@ const getSDLField = (
       if (!f.checked) return null;
 
       let fieldStr = f.name;
-
+      let valueStr = '';
       // enum types don't have args
       if (!typeName.startsWith('enum')) {
         if (f.args && !isEmpty(f.args)) {
           fieldStr = `${fieldStr}(`;
           Object.values(f.args).forEach((arg: GraphQLInputField) => {
-            let valueStr = `${arg.name} : ${arg.type.inspect()}`;
+            valueStr = `${arg.name} : ${arg.type.inspect()}`;
 
-            if (argTree && argTree[f.name] && argTree[f.name][arg.name]) {
-              const argName = argTree[f.name][arg.name];
-              let unquoted;
-              const isEnum =
-                typeof argName === 'string' &&
-                argName &&
-                !argName.toLowerCase().startsWith('x-hasura') &&
-                isEnumType(arg.type);
+            // add default value after type definition if it exists
+            if (arg.defaultValue !== undefined) {
+              const defaultValue = formatArg({
+                arg,
+                argName: arg.defaultValue,
+              });
+              valueStr = `${valueStr} = ${defaultValue} `;
+            }
 
-              if (typeof argName === 'object') {
-                unquoted = serialiseArgs(argName, arg);
-              } else if (typeof argName === 'number') {
-                unquoted = `${argName}`;
-              } else if (isEnum) {
-                unquoted = `${argName}`;
-              } else {
-                unquoted = `"${argName}"`;
+            const argName = argTree?.[type?.name]?.[f?.name]?.[arg?.name];
+
+            if (argName) {
+              const preset = formatArg({ arg, argName });
+              if (!isEmpty(preset)) {
+                valueStr = `${valueStr} @preset(value: ${preset}) `;
               }
-
-              if (!isEmpty(unquoted))
-                valueStr = `${valueStr} @preset(value: ${unquoted})`;
             }
 
             fieldStr = `${fieldStr + valueStr} `;
           });
           fieldStr = `${fieldStr})`;
-          fieldStr = `${fieldStr}: ${f.return}`;
+
+          fieldStr = `${fieldStr}: ${f.return} `;
         } else {
           // normal data type - ie: without arguments/ presets
           fieldStr =
@@ -534,9 +705,15 @@ const getSDLField = (
               : `${fieldStr} : ${f.return} = ${f.defaultValue}`;
         }
       }
-
-      result = `${result}
+      // only need the arg string for input object types
+      if (typeName.startsWith('input')) {
+        result = `${result}
+      ${valueStr}`;
+      } else {
+        result = `${result}
       ${fieldStr}`;
+      }
+      return true;
     });
   return `${result}\n}`;
 };
@@ -574,7 +751,10 @@ export const generateSDL = (
     if (!isEmpty(fieldDef)) result = `${result}\n${fieldDef}\n`;
   });
 
-  prefix = `${prefix}
+  prefix =
+    prefix === `schema{`
+      ? ''
+      : `${prefix}
 }\n`;
 
   if (isEmpty(result)) return '';
@@ -598,14 +778,6 @@ export const buildSchemaFromRoleDefn = (roleDefinition: string) => {
     return null;
   }
   return permissionsSchema;
-};
-
-const addToArrayString = (acc: string, newStr: unknown, withQuotes = false) => {
-  if (acc !== '') {
-    if (withQuotes) acc = `${acc}, "${newStr}"`;
-    else acc = `${acc}, ${newStr}`;
-  } else acc = `[${newStr}`;
-  return acc;
 };
 
 const parseObjectField = (arg: ArgumentNode | ObjectFieldNode) => {
@@ -635,24 +807,54 @@ const parseObjectField = (arg: ArgumentNode | ObjectFieldNode) => {
     return res;
   }
 
+  type NodeType =
+    | IntValueNode
+    | FloatValueNode
+    | StringValueNode
+    | BooleanValueNode
+    | EnumValueNode;
+
   // Array values
   if (
     arg?.value?.kind === 'ListValue' &&
     arg?.value?.values &&
     arg?.value?.values?.length > 0
   ) {
-    let res = '';
-    arg.value.values.forEach((v: ValueNode) => {
-      if (v.kind === 'IntValue' || v.kind === 'FloatValue') {
-        res = addToArrayString(res, v.value);
-      } else if (v.kind === 'BooleanValue') {
-        res = addToArrayString(res, v.value);
-      } else if (v.kind === 'StringValue') {
-        res = addToArrayString(res, v.value);
+    const res = arg.value.values.reduce((acc, valueNode, i, arr) => {
+      const isValid =
+        valueNode.kind === 'IntValue' ||
+        valueNode.kind === 'FloatValue' ||
+        valueNode.kind === 'StringValue' ||
+        valueNode.kind === 'BooleanValue' ||
+        valueNode.kind === 'EnumValue';
+
+      if (isValid) {
+        const vNode = valueNode as NodeType;
+        const isOnlyItem = arr.length === 1;
+        const isFirstItem = i === 0;
+        const isLastItem = i === arr.length - 1;
+
+        if (isOnlyItem) {
+          return `[${vNode.value}]`;
+        }
+
+        if (isFirstItem) {
+          return `[${vNode.value}`;
+        }
+
+        if (isLastItem) {
+          return `${acc}, ${vNode.value}]`;
+        }
+
+        return `${acc}, ${vNode.value}`;
       }
-    });
-    return `${res}]`;
+
+      return acc;
+    }, '');
+
+    return res;
   }
+  return undefined;
 };
 
 const getDirectives = (field: InputValueDefinitionNode) => {
@@ -674,13 +876,18 @@ const getPresets = (field: FieldDefinitionNode) => {
   return res;
 };
 
-const getFieldsMap = (fields: FieldDefinitionNode[]) => {
-  const res: Record<string, any> = {};
+const getFieldsMap = (fields: FieldDefinitionNode[], parentName: string) => {
+  const type = `type ${parentName}`;
+  const res: Record<string, any> = { [type]: {} };
   fields.forEach(field => {
-    res[field?.name?.value] = getPresets(field);
+    res[type][field?.name?.value] = getPresets(field);
   });
   return res;
 };
+
+type ArgTypesDefinition =
+  | ObjectTypeDefinitionNode
+  | InputObjectTypeDefinitionNode;
 
 export const getArgTreeFromPermissionSDL = (
   definition: string,
@@ -689,12 +896,27 @@ export const getArgTreeFromPermissionSDL = (
   const roots = getSchemaRoots(introspectionSchema);
   try {
     const schema: DocumentNode = parse(definition);
-    const defs = schema.definitions as ObjectTypeDefinitionNode[];
+    const defs = schema.definitions as ArgTypesDefinition[];
     const argTree =
       defs &&
       defs.reduce((acc = [], i) => {
         if (i.name && i.fields && roots.includes(i?.name?.value)) {
-          const res = getFieldsMap(i.fields as FieldDefinitionNode[]);
+          const res = getFieldsMap(
+            i.fields as FieldDefinitionNode[],
+            i.name.value
+          );
+          return { ...acc, ...res };
+        }
+        if (i.name && i.fields && i.kind === 'InputObjectTypeDefinition') {
+          const type = `input ${i.name.value}`;
+          const res: Record<string, any> = { [type]: {} };
+          i.fields.forEach(field => {
+            if (field.directives && field.directives.length > 0) {
+              res[type][field.name?.value] = {};
+              res[type][field.name?.value][field.name?.value] =
+                getDirectives(field);
+            }
+          });
           return { ...acc, ...res };
         }
         return acc;

@@ -1,98 +1,159 @@
-import React, { ChangeEvent, Dispatch, useState } from 'react';
+import React, { ChangeEvent, Dispatch } from 'react';
+import { FaCheckCircle, FaInfoCircle } from 'react-icons/fa';
+import { IconTooltip } from '@/new-components/Tooltip';
 
 import { ConnectDBActions, ConnectDBState, connectionTypes } from './state';
 import { LabeledInput } from '../../../Common/LabeledInput';
-import Tooltip from '../../../Common/Tooltip/Tooltip';
 import { Driver, getSupportedDrivers } from '../../../../dataSources';
-import { readFile } from './utils';
 
-import styles from './DataSources.scss';
+import styles from './DataSources.module.scss';
+import JSONEditor from '../TablePermissions/JSONEditor';
+import { SupportedFeaturesType } from '../../../../dataSources/types';
+import { Path } from '../../../Common/utils/tsUtils';
+import ConnectionSettingsForm from './ConnectionSettings/ConnectionSettingsForm';
+import { GraphQLFieldCustomizationContainer } from './GraphQLFieldCustomization/GraphQLFieldCustomizationContainer';
 
-type ConnectDatabaseFormProps = {
+export interface ConnectDatabaseFormProps {
   // Connect DB State Props
   connectionDBState: ConnectDBState;
   connectionDBStateDispatch: Dispatch<ConnectDBActions>;
   // Connection Type Props - for the Radio buttons
   updateConnectionTypeRadio: (e: ChangeEvent<HTMLInputElement>) => void;
+  changeConnectionType?: (value: string) => void;
   connectionTypeState: string;
   // Other Props
-  isreadreplica?: boolean;
+  isReadReplica?: boolean;
+  isEditState?: boolean;
   title?: string;
-};
+}
 
 export const connectionRadios = [
   {
-    value: connectionTypes.CONNECTION_PARAMS,
-    title: 'Connection Parameters',
-    disableOnEdit: true,
-  },
-  {
-    value: connectionTypes.DATABASE_URL,
-    title: 'Database URL',
-    disableOnEdit: false,
-  },
-  {
-    value: connectionTypes.ENV_VAR,
+    value: connectionTypes?.ENV_VAR,
     title: 'Environment Variable',
-    disableOnEdit: true,
+  },
+  {
+    value: connectionTypes?.DATABASE_URL,
+    title: 'Database URL',
+  },
+  {
+    value: connectionTypes?.CONNECTION_PARAMS,
+    title: 'Connection Parameters',
   },
 ];
 
 const dbTypePlaceholders: Record<Driver, string> = {
   postgres: 'postgresql://username:password@hostname:5432/database',
+  citus: 'postgresql://username:password@hostname:5432/database',
   mssql:
-    'Driver={ODBC Driver 17 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password;',
+    'Driver={ODBC Driver 18 for SQL Server};Server=serveraddress;Database=dbname;Uid=username;Pwd=password',
   mysql: 'MySQL connection string',
   bigquery: 'SERVICE_ACCOUNT_KEY_FROM_ENV',
+  cockroach: 'postgresql://username:password@hostname:5432/database',
 };
 
 const defaultTitle = 'Connect Database Via';
 
-const driverToLabel: Record<Driver, string> = {
-  mysql: 'MySQL',
-  postgres: 'PostgreSQL',
-  mssql: 'MS Server',
-  bigquery: 'BigQuery',
+const driverToLabel: Record<
+  Driver,
+  {
+    label: string;
+    defaultConnection: string;
+    info?: React.ReactElement[];
+    beta?: boolean;
+  }
+> = {
+  mysql: { label: 'MySQL', defaultConnection: 'DATABASE_URL' },
+  postgres: { label: 'PostgreSQL', defaultConnection: 'DATABASE_URL' },
+  mssql: {
+    label: 'MS SQL Server',
+    defaultConnection: 'DATABASE_URL',
+    info: [
+      <>
+        Only Database URLs and Environment Variables are available for MS SQL
+        Server
+      </>,
+    ],
+  },
+  bigquery: {
+    label: 'BigQuery',
+    defaultConnection: 'CONNECTION_PARAMETERS',
+    info: [
+      <>
+        Only Connection Parameters and Environment Variables are available for
+        BigQuery
+      </>,
+    ],
+  },
+  citus: {
+    label: 'Citus',
+    defaultConnection: 'DATABASE_URL',
+  },
+  cockroach: {
+    label: 'CockroachDB',
+    defaultConnection: 'DATABASE_URL',
+    info: [
+      <>
+        Only Database URLs and Environment Variables are available for
+        CockroachDB
+      </>,
+      <div className="flex whitespace-nowrap">
+        Please makes sure to not use the
+        <div className="font-semibold text-gray-500 px-1">
+          &quot;sslverify=verify-full&quot;
+        </div>
+        parameter in your connection string. SSL mode needs to be configured
+        under the
+        <div className="font-semibold text-gray-500 px-1">
+          SSL Certificate Section
+        </div>
+        section below
+      </div>,
+    ],
+  },
 };
 
-const supportedDrivers = getSupportedDrivers('connectDbForm.enabled');
+const ConnectDatabaseForm = (props: ConnectDatabaseFormProps) => {
+  const {
+    connectionDBState,
+    connectionDBStateDispatch,
+    updateConnectionTypeRadio,
+    connectionTypeState,
+    isReadReplica = false,
+    title,
+    isEditState,
+  } = props;
 
-const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
-  connectionDBState,
-  connectionDBStateDispatch,
-  updateConnectionTypeRadio,
-  connectionTypeState,
-  isreadreplica = false,
-  title,
-}) => {
-  const [currentConnectionParamState, toggleConnectionParamState] = useState(
-    false
-  );
-  const toggleConnectionParams = (value: boolean) => () => {
-    toggleConnectionParamState(value);
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files![0];
-    const addFileQueries = (content: string) => {
-      try {
-        connectionDBStateDispatch({
-          type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT_FILE',
-          data: content,
-        });
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    readFile(file, addFileQueries);
+  const isDBSupported = (driver: Driver, connectionType: string) => {
+    let ts = 'databaseURL';
+    if (connectionType === 'CONNECTION_PARAMETERS') {
+      ts = 'connectionParameters';
+    }
+    if (connectionType === 'ENVIRONMENT_VARIABLES') {
+      ts = 'environmentVariable';
+    }
+    return getSupportedDrivers(
+      `connectDbForm.${ts}` as Path<SupportedFeaturesType>
+    ).includes(driver);
   };
 
   return (
     <>
-      <h4 className={`${styles.remove_pad_bottom} ${styles.connect_db_header}`}>
+      <p
+        className={`${styles.remove_pad_bottom} mb-md flex items-center gap-1 ${styles.connect_db_header}`}
+      >
         {title ?? defaultTitle}
-      </h4>
+        <IconTooltip message="Environment variable recommended" />
+        <a
+          href="https://hasura.io/docs/latest/graphql/cloud/projects/create.html#existing-database"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span className={`${styles.fontStyleItalic} ${styles.knowMoreLink}`}>
+            (Know More)
+          </span>
+        </a>
+      </p>
       <div
         className={styles.connect_db_radios}
         onChange={updateConnectionTypeRadio}
@@ -100,13 +161,18 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
         {connectionRadios.map(radioBtn => (
           <label
             key={`label-${radioBtn.title}`}
-            className={styles.connect_db_radio_label}
+            className={`${styles.connect_db_radio_label} inline-flex ${
+              !isDBSupported(connectionDBState.dbType, radioBtn.value)
+                ? styles.label_disabled
+                : ''
+            }`}
           >
             <input
               type="radio"
               value={radioBtn.value}
+              className="legacy-input-fix"
               name={
-                !isreadreplica
+                !isReadReplica
                   ? 'connection-type'
                   : 'connection-type-read-replica'
               }
@@ -114,147 +180,153 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               defaultChecked={
                 connectionTypeState === connectionTypes.DATABASE_URL
               }
-              // disabled={
-              //   isEditState === radioBtn.disableOnEdit && isEditState
-              // }
+              disabled={
+                !isDBSupported(connectionDBState.dbType, radioBtn.value)
+              }
             />
             {radioBtn.title}
           </label>
         ))}
       </div>
-      <div className={styles.connect_form_layout}>
-        {!isreadreplica && (
-          <>
+      <div className={styles.add_mar_bottom_mid}>
+        {connectionTypeState.includes(connectionTypes.ENV_VAR) ? (
+          <div className={styles.add_mar_bottom_mid}>
+            <FaCheckCircle
+              className={`${styles.color_green} ${styles.padd_small_right}`}
+            />
+            <span className={styles.text_muted}>
+              Environment variable recommended
+            </span>
+          </div>
+        ) : null}
+        {driverToLabel[connectionDBState.dbType].info?.map(info => {
+          return (
+            <div className="flex">
+              <FaInfoCircle className={`${styles.padd_small_right} mt-1`} />
+              <span className={styles.text_muted}>{info}</span>
+            </div>
+          );
+        })}
+      </div>
+      {connectionTypeState.includes(connectionTypes.DATABASE_URL) ||
+      (connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&
+        connectionDBState.dbType === 'mssql') ? (
+        <LabeledInput
+          label="Database URL"
+          onChange={e =>
+            connectionDBStateDispatch({
+              type: 'UPDATE_DB_URL',
+              data: e.target.value,
+            })
+          }
+          value={connectionDBState.databaseURLState.dbURL}
+          placeholder={dbTypePlaceholders[connectionDBState.dbType]}
+          data-test="database-url"
+        />
+      ) : null}
+      {connectionTypeState.includes(connectionTypes.ENV_VAR) &&
+      connectionDBState.dbType !== 'bigquery' ? (
+        <LabeledInput
+          label="Environment Variable"
+          placeholder="HASURA_GRAPHQL_DB_URL_FROM_ENV"
+          onChange={e =>
+            connectionDBStateDispatch({
+              type: 'UPDATE_DB_URL_ENV_VAR',
+              data: e.target.value,
+            })
+          }
+          value={connectionDBState.envVarState.envVar}
+          data-test="database-url-env"
+        />
+      ) : null}
+      {(connectionTypeState.includes(connectionTypes.DATABASE_URL) ||
+        connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) ||
+        connectionTypeState.includes(connectionTypes.ENV_VAR)) &&
+      connectionDBState.dbType === 'bigquery' ? (
+        <>
+          {connectionTypeState.includes(connectionTypes.ENV_VAR) ? (
             <LabeledInput
+              label="Environment Variable"
+              placeholder={dbTypePlaceholders[connectionDBState.dbType]}
               onChange={e =>
                 connectionDBStateDispatch({
-                  type: 'UPDATE_DISPLAY_NAME',
+                  type: 'UPDATE_DB_URL_ENV_VAR',
                   data: e.target.value,
                 })
               }
-              value={connectionDBState.displayName}
-              label="Database Display Name"
-              placeholder="database name"
-              data-test="database-display-name"
+              value={connectionDBState.envVarState.envVar}
+              data-test="service-account-env-var"
             />
-            <label
-              key="Data Source Driver"
-              className={styles.connect_db_input_label}
-            >
-              Data Source Driver
-            </label>
-            <select
-              key="connect-db-type"
-              value={connectionDBState.dbType}
-              onChange={e =>
-                connectionDBStateDispatch({
-                  type: 'UPDATE_DB_DRIVER',
-                  data: e.target.value as Driver,
-                })
-              }
-              className={`form-control ${styles.connect_db_input_pad}`}
-              data-test="database-type"
-            >
-              {supportedDrivers.map(driver => (
-                <option key={driver} value={driver}>
-                  {driverToLabel[driver]}
-                </option>
-              ))}
-            </select>
-          </>
-        )}
-        {(connectionTypeState.includes(connectionTypes.DATABASE_URL) ||
-          (connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&
-            connectionDBState.dbType === 'mssql')) &&
-        connectionDBState.dbType !== 'bigquery' ? (
-          <LabeledInput
-            label="Database URL"
-            onChange={e =>
-              connectionDBStateDispatch({
-                type: 'UPDATE_DB_URL',
-                data: e.target.value,
-              })
-            }
-            value={connectionDBState.databaseURLState.dbURL}
-            placeholder={dbTypePlaceholders[connectionDBState.dbType]}
-            data-test="database-url"
-            // disabled={isEditState}
-          />
-        ) : null}
-        {connectionTypeState.includes(connectionTypes.ENV_VAR) &&
-        connectionDBState.dbType !== 'bigquery' ? (
-          <LabeledInput
-            label="Environment Variable"
-            placeholder="HASURA_GRAPHQL_DB_URL_FROM_ENV"
-            onChange={e =>
-              connectionDBStateDispatch({
-                type: 'UPDATE_DB_URL_ENV_VAR',
-                data: e.target.value,
-              })
-            }
-            value={connectionDBState.envVarState.envVar}
-            data-test="database-url-env"
-          />
-        ) : null}
-        {(connectionTypeState.includes(connectionTypes.DATABASE_URL) ||
-          connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) ||
-          connectionTypeState.includes(connectionTypes.ENV_VAR)) &&
-        connectionDBState.dbType === 'bigquery' ? (
-          <>
-            {connectionTypeState.includes(connectionTypes.ENV_VAR) ? (
-              <LabeledInput
-                label="Environment Variable"
-                placeholder={dbTypePlaceholders[connectionDBState.dbType]}
-                onChange={e =>
-                  connectionDBStateDispatch({
-                    type: 'UPDATE_DB_URL_ENV_VAR',
-                    data: e.target.value,
-                  })
-                }
-                value={connectionDBState.envVarState.envVar}
-                data-test="service-account-env-var"
-              />
-            ) : (
-              <div className={styles.add_mar_bottom_mid}>
-                <div className={styles.add_mar_bottom_mid}>
-                  <b>Service Account File:</b>
-                  <Tooltip message="Service account key file for bigquery db" />
-                </div>
-                <input
-                  type="file"
-                  className={`form-control input-sm ${styles.inline_block}`}
-                  onChange={handleFileUpload}
-                />
+          ) : (
+            <div className={styles.add_mar_bottom_mid}>
+              <div
+                className={`${styles.add_mar_bottom_mid} flex items-center gap-1`}
+              >
+                <b>Service Account Key:</b>
+                <IconTooltip message="Service account key for BigQuery data source" />
               </div>
-            )}
-            <LabeledInput
-              label="Project Id"
-              onChange={e =>
-                connectionDBStateDispatch({
-                  type: 'UPDATE_DB_BIGQUERY_PROJECT_ID',
-                  data: e.target.value,
-                })
+              <JSONEditor
+                minLines={5}
+                initData="{}"
+                onChange={value => {
+                  connectionDBStateDispatch({
+                    type: 'UPDATE_DB_BIGQUERY_SERVICE_ACCOUNT',
+                    data: value,
+                  });
+                }}
+                data={connectionDBState.databaseURLState.serviceAccount}
+              />
+            </div>
+          )}
+          <LabeledInput
+            label="Project Id"
+            onChange={e =>
+              connectionDBStateDispatch({
+                type: 'UPDATE_DB_BIGQUERY_PROJECT_ID',
+                data: e.target.value,
+              })
+            }
+            value={connectionDBState.databaseURLState.projectId}
+            placeholder="project_id"
+            data-test="project-id"
+          />
+          <LabeledInput
+            label="Datasets"
+            onChange={e =>
+              connectionDBStateDispatch({
+                type: 'UPDATE_DB_BIGQUERY_DATASETS',
+                data: e.target.value,
+              })
+            }
+            value={connectionDBState.databaseURLState.datasets}
+            placeholder="dataset1, dataset2"
+            data-test="datasets"
+          />
+          <LabeledInput
+            label="Global Select Limit"
+            onChange={e => {
+              let data = Number.parseInt(e.target.value, 10);
+              if (Number.isNaN(data) || data <= 0) {
+                data = 0;
               }
-              value={connectionDBState.databaseURLState.projectId}
-              placeholder="project_id"
-              data-test="project-id"
-            />
-            <LabeledInput
-              label="Datasets"
-              onChange={e =>
-                connectionDBStateDispatch({
-                  type: 'UPDATE_DB_BIGQUERY_DATASETS',
-                  data: e.target.value,
-                })
-              }
-              value={connectionDBState.databaseURLState.datasets}
-              placeholder="dataset1, dataset2"
-              data-test="datasets"
-            />
-          </>
-        ) : null}
-        {connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&
-        connectionDBState.dbType === 'postgres' ? (
+              connectionDBStateDispatch({
+                type: 'UPDATE_DB_BIGQUERY_GLOBAL_LIMIT',
+                data,
+              });
+            }}
+            type="number"
+            min="0"
+            value={connectionDBState.databaseURLState.global_select_limit}
+            placeholder="1000"
+            data-test="global_select_limit"
+          />
+        </>
+      ) : null}
+      {connectionTypeState.includes(connectionTypes.CONNECTION_PARAMS) &&
+        getSupportedDrivers('connectDbForm.connectionParameters').includes(
+          connectionDBState.dbType
+        ) &&
+        connectionDBState.dbType !== 'bigquery' && (
           <>
             <LabeledInput
               label="Host"
@@ -320,91 +392,45 @@ const ConnectDatabaseForm: React.FC<ConnectDatabaseFormProps> = ({
               data-test="database-name"
             />
           </>
-        ) : null}
-        <div className={styles.connection_settings_layout}>
-          <div className={styles.connection_settings_header}>
-            <a
-              href="#"
-              style={{ textDecoration: 'none' }}
-              onClick={toggleConnectionParams(!currentConnectionParamState)}
-            >
-              {currentConnectionParamState ? (
-                <i className="fa fa-caret-down" />
-              ) : (
-                <i className="fa fa-caret-right" />
-              )}
-              {'  '}
-              Connection Settings
-            </a>
-          </div>
-          {currentConnectionParamState ? (
-            <div className={styles.connection_settings_form}>
-              <div className={styles.connection_settings_form_input_layout}>
-                <LabeledInput
-                  label="Max Connections"
-                  type="number"
-                  className={`form-control ${styles.connnection_settings_form_input}`}
-                  placeholder="50"
-                  value={
-                    connectionDBState.connectionSettings?.max_connections ??
-                    undefined
-                  }
-                  onChange={e =>
-                    connectionDBStateDispatch({
-                      type: 'UPDATE_MAX_CONNECTIONS',
-                      data: e.target.value,
-                    })
-                  }
-                  min="0"
-                  boldlabel
-                  data-test="max-connections"
-                />
-              </div>
-              <div className={styles.connection_settings_form_input_layout}>
-                <LabeledInput
-                  label="Idle Timeout"
-                  type="number"
-                  className={`form-control ${styles.connnection_settings_form_input}`}
-                  placeholder="180"
-                  value={
-                    connectionDBState.connectionSettings?.idle_timeout ??
-                    undefined
-                  }
-                  onChange={e =>
-                    connectionDBStateDispatch({
-                      type: 'UPDATE_IDLE_TIMEOUT',
-                      data: e.target.value,
-                    })
-                  }
-                  min="0"
-                  boldlabel
-                  data-test="idle-timeout"
-                />
-              </div>
-              <div className={styles.connection_settings_form_input_layout}>
-                <LabeledInput
-                  label="Retries"
-                  type="number"
-                  className={`form-control ${styles.connnection_settings_form_input}`}
-                  placeholder="1"
-                  value={
-                    connectionDBState.connectionSettings?.retries ?? undefined
-                  }
-                  onChange={e =>
-                    connectionDBStateDispatch({
-                      type: 'UPDATE_RETRIES',
-                      data: e.target.value,
-                    })
-                  }
-                  min="0"
-                  boldlabel
-                  data-test="retries"
-                />
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </div>
+        )}
+      {getSupportedDrivers('connectDbForm.extensions_schema').includes(
+        connectionDBState.dbType
+      ) ? (
+        <LabeledInput
+          label="Extensions Schema"
+          onChange={e => {
+            const data =
+              e.target?.value?.length > 1 ? e.target.value : undefined;
+            connectionDBStateDispatch({
+              type: 'UPDATE_EXTENSIONS_SCHEMA',
+              data,
+            });
+          }}
+          type="text"
+          value={connectionDBState.extensionsSchema}
+          placeholder="public"
+          tooltipText="Name of the schema where the graphql-engine will install database extensions (default: `public`). Specified schema should be present in the search path of the database."
+          data-test="extensions_schema"
+        />
+      ) : null}
+
+      <ConnectionSettingsForm
+        connectionDBState={connectionDBState}
+        connectionDBStateDispatch={connectionDBStateDispatch}
+        isEditState={isEditState}
+      />
+      {/*
+        TODO: remove the edit state condition when the BE issue is solved
+        https://github.com/hasura/graphql-engine-mono/issues/4700
+      */}
+
+      <GraphQLFieldCustomizationContainer
+        rootFields={connectionDBState.customization?.rootFields}
+        typeNames={connectionDBState.customization?.typeNames}
+        namingConvention={connectionDBState.customization?.namingConvention}
+        connectionDBStateDispatch={connectionDBStateDispatch}
+        connectionDBState={connectionDBState}
+      />
     </>
   );
 };

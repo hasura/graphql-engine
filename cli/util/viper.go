@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/pflag"
@@ -16,7 +17,10 @@ var ViperEnvReplacer = strings.NewReplacer(".", "_")
 
 // BindPFlag - binds flag with viper along with env usage
 func BindPFlag(v *viper.Viper, key string, f *pflag.Flag) {
-	v.BindPFlag(key, f)
+	err := v.BindPFlag(key, f)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "viper failed binding pflag: %v with error: %v \n", key, err)
+	}
 	key = ViperEnvReplacer.Replace(key)
 	key = strings.ToUpper(ViperEnvPrefix + "_" + key)
 	f.Usage = f.Usage + fmt.Sprintf(` (env "%s")`, key)

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import styles from '../../Settings/Settings.scss';
-import Button from '../../../Common/Button';
+import { Button } from '@/new-components/Button';
 import TextInput from '../../../Common/TextInput/TextInput';
 import { InheritedRole } from '../../../../metadata/types';
+import { focusYellowRing, inputStyles } from '../constants';
 
 type Mode = 'create' | 'edit';
 
@@ -127,19 +127,18 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
   return (
     <>
       {!isCollapsed && (
-        <div className={styles.RolesEditor}>
+        <div className="p-md bg-white border border-gray-200">
           <div>
-            <div className={styles.editorHeader}>
+            <div className="flex">
               <Button
-                color="white"
-                size="xs"
+                size="sm"
                 onClick={() => {
                   cancelCb();
                 }}
               >
                 Cancel
               </Button>
-              <div className={styles.roleNameContainer}>
+              <div className="pl-md">
                 {mode === 'create' ? (
                   <div>
                     <b>Create Role:</b> {inheritedRoleName}{' '}
@@ -151,19 +150,19 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
                 )}
               </div>
             </div>
-            <hr />
-            <div className={styles.filterContainer}>
+            <hr className="my-md" />
+            <div>
               <TextInput
                 onChange={filterTextChange}
                 value={filterText}
                 placeholder="Filter Roles..."
-                bsclass="max-width-250"
+                bsclass={`mb-xs ${inputStyles}`}
               />
               <div>
-                <Button color="white" size="xs" onClick={selectAll}>
+                <Button size="sm" onClick={selectAll}>
                   Select all
                 </Button>{' '}
-                <Button color="white" size="xs" onClick={clearAll}>
+                <Button size="sm" onClick={clearAll}>
                   Clear all
                 </Button>
               </div>
@@ -178,22 +177,23 @@ const InheritedRolesEditor: React.FC<EditorProps> = ({
                         option.value.includes(filterText) || !filterText.length
                     )
                     .map((option: Option, index) => (
-                      <div key={index} className={styles.roleOption}>
+                      <div key={index} className="flex items-center">
                         <input
+                          className={`${focusYellowRing} !m-0 !mr-sm`}
                           type="checkbox"
                           checked={option.isChecked}
                           onChange={checkboxValueChange}
                           value={option.value}
                           required
                         />{' '}
-                        {option.value}{' '}
+                        <div>{option.value}</div>
                       </div>
                     ))}
             </div>
-            <hr />
+            <hr className="my-md" />
             <div>
               <Button
-                color="yellow"
+                mode="primary"
                 onClick={saveRole}
                 disabled={
                   !options.filter((option: Option) => option.isChecked).length

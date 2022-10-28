@@ -2,46 +2,70 @@
 -- and efficient operations to construct them
 
 module Hasura.EncJSON
-  ( EncJSON
-  , encJFromBuilder
-  , encJToLBS
-  , encJToBS
-  , encJFromJValue
-  , encJFromChar
-  , encJFromText
-  , encJFromBS
-  , encJFromLBS
-  , encJFromList
-  , encJFromAssocList
-  , encJFromInsOrdHashMap
-  ) where
+  ( EncJSON,
+    encJFromBuilder,
+    encJToLBS,
+    encJToBS,
+    encJFromJValue,
+    encJFromChar,
+    encJFromText,
+    encJFromNonEmptyText,
+    encJFromBool,
+    encJFromBS,
+    encJFromLBS,
+    encJFromList,
+    encJFromAssocList,
+    encJFromInsOrdHashMap,
+    encJFromOrderedValue,
+  )
+where
 
-import           Hasura.Prelude
+import Data.Aeson qualified as J
+import Data.Aeson.Encoding qualified as J
+import Data.Aeson.Ordered qualified as JO
+import Data.ByteString qualified as B
+import Data.ByteString.Builder qualified as BB
+import Data.ByteString.Lazy qualified as BL
+import Data.HashMap.Strict.InsOrd qualified as OMap
+import Data.Text.Encoding qualified as TE
+import Data.Text.NonEmpty (NonEmptyText)
+import Data.Text.NonEmpty qualified as NET
+import Data.Vector qualified as V
+import Database.PG.Query qualified as PG
+import Hasura.Prelude
 
-import qualified Data.Aeson                      as J
-import qualified Data.ByteString                 as B
-import qualified Data.ByteString.Builder         as BB
-import qualified Data.ByteString.Lazy            as BL
-import qualified Data.Text.Encoding              as TE
-import qualified Database.PG.Query               as Q
-import qualified Data.HashMap.Strict.InsOrd      as OMap
+newtype EncJSON = EncJSON {unEncJSON :: BB.Builder}
 
--- encoded json
--- TODO (from master): can be improved with gadts capturing bytestring, lazybytestring
--- and builder
-newtype EncJSON
-  = EncJSON { unEncJSON :: BB.Builder }
-  deriving (Semigroup, Monoid, IsString)
+-- | JSONB bytestrings start with a `SOH` header `/x1` and then
+-- follow with a valid JSON string, therefore we should check for this
+-- and remove if necessary before decoding as normal
+instance PG.FromCol EncJSON where
+  fromCol (Just bs) =
+    Right $
+      encJFromBS $ case B.uncons bs of
+        Just (bsHead, bsTail) ->
+          if bsHead == 1
+            then bsTail
+            else bs
+        Nothing -> bs
+  fromCol Nothing =
+    Right (encJFromJValue J.Null) -- null values return a JSON null value
 
-instance Show EncJSON where
-  showsPrec d x = showParen (d > 10) $
-    showString "encJFromBS " . showsPrec 11 (encJToLBS x)
-
-instance Eq EncJSON where
-  (==) = (==) `on` encJToLBS
-
-instance Q.FromCol EncJSON where
-  fromCol = fmap encJFromBS . Q.fromCol
+-- No other instances for `EncJSON`. In particular, because:
+--
+-- - Having a `Semigroup` or `Monoid` instance allows constructing semantically
+--   illegal values of type `EncJSON`. To drive this point home: the derived
+--   `Semigroup` and `Monoid` instances always produce illegal JSON. It is
+--   merely through an abuse of these APIs that legal JSON can be created.
+--
+-- - `IsString` would be a footgun because it's not clear what its expected
+--   behavior is: does it construct serialized JSON from a serialized `String`,
+--   or does it serialize a given `String` into a JSON-encoded string value?
+--
+-- - `Eq` would also be a footgun: does it compare two serialized values, or
+--   does it compare values semantically?
+--
+-- - `Show`: unused.
 
 encJToLBS :: EncJSON -> BL.ByteString
 encJToLBS = BB.toLazyByteString . unEncJSON
@@ -72,29 +96,49 @@ encJFromChar = EncJSON . BB.charUtf8
 {-# INLINE encJFromChar #-}
 
 encJFromText :: Text -> EncJSON
-encJFromText = encJFromBS . TE.encodeUtf8
+encJFromText = encJFromBuilder . TE.encodeUtf8Builder
 {-# INLINE encJFromText #-}
 
+encJFromNonEmptyText :: NonEmptyText -> EncJSON
+encJFromNonEmptyText = encJFromBuilder . TE.encodeUtf8Builder . NET.unNonEmptyText
+{-# INLINE encJFromNonEmptyText #-}
+
+encJFromBool :: Bool -> EncJSON
+encJFromBool = \case
+  False -> encJFromText "false"
+  True -> encJFromText "true"
+{-# INLINE encJFromBool #-}
+
 encJFromList :: [EncJSON] -> EncJSON
-encJFromList = \case
-  []   -> "[]"
-  x:xs -> encJFromChar '['
-          <> x
-          <> foldr go (encJFromChar ']') xs
-    where go v b  = encJFromChar ',' <> v <> b
+encJFromList =
+  encJFromBuilder . \case
+    [] -> "[]"
+    x : xs -> "[" <> unEncJSON x <> foldr go "]" xs
+      where
+        go v b = "," <> unEncJSON v <> b
 
 -- from association list
 encJFromAssocList :: [(Text, EncJSON)] -> EncJSON
-encJFromAssocList = \case
-  []   -> "{}"
-  x:xs -> encJFromChar '{'
-          <> builder' x
-          <> foldr go (encJFromChar '}') xs
-  where
-    go v b  = encJFromChar ',' <> builder' v <> b
-    -- builds "key":value from (key,value)
-    builder' (t, v) =
-      encJFromChar '"' <> encJFromText t <> encJFromText "\":" <> v
+encJFromAssocList =
+  encJFromBuilder . \case
+    [] -> "{}"
+    x : xs -> "{" <> builder' x <> foldr go "}" xs
+      where
+        go v b = "," <> builder' v <> b
+        -- builds "key":value from (key,value)
+        builder' (t, v) = J.fromEncoding (J.text t) <> ":" <> unEncJSON v
 
 encJFromInsOrdHashMap :: InsOrdHashMap Text EncJSON -> EncJSON
 encJFromInsOrdHashMap = encJFromAssocList . OMap.toList
+
+-- | Encode a 'JO.Value' as 'EncJSON'.
+encJFromOrderedValue :: JO.Value -> EncJSON
+encJFromOrderedValue = \case
+  JO.Object obj ->
+    encJFromAssocList $ (map . second) encJFromOrderedValue $ JO.toList obj
+  JO.Array vec ->
+    encJFromList $ map encJFromOrderedValue $ V.toList vec
+  JO.String s -> encJFromJValue s
+  JO.Number sci -> encJFromJValue sci
+  JO.Bool b -> encJFromJValue b
+  JO.Null -> encJFromJValue J.Null

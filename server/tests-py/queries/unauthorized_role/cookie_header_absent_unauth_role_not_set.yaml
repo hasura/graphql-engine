@@ -1,0 +1,19 @@
+description: Make request with role header not set (no unAuthorized role either) and cookie JWT header not set
+url: /v1/graphql
+status: 200
+# set a random cookie so that header length is not 0
+headers:
+  Cookie: 'refresh_token=john_doe'
+response:
+  errors:
+  - extensions:
+      path: $
+      code: invalid-headers
+    message: Missing 'Authorization' or 'Cookie' header in JWT authentication mode
+query:
+  query: |
+    query {
+      user{
+        id
+      }
+    }

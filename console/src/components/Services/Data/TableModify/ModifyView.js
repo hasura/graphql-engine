@@ -1,5 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+import { Button } from '@/new-components/Button';
 import TableHeader from '../TableCommon/TableHeader';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import {
@@ -12,12 +14,10 @@ import {
 import TableCommentEditor from './TableCommentEditor';
 import { ordinalColSort } from '../utils';
 import { setTable } from '../DataActions';
-import Button from '../../../Common/Button/Button';
 import { NotFoundError } from '../../../Error/PageNotFound';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import Tooltip from '../../../Common/Tooltip/Tooltip';
-import styles from './ModifyTable.scss';
 import {
   getTableCustomColumnNames,
   findTable,
@@ -29,6 +29,7 @@ import { RightContainer } from '../../../Common/Layout/RightContainer';
 import ComputedFields from './ComputedFields';
 import RootFields from './RootFields';
 import FeatureDisabled from '../FeatureDisabled';
+import { inputStyles } from '../constants';
 
 const ModifyView = props => {
   const {
@@ -65,9 +66,7 @@ const ModifyView = props => {
   };
 
   React.useEffect(() => {
-    if (tableSchema.configuration) {
-      setCustomColumnNames(tableSchema.configuration.custom_column_names);
-    }
+    setCustomColumnNames(getTableCustomColumnNames(tableSchema));
   }, [tableSchema.configuration]);
 
   if (!tableSchema) {
@@ -117,19 +116,19 @@ const ModifyView = props => {
 
       const columnExpanded = () => {
         return (
-          <div className={`${styles.display_flex}`}>
-            <label className={'col-xs-4'}>
-              GraphQL field name
+          <div className="flex items-center">
+            <label className="flex items-center text-gray-600 font-semibold">
+              GraphQL Field Name
               <Tooltip
                 message={
                   'Expose the column with a different name in the GraphQL API'
                 }
               />
             </label>
-            <div className={'col-xs-6'}>
+            <div className="ml-auto w-6/12">
               <input
                 type="text"
-                className={'form-control'}
+                className={inputStyles}
                 value={customColumnNames[columnName] || ''}
                 placeholder={`${columnName} (default)`}
                 onChange={setCustomColumnName}
@@ -179,8 +178,10 @@ const ModifyView = props => {
 
     return (
       <>
-        <h4 className={styles.subheading_text}>Columns</h4>
-        {columnList}
+        <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+          Columns
+        </h4>
+        <div className="w-full sm:w-6/12 mb-md">{columnList}</div>
       </>
     );
   };
@@ -196,8 +197,7 @@ const ModifyView = props => {
   const untrackBtn = (
     <Button
       type="submit"
-      className={styles.add_mar_right}
-      color="white"
+      className="mr-sm"
       size="sm"
       onClick={untrackOnclick}
       data-test="untrack-view"
@@ -216,7 +216,7 @@ const ModifyView = props => {
   const deleteBtn = (
     <Button
       type="submit"
-      color="red"
+      mode="destructive"
       size="sm"
       onClick={deleteOnClick}
       data-test="delete-view"
@@ -241,44 +241,66 @@ const ModifyView = props => {
 
   return (
     <RightContainer>
-      <div className={styles.container + ' container-fluid'}>
-        <TableHeader
-          dispatch={dispatch}
-          table={tableSchema}
-          tabName="modify"
-          migrationMode={migrationMode}
-          readOnlyMode={readOnlyMode}
-          source={currentSource}
-        />
-        <br />
-        <div className={'container-fluid ' + styles.padd_left_remove}>
-          <div className={'col-xs-8 ' + styles.padd_left_remove}>
+      <Analytics name="ModifyTableView" {...REDACT_EVERYTHING}>
+        <div>
+          <TableHeader
+            dispatch={dispatch}
+            table={tableSchema}
+            tabName="modify"
+            migrationMode={migrationMode}
+            readOnlyMode={readOnlyMode}
+            source={currentSource}
+          />
+          <br />
+          <div className="w-full sm:w-6/12 mb-lg">
+            <h4 className="flex items-center text-gray-600 font-semibold mb-formlabel">
+              View Comments
+            </h4>
             <TableCommentEditor
               tableComment={tableComment}
               tableCommentEdit={tableCommentEdit}
               tableType={tableType}
               dispatch={dispatch}
             />
-            <ViewDefinitions
-              dispatch={dispatch}
-              sql={viewDefSql}
-              source={currentSource}
-            />
-            <hr />
-            {getViewColumnsSection()}
-            <hr />
-            <ComputedFields tableSchema={tableSchema} />
-            <hr />
-            <RootFields tableSchema={tableSchema} />
-            <hr />
-            {untrackBtn}
-            {deleteBtn}
-            <br />
-            <br />
           </div>
-          <div className={styles.fixed + ' col-xs-3 hidden'}>{alert}</div>
+
+          <h3 className="text-sm tracking-widest text-gray-400 uppercase font-semibold mb-sm">
+            View Properties
+          </h3>
+
+          <ViewDefinitions
+            dispatch={dispatch}
+            sql={viewDefSql}
+            source={currentSource}
+          />
+
+          {getViewColumnsSection()}
+
+          {isFeatureSupported('tables.modify.computedFields') && (
+            <>
+              <div className="w-full sm:w-6/12 mb-md">
+                <ComputedFields tableSchema={tableSchema} />
+              </div>
+            </>
+          )}
+
+          {isFeatureSupported('tables.modify.customGqlRoot') && (
+            <>
+              <div className="w-full sm:w-6/12 mb-md">
+                <RootFields tableSchema={tableSchema} />
+              </div>
+            </>
+          )}
+
+          {untrackBtn}
+          {deleteBtn}
+          <br />
+          <br />
+          <div className="top-150 r-50 bottom-0 min-w-13 grid-cols-3">
+            {alert}
+          </div>
         </div>
-      </div>
+      </Analytics>
     </RightContainer>
   );
 };

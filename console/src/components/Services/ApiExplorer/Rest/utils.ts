@@ -278,3 +278,47 @@ export const supportedNumericTypes = [
   'tinyint',
   'decimal',
 ];
+
+const getValueWithType = (variableData: VariableState) => {
+  if (variableData.type === 'Boolean') {
+    if (variableData.value.trim().toLowerCase() === 'false') {
+      return false;
+    }
+    // NOTE: since everything that's not empty is considered as truthy
+    return true;
+  }
+
+  if (supportedNumericTypes.includes(variableData.type)) {
+    return Number(variableData.value);
+  }
+
+  return variableData.value?.trim()?.toString();
+};
+
+export const getRequestBody = ({
+  urlQueryVariables,
+  variableState,
+}: {
+  urlQueryVariables: EndpointData[];
+  variableState: VariableState[];
+}) => {
+  const variablesUsedInURL = urlQueryVariables.map(x => x.value);
+  const requestBody = variableState
+    .filter(variable => !variablesUsedInURL.includes(variable.name))
+    .reduce(
+      (acc, variableData) => ({
+        ...acc,
+        [variableData.name]: getValueWithType(variableData),
+      }),
+      {}
+    );
+  return Object.keys(requestBody).length
+    ? JSON.stringify(requestBody)
+    : undefined;
+};
+
+export const inputStyles =
+  'block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400';
+
+export const focusYellowRing =
+  'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400';

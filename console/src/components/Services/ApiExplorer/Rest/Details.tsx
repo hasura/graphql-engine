@@ -1,18 +1,17 @@
 import React, { useRef } from 'react';
 import { RouteComponentProps } from 'react-router';
 import { connect, ConnectedProps } from 'react-redux';
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 
+import { Button } from '@/new-components/Button';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import AceEditor from '../../../Common/AceEditor/BaseEditor';
-import Button from '../../../Common/Button/Button';
 import { Badge } from '../../../UIKit/atoms';
 import { Dispatch, ReduxState } from '../../../../types';
 import _push from '../../Data/push';
-import { badgeSort, getCurrentPageHost } from './utils';
+import { badgeSort, getCurrentPageHost, inputStyles } from './utils';
 import { LS_KEYS, setLSItem } from '../../../../utils/localStorage';
 import LivePreview from './LivePreview';
-
-import styles from './RESTStyles.scss';
 
 interface DetailsComponentProps extends InjectedProps {
   location: RouteComponentProps<unknown, unknown>['location'];
@@ -49,38 +48,32 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
   };
 
   return (
-    <>
-      <div
-        className={`container-fluid ${styles.rest_add_padding_left} ${styles.padd_top}`}
-      >
-        <div className={styles.subHeader}>
+    <Analytics name="RestDetails" {...REDACT_EVERYTHING}>
+      <div className="px-md pt-md">
+        <div className="">
           <BreadCrumb breadCrumbs={crumbs} />
         </div>
-        <div className={styles.display_flex}>
-          <h2 className={`${styles.headerText} ${styles.display_inline}`}>
+        <div className="flex">
+          <h2 className="text-xl font-bold inline-block">
             {endpointState.name}
           </h2>
           <Button
-            color="yellow"
-            size="xs"
-            className={styles.add_mar_left}
+            mode="primary"
+            size="md"
+            className="ml-md"
             onClick={onClickEdit}
           >
             Edit Endpoint
           </Button>
         </div>
-        <div className={styles.add_mar_top}>{endpointState.comment}</div>
-        <hr />
-        <div className={styles.rest_details_layout}>
-          <div className={styles.rest_details_left_content}>
+        <div className="mt-md">{endpointState.comment}</div>
+        <hr className="my-md" />
+        <div className="flex w-full justify-between">
+          <div className="w-7/12">
             <div>
-              <h4
-                className={`${styles.subheading_text} ${styles.display_inline}`}
-              >
-                REST Endpoint
-              </h4>
+              <h4 className="text-base font-bold mb-md">REST Endpoint</h4>
               <input
-                className="form-control"
+                className={`${inputStyles} w-full disabled:bg-gray-100`}
                 type="text"
                 placeholder="Rest endpoint URL"
                 value={endpointLocation && endpointLocation.current}
@@ -89,28 +82,19 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
                 required
               />
             </div>
-            <h4
-              className={`${styles.subheading_text} ${styles.display_inline} ${styles.padd_top}`}
-            >
+            <h4 className="text-base font-bold pt-md mb-md">
               Methods Available
             </h4>
             <div>
               {badgeSort(endpointState.methods).map(method => (
-                <span
-                  className={`${styles.headerBadge} ${styles.padd_right}`}
-                  key={`badge-details-${method}`}
-                >
+                <span className="pr-md" key={`badge-details-${method}`}>
                   <Badge type={`rest-${method}`} />
                 </span>
               ))}
             </div>
-            <hr />
-            <div className={styles.gql_header_details}>
-              <h4
-                className={`${styles.subheading_text} ${styles.display_inline}`}
-              >
-                GraphQL Request
-              </h4>
+            <hr className="mb-lg mt-md" />
+            <div className="flex align-center justify-between mb-md">
+              <h4 className="text-base font-bold pt-xs">GraphQL Request</h4>
               <Button
                 size="sm"
                 color="white"
@@ -122,14 +106,14 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
             <AceEditor
               name="query-viewer"
               value={endpointState.currentQuery}
-              placeholder={`query SampleQuery {}`}
+              placeholder="query SampleQuery {}"
               height="300px"
               width="100%"
               mode="graphqlschema"
               readOnly
             />
           </div>
-          <div className={styles.rest_details_right_content}>
+          <div className="h-full w-1/2 pl-xl">
             <LivePreview
               endpointState={endpointState}
               pageHost={endpointLocation && endpointLocation.current}
@@ -138,7 +122,7 @@ const DetailsComponent: React.FC<DetailsComponentProps> = ({
           </div>
         </div>
       </div>
-    </>
+    </Analytics>
   );
 };
 

@@ -1,140 +1,163 @@
 module Hasura.RQL.DML.Count
-  ( CountQueryP1(..)
-  , validateCountQWith
-  , validateCountQ
-  , runCount
-  , countQToTx
-  ) where
+  ( CountQueryP1 (..),
+    validateCountQWith,
+    validateCountQ,
+    runCount,
+    countQToTx,
+  )
+where
 
-import           Hasura.Prelude
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Aeson
+import Data.ByteString.Builder qualified as BB
+import Data.Sequence qualified as DS
+import Database.PG.Query qualified as PG
+import Hasura.Backends.Postgres.Connection.MonadTx
+import Hasura.Backends.Postgres.Execute.Types
+import Hasura.Backends.Postgres.SQL.DML qualified as S
+import Hasura.Backends.Postgres.SQL.Types
+import Hasura.Backends.Postgres.Translate.BoolExp
+import Hasura.Base.Error
+import Hasura.EncJSON
+import Hasura.Prelude
+import Hasura.RQL.DML.Internal
+import Hasura.RQL.DML.Types
+import Hasura.RQL.IR.BoolExp
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Metadata
+import Hasura.RQL.Types.SchemaCache
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
+import Hasura.SQL.Types
+import Hasura.Session
+import Hasura.Tracing qualified as Tracing
 
-import qualified Data.ByteString.Builder                    as BB
-import qualified Data.Sequence                              as DS
+data CountQueryP1 = CountQueryP1
+  { cqp1Table :: QualifiedTable,
+    cqp1Where :: (AnnBoolExpSQL ('Postgres 'Vanilla), Maybe (AnnBoolExpSQL ('Postgres 'Vanilla))),
+    cqp1Distinct :: Maybe [PGCol]
+  }
+  deriving (Eq)
 
-import           Control.Monad.Trans.Control                (MonadBaseControl)
-import           Data.Aeson
-
-import qualified Database.PG.Query                          as Q
-import qualified Hasura.Backends.Postgres.SQL.DML           as S
-import qualified Hasura.Tracing                             as Tracing
-
-import           Hasura.Backends.Postgres.SQL.Types
-import           Hasura.Backends.Postgres.Translate.BoolExp
-import           Hasura.Base.Error
-import           Hasura.EncJSON
-import           Hasura.RQL.DML.Internal
-import           Hasura.RQL.DML.Types
-import           Hasura.RQL.IR.BoolExp
-import           Hasura.RQL.Types
-import           Hasura.RQL.Types.Run
-import           Hasura.SQL.Types
-import           Hasura.Session
-
-
-data CountQueryP1
-  = CountQueryP1
-  { cqp1Table    :: !QualifiedTable
-  , cqp1Where    :: !(AnnBoolExpSQL ('Postgres 'Vanilla), Maybe (AnnBoolExpSQL ('Postgres 'Vanilla)))
-  , cqp1Distinct :: !(Maybe [PGCol])
-  } deriving (Eq)
-
-mkSQLCount
-  :: CountQueryP1 -> S.Select
+mkSQLCount ::
+  CountQueryP1 -> S.Select
 mkSQLCount (CountQueryP1 tn (permFltr, mWc) mDistCols) =
   S.mkSelect
-    { S.selExtr = [S.Extractor S.countStar Nothing]
-    , S.selFrom = Just $ S.FromExp
-                  [S.mkSelFromExp False innerSel $ TableName "r"]
+    { S.selExtr = [S.Extractor S.countStar Nothing],
+      S.selFrom =
+        Just $
+          S.FromExp
+            [S.mkSelFromExp False innerSel $ TableName "r"]
     }
   where
-
     finalWC =
       toSQLBoolExp (S.QualTable tn) $
-      maybe permFltr (andAnnBoolExps permFltr) mWc
+        maybe permFltr (andAnnBoolExps permFltr) mWc
 
-    innerSel = partSel
-      { S.selFrom  = Just $ S.mkSimpleFromExp tn
-      , S.selWhere = S.WhereFrag <$> Just finalWC
-      }
+    innerSel =
+      partSel
+        { S.selFrom = Just $ S.mkSimpleFromExp tn,
+          S.selWhere = S.WhereFrag <$> Just finalWC
+        }
 
     partSel = case mDistCols of
       Just distCols ->
         let extrs = flip map distCols $ \c -> S.Extractor (S.mkSIdenExp c) Nothing
-        in S.mkSelect
-          { S.selDistinct = Just S.DistinctSimple
-          , S.selExtr     = extrs
+         in S.mkSelect
+              { S.selDistinct = Just S.DistinctSimple,
+                S.selExtr = extrs
+              }
+      Nothing ->
+        S.mkSelect
+          { S.selExtr = [S.Extractor (S.SEStar Nothing) Nothing]
           }
-      Nothing -> S.mkSelect
-                 { S.selExtr = [S.Extractor (S.SEStar Nothing) Nothing] }
 
 -- SELECT count(*) FROM (SELECT DISTINCT c1, .. cn FROM .. WHERE ..) r;
 -- SELECT count(*) FROM (SELECT * FROM .. WHERE ..) r;
-validateCountQWith
-  :: (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m)
-  => SessVarBldr ('Postgres 'Vanilla) m
-  -> (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp)
-  -> CountQuery
-  -> m CountQueryP1
+validateCountQWith ::
+  (UserInfoM m, QErrM m, TableInfoRM ('Postgres 'Vanilla) m) =>
+  SessionVariableBuilder m ->
+  (ColumnType ('Postgres 'Vanilla) -> Value -> m S.SQLExp) ->
+  CountQuery ->
+  m CountQueryP1
 validateCountQWith sessVarBldr prepValBldr (CountQuery qt _ mDistCols mWhere) = do
-  tableInfo <- askTabInfoSource qt
+  tableInfo <- askTableInfoSource qt
 
   -- Check if select is allowed
-  selPerm <- modifyErr (<> selNecessaryMsg) $
-             askSelPermInfo tableInfo
+  selPerm <-
+    modifyErr (<> selNecessaryMsg) $
+      askSelPermInfo tableInfo
 
   let colInfoMap = _tciFieldInfoMap $ _tiCoreInfo tableInfo
 
   forM_ mDistCols $ \distCols -> do
-    let distColAsrns = [ checkSelOnCol selPerm
-                       , assertPGCol colInfoMap relInDistColsErr]
+    let distColAsrns =
+          [ checkSelOnCol selPerm,
+            assertColumnExists colInfoMap relInDistColsErr
+          ]
     withPathK "distinct" $ verifyAsrns distColAsrns distCols
 
   -- convert the where clause
   annSQLBoolExp <- forM mWhere $ \be ->
     withPathK "where" $
-    convBoolExp colInfoMap selPerm be sessVarBldr qt (valueParserWithCollectableType prepValBldr)
+      convBoolExp colInfoMap selPerm be sessVarBldr qt (valueParserWithCollectableType prepValBldr)
 
-  resolvedSelFltr <- convAnnBoolExpPartialSQL sessVarBldr $
-                     spiFilter selPerm
+  resolvedSelFltr <-
+    convAnnBoolExpPartialSQL sessVarBldr $
+      spiFilter selPerm
 
-  return $ CountQueryP1
-    qt
-    (resolvedSelFltr, annSQLBoolExp)
-    mDistCols
+  return $
+    CountQueryP1
+      qt
+      (resolvedSelFltr, annSQLBoolExp)
+      mDistCols
   where
     selNecessaryMsg =
       "; \"count\" is only allowed if the role "
-      <> "has \"select\" permissions on the table"
+        <> "has \"select\" permissions on the table"
     relInDistColsErr =
       "Relationships can't be used in \"distinct\"."
 
-validateCountQ
-  :: (QErrM m, UserInfoM m, CacheRM m)
-  => CountQuery -> m (CountQueryP1, DS.Seq Q.PrepArg)
+validateCountQ ::
+  (QErrM m, UserInfoM m, CacheRM m) =>
+  CountQuery ->
+  m (CountQueryP1, DS.Seq PG.PrepArg)
 validateCountQ query = do
   let source = cqSource query
-  tableCache :: TableCache ('Postgres 'Vanilla) <- askTableCache source
-  flip runTableCacheRT (source, tableCache) $ runDMLP1T $
-    validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
+  tableCache :: TableCache ('Postgres 'Vanilla) <- fold <$> askTableCache source
+  flip runTableCacheRT (source, tableCache) $
+    runDMLP1T $
+      validateCountQWith sessVarFromCurrentSetting binRHSBuilder query
 
-countQToTx
-  :: (QErrM m, MonadTx m)
-  => (CountQueryP1, DS.Seq Q.PrepArg) -> m EncJSON
+countQToTx ::
+  (MonadTx m) =>
+  (CountQueryP1, DS.Seq PG.PrepArg) ->
+  m EncJSON
 countQToTx (u, p) = do
-  qRes <- liftTx $ Q.rawQE dmlTxErrorHandler
-          (Q.fromBuilder countSQL) (toList p) True
+  qRes <-
+    liftTx $
+      PG.rawQE
+        dmlTxErrorHandler
+        (PG.fromBuilder countSQL)
+        (toList p)
+        True
   return $ encJFromBuilder $ encodeCount qRes
   where
     countSQL = toSQL $ mkSQLCount u
-    encodeCount (Q.SingleRow (Identity c)) =
+    encodeCount (PG.SingleRow (Identity c)) =
       BB.byteString "{\"count\":" <> BB.intDec c <> BB.char7 '}'
 
-runCount
-  :: ( QErrM m, UserInfoM m, CacheRM m
-     , MonadIO m, MonadBaseControl IO m
-     , Tracing.MonadTrace m, MetadataM m
-     )
-  => CountQuery -> m EncJSON
+runCount ::
+  ( QErrM m,
+    UserInfoM m,
+    CacheRM m,
+    MonadIO m,
+    MonadBaseControl IO m,
+    Tracing.MonadTrace m,
+    MetadataM m
+  ) =>
+  CountQuery ->
+  m EncJSON
 runCount q = do
   sourceConfig <- askSourceConfig @('Postgres 'Vanilla) (cqSource q)
-  validateCountQ q >>= runQueryLazyTx (_pscExecCtx sourceConfig) Q.ReadOnly . countQToTx
+  validateCountQ q >>= runTxWithCtx (_pscExecCtx sourceConfig) PG.ReadOnly . countQToTx

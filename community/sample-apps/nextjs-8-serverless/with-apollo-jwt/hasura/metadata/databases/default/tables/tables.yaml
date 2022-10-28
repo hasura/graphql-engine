@@ -1,0 +1,4 @@
+- "!include public_article.yaml"
+- "!include public_role.yaml"
+- "!include public_user.yaml"
+- "!include public_user_role.yaml"

@@ -1,5 +1,5 @@
 import React from 'react';
-import Tooltip from 'react-bootstrap/lib/Tooltip';
+import { IconTooltip } from '@/new-components/Tooltip';
 
 import { getPermissionFilterString } from '../PermissionsSummary/utils';
 import { getLegacyOperator, allOperators } from './PermissionBuilder/utils';
@@ -44,9 +44,7 @@ const tooltipMsg: Record<FilterType, string> = {
 };
 
 export const getUpdateTooltip = (filterType: FilterType) => (
-  <Tooltip id={`tooltip-update-${filterType}`}>
-    {tooltipMsg[filterType]}
-  </Tooltip>
+  <IconTooltip message={tooltipMsg[filterType]} />
 );
 
 const getOptionsForUpdate = (
@@ -215,4 +213,56 @@ export const getPermissionsIcon = (
   }
 
   return 'fullAccess';
+};
+
+export const hasSelectPrimaryKey = (
+  primaryKeys: string[],
+  selectedColumns: string[]
+) =>
+  primaryKeys?.every(primaryKeyColumn =>
+    selectedColumns?.includes(primaryKeyColumn)
+  );
+
+export type Schema = { table_name: string; primary_key: { columns: string[] } };
+export type State = {
+  permissionsState: {
+    table: string;
+  };
+};
+
+export const getPrimaryKeysFromTable = (
+  schemas: Schema[],
+  state: State
+): string[] => {
+  const desiredSchema = schemas?.find(
+    schema => schema.table_name === state.permissionsState.table
+  );
+  return desiredSchema?.primary_key?.columns || [];
+};
+
+export const hasSelectedTablePrimaryKeyFromMetadata = (metadata: any) => {
+  const currentlyEnabledColumns =
+    metadata.permissionsState?.select?.columns || [];
+
+  const currentTablePrimaryKeys = getPrimaryKeysFromTable(
+    metadata.allSchemas,
+    metadata
+  );
+  return hasSelectPrimaryKey(currentTablePrimaryKeys, currentlyEnabledColumns);
+};
+
+type AlteredPermission = 'select_by_pk' | 'select_aggregate';
+type SelectPermission = 'select' | 'select_aggregate' | 'select_by_pk';
+
+export const getNewRootPermissionState = (
+  currentPermissions: SelectPermission[],
+  newPermission: AlteredPermission,
+  isQueryAllowed: boolean
+) => {
+  if (!isQueryAllowed && currentPermissions?.includes(newPermission)) {
+    return currentPermissions.filter(
+      rootPermission => rootPermission !== newPermission
+    );
+  }
+  return currentPermissions;
 };

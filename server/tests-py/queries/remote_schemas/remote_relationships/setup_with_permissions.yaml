@@ -17,33 +17,35 @@ args:
 - type: run_sql
   args:
     sql: |
-      create table profiles (
+      create schema custom;
+      create table custom.profiles (
           id serial primary key,
           name text
       );
 - type: run_sql
   args:
     sql: |
-      insert into profiles (name) values
+      insert into custom.profiles (name) values
       ( 'alice' ),
       ( 'bob' ),
       ( 'alice')
 - type: track_table
   args:
-    schema: public
+    schema: custom
     name: profiles
 
 - type: set_table_customization
   args:
-    table: profiles
+    table: {schema: custom, name: profiles}
     configuration:
-      custom_column_names:
-        name: profile_name
+      column_config:
+        name:
+          custom_name: profile_name
 
 - type: create_select_permission
   args:
     table:
-      schema: public
+      schema: custom
       name: profiles
     role: user
     permission:
@@ -57,6 +59,5 @@ args:
   args:
     name: my-remote-schema
     definition:
-      url: http://localhost:4000
+      url: "{{GRAPHQL_SERVICE_HANDLER}}"
       forward_client_headers: false
-

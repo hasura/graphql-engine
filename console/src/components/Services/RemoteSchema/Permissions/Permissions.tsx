@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Helmet from 'react-helmet';
 import { GraphQLSchema } from 'graphql';
+import { useGetAnalyticsAttributes } from '@/features/Analytics';
 import PermissionsTable from './PermissionsTable';
 import PermissionEditor from './PermissionEditor';
 import { useIntrospectionSchemaRemote } from '../graphqlUtils';
 import globals from '../../../../Globals';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
 import { getRemoteSchemaFields, buildSchemaFromRoleDefn } from './utils';
 import {
   RemoteSchemaFields,
@@ -106,11 +106,16 @@ const Permissions: React.FC<PermissionsProps> = props => {
       setRemoteSchemaFields(getRemoteSchemaFields(schema, permissionsSchema));
   }, [schema, permissionEdit?.isNewRole, schemaDefinition]);
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes(
+    'RemoteSchemaPermissions',
+    { redactText: true }
+  );
+
   if (error || !schema) {
     return (
       <div>
         Error introspecting remote schema.{' '}
-        <a onClick={introspect} className={styles.cursorPointer} role="button">
+        <a onClick={introspect} className="cursor-pointer" role="button">
           {' '}
           Try again{' '}
         </a>
@@ -120,9 +125,11 @@ const Permissions: React.FC<PermissionsProps> = props => {
 
   return (
     <div>
-      <Helmet
-        title={`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}
-      />
+      <Helmet>
+        <title
+          {...titleAnalyticsAttributes}
+        >{`Permissions - ${currentRemoteSchema.name} - Remote Schemas | Hasura`}</title>
+      </Helmet>
       <PermissionsTable
         allRoles={allRoles}
         currentRemoteSchema={currentRemoteSchema}
@@ -143,7 +150,7 @@ const Permissions: React.FC<PermissionsProps> = props => {
           permRemoveMultipleRoles={permRemoveMultipleRoles}
         />
       )}
-      <div className={`${styles.add_mar_bottom}`}>
+      <div className="mb-sm">
         {!readOnlyMode && (
           <PermissionEditor
             key={permissionEdit.isNewRole ? 'NEW' : permissionEdit.role}

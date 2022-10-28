@@ -258,5 +258,29 @@ args:
             id: X-Hasura-User-Id
             is_admin: true
 
+- type: create_select_permission
+  args:
+    table: article
+    role: user
+    permission:
+      columns:
+      - author_id
+      - content
+      - id
+      - title
+      filter:
+        is_published:
+          _eq: true
+
+- type: create_select_permission
+  args:
+    table: author
+    role: user
+    permission:
+      columns:
+      - id
+      - name
+      filter: {}
+
 - type: track_table
   args: table_with_sql_identifier

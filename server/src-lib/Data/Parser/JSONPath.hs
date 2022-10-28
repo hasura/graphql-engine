@@ -1,38 +1,65 @@
 module Data.Parser.JSONPath
-  ( parseJSONPath
-  , JSONPathElement(..)
-  , JSONPath
-  ) where
+  ( encodeJSONPath,
+    parseJSONPath,
+  )
+where
 
-import           Data.Bifunctor
-import qualified Data.Text            as T
-import           Prelude
+import Control.Applicative
+import Data.Aeson (Key)
+import Data.Aeson qualified as Aeson
+import Data.Aeson.Internal (JSONPath, JSONPathElement (..))
+import Data.Aeson.Key qualified as K
+import Data.Attoparsec.Text
+import Data.Bifunctor qualified as Bifunctor
+import Data.Text qualified as T
+import Data.Text.Lazy qualified as TL
+import Data.Text.Lazy.Encoding qualified as TL
+import Hasura.Prelude
 
-import           Control.Applicative
-import           Data.Aeson.Internal  (JSONPath, JSONPathElement (..))
-import           Data.Attoparsec.Text
-
-parseJSONPath :: T.Text -> Either String JSONPath
-parseJSONPath "$" = Right []
-parseJSONPath txt = first (const invalidMessage) $
-  parseOnly (optional (char '$') *> many1' element <* endOfInput) txt
+-- | Encodes a JSON path as text that looks like code you would write
+-- in order to traverse that path in JavaScript.
+encodeJSONPath :: JSONPath -> Text
+encodeJSONPath path = "$" <> foldMap formatPart path
   where
-    invalidMessage = T.unpack txt
-      ++ ". Accept letters, digits, underscore (_) or hyphen (-) only"
-      ++ ". Use single quotes enclosed in bracket (['...']) if there is any special character"
+    formatPart (Index idx) = "[" <> tshow idx <> "]"
+    formatPart (Key key)
+      | specialChars stringKey = TL.toStrict ("[" <> TL.decodeUtf8 (Aeson.encode (Aeson.String textKey)) <> "]")
+      | otherwise = "." <> textKey
+      where
+        textKey = K.toText key
+        stringKey = T.unpack textKey
+        specialChars [] = True
+        -- first char must not be number
+        specialChars (c : xs) =
+          notElem c (alphabet ++ "_")
+            || any (`notElem` (alphaNumerics ++ "_-")) xs
+
+parseJSONPath :: Text -> Either Text JSONPath
+parseJSONPath "$" = Right []
+parseJSONPath txt =
+  Bifunctor.first (const invalidMessage) $
+    parseOnly (optional (char '$') *> many1' element <* endOfInput) txt
+  where
+    invalidMessage =
+      txt
+        <> ". Accept letters, digits, underscore (_) or hyphen (-) only"
+        <> ". Use quotes enclosed in bracket ([\"...\"]) if there is any special character"
 
 element :: Parser JSONPathElement
-element = Key <$> (optional (char '.') *> name)   -- field or .field
-      <|> bracketElement                          -- [42] or ['field']
+element =
+  Key <$> (optional (char '.') *> name) -- field or .field
+    <|> bracketElement -- [42], ["field"], or ['field']
 
-name :: Parser T.Text
-name = go <?> "property name" where
-  go = do
-    firstChar <- letter
-             <|> char '_'
-             <?> "first character of property name must be a letter or underscore"
-    otherChars <- many' (letter <|> digit <|> satisfy (inClass "-_"))
-    pure $ T.pack (firstChar:otherChars)
+name :: Parser Key
+name = go <?> "property name"
+  where
+    go = do
+      firstChar <-
+        letter
+          <|> char '_'
+          <?> "first character of property name must be a letter or underscore"
+      otherChars <- many' (letter <|> digit <|> satisfy (inClass "-_"))
+      pure $ K.fromText $ T.pack (firstChar : otherChars)
 
 -- | Parses a JSON property key or index in square bracket format, e.g.
 -- > [42]
@@ -40,17 +67,39 @@ name = go <?> "property name" where
 -- > ['你好']
 bracketElement :: Parser JSONPathElement
 bracketElement = do
-  optional (char '.') *> char '['
-  result <- Index <$> decimal
-        <|>   Key <$> quotedString '"'
-        <|>   Key <$> quotedString '\''
-  char ']'
+  void $ optional (char '.') *> char '['
+  result <-
+    Index <$> decimal
+      <|> Key <$> doubleQuotedString
+      <|> Key <$> singleQuotedString
+  void $ char ']'
   pure result
   where
-    quotedString delimiter = do
-      char delimiter
-      result <- T.pack <$> many' (charOrEscape delimiter)
-      char delimiter
-      pure result
+    parseJSONString inQuotes =
+      maybe (fail "Invalid JSON string") (pure . K.fromText) . Aeson.decode . TL.encodeUtf8 $
+        "\"" <> inQuotes <> "\""
 
-    charOrEscape delimiter = (char '\\' *> anyChar) <|> notChar delimiter
+    doubleQuotedString = do
+      void $ char '"'
+      inQuotes <- TL.concat <$> many doubleQuotedChar
+      void $ char '"'
+      parseJSONString inQuotes
+
+    doubleQuotedChar = jsonChar '"'
+
+    -- Converts `'foo'` to `"foo"` and then parses it.
+    singleQuotedString = do
+      void $ char '\''
+      inQuotes <- TL.concat <$> many singleQuotedChar
+      void $ char '\''
+      parseJSONString inQuotes
+
+    -- Un-escapes single quotes, and escapes double quotes.
+    singleQuotedChar =
+      (string "\\'" *> pure "'")
+        <|> (string "\"" *> pure "\\\"")
+        <|> jsonChar '\''
+
+    jsonChar delimiter =
+      (("\\" <>) . TL.singleton <$> (char '\\' *> anyChar))
+        <|> (TL.singleton <$> notChar delimiter)

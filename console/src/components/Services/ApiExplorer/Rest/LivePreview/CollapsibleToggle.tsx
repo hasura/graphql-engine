@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-
-import styles from '../RESTStyles.scss';
+import { FaChevronRight } from 'react-icons/fa';
 
 type CollapsibleToggleProps = {
   state: Record<string, any>[];
@@ -19,43 +18,36 @@ const CollapsibleToggle: React.FC<CollapsibleToggleProps> = ({
   const toggleHandler = () => setIsOpen(prev => !prev);
 
   return (
-    <div
-      className={`${styles.collapsibleWrapper} ${
-        !isOpen ? styles.collapsedWrapper : ''
-      }`}
-    >
+    <div className={`rounded-sm p-md ${!isOpen ? ' bg-gray-100' : ''}`}>
       <div
-        className={styles.collapsibleToggle}
+        className="cursor-pointer flex items-center"
         onClick={toggleHandler}
         role="button"
         tabIndex={0}
       >
-        <span className={styles.collapsibleIndicatorWrapper}>
-          <i
-            className={`fa fa-chevron-right ${styles.collapsibleIndicator} ${
-              isOpen && styles.collapsibleIndicatorOpen
+        <span className="text-base pr-sm">
+          <FaChevronRight
+            className={`transition duration-150 ease-in-out ${
+              isOpen && ' rotate-90'
             }`}
           />
         </span>
 
-        <span className={styles.titleWrapper}>
-          <div className={styles.defaultCollapsibleTitle}>{title}</div>
+        <span className="flex items-center">
+          <div className="font-base font-bold text-gray-500">{title}</div>
         </span>
       </div>
-      <br />
 
       {isOpen ? (
         <>{children}</>
       ) : (
-        <div className={styles.collapsible_info_container}>
+        <div className="flex flex-wrap break-words">
           {state?.map((stateVar, index) => (
-            <div className={styles.collapsed_text_container}>
-              <div className={styles.collapsed_text}>
+            <div className="flex">
+              <div className="overflow-hidden text-ellipsis max-w-[300] text-base">
                 {`${stateVar[properties[0]]}  :  ${stateVar[properties[1]]}`}
               </div>
-              {index !== state?.length - 1 ? (
-                <p className={styles.collapsed_separator}>|</p>
-              ) : null}
+              {index !== state?.length - 1 ? <p>|</p> : null}
             </div>
           ))}
         </div>

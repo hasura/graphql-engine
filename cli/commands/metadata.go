@@ -1,16 +1,24 @@
 package commands
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 
-	"github.com/hasura/graphql-engine/cli"
-	"github.com/hasura/graphql-engine/cli/internal/metadataobject"
-	"github.com/hasura/graphql-engine/cli/internal/scripts"
-	"github.com/hasura/graphql-engine/cli/util"
-	"github.com/pkg/errors"
+	"github.com/goccy/go-yaml"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
+	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
+	"github.com/hasura/graphql-engine/cli/v2/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+type rawOutputFormat string
+
+const rawOutputFormatJSON rawOutputFormat = "json"
+const rawOutputFormatYAML rawOutputFormat = "yaml"
 
 // NewMetadataCmd returns the metadata command
 func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
@@ -48,7 +56,9 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	f.String("endpoint", "", "http(s) endpoint for Hasura GraphQL engine")
 	f.String("admin-secret", "", "admin secret for Hasura GraphQL engine")
 	f.String("access-key", "", "access key for Hasura GraphQL engine")
-	f.MarkDeprecated("access-key", "use --admin-secret instead")
+	if err := f.MarkDeprecated("access-key", "use --admin-secret instead"); err != nil {
+		ec.Logger.WithError(err).Errorf("error while using a dependency library")
+	}
 	f.Bool("insecure-skip-tls-verify", false, "skip TLS verification and disable cert checking (default: false)")
 	f.String("certificate-authority", "", "path to a cert file for the certificate authority")
 
@@ -61,41 +71,39 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 	return metadataCmd
 }
 
-func executeMetadata(cmd string, ec *cli.ExecutionContext) error {
-	var files map[string][]byte
-	var err error
-	metadataHandler := metadataobject.NewHandlerFromEC(ec)
-	switch cmd {
-	case "export":
-		files, err = metadataHandler.ExportMetadata()
+func writeByOutputFormat(w io.Writer, b []byte, format rawOutputFormat) error {
+	switch format {
+	case rawOutputFormatJSON:
+		out := new(bytes.Buffer)
+		err := json.Indent(out, b, "", "  ")
 		if err != nil {
-			return errors.Wrap(err, "cannot export metadata from server")
+			return err
 		}
-		err = metadataHandler.WriteMetadata(files)
+		_, err = io.Copy(w, out)
 		if err != nil {
-			return errors.Wrap(err, "cannot write metadata")
+			return fmt.Errorf("writing output failed: %w", err)
 		}
-	case "clear":
-		err = metadataHandler.ResetMetadata()
+	case rawOutputFormatYAML:
+		o, err := metadatautil.JSONToYAML(b)
 		if err != nil {
-			return errors.Wrap(err, "cannot clear Metadata")
+			return err
 		}
-	case "reload":
-		err = metadataHandler.ReloadMetadata()
+		_, err = io.Copy(w, bytes.NewReader(o))
 		if err != nil {
-			return errors.Wrap(err, "cannot reload Metadata")
+			return fmt.Errorf("writing output failed: %w", err)
 		}
-	case "apply":
-		if ec.Config.Version <= cli.V2 {
-			err := metadataHandler.V1ApplyMetadata()
-			if err != nil {
-				return errors.Wrap(err, "cannot apply metadata on the database")
-			}
-			return nil
-		}
-		if err := metadataHandler.V2ApplyMetadata(); err != nil {
-			return fmt.Errorf("\n%w", err)
-		}
+	default:
+		return fmt.Errorf("output format '%v' is not supported. supported formats: %v, %v", format, rawOutputFormatJSON, rawOutputFormatYAML)
 	}
 	return nil
+}
+
+func isJSON(str []byte) bool {
+	var js json.RawMessage
+	return json.Unmarshal(str, &js) == nil
+}
+
+func isYAML(str []byte) bool {
+	var y yaml.MapSlice
+	return yaml.Unmarshal(str, &y) == nil
 }

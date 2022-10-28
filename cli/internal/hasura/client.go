@@ -3,7 +3,7 @@ package hasura
 import (
 	"io"
 
-	"github.com/hasura/graphql-engine/cli/internal/httpc"
+	"github.com/hasura/graphql-engine/cli/v2/internal/httpc"
 )
 
 type GenericSend func(requestBody interface{}) (httpcResponse *httpc.Response, responseBody io.Reader, error error)
@@ -39,12 +39,14 @@ type SourceKind string
 
 const (
 	SourceKindPG    SourceKind = "postgres"
-	SourceKindMSSQL            = "mssql"
+	SourceKindMSSQL SourceKind = "mssql"
+	SourceKindCitus SourceKind = "citus"
 )
 
 type V2Query interface {
 	PGSourceOps
 	MSSQLSourceOps
+	CitusSourceOps
 	Send(requestBody interface{}) (httpcResponse *httpc.Response, body io.Reader, error error)
 	Bulk([]RequestBody) (io.Reader, error)
 }

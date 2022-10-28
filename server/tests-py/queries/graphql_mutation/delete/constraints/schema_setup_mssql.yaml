@@ -1,0 +1,58 @@
+type: bulk
+args:
+
+- type: mssql_run_sql
+  args:
+    source: mssql
+    sql: |
+      create table author(
+          id INT IDENTITY NOT NULL PRIMARY KEY,
+          name NVARCHAR(450) UNIQUE
+      );
+      CREATE TABLE article (
+        id INT IDENTITY NOT NULL PRIMARY KEY,
+        title TEXT,
+        content TEXT,
+        is_published BIT,
+        author_id INTEGER NOT NULL REFERENCES author(id),
+        published_on TIMESTAMP
+      );
+
+      INSERT INTO author(name)
+      VALUES
+          ('Author 1'),
+          ('Author 2'),
+          ('Author 3');
+
+      INSERT INTO article(title, content, author_id, is_published)
+      VALUES
+          (
+              'Article 1',
+              'Sample article content 1',
+              1,
+              0
+              ),
+          (
+              'Article 2',
+              'Sample article content 2',
+              1,
+              1
+              ),
+          (
+              'Article 3',
+              'Sample article content 3',
+              1,
+              1
+              ),
+          (
+              'Article 4',
+              'Sample article content 4',
+              2,
+              1
+              ),
+          (
+              'Article 5',
+              'Sample article content 5',
+              2,
+              0
+              );

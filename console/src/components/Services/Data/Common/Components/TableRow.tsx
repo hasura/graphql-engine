@@ -1,9 +1,9 @@
 import React from 'react';
 
 import { dataSource } from '../../../../../dataSources';
-import styles from '../../../../Common/TableCommon/Table.scss';
 import { TypedInput } from './TypedInput';
 import { TableColumn } from '../../../../../dataSources/types';
+import { focusYellowRing } from '../../constants';
 
 const getColumnInfo = (
   col: TableColumn,
@@ -67,11 +67,11 @@ const getColumnInfo = (
 export interface TableRowProps {
   column: TableColumn;
   setRef: (
-    refName: 'valueNode' | 'nullNode' | 'defaultNode' | 'insertRadioNode',
+    refName: 'valueNode' | 'nullNode' | 'defaultNode' | 'radioNode',
     node: HTMLInputElement | null
   ) => void;
   enumOptions: Record<string, any>;
-  index: number;
+  index: string;
   clone?: Record<string, any>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>, val: unknown) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
@@ -88,19 +88,14 @@ export const TableRow: React.FC<TableRowProps> = ({
   clone,
   prevValue,
 }) => {
-  const {
-    colName,
-    isDisabled,
-    isNullable,
-    hasDefault,
-    columnValueType,
-  } = getColumnInfo(column, prevValue, clone);
+  const { colName, isDisabled, isNullable, hasDefault, columnValueType } =
+    getColumnInfo(column, prevValue, clone);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     val: string
   ) => {
-    if (isDisabled || isNullable || hasDefault) return;
+    if (isDisabled) return;
 
     if (onChange) {
       onChange(e, val);
@@ -108,7 +103,7 @@ export const TableRow: React.FC<TableRowProps> = ({
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (isDisabled || isNullable || hasDefault) return;
+    if (isDisabled) return;
 
     if (onFocus) {
       onFocus(e);
@@ -116,28 +111,29 @@ export const TableRow: React.FC<TableRowProps> = ({
   };
 
   return (
-    <div className="form-group">
-      <label
-        className={`col-sm-3 control-label ${styles.insertBoxLabel}`}
-        title={colName}
-      >
+    <div className="items-center flex pb-xs">
+      <div className="w-2/12 overflow-hidden text-ellipsis" title={colName}>
         {colName}
-      </label>
-      <label className={`${styles.radioLabel} radio-inline`}>
+      </div>
+      <div>
         <input
           type="radio"
+          className={`${focusYellowRing} !m-0 !mr-sm `}
           ref={node => {
-            setRef('insertRadioNode', node);
+            setRef('radioNode', node);
           }}
           name={`${colName}-value`}
           defaultChecked={columnValueType === 'value'}
           disabled={isDisabled}
         />
+      </div>
+      <div className="flex items-center mr-sm relative">
         <TypedInput
           inputRef={(node: HTMLInputElement) => {
             setRef('valueNode', node);
           }}
-          prevValue={prevValue}
+          // TODO: #3053 console: fix type coercion to null
+          prevValue={prevValue as null}
           enumOptions={enumOptions}
           col={column}
           clone={clone}
@@ -146,23 +142,25 @@ export const TableRow: React.FC<TableRowProps> = ({
           disabled={isDisabled}
           index={index}
         />
-      </label>
-      <label className={`${styles.radioLabel} radio-inline`}>
+      </div>
+      <div className="flex items-center mr-sm relative">
         <input
           type="radio"
+          className={`${focusYellowRing} !m-0 !mr-sm`}
           ref={node => {
             setRef('nullNode', node);
           }}
           disabled={!isNullable}
           defaultChecked={columnValueType === 'null'}
           name={`${colName}-value`}
-          data-test={`nullable-radio-${index}`}
+          data-test={`null-value-radio-${index}`}
         />
-        <span className={styles.radioSpan}>NULL</span>
-      </label>
-      <label className={`${styles.radioLabel} radio-inline`}>
+        <div>NULL</div>
+      </div>
+      <div className="flex items-center mr-sm relative">
         <input
           type="radio"
+          className={`${focusYellowRing} !m-0 !mr-sm`}
           ref={node => {
             setRef('defaultNode', node);
           }}
@@ -171,8 +169,8 @@ export const TableRow: React.FC<TableRowProps> = ({
           defaultChecked={columnValueType === 'default'}
           data-test={`typed-input-default-${index}`}
         />
-        <span className={styles.radioSpan}>Default</span>
-      </label>
+        <div>Default</div>
+      </div>
     </div>
   );
 };

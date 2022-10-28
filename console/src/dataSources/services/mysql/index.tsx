@@ -1,6 +1,6 @@
 import React from 'react';
 import { DataSourcesAPI } from '../..';
-import { Table, TableColumn } from '../../types';
+import { Table, TableColumn, ViolationActions } from '../../types';
 import {
   getAlterForeignKeySql,
   getCreateFKeySql,
@@ -11,7 +11,6 @@ import {
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNotNullSql,
-  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNotNullSql,
   getAlterColumnTypeSql,
@@ -20,6 +19,7 @@ import {
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getAlterPkSql,
   getCreateTriggerSql,
   getDropSql,
   getDropSchemaSql,
@@ -33,6 +33,10 @@ import {
   uniqueKeysSql,
   schemaListSql,
   getAdditionalColumnsInfoQuerySql,
+  getAlterTableCommentSql,
+  getAlterColumnCommentSql,
+  getAlterViewCommentSql,
+  getAlterFunctionCommentSql,
 } from './sqlUtils';
 import { getTableSupportedQueries } from '../postgresql';
 
@@ -129,7 +133,16 @@ const operators = [
   { name: '<=', value: '$lte', graphqlOp: '_lte' },
 ];
 
-const createSQLRegex = /create\s*((?:|or\s*replace)\s*view|\s*(table|function|view))\s*(?:\s*if*\s*not\s*exists\s*)?(((\`?\w+\`?)\.(\`?\w+\`?))|(\`?\w+\`?))/g; // eslint-disable-line
+const createSQLRegex =
+  /create\s*((?:|or\s*replace)\s*view|\s*(table|function|view))\s*(?:\s*if*\s*not\s*exists\s*)?(((\`?\w+\`?)\.(\`?\w+\`?))|(\`?\w+\`?))/g; // eslint-disable-line
+
+const violationActions: ViolationActions[] = [
+  'restrict',
+  'no action',
+  'cascade',
+  'set null',
+  'set default',
+];
 
 export const mysql: DataSourcesAPI = {
   getFunctionSchema: () => {
@@ -172,9 +185,9 @@ export const mysql: DataSourcesAPI = {
   getEstimateCountQuery: (schema: string, table: string) => {
     return `
 SELECT
-	TABLE_ROWS
+  TABLE_ROWS
 FROM
-	INFORMATION_SCHEMA.TABLES
+  INFORMATION_SCHEMA.TABLES
 WHERE
   information_schema.\`TABLES\`.\`TABLE_NAME\` = "${table}" AND
   information_schema.\`TABLES\`.\`TABLE_SCHEMA\` = ${schema};
@@ -192,6 +205,7 @@ WHERE
     throw new Error('not implemented');
   },
   schemaListSql,
+  schemaListQuery: '',
   dependencyErrorCode: '',
   columnDataTypes,
   commonDataTypes,
@@ -215,7 +229,6 @@ WHERE
   getAddColumnSql,
   getAddUniqueConstraintSql,
   getDropNotNullSql,
-  getSetCommentSql,
   getSetColumnDefaultSql,
   getSetNotNullSql,
   getAlterColumnTypeSql,
@@ -224,10 +237,14 @@ WHERE
   checkSchemaModification,
   getCreateCheckConstraintSql,
   getCreatePkSql,
+  getAlterPkSql,
   frequentlyUsedColumns: [],
   primaryKeysInfoSql,
   uniqueKeysSql,
   checkConstraintsSql: undefined,
+  tableIndexSql: undefined,
+  createIndexSql: undefined,
+  dropIndexSql: undefined,
   getFKRelations,
   getReferenceOption: (option: string) => option,
   getEventInvocationInfoByIDSql: undefined,
@@ -235,5 +252,9 @@ WHERE
   permissionColumnDataTypes: null,
   viewsSupported: false,
   supportedColumnOperators: null,
-  aggregationPermissionsAllowed: false,
+  violationActions,
+  getAlterTableCommentSql,
+  getAlterColumnCommentSql,
+  getAlterViewCommentSql,
+  getAlterFunctionCommentSql,
 };

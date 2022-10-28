@@ -1,0 +1,23 @@
+description: Explain query with limit and order by table column
+url: /v1/graphql/explain
+status: 200
+query:
+  query:
+    query: |
+      query {
+          article(limit: 5, order_by: {author_id: desc}){
+            id
+            title
+            content
+          }
+      }
+response:
+- field: article
+  sql: "SELECT  coalesce(json_agg(\"root\" ORDER BY \"root.pg.author_id\" DESC NULLS\
+    \ FIRST), '[]' ) AS \"root\" FROM  (SELECT  \"_root.base\".\"author_id\" AS \"\
+    root.pg.author_id\", row_to_json((SELECT  \"_e\"  FROM  (SELECT  \"_root.base\"\
+    .\"id\" AS \"id\", \"_root.base\".\"title\" AS \"title\", \"_root.base\".\"content\"\
+    \ AS \"content\"       ) AS \"_e\"      ) ) AS \"root\" FROM  (SELECT  *  FROM\
+    \ \"public\".\"article\"  WHERE ('true')   ORDER BY \"author_id\" DESC NULLS FIRST\
+    \ LIMIT 5 ) AS \"_root.base\"    ORDER BY \"root.pg.author_id\" DESC NULLS FIRST\
+    \  ) AS \"_root\"      "

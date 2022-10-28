@@ -1,0 +1,4 @@
+type: bulk
+args:
+- type: export_metadata
+  args: {}

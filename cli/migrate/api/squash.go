@@ -8,14 +8,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hasura/graphql-engine/cli/migrate"
-	"github.com/hasura/graphql-engine/cli/migrate/cmd"
-	mig "github.com/hasura/graphql-engine/cli/migrate/cmd"
+	"github.com/hasura/graphql-engine/cli/v2/migrate"
+	"github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
+	mig "github.com/hasura/graphql-engine/cli/v2/migrate/cmd"
 )
 
 type squashCreateRequest struct {
 	Name    string `json:"name"`
 	From    uint64 `json:"from"`
+	To      *int64 `json:"to"`
 	version int64
 }
 
@@ -58,7 +59,11 @@ func SquashCreateAPI(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, &Response{Code: "internal_error", Message: err.Error()})
 		return
 	}
-	versions, err := cmd.SquashCmd(t, request.From, request.version, request.Name, sourceURL.Path)
+	if request.To == nil {
+		var v int64 = -1
+		request.To = &v
+	}
+	versions, err := cmd.SquashCmd(t, request.From, *request.To, request.version, request.Name, sourceURL.Path)
 	if err != nil {
 		if strings.HasPrefix(err.Error(), DataAPIError) {
 			c.JSON(http.StatusBadRequest, &Response{Code: "data_api_error", Message: strings.TrimPrefix(err.Error(), DataAPIError)})

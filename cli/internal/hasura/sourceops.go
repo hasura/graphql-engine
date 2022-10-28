@@ -5,13 +5,10 @@ const (
 	TuplesOK  RunSQLResultType = "TuplesOk"
 )
 
-// hasura API requests used to interact with pg sources
+type RunSQLResultType string
+
 type PGSourceOps interface {
 	PGRunSQL(input PGRunSQLInput) (response *PGRunSQLOutput, err error)
-}
-
-type MSSQLSourceOps interface {
-	MSSQLRunSQL(input MSSQLRunSQLInput) (response *MSSQLRunSQLOutput, err error)
 }
 
 type PGRunSQLInput struct {
@@ -22,15 +19,24 @@ type PGRunSQLInput struct {
 	CheckMetadataConsistency *bool  `json:"check_metadata_consistency,omitempty" yaml:"check_metadata_consistency,omitempty"`
 }
 
-type RunSQLResultType string
-
 type PGRunSQLOutput struct {
 	ResultType RunSQLResultType `json:"result_type" yaml:"result_type"`
 	Result     [][]string       `json:"result" yaml:"result"`
 }
 
+type MSSQLSourceOps interface {
+	MSSQLRunSQL(input MSSQLRunSQLInput) (response *MSSQLRunSQLOutput, err error)
+}
 type MSSQLRunSQLInput PGRunSQLInput
 type MSSQLRunSQLOutput struct {
 	ResultType RunSQLResultType `json:"result_type" yaml:"result_type"`
 	Result     [][]interface{}  `json:"result" yaml:"result"`
 }
+
+type CitusSourceOps interface {
+	CitusRunSQL(input CitusRunSQLInput) (response *CitusRunSQLOutput, err error)
+}
+
+type CitusRunSQLInput PGRunSQLInput
+
+type CitusRunSQLOutput PGRunSQLOutput

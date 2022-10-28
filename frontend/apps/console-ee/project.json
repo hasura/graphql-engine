@@ -1,0 +1,93 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/console-ee/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nrwl/web:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "compiler": "babel",
+        "outputPath": "dist/apps/console-ee",
+        "index": "apps/console-ee/src/index.html",
+        "baseHref": "/",
+        "main": "apps/console-ee/src/main.tsx",
+        "polyfills": "apps/console-ee/src/polyfills.ts",
+        "tsConfig": "apps/console-ee/tsconfig.app.json",
+        "assets": [
+          "apps/console-ee/src/favicon.ico",
+          "apps/console-ee/src/assets"
+        ],
+        "styles": [
+          "apps/console-ee/src/css/tailwind.css",
+          "apps/console-ee/src/css/legacy-boostrap.css"
+        ],
+        "scripts": [],
+        "webpackConfig": "apps/console-ee/custom-webpack.config.js",
+        "postcssConfig": "apps/console-ee/postcss.config.js"
+      },
+      "configurations": {
+        "development": {
+          "outputHashing": "none",
+          "extractCss": false,
+          "extractLicenses": false,
+          "optimization": false,
+          "sourceMap": true,
+          "vendorChunk": false
+        },
+        "production": {
+          "fileReplacements": [
+            {
+              "replace": "apps/console-ee/src/environments/environment.ts",
+              "with": "apps/console-ee/src/environments/environment.prod.ts"
+            }
+          ],
+          "optimization": true,
+          "outputHashing": "none",
+          "extractCss": false,
+          "sourceMap": true,
+          "namedChunks": false,
+          "generateIndexHtml": false,
+          "extractLicenses": true,
+          "vendorChunk": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nrwl/web:dev-server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "console-ee:build",
+        "hmr": true,
+        "port": 5500,
+        "allowedHosts": "all"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "console-ee:build:development"
+        },
+        "production": {
+          "buildTarget": "console-ee:build:production",
+          "hmr": false
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/console-ee/**/*.{ts,tsx,js,jsx}"]
+      }
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "outputs": ["coverage/apps/console-ee"],
+      "options": {
+        "jestConfig": "apps/console-ee/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": []
+}

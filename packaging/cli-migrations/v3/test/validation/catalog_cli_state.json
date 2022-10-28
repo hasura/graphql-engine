@@ -1,0 +1,11 @@
+{
+  "isStateCopyCompleted": true,
+  "migrations": {
+    "default": {
+      "1616826329751": false
+    }
+  },
+  "settings": {
+    "migration_mode": "true"
+  }
+}

@@ -1,6 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import { GraphQLSchema } from 'graphql';
-import styles from '../../../Common/Permissions/PermissionStyles.scss';
+import { FaPencilAlt } from 'react-icons/fa';
+import styles from '../../../Common/Permissions/PermissionStyles.module.scss';
 import PermTableHeader from '../../../Common/Permissions/TableHeader';
 import PermTableBody from '../../../Common/Permissions/TableBody';
 import { permissionsSymbols } from '../../../Common/Permissions/PermissionSymbols';
@@ -61,7 +62,7 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
   const getEditIcon = () => {
     return (
       <span className={styles.editPermsIcon}>
-        <i className="fa fa-pencil" aria-hidden="true" />
+        <FaPencilAlt aria-hidden="true" />
       </span>
     );
   };
@@ -128,11 +129,12 @@ const PermissionsTable: React.FC<PermissionsTableProps> = ({
       if (role !== 'admin' && !readOnlyMode) {
         editIcon = getEditIcon();
 
+        className += styles.clickableCell;
+
         if (isCurrEdit) {
           onClick = dispatchCloseEdit;
-          className += styles.currEdit;
+          className += ` ${styles.currEdit}`;
         } else {
-          className += styles.clickableCell;
           onClick = dispatchOpenEdit();
         }
       }

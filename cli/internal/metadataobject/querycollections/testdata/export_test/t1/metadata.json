@@ -1,0 +1,15 @@
+{
+  "query_collections": [
+    {
+      "name": "allowed-queries",
+      "definition": {
+        "queries": [
+          {
+            "name": "getArticles",
+            "query": "query getArticles {\n  articles {\n    title\n    id\n    content\n  }\n}\n"
+          }
+        ]
+      }
+    }
+  ]
+}

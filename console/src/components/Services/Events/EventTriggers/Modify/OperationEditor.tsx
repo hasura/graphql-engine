@@ -1,48 +1,52 @@
 import React from 'react';
 import Editor from '../../../../Common/Layout/ExpandableEditor/Editor';
-import Tooltip from '../../../../Common/Tooltip/Tooltip';
 import {
   EventTrigger,
   EventTriggerOperation,
   ETOperationColumn,
   VoidCallback,
+  DatabaseInfo,
 } from '../../types';
 import {
   parseEventTriggerOperations,
   getETOperationColumns,
 } from '../../utils';
-
-import Operations from '../Common/Operations';
-import { TableColumn } from '../../../../../dataSources/types';
+import { Operations } from '../Common/Operations';
+import { ColumnSelectionRadioButton } from '../Common/ColumnSelectionRadioButton';
+import { focusYellowRing } from '../../constants';
 
 type OperationEditorProps = {
   currentTrigger: EventTrigger;
-  allTableColumns: TableColumn[];
+  databaseInfo: DatabaseInfo;
   operations: Record<EventTriggerOperation, boolean>;
   setOperations: (o: Record<EventTriggerOperation, boolean>) => void;
   operationColumns: ETOperationColumn[];
   setOperationColumns: (operationColumns: ETOperationColumn[]) => void;
-  styles: Record<string, string>;
   save: (success: VoidCallback, error: VoidCallback) => void;
+  isAllColumnChecked: boolean;
+  handleColumnRadioButton: () => void;
 };
 
-const OperationEditor = (props: OperationEditorProps) => {
+export const OperationEditor: React.FC<OperationEditorProps> = props => {
   const {
-    allTableColumns,
-    styles,
+    databaseInfo,
     save,
     currentTrigger,
     operations,
     operationColumns,
     setOperations,
     setOperationColumns,
+    isAllColumnChecked,
+    handleColumnRadioButton,
   } = props;
-
   const etDef = currentTrigger.configuration.definition;
   const existingOps = parseEventTriggerOperations(etDef);
+  const columnInfo =
+    databaseInfo?.[currentTrigger.schema_name]?.[currentTrigger.table_name] ??
+    [];
   const existingOpColumns = getETOperationColumns(
     etDef.update ? etDef.update.columns : [],
-    allTableColumns
+    columnInfo
   );
 
   const reset = () => {
@@ -55,62 +59,81 @@ const OperationEditor = (props: OperationEditorProps) => {
     opCols: ETOperationColumn[],
     readOnly: boolean
   ) => (
-    <div className={styles.modifyOps}>
-      <div
-        className={`${styles.modifyOpsCollapsedContent} ${styles.add_mar_bottom_mid}`}
-      >
-        <div className={`col-md-12 ${styles.padd_remove}`}>
+    <div>
+      <label className="block text-gray-600 font-medium mb-sm">
+        Trigger Method
+      </label>
+      <div className="flex">
+        <div className="mb-sm w-full p-0">
           <Operations
             selectedOperations={ops}
             setOperations={setOperations}
             readOnly={readOnly}
+            tableName={currentTrigger.table_name}
           />
         </div>
       </div>
-      <div className={styles.modifyOpsCollapsedContent}>
-        <div className={`col-md-12 ${styles.padd_remove}`}>
-          Listen columns for update:&nbsp;
-        </div>
-        <div className={`col-md-12 ${styles.padd_remove}`}>
-          {ops.update ? (
-            opCols.map(col => {
-              const toggle = () => {
-                if (!readOnly) {
-                  const newCols = opCols.map(oc => {
-                    return {
-                      ...oc,
-                      enabled: col.name === oc.name ? !oc.enabled : oc.enabled,
-                    };
-                  });
-                  setOperationColumns(newCols);
-                }
-              };
-              return (
-                <label
-                  className={`${styles.opsCheckboxWrapper} ${styles.columnListElement} ${styles.padd_remove} ${styles.cursorPointer}`}
-                  key={col.name}
-                  onChange={toggle}
-                >
-                  <input
-                    type="checkbox"
-                    className={`${styles.opsCheckboxDisabled} ${styles.cursorPointer}`}
-                    checked={col.enabled}
-                    disabled={readOnly}
-                    readOnly
-                  />
-                  {col.name}
-                  <small className={styles.addPaddSmall}> ({col.type})</small>
-                </label>
-              );
-            })
-          ) : (
-            <div
-              className={`col-md-12 ${styles.padd_remove} ${styles.modifyOpsCollapsedtitle}`}
-            >
-              <i>Applicable only if update operation is selected.</i>
+      <div>
+        <label className="block text-gray-600 font-medium mb-xs">
+          Trigger Columns
+        </label>
+        <p className="text-sm text-gray-600 mb-sm">
+          Trigger columns to listen to for updates.
+        </p>
+      </div>
+      <div>
+        {ops.update ? (
+          <>
+            <div className={`w-full p-0 mr-md mt-md ${focusYellowRing}`}>
+              <ColumnSelectionRadioButton
+                isAllColumnChecked={isAllColumnChecked}
+                handleColumnRadioButton={handleColumnRadioButton}
+                readOnly={readOnly}
+              />
             </div>
-          )}
-        </div>
+            <>
+              {!isAllColumnChecked ? (
+                <div className="w-full p-0">
+                  {opCols.map(col => {
+                    const toggle = () => {
+                      if (!readOnly) {
+                        const newCols = opCols.map(oc => {
+                          return {
+                            ...oc,
+                            enabled:
+                              col.name === oc.name ? !oc.enabled : oc.enabled,
+                          };
+                        });
+                        setOperationColumns(newCols);
+                      }
+                    };
+                    return (
+                      <label
+                        className="mr-md my-md p-0 pointer-cursor"
+                        key={col.name}
+                        onChange={toggle}
+                      >
+                        <input
+                          type="checkbox"
+                          className={`!mr-xs cursor-pointer ${focusYellowRing} disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-200 border-gray-200 rounded-sm bg-white`}
+                          checked={col.enabled}
+                          disabled={readOnly}
+                          readOnly
+                        />
+                        {col.name}
+                        <small className="p-xs"> ({col.type})</small>
+                      </label>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </>
+          </>
+        ) : (
+          <div className="w-full p-0">
+            <i>Applicable only if update operation is selected.</i>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -120,16 +143,12 @@ const OperationEditor = (props: OperationEditorProps) => {
   const expanded = () => renderEditor(operations, operationColumns, false);
 
   return (
-    <div className={`${styles.container} ${styles.borderBottom}`}>
-      <div className={styles.modifySection}>
-        <h4 className={styles.modifySectionHeading}>
-          Trigger Operations{' '}
-          <Tooltip message="Edit operations and related columns" />
-        </h4>
+    <div className="w-full">
+      <div>
+        <h4 className="font-bold text-lg mb-md">Trigger Operations</h4>
         <Editor
           editorCollapsed={collapsed}
           editorExpanded={expanded}
-          styles={styles}
           property="ops"
           service="modify-trigger"
           saveFunc={save}
@@ -139,5 +158,3 @@ const OperationEditor = (props: OperationEditorProps) => {
     </div>
   );
 };
-
-export default OperationEditor;

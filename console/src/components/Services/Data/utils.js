@@ -1,7 +1,3 @@
-import {
-  READ_ONLY_RUN_SQL_QUERIES,
-  checkFeatureSupport,
-} from '../../../helpers/versionUtils';
 import { isJsonString } from '../../Common/utils/jsUtils';
 import { ERROR_CODES } from './constants';
 import { dataSource } from '../../../dataSources';
@@ -81,27 +77,17 @@ export const getTableName = t => {
 export const fetchTrackedTableFkQuery = (options, source) => {
   const runSql = dataSource?.getFKRelations(options) || '';
 
-  return getRunSqlQuery(
-    runSql,
-    source,
-    false,
-    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
-  );
+  return getRunSqlQuery(runSql, source, false, true);
 };
 
 export const fetchTableListQuery = (options, source) => {
   const runSql = dataSource?.getFetchTablesListQuery(options) || '';
 
-  return getRunSqlQuery(
-    runSql,
-    source,
-    false,
-    checkFeatureSupport(READ_ONLY_RUN_SQL_QUERIES) ? true : false
-  );
+  return getRunSqlQuery(runSql, source, false, true);
 };
 
 // TODO: move to postgres service
-const postgresFunctionTester = /.*\(\)$/gm;
+const postgresFunctionTester = /.*\(.*\)$/gm;
 export const isPostgresFunction = str =>
   new RegExp(postgresFunctionTester).test(str);
 export const isTypeCast = (str = '') => str.split('::').length > 1;
@@ -162,3 +148,8 @@ export const getSourceDriver = (dataSources, source) => {
   const sourceObject = dataSources.find(({ name }) => name === source);
   return sourceObject?.driver || sourceObject?.kind || 'postgres';
 };
+
+export const inputStyles =
+  'w-full block h-10 shadow-sm rounded border-gray-300 hover:border-gray-400 focus:ring-2 focus:ring-yellow-200 focus:border-yellow-400 disabled:bg-gray-100 disabled:cursor-not-allowed';
+export const focusYellowRing =
+  'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-400';

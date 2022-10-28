@@ -1,8 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Button from '../../../Common/Button/Button';
-
-import styles from '../../../Common/Common.scss';
+import { Button } from '@/new-components/Button';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 import { resetMetadata } from '../../../../metadata/actions';
@@ -31,14 +29,15 @@ class ResetMetadata extends Component {
     };
 
     return (
-      <div className={styles.display_inline}>
+      <div className="inline-block">
         <Button
           data-test="data-reset-metadata"
-          color="white"
+          isLoading={this.state.isResetting}
+          loadingText="Resetting..."
           size="sm"
           onClick={handleReset}
         >
-          {this.state.isResetting ? 'Resetting...' : 'Reset'}
+          Reset
         </Button>
       </div>
     );

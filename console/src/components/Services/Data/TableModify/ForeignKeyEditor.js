@@ -1,17 +1,12 @@
-import React, { useEffect } from 'react';
-import { ordinalColSort } from '../utils';
+import React from 'react';
 import {
   setForeignKeys,
   saveForeignKeys,
   removeForeignKey,
 } from './ModifyActions';
-import {
-  getForeignKeyConfig,
-  getExistingFKConstraints,
-} from '../Common/Components/utils';
+import { getForeignKeyConfig } from '../Common/Components/utils';
 import ExpandableEditor from '../../../Common/Layout/ExpandableEditor/Editor';
 import ForeignKeySelector from '../Common/Components/ForeignKeySelector';
-import { updateSchemaInfo } from '../DataActions';
 
 import { getConfirmation } from '../../../Common/utils/jsUtils';
 
@@ -22,36 +17,9 @@ const ForeignKeyEditor = ({
   fkModify,
   schemaList,
   readOnlyMode,
+  orderedColumns,
+  existingForeignKeys,
 }) => {
-  const columns = tableSchema.columns.sort(ordinalColSort);
-
-  // columns in the right order with their indices
-  const orderedColumns = columns.map((c, i) => ({
-    name: c.column_name,
-    index: i,
-  }));
-
-  // restructure the existing foreign keys and add it to fkModify (for easy processing)
-  const existingForeignKeys = getExistingFKConstraints(
-    tableSchema,
-    orderedColumns
-  );
-  const schemasToBeFetched = {};
-  existingForeignKeys.forEach(efk => {
-    schemasToBeFetched[efk.refSchemaName] = true;
-  });
-  existingForeignKeys.push({
-    refSchemaName: '',
-    refTableName: '',
-    onUpdate: 'restrict',
-    onDelete: 'restrict',
-    colMappings: [{ column: '', refColumn: '' }],
-  });
-  useEffect(() => {
-    dispatch(setForeignKeys(existingForeignKeys));
-    dispatch(updateSchemaInfo({ schemas: Object.keys(schemasToBeFetched) }));
-  }, []);
-
   const numFks = fkModify.length;
 
   // Map the foreign keys in the fkModify state and render
@@ -87,10 +55,8 @@ const ForeignKeyEditor = ({
 
     // Label to show next to the 'Edit' button (the FK configuration)
     const collapsedLabel = () => {
-      const collapsedLabelText =
-        isLast && numFks === 1 ? 'No foreign keys' : getFkConfigLabel(fkConfig);
-
-      return <div>{collapsedLabelText}</div>;
+      const collapsedLabelText = getFkConfigLabel(fkConfig);
+      return <div className="text-gray-600">{collapsedLabelText}</div>;
     };
 
     // The content when the editor is expanded
@@ -111,7 +77,8 @@ const ForeignKeyEditor = ({
     // The collapse button text when the editor is collapsed
     let expandButtonText = 'Edit';
     if (isLast) {
-      expandButtonText = numFks === 1 ? 'Add' : 'Add a new foreign key';
+      expandButtonText =
+        numFks === 1 ? 'Add a foreign key' : 'Add a new foreign key';
     }
 
     // label next to the button when the editor is expanded

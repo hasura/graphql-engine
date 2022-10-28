@@ -1,37 +1,48 @@
 # Contributing
 
-This guide explains how to set up the graphql-engine server for development on your
-own machine and how to contribute.
+This guide explains how to set up the graphql-engine server for development on your own machine and how to contribute.
 
 ## Pre-requisites
 
-- [GHC](https://www.haskell.org/ghc/) 8.10.2 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
+- [GHC](https://www.haskell.org/ghc/) 9.2.4 and [cabal-install](https://cabal.readthedocs.io/en/latest/)
   - There are various ways these can be installed, but [ghcup](https://www.haskell.org/ghcup/) is a good choice if you’re not sure.
-- [Node.js](https://nodejs.org/en/) (>= v8.9)
-- npm >= 5.7
-- [gsutil](https://cloud.google.com/storage/docs/gsutil)
-- libpq-dev
-- libkrb5-dev
-- openssl and libssl-dev
-- python >= 3.5 with pip3 and virtualenv
+- There are few system packages required like `libpq-dev`, `libssl-dev`, etc. The best place to get the entire list is from the [Dockerfile](../packaging/graphql-engine-base/ubuntu.dockerfile)
+- Additional Haskell tools (expected versions can be found in _VERSIONS.json_):
+  - [HLint](https://github.com/ndmitchell/hlint), for linting Haskell code
+  - [hpack](https://github.com/sol/hpack), for generating Cabal files
+  - [Ormolu](https://github.com/tweag/ormolu), for formatting Haskell code
+- [Docker](https://www.docker.com/get-started/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
-The last few prerequisites can be installed on Debian or Ubuntu with:
+For running the test suite:
 
-    $ sudo apt install libpq-dev libkrb5-dev python3 python3-pip python3-venv openssl libssl-dev
+- [node.js](https://nodejs.org/en/) (see [.nvmrc](../.nvmrc) for the version), and the bundled NPM version
+- Python >= 3.9 with pip3 and virtualenv
 
-Additionally, you will need a way to run a Postgres database server. The `dev.sh` script (described below) can set up a Postgres instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
+For building the Console:
 
-- [PostgreSQL](https://www.postgresql.org) >= 9.5
+- node.js, as above
+
+Additionally, you will need a way to run a PostgreSQL database server. The `dev.sh` script (described below) can set up a PostgreSQL instance for you via [Docker](https://www.docker.com), but if you want to run it yourself, you’ll need:
+
+- [PostgreSQL](https://www.postgresql.org) >= 10
 - [postgis](https://postgis.net)
 
-### Upgrading npm
+### Installing tooling with Nix
 
-If your npm is too old (>= 5.7 required):
+Simply [install Nix](https://nixos.org/download.html) and type `nix develop`.
 
-    $ npm install -g npm@latest   # sudo may be required
+If you don't want to start a new shell each time, you can also use [direnv](https://direnv.net/) and [nix-direnv](https://github.com/nix-community/nix-direnv), then create a _.envrc.local_ file with the contents:
 
-or update your nodejs.
+```bash
+#!/usr/bin/env bash
 
+use flake
+```
+
+### Installing tooling with direnv
+
+This project contains scripts for installing project dependencies automatically with [direnv](https://direnv.net/). For more information, see the `.envrc` file in the root.
 
 ## Development workflow
 
@@ -43,20 +54,24 @@ After making your changes
 ...console assets:
 
     $ cd console
+    $ nvm use
     $ npm ci
     $ npm run server-build
     $ cd ..
 
 ...and the server:
 
-    $ cd server
-    $ ln -s cabal.project.dev cabal.project.local
+    $ ln -s cabal/dev.project cabal.project.local
     $ cabal new-update
-    $ cabal new-build
+    $ cabal new-build graphql-engine
 
-To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal.project.dev-sh.local` instead of `cabal.project.dev`:
+To set up the project configuration to coincide with the testing scripts below, thus avoiding recompilation when testing locally, rather use `cabal/dev-sh.project.local` instead of `cabal/dev.project`:
 
-    $ ln -s cabal.project.dev-sh.local cabal.project.local
+    $ ln -s cabal/dev-sh.project.local cabal.project.local
+
+#### Compiling on MacOS
+
+If you are on MacOS, or experiencing any errors related to missing dependencies on MacOS, please try [this alternative setup guide](COMPILING-ON-MACOS.md), or try Nix (as above).
 
 ### IDE Support
 
@@ -86,6 +101,8 @@ Then in a new terminal launch `graphql-engine` in dev mode with:
 
     $ scripts/dev.sh graphql-engine
 
+This command also starts the GraphQL Engine console, which you can access at http://localhost:8181/console.
+
 The `dev.sh` will print some helpful information and logs from both services
 will be printed to screen.
 
@@ -93,7 +110,7 @@ You can run the test suite with:
 
     $ scripts/dev.sh test
 
-This should run in isolation.  The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report).  Errors and failures are indicated by `F`s and `E`s.
+This should run in isolation. The output format is described in the [pytest documentation](https://docs.pytest.org/en/latest/usage.html#detailed-summary-report). Errors and failures are indicated by `F`s and `E`s.
 
 Optionally, launch a new container for alternative (MSSQL) backend with:
 
@@ -101,7 +118,7 @@ Optionally, launch a new container for alternative (MSSQL) backend with:
 
 Tests can be run against a specific backend (defaulting to Postgres) with the `backend` flag, for example:
 
-    $ scripts/dev.sh test --integration -k TestGraphQLQueryBasicCommon --backend mssql
+    $ scripts/dev.sh test --integration -k TestGraphQLQueryBasicCommon --backend (bigquery|citus|mssql|postgres)
 
 ### Run and test manually
 
@@ -114,173 +131,172 @@ The following command can be used to build and launch a local `graphql-engine` i
 ```
 cabal new-run -- exe:graphql-engine \
   --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-  serve --enable-console --console-assets-dir=../console/static/dist
+  serve --enable-console --console-assets-dir=console/static/dist
 ```
 
 This will launch a server on port 8080, and it will serve the console assets if they were built with `npm run server-build` as mentioned above.
 
 #### Test
 
-`graphql-engine` has two test suites:
+`graphql-engine` has several test suites, among them:
 
-  1. A small set of unit tests and integration tests written in Haskell.
+1. A small set of unit tests and integration tests written in Haskell, in `server/src-test`.
 
-  2. An extensive set of end-to-end tests written in Python.
+2. A new integration test suite written in Haskell, in `server/lib/api-tests`.
 
-Both sets of tests require a running Postgres database.
+3. An extensive set of end-to-end tests written in Python, in `server/tests-py`.
+
+All sets of tests require running databases:
+
+- some unit tests hit the database, and running the unit test suite requires passing in a postgres connection string,
+- the Haskell integration test suite requires databases to run (they can be started via the docker command listed below),
+- the Python integration test suite also requires databases AND the engine to be running, which can be started via either the `dev.sh` script, or manually.
+
+##### Running py tests
+
+The easiest way to run the Python integration test suite is by running:
+
+```sh
+scripts/dev.sh test --integration
+```
+
+For more details please check out the [README](./tests-py/README.md).
 
 ##### Running the Haskell test suite
 
+There are three categories of unit tests:
+
+- true unit tests
+- Postgres unit tests (require a postgres instance)
+- MSSQL unit tests (require a MSSQL instance)
+
+The easiest way to run these tests is through `dev.sh`:
+
 ```
-cabal new-run -- test:graphql-engine-tests \
-  --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>'
+./scripts/dev.sh test --unit
 ```
 
-##### Running the Python test suite
+If you want to limit to a specific set of tests:
 
-1. To run the Python tests, you’ll need to install the necessary Python dependencies first. It is recommended that you do this in a self-contained Python venv, which is supported by Python 3.3+ out of the box. To create one, run:
+```
+./scripts/dev.sh test --unit --match "some pattern" mssql
+```
 
-   ```
-   python3 -m venv .python-venv
-   ```
+Note that you have to use one of 'unit', 'postgres' or 'mssql' when
+using '--match'. There is no way to match without specifying the subset
+of tests to run.
 
-   (The second argument names a directory where the venv sandbox will be created; it can be anything you like, but `.python-venv` is `.gitignore`d.)
+Alternatively, you can run unit tests directly through cabal:
 
-   With the venv created, you can enter into it in your current shell session by running:
+```
+cabal new-run -- test:graphql-engine-tests unit
+HASURA_GRAPHQL_DATABASE_URL='postgres://<user>:<password>@<host>:<port>/<dbname>' \
+    cabal new-run -- test:graphql-engine-tests postgres
+```
 
-   ```
-   source .python-venv/bin/activate
-   ```
+##### Running the Haskell integration test suite
 
-   (Source `.python-venv/bin/activate.fish` instead if you are using `fish` as your shell.)
+1. To run the Haskell integration test suite, you'll first need to bring up the database containers:
 
-2. Install the necessary Python dependencies into the sandbox:
+```sh
+docker compose up
+```
 
-   ```
-   pip3 install -r tests-py/requirements.txt
-   ```
+2. Once the containers are up, you can run the test suite via
 
-3. Install the dependencies for the Node server used by the remote schema tests:
+```sh
+cabal run api-tests
+```
 
-   ```
-   (cd tests-py/remote_schemas/nodejs && npm ci)
-   ```
+For more details please check out the [README](./lib/api-tests/README.md).
 
-4. Start an instance of `graphql-engine` for the test suite to use:
+##### Running unit tests and recompiling
 
-   ```
-   env EVENT_WEBHOOK_HEADER=MyEnvValue \
-       WEBHOOK_FROM_ENV=http://localhost:5592/ \
-       SCHEDULED_TRIGGERS_WEBHOOK_DOMAIN=http://127.0.0.1:5594 \
-     cabal new-run -- exe:graphql-engine \
-       --database-url='postgres://<user>:<password>@<host>:<port>/<dbname>' \
-       serve --stringify-numeric-types
-   ```
+While working on features, you might want to add unit tests and work through
+getting them to pass. This is generally a slow process, but there is a
+workaround to allow loading both the `graphql-engine` library and the unit
+testing library in `ghcid` at the same time:
 
-   Optionally, replace the `--database-url` parameter with `--metadata-database-url` to enable testing against multiple sources.
+```sh
+ghcid -a -c "cabal repl graphql-engine-tests -f -O0 -fghci-load-test-with-lib" --test Main.main
+```
 
-   The environment variables are needed for a couple tests, and the `--stringify-numeric-types` option is used to avoid the need to do floating-point comparisons.
+This assumes you already have `HASURA_GRAPHQL_DATABASE_URL` and `HASURA_MSSQL_CONN_STR`
+exported as environment variables.
 
-5. Optionally, add alternative sources to test against:
+If you just want to run all unit tests, you can add ` --setup ":set args unit"`
+to the command line above. If you want to run specific test(s), you can instead
+do `--setup ":set args unit --match name_of_test(s)"`.
 
-    If you enabled testing against multiple sources with in the last step, you can add those sources as follows:
-    ```
-    # Add a Postgres source
-    curl "$METADATA_URL" \
-    --data-raw '{"type":"pg_add_source","args":{"name":"default","configuration":{"connection_info":{"database_url":"'"$POSTGRES_DB_URL"'","pool_settings":{}}}}}'
+#### Building with profiling
 
-    # Add a SQL Server source
-    curl "$METADATA_URL" \
-    --data-raw '{"type":"mssql_add_source","args":{"name":"mssql","configuration":{"connection_info":{"connection_string":"'"$MSSQL_DB_URL"'","pool_settings":{}}}}}'
+To build with profiling support, you need to both enable profiling via `cabal`
+and set the `profiling` flag. E.g.
 
-    # Optionally verify sources have been added
-    curl "$METADATA_URL" --data-raw '{"type":"export_metadata","args":{}}'
-    ```
-
-6. With the server running, run the test suite:
-
-   ```
-   cd tests-py
-   pytest --hge-urls http://localhost:8080 \
-          --pg-urls 'postgres://<user>:<password>@<host>:<port>/<dbname>'
-   ```
-
-This will run all the tests, which can take a couple minutes (especially since some of the tests are slow). You can configure `pytest` to run only a subset of the tests; see [the `pytest` documentation](https://doc.pytest.org/en/latest/usage.html) for more details.
-
-Some other useful points of note:
-
-  - It is recommended to use a separate Postgres database for testing, since the tests will drop and recreate the `hdb_catalog` schema, and they may fail if certain tables already exist. (It’s also useful to be able to just drop and recreate the entire test database if it somehow gets into a bad state.)
-
-  - You can pass the `-v` or `-vv` options to `pytest` to enable more verbose output while running the tests and in test failures. You can also pass the `-l` option to display the current values of Python local variables in test failures.
-
-  - Tests can be run against a specific backend (defaulting to Postgres) with the `backend` flag, for example:
-    ```
-      pytest --hge-urls http://localhost:8080 \
-             --pg-urls 'postgres://<user>:<password>@<host>:<port>/<dbname>'
-             --backend mssql -k TestGraphQLQueryBasicCommon
-    ```
-
-##### Guide on writing python tests
-
-1. Check whether the test you intend to write already exists in the test suite, so that there will be no
-   duplicate tests or the existing test will just need to be modified.
-
-2. All the tests use setup and teardown, the setup step is used to initialize the graphql-engine
-   and the database in a certain state after which the tests should be run. After the tests are run,
-   the state needs to be cleared, which should be done in the teardown step. The setup and teardown
-   is localised for every python test class.
-
-   See `TestCreateAndDelete` in [test_events.py](tests-py/test_events.py)
-   for reference.
-
-3. The setup and teardown can be configured to run before and after every test in a test class
-   or run before and after running all the tests in a class. Depending on the use case, there
-   are different fixtures like `per_class_tests_db_state`,`per_method_tests_db_state` defined in the [conftest.py](tests-py/conftest.py) file.
-
-4. Sometimes, it's required to run the graphql-engine with in a different configuration only
-   for a particular set of tests. In this case, these tests should be run only when the graphql-engine
-   is run with the said configuration and should be skipped in other graphql-engine configurations. This
-   can be done by accepting a new command-line flag from the `pytest` command and depending on the value or
-   presence of the flag, the tests should be run accordingly. After adding this kind of a test, a new section
-   needs to be added in the [test-server.sh](../.circleci/test-server.sh). This new section's name should also
-   be added in the `server-test-names.txt` file, otherwise the test will not be run in the CI.
-
-   For example,
-
-   The tests in the [test_remote_schema_permissions.py](tests-py/test_remote_schema_permissions.py)
-   are only to be run when the remote schema permissions are enabled in the graphql-engine and when
-   it's not set, these tests should be skipped. Now, to run these tests we parse a command line option
-   from pytest called (`--enable-remote-schema-permissions`) and the presence of this flag means that
-   we need to run these tests. When the tests are run with this command line option, it's assumed that
-   the server has enabled remote schema permissions.
-
-##### Adding test support for a new backend
-The current workflow for supporting a new backend in integration tests is as follows:
-
-1. Add functions to launch and cleanup a server for the new backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-876c076817b4e593cf797bdfa378ac3a24b6dc76c6f6408dd2f27da903bb331dR520-R523).
-2. Connect to the database you've just launched. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-876c076817b4e593cf797bdfa378ac3a24b6dc76c6f6408dd2f27da903bb331dR554-R557).
-3. Add setup and teardown files:
-    1. `setup_<backend>`: for `v1/query` or metadata queries such as `<backend>_track_table`. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-97ba2b889f4ed620e8bd044f819b1f94f95bfc695a69804519e38a00119337d9).
-    2. `schema_setup_<backend>`: for `v2/query` queries such as `<backend>_run_sql`. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-b34081ef8e1c34492fcf0cf72a8c1d64bcb66944f2ab2efb9ac0812cd7a003c7).
-    3. `teardown_<backend>` and `cleardb_<backend>`
-    4. important: filename suffixes should be the same as the value that’s being passed to `—backend`; that's how the files are looked up.
-4. Write test using [the `per_backend_tests` fixture](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-1034b560ce9984643a4aa4edab1d612aa512f1c3c28bbc93364700620681c962R420), parameterised by backend. [Example](https://github.com/hasura/graphql-engine/commit/64d52f5fa333f337ef76ada4e0b6abd49353c457/scripts/dev.sh#diff-40b7c6ad5362e70cafd29a3ac5d0a5387bd75befad92532ea4aaba99421ba3c8R12-R13).
-5. Optional: Run the existing (Postgres) test suite against the new backend to identify and group common and backend-specific tests into their own classes.
-
-Tests against alternative backends aren't yet run/supported in CI, so please test locally.
+```
+cabal build exe:graphql-engine -f profiling --enable-profiling
+```
 
 ### Create Pull Request
 
 - Make sure your commit messages meet the [guidelines](../CONTRIBUTING.md).
-- If you changed the versions of any dependencies, run `cabal new-freeze` to update the freeze file.
+- If you changed the versions of any dependencies, run
+  `scripts/cabal-freeze-update.sh --all` to update the freeze file.
 - Create a pull request from your forked repo to the main repo.
 - Every pull request will automatically build and run the tests.
 
 ## Code conventions
 
-This helps enforce a uniform style for all committers.
+The following conventions help us maintain a uniform style for all committers:
+make sure your contributions are in line with them.
 
-- Compiler warnings are turned on, make sure your code has no warnings.
-- Use [hlint](https://github.com/ndmitchell/hlint) to make sure your code has no warnings.
-  You can use our custom hlint config with `$ hlint --hint=server/.hlint.yaml .`
-- Use [stylish-haskell](https://github.com/jaspervdj/stylish-haskell) to format your code.
+We enforce these by means of CI hooks which will fail the build if any of these
+are not met.
+
+- No compiler warnings: Make sure your code builds with no warnings (adding
+  `-Werror` to `ghc-options` in your `cabal.project` is a good way of checking
+  this.)
+- No lint failures: Use [hlint](https://github.com/ndmitchell/hlint) with our
+  custom config to validate your code, using `hlint --hint=../.hlint.yaml`.
+- Consistent formatting: Use [ormolu](https://github.com/tweag/ormolu) to
+  format your code. `ormolu -ei '*.hs'` will format all files with a `.hs`
+  extension in the current directory.
+- Consistent style: Consider the [style guide](./STYLE.md) when writing new code.
+
+## Testing
+
+Please see [testing-guidelines](./testing-guidelines.md) for details on how to add tests.
+
+## Local hoogle instance
+
+[Hoogle](https://github.com/ndmitchell/hoogle) is a Haskell API search engine. The server at
+[hoogle.haskell.org](https://hoogle.haskell.org/) provides a version of Hoogle that enables
+searching through all packanges available in [Stackage](https://www.stackage.org/). Following
+instructions help in setting up a local hoogle server that enables searching through `graphql-engine` server code.
+
+### Step 1: Installing hoogle
+
+Installing `hoogle` is fairly simple with `cabal`.
+
+```bash
+cabal install hoogle
+```
+
+### Step 2: Generating hoogle database
+
+A Hoogle database is a prebuilt index of a set of packages. The `hoogle.sh` script in the
+top-level `scripts/` directory helps in generating the hoogle database for GraphQL Engine server
+code and store it in `dist-newstyle/` directory.
+
+    $ scripts/hoogle.sh generate
+
+### Step 3: Running hoogle instance
+
+Running the following `hoogle.sh` script command starts a local hoogle server with the database
+generated in `Step 2`.
+
+    $ scripts/hoogle.sh serve
+
+Use `--port` option to specify custom port to start hoogle server.
+
+    $ scripts/hoogle.sh serve --port 8181

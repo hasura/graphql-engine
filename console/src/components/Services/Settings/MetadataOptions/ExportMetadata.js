@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 
 import {
   showSuccessNotification,
@@ -22,8 +22,6 @@ class ExportMetadata extends Component {
   }
 
   render() {
-    const styles = require('../Settings.scss');
-
     const { isExporting } = this.state;
 
     const { dispatch } = this.props;
@@ -59,15 +57,16 @@ class ExportMetadata extends Component {
     };
 
     return (
-      <div className={styles.display_inline}>
+      <div className="inline-block">
         <Button
           data-test="data-export-metadata"
-          className={styles.margin_right}
+          className="mr-md"
           size="sm"
-          color="white"
+          isLoading={isExporting}
+          loadingText="Exporting..."
           onClick={handleExport}
         >
-          {isExporting ? 'Exporting...' : 'Export metadata'}
+          Export metadata
         </Button>
       </div>
     );

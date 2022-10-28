@@ -1,0 +1,25 @@
+- description: Test Webhook Transform Bad Eval
+  url: /v1/metadata
+  headers:
+    X-Hasura-Role: admin
+  status: 200
+  response:
+    - source_position:
+        end_column: 15
+        start_line: 0
+        end_line: 0
+        start_column: 4
+      error_code: Attribute Error
+      message: "'Object' has no attritubte 'world'."
+  query:
+    type: test_webhook_transform
+    args:
+      webhook_url: http://localhost:1234
+      body:
+        hello: world
+      request_transform:
+        version: 2
+        body:
+          action: transform
+          template: "{{ $body.world }}"
+        template_engine: Kriti

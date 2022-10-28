@@ -7,7 +7,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func TestV3MetadataTableConfig_Export(t *testing.T) {
@@ -15,7 +15,7 @@ func TestV3MetadataTableConfig_Export(t *testing.T) {
 		FunctionConfig *FunctionConfig
 	}
 	type args struct {
-		metadata yaml.MapSlice
+		metadata map[string]yaml.Node
 	}
 	tests := []struct {
 		name    string
@@ -33,17 +33,17 @@ func TestV3MetadataTableConfig_Export(t *testing.T) {
 				},
 			},
 			args: args{
-				metadata: func() yaml.MapSlice {
+				metadata: func() map[string]yaml.Node {
 					metadata := `
 sources:
 -  name: default
    functions:
      - function:
-         name: "test"
+         name: test
      - function:
-         name: "test"
+         name: test
 `
-					var v yaml.MapSlice
+					var v map[string]yaml.Node
 					assert.NoError(t, yaml.Unmarshal([]byte(metadata), &v))
 					return v
 				}(),
@@ -61,12 +61,12 @@ sources:
 				},
 			},
 			args: args{
-				metadata: func() yaml.MapSlice {
+				metadata: func() map[string]yaml.Node {
 					metadata := `
 sources:
 -  name: default
 `
-					var v yaml.MapSlice
+					var v map[string]yaml.Node
 					assert.NoError(t, yaml.Unmarshal([]byte(metadata), &v))
 					return v
 				}(),
@@ -84,9 +84,9 @@ sources:
 				},
 			},
 			args: args{
-				metadata: func() yaml.MapSlice {
+				metadata: func() map[string]yaml.Node {
 					metadata := ``
-					var v yaml.MapSlice
+					var v map[string]yaml.Node
 					assert.NoError(t, yaml.Unmarshal([]byte(metadata), &v))
 					return v
 				}(),

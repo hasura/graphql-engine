@@ -2,14 +2,22 @@ import { Nullable } from '../components/Common/utils/tsUtils';
 import { Column } from '../utils/postgresColumnTypes';
 import {
   FunctionDefinition,
+  QualifiedTable,
   RemoteRelationshipDef,
-  TableEntry,
+  TableConfig,
 } from '../metadata/types';
 import { ReduxState } from '../types';
 import {
   getSelectQuery,
   getRunSqlQuery,
-} from '../../src/components/Common/utils/v1QueryUtils';
+  WhereClause,
+} from '../components/Common/utils/v1QueryUtils';
+import { Driver } from '.';
+import { PostgresTrigger } from './services/postgresql/types';
+
+export type TableORSchemaArg =
+  | { schemas: string[] }
+  | { tables: QualifiedTable[] };
 
 export interface Relationship
   extends Pick<BaseTable, 'table_name' | 'table_schema'> {
@@ -36,9 +44,47 @@ export interface BaseTableColumn {
   data_type_name?: string;
 }
 
+export type TableType =
+  | 'TABLE'
+  | 'VIEW'
+  | 'MATERIALIZED VIEW'
+  | 'FOREIGN TABLE'
+  | 'PARTITIONED TABLE'
+  | 'BASE TABLE'
+  | 'TABLE' // specific to SQL Server
+  | 'EXTERNAL'; // specific to Big Query
+
+export interface ViewInfo {
+  is_trigger_insertable_into: 'YES' | 'NO';
+  is_insertable_into: 'YES' | 'NO';
+  is_updatable: 'YES' | 'NO';
+  is_trigger_updatable: 'YES' | 'NO';
+  is_trigger_deletable: 'YES' | 'NO';
+  table_schema: string;
+  table_name: string;
+  view_definition: string;
+}
+
+export interface NormalizedTable {
+  table_schema: string;
+  table_name: string;
+  table_type: TableType;
+  comment?: string | null;
+  columns: TableColumn[];
+  view_info?: ViewInfo | null;
+  is_table_tracked: boolean;
+  triggers?: PostgresTrigger[];
+  citus_table_type?: string;
+  configuration?: {
+    column_config: ColumnConfig;
+    custom_root_fields: CustomRootFields;
+    custom_name: string;
+  };
+}
+
 export interface TableColumn extends BaseTableColumn {
   is_generated?: boolean;
-  is_nullable?: string;
+  is_nullable?: 'NO' | 'YES' | string;
   is_identity?: boolean;
   identity_generation?: 'ALWAYS' | 'BY DEFAULT' | null;
   comment?: string | null;
@@ -74,18 +120,41 @@ export type ForeignKeyConstraint = {
 };
 
 export type CheckConstraint = {
+  table_schema: string;
+  table_name: string;
   constraint_name: string;
+  column_name?: string | null;
+  /** sql definition */
   check: string;
 };
 
 export type ComputedField = {
+  name?: string;
   computed_field_name: string;
   definition: {
     function: FunctionDefinition;
     table_argument: string | null;
     session_argument: string | null;
   };
-  comment: string | null;
+  comment?: string | null;
+};
+
+export type IndexType = 'btree' | 'hash' | 'gin' | 'gist' | 'spgist' | 'brin';
+
+export type Index = {
+  table_name: string;
+  table_schema: string;
+  index_name: string;
+  index_type: IndexType;
+  index_columns: string[];
+  index_definition_sql: string;
+};
+
+export type IndexFormTips = {
+  unique: string;
+  indexName: string;
+  indexColumns: string;
+  indexType: string;
 };
 
 export type Schema = {
@@ -99,24 +168,55 @@ export interface BaseTable {
   is_enum?: boolean;
 }
 
+export type Constraint = {
+  table_name: string;
+  table_schema: string;
+  constraint_name: string;
+  columns: string[];
+};
+
+export type PrimaryKey = Constraint;
+export type UniqueKey = Constraint;
+
+export type CustomRootFields = {
+  select?: Nullable<string> | CustomRootField;
+  select_by_pk?: Nullable<string> | CustomRootField;
+  select_aggregate?: Nullable<string> | CustomRootField;
+  select_stream?: Nullable<string> | CustomRootField;
+  insert?: Nullable<string> | CustomRootField;
+  insert_one?: Nullable<string> | CustomRootField;
+  update?: Nullable<string> | CustomRootField;
+  update_by_pk?: Nullable<string> | CustomRootField;
+  delete?: Nullable<string> | CustomRootField;
+  delete_by_pk?: Nullable<string> | CustomRootField;
+  update_many?: Nullable<string> | CustomRootField;
+};
+
+export type CustomRootField = {
+  name?: Nullable<string>;
+  comment?: Nullable<string>;
+};
+
+export type ColumnConfig = {
+  [column: string]: ColumnConfigValue;
+};
+
+export type ColumnConfigValue = {
+  custom_name?: Nullable<string>;
+  comment?: Nullable<string>;
+};
+
+/**
+ * @deprecated use {@link NormalizedTable} instead
+ * which will be later renamed to Table when it
+ * been fully adopted and necessary changes made
+ */
 export interface Table extends BaseTable {
   table_name: string;
   table_schema: string;
-  table_type:
-    | 'TABLE'
-    | 'VIEW'
-    | 'MATERIALIZED VIEW'
-    | 'FOREIGN TABLE'
-    | 'PARTITIONED TABLE'
-    | 'BASE TABLE'
-    | 'TABLE' // specific to SQL Server
-    | 'EXTERNAL'; // specific to Big Query
-  primary_key: {
-    table_name: string;
-    table_schema: string;
-    constraint_name: string;
-    columns: string[];
-  } | null;
+  comment: string | null;
+  table_type: TableType;
+  primary_key: PrimaryKey | null;
   is_table_tracked: boolean;
   columns: TableColumn[];
   relationships: Relationship[];
@@ -125,48 +225,22 @@ export interface Table extends BaseTable {
   opp_foreign_key_constraints: ForeignKeyConstraint[];
   check_constraints: CheckConstraint[];
   configuration?: {
-    custom_column_names: {
-      [column: string]: string;
-    };
-    custom_root_fields: {
-      select: Nullable<string>;
-      select_by_pk: Nullable<string>;
-      select_aggregate?: Nullable<string>;
-      insert?: Nullable<string>;
-      insert_one?: Nullable<string>;
-      update?: Nullable<string>;
-      update_by_pk?: Nullable<string>;
-      delete?: Nullable<string>;
-      delete_by_pk?: Nullable<string>;
-    };
+    column_config: ColumnConfig;
+    custom_root_fields: CustomRootFields;
     custom_name: string;
   };
   computed_fields: ComputedField[];
   is_enum: boolean;
-  view_info: {
-    is_trigger_insertable_into: 'YES' | 'NO';
-    is_insertable_into: 'YES' | 'NO';
-    is_updatable: 'YES' | 'NO';
-    is_trigger_updatable: 'YES' | 'NO';
-    is_trigger_deletable: 'YES' | 'NO';
-    table_schema: string;
-    table_name: string;
-    view_definition: string;
-  } | null;
+  view_info: ViewInfo | null;
   remote_relationships: {
     remote_relationship_name: string;
     table_name: string;
     table_schema: string;
     definition: RemoteRelationshipDef;
   }[];
-  unique_constraints:
-    | {
-        table_name: string;
-        table_schema: string;
-        constraint_name: string;
-        columns: string[];
-      }[]
-    | null;
+  citusTableType?: string;
+  unique_constraints: UniqueKey[] | null;
+  is_apollo_federation_supported?: boolean;
 }
 
 export type Partition = {
@@ -176,9 +250,18 @@ export type Partition = {
   parent_table: string;
   partition_def: string;
   partition_key: string;
+  name?: string;
+  isUnique?: boolean;
+  isPrimary?: boolean;
 };
 
 export type ColumnAction = 'add' | 'modify';
+
+export type DependentSQLGenerator = (
+  schemaName: string,
+  tableName: string,
+  columnName: string
+) => { upSql: string; downSql: string };
 
 export interface FrequentlyUsedColumn {
   name: string;
@@ -188,11 +271,7 @@ export interface FrequentlyUsedColumn {
   primary?: boolean;
   default?: string;
   defaultText?: string;
-  dependentSQLGenerator?: (
-    schemaName: string,
-    tableName: string,
-    columnName: string
-  ) => { upSql: string; downSql: string };
+  dependentSQLGenerator?: DependentSQLGenerator;
   minPGVersion?: number;
 }
 
@@ -211,7 +290,10 @@ export type PermissionColumnCategories = Record<ColumnCategories, string[]>;
 
 export type SupportedFeaturesType = {
   driver: {
-    name: string;
+    name: Driver;
+    fetchVersion?: {
+      enabled: boolean;
+    };
   };
   schemas: {
     create: {
@@ -224,30 +306,56 @@ export type SupportedFeaturesType = {
   tables: {
     create: {
       enabled: boolean;
+      frequentlyUsedColumns?: boolean;
+      columnTypeSelector?: boolean;
     };
     browse: {
       enabled: boolean;
       customPagination?: boolean;
       aggregation: boolean;
+      deleteRow: boolean;
+      editRow: boolean;
+      bulkRowSelect: boolean;
     };
     insert: {
       enabled: boolean;
     };
     modify: {
       enabled: boolean;
+      editableTableName?: boolean;
       readOnly?: boolean;
-      comments?: boolean;
-      columns?: boolean;
-      columns_edit?: boolean;
+      comments?: {
+        view: boolean;
+        edit: boolean;
+      };
+      columns?: {
+        view: boolean;
+        edit: boolean;
+        graphqlFieldName: boolean;
+        frequentlyUsedColumns?: boolean;
+      };
       computedFields?: boolean;
-      primaryKeys?: boolean;
-      primaryKeys_edit?: boolean;
-      foreginKeys?: boolean;
-      foreginKeys_edit?: boolean;
-      uniqueKeys?: boolean;
-      uniqueKeys_edit?: boolean;
+      primaryKeys?: {
+        view: boolean;
+        edit: boolean;
+      };
+      foreignKeys?: {
+        view: boolean;
+        edit: boolean;
+      };
+      uniqueKeys?: {
+        view: boolean;
+        edit: boolean;
+      };
       triggers?: boolean;
-      checkConstraints?: boolean;
+      checkConstraints?: {
+        view: boolean;
+        edit: boolean;
+      };
+      indexes?: {
+        view: boolean;
+        edit: boolean;
+      };
       customGqlRoot?: boolean;
       setAsEnum?: boolean;
       untrack?: boolean;
@@ -255,11 +363,16 @@ export type SupportedFeaturesType = {
     };
     relationships: {
       enabled: boolean;
+      remoteDbRelationships?: {
+        hostSource: boolean;
+        referenceSource: boolean;
+      };
       remoteRelationships?: boolean;
       track: boolean;
     };
     permissions: {
       enabled: boolean;
+      aggregation: boolean;
     };
     track: {
       enabled: boolean;
@@ -272,6 +385,13 @@ export type SupportedFeaturesType = {
     };
     nonTrackableFunctions: {
       enabled: boolean;
+    };
+    modify: {
+      enabled: boolean;
+      comments: {
+        view: boolean;
+        edit: boolean;
+      };
     };
   };
   events: {
@@ -286,15 +406,34 @@ export type SupportedFeaturesType = {
   };
   rawSQL: {
     enabled: boolean;
+    statementTimeout: boolean;
     tracking: boolean;
   };
-  connectDbForm: {
-    enabled: boolean;
-    connectionParameters: boolean;
-    databaseURL: boolean;
-    environmentVariable: boolean;
-    read_replicas: boolean;
+  connectDbForm: ConnectDbForm;
+};
+
+type ConnectDbForm = {
+  enabled: boolean;
+  connectionParameters: boolean;
+  databaseURL: boolean;
+  environmentVariable: boolean;
+  read_replicas: {
+    create: boolean;
+    edit: boolean;
   };
+  extensions_schema: boolean;
+  namingConvention: boolean;
+} & DbConnectionSettings;
+
+export type DbConnectionSettings = {
+  connectionSettings: boolean;
+  cumulativeMaxConnections: boolean;
+  retries: boolean;
+  pool_timeout: boolean;
+  connection_lifetime: boolean;
+  isolation_level: boolean;
+  prepared_statements: boolean;
+  ssl_certificates: boolean;
 };
 
 type Tables = ReduxState['tables'];
@@ -304,7 +443,7 @@ export type generateTableRowRequestType = {
   getTableRowRequestBody: (data: {
     tables: Tables;
     isExport?: boolean;
-    tableConfiguration?: TableEntry['configuration'];
+    tableConfiguration: TableConfig;
   }) =>
     | {
         type: string;
@@ -321,10 +460,166 @@ export type generateTableRowRequestType = {
       };
   processTableRowData: <T>(
     data: T,
-    config?: {
+    config: {
       originalTable: string;
       currentSchema: string;
-      tableConfiguration?: TableEntry['configuration'];
+      tableConfiguration: TableConfig;
     }
   ) => { rows: T[]; estimatedCount: number };
 };
+
+export type generateInsertRequestType = {
+  endpoint: string;
+  getInsertRequestBody: (data: {
+    tableDef: QualifiedTable;
+    source: string;
+    insertObject: Record<string, any>;
+    tableConfiguration: TableConfig;
+    returning: string[];
+  }) =>
+    | {
+        type: 'insert';
+        args: {
+          source: string;
+          table: QualifiedTable;
+          objects: [Record<string, any>];
+          returning: string[];
+        };
+      }
+    | {
+        query: string;
+        variables: null;
+      };
+  processInsertData: (
+    data:
+      | { affectedRows: number; returning: Array<Record<string, any>> }
+      | Record<string, Record<string, any>>,
+    tableConfiguration: TableConfig,
+    config: {
+      currentTable: string;
+      currentSchema: string;
+    }
+  ) => {
+    affectedRows: number | Record<string, any>;
+    returnedFields: Record<string, any>;
+  };
+};
+
+export type GenerateRowsCountRequestType = {
+  endpoint: string;
+  getRowsCountRequestBody: generateTableRowRequestType['getTableRowRequestBody'];
+  processCount: (config: {
+    data: any;
+    originalTable: string;
+    currentSchema: string;
+    tableConfiguration: TableConfig;
+  }) => number;
+};
+
+export type GenerateEditRowRequest = {
+  endpoint: string;
+  processEditData: (args: {
+    tableDef: QualifiedTable;
+    tableConfiguration: TableConfig;
+    data: any;
+  }) => number;
+  getEditRowRequestBody: (data: {
+    source: string;
+    tableDef: QualifiedTable;
+    tableConfiguration: TableConfig;
+    set: Record<string, any>;
+    where: Record<string, any>;
+    defaultArray: any[];
+  }) =>
+    | {
+        type: string;
+        args: {
+          source: string;
+          table: QualifiedTable;
+          $set: Record<string, any>;
+          $default: any[];
+          where: Record<string, any>;
+        };
+      }
+    | {
+        query: string;
+        variables: null;
+      };
+};
+
+export type RelType = {
+  relName: string;
+  lTable: string;
+  lSchema: string;
+  isObjRel: boolean;
+  lcol: string[] | null;
+  rcol: string[] | null;
+  rTable: string | null;
+  rSchema: string | null;
+};
+
+export type GenerateDeleteRowRequest = {
+  endpoint: string;
+  getDeleteRowRequestBody: (args: {
+    pkClause: WhereClause;
+    tableName: string;
+    schemaName: string;
+    columnInfo: BaseTableColumn[];
+    source: string;
+    tableConfiguration: TableConfig;
+  }) =>
+    | {
+        type: string;
+        args: {
+          source: string;
+          table: {
+            name: string;
+            schema: string;
+          };
+          where: WhereClause;
+        };
+      }
+    | {
+        query: string;
+        variables: null;
+      };
+  processDeleteRowData: (data: Record<string, any>) => number;
+};
+
+export type GenerateBulkDeleteRowRequest = {
+  endpoint: string;
+  getBulkDeleteRowRequestBody: (args: {
+    pkClauses: WhereClause[];
+    tableName: string;
+    schemaName: string;
+    columnInfo: BaseTableColumn[];
+    source: string;
+    tableConfiguration: TableConfig;
+  }) =>
+    | {
+        type: string;
+        source: string;
+        args: {
+          type: string;
+          args: {
+            source: string;
+            table: {
+              name: string;
+              schema: string;
+            };
+            where: WhereClause;
+          };
+        }[];
+      }
+    | {
+        query: string;
+        variables: null;
+      };
+  processBulkDeleteRowData: (data: Record<string, any>) => number;
+};
+export type ViolationActions =
+  | 'restrict'
+  | 'no action'
+  | 'cascade'
+  | 'set null'
+  | 'set default';

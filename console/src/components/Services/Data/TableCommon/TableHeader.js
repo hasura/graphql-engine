@@ -1,16 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router';
 import Helmet from 'react-helmet';
+import { useGetAnalyticsAttributes } from '@/features/Analytics';
 import { changeTableName } from '../TableModify/ModifyActions';
 import { capitalize, exists } from '../../../Common/utils/jsUtils';
 import EditableHeading from '../../../Common/EditableHeading/EditableHeading';
 import BreadCrumb from '../../../Common/Layout/BreadCrumb/BreadCrumb';
 import { tabNameMap } from '../utils';
-import {
-  currentDriver,
-  dataSource,
-  isFeatureSupported,
-} from '../../../../dataSources';
+import { dataSource, isFeatureSupported } from '../../../../dataSources';
 import {
   getSchemaBaseRoute,
   getTableBrowseRoute,
@@ -22,19 +19,19 @@ import {
   getDataSourceBaseRoute,
 } from '../../../Common/utils/routesUtils';
 import { getReadableNumber } from '../../../Common/utils/jsUtils';
+import { FaDatabase, FaFolder, FaTable } from 'react-icons/fa';
+import styles from '../../../Common/TableCommon/Table.module.scss';
 
 const TableHeader = ({
-  tabName,
   count,
+  dispatch,
   isCountEstimated,
-  table,
   migrationMode,
   readOnlyMode,
   source,
-  dispatch,
+  table,
+  tabName,
 }) => {
-  const styles = require('../../../Common/TableCommon/Table.scss');
-
   const tableName = table.table_name;
   const tableSchema = table.table_schema;
   const isTableType = dataSource.isTable(table);
@@ -60,17 +57,17 @@ const TableHeader = ({
       {
         title: source,
         url: getDataSourceBaseRoute(source),
-        prefix: <i className="fa fa-database" />,
+        prefix: <FaDatabase />,
       },
       {
         title: tableSchema,
         url: getSchemaBaseRoute(tableSchema, source),
-        prefix: <i className="fa fa-folder" />,
+        prefix: <FaFolder />,
       },
       {
         title: tableName,
         url: getTableBrowseRoute(tableSchema, source, tableName, isTableType),
-        prefix: <i className="fa fa-table" />,
+        prefix: <FaTable />,
       },
       {
         title: activeTab,
@@ -89,20 +86,31 @@ const TableHeader = ({
     );
   };
 
+  const titleAnalyticsAttributes = useGetAnalyticsAttributes('Table', {
+    redactText: true,
+  });
+
   return (
     <div>
-      <Helmet
-        title={capitalize(tabName) + ' - ' + tableName + ' - Data | Hasura'}
-      />
+      <Helmet>
+        <title {...titleAnalyticsAttributes}>
+          {capitalize(tabName) + ' - ' + tableName + ' - Data | Hasura'}
+        </title>
+      </Helmet>
       <div className={styles.subHeader}>
         <BreadCrumb breadCrumbs={getBreadCrumbs()} />
         <EditableHeading
           currentValue={tableName}
           save={saveTableNameChange}
           loading={false}
-          editable={tabName === 'modify' && currentDriver === 'postgres'}
+          editable={
+            tabName === 'modify' &&
+            isFeatureSupported('tables.modify.editableTableName')
+          }
           dispatch={dispatch}
           property={isTableType ? 'table' : 'view'}
+          table={table}
+          source={source}
         />
         <div className={styles.nav}>
           <ul className="nav nav-pills">

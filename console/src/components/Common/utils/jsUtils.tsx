@@ -141,6 +141,10 @@ export const isArrayString = (str: string) => {
   return false;
 };
 
+export function emptyStringToNull(val?: string): string | null {
+  return val && val !== '' ? val : null;
+}
+
 /* ARRAY utils */
 export const deleteArrayElementAtIndex = (array: unknown[], index: number) => {
   return array.splice(index, 1);
@@ -165,7 +169,11 @@ export const isStringArray = (str: string): boolean => {
 
 /* JSON utils */
 
-export function getAllJsonPaths(json: any, leafKeys: any[], prefix = '') {
+export function getAllJsonPaths(
+  json: any,
+  leafKeys: any[],
+  prefix = ''
+): Record<string, any>[] | string[] {
   const paths = [];
 
   const addPrefix = (subPath: string) => {
@@ -175,7 +183,7 @@ export function getAllJsonPaths(json: any, leafKeys: any[], prefix = '') {
   const handleSubJson = (subJson: any, newPrefix: string) => {
     const subPaths = getAllJsonPaths(subJson, leafKeys, newPrefix);
 
-    subPaths.forEach(subPath => {
+    subPaths.forEach((subPath: typeof subPaths[0]) => {
       paths.push(subPath);
     });
 
@@ -342,6 +350,9 @@ export const downloadObjectAsJsonFile = (fileName: string, object: any) => {
 
   downloadFile(fileNameWithSuffix, dataString);
 };
+
+export const encodeFileContent = (data: string) => encodeURIComponent(data);
+
 export const downloadObjectAsCsvFile = (
   fileName: string,
   rows: Record<string, unknown>[] = []
@@ -354,20 +365,21 @@ export const downloadObjectAsCsvFile = (
           i =>
             `"${
               typeof i === 'string' && isJsonString(i)
-                ? i.replace(/"/g, `'`) // in csv, a cell with double quotes and comma will result is bad formating
+                ? i.replace(/"/g, `'`) // in csv, a cell with double quotes and comma will result in bad formatting
                 : JSON.stringify(i, null, 2).replace(/"/g, `'`)
             }"`
         )
         .join(',')
     )
     .join('\n');
-  const csvContent = `data:text/csv;charset=utf-8,${titleRowString}\n${rowsString}`;
+
+  const csvContent = `${titleRowString}\n${rowsString}`;
+  const encodedCsvContent = encodeFileContent(csvContent);
+  const csvDataString = `data:text/csv;charset=utf-8,${encodedCsvContent}`;
 
   const fileNameWithSuffix = `${fileName}.csv`;
 
-  const encodedUri = encodeURI(csvContent);
-
-  downloadFile(fileNameWithSuffix, encodedUri);
+  downloadFile(fileNameWithSuffix, csvDataString);
 };
 export const getFileExtensionFromFilename = (filename: string) => {
   const matches = filename.match(/\.[0-9a-z]+$/i);
@@ -397,4 +409,8 @@ export const getCurrTimeForFileName = () => {
 
 export const convertDateTimeToLocale = (dateTime: string | Date | number) => {
   return moment(dateTime, moment.ISO_8601).format('ddd, MMM Do HH:mm:ss Z');
+};
+
+export const isConsoleError = (x: any): x is Error => {
+  return typeof x.name === 'string' && typeof x.message === 'string';
 };

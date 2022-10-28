@@ -1,0 +1,456 @@
+{
+    "version": 3,
+    "sources": [
+        {
+            "name": "default",
+            "kind": "postgres",
+            "tables": [
+                {
+                    "table": {
+                        "schema": "public",
+                        "name": "albums"
+                    },
+                    "object_relationships": [
+                        {
+                            "name": "artist",
+                            "using": {
+                                "foreign_key_constraint_on": "artist_id"
+                            }
+                        }
+                    ],
+                    "array_relationships": [
+                        {
+                            "name": "tracks",
+                            "using": {
+                                "foreign_key_constraint_on": {
+                                    "column": "album_id",
+                                    "table": {
+                                        "schema": "public",
+                                        "name": "tracks"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "insert_permissions": [
+                        {
+                            "role": "user",
+                            "permission": {
+                                "check": {},
+                                "set": {
+                                    "id": "x-hasura-user-id"
+                                },
+                                "columns": [
+                                    "id",
+                                    "title",
+                                    "artist_id"
+                                ],
+                                "backend_only": false
+                            }
+                        }
+                    ],
+                    "select_permissions": [
+                        {
+                            "role": "user",
+                            "permission": {
+                                "columns": [
+                                    "artist_id",
+                                    "title"
+                                ],
+                                "filter": {
+                                    "id": {
+                                        "_eq": "X-Hasura-User-Id"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "table": {
+                        "schema": "public",
+                        "name": "artists"
+                    },
+                    "array_relationships": [
+                        {
+                            "name": "albums",
+                            "using": {
+                                "foreign_key_constraint_on": {
+                                    "column": "artist_id",
+                                    "table": {
+                                        "schema": "public",
+                                        "name": "albums"
+                                    }
+                                }
+                            }
+                        }
+                    ],
+                    "event_triggers": [
+                        {
+                            "name": "artists",
+                            "definition": {
+                                "enable_manual": false,
+                                "insert": {
+                                    "columns": "*"
+                                },
+                                "update": {
+                                    "columns": "*"
+                                }
+                            },
+                            "retry_conf": {
+                                "num_retries": 0,
+                                "interval_sec": 10,
+                                "timeout_sec": 60
+                            },
+                            "webhook": "https://httpbin.org/post",
+                            "request_transform": {
+                                "body": "{\n  \"table\": {\n    \"name\": {{$body.table.name}},\n    \"schema\": {{$body.table.schema}}\n  }\n}",
+                                "content_type": "application/json",
+                                "method": "PUT",
+                                "query_params": {},
+                                "template_engine": "Kriti"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "table": {
+                        "schema": "public",
+                        "name": "genres"
+                    },
+                    "array_relationships": [
+                        {
+                            "name": "tracks",
+                            "using": {
+                                "foreign_key_constraint_on": {
+                                    "column": "genre_id",
+                                    "table": {
+                                        "schema": "public",
+                                        "name": "tracks"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "table": {
+                        "schema": "public",
+                        "name": "media_types"
+                    },
+                    "array_relationships": [
+                        {
+                            "name": "tracks",
+                            "using": {
+                                "foreign_key_constraint_on": {
+                                    "column": "media_type_id",
+                                    "table": {
+                                        "schema": "public",
+                                        "name": "tracks"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "table": {
+                        "schema": "public",
+                        "name": "playlist_track"
+                    },
+                    "object_relationships": [
+                        {
+                            "name": "playlist",
+                            "using": {
+                                "foreign_key_constraint_on": "playlist_id"
+                            }
+                        },
+                        {
+                            "name": "track",
+                            "using": {
+                                "foreign_key_constraint_on": "track_id"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "table": {
+                        "schema": "public",
+                        "name": "playlists"
+                    },
+                    "array_relationships": [
+                        {
+                            "name": "playlist_tracks",
+                            "using": {
+                                "foreign_key_constraint_on": {
+                                    "column": "playlist_id",
+                                    "table": {
+                                        "schema": "public",
+                                        "name": "playlist_track"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                },
+                {
+                    "table": {
+                        "schema": "public",
+                        "name": "tracks"
+                    },
+                    "object_relationships": [
+                        {
+                            "name": "album",
+                            "using": {
+                                "foreign_key_constraint_on": "album_id"
+                            }
+                        },
+                        {
+                            "name": "genre",
+                            "using": {
+                                "foreign_key_constraint_on": "genre_id"
+                            }
+                        },
+                        {
+                            "name": "media_type",
+                            "using": {
+                                "foreign_key_constraint_on": "media_type_id"
+                            }
+                        }
+                    ],
+                    "array_relationships": [
+                        {
+                            "name": "playlist_tracks",
+                            "using": {
+                                "foreign_key_constraint_on": {
+                                    "column": "track_id",
+                                    "table": {
+                                        "schema": "public",
+                                        "name": "playlist_track"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            ],
+            "functions": [
+                {
+                    "function": {
+                        "schema": "public",
+                        "name": "search_albums"
+                    }
+                },
+                {
+                    "function": {
+                        "schema": "public",
+                        "name": "search_artists"
+                    }
+                }
+            ],
+            "configuration": {
+                "connection_info": {
+                    "use_prepared_statements": true,
+                    "database_url": {
+                        "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+                    },
+                    "isolation_level": "read-committed",
+                    "pool_settings": {
+                        "connection_lifetime": 600,
+                        "retries": 1,
+                        "idle_timeout": 180,
+                        "max_connections": 50
+                    }
+                }
+            }
+        }
+    ],
+    "remote_schemas": [
+        {
+            "name": "countries",
+            "definition": {
+                "url_from_env": "RS_ENV",
+                "timeout_seconds": 11,
+                "headers": [
+                    {
+                        "value": "countries-bar",
+                        "name": "countries-foo"
+                    }
+                ],
+                "forward_client_headers": true
+            },
+            "comment": "foo countries",
+            "permissions": [
+                {
+                    "role": "user",
+                    "definition": {
+                        "schema": "schema  { query: Query }\n\ntype Continent { code: ID!\n  countries: [Country!]!\n  name: String!\n}\n\ntype Country { capital: String\n  code: ID!\n  continent: Continent!\n  currency: String\n  emoji: String!\n  emojiU: String!\n  languages: [Language!]!\n  name: String!\n  native: String!\n  phone: String!\n  states: [State!]!\n}\n\ntype Language { code: ID!\n  name: String\n  native: String\n  rtl: Boolean!\n}\n\ntype Query { continent(code: ID!): Continent\n  countries(filter: CountryFilterInput): [Country!]!\n  languages(filter: LanguageFilterInput): [Language!]!\n}\n\ntype State { code: String\n  country: Country!\n  name: String!\n}\n\ninput CountryFilterInput {code: StringQueryOperatorInput\n  continent: StringQueryOperatorInput\n  currency: StringQueryOperatorInput\n}\n\ninput LanguageFilterInput {code: StringQueryOperatorInput\n}\n\ninput StringQueryOperatorInput {eq: String\n  glob: String\n  in: [String]\n  ne: String\n  nin: [String]\n  regex: String\n}"
+                    }
+                }
+            ]
+        }
+    ],
+    "query_collections": [
+        {
+            "name": "allowed-queries",
+            "definition": {
+                "queries": [
+                    {
+                        "name": "getAlbums",
+                        "query": "query getAlbums {\n  albums {\n    id\n    title\n  }\n}\n"
+                    },
+                    {
+                        "name": "getArtists",
+                        "query": "query getArtists {\n  artists {\n    id\n    name\n  }\n}\n"
+                    },
+                    {
+                        "name": "get-artists",
+                        "query": "query getArtists {\n  artists {\n    name\n  }\n}"
+                    }
+                ]
+            }
+        }
+    ],
+    "allowlist": [
+        {
+            "collection": "allowed-queries",
+            "scope": {
+                "global": true
+            }
+        }
+    ],
+    "actions": [
+        {
+            "name": "foo",
+            "definition": {
+                "handler": "{{ACTION_BASE_URL}}/foo",
+                "output_type": "FooOutput",
+                "headers": [
+                    {
+                        "value": "foo-value",
+                        "name": "foo-header"
+                    }
+                ],
+                "arguments": [
+                    {
+                        "name": "foo",
+                        "type": "FooInput!"
+                    }
+                ],
+                "request_transform": {
+                    "body": "{\n  \"my-baz\": {{$body.input.foo.baz}}\n   \n}",
+                    "content_type": "application/json",
+                    "method": "POST",
+                    "query_params": {},
+                    "template_engine": "Kriti"
+                },
+                "type": "mutation",
+                "kind": "synchronous",
+                "timeout": 97
+            },
+            "comment": "foo action",
+            "permissions": [
+                {
+                    "role": "user"
+                }
+            ]
+        }
+    ],
+    "custom_types": {
+        "input_objects": [
+            {
+                "name": "FooInput",
+                "fields": [
+                    {
+                        "name": "baz",
+                        "type": "String!"
+                    }
+                ]
+            }
+        ],
+        "objects": [
+            {
+                "name": "FooOutput",
+                "fields": [
+                    {
+                        "name": "bar",
+                        "type": "String!"
+                    }
+                ],
+                "relationships": [
+                    {
+                        "remote_table": {
+                            "schema": "public",
+                            "name": "artists"
+                        },
+                        "name": "fooArtist",
+                        "source": "default",
+                        "type": "object",
+                        "field_mapping": {
+                            "bar": "name"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "cron_triggers": [
+        {
+            "name": "bar-trigger",
+            "webhook": "https://httpbin.org/post",
+            "schedule": "* * * * *",
+            "include_in_metadata": true,
+            "payload": {
+                "bar": "done"
+            },
+            "retry_conf": {
+                "num_retries": 5,
+                "timeout_seconds": 90,
+                "tolerance_seconds": 21600,
+                "retry_interval_seconds": 100
+            },
+            "headers": [
+                {
+                    "value": "foo",
+                    "name": "stuff"
+                }
+            ],
+            "comment": "bar-trigger"
+        }
+    ],
+    "rest_endpoints": [
+        {
+            "definition": {
+                "query": {
+                    "collection_name": "allowed-queries",
+                    "query_name": "get-artists"
+                }
+            },
+            "url": "get-artists",
+            "methods": [
+                "GET"
+            ],
+            "name": "get-artists",
+            "comment": null
+        }
+    ],
+    "inherited_roles": [
+        {
+            "role_name": "user-dupe",
+            "role_set": [
+                "user"
+            ]
+        }
+    ],
+    "network": {
+        "tls_allowlist": [
+            {
+                "suffix": null,
+                "permissions": [
+                    "self-signed"
+                ],
+                "host": "scriptonist.dev"
+            }
+        ]
+    }
+}

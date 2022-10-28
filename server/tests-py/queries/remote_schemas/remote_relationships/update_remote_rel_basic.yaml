@@ -1,7 +1,7 @@
 type: update_remote_relationship
 args:
   name: messageBasic
-  table: profiles
+  table: {schema: custom, name: profiles}
   hasura_fields:
     - id
   remote_schema: my-remote-schema

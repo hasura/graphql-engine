@@ -3,9 +3,9 @@ args:
 - type: run_sql
   args:
     sql: |
-      drop table hello
+      drop table hello;
+      drop table authors;
 
 - type: remove_remote_schema
   args:
     name: simple2-graphql
- 

@@ -1,71 +1,65 @@
-module Hasura.Eventing.ScheduledTrigger.Types where
+{-# LANGUAGE TemplateHaskell #-}
 
-import           Hasura.Prelude
+module Hasura.Eventing.ScheduledTrigger.Types
+  ( CronTriggerStats (CronTriggerStats, _ctsMaxScheduledTime, _ctsName),
+    RetryContext (RetryContext, _rctxConf),
+    ScheduledEventOp (..),
+    ScheduledEventWebhookPayload (ScheduledEventWebhookPayload, sewpName, sewpScheduledTime, sewpRequestTransform, sewpResponseTransform),
+    ScheduledTriggerInternalErr (ScheduledTriggerInternalErr),
+  )
+where
 
-import qualified Data.Aeson                 as J
-import qualified Data.Aeson.TH              as J
-import qualified Database.PG.Query          as Q
-import qualified Database.PG.Query.PTI      as PTI
-import qualified PostgreSQL.Binary.Encoding as PE
-
-import           Data.Time.Clock
-
-import qualified Hasura.Logging             as L
-
-import           Hasura.Base.Error
-import           Hasura.Eventing.HTTP
-import           Hasura.RQL.Types
-
+import Data.Aeson qualified as J
+import Data.Aeson.TH qualified as J
+import Data.Time.Clock
+import Hasura.Base.Error
+import Hasura.Eventing.HTTP
+import Hasura.Logging qualified as L
+import Hasura.Prelude
+import Hasura.RQL.DDL.Webhook.Transform (MetadataResponseTransform, RequestTransform)
+import Hasura.RQL.Types.EventTrigger
+import Hasura.RQL.Types.ScheduledTrigger
 
 newtype ScheduledTriggerInternalErr
   = ScheduledTriggerInternalErr QErr
-  deriving (Show, Eq)
+  deriving (Eq)
 
 instance L.ToEngineLog ScheduledTriggerInternalErr L.Hasura where
   toEngineLog (ScheduledTriggerInternalErr qerr) =
     (L.LevelError, L.scheduledTriggerLogType, J.toJSON qerr)
 
-data CronTriggerStats
-  = CronTriggerStats
-  { ctsName                :: !TriggerName
-  , ctsUpcomingEventsCount :: !Int
-  , ctsMaxScheduledTime    :: !UTCTime
-  } deriving (Show, Eq)
+data CronTriggerStats = CronTriggerStats
+  { _ctsName :: !TriggerName,
+    _ctsUpcomingEventsCount :: !Int,
+    _ctsMaxScheduledTime :: !UTCTime
+  }
+  deriving (Eq)
 
-data RetryContext
-  = RetryContext
-  { _rctxTries :: !Int
-  , _rctxConf  :: !STRetryConf
-  } deriving (Show, Eq)
+data RetryContext = RetryContext
+  { _rctxTries :: !Int,
+    _rctxConf :: !STRetryConf
+  }
+  deriving (Eq)
 
-data ScheduledEventWebhookPayload
-  = ScheduledEventWebhookPayload
-  { sewpId            :: !EventId
-  , sewpName          :: !(Maybe TriggerName)
-  , sewpScheduledTime :: !UTCTime
-  , sewpPayload       :: !J.Value
-  , sewpComment       :: !(Maybe Text)
-  , sewpCreatedAt     :: !(Maybe UTCTime)
-  -- ^ sewpCreatedAt is the time at which the event was created,
-  -- In case of one-off scheduled events, it's the time at which
-  -- the user created the event and in case of cron triggers, the
-  -- graphql-engine generator, generates the cron events, the
-  -- `created_at` is just an implementation detail, so we
-  -- don't send it
-  } deriving (Show, Eq)
-
-$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
-
-newtype ScheduledEventIdArray =
-  ScheduledEventIdArray { unScheduledEventIdArray :: [ScheduledEventId]}
+data ScheduledEventWebhookPayload = ScheduledEventWebhookPayload
+  { sewpId :: !EventId,
+    sewpName :: !(Maybe TriggerName),
+    sewpScheduledTime :: !UTCTime,
+    sewpPayload :: !J.Value,
+    sewpComment :: !(Maybe Text),
+    -- | sewpCreatedAt is the time at which the event was created,
+    -- In case of one-off scheduled events, it's the time at which
+    -- the user created the event and in case of cron triggers, the
+    -- graphql-engine generator, generates the cron events, the
+    -- `created_at` is just an implementation detail, so we
+    -- don't send it
+    sewpCreatedAt :: !(Maybe UTCTime),
+    sewpRequestTransform :: !(Maybe RequestTransform),
+    sewpResponseTransform :: !(Maybe MetadataResponseTransform)
+  }
   deriving (Show, Eq)
 
-instance Q.ToPrepArg ScheduledEventIdArray where
-  toPrepVal (ScheduledEventIdArray l) =
-    Q.toPrepValHelper PTI.unknown encoder $ map unEventId l
-    where
-      -- 25 is the OID value of TEXT, https://jdbc.postgresql.org/development/privateapi/constant-values.html
-      encoder = PE.array 25 . PE.dimensionArray foldl' (PE.encodingArray . PE.text_strict)
+$(J.deriveToJSON hasuraJSON {J.omitNothingFields = True} ''ScheduledEventWebhookPayload)
 
 data ScheduledEventOp
   = SEOpRetry !UTCTime

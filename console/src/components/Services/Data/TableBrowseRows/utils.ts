@@ -1,6 +1,9 @@
-type TableSchema = {
+import { MetadataDataSource } from '../../../../metadata/types';
+import { ReduxState } from './../../../../types';
+
+export type TableSchema = {
   primary_key?: { columns: string[] };
-  columns: Array<{ column_name: string }>;
+  columns: Array<{ column_name: string; data_type: string }>;
 };
 
 type TableSchemaWithPK = {
@@ -13,6 +16,22 @@ export const isTableWithPK = (
   return (
     !!tableSchema.primary_key && tableSchema.primary_key.columns.length > 0
   );
+};
+
+export const getTableConfiguration = (
+  tables: ReduxState['tables'],
+  sources: MetadataDataSource[]
+) => {
+  const {
+    currentSchema,
+    currentTable: originalTable,
+    currentDataSource,
+  } = tables;
+  return sources
+    ?.find(s => s.name === currentDataSource)
+    ?.tables.find(
+      t => originalTable === t.table.name && currentSchema === t.table.schema
+    )?.configuration;
 };
 
 export const compareRows = (

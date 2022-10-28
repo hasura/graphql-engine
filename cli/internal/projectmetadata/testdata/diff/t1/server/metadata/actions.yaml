@@ -1,0 +1,39 @@
+actions:
+- name: bar
+  definition:
+    kind: synchronous
+    handler: http://localhost:3000
+    request_transform:
+      body: |-
+        {
+          "users": {
+            "bar": {{$body.input.arg1.username}},
+            "password": {{$body.input.arg1.password}}
+          }
+        }
+      content_type: application/json
+      template_engine: Kriti
+- name: foo
+  definition:
+    kind: synchronous
+    handler: http://localhost:3000
+    request_transform:
+      body: |-
+        {
+          "users": {
+            "bar": {{$body.input.arg1.username}},
+            "foo": {{$body.input.arg1.password}}
+          }
+        }
+      content_type: application/json
+      method: GET
+      query_params: {}
+      template_engine: Kriti
+  comment: Foo
+custom_types:
+  enums: []
+  input_objects:
+  - name: SampleInput
+  objects:
+  - name: SampleOutput
+  scalars: []

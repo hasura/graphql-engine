@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router';
+import { IoGitBranch } from 'react-icons/io5';
 
 import LeftSubSidebar from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
-import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
 import WarningSymbol from '../../Common/WarningSymbol/WarningSymbol';
 
 const RemoteSchemaSubSidebar = ({
@@ -45,7 +45,7 @@ const RemoteSchemaSubSidebar = ({
     if (_dataList.length === 0) {
       childList = (
         <li
-          className={styles.noChildren}
+          className={'text-md font-normal text-gray-500'}
           data-test="remote-schema-sidebar-no-schemas"
         >
           <i>No remote schemas available</i>
@@ -57,10 +57,10 @@ const RemoteSchemaSubSidebar = ({
           let activeTableClass = '';
 
           if (
-            d.name === viewRemoteSchema &&
-            location.pathname.includes(viewRemoteSchema)
+            location.pathname.includes(`/remote-schemas/`) &&
+            location.pathname.includes(`/${d.name}/`)
           ) {
-            activeTableClass = styles.activeLink;
+            activeTableClass = '!text-yellow-500';
           }
 
           const inconsistentCurrentSchema = inconsistentRemoteSchemas.find(
@@ -68,23 +68,17 @@ const RemoteSchemaSubSidebar = ({
           );
 
           return (
-            <li
-              className={activeTableClass}
-              key={i}
-              data-test={`remote-schema-sidebar-links-${i + 1}`}
-            >
+            <li key={i} data-test={`remote-schema-sidebar-links-${i + 1}`}>
               <Link
+                className={activeTableClass}
                 to={`${appPrefix}/manage/${d.name}/details`}
                 data-test={d.name}
               >
-                <i
-                  className={`${styles.tableIcon} fa fa-code-fork`}
-                  aria-hidden="true"
-                />
+                <IoGitBranch aria-hidden="true" size="12px" className="mr-xs" />
                 {d.name}
                 {inconsistentCurrentSchema ? (
                   <WarningSymbol
-                    customStyle={styles.padLeft4}
+                    customStyle="ml-xs"
                     tooltipText={
                       'This remote schema is in an inconsistent state. ' +
                       'Fields from this remote schema are currently not exposed over the GraphQL API'
@@ -109,6 +103,7 @@ const RemoteSchemaSubSidebar = ({
       heading={`Remote Schemas (${dataList.length ?? 0})`}
       addLink={`${appPrefix}/manage/add`}
       addLabel={'Add'}
+      addTrackId="remote-schemas-tab-button-add-remote-schema-sidebar"
       addTestString={'remote-schema-sidebar-add-table'}
       childListTestString={'remote-schema-table-links'}
     >

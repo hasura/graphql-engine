@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { FaBook, FaEdit, FaWrench } from 'react-icons/fa';
 import { Link } from 'react-router';
 
 import LeftSubSidebar from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar';
-import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import styles from '../../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
+import { inputStyles } from '../constants';
 
 const LeftSidebar = ({
   appPrefix,
@@ -19,37 +21,32 @@ const LeftSidebar = ({
       <input
         type="text"
         onChange={handleSearch}
-        className="form-control"
+        className={inputStyles}
         placeholder="search actions"
         data-test="search-actions"
       />
     );
   };
 
-  // TODO test search
-  let actionsList = [];
-  if (searchText) {
-    const secondaryResults = [];
-    actions.forEach(a => {
-      if (a.name.startsWith(searchText)) {
-        actionsList.push(a);
-      } else if (a.name.includes(searchText)) {
-        secondaryResults.push(a);
-      }
-    });
-    actionsList = [...actionsList, ...secondaryResults];
-  } else {
-    actionsList = [...actions];
-  }
+  const actionsList = useMemo(() => {
+    if (!searchText) return actions;
+
+    return actions.reduce((acc, action) => {
+      const idx = action.name.search(RegExp(searchText, 'i'));
+      if (idx === 0) return [action, ...acc];
+      if (idx > 0) return [...acc, action];
+      return acc;
+    }, []);
+  }, [searchText, actions]);
 
   const getActionIcon = action => {
     switch (action.definition.type) {
       case 'mutation':
-        return 'fa-pencil-square-o';
+        return <FaEdit className={styles.tableIcon} aria-hidden="true" />;
       case 'query':
-        return 'fa-book';
+        return <FaBook className={styles.tableIcon} aria-hidden="true" />;
       default:
-        return 'fa-wrench';
+        return <FaWrench className={styles.tableIcon} aria-hidden="true" />;
     }
   };
 
@@ -58,8 +55,8 @@ const LeftSidebar = ({
     if (actionsList.length === 0) {
       childList = (
         <li
-          className={styles.noChildren}
           data-test="actions-sidebar-no-actions"
+          className="italic font-normal pb-sm pt-xs text-gray-500"
         >
           <i>No actions available</i>
         </li>
@@ -68,25 +65,19 @@ const LeftSidebar = ({
       childList = actionsList.map((a, i) => {
         let activeTableClass = '';
         if (a.name === currentAction) {
-          activeTableClass = styles.activeLink;
+          activeTableClass = '!text-yellow-500';
         }
 
         const actionIcon = getActionIcon(a);
 
         return (
-          <li
-            className={activeTableClass}
-            key={i}
-            data-test={`action-sidebar-links-${i + 1}`}
-          >
+          <li key={i} data-test={`action-sidebar-links-${i + 1}`}>
             <Link
+              className={activeTableClass}
               to={appPrefix + '/manage/' + a.name + '/modify'}
               data-test={a.name}
             >
-              <i
-                className={styles.tableIcon + ' fa ' + actionIcon}
-                aria-hidden="true"
-              />
+              {actionIcon}
               {a.name}
             </Link>
           </li>
@@ -104,6 +95,7 @@ const LeftSidebar = ({
       heading={`Actions (${actionsList.length})`}
       addLink={`${appPrefix}/manage/add`}
       addLabel={'Create'}
+      addTrackId="action-tab-button-add-actions-sidebar"
       addTestString={'actions-sidebar-add-table'}
       childListTestString={'actions-table-links'}
     >

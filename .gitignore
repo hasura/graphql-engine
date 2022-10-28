@@ -1,6 +1,7 @@
 .hasura-dev-python-venv
 server/tests-py/.devsh_version
 npm-debug.log
+dist-newstyle/
 *.temp
 *.DS_Store
 .tern-project
@@ -15,3 +16,6 @@ venv
 
 # Test artifacts
 *.tix
+
+# ignored so that everyone can have their own hie.yaml
+hie.yaml

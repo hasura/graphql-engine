@@ -2,11 +2,12 @@ import React from 'react';
 import Helmet from 'react-helmet';
 import { push } from 'react-router-redux';
 
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
+
 import { appPrefix, pageTitle } from '../constants';
 import globals from '../../../../Globals';
-import Button from '../../../Common/Button/Button';
+import { Button } from '@/new-components/Button';
 import TopicDescription from '../../Common/Landing/TopicDescription';
-import styles from '../Actions.scss';
 
 // import TryItOut from '../../Common/Landing/TryItOut';
 
@@ -25,7 +26,7 @@ class Landing extends React.Component {
             description="Actions are custom queries or mutations that are resolved via HTTP handlers. Actions can be used to carry out complex data validations, data enrichment from external sources or execute just about any custom business logic."
             knowMoreHref="https://hasura.io/docs/latest/graphql/core/actions/index.html"
           />
-          <hr className={styles.clear_fix} />
+          <hr className="mt-lg mb-lg" />
         </div>
       );
     };
@@ -37,39 +38,36 @@ class Landing extends React.Component {
       };
 
       const addBtn = !readOnlyMode && (
-        <Button
-          data-test="data-create-actions"
-          color="yellow"
-          size="sm"
-          className={styles.add_mar_left}
-          onClick={handleClick}
-        >
-          Create
-        </Button>
+        <div className="ml-md">
+          <Button
+            data-test="data-create-actions"
+            mode="primary"
+            onClick={handleClick}
+          >
+            Create
+          </Button>
+        </div>
       );
 
       return addBtn;
     };
 
     return (
-      <div
-        className={`${styles.padd_left_remove} ${styles.actionsWrapper} container-fluid ${styles.padd_top}`}
-      >
-        <div className={styles.padd_left}>
-          <Helmet title={`${pageTitle} | Hasura`} />
-          <div>
-            <div className={styles.display_flex}>
-              <h2 className={`${styles.headerText} ${styles.inline_block}`}>
-                Actions
-              </h2>
-              {getAddBtn()}
+      <Analytics name="Actions" {...REDACT_EVERYTHING}>
+        <div>
+          <div className="p-5">
+            <Helmet title={`${pageTitle} | Hasura`} />
+            <div>
+              <div className={'flex'}>
+                <h2 className="font-bold text-3xl pr-3">Actions</h2>
+                {getAddBtn()}
+              </div>
+              <hr className="mt-5 mb-5" />
+              {getIntroSection()}
             </div>
-            <hr />
-
-            {getIntroSection()}
           </div>
         </div>
-      </div>
+      </Analytics>
     );
   }
 }

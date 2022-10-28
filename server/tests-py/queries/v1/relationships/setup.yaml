@@ -11,6 +11,11 @@ args:
           name text unique,
           remarks text
       );
+      create table author_details(
+        id serial primary key,
+        author_id INTEGER REFERENCES author(id),
+        email text unique
+      );
       CREATE VIEW author_view AS
           SELECT id, UPPER(name) as name FROM author;
       CREATE TABLE article (
@@ -44,6 +49,11 @@ args:
   args:
     schema: public
     name: author
+
+- type: track_table
+  args:
+    schema: public
+    name: author_details
 
 #View author_view
 - type: track_table
@@ -94,6 +104,15 @@ args:
     objects:
       - name: Author 1
       - name: Author 2
+
+- type: insert
+  args:
+    table: author_details
+    objects:
+      - author_id: 1
+        email: "author1@authors.com"
+      - author_id: 2
+        email: "author2@authors.com"
 
 #Insert Article table data
 - type: insert

@@ -9,7 +9,7 @@
     - extensions:
         path: $.selectionSet.author.selectionSet.remarks_internal
         code: validation-failed
-      message: "field \"remarks_internal\" not found in type: 'author'"
+      message: "field 'remarks_internal' not found in type: 'author'"
   query:
     query: |
       query {

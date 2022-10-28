@@ -1,11 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
+import { DownOutlined, RightOutlined } from '@ant-design/icons';
+import {
+  availableFeatureFlagIds,
+  useIsFeatureFlagEnabled,
+} from '@/features/FeatureFlags'; // Run time flag
+import {
+  FaDatabase,
+  FaFolder,
+  FaFolderOpen,
+  FaListUl,
+  FaTable,
+} from 'react-icons/fa';
+import { Key } from 'antd/lib/table/interface';
 import { Link } from 'react-router';
-import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import './custom.css';
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import {
   getFunctionModifyRoute,
   getTableBrowseRoute,
 } from '../../Common/utils/routesUtils';
 import GqlCompatibilityWarning from '../../Common/GqlCompatibilityWarning/GqlCompatibilityWarning';
+import { GDCTree } from './GDCTree/GDCTree';
 
 type SourceItemsTypes =
   | 'database'
@@ -15,6 +30,15 @@ type SourceItemsTypes =
   | 'function'
   | 'table';
 
+const sourceItemsTypesToIcons: Record<SourceItemsTypes, ReactNode> = {
+  enum: <FaListUl />,
+  database: <FaDatabase />,
+  function: <FaDatabase />,
+  schema: <></>,
+  table: <FaTable />,
+  view: <></>,
+};
+
 type SourceItem = {
   name: string;
   type: SourceItemsTypes;
@@ -23,6 +47,34 @@ type SourceItem = {
 
 const activeStyle = {
   color: '#fd9540',
+};
+
+const legacyIconStyles = 'ml-2 mr-5';
+
+const filterItemsBySearch = (searchQuery: string, itemList: SourceItem[]) => {
+  const caseSensitiveResults: SourceItem[] = [];
+  const caseAgnosticResults: SourceItem[] = [];
+  itemList.forEach(item => {
+    if (item.name.search(searchQuery) > -1) {
+      caseSensitiveResults.push(item);
+    } else if (item.name.toLowerCase().search(searchQuery.toLowerCase()) > -1) {
+      caseAgnosticResults.push(item);
+    }
+  });
+
+  return [
+    ...caseSensitiveResults.sort((item1, item2) => {
+      return item1.name.search(searchQuery) > item2.name.search(searchQuery)
+        ? 1
+        : -1;
+    }),
+    ...caseAgnosticResults.sort((item1, item2) => {
+      return item1.name.toLowerCase().search(searchQuery.toLowerCase()) >
+        item2.name.toLowerCase().search(searchQuery.toLowerCase())
+        ? 1
+        : -1;
+    }),
+  ];
 };
 
 type LeafItemsViewProps = {
@@ -38,13 +90,10 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
   pathname,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const isActive =
-    pathname.includes(
-      `/data/${currentSource}/schema/${currentSchema}/tables/${item.name}/`
-    ) ||
-    pathname.includes(
-      `/data/${currentSource}/schema/${currentSchema}/views/${item.name}/`
-    );
+  const regex = new RegExp(
+    `\\/data\\/${currentSource}\\/schema\\/${currentSchema}\\/(tables|functions|views)\\/${item.name}\\/`
+  );
+  const isActive = regex.test(pathname);
 
   const isView = item.type === 'view';
 
@@ -107,9 +156,9 @@ const LeafItemsView: React.FC<LeafItemsViewProps> = ({
                 style={isActive ? activeStyle : {}}
               >
                 {item.type === 'enum' ? (
-                  <i className="fa fa-list-ul" />
+                  <FaListUl className="mr-1" />
                 ) : (
-                  <i className="fa fa-table" />
+                  <FaTable className="mr-1" />
                 )}
                 {item.type === 'view' ? <i>{item.name}</i> : item.name}
               </Link>
@@ -133,6 +182,7 @@ type SchemaItemsViewProps = {
   setActiveSchema: (value: string) => void;
   pathname: string;
   databaseLoading: boolean;
+  schemaLoading: boolean;
 };
 const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
   item,
@@ -141,23 +191,36 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
   setActiveSchema,
   pathname,
   databaseLoading,
+  schemaLoading,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const [search, setSearch] = React.useState('');
+  const onSearchChange = React.useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearch(e.target.value);
+    },
+    [search]
+  );
+
   const showActiveStyle =
     pathname === `/data/${currentSource}/schema/${item.name}`;
-
   useEffect(() => {
     setIsOpen(isActive);
   }, [isActive]);
+
+  const itemSearchResults = search
+    ? filterItemsBySearch(search, item.children || [])
+    : item.children;
 
   return (
     <>
       <div
         onClick={() => {
-          setActiveSchema(item.name);
+          setActiveSchema(encodeURIComponent(item.name));
         }}
         onKeyDown={() => {
-          setActiveSchema(item.name);
+          setActiveSchema(encodeURIComponent(item.name));
         }}
         role="button"
         className={styles.padd_bottom_small}
@@ -169,36 +232,58 @@ const SchemaItemsView: React.FC<SchemaItemsViewProps> = ({
             `${styles.title} ${isOpen ? '' : styles.titleClosed}`
           }
         >
-          <i className={`${isOpen ? 'fa fa-folder-open' : 'fa fa-folder'}`} />{' '}
-          {item.name}
+          {isOpen ? (
+            <DownOutlined className={`text-xs ${legacyIconStyles}`} />
+          ) : (
+            <RightOutlined className={`text-xs ${legacyIconStyles}`} />
+          )}
+          {isOpen ? <FaFolderOpen /> : <FaFolder />} {item.name}
         </span>
       </div>
-      <ul className={styles.reducedChildPadding}>
-        {isOpen && item.children ? (
-          !databaseLoading ? (
-            item.children.map((child, key) => (
-              <li key={key}>
-                <LeafItemsView
-                  item={child}
-                  currentSource={currentSource}
-                  currentSchema={item.name}
-                  key={key}
-                  pathname={pathname}
+      {isOpen && itemSearchResults ? (
+        !(databaseLoading || schemaLoading) ? (
+          item.children?.length ? (
+            <>
+              <div className="my-1 px-sm">
+                <input
+                  type="text"
+                  onChange={onSearchChange}
+                  className="form-control"
+                  placeholder={`Search tables in ${item.name}....`}
+                  data-test="search-tables"
                 />
-              </li>
-            ))
+              </div>
+              <ul className={styles.reducedChildPadding}>
+                {itemSearchResults.map((child, key) => (
+                  <li key={key}>
+                    <LeafItemsView
+                      item={child}
+                      currentSource={currentSource}
+                      currentSchema={item.name}
+                      key={key}
+                      pathname={pathname}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : (
-            <li>
-              <span
-                className={`${styles.sidebarTablePadding} ${styles.padd_bottom_small}`}
-              >
-                <i className="fa fa-table" />
-                <span className={styles.loaderBar} />
-              </span>
+            <li
+              className="font-normal px-sm"
+              data-test="table-sidebar-no-tables"
+            >
+              <i>No tables or views in this schema</i>
             </li>
           )
-        ) : null}
-      </ul>
+        ) : (
+          <span
+            className={`${styles.sidebarTablePadding} ${styles.padd_bottom_small}`}
+          >
+            <FaTable />
+            <span className={styles.loaderBar} />
+          </span>
+        )
+      ) : null}
     </>
   );
 };
@@ -211,6 +296,7 @@ type DatabaseItemsViewProps = {
   currentSchema: string;
   pathname: string;
   databaseLoading: boolean;
+  schemaLoading: boolean;
 };
 const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   item,
@@ -220,9 +306,15 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
   currentSchema,
   pathname,
   databaseLoading,
+  schemaLoading,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const showActiveStyle = pathname === `/data/${item.name}/`;
+  const showActiveStyle = [
+    `/data/${item.name}/`,
+    `/data/${item.name}`,
+    `/data/${item.name}/display`,
+    `/data/${item.name}/gallery`,
+  ].includes(pathname);
 
   useEffect(() => {
     setIsOpen(isActive);
@@ -250,7 +342,12 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
           }
           style={showActiveStyle ? activeStyle : {}}
         >
-          <i className={`fa fa-${item.type}`} /> {item.name}
+          {isOpen ? (
+            <DownOutlined className={`text-xs ${legacyIconStyles}`} />
+          ) : (
+            <RightOutlined className={`text-xs ${legacyIconStyles}`} />
+          )}
+          {sourceItemsTypesToIcons[item.type]} {item.name}
         </span>
       </div>
       {isOpen && item.children
@@ -264,6 +361,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
                 key={key}
                 pathname={pathname}
                 databaseLoading={databaseLoading}
+                schemaLoading={schemaLoading}
               />
             </li>
           ))
@@ -273,7 +371,7 @@ const DatabaseItemsView: React.FC<DatabaseItemsViewProps> = ({
           <span
             className={`${styles.title} ${styles.titleClosed} ${styles.padd_bottom_small}`}
           >
-            <i className="fa fa-folder" />
+            <FaFolder />
             <span className={styles.loaderBar} />
           </span>
         </li>
@@ -290,7 +388,9 @@ type TreeViewProps = {
   currentSchema: string;
   pathname: string;
   databaseLoading: boolean;
+  schemaLoading: boolean;
   preLoadState: boolean;
+  gdcItemClick: (value: Key[]) => void;
 };
 const TreeView: React.FC<TreeViewProps> = ({
   items,
@@ -300,28 +400,34 @@ const TreeView: React.FC<TreeViewProps> = ({
   currentSchema,
   pathname,
   databaseLoading,
+  schemaLoading,
   preLoadState,
+  gdcItemClick,
 }) => {
   const handleSelectDataSource = (dataSource: string) => {
     onDatabaseChange(dataSource);
   };
 
-  if (items.length === 0) {
+  const { enabled: isGDCTreeViewEnabled } = useIsFeatureFlagEnabled(
+    availableFeatureFlagIds.gdcId
+  );
+
+  if (items.length === 0 && !isGDCTreeViewEnabled) {
     return preLoadState ? (
       <div className={styles.treeNav}>
         <span className={`${styles.title} ${styles.padd_bottom_small}`}>
-          <i className="fa fa-database" />
+          <FaDatabase />
         </span>
         <span className={styles.loaderBar} />
         <li>
           <span className={`${styles.title} ${styles.padd_bottom_small}`}>
-            <i className="fa fa-folder" />
+            <FaFolder />
             <span className={styles.loaderBar} />
             <ul className={styles.reducedChildPadding}>
               <li
                 className={`${styles.sidebarTablePadding} ${styles.add_mar_left_mid}`}
               >
-                <i className="fa fa-table" />
+                <FaTable />
                 <span className={styles.loaderBar} />
               </li>
             </ul>
@@ -347,8 +453,14 @@ const TreeView: React.FC<TreeViewProps> = ({
           currentSchema={currentSchema}
           pathname={pathname}
           databaseLoading={databaseLoading}
+          schemaLoading={schemaLoading}
         />
       ))}
+      {isGDCTreeViewEnabled ? (
+        <div id="tree-container" className="inline-block">
+          <GDCTree onSelect={gdcItemClick} />
+        </div>
+      ) : null}
     </div>
   );
 };

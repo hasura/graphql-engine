@@ -1,43 +1,194 @@
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TemplateHaskell #-}
+
+-- | MSSQL Source
+--
+-- Implements the Source related methods of the
+-- 'Hasura.RQL.Types.Metadata.Backend.BackendMetadata' type class
+-- for the MSSQL backend, which provides an interface for identifying the
+-- MSSQL database instance (source) and manipulate it.
+--
+-- The actual instance is defined in "Hasura.Backends.MSSQL.Instances.Metadata".
 module Hasura.Backends.MSSQL.DDL.Source
-  ( resolveSourceConfig
-  , resolveDatabaseMetadata
-  , postDropSourceHook
+  ( resolveSourceConfig,
+    resolveDatabaseMetadata,
+    postDropSourceHook,
+    prepareCatalog,
   )
 where
 
-import           Hasura.Prelude
+import Control.Monad.Trans.Control (MonadBaseControl)
+import Data.Environment qualified as Env
+import Data.FileEmbed (makeRelativeToProject)
+import Data.HashMap.Strict qualified as HM
+import Data.Text.Lazy qualified as LT
+import Database.MSSQL.Transaction
+import Database.MSSQL.Transaction qualified as Tx
+import Database.ODBC.SQLServer
+import Database.ODBC.TH qualified as ODBC
+import Hasura.Backends.MSSQL.Connection
+import Hasura.Backends.MSSQL.DDL.EventTrigger
+import Hasura.Backends.MSSQL.DDL.Source.Version
+import Hasura.Backends.MSSQL.Instances.Types ()
+import Hasura.Backends.MSSQL.Meta
+import Hasura.Backends.MSSQL.SQL.Error qualified as HGE
+import Hasura.Backends.MSSQL.Types
+import Hasura.Base.Error
+import Hasura.Logging (Hasura, Logger)
+import Hasura.Prelude
+import Hasura.RQL.Types.Backend (BackendConfig)
+import Hasura.RQL.Types.Common
+import Hasura.RQL.Types.EventTrigger (RecreateEventTriggers (..))
+import Hasura.RQL.Types.Source
+import Hasura.RQL.Types.SourceCustomization
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
+import Language.Haskell.TH.Lib qualified as TH
+import Language.Haskell.TH.Syntax qualified as TH
+import Text.Shakespeare.Text qualified as ST
 
-import           Hasura.Backends.MSSQL.Connection
-import           Hasura.Backends.MSSQL.Meta
-import           Hasura.Base.Error
-import           Hasura.RQL.Types.Common
-import           Hasura.RQL.Types.Source
-import           Hasura.SQL.Backend
-import           Hasura.Server.Types              (MaintenanceMode)
+resolveSourceConfig ::
+  (MonadIO m, MonadResolveSource m) =>
+  Logger Hasura ->
+  SourceName ->
+  MSSQLConnConfiguration ->
+  BackendSourceKind 'MSSQL ->
+  BackendConfig 'MSSQL ->
+  Env.Environment ->
+  manager ->
+  m (Either QErr MSSQLSourceConfig)
+resolveSourceConfig _logger name config _backendKind _backendConfig _env _manager = runExceptT do
+  sourceResolver <- getMSSQLSourceResolver
+  liftEitherM $ liftIO $ sourceResolver name config
 
-resolveSourceConfig
-  :: (MonadIO m)
-  => SourceName
-  -> MSSQLConnConfiguration
-  -> m (Either QErr MSSQLSourceConfig)
-resolveSourceConfig _name (MSSQLConnConfiguration connInfo) = runExceptT do
-  (connString, mssqlPool) <- createMSSQLPool connInfo
-  pure $ MSSQLSourceConfig connString mssqlPool
-
-resolveDatabaseMetadata
-  :: (MonadIO m)
-  => MSSQLSourceConfig
-  -> MaintenanceMode
-  -> m (Either QErr (ResolvedSource 'MSSQL))
-resolveDatabaseMetadata config _maintenanceMode = runExceptT do
-  dbTablesMetadata <- loadDBMetadata pool
-  pure $ ResolvedSource config dbTablesMetadata mempty mempty
+resolveDatabaseMetadata ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  MSSQLSourceConfig ->
+  SourceTypeCustomization ->
+  m (Either QErr (ResolvedSource 'MSSQL))
+resolveDatabaseMetadata config customization = runExceptT do
+  dbTablesMetadata <- mssqlRunReadOnly mssqlExecCtx $ loadDBMetadata
+  pure $ ResolvedSource config customization dbTablesMetadata mempty mempty
   where
-    MSSQLSourceConfig _connString pool = config
+    MSSQLSourceConfig _connString mssqlExecCtx = config
 
-postDropSourceHook
-  :: (MonadIO m)
-  => MSSQLSourceConfig -> m ()
-postDropSourceHook (MSSQLSourceConfig _ pool) =
+postDropSourceHook ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  MSSQLSourceConfig ->
+  TableEventTriggers 'MSSQL ->
+  m ()
+postDropSourceHook (MSSQLSourceConfig _ mssqlExecCtx) tableTriggersMap = do
+  -- The SQL triggers for MSSQL source are created within the schema of the table,
+  -- and is not associated with 'hdb_catalog' schema. Thus only deleting the
+  -- 'hdb_catalog' schema is not sufficient, since it will still leave the SQL
+  -- triggers within the table schema.
+  --
+  -- This causes problems, whenever the next insert/delete/update operation occurs
+  -- the SQL triggers will try to unsuccessfully insert event_log to the nonexistent
+  -- 'hdb_catalog.event_log' table. The left over SQL triggers thus stops any
+  -- operation that will happen on the table.
+  --
+  -- Hence we first delete all the related Hasura SQL triggers and then drop the
+  -- 'hdb_catalog' schema.
+  for_ (HM.toList tableTriggersMap) $ \(_table@(TableName _tableName schema), triggers) ->
+    for_ triggers $ \triggerName ->
+      liftIO $ runExceptT $ mssqlRunReadWrite mssqlExecCtx (dropTriggerQ triggerName schema)
+  _ <- runExceptT $ mssqlRunReadWrite mssqlExecCtx dropSourceCatalog
   -- Close the connection
-  liftIO $ drainMSSQLPool pool
+  liftIO $ mssqlDestroyConn mssqlExecCtx
+
+doesSchemaExist :: MonadMSSQLTx m => SchemaName -> m Bool
+doesSchemaExist (SchemaName schemaName) = do
+  liftMSSQLTx $
+    Tx.singleRowQueryE
+      HGE.defaultMSSQLTxErrorHandler
+      [ODBC.sql|
+      SELECT CAST (
+        CASE
+          WHEN EXISTS( SELECT 1 FROM sys.schemas WHERE name = $schemaName )
+            THEN 1
+          ELSE 0
+        END
+      AS BIT)
+    |]
+
+doesTableExist :: MonadMSSQLTx m => TableName -> m Bool
+doesTableExist tableName = do
+  liftMSSQLTx $
+    Tx.singleRowQueryE
+      HGE.defaultMSSQLTxErrorHandler
+      [ODBC.sql|
+        SELECT CAST (
+          CASE
+            WHEN (Select OBJECT_ID($qualifiedTable)) IS NOT NULL
+              THEN 1
+            ELSE 0
+          END
+        AS BIT)
+      |]
+  where
+    qualifiedTable = qualifyTableName tableName
+
+-- | Initialise catalog tables for a source, including those required by the event delivery subsystem.
+prepareCatalog ::
+  (MonadIO m, MonadBaseControl IO m) =>
+  MSSQLSourceConfig ->
+  ExceptT QErr m RecreateEventTriggers
+prepareCatalog sourceConfig = mssqlRunReadWrite (_mscExecCtx sourceConfig) do
+  hdbCatalogExist <- doesSchemaExist "hdb_catalog"
+  eventLogTableExist <- doesTableExist $ TableName "event_log" "hdb_catalog"
+  sourceVersionTableExist <- doesTableExist $ TableName "hdb_source_catalog_version" "hdb_catalog"
+  if
+      -- Fresh database
+      | not hdbCatalogExist -> liftMSSQLTx do
+        unitQueryE HGE.defaultMSSQLTxErrorHandler "CREATE SCHEMA hdb_catalog"
+        initSourceCatalog
+        return RETDoNothing
+      -- Only 'hdb_catalog' schema defined
+      | not (sourceVersionTableExist || eventLogTableExist) -> do
+        liftMSSQLTx initSourceCatalog
+        return RETDoNothing
+      | otherwise -> migrateSourceCatalog
+  where
+    initSourceCatalog = do
+      unitQueryE HGE.defaultMSSQLTxErrorHandler $(makeRelativeToProject "src-rsr/mssql/init_mssql_source.sql" >>= ODBC.sqlFile)
+      setSourceCatalogVersion latestSourceCatalogVersion
+
+dropSourceCatalog :: MonadMSSQLTx m => m ()
+dropSourceCatalog = do
+  let sql = $(makeRelativeToProject "src-rsr/mssql/drop_mssql_source.sql" >>= ODBC.sqlFile)
+  liftMSSQLTx $ unitQueryE HGE.defaultMSSQLTxErrorHandler sql
+
+migrateSourceCatalog :: MonadMSSQLTx m => m RecreateEventTriggers
+migrateSourceCatalog =
+  getSourceCatalogVersion >>= migrateSourceCatalogFrom
+
+migrateSourceCatalogFrom :: MonadMSSQLTx m => SourceCatalogVersion -> m RecreateEventTriggers
+migrateSourceCatalogFrom prevVersion
+  | prevVersion == latestSourceCatalogVersion = pure RETDoNothing
+  | [] <- neededMigrations =
+    throw400 NotSupported $
+      "Expected source catalog version <= "
+        <> tshow latestSourceCatalogVersion
+        <> ", but the current version is "
+        <> tshow prevVersion
+  | otherwise = do
+    liftMSSQLTx $ traverse_ snd neededMigrations
+    setSourceCatalogVersion latestSourceCatalogVersion
+    pure RETRecreate
+  where
+    neededMigrations =
+      dropWhile ((/= prevVersion) . fst) sourceMigrations
+
+sourceMigrations :: [(SourceCatalogVersion, TxE QErr [Text])]
+sourceMigrations =
+  $( let migrationFromFile from =
+           let to = succ from
+               path = "src-rsr/mssql/mssql_source_migrations/" <> show from <> "_to_" <> show to <> ".sql"
+            in do
+                 [|(multiRowQueryE HGE.defaultMSSQLTxErrorHandler $ rawUnescapedText . LT.toStrict $ $(makeRelativeToProject path >>= ST.stextFile))|]
+
+         migrationsFromFile = map $ \from ->
+           [|($(TH.lift $ from), $(migrationFromFile from))|]
+      in TH.listE $ migrationsFromFile previousSourceCatalogVersions
+   )

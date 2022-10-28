@@ -4,11 +4,11 @@ import ReactTable, {
   ComponentPropsGetter0,
 } from 'react-table';
 import 'react-table/react-table.css';
+import { Button } from '@/new-components/Button';
 import { FilterTableProps, GridHeadingProps } from './types';
 import { Dispatch } from '../../../../../types';
 import { makeOrderBy } from '../../../../Common/utils/v1QueryUtils';
 import { ordinalColSort } from '../../../Data/utils';
-import styles from '../../Events.scss';
 import InvocationLogDetails from './InvocationLogDetails';
 import ExpanderButton from './ExpanderButton';
 import { redeliverDataEvent } from '../../ServerIO';
@@ -18,42 +18,35 @@ import RedeliverEvent from './RedeliverEvent';
 import { convertDateTimeToLocale } from '../../../../Common/utils/jsUtils';
 import { Nullable } from '../../../../Common/utils/tsUtils';
 import { getInvocationLogStatus } from './utils';
-import Button from '../../../../Common/Button/Button';
 import { QualifiedTable } from '../../../../../metadata/types';
+import { PaginationWithOnlyNav } from '../../../../../new-components/PaginationWithOnlyNav/PaginationWithOnlyNav';
 
 type RedeliverButtonProps = {
   onClickHandler: (e: React.MouseEvent) => void;
 };
-
 const RedliverEventButton: React.FC<RedeliverButtonProps> = ({
   onClickHandler,
 }) => (
   <Button
-    color="white"
-    size="xs"
+    size="sm"
     title="Redeliver event"
     onClick={onClickHandler}
-    className={`${styles.cursorPointer} ${styles.add_mar_right_small}`}
-  >
-    <ReloadIcon className="" />
-  </Button>
+    className="mr-xs"
+    icon={<ReloadIcon />}
+  />
 );
-
 interface Props extends FilterTableProps {
   dispatch: Dispatch;
   tableDef?: QualifiedTable;
   tableSource?: string;
 }
-
 const InvocationLogsTable: React.FC<Props> = props => {
-  const { rows, filterState, runQuery, columns, count, dispatch } = props;
-  const [redeliveredEventId, setRedeliveredEventId] = React.useState<
-    Nullable<string>
-  >(null);
+  const { rows, filterState, runQuery, columns, dispatch } = props;
+  const [redeliveredEventId, setRedeliveredEventId] =
+    React.useState<Nullable<string>>(null);
   const [isRedelivering, setIsRedelivering] = React.useState(false);
   const [currentPage, setPage] = React.useState(0);
-  const [pageSize, setPageSize] = React.useState(10);
-
+  const [, setPageSize] = React.useState(10);
   const redeliverHandler = (
     eventId: string,
     tableDef?: QualifiedTable,
@@ -78,7 +71,6 @@ const InvocationLogsTable: React.FC<Props> = props => {
       )
     );
   };
-
   const redeliverModal = (eventId: string) => {
     if (!redeliveredEventId) return null;
     return (
@@ -87,7 +79,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
         show={eventId === redeliveredEventId}
         onClose={() => setRedeliveredEventId(null)}
         onCancel={() => setRedeliveredEventId(null)}
-        customClass={styles.redeliverModal}
+        customClass="min-w-[75%] mb-0"
       >
         <RedeliverEvent
           eventId={redeliveredEventId}
@@ -97,18 +89,10 @@ const InvocationLogsTable: React.FC<Props> = props => {
       </Modal>
     );
   };
-
-  if (rows.length === 0) {
-    return <div className={styles.add_mar_top}>No data available</div>;
-  }
-
   const sortedColumns = columns.sort(ordinalColSort);
-
   let shouldSortColumn = true;
-
   const sortByColumn = (col: string) => {
     // Remove all the existing order_bys
-
     const existingColSort = filterState.sorts.find(s => s.column === col);
     if (existingColSort && existingColSort.type === 'asc') {
       runQuery({
@@ -120,7 +104,6 @@ const InvocationLogsTable: React.FC<Props> = props => {
       });
     }
   };
-
   const changePage = (page: number) => {
     if (filterState.offset !== page * filterState.limit) {
       setPage(page);
@@ -129,7 +112,6 @@ const InvocationLogsTable: React.FC<Props> = props => {
       });
     }
   };
-
   const changePageSize = (size: number) => {
     if (filterState.limit !== size) {
       setPageSize(size);
@@ -138,11 +120,11 @@ const InvocationLogsTable: React.FC<Props> = props => {
       });
     }
   };
-
   const expanderActions: GridHeadingProps = {
     expander: true,
     Header: '',
     accessor: 'expander',
+    width: 100,
     Expander: ({ isExpanded, viewIndex }) => {
       const row = rows[viewIndex];
       return (
@@ -167,9 +149,7 @@ const InvocationLogsTable: React.FC<Props> = props => {
       );
     },
   };
-
   const gridHeadings = [expanderActions];
-
   sortedColumns.forEach(column => {
     if (column !== 'redeliver') {
       gridHeadings.push({
@@ -178,7 +158,6 @@ const InvocationLogsTable: React.FC<Props> = props => {
       });
     }
   });
-
   const rowsFormatted = rows.map(r => {
     let formattedRow: any = {};
     Object.keys(r).forEach((col: string) => {
@@ -199,7 +178,6 @@ const InvocationLogsTable: React.FC<Props> = props => {
     };
     return formattedRow;
   });
-
   const getTheadThProps: ComponentPropsGetterC = (
     finalState,
     some,
@@ -217,7 +195,6 @@ const InvocationLogsTable: React.FC<Props> = props => {
       shouldSortColumn = true;
     },
   });
-
   const getResizerProps: ComponentPropsGetter0 = (
     finalState,
     none,
@@ -229,17 +206,6 @@ const InvocationLogsTable: React.FC<Props> = props => {
       ctx.resizeColumnStart(e, column, false);
     },
   });
-
-  const getNumOfPages = (
-    currentPageSize: number,
-    currentCount: number | undefined,
-    currentRowData: Record<string, any>[]
-  ) => {
-    if (currentCount) {
-      return Math.ceil(currentCount / currentPageSize);
-    }
-    return Math.ceil(currentRowData.length / currentPageSize);
-  };
 
   return (
     <ReactTable
@@ -254,9 +220,17 @@ const InvocationLogsTable: React.FC<Props> = props => {
       getResizerProps={getResizerProps}
       onPageChange={changePage}
       page={currentPage}
-      pages={getNumOfPages(pageSize, count, rowsFormatted)}
-      showPagination={count ? count > 10 : false}
+      showPagination
       onPageSizeChange={changePageSize}
+      PaginationComponent={() => (
+        <PaginationWithOnlyNav
+          offset={filterState.offset}
+          limit={filterState.limit}
+          changePage={changePage}
+          changePageSize={changePageSize}
+          rows={rows}
+        />
+      )}
       SubComponent={logRow => {
         const finalIndex = logRow.index;
         const finalRow = rows[finalIndex];
@@ -272,5 +246,4 @@ const InvocationLogsTable: React.FC<Props> = props => {
     />
   );
 };
-
 export default InvocationLogsTable;

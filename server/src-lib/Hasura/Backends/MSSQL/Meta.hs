@@ -1,183 +1,225 @@
--- |
+{-# LANGUAGE TemplateHaskell #-}
 
+-- | Metadata related types, functions and helpers.
+--
+-- Provides a single function which loads the MSSQL database metadata.
+-- See the file at src-rsr/mssql/mssql_table_metadata.sql for the SQL we use to build
+-- this metadata.
+-- See 'Hasura.RQL.Types.Table.DBTableMetadata' for the Haskell type we use forall
+-- storing this metadata.
 module Hasura.Backends.MSSQL.Meta
-  ( loadDBMetadata
-  ) where
+  ( loadDBMetadata,
+  )
+where
 
-import           Hasura.Prelude
-
-import qualified Data.HashMap.Strict                   as HM
-import qualified Data.HashSet                          as HS
-import qualified Data.Text                             as T
-import qualified Data.Text.Encoding                    as T
-import qualified Database.PG.Query                     as Q (sqlFromFile)
-
-import           Data.Aeson                            as Aeson
-import           Data.FileEmbed                        (makeRelativeToProject)
-import           Data.String
-
-import           Hasura.Backends.MSSQL.Connection
-import           Hasura.Backends.MSSQL.Instances.Types ()
-import           Hasura.Backends.MSSQL.Types
-import           Hasura.Base.Error
-import           Hasura.RQL.Types.Column
-import           Hasura.RQL.Types.Common               (OID (..))
-import           Hasura.RQL.Types.Table
-import           Hasura.SQL.Backend
-
+import Data.Aeson as Aeson
+import Data.ByteString.UTF8 qualified as BSUTF8
+import Data.FileEmbed (embedFile, makeRelativeToProject)
+import Data.HashMap.Strict qualified as HM
+import Data.HashMap.Strict.NonEmpty qualified as NEHashMap
+import Data.HashSet qualified as HS
+import Data.String
+import Data.Text qualified as T
+import Data.Text.Encoding qualified as T
+import Database.MSSQL.Transaction qualified as Tx
+import Database.ODBC.SQLServer qualified as ODBC
+import Hasura.Backends.MSSQL.Instances.Types ()
+import Hasura.Backends.MSSQL.SQL.Error
+import Hasura.Backends.MSSQL.Types.Internal
+import Hasura.Base.Error
+import Hasura.Prelude
+import Hasura.RQL.Types.Column
+import Hasura.RQL.Types.Common (OID (..))
+import Hasura.RQL.Types.Table
+import Hasura.SQL.Backend
 
 --------------------------------------------------------------------------------
--- Loader
 
-loadDBMetadata
-  :: (MonadError QErr m, MonadIO m)
-  => MSSQLPool -> m (DBTablesMetadata 'MSSQL)
-loadDBMetadata pool = do
-  let sql = $(makeRelativeToProject "src-rsr/mssql_table_metadata.sql" >>= Q.sqlFromFile)
-  sysTablesText <- runJSONPathQuery pool (fromString sql)
+-- * Loader
+
+loadDBMetadata :: (MonadIO m) => Tx.TxET QErr m (DBTablesMetadata 'MSSQL)
+loadDBMetadata = do
+  let queryBytes = $(makeRelativeToProject "src-rsr/mssql/mssql_table_metadata.sql" >>= embedFile)
+      odbcQuery :: ODBC.Query = fromString . BSUTF8.toString $ queryBytes
+  sysTablesText <- runIdentity <$> Tx.singleRowQueryE defaultMSSQLTxErrorHandler odbcQuery
   case Aeson.eitherDecodeStrict (T.encodeUtf8 sysTablesText) of
-    Left e          -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
+    Left e -> throw500 $ T.pack $ "error loading sql server database schema: " <> e
     Right sysTables -> pure $ HM.fromList $ map transformTable sysTables
 
-
 --------------------------------------------------------------------------------
--- Local types
+
+-- * Local types
 
 data SysTable = SysTable
-  { staName            :: Text
-  , staObjectId        :: Int
-  , staJoinedSysColumn :: [SysColumn]
-  , staJoinedSysSchema :: SysSchema
-  } deriving (Show, Generic)
+  { staName :: Text,
+    staObjectId :: Int,
+    staJoinedSysColumn :: [SysColumn],
+    staJoinedSysSchema :: SysSchema,
+    staJoinedSysPrimaryKey :: Maybe SysPrimaryKey
+  }
+  deriving (Show, Generic)
 
-instance FromJSON (SysTable) where
+instance FromJSON SysTable where
   parseJSON = genericParseJSON hasuraJSON
 
+newtype SysPrimaryKeyColumn = SysPrimaryKeyColumn
+  {spkcName :: Text}
+  deriving (Show, Generic)
+
+instance FromJSON SysPrimaryKeyColumn where
+  parseJSON = genericParseJSON hasuraJSON
+
+data SysPrimaryKey = SysPrimaryKey
+  { spkName :: Text,
+    spkIndexId :: Int,
+    spkColumns :: NESeq SysPrimaryKeyColumn
+  }
+  deriving (Show, Generic)
+
+instance FromJSON SysPrimaryKey where
+  parseJSON = genericParseJSON hasuraJSON
 
 data SysSchema = SysSchema
-  { ssName     :: Text
-  , ssSchemaId :: Int
-  } deriving (Show, Generic)
+  { ssName :: Text,
+    ssSchemaId :: Int
+  }
+  deriving (Show, Generic)
 
-instance FromJSON (SysSchema) where
+instance FromJSON SysSchema where
   parseJSON = genericParseJSON hasuraJSON
 
-
 data SysColumn = SysColumn
-  { scName                    :: Text
-  , scColumnId                :: Int
-  , scUserTypeId              :: Int
-  , scIsNullable              :: Bool
-  , scJoinedSysType           :: SysType
-  , scJoinedForeignKeyColumns :: [SysForeignKeyColumn]
-  } deriving (Show, Generic)
+  { scName :: Text,
+    scColumnId :: Int,
+    scUserTypeId :: Int,
+    scIsNullable :: Bool,
+    scIsIdentity :: Bool,
+    scIsComputed :: Bool,
+    scJoinedSysType :: SysType,
+    scJoinedForeignKeyColumns :: [SysForeignKeyColumn]
+  }
+  deriving (Show, Generic)
+
 instance FromJSON SysColumn where
   parseJSON = genericParseJSON hasuraJSON
 
 data SysType = SysType
-  { styName       :: Text
-  , stySchemaId   :: Int
-  , styUserTypeId :: Int
-  } deriving (Show, Generic)
+  { styName :: Text,
+    stySchemaId :: Int,
+    styUserTypeId :: Int
+  }
+  deriving (Show, Generic)
 
-instance FromJSON (SysType) where
+instance FromJSON SysType where
   parseJSON = genericParseJSON hasuraJSON
-
 
 data SysForeignKeyColumn = SysForeignKeyColumn
-  { sfkcConstraintObjectId         :: Int
-  , sfkcConstraintColumnId         :: Int
-  , sfkcParentObjectId             :: Int
-  , sfkcParentColumnId             :: Int
-  , sfkcReferencedObjectId         :: Int
-  , sfkcReferencedColumnId         :: Int
-  , sfkcJoinedReferencedTableName  :: Text
-  , sfkcJoinedReferencedColumnName :: Text
-  , sfkcJoinedReferencedSysSchema  :: SysSchema
-  } deriving (Show, Generic)
+  { sfkcConstraintObjectId :: Int,
+    sfkcConstraintColumnId :: Int,
+    sfkcParentObjectId :: Int,
+    sfkcParentColumnId :: Int,
+    sfkcReferencedObjectId :: Int,
+    sfkcReferencedColumnId :: Int,
+    sfkcJoinedReferencedTableName :: Text,
+    sfkcJoinedReferencedColumnName :: Text,
+    sfkcJoinedReferencedSysSchema :: SysSchema
+  }
+  deriving (Show, Generic)
 
-instance FromJSON (SysForeignKeyColumn) where
+instance FromJSON SysForeignKeyColumn where
   parseJSON = genericParseJSON hasuraJSON
 
-
 --------------------------------------------------------------------------------
--- Transform
+
+-- * Transform
 
 transformTable :: SysTable -> (TableName, DBTableMetadata 'MSSQL)
 transformTable tableInfo =
-  let schemaName = ssName $ staJoinedSysSchema tableInfo
-      tableName  = TableName (staName tableInfo) schemaName
-      tableOID   = OID $ staObjectId tableInfo
+  let schemaName = SchemaName $ ssName $ staJoinedSysSchema tableInfo
+      tableName = TableName (staName tableInfo) schemaName
+      tableOID = OID $ staObjectId tableInfo
       (columns, foreignKeys) = unzip $ transformColumn <$> staJoinedSysColumn tableInfo
       foreignKeysMetadata = HS.fromList $ map ForeignKeyMetadata $ coalesceKeys $ concat foreignKeys
-  in ( tableName
-     , DBTableMetadata
-       tableOID
-       columns
-       Nothing  -- no primary key information?
-       HS.empty -- no unique constraints?
-       foreignKeysMetadata
-       Nothing  -- no views, only tables
-       Nothing  -- no description
-     )
+      primaryKey = transformPrimaryKey <$> staJoinedSysPrimaryKey tableInfo
+      identityColumns =
+        map (ColumnName . scName) $
+          filter scIsIdentity $ staJoinedSysColumn tableInfo
+   in ( tableName,
+        DBTableMetadata
+          tableOID
+          columns
+          primaryKey
+          HS.empty -- no unique constraints?
+          foreignKeysMetadata
+          Nothing -- no views, only tables
+          Nothing -- no description
+          identityColumns
+      )
 
-transformColumn
-  :: SysColumn
-  -> (RawColumnInfo 'MSSQL, [ForeignKey 'MSSQL])
-transformColumn columnInfo =
-  let prciName        = ColumnName $ scName columnInfo
-      prciPosition    = scColumnId columnInfo
-      -- ^ the IR uses this to uniquely identify columns, as Postgres will
-      -- keep a unique position for a column even when columns are added
-      -- or dropped. We assume here that this arbitrary column id can
-      -- serve the same purpose.
-      prciIsNullable  = scIsNullable columnInfo
-      prciDescription = Nothing
-      prciType = parseScalarType $ styName $ scJoinedSysType columnInfo
-      foreignKeys = scJoinedForeignKeyColumns columnInfo <&> \foreignKeyColumn ->
-        let _fkConstraint    = Constraint () $ OID $ sfkcConstraintObjectId foreignKeyColumn
-            -- ^ constraints have no name in MSSQL, and are uniquely identified by their OID
-            schemaName       = ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
-            _fkForeignTable  = TableName (sfkcJoinedReferencedTableName foreignKeyColumn) schemaName
-            _fkColumnMapping = HM.singleton prciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
-        in ForeignKey {..}
-  in (RawColumnInfo{..}, foreignKeys)
+transformColumn ::
+  SysColumn ->
+  (RawColumnInfo 'MSSQL, [ForeignKey 'MSSQL])
+transformColumn sysCol =
+  let rciName = ColumnName $ scName sysCol
+      rciPosition = scColumnId sysCol
 
+      rciIsNullable = scIsNullable sysCol
+      rciDescription = Nothing
+      rciType = parseScalarType $ styName $ scJoinedSysType sysCol
+      foreignKeys =
+        scJoinedForeignKeyColumns sysCol <&> \foreignKeyColumn ->
+          let _fkConstraint = Constraint (ConstraintName "fk_mssql") $ OID $ sfkcConstraintObjectId foreignKeyColumn
+
+              schemaName = SchemaName $ ssName $ sfkcJoinedReferencedSysSchema foreignKeyColumn
+              _fkForeignTable = TableName (sfkcJoinedReferencedTableName foreignKeyColumn) schemaName
+              _fkColumnMapping = NEHashMap.singleton rciName $ ColumnName $ sfkcJoinedReferencedColumnName foreignKeyColumn
+           in ForeignKey {..}
+
+      colIsImmutable = scIsComputed sysCol || scIsIdentity sysCol
+      rciMutability = ColumnMutability {_cmIsInsertable = not colIsImmutable, _cmIsUpdatable = not colIsImmutable}
+   in (RawColumnInfo {..}, foreignKeys)
+
+transformPrimaryKey :: SysPrimaryKey -> PrimaryKey 'MSSQL (Column 'MSSQL)
+transformPrimaryKey (SysPrimaryKey {..}) =
+  let constraint = Constraint (ConstraintName spkName) $ OID spkIndexId
+      columns = (ColumnName . spkcName) <$> spkColumns
+   in PrimaryKey constraint columns
 
 --------------------------------------------------------------------------------
--- Helpers
+
+-- * Helpers
 
 coalesceKeys :: [ForeignKey 'MSSQL] -> [ForeignKey 'MSSQL]
 coalesceKeys = HM.elems . foldl' coalesce HM.empty
   where
     coalesce mapping fk@(ForeignKey constraint tableName _) = HM.insertWith combine (constraint, tableName) fk mapping
-    combine oldFK newFK = oldFK { _fkColumnMapping = (HM.union `on` _fkColumnMapping) oldFK newFK }
+    combine oldFK newFK = oldFK {_fkColumnMapping = (NEHashMap.union `on` _fkColumnMapping) oldFK newFK}
 
 parseScalarType :: Text -> ScalarType
 parseScalarType = \case
-  "char"             -> CharType
-  "numeric"          -> NumericType
-  "decimal"          -> DecimalType
-  "money"            -> DecimalType
-  "smallmoney"       -> DecimalType
-  "int"              -> IntegerType
-  "smallint"         -> SmallintType
-  "float"            -> FloatType
-  "real"             -> RealType
-  "date"             -> DateType
-  "time"             -> Ss_time2Type
-  "varchar"          -> VarcharType
-  "nchar"            -> WcharType
-  "nvarchar"         -> WvarcharType
-  "ntext"            -> WtextType
-  "timestamp"        -> TimestampType
-  "text"             -> TextType
-  "binary"           -> BinaryType
-  "bigint"           -> BigintType
-  "tinyint"          -> TinyintType
-  "varbinary"        -> VarbinaryType
-  "bit"              -> BitType
+  "char" -> CharType
+  "numeric" -> NumericType
+  "decimal" -> DecimalType
+  "money" -> DecimalType
+  "smallmoney" -> DecimalType
+  "int" -> IntegerType
+  "smallint" -> SmallintType
+  "float" -> FloatType
+  "real" -> RealType
+  "date" -> DateType
+  "time" -> Ss_time2Type
+  "varchar" -> VarcharType
+  "nchar" -> WcharType
+  "nvarchar" -> WvarcharType
+  "ntext" -> WtextType
+  "timestamp" -> TimestampType
+  "text" -> TextType
+  "binary" -> BinaryType
+  "bigint" -> BigintType
+  "tinyint" -> TinyintType
+  "varbinary" -> VarbinaryType
+  "bit" -> BitType
   "uniqueidentifier" -> GuidType
-  "geography"        -> GeographyType
-  "geometry"         -> GeometryType
-  t                  -> UnknownType t
+  "geography" -> GeographyType
+  "geometry" -> GeometryType
+  t -> UnknownType t

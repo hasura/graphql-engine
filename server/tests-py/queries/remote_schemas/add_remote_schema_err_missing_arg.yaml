@@ -4,13 +4,13 @@ status: 400
 response:
   path: $.args
   error: |-
-    Interface field argument 'Character'."id"("ifaceArg":) required, but Object field 'Human'."id" does not provide it
+    Interface field argument 'Character'."id"("ifaceArg":) required, but Object field 'Droid'."id" does not provide it
   code: remote-schema-error
 query:
   type: add_remote_schema
   args:
     name: err-missing-arg
     definition:
-      url: http://localhost:5000/iface-graphql-err-missing-arg
+      url: "{{REMOTE_SCHEMAS_WEBHOOK_DOMAIN}}/iface-graphql-err-missing-arg"
       headers: []
       forward_client_headers: true

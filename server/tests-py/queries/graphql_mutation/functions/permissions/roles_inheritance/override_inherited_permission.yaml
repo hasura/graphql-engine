@@ -1,0 +1,64 @@
+- description: Action not accessible to inherited role because any of the parent roles can't access it
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: inherited_role2
+  status: 200
+  query:
+    query: |
+      mutation {
+        add_to_score (args: {search: "er"}) {
+          name
+          score
+          role_echo
+        }
+      }
+  response:
+    errors:
+    - extensions:
+        path: $
+        code: validation-failed
+      message: no mutations exist
+
+- description: Override the inherited permission by setting explicit permission
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_create_function_permission
+    args:
+      function: add_to_score
+      role: inherited_role2
+  response:
+    message: success
+
+- description: Query the mutation after adding the explicit permission
+  url: /v1/graphql
+  headers:
+    X-Hasura-Role: inherited_role2
+    X-Hasura-User-Id: '1'
+  status: 200
+  query:
+    query: |
+      mutation {
+        add_to_score (args: {search: "er"}) {
+          name
+          role_echo
+        }
+      }
+  response:
+    data:
+      add_to_score:
+        - name: user 1
+          role_echo: inherited_role2
+        - name: user 2
+          role_echo: inherited_role2
+
+- description: Drop the overridden permission
+  url: /v1/metadata
+  status: 200
+  query:
+    type: pg_drop_function_permission
+    args:
+      function: add_to_score
+      role: inherited_role2
+  response:
+    message: success

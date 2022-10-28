@@ -33,7 +33,14 @@
         );
         INSERT INTO author_s1 (name)
           VALUES ('Author 1'), ('Author 2');
-    
+        create function search_authors(search text)
+        returns setof author_s1 as $$
+            select *
+            from author_s1
+            where
+              name ilike ('%' || search || '%');
+        $$ language sql stable;
+
 - description: track table
   url: /v1/metadata
   status: 200
@@ -43,6 +50,32 @@
     type: pg_track_table
     args:
       table: author_s1
+      source: pg1
+
+- description: track function
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_track_function
+    args:
+      function:
+        schema: public
+        name: search_authors
+      source: pg1
+
+- description: untrack function
+  url: /v1/metadata
+  status: 200
+  response:
+    message: success
+  query:
+    type: pg_untrack_function
+    args:
+      function:
+        schema: public
+        name: search_authors
       source: pg1
 
 - description: untrack table
@@ -67,7 +100,7 @@
     args:
       source: pg1
       sql: |
-        drop table author_s1;
+        drop table author_s1 cascade;
 
 - description: PG Drop Source
   url: /v1/metadata

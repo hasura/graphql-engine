@@ -1,0 +1,78 @@
+{
+  "remote_schemas": [
+    {
+      "name": "countries",
+      "definition": {
+        "url": "https://countries.trevorblades.com/",
+        "timeout_seconds": 60,
+        "customization": {
+          "type_names": {
+            "prefix": "countries_v1",
+            "mapping": {}
+          },
+          "root_fields_namespace": "countries_v1"
+        }
+      },
+      "comment": "",
+      "remote_relationships": [
+        {
+          "relationships": [
+            {
+              "definition": {
+                "to_source": {
+                  "relationship_type": "array",
+                  "source": "default",
+                  "table": {
+                    "schema": "public",
+                    "name": "countries"
+                  },
+                  "field_mapping": {
+                    "code": "code"
+                  }
+                }
+              },
+              "name": "country"
+            }
+          ],
+          "type_name": "Country"
+        }
+      ]
+    },
+    {
+      "name": "react-finland",
+      "definition": {
+        "url": "https://api.react-finland.fi/graphql",
+        "timeout_seconds": 60,
+        "customization": {
+          "root_fields_namespace": "react_finland"
+        }
+      },
+      "comment": "",
+      "remote_relationships": [
+        {
+          "relationships": [
+            {
+              "definition": {
+                "to_remote_schema": {
+                  "remote_field": {
+                    "country": {
+                      "arguments": {
+                        "code": "$code"
+                      }
+                    }
+                  },
+                  "remote_schema": "countries",
+                  "lhs_fields": [
+                    "code"
+                  ]
+                }
+              },
+              "name": "country"
+            }
+          ],
+          "type_name": "Country"
+        }
+      ]
+    }
+  ]
+}

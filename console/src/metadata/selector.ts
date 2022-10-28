@@ -4,11 +4,9 @@ import { FixMe, ReduxState } from '../types';
 import { TableEntry, DataSource } from './types';
 import { filterInconsistentMetadataObjects } from '../components/Services/Settings/utils';
 import { parseCustomTypes } from '../shared/utils/hasuraCustomTypeUtils';
-import { Driver } from '../dataSources';
-import {
-  EventTrigger,
-  ScheduledTrigger,
-} from '../components/Services/Events/types';
+import { Driver, drivers } from '../dataSources';
+import { EventTrigger } from '../components/Services/Events/types';
+import { getDatabaseUrlFromSource } from './utils';
 
 export const getDataSourceMetadata = (state: ReduxState) => {
   const currentDataSource = state.tables?.currentDataSource;
@@ -28,7 +26,10 @@ export const getRemoteSchemaPermissions = (state: ReduxState) => {
 export const getInitDataSource = (
   state: ReduxState
 ): { source: string; driver: Driver } => {
-  const dataSources = state.metadata.metadataObject?.sources || [];
+  const dataSources =
+    state.metadata.metadataObject?.sources.filter(s =>
+      s.kind ? drivers.includes(s.kind) : true
+    ) || [];
   if (dataSources.length) {
     return {
       source: dataSources[0].name,
@@ -52,6 +53,11 @@ export const getCurrentSource = (state: ReduxState) => {
 
 const getInconsistentObjects = (state: ReduxState) => {
   return state.metadata.inconsistentObjects;
+};
+const getSecuritySettings = (state: ReduxState) => {
+  const { api_limits, graphql_schema_introspection } =
+    state.metadata.metadataObject ?? {};
+  return { api_limits, graphql_schema_introspection };
 };
 
 export const getTables = createSelector(getDataSourceMetadata, source => {
@@ -93,8 +99,8 @@ const permKeys: Array<keyof PermKeys> = [
   'delete_permissions',
 ];
 export const rolesSelector = createSelector(
-  [getTablesFromAllSources, getActions, getRemoteSchemas],
-  (tables, actions, remoteSchemas) => {
+  [getTablesFromAllSources, getActions, getRemoteSchemas, getSecuritySettings],
+  (tables, actions, remoteSchemas, securitySettings) => {
     const roleNames: string[] = [];
     tables?.forEach(table =>
       permKeys.forEach(key =>
@@ -109,6 +115,19 @@ export const rolesSelector = createSelector(
     remoteSchemas?.forEach(remoteSchema => {
       remoteSchema?.permissions?.forEach(p => roleNames.push(p.role));
     });
+
+    Object.entries(securitySettings.api_limits ?? {}).forEach(
+      ([limit, value]) => {
+        if (limit !== 'disabled' && typeof value !== 'boolean') {
+          Object.keys(value?.per_role ?? {}).forEach(role =>
+            roleNames.push(role)
+          );
+        }
+      }
+    );
+    securitySettings.graphql_schema_introspection?.disabled_for_roles.forEach(
+      role => roleNames.push(role)
+    );
     return Array.from(new Set(roleNames));
   }
 );
@@ -157,16 +176,14 @@ export const getTablesInfoSelector = createSelector(
 
 export const getTableInformation = createSelector(
   getTables,
-  tables => (tableName: string, tableSchema: string) => <
-    T extends keyof TableEntry
-  >(
-    property: T
-  ): TableEntry[T] | null => {
-    const table = tables?.find(
-      t => tableName === t.table.name && tableSchema === t.table.schema
-    );
-    return table ? table[property] : null;
-  }
+  tables =>
+    (tableName: string, tableSchema: string) =>
+    <T extends keyof TableEntry>(property: T): TableEntry[T] | null => {
+      const table = tables?.find(
+        t => tableName === t.table.name && tableSchema === t.table.schema
+      );
+      return table ? table[property] : null;
+    }
 );
 
 export const getCurrentTableInformation = createSelector(
@@ -274,7 +291,9 @@ export const getEventTriggers = createSelector(getMetadata, metadata => {
               retry_conf: trigger.retry_conf,
               webhook: trigger.webhook || '',
               webhook_from_env: trigger.webhook_from_env,
+              cleanup_config: trigger.cleanup_config,
             },
+            request_transform: trigger.request_transform,
           })) || [];
         return [...triggers, ...acc];
       }, [] as EventTrigger[])
@@ -287,11 +306,13 @@ export const getManualEventsTriggers = createSelector(
   getEventTriggers,
   getCurrentSchema,
   getCurrentTable,
-  (triggers, schema, table) => {
+  getCurrentSource,
+  (triggers, schema, table, source) => {
     return triggers.filter(
       t =>
         t.table_name === table &&
         t.schema_name === schema &&
+        t.source === source &&
         t.configuration.definition.enable_manual
     );
   }
@@ -320,7 +341,9 @@ export const getEventTriggerByName = createSelector(
               retry_conf: trigger.retry_conf,
               webhook: trigger.webhook || '',
               webhook_from_env: trigger.webhook_from_env,
+              cleanup_config: trigger.cleanup_config,
             },
+            request_transform: trigger.request_transform,
           };
       }
     }
@@ -329,57 +352,47 @@ export const getEventTriggerByName = createSelector(
   }
 );
 
-export const getCronTriggers = createSelector(getMetadata, metadata => {
-  const cronTriggers: ScheduledTrigger[] = (metadata?.cron_triggers || []).map(
-    cron => ({
-      name: cron.name,
-      payload: cron.payload,
-      retry_conf: {
-        num_retries: cron.retry_conf?.num_retries,
-        retry_interval_seconds: cron.retry_conf?.retry_interval_seconds,
-        timeout_seconds: cron.retry_conf?.timeout_seconds,
-        tolerance_seconds: cron.retry_conf?.tolerance_seconds,
-      },
-      header_conf: cron.headers,
-      webhook_conf: cron.webhook,
-      cron_schedule: cron.schedule,
-      include_in_metadata: cron.include_in_metadata,
-      comment: cron.comment,
-    })
-  );
-  return cronTriggers || [];
-});
-
 export const getAllowedQueries = (state: ReduxState) =>
   state.metadata.allowedQueries || [];
 
 export const getInheritedRoles = (state: ReduxState) =>
   state.metadata.inheritedRoles || [];
 
+export const getSourcesFromMetadata = createSelector(getMetadata, metadata => {
+  return metadata?.sources.filter(s =>
+    s.kind ? drivers.includes(s.kind) : true
+  );
+});
+
 export const getDataSources = createSelector(getMetadata, metadata => {
   const sources: DataSource[] = [];
-  metadata?.sources.forEach(source => {
-    let url: string | { from_env: string } = '';
-    if (source.kind === 'bigquery') {
-      url = source.configuration?.service_account?.from_env || '';
-    } else {
-      url = source.configuration?.connection_info?.connection_string
-        ? source.configuration?.connection_info.connection_string
-        : source.configuration?.connection_info?.database_url || '';
-    }
-    sources.push({
-      name: source.name,
-      url,
-      connection_pool_settings: source.configuration?.connection_info
-        ?.pool_settings || {
-        retries: 1,
-        idle_timeout: 180,
-        max_connections: 50,
-      },
-      driver: source.kind || 'postgres',
-      read_replicas: source.configuration?.read_replicas ?? undefined,
+  metadata?.sources
+    .filter(s => (s.kind ? drivers.includes(s.kind) : true))
+    .forEach(source => {
+      let url: string | { from_env: string } = '';
+      if (source.kind === 'bigquery') {
+        url = source.configuration?.service_account?.from_env || '';
+      } else {
+        url = source.configuration?.connection_info?.connection_string
+          ? source.configuration?.connection_info.connection_string
+          : getDatabaseUrlFromSource(
+              source.kind,
+              source.configuration?.connection_info?.database_url
+            );
+      }
+      sources.push({
+        name: source.name,
+        url,
+        connection_pool_settings: source.configuration?.connection_info
+          ?.pool_settings || {
+          retries: 1,
+          idle_timeout: 180,
+          max_connections: 50,
+        },
+        driver: source.kind || 'postgres',
+        read_replicas: source.configuration?.read_replicas ?? undefined,
+      });
     });
-  });
   return sources;
 });
 

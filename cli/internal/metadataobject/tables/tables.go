@@ -4,14 +4,12 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
+
 	"github.com/sirupsen/logrus"
 
-	"github.com/hasura/graphql-engine/cli"
-	"gopkg.in/yaml.v2"
-)
-
-const (
-	MetadataFilename string = "tables.yaml"
+	"github.com/hasura/graphql-engine/cli/v2"
+	"gopkg.in/yaml.v3"
 )
 
 type TableConfig struct {
@@ -37,51 +35,59 @@ func (t *TableConfig) CreateFiles() error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(filepath.Join(t.MetadataDir, MetadataFilename), data, 0644)
+	err = ioutil.WriteFile(filepath.Join(t.MetadataDir, t.Filename()), data, 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *TableConfig) Build(metadata *yaml.MapSlice) error {
-	data, err := ioutil.ReadFile(filepath.Join(t.MetadataDir, MetadataFilename))
+func (t *TableConfig) Build() (map[string]interface{}, error) {
+	data, err := metadataobject.ReadMetadataFile(filepath.Join(t.MetadataDir, t.Filename()))
 	if err != nil {
-		return err
+		return nil, t.error(err)
 	}
-	item := yaml.MapItem{
-		Key:   "tables",
-		Value: []yaml.MapSlice{},
-	}
-	err = yaml.Unmarshal(data, &item.Value)
+	var obj []yaml.Node
+	err = yaml.Unmarshal(data, &obj)
 	if err != nil {
-		return err
+		return nil, t.error(err)
 	}
-	*metadata = append(*metadata, item)
+	return map[string]interface{}{t.Key(): obj}, nil
+}
+
+func (t *TableConfig) Export(metadata map[string]yaml.Node) (map[string][]byte, error) {
+	return metadataobject.DefaultExport(t, metadata, t.error, metadataobject.DefaultObjectTypeSequence)
+}
+
+func (t *TableConfig) Filename() string {
+	return "tables.yaml"
+}
+
+func (t *TableConfig) Key() string {
+	return metadataobject.TablesKey
+}
+
+func (t *TableConfig) GetFiles() ([]string, error) {
+	rootFile := filepath.Join(t.BaseDirectory(), t.Filename())
+	files, err := metadataobject.DefaultGetFiles(rootFile)
+	if err != nil {
+		return nil, t.error(err)
+	}
+	return files, nil
+}
+
+func (t *TableConfig) WriteDiff(opts metadataobject.WriteDiffOpts) error {
+	err := metadataobject.DefaultWriteDiff(metadataobject.DefaultWriteDiffOpts{From: t, WriteDiffOpts: opts})
+	if err != nil {
+		return t.error(err)
+	}
 	return nil
 }
 
-func (t *TableConfig) Export(metadata yaml.MapSlice) (map[string][]byte, error) {
-	var tables interface{}
-	for _, item := range metadata {
-		k, ok := item.Key.(string)
-		if !ok || k != "tables" {
-			continue
-		}
-		tables = item.Value
-	}
-	if tables == nil {
-		tables = make([]interface{}, 0)
-	}
-	data, err := yaml.Marshal(tables)
-	if err != nil {
-		return nil, err
-	}
-	return map[string][]byte{
-		filepath.Join(t.MetadataDir, MetadataFilename): data,
-	}, nil
+func (t *TableConfig) BaseDirectory() string {
+	return t.MetadataDir
 }
 
-func (t *TableConfig) Name() string {
-	return "tables"
+func (t *TableConfig) error(err error, additionalContext ...string) metadataobject.ErrParsingMetadataObject {
+	return metadataobject.NewErrParsingMetadataObject(t, err, additionalContext...)
 }

@@ -23,10 +23,8 @@ const getValidAlterOptions = (alterTypeOptions, colName) => {
   };
 
   if (alterTypeOptions.length > 3) {
-    const {
-      typInfo: validOptions,
-      typValueMap: validOptionsMap,
-    } = getDataTypeInfo(alterTypeOptions.slice(3, 6), colName, 0);
+    const { typInfo: validOptions, typValueMap: validOptionsMap } =
+      getDataTypeInfo(alterTypeOptions.slice(3, 6), colName, 0);
 
     allInfo = allInfo.concat(validOptions);
     // const allInfo = [...currentInfo, ...validOptions];
@@ -53,8 +51,12 @@ export const sanitiseRootFields = rootFields => {
   const santisedRootFields = {};
   Object.keys(rootFields).forEach(rootFieldType => {
     let rootField = rootFields[rootFieldType];
-    if (rootField !== null) {
+    if (typeof rootField === 'string') {
       rootField = rootField.trim() || null;
+    } else if (rootField) {
+      rootField.name = rootField.name ? rootField.name.trim() : null;
+      rootField.comment =
+        typeof rootField.comment === 'string' ? rootField.comment.trim() : null;
     }
     santisedRootFields[rootFieldType] = rootField;
   });

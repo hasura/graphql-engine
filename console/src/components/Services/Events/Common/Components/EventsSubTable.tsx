@@ -1,18 +1,19 @@
 import React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import ReactTable from 'react-table';
-
-import styles from '../../Events.scss';
+import { currentDriver, dataSource } from '@/dataSources';
+import { getRunSqlQuery } from '@/components/Common/utils/v1QueryUtils';
 import InvocationLogDetails from './InvocationLogDetails';
 import { Event } from '../../types';
 import {
   SupportedEvents,
   getEventInvocationsLogByID,
 } from '../../../../../metadata/queryUtils';
-import { sanitiseRow } from '../../utils';
+import { parseEventsSQLResp, sanitiseRow } from '../../utils';
 import { Dispatch, ReduxState } from '../../../../../types';
 import requestAction from '../../../../../utils/requestAction';
 import Endpoints from '../../../../../Endpoints';
+import Spinner from '../../../../Common/Spinner/Spinner';
 
 interface Props extends InjectedReduxProps {
   rows: any[];
@@ -39,27 +40,27 @@ const RenderEventSubTable: React.FC<RenderSubTableProps> = ({
   rowsFormatted,
   headings,
 }) => (
-  <div className={styles.addPadding20Px}>
+  <div className="p-md">
     {event.webhook_conf && (
-      <div className={`row ${styles.add_mar_bottom_mid}`}>
-        <div className="col-md-2">
+      <div className="row mb-sm">
+        <div className="w-1/6">
           <b>Webhook:</b>
         </div>
-        <div className="col-md-4">{event.webhook_conf}</div>
+        <div className="w-1/3">{event.webhook_conf}</div>
       </div>
     )}
     {event.comment && (
-      <div className={`row ${styles.add_mar_bottom_mid}`}>
-        <div className="col-md-2">
+      <div className="row mb-xs">
+        <div className="w-1/6">
           <b>Comment:</b>
         </div>
-        <div className="col-md-4">{event.comment}</div>
+        <div className="w-4/6">{event.comment}</div>
       </div>
     )}
-    <div className={styles.add_mar_bottom_mid}>
+    <div className="mb-xs">
       <b>Recent Invocations:</b>
     </div>
-    <div className={`${styles.invocationsSection}`}>
+    <div>
       {rows.length ? (
         <ReactTable
           data={rowsFormatted}
@@ -101,14 +102,49 @@ const EventsSubTable: React.FC<Props> = ({
   triggerType,
   ...props
 }) => {
-  const [inv, setInvocations] = React.useState([]);
+  const [inv, setInvocations] = React.useState<
+    Record<string, string | number | boolean>[]
+  >([]);
   const [errInfo, setErrInfo] = React.useState(null);
+  const [loading, setLoading] = React.useState<boolean>(false);
 
   React.useEffect(() => {
     if (!triggerType || !props.event.id) {
       return;
     }
-    // TODO: handle a "loading" state
+    if (triggerType === 'data' && props.event.id) {
+      const url = Endpoints.query;
+      const payload = getRunSqlQuery(
+        dataSource.getDataTriggerInvocations?.(props.event.id) ?? '',
+        props.source,
+        undefined,
+        undefined,
+        currentDriver
+      );
+      const options = {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        headers: props.headers,
+      };
+      setLoading(true);
+      props
+        .getEventInvocationData(url, options)
+        .then(data => {
+          setLoading(false);
+          const parsed = parseEventsSQLResp(data?.result);
+          if (parsed) setInvocations(parsed);
+          if (data && data?.invocations && !data.error) {
+            setInvocations(data.invocations);
+            return;
+          }
+          setErrInfo(data.error);
+        })
+        .catch(err => {
+          setErrInfo(err);
+          setLoading(false);
+        });
+      return;
+    }
     const url = Endpoints.metadata;
     const payload = getEventInvocationsLogByID(triggerType, props.event.id);
     const options = {
@@ -116,18 +152,34 @@ const EventsSubTable: React.FC<Props> = ({
       body: JSON.stringify(payload),
       headers: props.headers,
     };
+    setLoading(true);
+
     props
       .getEventInvocationData(url, options)
       .then(data => {
+        setLoading(false);
         if (data && data?.invocations && !data.error) {
           setInvocations(data.invocations);
           return;
         }
         setErrInfo(data.error);
       })
-      .catch(err => setErrInfo(err));
+      .catch(err => {
+        setLoading(false);
+        setErrInfo(err);
+      });
   }, []);
 
+  if (loading) {
+    return (
+      <div className="p-md">
+        <div className="pb-xs">
+          <b>Recent Invocations:</b>
+        </div>
+        <Spinner />
+      </div>
+    );
+  }
   if (!makeAPICall || !triggerType) {
     return <RenderEventSubTable {...props} />;
   }
@@ -147,10 +199,7 @@ const EventsSubTable: React.FC<Props> = ({
     // Insert cells corresponding to all rows
     invocationColumns.forEach(col => {
       newRow[col] = (
-        <div
-          className={styles.tableCellCenterAlignedOverflow}
-          key={`${col}-${col}-${i}`}
-        >
+        <div className="text-center overflow-hidden" key={`${col}-${col}-${i}`}>
           {sanitiseRow(col, r)}
         </div>
       );
@@ -171,11 +220,12 @@ const EventsSubTable: React.FC<Props> = ({
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
   getEventInvocationData: (url: string, options: RequestInit) =>
-    dispatch(requestAction(url, options)),
+    dispatch(requestAction(url, options, undefined, undefined, true, true)),
 });
 
 const mapStateToProps = (state: ReduxState) => ({
   headers: state.tables.dataHeaders,
+  source: state.tables.currentDataSource,
 });
 const connector = connect(mapStateToProps, mapDispatchToProps);
 type InjectedReduxProps = ConnectedProps<typeof connector>;

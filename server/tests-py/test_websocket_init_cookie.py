@@ -1,20 +1,18 @@
 import json
-import threading
 from urllib.parse import urlparse
 
 import websocket
 import pytest
-from validate import check_query
 from context import PytestConf
 
 if not PytestConf.config.getoption("--test-ws-init-cookie"):
     pytest.skip("--test-ws-init-cookie flag is missing, skipping tests", allow_module_level=True)
 
-
 def url(hge_ctx):
     ws_url = urlparse(hge_ctx.hge_url)._replace(scheme='ws', path='/v1alpha1/graphql')
     return ws_url.geturl()
 
+@pytest.mark.usefixtures('auth_hook')
 class TestWebsocketInitCookie():
     """
     test if cookie is sent when initing the websocket connection, is our auth
@@ -24,11 +22,9 @@ class TestWebsocketInitCookie():
 
     @pytest.fixture(autouse=True)
     def transact(self, hge_ctx):
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/person_table.yaml')
-        assert st_code == 200, resp
+        hge_ctx.v1q_f(self.dir + '/person_table.yaml')
         yield
-        assert st_code == 200, resp
-        st_code, resp = hge_ctx.v1q_f(self.dir + '/drop_person_table.yaml')
+        hge_ctx.v1q_f(self.dir + '/drop_person_table.yaml')
 
     def _send_query(self, hge_ctx):
         ws_url = url(hge_ctx)

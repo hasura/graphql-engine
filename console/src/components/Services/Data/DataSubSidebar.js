@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
 import { Link } from 'react-router';
+import { FaCheckCircle } from 'react-icons/fa';
 import { manageDatabasesRoute } from '../../Common/utils/routesUtils';
 import TreeView from './TreeView';
-import { getDatabaseTableTypeInfoForAllSources } from './DataActions';
 import { isInconsistentSource, getSourceDriver } from './utils';
 import { canReUseTableTypes } from './DataSources/utils';
 import { useDataSource } from '../../../dataSources';
-import { getDataSources } from '../../../metadata/selector';
+import {
+  getDataSources,
+  getSourcesFromMetadata,
+  getTablesFromAllSources,
+} from '../../../metadata/selector';
 import {
   updateCurrentSchema,
   UPDATE_CURRENT_DATA_SOURCE,
   fetchDataInit,
+  getDatabaseTableTypeInfoForAllSources,
 } from './DataActions';
 import _push from './push';
-import Button from '../../Common/Button/Button';
-import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.scss';
+import { Button } from '@/new-components/Button';
+import styles from '../../Common/Layout/LeftSubSidebar/LeftSubSidebar.module.scss';
 import Spinner from '../../Common/Spinner/Spinner';
+import { useGDCTreeItemClick } from './GDCTree/hooks/useGDCTreeItemClick';
 
 const DATA_SIDEBAR_SET_LOADING = 'dataSidebar/DATA_SIDEBAR_SET_LOADING';
 
@@ -68,6 +74,8 @@ const DataSubSidebar = props => {
     pathname,
     dataSources,
     sidebarLoadingState,
+    currentTable,
+    metadataSources,
   } = props;
   const { setDriver } = useDataSource();
 
@@ -103,7 +111,9 @@ const DataSubSidebar = props => {
     setSchemaLoading(true);
     dispatch(updateCurrentSchema(value, currentDataSource))
       .then(() => {
-        dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+        if (value === currentSchema) {
+          dispatch(_push(`/data/${currentDataSource}/schema/${value}`));
+        }
       })
       .finally(() => {
         setSchemaLoading(false);
@@ -193,6 +203,8 @@ const DataSubSidebar = props => {
 
   const [treeViewItems, setTreeViewItems] = useState([]);
 
+  const { handleClick } = useGDCTreeItemClick(dispatch);
+
   useEffect(() => {
     // skip api call, if the data is there in store
     if (canReUseTableTypes(allSourcesSchemas, sources)) {
@@ -229,14 +241,9 @@ const DataSubSidebar = props => {
         setTreeViewItems(newItems);
       }
     );
-  }, [sources.length, tables, functions, enums, schemaList]);
+  }, [sources.length, tables, functions, enums, schemaList, currentTable]);
 
-  const loadStyle = {
-    pointerEvents: 'none',
-    cursor: 'progress',
-  };
-
-  const databasesCount = treeViewItems?.length || 0;
+  const databasesCount = metadataSources.length;
 
   return (
     <div className={`${styles.subSidebarList} ${styles.padd_top_small}`}>
@@ -252,12 +259,12 @@ const DataSubSidebar = props => {
             databaseLoading ||
             sidebarLoadingState ||
             isFetching ? (
-              <div className={styles.inline_display}>
+              <div className={styles.inline_display} id="spinner">
                 <Spinner className={styles.spinner} />
               </div>
             ) : (
-              <i
-                className={`fa fa-check-circle ${styles.padd_left_sm} ${styles.color_green}`}
+              <FaCheckCircle
+                className={`${styles.padd_left_sm} ${styles.color_green}`}
                 aria-hidden="true"
               />
             )}
@@ -268,11 +275,7 @@ const DataSubSidebar = props => {
             className={`col-xs-4 text-center ${styles.padd_left_remove} ${styles.sidebarCreateTable}`}
           >
             <Link className={styles.padd_remove_full} to={manageDatabasesRoute}>
-              <Button
-                size="xs"
-                color="white"
-                data-test="sidebar-manage-database"
-              >
+              <Button size="sm" data-test="sidebar-manage-database">
                 Manage
               </Button>
             </Link>
@@ -280,16 +283,7 @@ const DataSubSidebar = props => {
         )}
       </div>
       <ul className={styles.subSidebarListUL} data-test="table-links">
-        <div
-          style={
-            schemaLoading ||
-            databaseLoading ||
-            sidebarLoadingState ||
-            isFetching
-              ? loadStyle
-              : { pointerEvents: 'auto' }
-          }
-        >
+        <div style={{ pointerEvents: 'auto' }}>
           <TreeView
             items={treeViewItems}
             onDatabaseChange={onDatabaseChange}
@@ -298,7 +292,9 @@ const DataSubSidebar = props => {
             currentSchema={currentSchema}
             pathname={pathname}
             databaseLoading={databaseLoading}
+            schemaLoading={schemaLoading}
             preLoadState={preLoadState}
+            gdcItemClick={handleClick}
           />
         </div>
       </ul>
@@ -309,24 +305,25 @@ const DataSubSidebar = props => {
 const mapStateToProps = state => {
   return {
     migrationMode: state.main.migrationMode,
-    sources: state.metadata.metadataObject.sources,
+    sources: getSourcesFromMetadata(state),
     inconsistentObjects: state.metadata.inconsistentObjects,
-    tables: state.metadata.metadataObject.sources.map(s => s.tables).flat()
-      .length,
-    enums: state.metadata.metadataObject.sources
+    tables: getTablesFromAllSources(state).flat().length,
+    enums: getSourcesFromMetadata(state)
       .map(s => s.tables)
       .flat()
       .filter(item => item.hasOwnProperty('is_enum')).length,
-    functions: state.metadata.metadataObject.sources
+    functions: getSourcesFromMetadata(state)
       .map(s => s.functions || [])
       .flat().length,
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
+    currentTable: state.tables.currentTable,
     schemaList: state.tables.schemaList,
     allSourcesSchemas: state.tables?.allSourcesSchemas,
     pathname: state?.routing?.locationBeforeTransitions?.pathname,
     dataSources: getDataSources(state),
     sidebarLoadingState: state.dataSidebar.loading,
+    metadataSources: state.metadata.metadataObject.sources,
   };
 };
 

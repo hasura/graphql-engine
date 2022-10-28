@@ -1,0 +1,13 @@
+description: Null response should be allowed
+url: /v1/graphql
+status: 200
+query:
+  query: |
+    mutation {
+      null_response {
+        id
+      }
+    }
+response:
+  data:
+    null_response: null

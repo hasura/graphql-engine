@@ -1,4 +1,8 @@
+import { TriggerOperation } from '@/components/Common/FilterQuery/state';
+import globals from '@/Globals';
+import { isEnvironmentSupportMultiTenantConnectionPooling } from '@/utils/proConsole';
 import React from 'react';
+import { DeepRequired } from 'ts-essentials';
 import { DataSourcesAPI } from '../..';
 import { QualifiedTable } from '../../../metadata/types';
 import {
@@ -6,8 +10,16 @@ import {
   Table,
   BaseTableColumn,
   SupportedFeaturesType,
+  FrequentlyUsedColumn,
+  ViolationActions,
+  NormalizedTable,
 } from '../../types';
-import { generateTableRowRequest, operators } from './utils';
+import {
+  generateTableRowRequest,
+  operators,
+  generateRowsCountRequest,
+  sqlHandleApostrophe,
+} from './utils';
 
 const permissionColumnDataTypes = {
   character: [
@@ -54,10 +66,12 @@ const supportedColumnOperators = [
   '_lte',
 ];
 
-const isTable = (table: Table) => {
-  if (!table.table_type) return true; // todo
+const isTable = (table: NormalizedTable) => {
   return table.table_type === 'TABLE' || table.table_type === 'BASE TABLE';
 };
+
+export const isColTypeString = (colType: string) =>
+  ['text', 'varchar', 'char', 'bpchar', 'name'].includes(colType);
 
 const columnDataTypes = {
   INTEGER: 'integer',
@@ -72,7 +86,8 @@ const columnDataTypes = {
 };
 
 // eslint-disable-next-line no-useless-escape
-const createSQLRegex = /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<tableWithSchema>\"?\w+\"?)|(?<table>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
+const createSQLRegex =
+  /create\s*(?:|or\s*replace)\s*(?<type>view|table|function)\s*(?:\s*if*\s*not\s*exists\s*)?((?<schema>\"?\w+\"?)\.(?<nameWithSchema>\"?\w+\"?)|(?<name>\"?\w+\"?))\s*(?<partition>partition\s*of)?/gim;
 
 export const displayTableName = (table: Table) => {
   const tableName = table.table_name;
@@ -80,9 +95,19 @@ export const displayTableName = (table: Table) => {
   return isTable(table) ? <span>{tableName}</span> : <i>{tableName}</i>;
 };
 
-export const supportedFeatures: SupportedFeaturesType = {
+const violationActions: ViolationActions[] = [
+  'no action',
+  'cascade',
+  'set null',
+  'set default',
+];
+
+export const supportedFeatures: DeepRequired<SupportedFeaturesType> = {
   driver: {
     name: 'mssql',
+    fetchVersion: {
+      enabled: false,
+    },
   },
   schemas: {
     create: {
@@ -94,41 +119,74 @@ export const supportedFeatures: SupportedFeaturesType = {
   },
   tables: {
     create: {
-      enabled: false,
+      enabled: true,
+      frequentlyUsedColumns: false,
+      columnTypeSelector: false,
     },
     browse: {
       enabled: true,
       customPagination: true,
-      aggregation: false,
+      aggregation: true,
+      deleteRow: false,
+      editRow: false,
+      bulkRowSelect: false,
     },
     insert: {
       enabled: false,
     },
     modify: {
+      editableTableName: false,
       enabled: true,
-      columns: true,
-      readOnly: true,
-      columns_edit: false,
+      columns: {
+        view: true,
+        edit: true,
+        graphqlFieldName: false,
+        frequentlyUsedColumns: false,
+      },
+      readOnly: false,
       computedFields: false,
-      primaryKeys: true,
-      primaryKeys_edit: false,
-      foreginKeys: true,
-      foreginKeys_edit: false,
-      uniqueKeys: true,
-      uniqueKeys_edit: false,
+      primaryKeys: {
+        view: true,
+        edit: true,
+      },
+      foreignKeys: {
+        view: true,
+        edit: true,
+      },
+      uniqueKeys: {
+        view: true,
+        edit: true,
+      },
       triggers: false,
-      checkConstraints: false,
-      customGqlRoot: false,
+      checkConstraints: {
+        view: true,
+        edit: false,
+      },
+      indexes: {
+        view: false,
+        edit: false,
+      },
+      customGqlRoot: true,
       setAsEnum: false,
       untrack: true,
-      delete: false,
+      delete: true,
+      comments: {
+        view: true,
+        edit: false,
+      },
     },
     relationships: {
       enabled: true,
       track: true,
+      remoteDbRelationships: {
+        hostSource: true,
+        referenceSource: true,
+      },
+      remoteRelationships: true,
     },
     permissions: {
       enabled: true,
+      aggregation: true,
     },
     track: {
       enabled: false,
@@ -142,11 +200,18 @@ export const supportedFeatures: SupportedFeaturesType = {
     nonTrackableFunctions: {
       enabled: false,
     },
+    modify: {
+      enabled: false,
+      comments: {
+        view: false,
+        edit: false,
+      },
+    },
   },
   events: {
     triggers: {
       enabled: true,
-      add: false,
+      add: true,
     },
   },
   actions: {
@@ -155,6 +220,7 @@ export const supportedFeatures: SupportedFeaturesType = {
   },
   rawSQL: {
     enabled: true,
+    statementTimeout: false,
     tracking: true,
   },
   connectDbForm: {
@@ -162,7 +228,21 @@ export const supportedFeatures: SupportedFeaturesType = {
     connectionParameters: false,
     databaseURL: true,
     environmentVariable: true,
-    read_replicas: false,
+    read_replicas: {
+      create: true,
+      edit: true,
+    },
+    prepared_statements: false,
+    isolation_level: false,
+    connectionSettings: true,
+    retries: false,
+    cumulativeMaxConnections:
+      isEnvironmentSupportMultiTenantConnectionPooling(globals),
+    extensions_schema: false,
+    pool_timeout: false,
+    connection_lifetime: false,
+    ssl_certificates: false,
+    namingConvention: false,
   },
 };
 
@@ -196,8 +276,13 @@ export const mssql: DataSourcesAPI = {
   isColumnAutoIncrement: () => {
     return false;
   },
-  getTableSupportedQueries: () => {
-    // since only subscriptions and queries are supported on MSSQL atm.
+  getTableSupportedQueries: (table: NormalizedTable) => {
+    // all query types are supported for tables
+    if (isTable(table)) {
+      return ['select', 'insert', 'update', 'delete'];
+    }
+
+    // only select permissions for views, until server can verify the other ones
     return ['select'];
   },
   getColumnType: (col: TableColumn) => col.data_type_name ?? col.data_type,
@@ -209,10 +294,13 @@ SELECT
   s.name AS schema_name
 FROM
   sys.schemas s
-  INNER JOIN sys.database_principals p ON (s.principal_id = p.principal_id)
 WHERE
-  p.type_desc = 'SQL_USER'
-  AND s.name NOT IN ('guest', 'INFORMATION_SCHEMA', 'sys')
+  s.name NOT IN (
+    'guest', 'INFORMATION_SCHEMA', 'sys',
+    'db_owner', 'db_securityadmin', 'db_accessadmin',
+    'db_backupoperator', 'db_ddladmin', 'db_datawriter',
+    'db_datareader', 'db_denydatawriter', 'db_denydatareader', 'hdb_catalog'
+  )
 ORDER BY
   s.name
 `,
@@ -227,12 +315,28 @@ ORDER BY
       whereClause = `AND sch.name IN (${schemas.map(s => `'${s}'`).join(',')})`;
     } else if (tables) {
       whereClause = `AND obj.name IN (${tables
-        .map(t => `'${t.table_name}'`)
+        .map(t => `'${t.name}'`)
         .join(',')})`;
     }
+    // ## Note on fetching MSSQL table comments
+    // LEFT JOIN (select * from sys.extended_properties where "minor_id"= 0) AS e ON e.major_id = obj.object_id
+    // this would filter out column comments, but if there are multiple extended properties with same major id and minor_id=0;
+    // ie, multiple properties on the table name (as shown below) can cause confusion and then it would pick only the first result.
+    // * case 1
+    // EXEC sys.sp_addextendedproperty
+    // @name=N'TableDescription',
+    // @value=N'Album Table is used for listing albums' ,
+    // @level0type=N'SCHEMA', @level0name=N'dbo',
+    // @level1type=N'TABLE', @level1name=N'Album';
+    // * case 2
+    // EXEC sys.sp_addextendedproperty
+    // @name=N'TableDescription2', -- ==> this is possible with mssql
+    // @value=N'some other property description' ,
+    // @level0type=N'SCHEMA', @level0name=N'dbo',
+    // @level1type=N'TABLE', @level1name=N'Album';
 
     return `
-    SELECT sch.name as table_schema,
+  SELECT sch.name as table_schema,
     obj.name as table_name,
     case
         when obj.type = 'AF' then 'Aggregate function (CLR)'
@@ -257,10 +361,11 @@ ORDER BY
         when obj.type = 'EC' then 'Edge constraint'
         when obj.type = 'V' then 'VIEW'
     end as table_type,
-    obj.type_desc AS comment,
+    (SELECT e.[value] AS comment for json path),
     JSON_QUERY([isc].json) AS columns
 FROM sys.objects as obj
     INNER JOIN sys.schemas as sch ON obj.schema_id = sch.schema_id
+		LEFT JOIN (select * from sys.extended_properties where minor_id = 0) AS e ON e.major_id = obj.object_id
     OUTER APPLY (
         SELECT
             a.name AS column_name,
@@ -279,11 +384,16 @@ FROM sys.objects as obj
                 WHEN t.is_user_defined = 1 THEN 'USER-DEFINED'
                 ELSE 'OTHER'
             END AS data_type,
-            t.name AS data_type_name
+            t.name AS data_type_name,
+            sch.name AS table_schema,
+            obj.name AS table_name,
+            ep.value AS comment,
+            ep.name AS extended_property_name_comment
         FROM
             sys.columns a
             LEFT JOIN sys.default_constraints ad ON (a.column_id = ad.parent_column_id AND a.object_id = ad.parent_object_id)
             JOIN sys.types t ON a.user_type_id = t.user_type_id
+            LEFT JOIN sys.extended_properties ep ON (ep.major_id = a.object_id AND ep.minor_id = a.column_id)
         WHERE a.column_id > 0 and a.object_id = obj.object_id
         FOR JSON path
 ) AS [isc](json) where obj.type_desc in ('USER_TABLE', 'VIEW') ${whereClause};`;
@@ -306,11 +416,131 @@ FROM sys.objects as obj
     return '';
   },
   dependencyErrorCode: '',
-  getCreateTableQueries: () => {
-    return [];
+  getCreateTableQueries: (
+    currentSchema: string,
+    tableName: string,
+    columns: any[],
+    primaryKeys: (number | string)[],
+    foreignKeys: any[],
+    uniqueKeys: any[],
+    checkConstraints: any[],
+    tableComment?: string | undefined
+  ) => {
+    const currentCols = columns.filter(c => c.name !== '');
+    const flatUniqueKeys = uniqueKeys.reduce((acc, val) => acc.concat(val), []);
+
+    const pKeys = primaryKeys
+      .filter(p => p !== '')
+      .map(p => currentCols[p as number].name);
+
+    let tableDefSql = '';
+    for (let i = 0; i < currentCols.length; i++) {
+      tableDefSql += `${currentCols[i].name} ${currentCols[i].type}`;
+
+      // check if column is nullable
+      if (!currentCols[i].nullable) {
+        tableDefSql += ' NOT NULL';
+      }
+
+      // check if the column is unique
+      if (uniqueKeys.length && flatUniqueKeys.includes(i)) {
+        tableDefSql += ' UNIQUE';
+      }
+
+      // check if column has a default value
+      if (
+        currentCols[i].default !== undefined &&
+        currentCols[i].default?.value !== ''
+      ) {
+        if (isColTypeString(currentCols[i].type)) {
+          // if a column type is text and if it has a non-func default value, add a single quote
+          tableDefSql += ` DEFAULT '${currentCols[i]?.default?.value}'`;
+        } else {
+          tableDefSql += ` DEFAULT ${currentCols[i]?.default?.value}`;
+        }
+      }
+
+      tableDefSql += i === currentCols.length - 1 ? '' : ', ';
+    }
+
+    // add primary key
+    if (pKeys.length > 0) {
+      tableDefSql += ', PRIMARY KEY (';
+      tableDefSql += pKeys.map(col => `${col}`).join(',');
+      tableDefSql += ') ';
+    }
+
+    const numFks = foreignKeys.length;
+    let fkDupColumn = null;
+    if (numFks > 1) {
+      foreignKeys.forEach((fk, _i) => {
+        if (_i === numFks - 1) {
+          return;
+        }
+
+        const { colMappings, refTableName, onUpdate, onDelete } = fk;
+
+        const mappingObj: Record<string, string> = {};
+        const rCols: string[] = [];
+        const lCols: string[] = [];
+
+        colMappings
+          .slice(0, -1)
+          .forEach((cm: { column: string | number; refColumn: string }) => {
+            if (mappingObj[cm.column] !== undefined) {
+              fkDupColumn = columns[cm.column as number].name;
+            }
+
+            mappingObj[cm.column] = cm.refColumn;
+            lCols.push(`"${columns[cm.column as number].name}"`);
+            rCols.push(`"${cm.refColumn}"`);
+          });
+
+        if (lCols.length === 0) {
+          return;
+        }
+        tableDefSql += `, FOREIGN KEY (${lCols.join(', ')}) REFERENCES "${
+          fk.refSchemaName
+        }"."${refTableName}"(${rCols.join(
+          ', '
+        )}) ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
+      });
+    }
+
+    if (fkDupColumn) {
+      return {
+        error: `The column "${fkDupColumn}" seems to be referencing multiple foreign columns`,
+      };
+    }
+
+    // add check constraints
+    if (checkConstraints.length > 0) {
+      checkConstraints.forEach(constraint => {
+        if (!constraint.name || !constraint.check) {
+          return;
+        }
+
+        tableDefSql += `, CONSTRAINT "${constraint.name}" CHECK(${constraint.check})`;
+      });
+    }
+
+    let sqlCreateTable = `CREATE TABLE "${currentSchema}"."${tableName}" (${tableDefSql});`;
+
+    // add comment to the table using MS_Description property
+    if (tableComment && tableComment !== '') {
+      const commentStr = sqlHandleApostrophe(tableComment);
+      const commentSQL = `EXEC sys.sp_addextendedproperty   
+      @name = N'MS_Description',   
+      @value = N'${commentStr}',   
+      @level0type = N'SCHEMA', @level0name = '${currentSchema}',  
+      @level1type = N'TABLE',  @level1name = '${tableName}';`;
+      sqlCreateTable += `${commentSQL}`;
+    }
+
+    return [sqlCreateTable];
   },
-  getDropTableSql: () => {
-    return '';
+  getDropTableSql: (schema: string, table: string) => {
+    return `DROP TABLE "${schema}"."${table}"`;
   },
   createSQLRegex,
   getDropSchemaSql: (schema: string) => {
@@ -322,14 +552,62 @@ FROM sys.objects as obj
   isTimeoutError: () => {
     return false;
   },
-  getAlterForeignKeySql: () => {
-    return '';
+  getAlterForeignKeySql: (
+    from: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    to: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    dropConstraint: string,
+    newConstraint: string,
+    onUpdate: string,
+    onDelete: string
+  ) => {
+    return `
+    BEGIN transaction;
+    ALTER TABLE "${from.schemaName}"."${from.tableName}"
+    DROP CONSTRAINT IF EXISTS "${dropConstraint}";
+    ALTER TABLE "${from.schemaName}"."${from.tableName}"
+    ADD CONSTRAINT "${newConstraint}"
+    FOREIGN KEY (${from.columns.join(', ')})
+    REFERENCES "${to.schemaName}"."${to.tableName}" (${to.columns.join(', ')}) 
+    ON UPDATE ${onUpdate} ON DELETE ${onDelete};
+    COMMIT transaction;
+    `;
   },
-  getCreateFKeySql: () => {
-    return '';
+  getCreateFKeySql: (
+    from: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    to: {
+      tableName: string;
+      schemaName: string;
+      columns: string[];
+    },
+    newConstraint: string,
+    onUpdate: string,
+    onDelete: string
+  ) => {
+    return `
+    ALTER TABLE "${from.schemaName}"."${from.tableName}"
+    ADD CONSTRAINT "${newConstraint}"
+    FOREIGN KEY (${from.columns.join(', ')})
+    REFERENCES "${to.schemaName}"."${to.tableName}" (${to.columns.join(', ')})
+    ON UPDATE ${onUpdate} ON DELETE ${onDelete}`;
   },
-  getDropConstraintSql: () => {
-    return '';
+  getDropConstraintSql: (
+    tableName: string,
+    schemaName: string,
+    constraintName: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}"`;
   },
   getRenameTableSql: () => {
     return '';
@@ -340,41 +618,112 @@ FROM sys.objects as obj
   getCreateTriggerSql: () => {
     return '';
   },
-  getDropSql: () => {
-    return '';
+  getDropSql: (tableName: string, schemaName: string, property = 'table') => {
+    return `DROP ${property} "${schemaName}"."${tableName}";`;
   },
   getViewDefinitionSql: () => {
     return '';
   },
-  getDropColumnSql: () => {
-    return '';
+  getDropColumnSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}"
+    DROP COLUMN "${columnName}"`;
   },
-  getAddColumnSql: () => {
-    return '';
+  getAddColumnSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    columnType: string,
+    options?: {
+      nullable: boolean;
+      unique: boolean;
+      default: any;
+      sqlGenerator?: FrequentlyUsedColumn['dependentSQLGenerator'];
+    },
+    constraintName?: string
+  ) => {
+    let sql = `ALTER TABLE "${schemaName}"."${tableName}" ADD "${columnName}" ${columnType}`;
+    if (!options) {
+      return sql;
+    }
+    if (options.nullable) {
+      sql += ` NULL`;
+    } else {
+      sql += ` NOT NULL`;
+    }
+    if (options.unique) {
+      sql += ` UNIQUE`;
+    }
+    if (options.default) {
+      sql += ` CONSTRAINT "${constraintName}" DEFAULT '${options.default}' WITH VALUES`;
+    }
+    return sql;
   },
-  getAddUniqueConstraintSql: () => {
-    return '';
+  getAddUniqueConstraintSql: (
+    tableName: string,
+    schemaName: string,
+    constraintName: string,
+    columns: string[]
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}"
+    ADD CONSTRAINT "${constraintName}"
+    UNIQUE (${columns.join(',')})`;
   },
-  getDropNotNullSql: () => {
-    return '';
+  getDropNotNullSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    columnType?: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" ALTER COLUMN "${columnName}"  ${columnType} NULL`;
   },
-  getSetCommentSql: () => {
-    return '';
+  getSetColumnDefaultSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    defaultValue: any,
+    constraintName: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT IF EXISTS "${constraintName}";
+    ALTER TABLE "${schemaName}"."${tableName}" ADD CONSTRAINT "${constraintName}" DEFAULT ${defaultValue} FOR "${columnName}"`;
   },
-  getSetColumnDefaultSql: () => {
-    return '';
+  getSetNotNullSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    columnType: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" ALTER COLUMN "${columnName}"  ${columnType} NOT NULL`;
   },
-  getSetNotNullSql: () => {
-    return '';
+  getAlterColumnTypeSql: (
+    tableName: string,
+    schemaName: string,
+    columnName: string,
+    columnType: string,
+    wasNullable?: boolean
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" ALTER COLUMN "${columnName}" ${columnType} ${
+      !wasNullable ? `NOT NULL` : ``
+    }`;
   },
-  getAlterColumnTypeSql: () => {
-    return '';
+  getDropColumnDefaultSql: (
+    tableName: string,
+    schemaName: string,
+    columnName?: string,
+    constraintName?: string
+  ) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}"`;
   },
-  getDropColumnDefaultSql: () => {
-    return '';
-  },
-  getRenameColumnQuery: () => {
-    return '';
+  getRenameColumnQuery: (
+    tableName: string,
+    schemaName: string,
+    newName: string,
+    oldName: string
+  ) => {
+    return `sp_rename '[${schemaName}].[${tableName}].[${oldName}]', '${newName}', 'COLUMN'`;
   },
   fetchColumnCastsQuery: '',
   checkSchemaModification: () => {
@@ -383,8 +732,40 @@ FROM sys.objects as obj
   getCreateCheckConstraintSql: () => {
     return '';
   },
-  getCreatePkSql: () => {
-    return '';
+  getCreatePkSql: ({
+    schemaName,
+    tableName,
+    selectedPkColumns,
+    constraintName,
+  }: {
+    schemaName: string;
+    tableName: string;
+    selectedPkColumns: string[];
+    constraintName?: string;
+  }) => {
+    return `ALTER TABLE "${schemaName}"."${tableName}"
+    ADD CONSTRAINT "${constraintName}"
+    PRIMARY KEY (${selectedPkColumns.map(pkc => `"${pkc}"`).join(',')})`;
+  },
+  getAlterPkSql: ({
+    schemaName,
+    tableName,
+    selectedPkColumns,
+    constraintName,
+  }: {
+    schemaName: string;
+    tableName: string;
+    selectedPkColumns: string[];
+    constraintName: string; // compulsory for PG
+  }) => {
+    return `BEGIN TRANSACTION;
+    ALTER TABLE "${schemaName}"."${tableName}" DROP CONSTRAINT "${constraintName}";
+    ALTER TABLE "${schemaName}"."${tableName}"
+      ADD CONSTRAINT "${constraintName}" PRIMARY KEY (${selectedPkColumns
+      .map(pkc => `"${pkc}"`)
+      .join(', ')});
+    
+    COMMIT TRANSACTION;`;
   },
   getFunctionDefinitionSql: null,
   primaryKeysInfoSql: ({ schemas }) => {
@@ -423,8 +804,30 @@ FROM sys.objects as obj
     FOR JSON PATH;
     `;
   },
-  checkConstraintsSql: () => {
-    return '';
+  checkConstraintsSql: ({ schemas }) => {
+    let whereClause = '';
+
+    if (schemas) {
+      whereClause = `WHERE schema_name (t.schema_id) in (${schemas
+        .map(s => `'${s}'`)
+        .join(',')})`;
+    }
+    return `
+SELECT
+	con.name AS constraint_name,
+	schema_name (t.schema_id) AS table_schema,
+	t.name AS table_name,
+	col.name AS column_name,
+	con.definition AS check_definition
+FROM
+	sys.check_constraints con
+	LEFT OUTER JOIN sys.objects t ON con.parent_object_id = t.object_id
+	LEFT OUTER JOIN sys.all_columns col ON con.parent_column_id = col.column_id
+		AND con.parent_object_id = col.object_id
+${whereClause}
+ORDER BY con.name
+FOR JSON PATH;
+    `;
   },
   uniqueKeysSql: ({ schemas }) => {
     let whereClause = '';
@@ -499,16 +902,50 @@ INNER JOIN sys.schemas sch2
     ON tab2.schema_id = sch2.schema_id for json path;
     `;
   },
-  getReferenceOption: () => {
-    return '';
+  getReferenceOption: (opt: string) => {
+    return opt;
   },
   deleteFunctionSql: () => {
     return '';
   },
-  getEventInvocationInfoByIDSql: () => {
-    return '';
+  // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
+  // https://github.com/hasura/graphql-engine-mono/issues/4641
+  getEventInvocationInfoByIDSql: (
+    logTableDef: QualifiedTable,
+    eventLogTable: QualifiedTable,
+    eventId: string
+  ) => {
+    const sql = `SELECT CONVERT(varchar(MAX), original_table.id) AS "id", CONVERT(varchar(MAX), original_table.event_id) AS "event_id",  
+        original_table.status,  CONVERT(varchar(MAX), original_table.request) AS "request", CONVERT(varchar(MAX), original_table.response) AS "response", 
+        CONVERT(varchar(MAX), CAST(original_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.id) AS "id", data_table.schema_name, 
+        data_table.table_name, data_table.trigger_name, CONVERT(varchar(MAX), data_table.payload) AS "payload", data_table.delivered, data_table.error,
+        data_table.tries, CONVERT(varchar(MAX), CAST(data_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.locked) AS "locked", 
+        CONVERT(varchar(MAX), data_table.next_retry_at) AS "next_retry_at", data_table.archived 
+        FROM "${logTableDef.schema}"."${logTableDef.name}" AS original_table JOIN "${eventLogTable.schema}"."${eventLogTable.name}" 
+        AS data_table ON original_table.event_id = data_table.id
+        WHERE original_table.event_id = '${eventId}'
+        ORDER BY original_table.created_at DESC `;
+    return sql;
   },
-  getDatabaseInfo: '',
+  getDatabaseInfo: `
+SELECT
+  TABLE_SCHEMA AS table_schema,
+  TABLE_NAME AS table_name,
+  COLUMN_NAME AS "column.columnName",
+  DATA_TYPE AS "column.columnType"
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE
+    TABLE_SCHEMA NOT IN (
+      'guest', 'INFORMATION_SCHEMA', 'sys',
+      'db_owner', 'db_securityadmin', 'db_accessadmin',
+      'db_backupoperator', 'db_ddladmin', 'db_datawriter',
+      'db_datareader', 'db_denydatawriter', 'db_denydatareader', 'hdb_catalog'
+    )
+ORDER BY
+  table_schema,
+  table_name
+FOR JSON path;
+`,
   getTableInfo: (tables: QualifiedTable[]) => `
 SELECT
 	o.name AS table_name,
@@ -531,7 +968,171 @@ WHERE
   permissionColumnDataTypes,
   viewsSupported: false,
   supportedColumnOperators,
-  aggregationPermissionsAllowed: false,
   supportedFeatures,
+  violationActions,
   defaultRedirectSchema,
+  generateRowsCountRequest,
+  // TODO(iyekings): this is a duplicate of schemaList
+  schemaListQuery: `
+  -- test_id = schema_list
+  SELECT
+    s.name AS schema_name
+  FROM
+    sys.schemas s
+  WHERE
+    s.name NOT IN (
+      'guest', 'INFORMATION_SCHEMA', 'sys',
+      'db_owner', 'db_securityadmin', 'db_accessadmin',
+      'db_backupoperator', 'db_ddladmin', 'db_datawriter',
+      'db_datareader', 'db_denydatawriter', 'db_denydatareader', 'hdb_catalog'
+    )
+  ORDER BY
+    s.name
+`,
+  getAlterTableCommentSql: () => {
+    return '';
+  },
+  getAlterColumnCommentSql: ({
+    tableName,
+    schemaName,
+    columnName,
+    comment,
+  }) => {
+    const commentStr = sqlHandleApostrophe(comment);
+    const dropCommonCommentStatement = `IF EXISTS (SELECT NULL FROM SYS.EXTENDED_PROPERTIES WHERE [major_id] = OBJECT_ID('${tableName}') AND [name] = N'column_comment_${schemaName}_${tableName}_${columnName}' AND [minor_id] = (SELECT [column_id] FROM SYS.COLUMNS WHERE [name] = '${columnName}' AND [object_id] = OBJECT_ID('${tableName}')))    
+        EXECUTE sp_dropextendedproperty   
+        @name = N'column_comment_${schemaName}_${tableName}_${columnName}',   
+        @level0type = N'SCHEMA', @level0name = '${schemaName}'
+    `;
+    const commonCommentStatement = `
+        exec sys.sp_addextendedproperty   
+        @name = N'column_comment_${schemaName}_${tableName}_${columnName}',   
+        @value = N'${commentStr}',   
+        @level0type = N'SCHEMA', @level0name = '${schemaName}'
+    `;
+    return `${dropCommonCommentStatement},@level1type = N'TABLE',  @level1name = '${tableName}',@level2type = N'COLUMN', @level2name = '${columnName}';
+    ${commonCommentStatement},@level1type = N'TABLE',  @level1name = '${tableName}',@level2type = N'COLUMN', @level2name = '${columnName}'`;
+  },
+  getAlterViewCommentSql: () => {
+    return '';
+  },
+  getAlterFunctionCommentSql: () => {
+    return '';
+  },
+  // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
+  // https://github.com/hasura/graphql-engine-mono/issues/4641
+  getDataTriggerLogsCountQuery: (
+    triggerName: string,
+    triggerOp: TriggerOperation
+  ): string => {
+    const triggerTypes = {
+      pending: 'pending',
+      processed: 'processed',
+      invocation: 'invocation',
+    };
+    const eventRelTable = `"hdb_catalog"."event_log"`;
+    const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
+
+    let logsCountQuery = `SELECT
+    COUNT(*)
+    FROM ${eventRelTable} data_table
+    WHERE data_table.trigger_name = '${triggerName}' `;
+
+    switch (triggerOp) {
+      case triggerTypes.pending:
+        logsCountQuery += `AND delivered=0 AND error=0 AND archived=0;`;
+        break;
+
+      case triggerTypes.processed:
+        logsCountQuery += `AND (delivered=1 OR error=1) AND archived=0;`;
+        break;
+      case triggerTypes.invocation:
+        logsCountQuery = `SELECT
+          COUNT(*)
+          FROM ${eventInvTable} original_table JOIN ${eventRelTable} data_table
+          ON original_table.event_id = data_table.id
+          WHERE data_table.trigger_name = '${triggerName}' `;
+        break;
+      default:
+        break;
+    }
+    return logsCountQuery;
+  },
+  // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
+  // https://github.com/hasura/graphql-engine-mono/issues/4641
+  getDataTriggerLogsQuery: (
+    triggerOp: TriggerOperation,
+    triggerName: string,
+    limit?: number,
+    offset?: number
+  ): string => {
+    const triggerTypes = {
+      pending: 'pending',
+      processed: 'processed',
+      invocation: 'invocation',
+    };
+    const eventRelTable = `"hdb_catalog"."event_log"`;
+    const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
+    let sql = '';
+
+    switch (triggerOp) {
+      case triggerTypes.pending:
+        sql = `SELECT CONVERT(varchar(MAX), id) AS "id", schema_name, table_name, trigger_name, 
+        CONVERT(varchar(MAX), payload) AS "payload", delivered, error, tries, CONVERT(varchar(MAX), CAST(created_at as datetime2) ) AS "created_at",
+        CONVERT(varchar(MAX), locked) AS "locked", CONVERT(varchar(MAX), next_retry_at) AS "next_retry_at", archived 
+        FROM ${eventRelTable} AS data_table
+        WHERE data_table.trigger_name = '${triggerName}'  
+        AND delivered=0 AND error=0 AND archived=0 ORDER BY created_at DESC `;
+        break;
+
+      case triggerTypes.processed:
+        sql = `SELECT CONVERT(varchar(MAX), id) AS "id", schema_name, table_name, trigger_name, 
+        CONVERT(varchar(MAX), payload) AS "payload", delivered, error, tries, CONVERT(varchar(MAX), CAST(created_at as datetime2) ) AS "created_at",
+        CONVERT(varchar(MAX), locked) AS "locked", CONVERT(varchar(MAX), next_retry_at) AS "next_retry_at", archived 
+        FROM ${eventRelTable} AS data_table 
+        WHERE data_table.trigger_name = '${triggerName}' 
+        AND (delivered=1 OR error=1) AND archived=0 ORDER BY created_at DESC `;
+        break;
+
+      case triggerTypes.invocation:
+        sql = `SELECT CONVERT(varchar(MAX), original_table.id) AS "id", CONVERT(varchar(MAX), original_table.event_id) AS "event_id",  
+        original_table.status,  CONVERT(varchar(MAX), original_table.request) AS "request", CONVERT(varchar(MAX), original_table.response) AS "response", 
+        CONVERT(varchar(MAX), CAST(original_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.id) AS "id", data_table.schema_name, 
+        data_table.table_name, data_table.trigger_name, CONVERT(varchar(MAX), data_table.payload) AS "payload", data_table.delivered, data_table.error,
+        data_table.tries, CONVERT(varchar(MAX), CAST(data_table.created_at as datetime2)) AS "created_at", CONVERT(varchar(MAX), data_table.locked) AS "locked", 
+        CONVERT(varchar(MAX), data_table.next_retry_at) AS "next_retry_at", data_table.archived 
+        FROM ${eventInvTable} AS original_table JOIN ${eventRelTable} AS data_table ON original_table.event_id = data_table.id
+        WHERE data_table.trigger_name = '${triggerName}' 
+        ORDER BY original_table.created_at DESC `;
+        break;
+      default:
+        break;
+    }
+
+    if (offset) {
+      sql += ` OFFSET ${offset} ROWS`;
+    } else {
+      sql += ` OFFSET 0 ROWS`;
+    }
+
+    if (limit) {
+      sql += ` FETCH NEXT ${limit} ROWS ONLY;`;
+    } else {
+      sql += ` FETCH NEXT 10 ROWS ONLY;`;
+    }
+
+    return sql;
+  },
+  // temporary workaround SQL query (till we get an API) as ODBC server library does not support some data types
+  // https://github.com/hasura/graphql-engine-mono/issues/4641
+  getDataTriggerInvocations: (eventId: string): string => {
+    const eventInvTable = `"hdb_catalog"."event_invocation_logs"`;
+    const sql = `SELECT CONVERT(varchar(MAX), id) AS "id", CONVERT(varchar(MAX), event_id) AS "event_id",  
+    status,  CONVERT(varchar(MAX), request) AS "request", CONVERT(varchar(MAX), response) AS "response", 
+    CONVERT(varchar(MAX), CAST(created_at as datetime2)) AS "created_at"
+    FROM ${eventInvTable} 
+    WHERE event_id = '${eventId}' 
+    ORDER BY created_at DESC;`;
+    return sql;
+  },
 };

@@ -51,13 +51,13 @@
   status: 200
   headers:
     X-Hasura-Role: user
-    X-Hasura-User-Id: '1'
+    X-Hasura-User-Id: "1"
   response:
     errors:
       - extensions:
           path: $.selectionSet.profiles.selectionSet.messagesSingleField
           code: validation-failed
-        message: '"messagesSingleField" has no argument named "includes"'
+        message: "'messagesSingleField' has no argument named 'includes'"
   query:
     query: |
       query {
@@ -77,7 +77,7 @@
   status: 200
   headers:
     X-Hasura-Role: user
-    X-Hasura-User-Id: '1'
+    X-Hasura-User-Id: "1"
   response:
     data:
       profiles:
