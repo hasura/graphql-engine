@@ -58,13 +58,11 @@ export function QueryDialog(props: Props) {
               Skip getting started tutorial
             </div>
           </Analytics>
-          <Button
-            mode="primary"
-            data-trackid="query-dialog-get-started-button"
-            onClick={onRunHandler}
-          >
-            Run Query <FaPlayCircle />
-          </Button>
+          <Analytics name="query-dialog-get-started-button">
+            <Button mode="primary" onClick={onRunHandler}>
+              Run Query <FaPlayCircle />
+            </Button>
+          </Analytics>
         </div>
       </>
     </Dialog>
