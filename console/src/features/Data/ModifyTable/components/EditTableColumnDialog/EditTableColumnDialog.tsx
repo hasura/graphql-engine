@@ -53,7 +53,7 @@ export const EditTableColumnDialog = (props: EditTableColumnDialogProps) => {
         <Dialog
           size="md"
           titleTooltip={`Edit ${column.name} column settings`}
-          title={column.name}
+          title={`[${column.name}]`}
           hasBackdrop
           onClose={onClose}
           footer={

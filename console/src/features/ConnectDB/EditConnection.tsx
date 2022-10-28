@@ -76,7 +76,7 @@ export const EditConnection = () => {
     >
       {options => {
         return (
-          <div>
+          <div className="max-w-5xl">
             <InputField type="text" name="name" label="Database Display Name" />
 
             <Select
@@ -92,9 +92,12 @@ export const EditConnection = () => {
             <div className="mt-4">
               <CustomizationForm />
             </div>
-            <Button type="submit" mode="primary" isLoading={submitIsLoading}>
-              Edit Connection
-            </Button>
+            <div className="mt-4">
+              <Button type="submit" mode="primary" isLoading={submitIsLoading}>
+                Edit Connection
+              </Button>
+            </div>
+
             {!!Object(options.formState.errors)?.keys?.length && (
               <div className="mt-6 max-w-xl">
                 <IndicatorCard status="negative">

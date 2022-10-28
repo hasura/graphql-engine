@@ -20,7 +20,7 @@ export const TableRootFields: React.VFC<ModifyTableProps> = props => {
   const [showCustomModal, setShowCustomModal] = React.useState(false);
   const { metadataTable, isLoading } = useMetadataTable(dataSourceName, table);
 
-  const { updateTableConfiguration, isLoading: saving } =
+  const { updateCustomRootFields, isLoading: saving } =
     useUpdateTableConfiguration(dataSourceName, table);
 
   if (isLoading) {
@@ -59,7 +59,7 @@ export const TableRootFields: React.VFC<ModifyTableProps> = props => {
       <TableTrackingCustomizationModal
         tableName={tableName}
         onSubmit={(formValues, config) => {
-          updateTableConfiguration(config).then(() => {
+          updateCustomRootFields(config).then(() => {
             setShowCustomModal(false);
           });
         }}

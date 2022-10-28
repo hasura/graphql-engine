@@ -81,5 +81,26 @@ export const useUpdateTableConfiguration = (
     ]
   );
 
-  return { updateTableConfiguration, metadata, resource_version, ...rest };
+  // helper function
+  const updateCustomRootFields = useCallback(
+    (config: MetadataTableConfig) => {
+      const newConfig: MetadataTableConfig = {
+        ...metadataTable?.configuration,
+        custom_name: config?.custom_name || undefined,
+        custom_root_fields: config?.custom_root_fields || {},
+      };
+
+      return updateTableConfiguration(newConfig);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [updateTableConfiguration]
+  );
+
+  return {
+    updateTableConfiguration,
+    updateCustomRootFields,
+    metadata,
+    resource_version,
+    ...rest,
+  };
 };
