@@ -124,6 +124,29 @@
           }
         ]
       }
+    ],
+    "react/forbid-component-props": [
+      "error",
+      {
+        "forbid": [
+          {
+            "propName": "data-analytics-name",
+            "message": "Analytics attributes (data-analytics-name) should be added through the Analytics component/utilities"
+          },
+          {
+            "propName": "data-trackid",
+            "message": "Analytics attributes (data-trackid) should be added through the Analytics component/utilities"
+          },
+          {
+            "propName": "data-heap-redact-text",
+            "message": "Analytics attributes (data-heap-redact-text) should be added through the Analytics component/utilities"
+          },
+          {
+            "propName": "data-heap-redact-attributes",
+            "message": "Analytics attributes (data-heap-redact-attributes) should be added through the Analytics component/utilities"
+          }
+        ]
+      }
     ]
   },
   "plugins": [
