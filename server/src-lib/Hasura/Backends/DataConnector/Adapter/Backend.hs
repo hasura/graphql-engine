@@ -92,10 +92,10 @@ instance Backend 'DataConnector where
   getCustomAggregateOperators Adapter.SourceConfig {..} =
     HashMap.foldrWithKey insertOps mempty scalarTypesCapabilities
     where
-      scalarTypesCapabilities = maybe mempty API.unScalarTypesCapabilities $ API._cScalarTypes _scCapabilities
+      scalarTypesCapabilities = API.unScalarTypesCapabilities $ API._cScalarTypes _scCapabilities
       insertOps typeName API.ScalarTypeCapabilities {..} m =
         HashMap.foldrWithKey insertOp m $
-          maybe mempty API.unAggregateFunctions _stcAggregateFunctions
+          API.unAggregateFunctions _stcAggregateFunctions
         where
           insertOp funtionName resultTypeName =
             HashMap.insertWith HashMap.union funtionName $

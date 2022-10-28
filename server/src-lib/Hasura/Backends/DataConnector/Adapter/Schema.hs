@@ -12,7 +12,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.List.NonEmpty qualified as NE
 import Data.Text.Casing (GQLNameIdentifier, fromCustomName)
 import Data.Text.Extended ((<<>))
-import Hasura.Backends.DataConnector.API.V0.Capabilities (lookupComparisonInputObjectDefinition)
+import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Backends.DataConnector.Adapter.Backend (CustomBooleanOperator (..), columnTypeToScalarType)
 import Hasura.Backends.DataConnector.Adapter.Types qualified as DC
 import Hasura.Base.Error
@@ -204,28 +204,28 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
       GS.C.SchemaT r m [P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector)))]
     mkCustomOperators tCase collapseIfNull typeName = do
       let capabilities = sourceInfo ^. RQL.siConfiguration . DC.scCapabilities
-      case lookupComparisonInputObjectDefinition capabilities (Witch.from $ DC.fromGQLType typeName) of
+      case Map.lookup (Witch.from $ DC.fromGQLType typeName) (API.unScalarTypesCapabilities $ API._cScalarTypes capabilities) of
         Nothing -> pure []
-        Just GQL.InputObjectTypeDefinition {..} -> do
-          traverse (mkCustomOperator tCase collapseIfNull) _iotdValueDefinitions
+        Just API.ScalarTypeCapabilities {..} -> do
+          traverse (mkCustomOperator tCase collapseIfNull) $ Map.toList $ fmap Witch.from $ API.unComparisonOperators $ _stcComparisonOperators
 
     mkCustomOperator ::
       NamingCase ->
       Options.DangerouslyCollapseBooleans ->
-      GQL.InputValueDefinition ->
+      (GQL.Name, DC.ScalarType) ->
       GS.C.SchemaT r m (P.InputFieldsParser n (Maybe (CustomBooleanOperator (IR.UnpreparedValue 'DataConnector))))
-    mkCustomOperator tCase collapseIfNull GQL.InputValueDefinition {..} = do
-      argParser <- mkArgParser _ivdType
+    mkCustomOperator tCase collapseIfNull (operatorName, argType) = do
+      argParser <- mkArgParser argType
       pure $
-        GS.BE.mkBoolOperator tCase collapseIfNull (fromCustomName _ivdName) _ivdDescription $
-          CustomBooleanOperator (GQL.unName _ivdName) . Just . Right <$> argParser
+        GS.BE.mkBoolOperator tCase collapseIfNull (fromCustomName operatorName) Nothing $
+          CustomBooleanOperator (GQL.unName operatorName) . Just . Right <$> argParser
 
-    mkArgParser :: GQL.GType -> GS.C.SchemaT r m (P.Parser 'P.Both n (IR.UnpreparedValue 'DataConnector))
+    mkArgParser :: DC.ScalarType -> GS.C.SchemaT r m (P.Parser 'P.Both n (IR.UnpreparedValue 'DataConnector))
     mkArgParser argType =
       fmap IR.mkParameter
         <$> columnParser'
-          (RQL.ColumnScalar $ DC.fromGQLType $ GQL.getBaseType argType)
-          (GQL.Nullability $ GQL.isNotNull argType)
+          (RQL.ColumnScalar argType)
+          (GQL.Nullability True)
 
 tableArgs' ::
   forall r m n.
