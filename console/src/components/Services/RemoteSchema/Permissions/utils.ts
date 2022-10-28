@@ -354,7 +354,6 @@ export const getType = (
             return { ...p, [c.name]: { ...c } };
           }, {});
         }
-
         childArray.push(field);
       });
 

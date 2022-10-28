@@ -6,7 +6,6 @@ import { SERVER_CONSOLE_MODE } from '../../../constants';
 
 import {
   schemaConnector,
-  viewTableConnector,
   rawSQLConnector,
   addExistingTableViewConnector,
   addTableConnector,
@@ -35,6 +34,7 @@ import { Connect } from '@/features/ConnectDB';
 import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemContainer';
 import { ModifyTableContainer } from './TableModify/ModifyTableContainer';
 import { TableEditItemContainer } from './TableEditItem/TableEditItemContainer';
+import { TableBrowseRowsContainer } from './TableBrowseRows/TableBrowseRowsContainer';
 import { ManageTable } from '@/features/Data/ManageTable';
 
 const makeDataRouter = (
@@ -87,10 +87,10 @@ const makeDataRouter = (
           </Route>
           <Route
             path=":schema/tables/:table"
-            component={viewTableConnector(connect)}
+            component={TableBrowseRowsContainer}
           >
             <IndexRedirect to="browse" />
-            <Route path="browse" component={viewTableConnector(connect)} />
+            <Route path="browse" component={TableBrowseRowsContainer} />
           </Route>
           <Route
             path=":schema/tables/:table/edit"
@@ -116,7 +116,7 @@ const makeDataRouter = (
           />
           <Route
             path=":schema/views/:table/browse"
-            component={viewTableConnector(connect)}
+            component={TableBrowseRowsContainer}
           />
           <Route
             path=":schema/views/:table/modify"
