@@ -3,6 +3,8 @@ import { SurveysResponseData } from '@/features/Surveys';
 import {
   getMetadataUrl,
   getMigrationUrl,
+  getSampleQueriesUrl,
+  getSchemaImageUrl,
   NEON_TEMPLATE_BASE_PATH,
 } from '../constants';
 
@@ -183,6 +185,8 @@ export const fetchSurveysDataResponse: Record<
 
 export const mockMetadataUrl = getMetadataUrl(NEON_TEMPLATE_BASE_PATH);
 export const mockMigrationUrl = getMigrationUrl(NEON_TEMPLATE_BASE_PATH);
+export const mockSampleQueryUrl = getSampleQueriesUrl(NEON_TEMPLATE_BASE_PATH);
+export const mockSchemaImageUrl = getSchemaImageUrl(NEON_TEMPLATE_BASE_PATH);
 
 export const MOCK_INITIAL_METADATA = {
   version: 3,

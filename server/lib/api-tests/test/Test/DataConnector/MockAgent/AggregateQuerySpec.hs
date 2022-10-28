@@ -18,6 +18,7 @@ import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Backends.DataConnector.API qualified as API
 import Hasura.Prelude
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Hspec (SpecWith, describe, it)
 
 --------------------------------------------------------------------------------
@@ -317,8 +318,8 @@ tests opts = describe "Aggregate Query Tests" $ do
                                   HashMap.fromList
                                     [ (API.FieldName "counts_count", API.StarCount),
                                       (API.FieldName "counts_uniqueBillingCountries", API.ColumnCount (API.ColumnCountAggregate (API.ColumnName "BillingCountry") True)),
-                                      (API.FieldName "ids_minimum_Id", API.SingleColumn (API.SingleColumnAggregate API.Min (API.ColumnName "InvoiceId"))),
-                                      (API.FieldName "ids_max_InvoiceId", API.SingleColumn (API.SingleColumnAggregate API.Max (API.ColumnName "InvoiceId")))
+                                      (API.FieldName "ids_minimum_Id", API.SingleColumn (singleColumnAggregateMin (API.ColumnName "InvoiceId"))),
+                                      (API.FieldName "ids_max_InvoiceId", API.SingleColumn (singleColumnAggregateMax (API.ColumnName "InvoiceId")))
                                     ],
                               _qLimit = Just 2,
                               _qOffset = Nothing,
@@ -337,3 +338,9 @@ aggregatesResponse aggregates = API.QueryResponse Nothing (Just $ HashMap.fromLi
 
 aggregatesAndRowsResponse :: [(API.FieldName, Aeson.Value)] -> [[(API.FieldName, API.FieldValue)]] -> API.QueryResponse
 aggregatesAndRowsResponse aggregates rows = API.QueryResponse (Just $ HashMap.fromList <$> rows) (Just $ HashMap.fromList aggregates)
+
+singleColumnAggregateMax :: API.ColumnName -> API.SingleColumnAggregate
+singleColumnAggregateMax = API.SingleColumnAggregate $ API.SingleColumnAggregateFunction [G.name|max|]
+
+singleColumnAggregateMin :: API.ColumnName -> API.SingleColumnAggregate
+singleColumnAggregateMin = API.SingleColumnAggregate $ API.SingleColumnAggregateFunction [G.name|min|]

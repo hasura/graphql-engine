@@ -7,7 +7,6 @@
 
 import dataPageConnector from './DataPageContainer';
 import PageContainer from './DataSubSidebar';
-import viewTableConnector from './TableBrowseRows/ViewTable';
 import addExistingTableViewConnector from './Add/AddExistingTableView';
 import addTableConnector from './Add/AddTable';
 import rawSQLConnector from './RawSQL/RawSQL';
@@ -30,7 +29,6 @@ import { useIsUnmounted } from './Common/tsUtils';
 export {
   dataPageConnector,
   PageContainer,
-  viewTableConnector,
   addExistingTableViewConnector,
   addTableConnector,
   rawSQLConnector,

@@ -1,3 +1,4 @@
+import { getRoute } from '@/features/Data';
 import { exportMetadata } from '@/features/DataSource';
 import { useHttpClient } from '@/features/Network';
 import { Dispatch } from '@/types';
@@ -29,17 +30,9 @@ export const useGDCTreeItemClick = (dispatch: Dispatch) => {
        */
       const isTableClicked = Object.keys(rest?.table || {}).length !== 0;
       if (isTableClicked) {
-        dispatch(
-          _push(
-            encodeURI(
-              `/data/v2/manage?database=${database}&table=${JSON.stringify(
-                rest.table
-              )}`
-            )
-          )
-        );
+        dispatch(_push(getRoute().table(database, rest.table)));
       } else {
-        dispatch(_push(encodeURI(`/data/v2/manage?database=${database}`)));
+        dispatch(_push(getRoute().database(database)));
       }
     },
     [dispatch, httpClient, isUnmounted]

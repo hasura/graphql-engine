@@ -3,6 +3,7 @@
 /* eslint-disable */
 
 export type { Aggregate } from './models/Aggregate';
+export type { AggregateFunctions } from './models/AggregateFunctions';
 export type { AndExpression } from './models/AndExpression';
 export type { AnotherColumnComparison } from './models/AnotherColumnComparison';
 export type { ApplyBinaryArrayComparisonOperator } from './models/ApplyBinaryArrayComparisonOperator';
@@ -19,6 +20,7 @@ export type { ColumnInfo } from './models/ColumnInfo';
 export type { ColumnNullability } from './models/ColumnNullability';
 export type { ComparisonCapabilities } from './models/ComparisonCapabilities';
 export type { ComparisonColumn } from './models/ComparisonColumn';
+export type { ComparisonOperators } from './models/ComparisonOperators';
 export type { ComparisonValue } from './models/ComparisonValue';
 export type { ConfigSchemaResponse } from './models/ConfigSchemaResponse';
 export type { Constraint } from './models/Constraint';
@@ -31,8 +33,6 @@ export type { ExplainCapabilities } from './models/ExplainCapabilities';
 export type { ExplainResponse } from './models/ExplainResponse';
 export type { Expression } from './models/Expression';
 export type { Field } from './models/Field';
-export type { GraphQLName } from './models/GraphQLName';
-export type { GraphQLTypeDefinitions } from './models/GraphQLTypeDefinitions';
 export type { MetricsCapabilities } from './models/MetricsCapabilities';
 export type { MutationCapabilities } from './models/MutationCapabilities';
 export type { NotExpression } from './models/NotExpression';

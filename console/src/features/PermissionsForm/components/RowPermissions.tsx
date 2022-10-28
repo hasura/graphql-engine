@@ -1,22 +1,18 @@
 import React from 'react';
-import { useFormContext, Controller } from 'react-hook-form';
+import { useFormContext } from 'react-hook-form';
 
 import 'brace/mode/json';
 import 'brace/theme/github';
 
-import { NormalizedTable, Table } from '@/dataSources/types';
-import { PGFunction } from '@/dataSources/services/postgresql/types';
-import { generateTableDef } from '@/dataSources';
 import { InputField } from '@/new-components/Form';
 import { IconTooltip } from '@/new-components/Tooltip';
 import { Collapse } from '@/new-components/deprecated';
 import { getIngForm } from '../../../components/Services/Data/utils';
 
 import JSONEditor from './JSONEditor';
-import PermissionBuilder from '../PermissionBuilder/PermissionBuilder';
+import { RowPermissionBuilder } from './RowPermissionsBuilder';
 
 import { QueryType } from '../types';
-import { DataLeaf } from '../../PermissionsTab/types/types';
 
 const NoChecksLabel = () => (
   <span data-test="without-checks">
@@ -37,13 +33,10 @@ const CustomLabel = () => (
 );
 
 export interface RowPermissionsProps {
-  dataLeaf: DataLeaf;
+  table: unknown;
   queryType: QueryType;
   subQueryType?: string;
-
   allRowChecks: Array<{ queryType: QueryType; value: string }>;
-  allSchemas?: NormalizedTable[];
-  allFunctions?: PGFunction[];
 }
 
 enum SelectedSection {
@@ -87,15 +80,36 @@ const getRowPermissionCheckType = (
   return 'filterType';
 };
 
+const isGDCTable = (table: unknown): table is string[] => {
+  return Array.isArray(table);
+};
+
+const hasTableName = (table: unknown): table is { name: string } => {
+  return typeof table === 'object' && 'name' in (table || {});
+};
+
+const getTableName = (table: unknown) => {
+  const gdcTable = isGDCTable(table);
+  if (gdcTable) {
+    return table[table.length - 1];
+  }
+
+  const tableName = hasTableName(table);
+  if (tableName) {
+    return table.name;
+  }
+
+  throw new Error('cannot read table');
+};
+
 export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
+  table,
   queryType,
   subQueryType,
-  dataLeaf,
   allRowChecks,
-  allSchemas,
-  allFunctions,
 }) => {
-  const { control, register, watch, setValue } = useFormContext();
+  const tableName = getTableName(table);
+  const { register, watch, setValue } = useFormContext();
   // determines whether the inputs should be pointed at `check` or `filter`
   const rowPermissions = getRowPermission(queryType, subQueryType);
   // determines whether the check type should be pointer at `checkType` or `filterType`
@@ -108,15 +122,10 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   const disabled =
     queryType === 'update' && subQueryType === 'post' && !watch('check');
 
-  const schemaList = React.useMemo(
-    () => allSchemas?.map(({ table_schema }) => table_schema),
-    [allSchemas]
-  );
-
   const selectedSection = watch(rowPermissionsCheckType);
 
   return (
-    <fieldset className="grid gap-2">
+    <fieldset key={queryType} className="grid gap-2">
       <div>
         <label className="flex items-center gap-2">
           <input
@@ -126,7 +135,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
             disabled={disabled}
             onClick={() => {
               setValue(rowPermissionsCheckType, SelectedSection.NoChecks);
-              setValue(rowPermissions, '{}');
+              setValue(rowPermissions, {});
             }}
             {...register(rowPermissionsCheckType)}
           />
@@ -194,39 +203,7 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
 
         {selectedSection === SelectedSection.Custom && (
           <div className="pt-4">
-            <Controller
-              control={control}
-              name={rowPermissions}
-              render={({ field: { onChange, value } }) => (
-                <>
-                  <JSONEditor
-                    data={value || '{}'}
-                    onChange={output => {
-                      onChange(output);
-                    }}
-                    initData="{}"
-                  />
-
-                  {allSchemas && allFunctions && schemaList && (
-                    <PermissionBuilder
-                      dispatchFuncSetFilter={output => {
-                        onChange(output);
-                      }}
-                      loadSchemasFunc={() => {}}
-                      tableDef={generateTableDef(
-                        dataLeaf.leaf?.name || '',
-                        dataLeaf.name
-                      )}
-                      allTableSchemas={allSchemas as Table[]}
-                      allFunctions={allFunctions}
-                      schemaList={schemaList}
-                      filter={value || '{}'}
-                      dispatch={() => console.log('output')}
-                    />
-                  )}
-                </>
-              )}
-            />
+            <RowPermissionBuilder tableName={tableName} nesting={['filter']} />
           </div>
         )}
       </div>

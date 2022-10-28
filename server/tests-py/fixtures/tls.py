@@ -2,7 +2,6 @@ import enum
 import http.server
 import pathlib
 from typing import NamedTuple
-import pytest
 import ssl
 import subprocess
 
@@ -38,11 +37,11 @@ class TLSCAConfiguration(NamedTuple):
             # sign the certificate with the provided CA key, which should be trusted
             subprocess.run(['openssl', 'x509', '-req', '-in', csr_file, '-CA', self.cert_file, '-CAkey', self.key_file, '-CAcreateserial', '-out', cert_file, '-days', '10', '-extensions', 'v3_req', '-extfile', config_file]).check_returncode()
 
-        server.socket = ssl.wrap_socket(
-            server.socket,
-            certfile=cert_file,
-            keyfile=key_file,
-            server_side=True,
-            ssl_version=ssl.PROTOCOL_SSLv23,
+        ssl_context = ssl.create_default_context(
+            purpose=ssl.Purpose.CLIENT_AUTH,
+            cafile=self.cert_file,
         )
+        ssl_context.load_cert_chain(certfile=cert_file, keyfile=key_file)
+        server.socket = ssl_context.wrap_socket(server.socket, server_side=True)
+
         return server

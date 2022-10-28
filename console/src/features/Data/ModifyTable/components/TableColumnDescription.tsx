@@ -1,7 +1,7 @@
 import { Badge } from '@/new-components/Badge';
 import { Button } from '@/new-components/Button';
 import React from 'react';
-import { FaKey } from 'react-icons/fa';
+import { FaKey, FaRegComment } from 'react-icons/fa';
 import { ModifyTableColumn } from '../types';
 
 export const TableColumnDescription: React.VFC<{
@@ -20,8 +20,20 @@ export const TableColumnDescription: React.VFC<{
       </Button>
 
       <div>
-        <div className="font-bold">{column.name}</div>
-        <div className="italic">{column.config?.comment}</div>
+        <div className="font-bold">
+          {column.name}
+          {column.config?.custom_name && (
+            <>
+              <span className="mx-2">→</span>
+              <span className="font-normal">{column.config.custom_name}</span>
+            </>
+          )}
+        </div>
+        {!!column.config?.comment && (
+          <div className="italic">
+            <FaRegComment className="opacity-50" /> {column.config?.comment}
+          </div>
+        )}
       </div>
       <div>
         <Badge color="gray">{column.dataType}</Badge>

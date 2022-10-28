@@ -57,7 +57,6 @@ export function NeonBanner(props: Props) {
             passHtmlAttributesToChildren
           >
             <Button
-              data-trackid="onboarding-wizard-neon-connect-db-button"
               data-testid="onboarding-wizard-neon-connect-db-button"
               mode={status.status === 'loading' ? 'default' : 'primary'}
               isLoading={status.status === 'loading'}

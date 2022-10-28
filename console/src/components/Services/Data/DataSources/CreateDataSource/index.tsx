@@ -1,10 +1,8 @@
 import * as React from 'react';
 import { connect, ConnectedProps } from 'react-redux';
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { isCloudConsole, hasLuxFeatureAccess } from '@/utils/cloudConsole';
+import { isCloudConsole } from '@/utils/cloudConsole';
 import Globals from '../../../../../Globals';
-import Heroku from './Heroku';
-import { HerokuSession } from './Heroku/types';
 import { ReduxState } from '../../../../../types';
 import styles from './styles.module.scss';
 import { mapDispatchToPropsEmpty } from '../../../../Common/utils/reactUtils';
@@ -16,44 +14,25 @@ import { Neon } from './Neon';
 
 interface Props extends InjectedProps {}
 
-const CreateDataSource: React.FC<Props> = ({
-  herokuSession,
-  dispatch,
-  allDataSources,
-}) => {
+const CreateDataSource: React.FC<Props> = ({ dispatch, allDataSources }) => {
   // this condition fails for everything other than a Hasura Cloud project
   if (!isCloudConsole(Globals)) {
     throw new NotFoundError();
   }
 
-  const showNeonIntegration =
-    hasLuxFeatureAccess(Globals, 'NeonDatabaseIntegration') &&
-    Globals.neonOAuthClientId &&
-    Globals.neonRootDomain;
-
   return (
     <Tabbed tabName="create">
       <Analytics name="CreateDataSource" {...REDACT_EVERYTHING}>
         <div className={styles.connect_db_content}>
-          {showNeonIntegration ? (
-            <div className={`${styles.container} mb-md`}>
-              <div className="w-full mb-md">
-                <Neon
-                  allDatabases={allDataSources.map(d => d.name)}
-                  dispatch={dispatch}
-                />
-              </div>
-              <HerokuBanner />
-            </div>
-          ) : (
-            <div className={`${styles.container} mb-md`}>
-              <Heroku
-                session={herokuSession}
+          <div className={`${styles.container} mb-md`}>
+            <div className="w-full mb-md">
+              <Neon
+                allDatabases={allDataSources.map(d => d.name)}
                 dispatch={dispatch}
-                allDataSources={allDataSources}
               />
             </div>
-          )}
+            <HerokuBanner />
+          </div>
         </div>
       </Analytics>
     </Tabbed>
@@ -62,7 +41,6 @@ const CreateDataSource: React.FC<Props> = ({
 
 const mapStateToProps = (state: ReduxState) => {
   return {
-    herokuSession: state.main.heroku.session as HerokuSession | undefined,
     currentDataSource: state.tables.currentDataSource,
     currentSchema: state.tables.currentSchema,
     allDataSources: getDataSources(state),

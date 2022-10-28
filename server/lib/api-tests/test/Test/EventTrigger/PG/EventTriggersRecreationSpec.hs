@@ -226,6 +226,8 @@ result:
   - object_identity
 - - CREATE TRIGGER
   - '"notify_hasura_users_INSERT_INSERT" on hasura.users'
+- - CREATE SCHEMA
+  - "hdb_catalog"
 - - CREATE FUNCTION
   - hdb_catalog."notify_hasura_users_INSERT_INSERT"()
 - - CREATE TABLE

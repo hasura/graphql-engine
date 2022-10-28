@@ -23,4 +23,4 @@ response:
   - extensions:
       path: "$"
       code: permission-error
-    message: check constraint of an insert permission has failed
+    message: check constraint of an insert/update permission has failed

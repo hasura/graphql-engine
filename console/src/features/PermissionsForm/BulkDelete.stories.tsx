@@ -13,20 +13,12 @@ export default {
   decorators: [ReactQueryDecorator()],
 } as Meta;
 
-const dataLeaf = {
-  type: 'schema',
-  name: 'users',
-  leaf: {
-    type: 'table',
-    name: 'users',
-  },
-};
-
 export const Primary: Story<BulkDeleteProps> = args => {
   return <BulkDelete {...args} />;
 };
 Primary.args = {
-  dataLeaf,
+  currentSource: 'postgres',
+  dataSourceName: 'default',
   roles: ['user'],
   handleClose: () => {},
 };

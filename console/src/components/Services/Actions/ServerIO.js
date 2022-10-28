@@ -64,141 +64,139 @@ import {
   getResponseTransformObject,
 } from '../../Common/ConfigureTransformation/utils';
 
-export const createAction = transformState => (dispatch, getState) => {
-  const { add: rawState } = getState().actions;
-  const existingTypesList = customTypesSelector(getState());
-  const allActions = actionsSelector(getState());
+export const createAction =
+  (transformState, responseTransformState) => (dispatch, getState) => {
+    const { add: rawState } = getState().actions;
+    const existingTypesList = customTypesSelector(getState());
+    const allActions = actionsSelector(getState());
 
-  const actionComment = rawState.comment ? rawState.comment.trim() : null;
+    const actionComment = rawState.comment ? rawState.comment.trim() : null;
 
-  const {
-    name: actionName,
-    arguments: args,
-    outputType,
-    error: actionDefError,
-    type: actionType,
-  } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
-  if (actionDefError) {
-    return dispatch(
-      showErrorNotification('Invalid Action Definition', actionDefError)
+    const {
+      name: actionName,
+      arguments: args,
+      outputType,
+      error: actionDefError,
+      type: actionType,
+    } = getActionDefinitionFromSdl(rawState.actionDefinition.sdl);
+    if (actionDefError) {
+      return dispatch(
+        showErrorNotification('Invalid Action Definition', actionDefError)
+      );
+    }
+
+    const { types, error: typeDefError } = getTypesFromSdl(
+      rawState.typeDefinition.sdl
     );
-  }
 
-  const { types, error: typeDefError } = getTypesFromSdl(
-    rawState.typeDefinition.sdl
-  );
+    if (typeDefError) {
+      return dispatch(
+        showErrorNotification('Invalid Types Definition', typeDefError)
+      );
+    }
 
-  if (typeDefError) {
-    return dispatch(
-      showErrorNotification('Invalid Types Definition', typeDefError)
+    const state = {
+      handler: rawState.handler.trim(),
+      kind: rawState.kind,
+      types,
+      actionType,
+      name: actionName,
+      arguments: args,
+      outputType,
+      headers: rawState.headers,
+      comment: actionComment,
+      timeout: parseInt(rawState.timeout, 10),
+    };
+
+    const requestTransform = getRequestTransformObject(transformState);
+    const responseTransform = getResponseTransformObject(
+      responseTransformState
     );
-  }
+    const validationError = getStateValidationError(state, existingTypesList);
+    if (validationError) {
+      return dispatch(showErrorNotification(validationError));
+    }
 
-  const state = {
-    handler: rawState.handler.trim(),
-    kind: rawState.kind,
-    types,
-    actionType,
-    name: actionName,
-    arguments: args,
-    outputType,
-    headers: rawState.headers,
-    comment: actionComment,
-    timeout: parseInt(rawState.timeout, 10),
-  };
+    const typesWithRelationships = hydrateTypeRelationships(
+      state.types,
+      existingTypesList
+    );
 
-  const requestTransform = getRequestTransformObject(transformState);
+    const { types: mergedTypes, overlappingTypenames } = mergeCustomTypes(
+      typesWithRelationships,
+      existingTypesList
+    );
 
-  const validationError = getStateValidationError(state, existingTypesList);
-  if (validationError) {
-    return dispatch(showErrorNotification(validationError));
-  }
+    if (overlappingTypenames) {
+      const isOk = getOverlappingTypeConfirmation(
+        state.name,
+        allActions,
+        existingTypesList,
+        overlappingTypenames
+      );
+      if (!isOk) {
+        return;
+      }
+    }
+    // Migration queries start
+    const migration = new Migration();
 
-  const typesWithRelationships = hydrateTypeRelationships(
-    state.types,
-    existingTypesList
-  );
+    const customFieldsQueryUp = generateSetCustomTypesQuery(
+      reformCustomTypes(mergedTypes)
+    );
 
-  const { types: mergedTypes, overlappingTypenames } = mergeCustomTypes(
-    typesWithRelationships,
-    existingTypesList
-  );
+    const customFieldsQueryDown = generateSetCustomTypesQuery(
+      reformCustomTypes(existingTypesList)
+    );
+    migration.add(customFieldsQueryUp, customFieldsQueryDown);
 
-  if (overlappingTypenames) {
-    const isOk = getOverlappingTypeConfirmation(
+    const actionQueryUp = generateCreateActionQuery(
       state.name,
-      allActions,
-      existingTypesList,
-      overlappingTypenames
+      generateActionDefinition(state, requestTransform, responseTransform),
+      actionComment
     );
-    if (!isOk) {
-      return;
-    }
-  }
-  // Migration queries start
-  const migration = new Migration();
 
-  const customFieldsQueryUp = generateSetCustomTypesQuery(
-    reformCustomTypes(mergedTypes)
-  );
+    const actionQueryDown = generateDropActionQuery(state.name);
 
-  const customFieldsQueryDown = generateSetCustomTypesQuery(
-    reformCustomTypes(existingTypesList)
-  );
-  migration.add(customFieldsQueryUp, customFieldsQueryDown);
+    migration.add(actionQueryUp, actionQueryDown);
+    // Migration queries end
 
-  const actionQueryUp = requestTransform
-    ? generateCreateActionQuery(
-        state.name,
-        generateActionDefinition(state, requestTransform),
-        actionComment
-      )
-    : generateCreateActionQuery(
-        state.name,
-        generateActionDefinition(state),
-        actionComment
-      );
-
-  const actionQueryDown = generateDropActionQuery(state.name);
-
-  migration.add(actionQueryUp, actionQueryDown);
-  // Migration queries end
-
-  const migrationName = `create_action_${state.name}`;
-  const requestMsg = 'Creating action...';
-  const successMsg = 'Created action successfully';
-  const errorMsg = 'Creating action failed';
-  const customOnSuccess = () => {
-    if (rawState.derive.operation) {
-      persistDerivedAction(state.name, rawState.derive.operation);
-    }
-    dispatch(exportMetadata()).then(() => {
+    const migrationName = `create_action_${state.name}`;
+    const requestMsg = 'Creating action...';
+    const successMsg = 'Created action successfully';
+    const errorMsg = 'Creating action failed';
+    const customOnSuccess = () => {
+      if (rawState.derive.operation) {
+        persistDerivedAction(state.name, rawState.derive.operation);
+      }
+      dispatch(exportMetadata()).then(() => {
+        dispatch(createActionRequestComplete());
+        dispatch(
+          push(`${globals.urlPrefix}${appPrefix}/manage/${state.name}/modify`)
+        );
+      });
+    };
+    const customOnError = () => {
       dispatch(createActionRequestComplete());
-      dispatch(
-        push(`${globals.urlPrefix}${appPrefix}/manage/${state.name}/modify`)
-      );
-    });
+    };
+    dispatch(createActionRequestInProgress());
+    makeMigrationCall(
+      dispatch,
+      getState,
+      migration.upMigration,
+      migration.downMigration,
+      migrationName,
+      customOnSuccess,
+      customOnError,
+      requestMsg,
+      successMsg,
+      errorMsg
+    );
   };
-  const customOnError = () => {
-    dispatch(createActionRequestComplete());
-  };
-  dispatch(createActionRequestInProgress());
-  makeMigrationCall(
-    dispatch,
-    getState,
-    migration.upMigration,
-    migration.downMigration,
-    migrationName,
-    customOnSuccess,
-    customOnError,
-    requestMsg,
-    successMsg,
-    errorMsg
-  );
-};
 
 export const saveAction =
-  (currentAction, transformState) => (dispatch, getState) => {
+  (currentAction, transformState, responseTransformState) =>
+  (dispatch, getState) => {
     const { modify: rawState } = getState().actions;
     const existingTypesList = customTypesSelector(getState());
     const {
@@ -241,7 +239,9 @@ export const saveAction =
     };
 
     const requestTransform = getRequestTransformObject(transformState);
-    const responseTransform = getResponseTransformObject(transformState);
+    const responseTransform = getResponseTransformObject(
+      responseTransformState
+    );
     const validationError = getStateValidationError(state);
 
     if (validationError) {
@@ -269,7 +269,6 @@ export const saveAction =
     );
 
     const dropCurrentActionQuery = generateDropActionQuery(currentAction.name);
-
     const updateCurrentActionQuery = getUpdateActionQuery(
       generateActionDefinition(state, requestTransform, responseTransform),
       currentAction.name,
@@ -281,17 +280,11 @@ export const saveAction =
       currentAction.comment
     );
 
-    const createNewActionQuery = requestTransform
-      ? generateCreateActionQuery(
-          state.name,
-          generateActionDefinition(state, requestTransform),
-          actionComment
-        )
-      : generateCreateActionQuery(
-          state.name,
-          generateActionDefinition(state),
-          actionComment
-        );
+    const createNewActionQuery = generateCreateActionQuery(
+      state.name,
+      generateActionDefinition(state, requestTransform, responseTransform),
+      actionComment
+    );
 
     const actionQueryDown = generateDropActionQuery(state.name);
     const oldActionQueryUp = generateCreateActionQuery(

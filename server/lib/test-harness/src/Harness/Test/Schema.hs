@@ -322,7 +322,7 @@ untrackTable :: HasCallStack => BackendType -> String -> Table -> TestEnvironmen
 untrackTable backend source Table {tableName} testEnvironment = do
   let backendType = defaultBackendTypeString backend
       schema = getSchemaName testEnvironment
-  let requestType = backendType <> "_untrack_table"
+      requestType = backendType <> "_untrack_table"
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -544,8 +544,9 @@ untrackRelationships :: HasCallStack => BackendType -> Table -> TestEnvironment 
 untrackRelationships backend Table {tableName, tableReferences, tableManualRelationships} testEnvironment = do
   let schema = getSchemaName testEnvironment
       source = defaultSource backend
+      backendType = defaultBackendTypeString backend
       tableField = mkTableField backend schema tableName
-      requestType = source <> "_drop_relationship"
+      requestType = backendType <> "_drop_relationship"
 
   forFinally_ (tableManualRelationships <> tableReferences) $ \ref@Reference {referenceLocalColumn, referenceTargetTable, referenceTargetColumn} -> do
     let arrayRelationshipName = mkArrayRelationshipName tableName referenceTargetColumn referenceLocalColumn

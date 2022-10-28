@@ -155,7 +155,6 @@ export const Builder = (props: Props) => {
       if (dropDownState?.name === '_and' || dropDownState?.name === '_or') {
         setValue(permissionsKey, undefined);
       }
-
       // when the dropdown changes both the permissions object
       // and operators object need to be unregistered below this level
       unregister(permissionsKey);

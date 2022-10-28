@@ -81,11 +81,8 @@ export interface CreateDefaultsArgs {
   existingPermission?: Record<string, any>;
 }
 
-export const createDefaultValues = ({
-  tableName,
-  schema,
-  existingPermission,
-}: CreateDefaultsArgs) => {
+export const createDefaultValues = (props: CreateDefaultsArgs) => {
+  const { tableName, schema, existingPermission } = props;
   if (!existingPermission) {
     return {};
   }

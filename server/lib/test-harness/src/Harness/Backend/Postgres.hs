@@ -4,6 +4,7 @@
 -- | PostgreSQL helpers.
 module Harness.Backend.Postgres
   ( livenessCheck,
+    metadataLivenessCheck,
     run_,
     runSQL,
     defaultSourceMetadata,
@@ -31,6 +32,7 @@ where
 import Control.Concurrent.Extended (sleep)
 import Control.Monad.Reader
 import Data.Aeson (Value)
+import Data.ByteString qualified as BS
 import Data.ByteString.Char8 qualified as S8
 import Data.String (fromString)
 import Data.Text qualified as T
@@ -55,16 +57,23 @@ import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Prelude
 import System.Process.Typed
 
--- | Check the postgres server is live and ready to accept connections.
+metadataLivenessCheck :: HasCallStack => IO ()
+metadataLivenessCheck =
+  doLivenessCheck (fromString postgresqlMetadataConnectionString)
+
 livenessCheck :: HasCallStack => IO ()
-livenessCheck = loop Constants.postgresLivenessCheckAttempts
+livenessCheck =
+  doLivenessCheck (fromString postgresqlConnectionString)
+
+-- | Check the postgres server is live and ready to accept connections.
+doLivenessCheck :: HasCallStack => BS.ByteString -> IO ()
+doLivenessCheck connectionString = loop Constants.postgresLivenessCheckAttempts
   where
     loop 0 = error ("Liveness check failed for PostgreSQL.")
     loop attempts =
       catch
         ( bracket
-            ( Postgres.connectPostgreSQL
-                (fromString Constants.postgresqlConnectionString)
+            ( Postgres.connectPostgreSQL connectionString
             )
             Postgres.close
             (const (pure ()))

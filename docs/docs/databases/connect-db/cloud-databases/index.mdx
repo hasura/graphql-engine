@@ -14,9 +14,11 @@ import useBaseUrl from '@docusaurus/useBaseUrl';
 import VersionedLink from '@site/src/components/VersionedLink';
 import ArrowRight from '@site/static/icons/arrow_right.svg';
 import Aiven from '@site/static/img/cloud-dbs/logos/aiven.png';
+import Alloy from '@site/static/img/cloud-dbs/logos/alloydb.png';
 import Aurora from '@site/static/img/cloud-dbs/logos/aws-aurora.png';
-import RDS from '@site/static/img/cloud-dbs/logos/aws.png';
 import Azure from '@site/static/img/cloud-dbs/logos/azure.png';
+import Cosmos from '@site/static/img/cloud-dbs/logos/cosmos.png';
+import RDS from '@site/static/img/cloud-dbs/logos/aws.png';
 import RollTide from '@site/static/img/cloud-dbs/logos/crunchy.png';
 import DO from '@site/static/img/cloud-dbs/logos/DO.png';
 import Elephant from '@site/static/img/cloud-dbs/logos/elephant.png';
@@ -48,6 +50,14 @@ specific cloud vendors.
       <h5>Aiven</h5>
     </div>
   </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/alloy'>
+    <div className='card-wrapper'>
+      <div className='card'>
+        <img src={Alloy} title='Google AlloyDB Postgres' alt='Connect Google AlloyDB to Hasura' />
+      </div>
+      <h5>AlloyDB</h5>
+    </div>
+  </VersionedLink>
   <VersionedLink to='/databases/connect-db/cloud-databases/aws-aurora'>
     <div className='card-wrapper'>
       <div className='card'>
@@ -62,6 +72,14 @@ specific cloud vendors.
         <img src={RDS} title='AWS RDS Postgres' alt='Connect AWS RDS Postgres to Hasura' />
       </div>
       <h5>AWS RDS Postgres</h5>
+    </div>
+  </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/azure-cosmos'>
+    <div className='card-wrapper'>
+      <div className='card'>
+        <img src={Cosmos} title='Azure Cosmos DB' alt='Connect Azure Cosmos to Hasura' />
+      </div>
+      <h5>Azure Cosmos</h5>
     </div>
   </VersionedLink>
   <VersionedLink to='/databases/connect-db/cloud-databases/azure'>
@@ -116,14 +134,14 @@ specific cloud vendors.
       <h5>GCP Postgres</h5>
     </div>
   </VersionedLink>
-    <VersionedLink to='/databases/connect-db/cloud-databases/mssql'>
-        <div className='card-wrapper'>
-            <div className='card'>
-                <img src={MSSQL} title='MS SQL on Azure' alt='Connect MS SQL on Azure to Hasura' />
-            </div>
-            <h5>Azure MS SQL</h5>
-        </div>
-    </VersionedLink>
+  <VersionedLink to='/databases/connect-db/cloud-databases/mssql'>
+    <div className='card-wrapper'>
+      <div className='card'>
+        <img src={MSSQL} title='MS SQL on Azure' alt='Connect MS SQL on Azure to Hasura' />
+      </div>
+      <h5>Azure MS SQL</h5>
+    </div>
+  </VersionedLink>
   <VersionedLink to='/databases/connect-db/cloud-databases/neon'>
     <div className='card-wrapper'>
       <div className='card'>

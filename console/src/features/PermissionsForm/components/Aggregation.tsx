@@ -37,7 +37,7 @@ export const AggregationSection: React.FC<AggregationProps> = ({
       status={enabled ? 'Enabled' : 'Disabled'}
       data-test="toggle-agg-permission"
       disabled={disabled}
-      defaultOpen={defaultOpen}
+      defaultOpen={defaultOpen || enabled}
     >
       <Collapse.Content>
         <div title={disabled ? 'Set row permissions first' : ''}>

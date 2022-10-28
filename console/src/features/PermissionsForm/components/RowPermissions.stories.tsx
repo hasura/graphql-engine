@@ -10,7 +10,7 @@ import {
   RowPermissionsWrapperProps,
 } from './RowPermissions';
 
-import { allSchemas, allFunctions } from '../mocks/mockData';
+// import { allSchemas, allFunctions } from '../mocks/mockData';
 import { QueryType } from '../types';
 
 export default {
@@ -18,7 +18,7 @@ export default {
   component: RowPermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (
-      <Form schema={z.any()} onSubmit={() => {}} className="p-4">
+      <Form schema={z.any()} onSubmit={() => {}}>
         {() => <StoryComponent />}
       </Form>
     ),
@@ -27,15 +27,6 @@ export default {
 } as Meta;
 
 const roleName = 'two';
-
-const dataLeaf = {
-  type: 'schema',
-  name: 'users',
-  leaf: {
-    type: 'table',
-    name: 'users',
-  },
-};
 
 // this will be moved into a utils folder
 const allRowChecks = [
@@ -62,11 +53,14 @@ export const Insert: Story<Props> = args => (
 Insert.args = {
   wrapper: { roleName, queryType: 'insert', defaultOpen: true },
   section: {
-    dataLeaf,
+    table: {
+      schema: 'public',
+      name: 'user',
+    },
     queryType: 'delete',
     allRowChecks,
-    allSchemas,
-    allFunctions,
+    // allSchemas,
+    // allFunctions,
   },
 };
 

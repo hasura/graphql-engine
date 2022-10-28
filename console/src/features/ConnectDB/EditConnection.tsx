@@ -39,6 +39,7 @@ const useEditDataSourceConnectionInfo = () => {
         configuration: metadataSource.configuration,
         driver: metadataSource.kind,
         name: metadataSource.name,
+        customization: metadataSource.customization,
       };
     },
   });
@@ -52,7 +53,7 @@ export const EditConnection = () => {
 
   if (!data) return <>Error</>;
 
-  const { schema, name, driver, configuration } = data;
+  const { schema, name, driver, configuration, customization } = data;
 
   if (!schema) return <>Could not find schema</>;
 
@@ -68,13 +69,14 @@ export const EditConnection = () => {
           driver,
           configuration: (configuration as any).value,
           replace_configuration: true,
+          customization,
         },
       }}
       className="p-0 pl-sm"
     >
       {options => {
         return (
-          <div>
+          <div className="max-w-5xl">
             <InputField type="text" name="name" label="Database Display Name" />
 
             <Select
@@ -90,9 +92,12 @@ export const EditConnection = () => {
             <div className="mt-4">
               <CustomizationForm />
             </div>
-            <Button type="submit" mode="primary" isLoading={submitIsLoading}>
-              Edit Connection
-            </Button>
+            <div className="mt-4">
+              <Button type="submit" mode="primary" isLoading={submitIsLoading}>
+                Edit Connection
+              </Button>
+            </div>
+
             {!!Object(options.formState.errors)?.keys?.length && (
               <div className="mt-6 max-w-xl">
                 <IndicatorCard status="negative">

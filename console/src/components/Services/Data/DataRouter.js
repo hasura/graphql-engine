@@ -6,7 +6,6 @@ import { SERVER_CONSOLE_MODE } from '../../../constants';
 
 import {
   schemaConnector,
-  viewTableConnector,
   rawSQLConnector,
   addExistingTableViewConnector,
   addTableConnector,
@@ -30,11 +29,13 @@ import ConnectDatabase from './DataSources/ConnectDatabase';
 import { setDriver } from '../../../dataSources';
 import { UPDATE_CURRENT_DATA_SOURCE } from './DataActions';
 import { getSourcesFromMetadata } from '../../../metadata/selector';
-import { ManageContainer } from '@/features/Data';
+import { ManageDatabaseContainer } from '@/features/Data';
 import { Connect } from '@/features/ConnectDB';
 import { TableInsertItemContainer } from './TableInsertItem/TableInsertItemContainer';
 import { ModifyTableContainer } from './TableModify/ModifyTableContainer';
 import { TableEditItemContainer } from './TableEditItem/TableEditItemContainer';
+import { TableBrowseRowsContainer } from './TableBrowseRows/TableBrowseRowsContainer';
+import { ManageTable } from '@/features/Data/ManageTable';
 
 const makeDataRouter = (
   connect,
@@ -54,7 +55,13 @@ const makeDataRouter = (
       <IndexRedirect to="manage" />
 
       <Route path="v2">
-        <Route path="manage" component={ManageContainer} />
+        <Route path="manage">
+          <Route path="table" component={ManageTable}>
+            <IndexRedirect to="modify" />
+            <Route path=":operation" component={ManageTable} />
+          </Route>
+          <Route path="database" component={ManageDatabaseContainer} />
+        </Route>
         <Route path="edit" component={Connect.EditConnection} />
       </Route>
 
@@ -80,10 +87,10 @@ const makeDataRouter = (
           </Route>
           <Route
             path=":schema/tables/:table"
-            component={viewTableConnector(connect)}
+            component={TableBrowseRowsContainer}
           >
             <IndexRedirect to="browse" />
-            <Route path="browse" component={viewTableConnector(connect)} />
+            <Route path="browse" component={TableBrowseRowsContainer} />
           </Route>
           <Route
             path=":schema/tables/:table/edit"
@@ -109,7 +116,7 @@ const makeDataRouter = (
           />
           <Route
             path=":schema/views/:table/browse"
-            component={viewTableConnector(connect)}
+            component={TableBrowseRowsContainer}
           />
           <Route
             path=":schema/views/:table/modify"

@@ -1,5 +1,6 @@
 import { TrackingTableFormValues } from '@/components/Services/Data/Schema/tableTrackCustomization/types';
 import { Button } from '@/new-components/Button';
+import { sanitizeGraphQLFieldNames } from '@/utils';
 import clsx from 'clsx';
 import React from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
@@ -12,12 +13,6 @@ interface InputFieldProps
   onClear?: () => void;
   onChange?: (value: string) => void;
 }
-
-const gqlRegex = new RegExp('[^A-Za-z0-9_]', 'g');
-
-const sanitizeInput = (value: string): string => {
-  return value.replace(' ', '_').replace(gqlRegex, '');
-};
 
 // TODO NEXT: replace with InputField component when the horizontal version is ready
 export const InputField: React.VFC<InputFieldProps> = ({
@@ -54,7 +49,7 @@ export const InputField: React.VFC<InputFieldProps> = ({
             {...fieldMethods}
             {...props}
             onChange={e => {
-              e.target.value = sanitizeInput(e.target.value);
+              e.target.value = sanitizeGraphQLFieldNames(e.target.value);
               fieldMethods.onChange(e);
               if (onChange) {
                 onChange(e.target.value);

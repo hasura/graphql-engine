@@ -8,6 +8,7 @@ module Data.HashMap.Strict.Extended
     isInverseOf,
     unionWithM,
     unionsAll,
+    unionsWith,
     homogenise,
     catMaybes,
   )
@@ -104,6 +105,11 @@ unionWithM f m1 m2 = foldM step m1 (M.toList m2)
 unionsAll ::
   (Eq k, Hashable k, Foldable t) => t (HashMap k v) -> HashMap k (NonEmpty v)
 unionsAll = F.foldl' (\a b -> M.unionWith (<>) a (fmap (:| []) b)) M.empty
+
+-- | Like 'M.unions', but combining elements
+unionsWith ::
+  (Eq k, Hashable k, Foldable t) => (v -> v -> v) -> t (HashMap k v) -> HashMap k v
+unionsWith f = F.foldl' (M.unionWith f) M.empty
 
 -- | Homogenise maps, such that all maps range over the full set of
 -- keys, inserting a default value as needed.

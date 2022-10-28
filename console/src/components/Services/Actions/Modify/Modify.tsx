@@ -12,6 +12,7 @@ import {
   parseValidateApiData,
   getValidateTransformOptions,
   getTransformState,
+  getResponseTransformState,
 } from '@/components/Common/ConfigureTransformation/utils';
 import { Button } from '@/new-components/Button';
 import requestAction from '@/utils/requestAction';
@@ -34,10 +35,16 @@ import {
   setRequestUrlTransform,
   setRequestPayloadTransform,
   setRequestTransformState,
+  responseTransformReducer,
+  getActionResponseTransformDefaultState,
+  setResponsePayloadTransform,
+  setResponseBody,
+  setResponseTransformState,
 } from '@/components/Common/ConfigureTransformation/requestTransformState';
 import {
   KeyValuePair,
   RequestTransformStateBody,
+  ResponseTransformStateBody,
 } from '@/components/Common/ConfigureTransformation/stateDefaults';
 import {
   RequestTransformContentType,
@@ -106,6 +113,11 @@ const ModifyAction: React.FC<ModifyProps> = ({
     getActionRequestTransformDefaultState()
   );
 
+  const [responseTransformState, responseTransformDispatch] = useReducer(
+    responseTransformReducer,
+    getActionResponseTransformDefaultState()
+  );
+
   // initialize action state
   const init = () => {
     const modifyState = getModifyState(currentAction, allTypes);
@@ -126,6 +138,16 @@ const ModifyAction: React.FC<ModifyProps> = ({
     } else {
       transformDispatch(
         setRequestTransformState(getActionRequestTransformDefaultState())
+      );
+    }
+    if (currentAction?.definition?.response_transform) {
+      const responseState = getResponseTransformState(
+        currentAction?.definition?.response_transform
+      );
+      responseTransformDispatch(setResponseTransformState(responseState));
+    } else {
+      responseTransformDispatch(
+        setResponseTransformState(getActionResponseTransformDefaultState())
       );
     }
   };
@@ -155,9 +177,8 @@ const ModifyAction: React.FC<ModifyProps> = ({
   ) => {
     dispatch(setTypeDefinition(value, error as any, timer, ast));
   };
-
   const onSave = () => {
-    dispatch(saveAction(currentAction, transformState));
+    dispatch(saveAction(currentAction, transformState, responseTransformState));
   };
 
   const onDelete = () => {
@@ -243,6 +264,14 @@ const ModifyAction: React.FC<ModifyProps> = ({
 
   const requestPayloadTransformOnChange = (data: boolean) => {
     transformDispatch(setRequestPayloadTransform(data));
+  };
+
+  const responsePayloadTransformOnChange = (data: boolean) => {
+    responseTransformDispatch(setResponsePayloadTransform(data));
+  };
+
+  const responseBodyOnChange = (responseBody: ResponseTransformStateBody) => {
+    responseTransformDispatch(setResponseBody(responseBody));
   };
 
   useEffect(() => {
@@ -405,7 +434,8 @@ const ModifyAction: React.FC<ModifyProps> = ({
 
             <ConfigureTransformation
               transformationType="action"
-              state={transformState}
+              requestTransfromState={transformState}
+              responseTransformState={responseTransformState}
               resetSampleInput={resetSampleInput}
               envVarsOnChange={envVarsOnChange}
               sessionVarsOnChange={sessionVarsOnChange}
@@ -418,6 +448,10 @@ const ModifyAction: React.FC<ModifyProps> = ({
               requestContentTypeOnChange={requestContentTypeOnChange}
               requestUrlTransformOnChange={requestUrlTransformOnChange}
               requestPayloadTransformOnChange={requestPayloadTransformOnChange}
+              responsePayloadTransformOnChange={
+                responsePayloadTransformOnChange
+              }
+              responseBodyOnChange={responseBodyOnChange}
             />
 
             <div className="flex items-start mb-lg">

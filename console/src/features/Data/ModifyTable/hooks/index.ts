@@ -1,7 +1,7 @@
 export {
   getTableFromMetadata,
   manageTableMetadataQueryKey,
-  useMetadataForManageTable,
   useMetadataTable,
+  useListAllTableColumns,
 } from './useMetadataForManageTable';
 export { useUpdateTableConfiguration } from './useUpdateTableConfiguration';

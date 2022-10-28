@@ -12,12 +12,10 @@ import { SupportedFeaturesType } from '../../../../dataSources/types';
 import { Path } from '../../../Common/utils/tsUtils';
 import ConnectionSettingsForm from './ConnectionSettings/ConnectionSettingsForm';
 import { GraphQLFieldCustomizationContainer } from './GraphQLFieldCustomization/GraphQLFieldCustomizationContainer';
-import { SampleDBTrial } from './SampleDatabase';
 
 export interface ConnectDatabaseFormProps {
   // Connect DB State Props
   connectionDBState: ConnectDBState;
-  sampleDBTrial?: SampleDBTrial;
   connectionDBStateDispatch: Dispatch<ConnectDBActions>;
   // Connection Type Props - for the Radio buttons
   updateConnectionTypeRadio: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -31,15 +29,15 @@ export interface ConnectDatabaseFormProps {
 
 export const connectionRadios = [
   {
-    value: connectionTypes.ENV_VAR,
+    value: connectionTypes?.ENV_VAR,
     title: 'Environment Variable',
   },
   {
-    value: connectionTypes.DATABASE_URL,
+    value: connectionTypes?.DATABASE_URL,
     title: 'Database URL',
   },
   {
-    value: connectionTypes.CONNECTION_PARAMS,
+    value: connectionTypes?.CONNECTION_PARAMS,
     title: 'Connection Parameters',
   },
 ];
@@ -97,7 +95,7 @@ const driverToLabel: Record<
     info: [
       <>
         Only Database URLs and Environment Variables are available for
-        CockroachD
+        CockroachDB
       </>,
       <div className="flex whitespace-nowrap">
         Please makes sure to not use the

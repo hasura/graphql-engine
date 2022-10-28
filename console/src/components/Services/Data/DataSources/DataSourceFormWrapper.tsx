@@ -9,7 +9,6 @@ import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { Button } from '@/new-components/Button';
 import ConnectDatabaseForm, { ConnectDatabaseFormProps } from './ConnectDBForm';
 import styles from './DataSources.module.scss';
-import { SampleDBSection } from './SampleDatabase';
 import { Driver } from '../../../../dataSources';
 import { isDBSupported } from './utils';
 
@@ -50,7 +49,6 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
     loading,
     isEditState,
     children,
-    sampleDBTrial,
     isReadReplica,
     connectionDBState,
     connectionDBStateDispatch,
@@ -63,27 +61,6 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
   const { enabled: isGDCFeatureFlagEnabled } = useIsFeatureFlagEnabled(
     availableFeatureFlagIds.gdcId
   );
-
-  const onSampleDBTry = () => {
-    if (!sampleDBTrial || !sampleDBTrial.isActive()) return;
-
-    sampleDBTrial.track.tryButton();
-
-    if (!sampleDBTrial.isActive()) return;
-
-    connectionDBStateDispatch({
-      type: 'UPDATE_DISPLAY_NAME',
-      data: 'SampleDB',
-    });
-    connectionDBStateDispatch({
-      type: 'UPDATE_DB_DRIVER',
-      data: 'postgres',
-    });
-    connectionDBStateDispatch({
-      type: 'UPDATE_DB_URL',
-      data: sampleDBTrial.getDatabaseUrl(),
-    });
-  };
 
   const handleDBChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value as Driver;
@@ -143,11 +120,6 @@ const DataSourceFormWrapper: React.FC<DataSourceFormWrapperProps> = props => {
             <div className="max-w-xl">
               {!isReadReplica && (
                 <>
-                  {sampleDBTrial && sampleDBTrial.isActive() && (
-                    <div className="mb-md">
-                      <SampleDBSection onTrySampleDB={onSampleDBTry} />
-                    </div>
-                  )}
                   <LabeledInput
                     onChange={e =>
                       connectionDBStateDispatch({

@@ -668,7 +668,9 @@ tableOrderByArg sourceInfo tableInfo = do
   pure $ do
     maybeOrderByExps <-
       fmap join $
-        P.fieldOptional orderByName orderByDesc $ P.nullable $ P.list orderByParser
+        P.fieldOptional orderByName orderByDesc $
+          P.nullable $
+            P.list orderByParser
     pure $ maybeOrderByExps >>= NE.nonEmpty . concat
 
 -- | Argument to distinct select on columns returned from table selection
@@ -890,12 +892,14 @@ tableAggregationFields sourceInfo tableInfo =
     allColumns <- tableSelectColumns sourceInfo tableInfo
     let numericColumns = onlyNumCols allColumns
         comparableColumns = onlyComparableCols allColumns
+        customOperatorsAndColumns =
+          Map.toList $ Map.mapMaybe (getCustomAggOpsColumns allColumns) $ getCustomAggregateOperators @b (_siConfiguration sourceInfo)
         description = G.Description $ "aggregate fields of " <>> tableInfoName tableInfo
     selectName <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableAggregateFieldTypeName tableGQLName
     count <- countField
     makeTypename <- asks getter
-    numericAndComparable <-
-      fmap concat $
+    nonCountFieldsMap <-
+      fmap (Map.unionsWith (++) . concat) $
         sequenceA $
           catMaybes
             [ -- operators on numeric columns
@@ -903,9 +907,8 @@ tableAggregationFields sourceInfo tableInfo =
                 then Nothing
                 else Just $
                   for numericAggOperators $ \operator -> do
-                    let fieldNameCase = applyFieldNameCaseCust tCase operator
                     numFields <- mkNumericAggFields operator numericColumns
-                    pure $ parseAggOperator makeTypename operator fieldNameCase tCase tableGQLName numFields,
+                    pure $ Map.singleton operator numFields,
               -- operators on comparable columns
               if null comparableColumns
                 then Nothing
@@ -913,14 +916,39 @@ tableAggregationFields sourceInfo tableInfo =
                   comparableFields <- traverse mkColumnAggField comparableColumns
                   pure $
                     comparisonAggOperators & map \operator ->
-                      let fieldNameCase = applyFieldNameCaseCust tCase operator
-                       in parseAggOperator makeTypename operator fieldNameCase tCase tableGQLName comparableFields
+                      Map.singleton operator comparableFields,
+              -- -- custom operators
+              if null customOperatorsAndColumns
+                then Nothing
+                else Just $
+                  for customOperatorsAndColumns \(operator, columnTypes) -> do
+                    customFields <- traverse (uncurry mkCustomColumnAggField) (toList columnTypes)
+                    pure $ Map.singleton operator customFields
             ]
-    let aggregateFields = count : numericAndComparable
+    let nonCountFields =
+          Map.mapWithKey
+            ( \operator fields ->
+                let fieldNameCase = applyFieldNameCaseCust tCase operator
+                 in parseAggOperator makeTypename operator fieldNameCase tCase tableGQLName fields
+            )
+            nonCountFieldsMap
+        aggregateFields = count : Map.elems nonCountFields
     pure $
       P.selectionSet selectName (Just description) aggregateFields
         <&> parsedSelectionsToFields IR.AFExp
   where
+    getCustomAggOpsColumns :: [ColumnInfo b] -> HashMap (ScalarType b) (ScalarType b) -> Maybe (NonEmpty (ColumnInfo b, ScalarType b))
+    getCustomAggOpsColumns columnInfos typeMap =
+      columnInfos
+        & mapMaybe
+          ( \ci@ColumnInfo {..} ->
+              case ciType of
+                ColumnEnumReference _ -> Nothing
+                ColumnScalar scalarType ->
+                  (ci,) <$> Map.lookup scalarType typeMap
+          )
+        & nonEmpty
+
     mkNumericAggFields :: G.Name -> [ColumnInfo b] -> SchemaT r m [FieldParser n (IR.ColFld b)]
     mkNumericAggFields name
       | name == Name._sum = traverse mkColumnAggField
@@ -933,14 +961,22 @@ tableAggregationFields sourceInfo tableInfo =
             $> IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
 
     mkColumnAggField :: ColumnInfo b -> SchemaT r m (FieldParser n (IR.ColFld b))
-    mkColumnAggField columnInfo = do
-      field <- columnParser (ciType columnInfo) (G.Nullability True)
+    mkColumnAggField columnInfo =
+      mkColumnAggField' columnInfo (ciType columnInfo)
+
+    mkColumnAggField' :: ColumnInfo b -> ColumnType b -> SchemaT r m (FieldParser n (IR.ColFld b))
+    mkColumnAggField' columnInfo resultType = do
+      field <- columnParser resultType (G.Nullability True)
       pure $
         P.selection_
           (ciName columnInfo)
           (ciDescription columnInfo)
           field
           $> IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
+
+    mkCustomColumnAggField :: ColumnInfo b -> ScalarType b -> SchemaT r m (FieldParser n (IR.ColFld b))
+    mkCustomColumnAggField columnInfo resultType =
+      mkColumnAggField' columnInfo (ColumnScalar resultType)
 
     countField :: SchemaT r m (FieldParser n (IR.AggregateField b))
     countField = do
@@ -1164,9 +1200,9 @@ relationshipField sourceInfo table ri = runMaybeT do
             -- "backwards" joining condition from the related table back to
             -- `table`.  If it is, then we can optimize the row-level permission
             -- filters by dropping them here.
-            if riRTable remoteRI == table
-              && riMapping remoteRI `Map.isInverseOf` riMapping ri
-              && thisTablePerm == remoteTablePerm
+            if (riRTable remoteRI == table)
+              && (riMapping remoteRI `Map.isInverseOf` riMapping ri)
+              && (thisTablePerm == remoteTablePerm)
               then BoolAnd []
               else x
           _ -> x
@@ -1235,7 +1271,8 @@ relationshipField sourceInfo table ri = runMaybeT do
                   IR.AnnRelationSelectG (riName ri) (riMapping ri) $
                     IR.AnnObjectSelectG fields (riRTable ri) $
                       deduplicatePermissions $
-                        IR._tpFilter $ tablePermissionsInfo remotePerms
+                        IR._tpFilter $
+                          tablePermissionsInfo remotePerms
     ArrRel -> do
       let arrayRelDesc = Just $ G.Description "An array relationship"
       otherTableParser <- MaybeT $ selectTable sourceInfo otherTableInfo relFieldName arrayRelDesc

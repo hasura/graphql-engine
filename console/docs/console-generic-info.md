@@ -183,7 +183,7 @@ npm run storybook
 
 Visit [http://localhost:3000](http://localhost:3000) to confirm the setup.
 
-![Testing Development Server](../assets/console-readme-assets/test-dev-setup.jpg)
+![Testing Development Server](../../assets/console-readme-assets/test-dev-setup.jpg)
 
 ### Make changes to the code
 

@@ -19,6 +19,7 @@ import Hasura.Generator.Common (defaultRange)
 import Hasura.Prelude
 import Hedgehog
 import Hedgehog.Gen qualified as Gen
+import Language.GraphQL.Draft.Syntax.QQ qualified as G
 import Test.Aeson.Utils (jsonOpenApiProperties, testToFromJSONToSchema)
 import Test.Hspec
 
@@ -41,7 +42,7 @@ spec = do
         |]
     describe "OrderBySingleColumnAggregate" $
       testToFromJSONToSchema
-        (OrderBySingleColumnAggregate (SingleColumnAggregate Sum (ColumnName "test_column")))
+        (OrderBySingleColumnAggregate (SingleColumnAggregate (SingleColumnAggregateFunction [G.name|sum|]) (ColumnName "test_column")))
         [aesonQQ|
           { "type": "single_column_aggregate",
             "function": "sum",
@@ -120,27 +121,27 @@ spec = do
       testToFromJSONToSchema Descending [aesonQQ|"desc"|]
     jsonOpenApiProperties genOrderDirection
 
-genOrderBy :: MonadGen m => m OrderBy
+genOrderBy :: Gen OrderBy
 genOrderBy =
   OrderBy
     <$> (HashMap.fromList <$> Gen.list defaultRange ((,) <$> genRelationshipName <*> genOrderByRelation))
     <*> Gen.nonEmpty defaultRange genOrderByElement
 
-genOrderByRelation :: MonadGen m => m OrderByRelation
+genOrderByRelation :: Gen OrderByRelation
 genOrderByRelation =
   OrderByRelation
     <$> Gen.maybe genExpression
     -- Gen.small ensures the recursion will terminate as the size will shrink with each recursion
     <*> Gen.small (HashMap.fromList <$> Gen.list defaultRange ((,) <$> genRelationshipName <*> genOrderByRelation))
 
-genOrderByElement :: MonadGen m => m OrderByElement
+genOrderByElement :: Gen OrderByElement
 genOrderByElement =
   OrderByElement
     <$> Gen.list defaultRange genRelationshipName
     <*> genOrderByTarget
     <*> genOrderDirection
 
-genOrderByTarget :: MonadGen m => m OrderByTarget
+genOrderByTarget :: Gen OrderByTarget
 genOrderByTarget =
   Gen.choice
     [ OrderByColumn <$> genColumnName,
@@ -148,5 +149,5 @@ genOrderByTarget =
       OrderBySingleColumnAggregate <$> genSingleColumnAggregate
     ]
 
-genOrderDirection :: MonadGen m => m OrderDirection
+genOrderDirection :: Gen OrderDirection
 genOrderDirection = Gen.enumBounded

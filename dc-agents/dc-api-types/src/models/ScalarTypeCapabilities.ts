@@ -2,14 +2,17 @@
 /* tslint:disable */
 /* eslint-disable */
 
-import type { GraphQLName } from './GraphQLName';
+import type { AggregateFunctions } from './AggregateFunctions';
+import type { ComparisonOperators } from './ComparisonOperators';
 
 /**
  * Capabilities of a scalar type.
- * comparison_type: Name of the GraphQL input object to be used for comparison operations on the scalar type. The input object type must be defined in the `graphql_schema`.
+ * comparison_operators: The comparison operators supported by the scalar type.
+ * aggregate_functions: The aggregate functions supported by the scalar type.
  *
  */
 export type ScalarTypeCapabilities = {
-  comparison_type?: GraphQLName;
+  aggregate_functions?: AggregateFunctions;
+  comparison_operators?: ComparisonOperators;
 };
 

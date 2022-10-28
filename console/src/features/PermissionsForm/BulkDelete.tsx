@@ -2,25 +2,26 @@ import React from 'react';
 import { Button } from '@/new-components/Button';
 
 import { useBulkDeletePermissions } from './hooks';
-import { DataLeaf } from '../PermissionsTab/types/types';
-import { useDataSource } from '../PermissionsTab/types/useDataSource';
 
 export interface BulkDeleteProps {
+  currentSource: string;
+  dataSourceName: string;
   roles: string[];
-  dataLeaf: DataLeaf;
+  table: unknown;
   handleClose: () => void;
 }
 
 export const BulkDelete: React.FC<BulkDeleteProps> = ({
+  currentSource,
+  dataSourceName,
   roles,
-  dataLeaf,
+  table,
   handleClose,
 }) => {
-  const dataSource = useDataSource();
-
   const { submit, isLoading, isError } = useBulkDeletePermissions({
-    dataSource,
-    dataLeaf,
+    currentSource,
+    dataSourceName,
+    table,
   });
 
   const handleDelete = async () => {

@@ -42,8 +42,7 @@ capabilities =
             API._cQueries = Just API.QueryCapabilities,
             API._cMutations = Nothing,
             API._cSubscriptions = Nothing,
-            API._cScalarTypes = Nothing,
-            API._cGraphQLTypeDefinitions = Nothing,
+            API._cScalarTypes = mempty,
             API._cRelationships = Just API.RelationshipCapabilities {},
             API._cComparisons =
               Just

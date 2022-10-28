@@ -3,6 +3,7 @@ import { MetadataTableConfig } from '@/features/MetadataAPI';
 import { Button } from '@/new-components/Button';
 import { Collapse } from '@/new-components/deprecated';
 import { Dialog } from '@/new-components/Dialog';
+import { SanitizeTips } from '@/utils/sanitizeGraphQLFieldNames';
 import React from 'react';
 import { FormProvider } from 'react-hook-form';
 import { FaExclamationCircle } from 'react-icons/fa';
@@ -41,13 +42,7 @@ export const TableTrackingCustomizationForm: React.VFC<TableTrackingCustomizatio
         <form onSubmit={formMethods.handleSubmit(handleSubmit)}>
           <div>
             <div className="px-sm pb-sm">
-              <div className="flex text-muted flex-col mb-4">
-                <div>
-                  Values are limited to letters, numbers, and underscores.
-                </div>
-                <div>Spaces are converted to underscores.</div>
-              </div>
-
+              <SanitizeTips />
               <div className="mb-4 flex justify-end">
                 <Button disabled={!hasValues} size="sm" onClick={reset}>
                   Clear All Fields

@@ -5,6 +5,7 @@ import {
 } from '@/components/Services/Data/Schema/tableTrackCustomization/types';
 import { Driver } from '@/dataSources';
 import { MetadataTableConfig } from '@/features/MetadataAPI';
+import pickBy from 'lodash.pickby';
 
 export const getTrackingTableFormPlaceholders = (
   tableName: string
@@ -32,19 +33,15 @@ export const buildConfigFromFormValues = (
 
   const config: MetadataTableConfig = {};
   // the shape of the form type almost matches the config type
-  const { custom_name, ...remainingValues } = values;
+  const { custom_name, ...customRoots } = values;
 
   if (custom_name) config.custom_name = custom_name;
 
-  Object.entries(remainingValues).forEach(entry => {
-    const [key, value] = entry as [keyof typeof remainingValues, string];
-    if (value) {
-      if (!config.custom_root_fields) {
-        config.custom_root_fields = {};
-      }
-      config.custom_root_fields[key] = value;
-    }
-  });
+  const rootsWithValues = pickBy(customRoots, v => v !== '');
+
+  if (Object.keys(rootsWithValues).length > 0) {
+    config.custom_root_fields = rootsWithValues;
+  }
 
   return config;
 };

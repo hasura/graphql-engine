@@ -95,6 +95,7 @@ export const RenderFormElement = (props: Props) => {
                 })}
               />
               <button
+                type="button"
                 className="text-blue-800 font-bold text-sm"
                 onClick={() => setValue(columnKey, 'X-Hasura-User-Id')}
               >

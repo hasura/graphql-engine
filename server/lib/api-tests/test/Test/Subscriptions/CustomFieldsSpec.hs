@@ -6,7 +6,10 @@
 module Test.Subscriptions.CustomFieldsSpec (spec) where
 
 import Data.Aeson (Value)
+import Data.Aeson.Key qualified as Key (toString)
 import Data.List.NonEmpty qualified as NE
+import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postGraphqlWithHeaders, postMetadata_)
 import Harness.Quoter.Graphql (graphql)
@@ -26,7 +29,19 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
-                  setupMetadata testEnvironment
+                  setupMetadata Fixture.Postgres testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Citus)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Citus.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.Citus testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Cockroach.setupTablesAction schema testEnvironment,
+                  setupMetadata Fixture.Cockroach testEnvironment
                 ]
             }
         ]
@@ -92,10 +107,19 @@ tests opts = do
 --------------------------------------------------------------------------------
 -- Metadata
 
-setupMetadata :: TestEnvironment -> Fixture.SetupAction
-setupMetadata testEnvironment = do
+setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
+setupMetadata backendType testEnvironment = do
   let schemaName :: Schema.SchemaName
       schemaName = Schema.getSchemaName testEnvironment
+
+      schemaKeyword :: String
+      schemaKeyword = Key.toString $ Fixture.schemaKeyword backendType
+
+      backendPrefix :: String
+      backendPrefix = Fixture.defaultBackendTypeString backendType
+
+      source :: String
+      source = Fixture.defaultSource backendType
 
       setup :: IO ()
       setup =
@@ -104,20 +128,20 @@ setupMetadata testEnvironment = do
           [interpolateYaml|
             type: bulk
             args:
-            - type: pg_set_table_customization
+            - type: #{backendPrefix}_set_table_customization
               args:
-                source: postgres
+                source: #{source}
                 table:
-                  schema: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                   name: logs
                 configuration:
                   custom_root_fields:
                      select_stream: LogsStream
-            - type: pg_create_select_permission
+            - type: #{backendPrefix}_create_select_permission
               args:
-                source: postgres
+                source: #{source}
                 table:
-                  schema: #{schemaName}
+                  #{schemaKeyword}: #{schemaName}
                   name: logs
                 role: user
                 permission:
@@ -131,11 +155,11 @@ setupMetadata testEnvironment = do
         postMetadata_
           testEnvironment
           [interpolateYaml|
-            type: pg_drop_select_permission
+            type: #{backendPrefix}_drop_select_permission
             args:
-              source: postgres
+              source: #{source}
               table:
-                schema: hasura
+                #{schemaKeyword}: #{schemaName}
                 name: logs
               role: user
           |]

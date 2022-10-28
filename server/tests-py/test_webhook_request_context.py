@@ -5,6 +5,8 @@ import pytest
 import queue
 import threading
 
+from conftest import extract_server_address_from
+
 
 class QueryEchoWebhookServer(http.server.HTTPServer):
     def __init__(self, server_address):
@@ -48,16 +50,18 @@ class QueryEchoWebhookHandler(http.server.BaseHTTPRequestHandler):
 @pytest.fixture(scope='class')
 @pytest.mark.early
 def query_echo_webhook(hge_fixture_env: dict[str, str]):
-    # TODO(swann): is this the right port?
-    webhook_httpd = QueryEchoWebhookServer(server_address=("localhost", 5594))
-    web_server = threading.Thread(target=webhook_httpd.serve_forever)
-    web_server.start()
-    hge_fixture_env['HASURA_GRAPHQL_AUTH_HOOK'] = 'http://localhost:5594/'
+    server_address = extract_server_address_from('HASURA_GRAPHQL_AUTH_HOOK')
+    server = QueryEchoWebhookServer(server_address)
+    thread = threading.Thread(target=server.serve_forever)
+    thread.start()
+    url = f'http://{server.server_address[0]}:{server.server_address[1]}'
+    print(f'{query_echo_webhook.__name__} server started on {url}')
+    hge_fixture_env['HASURA_GRAPHQL_AUTH_HOOK'] = url + '/'
     hge_fixture_env['HASURA_GRAPHQL_AUTH_HOOK_MODE'] = 'POST'
-    yield webhook_httpd
-    webhook_httpd.shutdown()
-    webhook_httpd.server_close()
-    web_server.join()
+    yield server
+    server.shutdown()
+    server.server_close()
+    thread.join()
 
 
 @pytest.mark.usefixtures('per_method_tests_db_state')

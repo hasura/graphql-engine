@@ -166,8 +166,9 @@ resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExc
   (tablesMeta, functionsMeta, pgScalars) <- runTx (_pscExecCtx sourceConfig) PG.ReadOnly $ do
     tablesMeta <- fetchTableMetadata $ OMap.keys $ _smTables sourceMetadata
     let allFunctions =
-          OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
-            <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
+          Set.fromList $
+            OMap.keys (_smFunctions sourceMetadata) -- Tracked functions
+              <> concatMap getComputedFieldFunctionsMetadata (OMap.elems $ _smTables sourceMetadata) -- Computed field functions
     functionsMeta <- fetchFunctionMetadata @pgKind allFunctions
     pgScalars <- fetchPgScalars
     let scalarsMap = Map.fromList do
@@ -394,7 +395,7 @@ cockroachFetchTableMetadata _tables = do
 class FetchFunctionMetadata (pgKind :: PostgresKind) where
   fetchFunctionMetadata ::
     (MonadTx m) =>
-    [QualifiedFunction] ->
+    Set.HashSet QualifiedFunction ->
     m (DBFunctionsMetadata ('Postgres pgKind))
 
 instance FetchFunctionMetadata 'Vanilla where
@@ -407,14 +408,14 @@ instance FetchFunctionMetadata 'Cockroach where
   fetchFunctionMetadata _ = pure mempty
 
 -- | Fetch Postgres metadata for all user functions
-pgFetchFunctionMetadata :: (MonadTx m) => [QualifiedFunction] -> m (DBFunctionsMetadata ('Postgres pgKind))
+pgFetchFunctionMetadata :: (MonadTx m) => Set.HashSet QualifiedFunction -> m (DBFunctionsMetadata ('Postgres pgKind))
 pgFetchFunctionMetadata functions = do
   results <-
     liftTx $
       PG.withQE
         defaultTxErrorHandler
         $(makeRelativeToProject "src-rsr/pg_function_metadata.sql" >>= PG.sqlFromFile)
-        [PG.ViaJSON $ LE.uniques functions]
+        [PG.ViaJSON functions]
         True
   pure $
     Map.fromList $

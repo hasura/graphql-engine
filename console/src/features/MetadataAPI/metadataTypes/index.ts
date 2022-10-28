@@ -10,4 +10,5 @@ export * from './network';
 export * from './restEndpoints';
 export * from './apiLimits';
 export * from './graphqlSchemaIntrospection';
+export * from './permissions';
 export * from './metadata';

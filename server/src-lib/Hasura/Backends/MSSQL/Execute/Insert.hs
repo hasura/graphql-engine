@@ -181,7 +181,7 @@ buildInsertTx tableName withAlias stringifyNum insert queryTags = do
 
   -- Raise an exception if the check condition is not met
   unless (checkConditionInt == 0) $
-    throw400 PermissionError "check constraint of an insert permission has failed"
+    throw400 PermissionError "check constraint of an insert/update permission has failed"
 
   pure $ encJFromText responseText
 

@@ -47,6 +47,10 @@ export type InputFieldProps<T extends z.infer<Schema>> =
      * The input field append label
      */
     appendLabel?: string;
+    /**
+     * A callback for transforming the input onChange for things like sanitizing input
+     */
+    inputTransform?: (val: string) => string;
   };
 
 export const InputField = <T extends z.infer<Schema>>({
@@ -59,6 +63,7 @@ export const InputField = <T extends z.infer<Schema>>({
   prependLabel = '',
   appendLabel = '',
   dataTest,
+  inputTransform,
   ...wrapperProps
 }: InputFieldProps<T>) => {
   const {
@@ -67,6 +72,9 @@ export const InputField = <T extends z.infer<Schema>>({
   } = useFormContext<T>();
 
   const maybeError = get(errors, name) as FieldError | undefined;
+
+  const { onChange, ...regReturn } = register(name);
+
   return (
     <FieldWrapper id={name} {...wrapperProps} error={maybeError}>
       <div className={clsx('relative flex')}>
@@ -104,7 +112,13 @@ export const InputField = <T extends z.infer<Schema>>({
             }
           )}
           placeholder={placeholder}
-          {...register(name)}
+          {...regReturn}
+          onChange={e => {
+            if (inputTransform) {
+              e.target.value = inputTransform(e.target.value);
+            }
+            onChange(e);
+          }}
           disabled={disabled}
           data-testid={name}
         />

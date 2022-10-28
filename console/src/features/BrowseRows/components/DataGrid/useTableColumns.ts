@@ -33,5 +33,6 @@ export const useTableColumns = ({
             : supportedOperators,
       };
     },
+    refetchOnWindowFocus: false,
   });
 };

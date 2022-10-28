@@ -302,7 +302,7 @@ runApp serveOptions = do
                 ),
             _pciRetries = Nothing
           }
-      metadataDbUrl = Just Constants.postgresqlConnectionString
+      metadataDbUrl = Just Constants.postgresqlMetadataConnectionString
   env <- Env.getEnvironment
   initTime <- liftIO getCurrentTime
   globalCtx <- App.initGlobalCtx env metadataDbUrl rci

@@ -1,4 +1,4 @@
-import { MetadataResponse } from '../../MetadataAPI';
+import { Metadata } from '@/features/MetadataAPI';
 
 export const schemaList = {
   result_type: 'TuplesOk',
@@ -15,7 +15,26 @@ export const query = {
   ],
 };
 
-export const metadata: MetadataResponse = {
+export const metadataTable = {
+  name: ['Artist'],
+  columns: [
+    {
+      name: 'ArtistId',
+      type: 'number',
+      nullable: false,
+    },
+    {
+      name: 'Name',
+      type: 'string',
+      nullable: true,
+    },
+  ],
+  primary_key: ['ArtistId'],
+  description:
+    'CREATE TABLE [Artist]\n(\n    [ArtistId] INTEGER  NOT NULL,\n    [Name] NVARCHAR(120),\n    CONSTRAINT [PK_Artist] PRIMARY KEY  ([ArtistId])\n)',
+};
+
+export const metadata: Metadata = {
   resource_version: 30,
   metadata: {
     inherited_roles: [],
@@ -27,7 +46,7 @@ export const metadata: MetadataResponse = {
         tables: [
           { table: { schema: 'public', name: 'a_table' } },
           {
-            table: { schema: 'public', name: 'users' },
+            table: { schema: 'public', name: 'user' },
             insert_permissions: [
               {
                 role: 'user',
@@ -53,6 +72,7 @@ export const metadata: MetadataResponse = {
           },
         ],
         functions: [{ function: { schema: 'public', name: 'search_user2' } }],
+
         configuration: {
           connection_info: {
             use_prepared_statements: true,
@@ -64,6 +84,36 @@ export const metadata: MetadataResponse = {
               idle_timeout: 180,
               max_connections: 50,
             },
+          },
+        },
+      },
+      {
+        name: 'sqlite',
+        kind: 'sqlite',
+        tables: [
+          {
+            table: ['Album'],
+          },
+          {
+            table: ['Artist'],
+            select_permissions: [
+              {
+                role: 'user',
+                permission: {
+                  columns: ['ArtistId', 'Name'],
+                  filter: {},
+                  allow_aggregations: true,
+                },
+              },
+            ],
+          },
+        ],
+        configuration: {
+          template: null,
+          timeout: null,
+          value: {
+            db: '/chinook.db',
+            include_sqlite_meta_tables: false,
           },
         },
       },

@@ -11,6 +11,7 @@ module Harness.Test.Fixture
     BackendType (..),
     defaultSource,
     defaultBackendTypeString,
+    schemaKeyword,
     noLocalTestEnvironment,
     SetupAction (..),
     emptySetupAction,
