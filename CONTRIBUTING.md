@@ -113,6 +113,7 @@ The README of the CLI repository can be found [here](https://github.com/hasura/g
 ### Reporting an Issue
 
 - Make sure you test against the latest released version. It is possible that we may have already fixed the bug you're experiencing.
+- Create a [issue](https://github.com/hasura/graphql-engine/issues/new/choose) right here!
 
 - Provide steps to reproduce the issue, including Postgres version,
   graphql-engine version and the provider you are running on (Heroku, Docker, etc.).
