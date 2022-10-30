@@ -17,9 +17,10 @@ self: super: {
             };
           hasura-prelude =
             hsuper.callPackage ../../server/lib/hasura-prelude { };
-          pg-client-hs = super.haskell.lib.dontCheck (hsuper.callPackage ../../server/lib/pg-client-hs {
-            resource-pool = hself.hasura-resource-pool;
-          });
+          pg-client-hs = super.haskell.lib.dontCheck
+            (hsuper.callPackage ../../server/lib/pg-client-hs {
+              resource-pool = hself.hasura-resource-pool;
+            });
 
           hasura-schema-parsers =
             hsuper.callPackage ../../server/lib/schema-parsers { };
@@ -31,6 +32,7 @@ self: super: {
               hedgehog = hself.hedgehog_1_2;
               immortal = hself.immortal_0_2_2_1;
               pg-client = hself.pg-client-hs;
+              odbc = hself.hasura-odbc;
               resource-pool = hself.hasura-resource-pool;
             }));
 
@@ -81,6 +83,14 @@ self: super: {
               rev = "c5faf9a358e83eaf15fef0c1e890f463d0022565";
               sha256 = "a8dzt1f/TwVG37rOsL/Bh2K90cDnGgj7HVpL0S3r59A=";
             }) { };
+
+          hasura-odbc = super.haskell.lib.dontCheck
+            (hsuper.callCabal2nix "odbc" (super.fetchFromGitHub {
+            owner = "fpco";
+            repo = "odbc";
+            rev = "38e04349fe28a91f189e44bd7783220956d18aae";
+            sha256 = "V9MMQTJ6j/lHv0HA34J6XM2dsbT/XTVi6MCCaUpomyo=";
+            }) { });
 
           # broken dependency fixe
           # openapi3-3.2.2: lens >=4.16.1 && <5.2
