@@ -35,7 +35,7 @@
 }:
 mkDerivation {
   pname = "graphql-engine";
-  version = "1.0.0";
+  version = "2.13.0";
   src = ./.;
   isLibrary = true;
   isExecutable = true;

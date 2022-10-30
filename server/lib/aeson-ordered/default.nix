@@ -1,63 +1,15 @@
-cabal-version: 1.12
-
--- This file is generated using hpack.
--- Do not modify it directly. Instead, edit package.yaml and then run:
---     make server/lib/aeson-ordered/aeson-ordered.cabal
-
--- This file has been generated from package.yaml by hpack version 0.34.7.
---
--- see: https://github.com/sol/hpack
-
-name:           aeson-ordered
-version:        0.1.0.0
-description:    Provides a data type that mirrors Aeson's 'Value', but that preserves order of object properties using an insertion-ordered map.
-homepage:       https://github.com/hasura/github-engine-mono#readme
-bug-reports:    https://github.com/hasura/github-engine-mono/issues
-author:         Anon Ray <anon@hasura.io>,
-                Bryan O'Sullivan <bos@serpentine.com>,
-                MailRank, Inc.
-maintainer:     Anon Ray <anon@hasura.io>,
-                Bryan O'Sullivan <bos@serpentine.com>,
-                MailRank, Inc.
-license:        BSD3
-license-file:   LICENSE
-build-type:     Simple
-extra-source-files:
-    CHANGELOG.md
-    LICENSE
-
-source-repository head
-  type: git
-  location: https://github.com/hasura/github-engine-mono
-
-library
-  exposed-modules:
-      Data.Aeson.Ordered
-  other-modules:
-      Paths_aeson_ordered
-  hs-source-dirs:
-      src
-  default-extensions:
-      BangPatterns
-      DeriveDataTypeable
-      DeriveGeneric
-      DerivingStrategies
-      GeneralizedNewtypeDeriving
-      ImportQualifiedPost
-      LambdaCase
-      OverloadedStrings
-      StrictData
-  ghc-options: -foptimal-applicative-do -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
-  build-depends:
-      aeson
-    , attoparsec
-    , base
-    , bytestring
-    , hashable
-    , insert-ordered-containers
-    , lens
-    , lens-aeson
-    , scientific
-    , text
-    , vector
-  default-language: Haskell2010
+{ mkDerivation, aeson, attoparsec, base, bytestring, hashable
+, insert-ordered-containers, lens, lens-aeson, lib, scientific
+, text, vector
+}:
+mkDerivation {
+  pname = "aeson-ordered";
+  version = "0.1.0.0";
+  src = ./.;
+  libraryHaskellDepends = [
+    aeson attoparsec base bytestring hashable insert-ordered-containers
+    lens lens-aeson scientific text vector
+  ];
+  homepage = "https://github.com/hasura/github-engine-mono#readme";
+  license = lib.licenses.bsd3;
+}
