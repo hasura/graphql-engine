@@ -37,16 +37,16 @@
         };
         overlays = [
           (import ./nix/overlays/ghc.nix)
+          (import ./nix/overlays/packages.nix)
           (import ./nix/overlays/msodbcsql18.nix)
         ];
       };
     in
     {
-      packages.graphql-parser = (pkgs.haskell.packages.${pkgs.ghcName}.callCabal2nix "graphql-parser" ./server/lib/graphql-parser-hs { }).overrideScope (
-        self: super: {
-          hedgehog = self.hedgehog_1_1_1;
-        }
-      );
+      packages = rec {
+        graphql-server = pkgs.haskell.packages.${pkgs.ghcName}.graphql-server;
+        default = graphql-server;
+      };
 
       formatter = pkgs.nixpkgs-fmt;
 

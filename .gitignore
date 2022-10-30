@@ -19,3 +19,7 @@ venv
 
 # ignored so that everyone can have their own hie.yaml
 hie.yaml
+
+.direnv
+.envrc.local
+cabal.project.local
