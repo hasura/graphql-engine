@@ -22,3 +22,6 @@ cabal.sandbox.config
 
 ws/
 TAGS
+
+# nix
+result

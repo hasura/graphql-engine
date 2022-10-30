@@ -17,9 +17,9 @@ self: super: {
             };
           hasura-prelude =
             hsuper.callPackage ../../server/lib/hasura-prelude { };
-          pg-client-hs = (hsuper.callPackage ../../server/lib/pg-client-hs {}).override {
-            resource-pool = hsuper.hasura-resource-pool;
-          };
+          pg-client-hs = super.haskell.lib.dontCheck (hsuper.callPackage ../../server/lib/pg-client-hs {
+            resource-pool = hself.hasura-resource-pool;
+          });
 
           hasura-schema-parsers =
             hsuper.callPackage ../../server/lib/schema-parsers { };
@@ -31,7 +31,7 @@ self: super: {
               hedgehog = hself.hedgehog_1_2;
               immortal = hself.immortal_0_2_2_1;
               pg-client = hself.pg-client-hs;
-              resource-pool = hself.resource-pool_0_3_1_0;
+              resource-pool = hself.hasura-resource-pool;
             }));
 
           # FIXME: for remote repos we have to calculate their default.nix until they get upstreamed/maintained
@@ -74,12 +74,12 @@ self: super: {
             sha256 = "m2mxYqQphXeiu9YyZ3RgyRT9xDEIT52ScI7vSWqvYFc=";
           }) { };
 
-          hasura-resource-pool = hsuper.callCabal2nix "hasura-resource-pool"
+          hasura-resource-pool = hsuper.callCabal2nix "resource-pool"
             (super.fetchFromGitHub {
               owner = "hasura";
               repo = "pool";
               rev = "c5faf9a358e83eaf15fef0c1e890f463d0022565";
-              sha256 = "m2mxYqQphXeiu9YyZ3RgyRT9xDEIT52ScI7vSWqvYFc=";
+              sha256 = "a8dzt1f/TwVG37rOsL/Bh2K90cDnGgj7HVpL0S3r59A=";
             }) { };
 
           # broken dependency fixe
