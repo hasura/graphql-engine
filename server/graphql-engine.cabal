@@ -158,7 +158,8 @@ flag ghci-load-test-with-lib
 common common-all
   ghc-options:
     -foptimal-applicative-do
-    -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+    -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns
+    -- -Wredundant-constraints
     -- This is just to keep compile-times in check and might be adjusted later (See mono #2610):
     -fmax-simplifier-iterations=2
     -- Insisting on export lists might help with compile times, and help to document modules:

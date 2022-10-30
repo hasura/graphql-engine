@@ -9,7 +9,7 @@
 , directory, either, ekg-core, ekg-json, ekg-prometheus, exceptions
 , fast-logger, file-embed, filepath, free, ghc-heap-view
 , graphql-parser, hashable, hasura-error-message, hasura-prelude
-, hasura-schema-parsers, hedgehog, hspec, hspec-core
+, hasura-schema-parsers, hasura-resource-pool, hedgehog, hspec, hspec-core
 , hspec-discover, hspec-expectations, hspec-expectations-json
 , hspec-expectations-lifted, hspec-hedgehog, http-api-data
 , http-client, http-client-tls, http-conduit, http-media
@@ -50,6 +50,7 @@ mkDerivation {
     ekg-core ekg-json ekg-prometheus exceptions fast-logger file-embed
     filepath free ghc-heap-view graphql-parser hashable
     hasura-error-message hasura-prelude hasura-schema-parsers
+    hasura-resource-pool
     http-api-data http-client http-client-tls http-conduit http-media
     http-types immortal insert-ordered-containers jose kan-extensions
     kriti-lang lens lens-aeson lifted-async lifted-base list-t memory
@@ -83,7 +84,7 @@ mkDerivation {
     dependent-sum-template directory either ekg-core ekg-json
     ekg-prometheus exceptions fast-logger file-embed filepath free
     ghc-heap-view graphql-parser hashable hasura-error-message
-    hasura-prelude hasura-schema-parsers hedgehog hspec hspec-core
+    hasura-prelude hasura-schema-parsers hasura-resource-pool hedgehog hspec hspec-core
     hspec-expectations hspec-expectations-json
     hspec-expectations-lifted hspec-hedgehog http-api-data http-client
     http-client-tls http-conduit http-media http-types HUnit immortal
