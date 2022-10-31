@@ -6,6 +6,7 @@ import (
 	nurl "net/url"
 	"sync"
 
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -104,27 +105,32 @@ type Driver interface {
 
 // Open returns a new driver instance.
 func Open(url string, logger *log.Logger) (Driver, error) {
+	var op errors.Op = "source.Open"
 	u, err := nurl.Parse(url)
 	if err != nil {
-		return nil, err
+		return nil, errors.E(op, err)
 	}
 
 	if u.Scheme == "" {
-		return nil, fmt.Errorf("source driver: invalid URL scheme")
+		return nil, errors.E(op, fmt.Errorf("source driver: invalid URL scheme"))
 	}
 
 	driversMu.RLock()
 	d, ok := drivers[u.Scheme]
 	driversMu.RUnlock()
 	if !ok {
-		return nil, fmt.Errorf("source driver: unknown driver %v (forgotten import?)", u.Scheme)
+		return nil, errors.E(op, fmt.Errorf("source driver: unknown driver %v (forgotten import?)", u.Scheme))
 	}
 
 	if logger == nil {
 		logger = log.New()
 	}
 
-	return d.Open(url, logger)
+	driver, err := d.Open(url, logger)
+	if err != nil {
+		return driver, errors.E(op, err)
+	}
+	return driver, nil
 }
 
 // Register globally registers a driver.
