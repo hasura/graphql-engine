@@ -27,8 +27,8 @@ self: super: {
           test-harness = hsuper.callPackage ../../server/lib/test-harness { };
 
           # FIXME: dependency issues with: ekg-json, immortal <0.3
-          graphql-server = super.haskell.lib.dontCheck
-            (super.haskell.lib.doJailbreak (hsuper.callPackage ../../server {
+          graphql-server = super.haskell.lib.disableLibraryProfiling (super.haskell.lib.dontCheck
+            (hsuper.callPackage ../../server {
               hedgehog = hself.hedgehog_1_2;
               immortal = hself.immortal_0_2_2_1;
               pg-client = hself.pg-client-hs;
@@ -97,6 +97,7 @@ self: super: {
           openapi3 = super.haskell.lib.doJailbreak hsuper.openapi3;
           servant-openapi3 =
             super.haskell.lib.doJailbreak hsuper.servant-openapi3;
+          ghc-heap-view = super.haskell.lib.disableLibraryProfiling hsuper.ghc-heap-view;
         };
       };
     };

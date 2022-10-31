@@ -45,7 +45,7 @@
     {
       packages = rec {
         inherit (pkgs.haskell.packages.${pkgs.ghcName})
-          graphql-server pg-client-hs hasura-resource-pool;
+          graphql-server pg-client-hs hasura-resource-pool ghc-heap-view;
         default = graphql-server;
       };
 

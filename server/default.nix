@@ -35,7 +35,7 @@
 }:
 mkDerivation {
   pname = "graphql-engine";
-  version = "2.13.0";
+  version = (builtins.readFile ./CURRENT_VERSION);
   src = ./.;
   isLibrary = true;
   isExecutable = true;
@@ -71,6 +71,7 @@ mkDerivation {
   executableHaskellDepends = [
     aeson-pretty base bytestring ekg-core ekg-prometheus hasura-prelude
     kan-extensions pg-client refined text text-conversions time unix
+    ghc-heap-view
   ];
   testHaskellDepends = [
     aeson aeson-casing aeson-ordered aeson-pretty aeson-qq
