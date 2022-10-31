@@ -26,15 +26,14 @@ self: super: {
             hsuper.callPackage ../../server/lib/schema-parsers { };
           test-harness = hsuper.callPackage ../../server/lib/test-harness { };
 
-          # FIXME: dependency issues with: ekg-json, immortal <0.3
-          graphql-server = super.haskell.lib.disableLibraryProfiling (super.haskell.lib.dontCheck
-            (hsuper.callPackage ../../server {
+          graphql-server = super.haskell.lib.justStaticExecutables
+            ((super.haskell.lib.dontCheck (hsuper.callPackage ../../server {
               hedgehog = hself.hedgehog_1_2;
               immortal = hself.immortal_0_2_2_1;
               pg-client = hself.pg-client-hs;
               odbc = hself.hasura-odbc;
               resource-pool = hself.hasura-resource-pool;
-            }));
+            })));
 
           # FIXME: for remote repos we have to calculate their default.nix until they get upstreamed/maintained
           ekg-core = hsuper.callCabal2nix "ekg-core" (super.fetchFromGitHub {
@@ -84,12 +83,12 @@ self: super: {
               sha256 = "a8dzt1f/TwVG37rOsL/Bh2K90cDnGgj7HVpL0S3r59A=";
             }) { };
 
-          hasura-odbc = super.haskell.lib.dontCheck
-            (hsuper.callCabal2nix "odbc" (super.fetchFromGitHub {
-            owner = "fpco";
-            repo = "odbc";
-            rev = "38e04349fe28a91f189e44bd7783220956d18aae";
-            sha256 = "V9MMQTJ6j/lHv0HA34J6XM2dsbT/XTVi6MCCaUpomyo=";
+          hasura-odbc = super.haskell.lib.dontCheck (hsuper.callCabal2nix "odbc"
+            (super.fetchFromGitHub {
+              owner = "fpco";
+              repo = "odbc";
+              rev = "38e04349fe28a91f189e44bd7783220956d18aae";
+              sha256 = "V9MMQTJ6j/lHv0HA34J6XM2dsbT/XTVi6MCCaUpomyo=";
             }) { });
 
           # broken dependency fixe
@@ -97,7 +96,8 @@ self: super: {
           openapi3 = super.haskell.lib.doJailbreak hsuper.openapi3;
           servant-openapi3 =
             super.haskell.lib.doJailbreak hsuper.servant-openapi3;
-          ghc-heap-view = super.haskell.lib.disableLibraryProfiling hsuper.ghc-heap-view;
+          ghc-heap-view =
+            super.haskell.lib.disableLibraryProfiling hsuper.ghc-heap-view;
         };
       };
     };
