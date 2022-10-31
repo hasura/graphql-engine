@@ -322,7 +322,7 @@ const mapStateToProps = state => {
     allSourcesSchemas: state.tables?.allSourcesSchemas,
     pathname: state?.routing?.locationBeforeTransitions?.pathname,
     dataSources: getDataSources(state),
-    sidebarLoadingState: state.dataSidebar.loading,
+    sidebarLoadingState: !!state.dataSidebar?.loading,
     metadataSources: state.metadata.metadataObject.sources,
   };
 };
