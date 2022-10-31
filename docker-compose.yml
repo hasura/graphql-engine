@@ -158,7 +158,7 @@ services:
       retries: 10
 
   cockroach:
-    image: us-docker.pkg.dev/cockroach-cloud-images/cockroachdb/cockroach:v22.2.0-beta.2-218-ga7ecaa82cf
+    image: cockroachdb/cockroach-unstable:v22.2.0-beta.4
     command:
       - start-single-node
       - --insecure
