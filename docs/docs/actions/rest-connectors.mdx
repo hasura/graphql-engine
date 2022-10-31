@@ -728,6 +728,98 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
+### Response Body
+
+You can transform the default body of your HTTP API response by configuring a response transform template. This can
+be used to match the output types defined in your Action with your HTTP API.
+
+:::info Note
+
+Response transforms are applicable only for JSON responses.
+
+:::
+
+<Tabs className="api-tabs">
+<TabItem value="console" label="Console">
+
+In the `Configure REST Connectors` section, click on `Add Response Transform`:
+
+<Thumbnail
+  src="/img/actions/transform-response_actions_2.13.png"
+  alt="response transform method"
+  width="800px"
+/>
+
+Hit `Create Action` to apply your changes.
+
+</TabItem>
+<TabItem value="cli" label="CLI">
+
+Update the `actions.yaml` file inside the `metadata` directory and add a [response_transform][responsetransformation]
+field to the Action:
+
+```yaml {6-9}
+- name: create_user
+  definition:
+    kind: synchronous
+    handler: https://action.my_app.com/create-user
+  timeout: 60
+  response_transform:
+    template_engine: Kriti
+    version: 2
+    body: '{"action": "transform", "template": "{\n  \"test\":{{$body.input.arg1.id}}\n}"}'
+```
+
+Apply the metadata by running:
+
+```bash
+hasura metadata apply
+```
+
+</TabItem>
+<TabItem value="api" label="API">
+
+REST Connectors can be configured for Actions using the [create_action][metadata-create-action] or
+[update_action][metadata-update-action] metadata APIs by adding a [response_transform][responsetransformation] field to
+the args:
+
+```http {24-29}
+POST /v1/metadata HTTP/1.1
+Content-Type: application/json
+X-Hasura-Role: admin
+
+{
+  "type":"create_action",
+  "args":{
+    "name":"create_user",
+    "definition":{
+      "kind":"synchronous",
+      "arguments":[
+        {
+          "name":"username",
+          "type":"String!"
+        },
+        {
+          "name":"email",
+          "type":"String!"
+        }
+      ],
+      "output_type":"User",
+      "handler":"{{ACTION_BASE_URL}}",
+      "timeout":60,
+      "response_transform": {
+        "template_engine": "Kriti",
+        "version": 2,
+        "body": {"action": "transform", "template": "{\n  \"test\":{{$body.input.arg1.id}}\n}"},
+        "comment": "Custom action to create user"
+      }
+    }
+  }
+}
+```
+</TabItem>
+</Tabs>
+
 ## Example
 
 Let's integrate Auth0's management API to update the profile of a user:
@@ -789,3 +881,4 @@ The transform is given by:
 [metadata-create-action]: /api-reference/metadata-api/actions.mdx#metadata-create-action
 [metadata-update-action]: /api-reference/metadata-api/actions.mdx#metadata-update-action
 [requesttransformation]: /api-reference/syntax-defs.mdx#requesttransformation
+[responsetransformation]: /api-reference/syntax-defs.mdx#responsetransformation
