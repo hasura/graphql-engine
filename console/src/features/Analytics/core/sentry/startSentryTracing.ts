@@ -5,6 +5,7 @@ import { BrowserTracing } from '@sentry/tracing';
 
 import globals from '@/Globals';
 import { getSentryTags } from './getSentryTags';
+import { errorMustBeBlocked } from './errorMustBeBlocked';
 import { getSentryEnvironment } from './getSentryEnvironment';
 import { isSentryAlreadyStarted } from './isSentryAlreadyStarted';
 import { logSentryEnabled, logSentryDisabled } from './logSentryInfo';
@@ -62,6 +63,17 @@ export function startSentryTracing(globalVars: Globals, envVars: EnvVars) {
     release: tags.serverVersion,
     initialScope: {
       tags,
+    },
+    beforeSend(event, hint) {
+      const blockError = errorMustBeBlocked({
+        error: hint.originalException,
+        urlPrefix: globalVars.urlPrefix,
+        pathname: window.location.pathname,
+      });
+
+      if (blockError) return null;
+
+      return event;
     },
   });
 
