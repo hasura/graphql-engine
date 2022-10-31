@@ -15,7 +15,7 @@ import Data.HashMap.Strict qualified as Map
 import Data.List.Split (chunksOf)
 import Data.Monoid (Sum (..))
 import Data.Text.Extended
-import GHC.AssertNF.CPP
+import GHC.AssertNF
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Options

@@ -40,7 +40,7 @@ import Data.Text qualified as T
 import Data.Text.Encoding qualified as TE
 import Data.Time.Clock qualified as TC
 import Data.Word (Word16)
-import GHC.AssertNF.CPP
+import GHC.AssertNF
 import Hasura.Backends.Postgres.Instances.Transport (runPGMutationTransaction)
 import Hasura.Base.Error
 import Hasura.EncJSON

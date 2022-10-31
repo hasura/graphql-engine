@@ -294,6 +294,7 @@ common lib-depends
                      , some
                      , split
                      , template-haskell
+                     , ghc-heap-view
                      , text
                      , text-builder >= 0.6
                      , th-lift
@@ -444,10 +445,6 @@ common lib-depends
                      , mysql-simple
                       -- dependency of vendored 'ip':
                      , wide-word
-  if !flag(profiling)
-    -- ghc-heap-view can't be built with profiling
-    build-depends:     ghc-heap-view
-
 library
   import: common-all, lib-depends
   hs-source-dirs:      src-lib
@@ -483,7 +480,6 @@ library
                      , Data.URL.Template
                      , Database.MSSQL.Transaction
                      , Database.MSSQL.Pool
-                     , GHC.AssertNF.CPP
                      , GHC.Stats.Extended
                      , GHC.Generics.Extended
                      , Hasura.App
