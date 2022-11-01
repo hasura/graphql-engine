@@ -1,0 +1,25 @@
+{ "type": "bulk", "args": [{
+    "type" : "create_query_collection",
+      "args": {
+          "name": "my_collection",
+          "comment": "an optional comment",
+          "definition": {
+              "queries": [
+                  {
+                      "name": "query_1",
+                      "query": "query { __typename }"
+                  }
+              ]
+          }
+      }
+},
+     {
+    "type" : "add_collection_to_allowlist",
+    "args": {
+        "collection": "my_collection",
+        "scope": {
+            "global": true
+        }
+    }
+}
+                          ]}

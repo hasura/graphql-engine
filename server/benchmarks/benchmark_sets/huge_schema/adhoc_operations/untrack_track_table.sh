@@ -7,11 +7,11 @@ function adhoc_operation() {
   curl \
     --request POST \
     --header 'Content-Type: application/json' \
-    --data "@$scriptDir/../untrack_table.json" \
+    --data "@$scriptDir/untrack_table.json" \
     "$HASURA_URL/v1/query"
   curl \
     --request POST \
     --header 'Content-Type: application/json' \
-    --data "@$scriptDir/../track_table.json" \
+    --data "@$scriptDir/track_table.json" \
     "$HASURA_URL/v1/query"
 }
