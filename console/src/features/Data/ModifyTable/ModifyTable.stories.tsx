@@ -8,6 +8,7 @@ import { ModifyTable } from './ModifyTable';
 const props = {
   table: ['Customer'],
   dataSourceName: 'sqlite-test',
+  tableName: 'Customer',
 };
 
 export default {

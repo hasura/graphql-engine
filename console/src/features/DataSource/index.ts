@@ -144,7 +144,6 @@ export const DataSource = (httpClient: AxiosInstance) => ({
         const driverInfo = await getDriverMethods(
           driver.kind
         ).introspection?.getDriverInfo();
-        console.log(driver, driverInfo);
 
         if (driverInfo && driverInfo !== Feature.NotImplemented)
           return {

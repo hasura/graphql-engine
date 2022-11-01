@@ -173,6 +173,31 @@ buildGQLContext ServerConfigCtx {..} sources allRemoteSchemas allActions customT
       )
     )
 
+buildSchemaOptions ::
+  (SQLGenCtx, Options.InferFunctionPermissions) ->
+  HashSet ExperimentalFeature ->
+  SchemaOptions
+buildSchemaOptions
+  ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters bigqueryStringNumericInput,
+    functionPermsCtx
+    )
+  expFeatures =
+    SchemaOptions
+      { soStringifyNumbers = stringifyNum,
+        soDangerousBooleanCollapse = dangerousBooleanCollapse,
+        soInferFunctionPermissions = functionPermsCtx,
+        soOptimizePermissionFilters = optimizePermissionFilters,
+        soIncludeUpdateManyFields =
+          if EFHideUpdateManyFields `Set.member` expFeatures
+            then Options.DontIncludeUpdateManyFields
+            else Options.IncludeUpdateManyFields,
+        soIncludeAggregationPredicates =
+          if EFHideAggregationPredicates `Set.member` expFeatures
+            then Options.Don'tIncludeAggregationPredicates
+            else Options.IncludeAggregationPredicates,
+        soBigQueryStringNumericInput = bigqueryStringNumericInput
+      }
+
 -- | Build the @QueryHasura@ context for a given role.
 buildRoleContext ::
   forall m.
@@ -191,21 +216,7 @@ buildRoleContext ::
       G.SchemaIntrospection
     )
 buildRoleContext options sources remotes actions customTypes role remoteSchemaPermsCtx expFeatures = do
-  let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters bigqueryStringNumericInput,
-        functionPermsCtx
-        ) = options
-      schemaOptions =
-        SchemaOptions
-          { soStringifyNumbers = stringifyNum,
-            soDangerousBooleanCollapse = dangerousBooleanCollapse,
-            soInferFunctionPermissions = functionPermsCtx,
-            soOptimizePermissionFilters = optimizePermissionFilters,
-            soIncludeUpdateManyFields =
-              if EFHideUpdateManyFields `Set.member` expFeatures
-                then Options.DontIncludeUpdateManyFields
-                else Options.IncludeUpdateManyFields,
-            soBigQueryStringNumericInput = bigqueryStringNumericInput
-          }
+  let schemaOptions = buildSchemaOptions options expFeatures
       schemaContext =
         SchemaContext
           HasuraSchema
@@ -356,21 +367,7 @@ buildRelayRoleContext ::
   Set.HashSet ExperimentalFeature ->
   m (RoleContext GQLContext)
 buildRelayRoleContext options sources actions customTypes role expFeatures = do
-  let ( SQLGenCtx stringifyNum dangerousBooleanCollapse optimizePermissionFilters bigqueryStringNumericInput,
-        functionPermsCtx
-        ) = options
-      schemaOptions =
-        SchemaOptions
-          { soStringifyNumbers = stringifyNum,
-            soDangerousBooleanCollapse = dangerousBooleanCollapse,
-            soInferFunctionPermissions = functionPermsCtx,
-            soOptimizePermissionFilters = optimizePermissionFilters,
-            soIncludeUpdateManyFields =
-              if EFHideUpdateManyFields `Set.member` expFeatures
-                then Options.DontIncludeUpdateManyFields
-                else Options.IncludeUpdateManyFields,
-            soBigQueryStringNumericInput = bigqueryStringNumericInput
-          }
+  let schemaOptions = buildSchemaOptions options expFeatures
       -- TODO: At the time of writing this, remote schema queries are not supported in relay.
       -- When they are supported, we should get do what `buildRoleContext` does. Since, they
       -- are not supported yet, we use `mempty` below for `RemoteSchemaMap`.

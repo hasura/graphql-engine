@@ -1,16 +1,24 @@
 import React from 'react';
 import { ManageTableProps } from '../ManageTable/ManageTable';
-import { TableColumns, TableComments } from './components';
+import { TableColumns, TableComments, TableRootFields } from './components';
 import { Section } from './parts';
 
-export const ModifyTable: React.VFC<ManageTableProps> = props => {
+export type ModifyTableProps = ManageTableProps & { tableName: string };
+
+export const ModifyTable: React.VFC<ModifyTableProps> = props => {
   return (
-    <div className="w-full 2xl:w-3/4 m-2 bg-white p-4 rounded-sm border ">
+    <div className="w-full bg-white p-4 rounded-sm border ">
       <Section headerText="Table Comments">
         <TableComments {...props} />
       </Section>
       <Section headerText="Table Columns">
         <TableColumns {...props} />
+      </Section>
+      <Section
+        headerText="Custom Field Names"
+        tooltipMessage="Customize table and column root names for GraphQL operations."
+      >
+        <TableRootFields {...props} />
       </Section>
     </div>
   );

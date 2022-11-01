@@ -86,6 +86,8 @@ export const TableRow = React.memo(
                 onClose={() => {
                   setShowCustomModal(false);
                 }}
+                callToAction="Customize & Track"
+                callToActionLoadingText="Saving..."
                 isLoading={loading}
                 show={showCustomModal}
               />

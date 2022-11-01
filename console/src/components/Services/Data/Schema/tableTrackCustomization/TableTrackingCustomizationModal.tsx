@@ -1,10 +1,9 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { TrackingTableFormValues } from '@/components/Services/Data/Schema/tableTrackCustomization/types';
-import { buildConfigFromFormValues } from '@/components/Services/Data/Schema/tableTrackCustomization/utils';
+
+import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
 import { MetadataTableConfig } from '@/features/MetadataAPI';
 import { Dialog } from '@/new-components/Dialog';
+import React from 'react';
 import { TableTrackingCustomizationForm } from './TableTrackingCustomizationForm';
 
 export type TableTrackingCustomizationModalProps = {
@@ -16,56 +15,48 @@ export type TableTrackingCustomizationModalProps = {
   onClose: () => void;
   isLoading: boolean;
   show?: boolean;
+  dialogDescription?: string;
+  callToAction?: string;
+  callToActionLoadingText?: string;
+  callToDeny?: string;
+  currentConfiguration?: MetadataTableConfig;
 };
 
 export const TableTrackingCustomizationModal: React.FC<TableTrackingCustomizationModalProps> =
-  ({ tableName, onSubmit, onClose, isLoading, show = true }) => {
-    const methods = useForm<TrackingTableFormValues>({
-      defaultValues: {
-        custom_name: '',
-        select: '',
-        select_by_pk: '',
-        select_aggregate: '',
-        select_stream: '',
-        insert: '',
-        insert_one: '',
-        update: '',
-        update_by_pk: '',
-        delete: '',
-        delete_by_pk: '',
-      },
-    });
-
-    const handleSubmit = (data: TrackingTableFormValues) => {
-      onSubmit(data, buildConfigFromFormValues(data));
-    };
-
-    if (!show) return null;
-
+  ({
+    tableName,
+    onSubmit,
+    onClose,
+    show = true,
+    currentConfiguration,
+    dialogDescription = 'Customize table name and root fields for GraphQL operations.',
+  }) => {
     return (
-      <Analytics name="TableTrackingCustomizationModal" {...REDACT_EVERYTHING}>
-        <form onSubmit={methods.handleSubmit(handleSubmit)}>
-          <Dialog
-            hasBackdrop
-            title={tableName}
-            description="Rename your table to resolve a conflicting with an existing GraphQL node."
-            onClose={onClose}
-            footer={{
-              callToAction: 'Customize and Track',
-              callToActionLoadingText: 'Sending...',
-              callToDeny: 'Cancel',
-              onClose,
-              isLoading,
-            }}
+      <>
+        {show && (
+          <Analytics
+            name="TableTrackingCustomizationModal"
+            {...REDACT_EVERYTHING}
           >
-            <>
+            <Dialog
+              hasBackdrop
+              title={tableName}
+              description={dialogDescription}
+              onClose={onClose}
+              titleTooltip="Customize table name and root fields for GraphQL operations."
+              contentContainer={{
+                className: 'mb-[60px]',
+              }}
+            >
               <TableTrackingCustomizationForm
                 initialTableName={tableName}
-                formMethods={methods}
+                currentConfiguration={currentConfiguration}
+                onClose={onClose}
+                onSubmit={onSubmit}
               />
-            </>
-          </Dialog>
-        </form>
-      </Analytics>
+            </Dialog>
+          </Analytics>
+        )}
+      </>
     );
   };

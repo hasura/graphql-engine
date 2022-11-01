@@ -45,8 +45,7 @@ possible to restrict unbounded or unexpected operations from being executed agai
 [must be enabled](/security/allow-list.mdx#enable-allow-list) via environment variable. These lists can be configured
 globally or at the role level which allows for each role to have a differently defined set of permissible operations.
 The allow list should include the complete set of expected operations for a given role to restrict the ability for a
-user to execute non-permissible operations. Consider using the
-[Hasura Allow List](https://www.graphql-code-generator.com/plugins/other/hasura-allow-list) codegen plugin to
+user to execute non-permissible operations. Consider using the [Hasura Allow List](https://www.graphql-code-generator.com/plugins/other/hasura-allow-list) codegen plugin to
 automatically generate allow list metadata from your application code.
 
 :::info Note
@@ -71,14 +70,62 @@ defined operations. Public APIs or APIs with less defined expected operations sh
 The row-based access control configuration dictates permissions for the GraphQL API. It is critical that these
 permissions be configured correctly in order to prevent unauthorized or unintended access to the GraphQL API.
 
-- Review the [permissions summary](/deployment/production-checklist.mdx#review-the-summary) for each schema to verify
-  permissions are constructed appropriately for your expected data access.
+- Review the [permissions summary](https://hasura.io/docs/latest/deployment/production-checklist/#review-the-summary)
+  for each schema to verify permissions are constructed appropriately for your expected data access.
 
-- Configure an [anonymous default role](/auth/authorization/common-roles-auth-examples.mdx#anonymous-users-example) in
-  order to apply global security permissions. This default role should be configured similarly to any other role. This
-  includes [RBAC permissions](/auth/authorization/basics.mdx), [API limits](/security/api-limits.mdx),
+- Configure an
+  [anonymous default role](https://hasura.io/docs/latest/auth/authorization/common-roles-auth-examples/#anonymous-users-example)
+  in order to apply global security permissions. This default role should be configured similarly to any other role.
+  This includes [RBAC permissions](https://hasura.io/docs/latest/auth/authorization/basics/),
+  [API limits](https://hasura.io/docs/latest/security/api-limits/),
   [allowed operations lists](https://www.graphql-code-generator.com/plugins/other/hasura-allow-list) and
-  [disabling schema introspection](/security/disable-graphql-introspection.mdx).
+  [disabling schema introspection](https://hasura.io/docs/latest/security/disable-graphql-introspection/).
+
+#### Restrict request methods to API endpoints {#api-methods}
+
+Hasura exposes many APIs which might not be relevant for a production instance that is only supposed to serve GraphQL.
+APIs can be selectively enabled using the corresponding flag or environment variable.
+
+In most production scenarios, you would only need GraphQL API to be enabled.
+
+```bash
+# set this env var to enable only the graphql api
+HASURA_GRAPHQL_ENABLED_APIS=graphql
+
+# if you're using flags
+graphql-engine --database-url=<database-url> serve --enabled-apis=graphql
+```
+
+By setting the above flag or env var, we are disabling the `metadata`, `pgdump` and `config` APIs. `health` and
+`version` APIs are public and cannot be disabled.
+
+<details>
+<summary>This table breaks down API endpoints used by Hasura as well
+as the expected request type(s) for each.</summary>
+
+| API                             | Endpoint                                                                         | Method(s)                   | Access           |
+| ------------------------------- | -------------------------------------------------------------------------------- | --------------------------- | ---------------- |
+| GraphQL                         | [/v1/graphql](/api-reference/graphql-api/index.mdx)                              | POST                        | Permission rules |
+| Relay                           | [/v1beta1/relay](/api-reference/relay-graphql-api/index.mdx)                     | POST                        | Permission rules |
+| Legacy GraphQL                  | [/v1alpha1/graphql](/api-reference/graphql-api/index.mdx)                        | POST                        | Permission rules |
+| Schema _(> v2.0)_               | [/v2/query](/api-reference/schema-api/index.mdx)                                 | POST                        | Admin only       |
+| Metadata _(> v2.0)_             | [/v1/metadata](/api-reference/metadata-api/index.mdx)                            | POST                        | Admin only       |
+| Schema/Metadata _(deprecated)_  | [/v1/query](/api-reference/schema-metadata-api/index.mdx)                        | POST                        | Admin only       |
+| Restified GQL                   | [/api/rest](/api-reference/restified.mdx)                                        | GET, POST (query, mutation) | GQL REST Routes  |
+| Version                         | [/v1/version](/api-reference/version.mdx)                                        | GET                         | Public           |
+| Health                          | [/healthz](/api-reference/health.mdx)<br />/hasura/healthz                       | GET                         | Public           |
+| PG Dump                         | [/v1alpha1/pg_dump](/api-reference/pgdump.mdx)                                   | POST                        | Admin only       |
+| Config                          | [/v1alpha1/config](/api-reference/config.mdx)                                    | GET                         | Admin only       |
+| Explain                         | [/v1/graphql/explain](/api-reference/explain.mdx)<br />/v1alpha1/graphql/explain | POST                        | Admin only       |
+| RTS stats                       | /dev/rts_stats                                                                   | GET                         |                  |
+| ekg                             | /dev/ekg                                                                         | GET                         | Admin only       |
+| Query plan cache _(deprecated)_ | /dev/plan_cache                                                                  | GET                         | Admin only       |
+| Subscriptions                   | /dev/subscriptions<br />/dev/subscriptions/extended                              | GET                         | Admin only       |
+| Data Connector                  | /dev/dataconnector/schema                                                        | GET                         | Admin only       |
+| OpenAPI                         | /api/swagger/json                                                                | GET                         | Admin only       |
+| Console                         | /console, /console/assets                                                        | GET                         |                  |
+
+</details>
 
 #### Disable development components
 
@@ -110,7 +157,6 @@ permissions as the provided credentials in the connection string.
   is appropriate.
 
 - Use database connections strings with the least privileges required for API operations.
-
 - Configure [read replicas](/databases/connect-db/read-replicas.mdx) to route read-only operations (queries) to one (or
   many) read replicas.
 
@@ -118,11 +164,12 @@ permissions as the provided credentials in the connection string.
 
 We recommend the following HTTP layer security policies to be configured at the API gateway:
 
-- [Configure HTTPS](/deployment/enable-https.mdx) on your reverse proxy to ensure encrypted communication between your
-  client and Hasura.
+- [Configure HTTPS](/deployment/enable-https.mdx) on your reverse proxy to ensure encrypted communication between your client and Hasura.
 - Implement request and response size restrictions.
 - Restricted allowed connection time to prevent incidents such as slowloris attacks.
 - Apply both IP filtering and IP rate limiting.
+- [Restrict API request methods by endpoint](/deployment/securing-graphql-endpoint.mdx#api-methods) to prevent invalid
+  request methods. This will also allow for custom error messaging at the API gateway when receiving invalid requests.
 
 Consider using a a
 [web application firewall](https://www.cloudflare.com/learning/ddos/glossary/web-application-firewall-waf/) (WAF) as the

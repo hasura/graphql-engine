@@ -18,14 +18,35 @@ export type { BigQueryTable } from './bigquery';
 export { NetworkArgs };
 
 export type AllowedTableRelationships =
-  | Legacy_SourceToRemoteSchemaRelationship
-  | SourceToRemoteSchemaRelationship
-  | SourceToSourceRelationship
-  | ManualObjectRelationship
-  | LocalTableObjectRelationship
+  /**
+   * Object relationships between columns of the same table. There is no same-table arr relationships
+   */
   | SameTableObjectRelationship
+  /**
+   * Object relationships between columns of two different tables but the tables are in the same DB
+   */
+  | LocalTableObjectRelationship
+  /**
+   * Array relationships between columns of two different tables but the tables are in the same DB using FKs
+   */
+  | LocalTableArrayRelationship
+  /**
+   * Manually added Object relationships between columns of two different tables but the tables are in the same DB FKs
+   */
+  | ManualObjectRelationship
+  /**
+   * Manually added Array relationships between columns of two different tables but the tables are in the same DB
+   */
   | ManualArrayRelationship
-  | LocalTableArrayRelationship;
+  /**
+   * Manually added relationships between columns of two different tables and the tables are in different DBs
+   */
+  | SourceToSourceRelationship
+  /**
+   * Manually added relationships between a DB and a remote schema - there are two formats as per the server.
+   */
+  | Legacy_SourceToRemoteSchemaRelationship
+  | SourceToRemoteSchemaRelationship;
 
 export type IntrospectedTable = {
   name: string;

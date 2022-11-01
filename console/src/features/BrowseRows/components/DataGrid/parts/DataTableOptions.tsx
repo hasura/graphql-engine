@@ -55,6 +55,7 @@ const DisplayWhereClauses = ({
                 {columnName} {operatorMap[operator]} {value}
               </span>
               <FaRegTimesCircle
+                className="cursor-pointer"
                 onClick={() => {
                   removeWhereClause(id);
                 }}
@@ -85,6 +86,7 @@ const DisplayOrderByClauses = ({
                 {orderByClause.column} ({orderByClause.type})
               </span>
               <FaRegTimesCircle
+                className="cursor-pointer"
                 onClick={() => {
                   removeOrderByClause(id);
                 }}

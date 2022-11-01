@@ -54,6 +54,7 @@ After making your changes
 ...console assets:
 
     $ cd console
+    $ nvm use
     $ npm ci
     $ npm run server-build
     $ cd ..
