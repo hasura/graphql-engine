@@ -17,6 +17,7 @@ import Network.HTTP.Client (defaultManagerSettings, newManager)
 import Servant.API (NamedRoutes)
 import Servant.Client (Client, ClientError, hoistClient, mkClientEnv, runClientM)
 import Test.CapabilitiesSpec qualified
+import Test.ConfigSpec qualified
 import Test.Data (TestData, guardedCapabilities, mkTestData)
 import Test.DataExport (exportData)
 import Test.ErrorSpec qualified
@@ -37,9 +38,12 @@ import Prelude
 testSourceName :: API.SourceName
 testSourceName = "dc-api-tests"
 
-tests :: TestData -> Client IO (NamedRoutes Routes) -> API.SourceName -> API.Config -> API.Capabilities -> Spec
-tests testData api sourceName agentConfig capabilities = do
+tests :: TestData -> Client IO (NamedRoutes Routes) -> API.SourceName -> API.Config -> API.CapabilitiesResponse -> Spec
+tests testData api sourceName agentConfig capabilitiesResponse = do
+  let capabilities = API._crCapabilities capabilitiesResponse
+  let configSchema = API._crConfigSchemaResponse capabilitiesResponse
   Test.HealthSpec.spec api sourceName agentConfig
+  Test.ConfigSpec.spec agentConfig configSchema
   Test.CapabilitiesSpec.spec api agentConfig capabilities
   Test.SchemaSpec.spec testData api sourceName agentConfig capabilities
   Test.QuerySpec.spec testData api sourceName agentConfig capabilities
@@ -53,7 +57,7 @@ main = do
   case command of
     Test testOptions@TestOptions {..} -> do
       api <- mkIOApiClient testOptions
-      agentCapabilities <- API._crCapabilities <$> guardedCapabilities api
+      agentCapabilities <- guardedCapabilities api
       let testData = mkTestData _toTestConfig
       let spec = tests testData api testSourceName _toAgentConfig agentCapabilities
       case _toExportMatchStrings of
