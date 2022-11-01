@@ -31,6 +31,15 @@ spec:
         - name: HASURA_GRAPHQL_DEV_MODE
           value: "true"
         ports:
-        - containerPort: 8080
+        - name: http
+          containerPort: 8080
           protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
         resources: {}
