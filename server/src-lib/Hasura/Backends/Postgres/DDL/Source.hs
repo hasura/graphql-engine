@@ -55,7 +55,7 @@ import Hasura.RQL.Types.SourceCustomization
 import Hasura.RQL.Types.Table
 import Hasura.SQL.Backend
 import Hasura.Server.Migrate.Internal
-import Hasura.Server.Migrate.Version (MetadataCatalogVersion (..))
+import Hasura.Server.Migrate.Version qualified as Version
 import Language.Haskell.TH.Lib qualified as TH
 import Language.Haskell.TH.Syntax qualified as TH
 
@@ -187,7 +187,7 @@ resolveDatabaseMetadata sourceMetadata sourceConfig sourceCustomization = runExc
 prepareCatalog ::
   (MonadIO m, MonadBaseControl IO m) =>
   SourceConfig ('Postgres pgKind) ->
-  ExceptT QErr m RecreateEventTriggers
+  ExceptT QErr m (RecreateEventTriggers, Version.SourceCatalogMigrationState)
 prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) PG.ReadWrite do
   hdbCatalogExist <- doesSchemaExist "hdb_catalog"
   eventLogTableExist <- doesTableExist "hdb_catalog" "event_log"
@@ -198,11 +198,11 @@ prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) PG.ReadWrite do
         PG.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
         enablePgcryptoExtension $ _pscExtensionsSchema sourceConfig
         initPgSourceCatalog
-        return RETDoNothing
+        return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
       -- Only 'hdb_catalog' schema defined
       | not (sourceVersionTableExist || eventLogTableExist) -> do
         liftTx initPgSourceCatalog
-        return RETDoNothing
+        return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
       -- Source is initialised by pre multisource support servers
       | not sourceVersionTableExist && eventLogTableExist -> do
         -- Update the Source Catalog to v43 to include the new migration
@@ -263,7 +263,7 @@ prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) PG.ReadWrite do
 --  downgrade pg sources themselves. Improve error message by referring the URL
 --  to the documentation.
 
-migrateSourceCatalog :: MonadTx m => m RecreateEventTriggers
+migrateSourceCatalog :: MonadTx m => m (RecreateEventTriggers, Version.SourceCatalogMigrationState)
 migrateSourceCatalog =
   getSourceCatalogVersion >>= migrateSourceCatalogFrom
 
@@ -273,9 +273,12 @@ migrateSourceCatalog =
 --    changes introduced in the newly added source catalog migrations. When the source is already
 --    in the latest catalog version, we do nothing because nothing has changed w.r.t the source catalog
 --    so recreating the event triggers will only be extraneous.
-migrateSourceCatalogFrom :: (MonadTx m) => SourceCatalogVersion pgKind -> m RecreateEventTriggers
+migrateSourceCatalogFrom ::
+  (MonadTx m) =>
+  SourceCatalogVersion pgKind ->
+  m (RecreateEventTriggers, Version.SourceCatalogMigrationState)
 migrateSourceCatalogFrom prevVersion
-  | prevVersion == latestSourceCatalogVersion = pure RETDoNothing
+  | prevVersion == latestSourceCatalogVersion = pure (RETDoNothing, Version.SCMSNothingToDo $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
   | [] <- neededMigrations =
     throw400 NotSupported $
       "Expected source catalog version <= "
@@ -285,7 +288,12 @@ migrateSourceCatalogFrom prevVersion
   | otherwise = do
     liftTx $ traverse_ snd neededMigrations
     setSourceCatalogVersion
-    pure RETRecreate
+    pure
+      ( RETRecreate,
+        Version.SCMSMigratedTo
+          (Version.unSourceCatalogVersion prevVersion)
+          (Version.unSourceCatalogVersion latestSourceCatalogVersion)
+      )
   where
     neededMigrations =
       dropWhile ((/= prevVersion) . fst) sourceMigrations
@@ -303,7 +311,7 @@ sourceMigrations =
    )
 
 -- Upgrade the hdb_catalog schema to v43 (Metadata catalog)
-upMigrationsUntil43 :: [(MetadataCatalogVersion, PG.TxE QErr ())]
+upMigrationsUntil43 :: [(Version.MetadataCatalogVersion, PG.TxE QErr ())]
 upMigrationsUntil43 =
   $( let migrationFromFile from to =
            let path = "src-rsr/migrations/" <> from <> "_to_" <> to <> ".sql"
@@ -312,7 +320,7 @@ upMigrationsUntil43 =
          migrationsFromFile = map $ \(to :: Int) ->
            let from = pred to
             in [|
-                 ( $(TH.lift (MetadataCatalogVersion from)),
+                 ( $(TH.lift (Version.MetadataCatalogVersion from)),
                    $(migrationFromFile (show from) (show to))
                  )
                  |]
@@ -324,9 +332,9 @@ upMigrationsUntil43 =
          -- moved to source catalog migrations and the 41st up migration is removed
          -- entirely.
          $
-           [|(MetadataCatalogVersion08, $(migrationFromFile "08" "1"))|] :
+           [|(Version.MetadataCatalogVersion08, $(migrationFromFile "08" "1"))|] :
            migrationsFromFile [2 .. 3]
-             ++ [|(MetadataCatalogVersion 3, from3To4)|] :
+             ++ [|(Version.MetadataCatalogVersion 3, from3To4)|] :
            (migrationsFromFile [5 .. 40]) ++ migrationsFromFile [42 .. 43]
    )
 

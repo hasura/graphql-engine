@@ -1,12 +1,18 @@
 module Hasura.Server.Migrate.Version
   ( MetadataCatalogVersion (..),
     SourceCatalogVersion (..),
+    SourceCatalogMigrationState (..),
   )
 where
 
+import Data.Aeson qualified as A
 import Data.List (isPrefixOf)
+import Data.Text.Extended
+import Hasura.Logging (Hasura, LogLevel (..), ToEngineLog (..))
 import Hasura.Prelude
+import Hasura.RQL.Types.Common (SourceName)
 import Hasura.SQL.Backend (BackendType)
+import Hasura.Server.Logging (StartupLog (..))
 import Language.Haskell.TH.Lift (Lift)
 
 -- | Represents the catalog version. This is stored in the database and then
@@ -42,6 +48,57 @@ instance Read MetadataCatalogVersion where
       map (first MetadataCatalogVersion) $ filter ((>= 0) . fst) $ readsPrec @Int prec s
 
 -- | This is the source catalog version, used when deciding whether to (re-)create event triggers.
-newtype SourceCatalogVersion (backend :: BackendType) = SourceCatalogVersion Int
+newtype SourceCatalogVersion (backend :: BackendType) = SourceCatalogVersion {unSourceCatalogVersion :: Int}
   deriving newtype (Eq, Enum, Show, Read)
   deriving stock (Lift)
+
+data SourceCatalogMigrationState
+  = -- | Source has not been initialized yet.
+    SCMSUninitializedSource
+  | -- | Source catalog is already at the latest catalog version.
+    SCMSNothingToDo Int
+  | -- | Initialization of the source catalog along with the catalog version.
+    SCMSInitialized Int
+  | -- | Source catalog migration <old catalog version> to <new catalog version>.
+    SCMSMigratedTo Int Int
+  | -- | Source catalog migration on hold with reason (Maintenance mode, read only mode etc).
+    SCMSMigrationOnHold Text
+  | SCMSNotSupported
+
+instance ToEngineLog (SourceName, SourceCatalogMigrationState) Hasura where
+  toEngineLog (sourceName, migrationStatus) =
+    let migrationStatusMessage =
+          case migrationStatus of
+            SCMSUninitializedSource -> "source " <> sourceName <<> " has not been initialized yet."
+            SCMSNothingToDo catalogVersion ->
+              "source " <> sourceName
+                <<> " is already at the latest catalog version ("
+                <> tshow catalogVersion
+                <> ")."
+            SCMSInitialized catalogVersion ->
+              "source " <> sourceName
+                <<> " has the source catalog version successfully initialized (at version "
+                <> tshow catalogVersion
+                <> ")."
+            SCMSMigratedTo oldCatalogVersion newCatalogVersion ->
+              "source "
+                <> sourceName <<> " has been migrated successfully from catalog version "
+                <> tshow oldCatalogVersion
+                <> " to "
+                <> tshow newCatalogVersion
+                <> "."
+            SCMSMigrationOnHold reason ->
+              "Source catalog migration for source: " <> sourceName <<> " is on hold due to " <> reason <> "."
+            SCMSNotSupported ->
+              "Source catalog migration is not supported for source " <>> sourceName
+     in toEngineLog $
+          StartupLog
+            { slLogLevel = LevelInfo,
+              slKind = "source_catalog_migrate",
+              slInfo =
+                A.toJSON $
+                  A.object
+                    [ "source" A..= sourceName,
+                      "message" A..= migrationStatusMessage
+                    ]
+            }

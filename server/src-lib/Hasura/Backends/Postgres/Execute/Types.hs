@@ -40,6 +40,9 @@ data PGExecCtx = PGExecCtx
     _pecRunReadNoTx :: RunTx,
     -- | Run a PG.ReadWrite transaction
     _pecRunReadWrite :: RunTx,
+    -- | Run a PG.ReadWrite transaction in Serializable transaction isolation level
+    --   This is mainly intended to be used to run source catalog migrations.
+    _pecRunSerializableTx :: RunTx,
     -- | Destroys connection pools
     _pecDestroyConn :: (IO ()),
     -- | Resize pools based on number of server instances
@@ -53,6 +56,7 @@ mkPGExecCtx isoLevel pool resizeStrategy =
     { _pecRunReadOnly = (PG.runTx pool (isoLevel, Just PG.ReadOnly)),
       _pecRunReadNoTx = (PG.runTx' pool),
       _pecRunReadWrite = (PG.runTx pool (isoLevel, Just PG.ReadWrite)),
+      _pecRunSerializableTx = (PG.runTx pool (PG.Serializable, Just PG.ReadWrite)),
       _pecDestroyConn = PG.destroyPGPool pool,
       _pecResizePools =
         case resizeStrategy of

@@ -44,6 +44,7 @@ import Hasura.RQL.Types.Table (ForeignKey (_fkConstraint))
 import Hasura.RQL.Types.Table qualified as RQL.T.T
 import Hasura.SQL.Backend (BackendSourceKind (..), BackendType (..))
 import Hasura.SQL.Types (CollectableType (..))
+import Hasura.Server.Migrate.Version (SourceCatalogMigrationState (..))
 import Hasura.Server.Utils qualified as HSU
 import Hasura.Session (SessionVariable, mkSessionVariable)
 import Hasura.Tracing (noReporter, runTraceTWithReporter)
@@ -55,7 +56,7 @@ import Servant.Client.Generic (genericClient)
 import Witch qualified
 
 instance BackendMetadata 'DataConnector where
-  prepareCatalog _ = pure RETDoNothing
+  prepareCatalog _ = pure (RETDoNothing, SCMSNotSupported)
   type BackendInvalidationKeys 'DataConnector = HashMap DC.DataConnectorName Inc.InvalidationKey
   resolveBackendInfo = resolveBackendInfo'
   resolveSourceConfig = resolveSourceConfig'

@@ -253,7 +253,7 @@ runInConn connString query =
   bracket
     (createMinimalPool connString)
     drainMSSQLPool
-    (runExceptT . runTx query)
+    (runExceptT . runTx ReadCommitted query)
 
 createMinimalPool :: Text -> IO MSSQLPool
 createMinimalPool connString =

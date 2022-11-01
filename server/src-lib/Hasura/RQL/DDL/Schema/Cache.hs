@@ -84,6 +84,7 @@ import Hasura.SQL.Backend
 import Hasura.SQL.BackendMap (BackendMap)
 import Hasura.SQL.BackendMap qualified as BackendMap
 import Hasura.SQL.Tag
+import Hasura.Server.Migrate.Version
 import Hasura.Server.Types
 import Hasura.Session
 import Hasura.Tracing qualified as Tracing
@@ -486,7 +487,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
         MonadError QErr m,
         MonadBaseControl IO m
       ) =>
-      (Proxy b, Bool, SourceConfig b) `arr` RecreateEventTriggers
+      (Proxy b, Bool, SourceConfig b) `arr` (RecreateEventTriggers, SourceCatalogMigrationState)
     initCatalogIfNeeded = Inc.cache proc (Proxy, atleastOneTrigger, sourceConfig) -> do
       arrM id
         -< do
@@ -498,11 +499,11 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
 
               if
                   -- when safe mode is enabled, don't perform any migrations
-                  | readOnlyMode == ReadOnlyModeEnabled -> pure RETDoNothing
+                  | readOnlyMode == ReadOnlyModeEnabled -> pure (RETDoNothing, SCMSMigrationOnHold "read-only mode enabled")
                   -- when eventing mode is disabled, don't perform any migrations
-                  | eventingMode == EventingDisabled -> pure RETDoNothing
+                  | eventingMode == EventingDisabled -> pure (RETDoNothing, SCMSMigrationOnHold "eventing mode disabled")
                   -- when maintenance mode is enabled, don't perform any migrations
-                  | maintenanceMode == (MaintenanceModeEnabled ()) -> pure RETDoNothing
+                  | maintenanceMode == (MaintenanceModeEnabled ()) -> pure (RETDoNothing, SCMSMigrationOnHold "maintenance mode enabled")
                   | otherwise -> do
                     -- The `initCatalogForSource` action is retried here because
                     -- in cloud there will be multiple workers (graphql-engine instances)
@@ -520,7 +521,7 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                         )
                         (const $ return . isLeft)
                         (const $ runExceptT $ prepareCatalog @b sourceConfig)
-            else pure RETDoNothing
+            else pure (RETDoNothing, SCMSUninitializedSource)
 
     buildSource ::
       forall b arr m.
@@ -736,7 +737,9 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
                               numEventTriggers = sum $ map (length . snd) eventTriggers
                               sourceConfig = _rsConfig source
 
-                          recreateEventTriggers <- initCatalogIfNeeded -< (Proxy :: Proxy b, numEventTriggers > 0, sourceConfig)
+                          (recreateEventTriggers, sourceCatalogMigrationState) <- initCatalogIfNeeded -< (Proxy :: Proxy b, numEventTriggers > 0, sourceConfig)
+
+                          bindA -< unLogger logger (sourceName, sourceCatalogMigrationState)
 
                           let alignTableMap :: HashMap (TableName b) a -> HashMap (TableName b) c -> HashMap (TableName b) (a, c)
                               alignTableMap = M.intersectionWith (,)

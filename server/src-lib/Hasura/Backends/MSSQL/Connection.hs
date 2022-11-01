@@ -230,6 +230,9 @@ data MSSQLExecCtx = MSSQLExecCtx
     mssqlRunReadOnly :: MSSQLRunTx,
     -- | A function that runs read-write queries; run in a transaction
     mssqlRunReadWrite :: MSSQLRunTx,
+    -- | A function that runs a transaction in the SERIALIZABLE transaction isolation
+    --   level. This is mainly intended to run source catalog migrations.
+    mssqlRunSerializableTx :: MSSQLRunTx,
     -- | Destroys connection pools
     mssqlDestroyConn :: IO (),
     -- | Resize pools based on number of server instances,
@@ -240,8 +243,9 @@ data MSSQLExecCtx = MSSQLExecCtx
 mkMSSQLExecCtx :: MSPool.MSSQLPool -> ResizePoolStrategy -> MSSQLExecCtx
 mkMSSQLExecCtx pool resizeStrategy =
   MSSQLExecCtx
-    { mssqlRunReadOnly = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler tx pool,
-      mssqlRunReadWrite = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler tx pool,
+    { mssqlRunReadOnly = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler MSTx.ReadCommitted tx pool,
+      mssqlRunReadWrite = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler MSTx.ReadCommitted tx pool,
+      mssqlRunSerializableTx = \tx -> MSTx.runTxE defaultMSSQLTxErrorHandler MSTx.Serializable tx pool,
       mssqlDestroyConn = MSPool.drainMSSQLPool pool,
       mssqlResizePools =
         case resizeStrategy of
