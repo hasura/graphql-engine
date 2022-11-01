@@ -77,6 +77,23 @@ services:
       timeout: 10s
       retries: 10
 
+  yugabyte:
+    image: yugabytedb/yugabyte:2.8.9.1-b1
+    command:
+      - bin/yugabyted
+      - start
+      - --daemon=false
+      - --initial_scripts_dir=/
+    ports:
+      - "65009:5433"
+    environment:
+      YSQL_USER: "hasura"
+      YSQL_PASSWORD: "hasura"
+      YSQL_DB: "hasura"
+    volumes:
+      - yugabyte-data:/var/lib/postgresql/data
+      - ./docker-compose/yugabyte/init.sql:/init.sql:ro 
+
   sqlserver:
     # We cannot use this image on arm64, as it's not available.
     # Instead, we use `mcr.microsoft.com/azure-sql-edge`.
@@ -227,3 +244,4 @@ volumes:
   mssql-data:
   postgres-data:
   cockroach-data:
+  yugabyte-data:

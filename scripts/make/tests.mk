@@ -35,6 +35,12 @@ test-cockroach: start-postgres start-cockroach remove-tix-file
 	$(call stop_after, \
 		cabal run api-tests -- -m 'Cockroach')
 
+.PHONY: test-postgres
+## test-postgres: run tests for Postgres backend
+test-postgres: start-backends remove-tix-file
+	$(call stop_after, \
+		cabal run api-tests -- -m 'Postgres')
+
 .PHONY: test-backends
 ## test-backends: run tests for all backends
 # BigQuery tests will require some setup detailed here: https://github.com/hasura/graphql-engine-mono/tree/main/server/lib/api-tests#required-setup-for-bigquery-tests

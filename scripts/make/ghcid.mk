@@ -58,6 +58,11 @@ ghcid-tests:
 ghcid-api-tests:
 	$(call run_ghcid,api-tests)
 
+.PHONY: ghcid-test-harness
+## ghcid-test-harness: build and watch test-harness in ghcid
+ghcid-test-harness:
+	$(call run_ghcid,test-harness)
+
 .PHONY: ghcid-test-backends
 ## ghcid-test-backends: run all api tests in ghcid
 ghcid-test-backends: remove-tix-file
