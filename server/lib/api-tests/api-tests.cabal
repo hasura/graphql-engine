@@ -117,6 +117,7 @@ executable api-tests
     Test.Queries.Directives.IncludeSpec
     Test.Queries.Directives.SkipSpec
     Test.Queries.DirectivesSpec
+    Test.Queries.DistinctSpec
     Test.Queries.ExplainSpec
     Test.Queries.FilterSearchSpec
     Test.Queries.FragmentsSpec

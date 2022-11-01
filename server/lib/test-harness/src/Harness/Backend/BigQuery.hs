@@ -61,7 +61,13 @@ run_ :: HasCallStack => String -> IO ()
 run_ query = do
   void $
     runWithRetry
-      (\conn -> (Execute.executeBigQuery conn Execute.BigQuery {Execute.query = fromString query, Execute.parameters = mempty}))
+      ( \conn -> do
+          res <-
+            Execute.executeBigQuery
+              conn
+              Execute.BigQuery {Execute.query = fromString query, Execute.parameters = mempty}
+          onLeft res \x -> liftIO (bigQueryError x query)
+      )
 
 bigQueryError :: HasCallStack => Execute.ExecuteProblem -> String -> IO a
 bigQueryError e query =
@@ -85,7 +91,7 @@ removeDataset schemaName =
   void $ runWithRetry (\conn -> Execute.deleteDataset conn $ unSchemaName schemaName)
 
 -- | Serialize Table into a SQL statement, as needed, and execute it on the BigQuery backend
-createTable :: SchemaName -> Schema.Table -> IO ()
+createTable :: HasCallStack => SchemaName -> Schema.Table -> IO ()
 createTable schemaName table@Schema.Table {tableName, tableColumns} = do
   run_ $
     T.unpack $
@@ -149,7 +155,7 @@ serialize = \case
   VCustomValue bsv -> Schema.formatBackendScalarValueType $ Schema.backendScalarValue bsv bsvBigQuery
 
 -- | Serialize Table into an SQL DROP statement and execute it
-dropTable :: SchemaName -> Schema.Table -> IO ()
+dropTable :: HasCallStack => SchemaName -> Schema.Table -> IO ()
 dropTable schemaName Schema.Table {tableName} = do
   run_ $
     T.unpack $
@@ -193,7 +199,7 @@ untrackTable testEnvironment schemaName Schema.Table {tableName} = do
 
 -- | Setup the schema in the most expected way.
 -- NOTE: Certain test modules may warrant having their own local version.
-setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+setup :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables' (testEnvironment, _) = do
   let source = defaultSource BigQuery
       backendType = defaultBackendTypeString BigQuery
@@ -249,24 +255,24 @@ teardown (reverse -> tables) (testEnvironment, _) = do
     -- remove test dataset
     (removeDataset schemaName)
 
-setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
+setupTablesAction :: HasCallStack => [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
 
-setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
+setupPermissionsAction :: HasCallStack => [Permissions.Permission] -> TestEnvironment -> SetupAction
 setupPermissionsAction permissions env =
   SetupAction
     (setupPermissions permissions env)
     (const $ teardownPermissions permissions env)
 
 -- | Setup the given permissions to the graphql engine in a TestEnvironment.
-setupPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
+setupPermissions :: HasCallStack => [Permissions.Permission] -> TestEnvironment -> IO ()
 setupPermissions permissions env = Permissions.setup BigQuery permissions env
 
 -- | Remove the given permissions from the graphql engine in a TestEnvironment.
-teardownPermissions :: [Permissions.Permission] -> TestEnvironment -> IO ()
+teardownPermissions :: HasCallStack => [Permissions.Permission] -> TestEnvironment -> IO ()
 teardownPermissions permissions env = Permissions.teardown BigQuery permissions env
 
 -- | We get @jobRateLimitExceeded@ errors from BigQuery if we run too many DML operations in short intervals.
