@@ -6,6 +6,8 @@ module Test.DataConnector.SelectPermissionsSpec
   )
 where
 
+--------------------------------------------------------------------------------
+
 import Data.Aeson (Value)
 import Data.ByteString (ByteString)
 import Data.List.NonEmpty qualified as NE

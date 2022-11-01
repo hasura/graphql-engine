@@ -57,42 +57,35 @@ name : *source
 kind: *backendTypeString
 tables:
   - table: [Album]
-    configuration:
-      custom_root_fields:
-        select: albums
-        select_by_pk: albums_by_pk
-      column_config:
-        AlbumId:
-          custom_name: id
-        Title:
-          custom_name: title
-        ArtistId:
-          custom_name: artist_id
     object_relationships:
-      - name: artist
+      - name: Artist
         using:
           manual_configuration:
             remote_table: [Artist]
             column_mapping:
               ArtistId: ArtistId
+    select_permissions:
+      - role: test-role
+        permission:
+          columns:
+            - AlbumId
+            - Title
+            - ArtistId
+          filter:
+            _exists:
+              _table: [Customer]
+              _where:
+                CustomerId:
+                  _eq: X-Hasura-CustomerId
   - table: [Artist]
-    configuration:
-      custom_root_fields:
-        select: artists
-        select_by_pk: artists_by_pk
-      column_config:
-        ArtistId:
-          custom_name: id
-        Name:
-          custom_name: name
     array_relationships:
-      - name: albums
+      - name: Albums
         using:
           manual_configuration:
             remote_table: [Album]
             column_mapping:
               ArtistId: ArtistId
-  - table: Playlist
+  - table: [Playlist]
     array_relationships:
     - name : Tracks
       using:
@@ -100,7 +93,7 @@ tables:
           column: PlaylistId
           table:
           - PlaylistTrack
-  - table: PlaylistTrack
+  - table: [PlaylistTrack]
     object_relationships:
       - name: Playlist
         using:
@@ -111,17 +104,50 @@ tables:
             remote_table: [Track]
             column_mapping:
               TrackId: TrackId
-  - table: Track
-  - table: Employee
-    configuration:
-      custom_root_fields:
-        select: employees
-        select_by_pk: employee_by_pk
-      column_config:
-        BirthDate:
-          custom_name: birth_date
-        LastName:
-          custom_name: last_name
+  - table: [Track]
+  - table: [Employee]
+    array_relationships:
+      - name: SupportRepForCustomers
+        using:
+          manual_configuration:
+            remote_table: [Customer]
+            column_mapping: 
+              EmployeeId: SupportRepId
+    select_permissions:
+      - role: test-role
+        permission:
+          columns:
+            - EmployeeId
+            - FirstName
+            - LastName
+            - Country
+          filter:
+            SupportRepForCustomers:
+              Country:
+                _ceq: [ "$", "Country" ]
+  - table: [Customer]
+    object_relationships:
+      - name: SupportRep
+        using:
+          manual_configuration:
+            remote_table: [Employee]
+            column_mapping:
+              SupportRepId: EmployeeId
+    select_permissions:
+      - role: test-role
+        permission:
+          columns:
+            - CustomerId
+            - FirstName
+            - LastName
+            - Country
+            - SupportRepId
+          filter:
+            SupportRep:
+              Country:
+                _ceq: [ "$", "Country" ]
+      
+
 configuration:
   *config
 |]
