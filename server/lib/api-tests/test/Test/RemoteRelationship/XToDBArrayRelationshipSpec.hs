@@ -269,7 +269,7 @@ lhsPostgresSetup rhsTableName (testEnvironment, _) = do
   let schemaName = Schema.getSchemaName testEnvironment
 
   let sourceName = "source"
-      sourceConfig = Postgres.defaultSourceConfiguration
+      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -281,7 +281,7 @@ args:
 |]
   -- setup tables only
   Postgres.createTable testEnvironment artist
-  Postgres.insertTable artist
+  Postgres.insertTable testEnvironment artist
   Schema.trackTable Fixture.Postgres sourceName artist testEnvironment
 
   GraphqlEngine.postMetadata_
@@ -326,7 +326,7 @@ args:
   |]
 
 lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresTeardown _ = Postgres.dropTable artist
+lhsPostgresTeardown (testEnvironment, _) = Postgres.dropTable testEnvironment artist
 
 --------------------------------------------------------------------------------
 -- LHS Cockroach
@@ -663,7 +663,7 @@ rhsPostgresSetup :: (TestEnvironment, ()) -> IO ()
 rhsPostgresSetup (testEnvironment, _) = do
   let schemaName = Schema.getSchemaName testEnvironment
   let sourceName = "target"
-      sourceConfig = Postgres.defaultSourceConfiguration
+      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -675,7 +675,7 @@ args:
 |]
   -- setup tables only
   Postgres.createTable testEnvironment album
-  Postgres.insertTable album
+  Postgres.insertTable testEnvironment album
   Schema.trackTable Fixture.Postgres sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
@@ -714,7 +714,7 @@ args:
   |]
 
 rhsPostgresTeardown :: (TestEnvironment, ()) -> IO ()
-rhsPostgresTeardown _ = Postgres.dropTable album
+rhsPostgresTeardown (testEnvironment, _) = Postgres.dropTable testEnvironment album
 
 --------------------------------------------------------------------------------
 -- RHS Cockroach

@@ -53,7 +53,7 @@ spec = Fixture.runWithLocalTestEnvironment (NE.fromList [context]) tests
                 },
               Fixture.SetupAction
                 { Fixture.setupAction = rhsPostgresSetup testEnvironment,
-                  Fixture.teardownAction = \_ -> rhsPostgresTeardown
+                  Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnvironment
                 },
               Fixture.SetupAction
                 { Fixture.setupAction = do
@@ -253,7 +253,7 @@ track =
 rhsPostgresSetup :: TestEnvironment -> IO ()
 rhsPostgresSetup testEnvironment = do
   let sourceName = "db"
-      sourceConfig = Postgres.defaultSourceConfiguration
+      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -264,11 +264,11 @@ args:
 |]
   -- setup tables only
   Postgres.createTable testEnvironment track
-  Postgres.insertTable track
+  Postgres.insertTable testEnvironment track
   Schema.trackTable Fixture.Postgres sourceName track testEnvironment
 
-rhsPostgresTeardown :: IO ()
-rhsPostgresTeardown = Postgres.dropTable track
+rhsPostgresTeardown :: TestEnvironment -> IO ()
+rhsPostgresTeardown testEnvironment = Postgres.dropTable testEnvironment track
 
 --------------------------------------------------------------------------------
 -- Tests

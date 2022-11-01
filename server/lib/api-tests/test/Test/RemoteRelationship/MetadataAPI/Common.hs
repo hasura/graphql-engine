@@ -72,11 +72,11 @@ dbTodbRemoteRelationshipFixture =
         [ clearMetadataSetupAction testEnvironment,
           Fixture.SetupAction
             { Fixture.setupAction = rhsPostgresSetup testEnvironment,
-              Fixture.teardownAction = \_ -> rhsPostgresTeardown
+              Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnvironment
             },
           Fixture.SetupAction
             { Fixture.setupAction = lhsPostgresSetup (testEnvironment, Nothing),
-              Fixture.teardownAction = \_ -> lhsPostgresTeardown
+              Fixture.teardownAction = \_ -> lhsPostgresTeardown testEnvironment
             },
           Fixture.SetupAction
             { Fixture.setupAction = createSourceRemoteRelationship testEnvironment,
@@ -99,7 +99,7 @@ dbToRemoteSchemaRemoteRelationshipFixture =
             },
           Fixture.SetupAction
             { Fixture.setupAction = lhsPostgresSetup (testEnvironment, Nothing),
-              Fixture.teardownAction = \_ -> lhsPostgresTeardown
+              Fixture.teardownAction = \_ -> lhsPostgresTeardown testEnvironment
             },
           Fixture.SetupAction
             { Fixture.setupAction = createRemoteSchemaRemoteRelationship testEnvironment,
@@ -118,7 +118,7 @@ remoteSchemaToDBRemoteRelationshipFixture =
         [ clearMetadataSetupAction testEnvironment,
           Fixture.SetupAction
             { Fixture.setupAction = rhsPostgresSetup testEnvironment,
-              Fixture.teardownAction = \_ -> rhsPostgresTeardown
+              Fixture.teardownAction = \_ -> rhsPostgresTeardown testEnvironment
             },
           Fixture.SetupAction
             { Fixture.setupAction = lhsRemoteServerSetup (testEnvironment, lhsServer),
@@ -214,7 +214,7 @@ albumTable =
 rhsPostgresSetup :: TestEnvironment -> IO ()
 rhsPostgresSetup testEnvironment = do
   let sourceName = "target"
-      sourceConfig = Postgres.defaultSourceConfiguration
+      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -225,17 +225,17 @@ args:
 |]
   -- setup tables only
   Postgres.createTable testEnvironment albumTable
-  Postgres.insertTable albumTable
+  Postgres.insertTable testEnvironment albumTable
   Schema.trackTable Fixture.Postgres sourceName albumTable testEnvironment
 
-rhsPostgresTeardown :: IO ()
-rhsPostgresTeardown = Postgres.dropTable albumTable
+rhsPostgresTeardown :: TestEnvironment -> IO ()
+rhsPostgresTeardown testEnvironment = Postgres.dropTable testEnvironment albumTable
 
 -- | LHS Postgres Setup
 lhsPostgresSetup :: (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup (testEnvironment, _) = do
   let sourceName = "source"
-      sourceConfig = Postgres.defaultSourceConfiguration
+      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -247,7 +247,7 @@ args:
 |]
   -- setup tables only
   Postgres.createTable testEnvironment track
-  Postgres.insertTable track
+  Postgres.insertTable testEnvironment track
   Schema.trackTable Fixture.Postgres sourceName track testEnvironment
 
 createSourceRemoteRelationship :: TestEnvironment -> IO ()
@@ -276,8 +276,8 @@ args:
           id: artist_id
   |]
 
-lhsPostgresTeardown :: IO ()
-lhsPostgresTeardown = Postgres.dropTable track
+lhsPostgresTeardown :: TestEnvironment -> IO ()
+lhsPostgresTeardown testEnvironment = Postgres.dropTable testEnvironment track
 
 --------------------------------------------------------------------------------
 -- DB to Remote Schema Remote relationship

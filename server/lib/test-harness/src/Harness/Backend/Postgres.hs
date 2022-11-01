@@ -61,9 +61,9 @@ metadataLivenessCheck :: HasCallStack => IO ()
 metadataLivenessCheck =
   doLivenessCheck (fromString postgresqlMetadataConnectionString)
 
-livenessCheck :: HasCallStack => IO ()
+livenessCheck :: HasCallStack => TestEnvironment -> IO ()
 livenessCheck =
-  doLivenessCheck (fromString postgresqlConnectionString)
+  doLivenessCheck . fromString . postgresqlConnectionString
 
 -- | Check the postgres server is live and ready to accept connections.
 doLivenessCheck :: HasCallStack => BS.ByteString -> IO ()
@@ -85,12 +85,12 @@ doLivenessCheck connectionString = loop Constants.postgresLivenessCheckAttempts
 
 -- | Run a plain SQL query.
 -- On error, print something useful for debugging.
-run_ :: HasCallStack => String -> IO ()
-run_ q =
+run_ :: HasCallStack => TestEnvironment -> String -> IO ()
+run_ testEnvironment q =
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
-            (fromString Constants.postgresqlConnectionString)
+            (fromString (Constants.postgresqlConnectionString testEnvironment))
         )
         Postgres.close
         (\conn -> void (Postgres.execute_ conn (fromString q)))
@@ -110,30 +110,32 @@ runSQL :: String -> TestEnvironment -> IO ()
 runSQL = Schema.runSQL Postgres (defaultSource Postgres)
 
 -- | Metadata source information for the default Postgres instance.
-defaultSourceMetadata :: Value
-defaultSourceMetadata =
+defaultSourceMetadata :: TestEnvironment -> Value
+defaultSourceMetadata testEnv =
   let source = defaultSource Postgres
       backendType = defaultBackendTypeString Postgres
+      sourceConfiguration = defaultSourceConfiguration testEnv
    in [yaml|
 name: *source
 kind: *backendType
 tables: []
-configuration: *defaultSourceConfiguration
+configuration: *sourceConfiguration
 |]
 
-defaultSourceConfiguration :: Value
-defaultSourceConfiguration =
-  [yaml|
-connection_info:
-  database_url: *postgresqlConnectionString
-  pool_settings: {}
-|]
+defaultSourceConfiguration :: TestEnvironment -> Value
+defaultSourceConfiguration testEnv =
+  let databaseUrl = postgresqlConnectionString testEnv
+   in [yaml|
+    connection_info:
+      database_url: *databaseUrl
+      pool_settings: {}
+   |]
 
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Postgres backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
 createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
-  run_ $
+  run_ testEnv $
     T.unpack $
       T.unwords
         [ "CREATE TABLE",
@@ -147,7 +149,7 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
           ");"
         ]
 
-  for_ tableUniqueIndexes (run_ . createUniqueIndexSql schemaName tableName)
+  for_ tableUniqueIndexes (run_ testEnv . createUniqueIndexSql schemaName tableName)
 
 uniqueConstraintSql :: Schema.Constraint -> Text
 uniqueConstraintSql = \case
@@ -209,11 +211,11 @@ mkReferenceSql schemaName Schema.Reference {referenceLocalColumn, referenceTarge
     ]
 
 -- | Serialize tableData into a PL-SQL insert statement and execute it.
-insertTable :: Schema.Table -> IO ()
-insertTable Schema.Table {tableName, tableColumns, tableData}
+insertTable :: TestEnvironment -> Schema.Table -> IO ()
+insertTable testEnv Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
-    run_ $
+    run_ testEnv $
       T.unpack $
         T.unwords
           [ "INSERT INTO",
@@ -253,9 +255,9 @@ mkRow row =
     ]
 
 -- | Serialize Table into a PL-SQL DROP statement and execute it
-dropTable :: Schema.Table -> IO ()
-dropTable Schema.Table {tableName} = do
-  run_ $
+dropTable :: TestEnvironment -> Schema.Table -> IO ()
+dropTable testEnv Schema.Table {tableName} = do
+  run_ testEnv $
     T.unpack $
       T.unwords
         [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
@@ -264,9 +266,9 @@ dropTable Schema.Table {tableName} = do
           ";"
         ]
 
-dropTableIfExists :: Schema.Table -> IO ()
-dropTableIfExists Schema.Table {tableName} = do
-  run_ $
+dropTableIfExists :: TestEnvironment -> Schema.Table -> IO ()
+dropTableIfExists testEnv Schema.Table {tableName} = do
+  run_ testEnv $
     T.unpack $
       T.unwords
         [ "SET client_min_messages TO WARNING;", -- suppress a NOTICE if the table isn't there
@@ -289,11 +291,11 @@ untrackTable testEnvironment table =
 setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables (testEnvironment, _) = do
   -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment defaultSourceMetadata Nothing
+  GraphqlEngine.setSource testEnvironment (defaultSourceMetadata testEnvironment) Nothing
   -- Setup and track tables
   for_ tables $ \table -> do
     createTable testEnvironment table
-    insertTable table
+    insertTable testEnvironment table
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
@@ -313,7 +315,7 @@ teardown (reverse -> tables) (testEnvironment, _) = do
     ( forFinally_ tables $ \table ->
         finally
           (untrackTable testEnvironment table)
-          (dropTable table)
+          (dropTable testEnvironment table)
     )
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction

@@ -184,7 +184,7 @@ lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 lhsPostgresSetup :: Aeson.Value -> Aeson.Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup albumJoin artistJoin (testEnvironment, _) = do
   let sourceName = "source"
-      sourceConfig = Postgres.defaultSourceConfiguration
+      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
@@ -197,7 +197,7 @@ args:
 |]
   -- setup tables only
   Postgres.createTable testEnvironment lhsTrack
-  Postgres.insertTable lhsTrack
+  Postgres.insertTable testEnvironment lhsTrack
   Schema.trackTable Fixture.Postgres sourceName lhsTrack testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -223,8 +223,8 @@ args:
   |]
 
 lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresTeardown _ = do
-  Postgres.dropTable lhsTrack
+lhsPostgresTeardown (testEnvironment, _) = do
+  Postgres.dropTable testEnvironment lhsTrack
 
 --------------------------------------------------------------------------------
 -- RHS Postgres
@@ -235,7 +235,7 @@ rhsPostgresMkLocalTestEnvironment _ = pure Nothing
 rhsPostgresSetup :: (TestEnvironment, Maybe Server) -> IO ()
 rhsPostgresSetup (testEnvironment, _) = do
   let sourceName = "target"
-      sourceConfig = Postgres.defaultSourceConfiguration
+      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
     [yaml|
@@ -246,15 +246,15 @@ args:
 |]
   Postgres.createTable testEnvironment rhsAlbum
   Postgres.createTable testEnvironment rhsArtist
-  Postgres.insertTable rhsAlbum
-  Postgres.insertTable rhsArtist
+  Postgres.insertTable testEnvironment rhsAlbum
+  Postgres.insertTable testEnvironment rhsArtist
   Schema.trackTable Fixture.Postgres sourceName rhsAlbum testEnvironment
   Schema.trackTable Fixture.Postgres sourceName rhsArtist testEnvironment
 
 rhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-rhsPostgresTeardown _ = do
-  Postgres.dropTable rhsAlbum
-  Postgres.dropTable rhsArtist
+rhsPostgresTeardown (testEnvironment, _) = do
+  Postgres.dropTable testEnvironment rhsAlbum
+  Postgres.dropTable testEnvironment rhsArtist
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server

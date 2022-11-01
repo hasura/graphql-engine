@@ -22,7 +22,7 @@ spec =
     ( (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
         { Fixture.setupTeardown = \(testEnvironment, _) ->
             [ Postgres.setupTablesAction schema testEnvironment,
-              functionSetup,
+              functionSetup testEnvironment,
               Postgres.setupFunctionRootFieldAction "authors" testEnvironment,
               Postgres.setupComputedFieldAction authorTable "authors" "author_comp" testEnvironment
             ]
@@ -55,11 +55,11 @@ schema =
     authorTable
   ]
 
-functionSetup :: Fixture.SetupAction
-functionSetup =
+functionSetup :: TestEnvironment -> Fixture.SetupAction
+functionSetup testEnvironment =
   Fixture.SetupAction
     { setupAction =
-        Postgres.run_ $
+        Postgres.run_ testEnvironment $
           "CREATE FUNCTION " ++ Constants.postgresDb
             ++ ".authors(author_row author) \
                \RETURNS SETOF author AS $$ \
@@ -68,7 +68,7 @@ functionSetup =
             ++ Constants.postgresDb
             ++ ".author \
                \$$ LANGUAGE sql STABLE;",
-      teardownAction = \_ -> Postgres.run_ $ "DROP FUNCTION " ++ Constants.postgresDb ++ ".authors;"
+      teardownAction = \_ -> Postgres.run_ testEnvironment $ "DROP FUNCTION " ++ Constants.postgresDb ++ ".authors;"
     }
 
 --------------------------------------------------------------------------------

@@ -64,7 +64,7 @@ import Harness.Constants qualified as Constants
 import Harness.Exceptions (SomeException (SomeException), bracket, catch, displayException, withFrozenCallStack)
 import Harness.Http qualified as Http
 import Harness.Quoter.Yaml (yaml)
-import Harness.TestEnvironment (Server (..), TestEnvironment (..), getServer, serverUrl, testLog, testLogBytestring)
+import Harness.TestEnvironment (BackendSettings (..), Server (..), TestEnvironment (..), getServer, serverUrl, testLog, testLogBytestring)
 import Hasura.App (Loggers (..), ServeCtx (..))
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
@@ -265,8 +265,8 @@ args:
 -- available before returning.
 --
 -- The port availability is subject to races.
-startServerThread :: Maybe (String, Int) -> IO Server
-startServerThread murlPrefixport = do
+startServerThread :: BackendSettings -> Maybe (String, Int) -> IO Server
+startServerThread backendSettings murlPrefixport = do
   (urlPrefix, port, thread) <-
     case murlPrefixport of
       Just (urlPrefix, port) -> do
@@ -276,7 +276,7 @@ startServerThread murlPrefixport = do
         port <- bracket (Warp.openFreePort) (Socket.close . snd) (pure . fst)
         let urlPrefix = "http://127.0.0.1"
         thread <-
-          Async.async (runApp Constants.serveOptions {soPort = unsafePort port})
+          Async.async (runApp backendSettings Constants.serveOptions {soPort = unsafePort port})
         pure (urlPrefix, port, thread)
   let server = Server {port = fromIntegral port, urlPrefix, thread}
   Http.healthCheck (serverUrl server)
@@ -285,8 +285,8 @@ startServerThread murlPrefixport = do
 -------------------------------------------------------------------------------
 
 -- | Run the graphql-engine server.
-runApp :: ServeOptions Hasura.Logging.Hasura -> IO ()
-runApp serveOptions = do
+runApp :: BackendSettings -> ServeOptions Hasura.Logging.Hasura -> IO ()
+runApp backendSettings serveOptions = do
   let rci =
         PostgresConnInfo
           { _pciDatabaseConn =
@@ -296,7 +296,7 @@ runApp serveOptions = do
                       { _pgcpHost = T.pack Constants.postgresHost,
                         _pgcpUsername = T.pack Constants.postgresUser,
                         _pgcpPassword = Just (T.pack Constants.postgresPassword),
-                        _pgcpPort = fromIntegral Constants.postgresPort,
+                        _pgcpPort = fromIntegral (Constants.postgresPort backendSettings),
                         _pgcpDatabase = T.pack Constants.postgresDb
                       }
                 ),

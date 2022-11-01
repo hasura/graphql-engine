@@ -5,6 +5,7 @@
 module Harness.TestEnvironment
   ( TestEnvironment (..),
     Server (..),
+    BackendSettings (..),
     getServer,
     serverUrl,
     stopServer,
@@ -39,11 +40,21 @@ data TestEnvironment = TestEnvironment
     uniqueTestId :: UUID,
     -- | the main backend type of the test, if applicable (ie, where we are not
     -- testing `remote <-> remote` joins or someting similarly esoteric)
-    backendType :: Maybe BackendType
+    backendType :: Maybe BackendType,
+    -- | settings for backends, taken from environment variables
+    backendSettings :: BackendSettings
   }
 
 instance Show TestEnvironment where
   show TestEnvironment {server} = "<TestEnvironment: " ++ urlPrefix server ++ ":" ++ show (port server) ++ " >"
+
+-- | Backend-specific settings passed in from environment variables
+-- Everything should be optional and fall back to sensible defaults
+-- to keep the suite easy to run
+newtype BackendSettings = BackendSettings
+  { -- | Port for the Postgres data source used in tests
+    postgresSourcePort :: Maybe Word16
+  }
 
 -- | Information about a server that we're working with.
 data Server = Server

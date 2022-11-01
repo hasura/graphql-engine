@@ -33,7 +33,7 @@ spec =
           (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction schema testEnvironment,
-                  setupPostgres,
+                  setupPostgres testEnvironment,
                   setupMetadata Fixture.Postgres testEnvironment
                 ]
             },
@@ -122,17 +122,19 @@ setupMysql =
 --------------------------------------------------------------------------------
 -- Postgres setup
 
-setupPostgres :: Fixture.SetupAction
-setupPostgres =
+setupPostgres :: TestEnvironment -> Fixture.SetupAction
+setupPostgres testEnvironment =
   Fixture.SetupAction
     { Fixture.setupAction =
         Postgres.run_
+          testEnvironment
           [sql|
             CREATE OR REPLACE VIEW author_view
             AS SELECT * FROM author
           |],
       Fixture.teardownAction = \_ ->
         Postgres.run_
+          testEnvironment
           [sql|
             DROP VIEW IF EXISTS author_view
           |]

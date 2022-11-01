@@ -46,6 +46,7 @@ import Data.HashSet qualified as Set
 import Data.Word (Word16)
 import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as PG
+import Harness.TestEnvironment (BackendSettings (..), TestEnvironment (..))
 import Hasura.Backends.Postgres.Connection.MonadTx (ExtensionsSchema (..))
 import Hasura.GraphQL.Execute.Subscription.Options qualified as ES
 import Hasura.GraphQL.Schema.Options qualified as Options
@@ -120,11 +121,17 @@ postgresDb = "hasura"
 postgresHost :: String
 postgresHost = "127.0.0.1"
 
-postgresPort :: Word16
-postgresPort = 65002
+-- | the port used for Postgres, unless it is overwritten by
+-- the `HASURA_TEST_POSTGRES_PORT` env var
+defaultPostgresPort :: Word16
+defaultPostgresPort = 65002
 
-postgresqlConnectionString :: String
-postgresqlConnectionString =
+postgresPort :: BackendSettings -> Word16
+postgresPort =
+  fromMaybe defaultPostgresPort . postgresSourcePort
+
+postgresqlConnectionString :: TestEnvironment -> String
+postgresqlConnectionString testEnv =
   "postgres://"
     ++ postgresUser
     ++ ":"
@@ -132,7 +139,7 @@ postgresqlConnectionString =
     ++ "@"
     ++ postgresHost
     ++ ":"
-    ++ show postgresPort
+    ++ show (postgresPort (backendSettings testEnv))
     ++ "/"
     ++ postgresDb
 

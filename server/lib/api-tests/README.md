@@ -167,6 +167,14 @@ Now based on what you want to, you can either run the Hasura's Graphql engine
 to debug this further or directly inspect the database using [any of its
 clients](https://en.wikipedia.org/wiki/Comparison_of_database_administration_tools).
 
+## Overwriting database ports
+
+It is useful to be able to test against different DB instances. The current
+environment variables are available:
+
+`HASURA_TEST_POSTGRES_PORT` (default `65002`) - overwrite the port of the Postgres source DB
+(this does not affect the DB used for metadata)
+
 ### Using GHCI
 
 Alternatively it is also possible to manually start up the test environment in

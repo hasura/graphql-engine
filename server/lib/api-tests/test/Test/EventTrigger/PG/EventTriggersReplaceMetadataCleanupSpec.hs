@@ -80,7 +80,7 @@ cleanupEventTriggersWhenSourceRemoved opts =
     it "remove source via replace_metadata, check that the event_log table is removed as well" $
       \(testEnvironment, (_, _)) -> do
         -- `hdb_catalog.event_log` should be existing before (as we have added an event trigger in setup)
-        checkIfPGTableExists "hdb_catalog.event_log" >>= (`shouldBe` True)
+        checkIfPGTableExists testEnvironment "hdb_catalog.event_log" >>= (`shouldBe` True)
 
         -- remove the source using replace_meatadata API
         let replaceMetadata =
@@ -103,7 +103,7 @@ cleanupEventTriggersWhenSourceRemoved opts =
           expectedResponse
 
         -- `hdb_catalog.event_log` should not be existing now
-        checkIfPGTableExists "hdb_catalog.event_log" >>= (`shouldBe` False)
+        checkIfPGTableExists testEnvironment "hdb_catalog.event_log" >>= (`shouldBe` False)
 
 --------------------------------------------------------------------------------
 
@@ -130,8 +130,8 @@ postgresSetup (testEnvironment, (webhookServer, _)) = do
     |]
 
 postgresTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresTeardown (_, (server, _)) = do
-  Postgres.dropTable (authorsTable "authors")
+postgresTeardown (testEnvironment, (server, _)) = do
+  Postgres.dropTable testEnvironment (authorsTable "authors")
   stopServer server
 
 webhookServerMkLocalTestEnvironment ::
@@ -139,14 +139,14 @@ webhookServerMkLocalTestEnvironment ::
 webhookServerMkLocalTestEnvironment _ = do
   Webhook.run
 
-checkIfPGTableExists :: String -> IO Bool
-checkIfPGTableExists tableName = do
+checkIfPGTableExists :: TestEnvironment -> String -> IO Bool
+checkIfPGTableExists testEnvironment tableName = do
   let sqlQuery = "SELECT to_regclass('" <> tableName <> "')::text;"
       handleNullExp (Postgres.UnexpectedNull {}) = pure False
       handleNullExp err = throw err
   catch
     ( bracket
-        (Postgres.connectPostgreSQL (fromString Constants.postgresqlConnectionString))
+        (Postgres.connectPostgreSQL (fromString (Constants.postgresqlConnectionString testEnvironment)))
         Postgres.close
         ( \conn -> do
             rows :: [[String]] <- Postgres.query_ conn (fromString sqlQuery)

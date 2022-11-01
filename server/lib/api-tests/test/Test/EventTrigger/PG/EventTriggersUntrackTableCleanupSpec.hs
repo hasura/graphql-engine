@@ -182,9 +182,9 @@ postgresSetup (testEnvironment, (webhookServer, _)) = do
     |]
 
 postgresTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresTeardown (_, (server, _)) = do
+postgresTeardown (testEnvironment, (server, _)) = do
   stopServer server
-  Postgres.dropTable (authorsTable "authors")
+  Postgres.dropTable testEnvironment (authorsTable "authors")
 
 webhookServerMkLocalTestEnvironment ::
   TestEnvironment -> IO (GraphqlEngine.Server, Webhook.EventsQueue)

@@ -169,10 +169,11 @@ postgresSetup :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) 
 postgresSetup (testEnvironment, (webhookServer, _)) = do
   let sourceName = "hge_test"
       extensionsSchema = "hasura" :: Text
+      databaseUrl = postgresqlConnectionString testEnvironment
       sourceConfig =
         [yaml|
           connection_info:
-            database_url: *postgresqlConnectionString
+            database_url: *databaseUrl
             pool_settings: {}
             extensions_schema: *extensionsSchema
              |]
@@ -188,7 +189,7 @@ postgresSetup (testEnvironment, (webhookServer, _)) = do
 
   -- setup tables
   Postgres.createTable testEnvironment (authorsTable "authors")
-  Postgres.insertTable (authorsTable "authors")
+  Postgres.insertTable testEnvironment (authorsTable "authors")
   Schema.trackTable Fixture.Postgres sourceName (authorsTable "authors") testEnvironment
 
   -- create the event trigger
@@ -220,7 +221,7 @@ postgresTeardown (testEnvironment, (server, _)) = do
           source: hge_test
     |]
   stopServer server
-  Postgres.dropTable (authorsTable "authors")
+  Postgres.dropTable testEnvironment (authorsTable "authors")
 
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|

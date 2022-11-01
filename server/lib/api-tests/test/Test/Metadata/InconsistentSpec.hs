@@ -56,7 +56,7 @@ tests opts = do
           inconsistent_objects: []
         |]
 
-      Postgres.dropTable table
+      Postgres.dropTable testEnvironment table
 
       postMetadata testEnvironment reloadMetadata
         `shouldReturnYaml` expectedInconsistentYaml (Just "success") testEnvironment
@@ -74,7 +74,7 @@ tests opts = do
         |]
 
       -- To be removed once the test fixtures can automatically clean this up.
-      Postgres.dropTable table
+      Postgres.dropTable testEnvironment table
 
   describe "replacing the metadata" do
     it "flags missing tables as inconsistent" \testEnvironment -> do
@@ -120,7 +120,7 @@ replaceMetadataWithTable testEnvironment =
   |]
   where
     backend = Maybe.fromMaybe (error "Unknown backend") $ backendType testEnvironment
-    sourceConfiguration = Postgres.defaultSourceConfiguration
+    sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
     sourceName = Fixture.defaultSource backend
     schemaName = Schema.getSchemaName testEnvironment
     tableName = Schema.tableName table
@@ -148,7 +148,7 @@ expectedInconsistentYaml message testEnvironment =
 setupMetadata :: Fixture.BackendType -> TestEnvironment -> Fixture.SetupAction
 setupMetadata backendType testEnvironment = do
   let sourceName = Fixture.defaultSource backendType
-      sourceConfiguration = Postgres.defaultSourceConfiguration
+      sourceConfiguration = Postgres.defaultSourceConfiguration testEnvironment
 
       setup :: IO ()
       setup =
@@ -176,7 +176,7 @@ dropTablesBeforeAndAfter testEnvironment = do
   Fixture.SetupAction action (const action)
   where
     action = case backendType testEnvironment of
-      Just Fixture.Postgres -> Postgres.dropTableIfExists table
+      Just Fixture.Postgres -> Postgres.dropTableIfExists testEnvironment table
       Just Fixture.Cockroach -> Cockroach.dropTableIfExists table
       Just b -> fail $ "Unknown backend:" <> show b
       Nothing -> fail $ "Unknown backend."

@@ -162,7 +162,7 @@ duplicateTriggerNameNotAllowed opts =
 
     it "replace_metadata: does not allow creating an event trigger with a name that already exists" $
       \(testEnvironment, (webhookServer, _)) -> do
-        let replaceMetadata = getReplaceMetadata webhookServer
+        let replaceMetadata = getReplaceMetadata testEnvironment webhookServer
 
             replaceMetadataWithDuplicateNameExpectedResponse =
               [yaml| 
@@ -201,9 +201,9 @@ postgresSetup (testEnvironment, (webhookServer, _)) = do
             columns: "*"
     |]
 
-getReplaceMetadata :: GraphqlEngine.Server -> Value
-getReplaceMetadata webhookServer =
-  let sourceConfig = Postgres.defaultSourceConfiguration
+getReplaceMetadata :: TestEnvironment -> GraphqlEngine.Server -> Value
+getReplaceMetadata testEnvironment webhookServer =
+  let sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
       schemaName = schemaKeyword Fixture.Postgres
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
    in [yaml|
@@ -259,8 +259,8 @@ postgresTeardown (testEnvironment, (server, _)) = do
           source: postgres
     |]
   stopServer server
-  Postgres.dropTable (authorsTable "authors")
-  Postgres.dropTable (articlesTable "articles")
+  Postgres.dropTable testEnvironment (authorsTable "authors")
+  Postgres.dropTable testEnvironment (articlesTable "articles")
 
 webhookServerMkLocalTestEnvironment ::
   TestEnvironment -> IO (GraphqlEngine.Server, Webhook.EventsQueue)

@@ -144,7 +144,7 @@ lhsPostgresMkLocalTestEnvironment _ = pure Nothing
 lhsPostgresSetup :: (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresSetup (testEnvironment, _) = do
   let sourceName = "source"
-      sourceConfig = Postgres.defaultSourceConfiguration
+      sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
@@ -157,7 +157,7 @@ args:
 |]
   -- setup tables only
   Postgres.createTable testEnvironment track
-  Postgres.insertTable track
+  Postgres.insertTable testEnvironment track
   Schema.trackTable Fixture.Postgres sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -185,7 +185,7 @@ lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresTeardown (testEnvironment, _) = do
   let sourceName = "source"
   Schema.untrackTable Fixture.Postgres sourceName track testEnvironment
-  Postgres.dropTable track
+  Postgres.dropTable testEnvironment track
 
 --------------------------------------------------------------------------------
 -- LHS Cockroach
