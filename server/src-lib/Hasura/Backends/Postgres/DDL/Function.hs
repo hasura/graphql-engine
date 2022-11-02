@@ -158,14 +158,16 @@ buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions raw
       let argNames = mapMaybe faName functionArgs
           invalidArgs = filter (isNothing . G.mkName . getFuncArgNameTxt) argNames
       unless (null invalidArgs) $
-        throwValidateError $ FunctionInvalidArgumentNames invalidArgs
+        throwValidateError $
+          FunctionInvalidArgumentNames invalidArgs
 
     makeInputArguments =
       case _fcSessionArgument of
         Nothing -> pure $ Seq.fromList $ map IAUserProvided functionArgs
         Just sessionArgName -> do
           unless (any (\arg -> Just sessionArgName == faName arg) functionArgs) $
-            throwValidateError $ FunctionInvalidSessionArgument sessionArgName
+            throwValidateError $
+              FunctionInvalidSessionArgument sessionArgName
           fmap Seq.fromList $
             forM functionArgs $ \arg ->
               if Just sessionArgName == faName arg
@@ -177,7 +179,8 @@ buildFunctionInfo source qf systemDefined fc@FunctionConfig {..} permissions raw
                 else pure $ IAUserProvided arg
 
     showErrors allErrors =
-      "the function " <> qf <<> " cannot be tracked "
+      "the function "
+        <> qf <<> " cannot be tracked "
         <> makeReasonMessage allErrors showOneError
 
     showOneError = \case

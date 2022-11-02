@@ -215,18 +215,18 @@ insertTable :: TestEnvironment -> Schema.Table -> IO ()
 insertTable testEnv Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
-    run_ testEnv $
-      T.unpack $
-        T.unwords
-          [ "INSERT INTO",
-            T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName,
-            "(",
-            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-            ")",
-            "VALUES",
-            commaSeparated $ mkRow <$> tableData,
-            ";"
-          ]
+      run_ testEnv $
+        T.unpack $
+          T.unwords
+            [ "INSERT INTO",
+              T.pack Constants.postgresDb <> "." <> wrapIdentifier tableName,
+              "(",
+              commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+              ")",
+              "VALUES",
+              commaSeparated $ mkRow <$> tableData,
+              ";"
+            ]
 
 -- | Identifiers which may be case-sensitive needs to be wrapped in @""@.
 --

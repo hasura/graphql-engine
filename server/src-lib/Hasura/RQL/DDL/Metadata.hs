@@ -336,7 +336,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
             throw400 AlreadyExists $
               "cron trigger with name "
                 <> ctName ct
-                <<> " already exists as a cron trigger with \"included_in_metadata\" as false"
+                  <<> " already exists as a cron trigger with \"included_in_metadata\" as false"
         -- we add the old cron triggers with included_in_metadata set to false with the
         -- newly added cron triggers
         pure $ allNewCronTriggers <> oldCronTriggersNotIncludedInMetadata
@@ -463,7 +463,8 @@ runReloadMetadata (ReloadMetadata reloadRemoteSchemas reloadSources reloadRecrea
       allRemoteSchemas = HS.fromList $ OMap.keys $ _metaRemoteSchemas metadata
       allDataConnectors =
         maybe mempty (HS.fromList . OMap.keys . unBackendConfigWrapper) $
-          BackendMap.lookup @'DataConnector $ _metaBackendConfigs metadata
+          BackendMap.lookup @'DataConnector $
+            _metaBackendConfigs metadata
       checkRemoteSchema name =
         unless (HS.member name allRemoteSchemas) $
           throw400 NotExists $
@@ -705,7 +706,8 @@ interpolateFromEnv env url =
           err e =
             throwError $
               err400 NotFound $
-                "Missing Env Var: " <> e
+                "Missing Env Var: "
+                  <> e
                   <> ". For security reasons when testing request options real environment variable values are not available. Please enter a mock value for "
                   <> e
                   <> " in the Sample Env Variables list. See https://hasura.io/docs/latest/graphql/core/actions/rest-connectors/#action-transforms-sample-context"

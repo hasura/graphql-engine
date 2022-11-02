@@ -148,10 +148,12 @@ runRenameSource RenameSource {..} = do
   sources <- scSources <$> askSchemaCache
 
   unless (HM.member _rmName sources) $
-    throw400 NotExists $ "Could not find source with name " <>> _rmName
+    throw400 NotExists $
+      "Could not find source with name " <>> _rmName
 
   when (HM.member _rmNewName sources) $
-    throw400 AlreadyExists $ "Source with name " <> _rmNewName <<> " already exists"
+    throw400 AlreadyExists $
+      "Source with name " <> _rmNewName <<> " already exists"
 
   let metadataModifier =
         MetadataModifier $
@@ -210,7 +212,8 @@ runDropSource dropSourceInfo@(DropSource name cascade) = do
       metadata <- getMetadata
       void $
         onNothing (metadata ^. metaSources . at name) $
-          throw400 NotExists $ "source with name " <> name <<> " does not exist"
+          throw400 NotExists $
+            "source with name " <> name <<> " does not exist"
       if cascade
         then -- Without sourceInfo we can't cascade, so throw an error
           throw400 Unexpected $ "source with name " <> name <<> " is inconsistent"
@@ -274,7 +277,8 @@ runPostDropSourceHook sourceName sourceInfo = do
   where
     logDropSourceHookError logger err =
       let msg =
-            "Error executing cleanup actions after removing source '" <> toTxt sourceName
+            "Error executing cleanup actions after removing source '"
+              <> toTxt sourceName
               <> "'. Consider cleaning up tables in hdb_catalog schema manually."
        in L.unLogger logger $ MetadataLog L.LevelWarn msg (J.toJSON err)
 

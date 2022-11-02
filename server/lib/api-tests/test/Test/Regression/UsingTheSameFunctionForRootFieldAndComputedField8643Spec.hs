@@ -60,7 +60,8 @@ functionSetup testEnvironment =
   Fixture.SetupAction
     { setupAction =
         Postgres.run_ testEnvironment $
-          "CREATE FUNCTION " ++ Constants.postgresDb
+          "CREATE FUNCTION "
+            ++ Constants.postgresDb
             ++ ".authors(author_row author) \
                \RETURNS SETOF author AS $$ \
                \  SELECT * \

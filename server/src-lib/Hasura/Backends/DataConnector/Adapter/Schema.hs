@@ -171,7 +171,7 @@ comparisonExps' sourceInfo columnType = P.memoizeOn 'comparisonExps' (dataConnec
         GQL.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
-            <<> ". All fields are combined with logical 'AND'."
+              <<> ". All fields are combined with logical 'AND'."
       columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
   customOperators <- (fmap . fmap . fmap) IR.ABackendSpecific <$> mkCustomOperators tCase collapseIfNull (P.getName typedParser)
   pure $

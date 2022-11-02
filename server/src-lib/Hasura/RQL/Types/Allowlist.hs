@@ -97,7 +97,8 @@ metadataAllowlistInsert entry@(AllowlistEntry coll _) al =
       Nothing -> Right (Just entry)
       Just _ ->
         Left $
-          "collection " <> coll <<> " already exists in the allowlist, scope ignored;"
+          "collection "
+            <> coll <<> " already exists in the allowlist, scope ignored;"
             <> " to change scope, use update_scope_of_collection_in_allowlist"
 
 metadataAllowlistUpdateScope ::

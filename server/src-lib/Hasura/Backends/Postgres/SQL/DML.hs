@@ -183,7 +183,6 @@ newtype OrderByExp
   = OrderByExp (NonEmpty OrderByItem)
   deriving (Show, Eq, NFData, Data, Cacheable, Hashable)
 
--- |
 data OrderByItem = OrderByItem
   { oExpression :: SQLExp,
     oOrdering :: Maybe OrderType,
@@ -601,7 +600,8 @@ instance ToSQL SQLExp where
   toSQL (SETyAnn e ty) =
     parenB (toSQL e) <> toSQL ty
   toSQL (SECond cond te fe) =
-    "CASE WHEN" <~> toSQL cond
+    "CASE WHEN"
+      <~> toSQL cond
       <~> "THEN"
       <~> toSQL te
       <~> "ELSE"
@@ -612,7 +612,8 @@ instance ToSQL SQLExp where
     "EXCLUDED."
       <> toSQL i
   toSQL (SEArray exps) =
-    "ARRAY" <> TB.char '['
+    "ARRAY"
+      <> TB.char '['
       <> (", " <+> exps)
       <> TB.char ']'
   toSQL (SEArrayIndex arrayExp indexExp) =
@@ -837,7 +838,8 @@ instance ToSQL FromItem where
   toSQL (FISelectWith isLateral selectWith alias) =
     toSQL isLateral <~> parenB (toSQL selectWith) <~> tableAliasToSqlWithAs alias
   toSQL (FIValues valsExp alias columnAliases) =
-    parenB (toSQL valsExp) <~> tableAliasToSqlWithAs alias
+    parenB (toSQL valsExp)
+      <~> tableAliasToSqlWithAs alias
       <~> case columnAliases of
         Nothing -> ""
         Just cols -> parenB (", " <+> map columnAliasToSqlWithoutAs cols)
@@ -1194,7 +1196,8 @@ instance ToSQL SQLInsert where
       <~> ( if null (siCols si)
               then
                 "VALUES"
-                  <~> ", " <+> map (const ("(DEFAULT)" :: TB.Builder)) (getValuesExp (siValues si))
+                  <~> ", "
+                  <+> map (const ("(DEFAULT)" :: TB.Builder)) (getValuesExp (siValues si))
               else "(" <~> (", " <+> siCols si) <~> ")" <~> toSQL (siValues si)
           )
       <~> maybe "" toSQL (siConflict si)

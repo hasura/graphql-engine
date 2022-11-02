@@ -237,7 +237,7 @@ bqComparisonExps = P.memoize 'comparisonExps $ \columnType -> do
         G.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
-            <<> ". All fields are combined with logical 'AND'."
+              <<> ". All fields are combined with logical 'AND'."
       -- textListParser = fmap openValueOrigin <$> P.list textParser
       columnListParser = fmap IR.openValueOrigin <$> P.list typedParser
       mkListLiteral :: [ColumnValue 'BigQuery] -> IR.UnpreparedValue 'BigQuery
@@ -360,7 +360,8 @@ geographyWithinDistanceInput = do
   floatParser <- columnParser (ColumnScalar BigQuery.FloatScalarType) (G.Nullability False)
   pure $
     P.object Name._st_dwithin_input Nothing $
-      DWithinGeogOp <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
+      DWithinGeogOp
+        <$> (IR.mkParameter <$> P.field Name._distance Nothing floatParser)
         <*> (IR.mkParameter <$> P.field Name._from Nothing geographyParser)
         <*> (IR.mkParameter <$> P.fieldWithDefault Name._use_spheroid Nothing (G.VBoolean False) booleanParser)
 

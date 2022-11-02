@@ -136,8 +136,8 @@ instance J.FromJSON RemoteArguments where
             Just ('$', rest)
               | T.null rest -> fail $ "Empty variable name"
               | otherwise -> case G.mkName rest of
-                Nothing -> fail $ "Invalid variable name '" <> T.unpack rest <> "'"
-                Just name' -> pure $ G.VVariable name'
+                  Nothing -> fail $ "Invalid variable name '" <> T.unpack rest <> "'"
+                  Just name' -> pure $ G.VVariable name'
             _ -> pure (G.VString text)
         J.Number !scientificNum ->
           pure $ case floatingOrInteger scientificNum of

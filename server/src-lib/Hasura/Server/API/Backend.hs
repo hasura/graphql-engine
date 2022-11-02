@@ -58,7 +58,8 @@ commandParserWithExplicitParser parseJSONWithBackendKind expected constructor ba
   -- the correct branch, the name matches, but the argument fails to parse, we must fail" and "this
   -- is not the command we were expecting here, it is fine to continue with another".
   whenMaybe (expected == provided) $
-    modifyFailure withDetails $ constructor <$> (parseJSONWithBackendKind backendKind arguments <?> J.Key "args")
+    modifyFailure withDetails $
+      constructor <$> (parseJSONWithBackendKind backendKind arguments <?> J.Key "args")
   where
     withDetails internalErrorMessage =
       intercalate

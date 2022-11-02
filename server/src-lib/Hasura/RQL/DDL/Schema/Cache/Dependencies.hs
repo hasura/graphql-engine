@@ -83,28 +83,28 @@ performIteration iterationNumber cache inconsistencies dependencies = do
     [] -> pure (cache, inconsistencies, HS.fromList . map snd <$> prunedDependencies)
     _
       | iterationNumber < 100 -> do
-        let inconsistentIds = nub $ concatMap imObjectIds newInconsistencies
-            prunedCache = foldl' (flip deleteMetadataObject) cache inconsistentIds
-            allInconsistencies = inconsistencies <> newInconsistencies
-        performIteration (iterationNumber + 1) prunedCache allInconsistencies prunedDependencies
+          let inconsistentIds = nub $ concatMap imObjectIds newInconsistencies
+              prunedCache = foldl' (flip deleteMetadataObject) cache inconsistentIds
+              allInconsistencies = inconsistencies <> newInconsistencies
+          performIteration (iterationNumber + 1) prunedCache allInconsistencies prunedDependencies
       | otherwise ->
-        -- Running for 100 iterations without terminating is (hopefully) enormously unlikely
-        -- unless we did something very wrong, so halt the process and abort with some
-        -- debugging information.
-        throwError
-          (err500 Unexpected "schema dependency resolution failed to terminate")
-            { qeInternal =
-                Just $
-                  ExtraInternal $
-                    object
-                      [ "inconsistent_objects"
-                          .= object
-                            [ "old" .= inconsistencies,
-                              "new" .= newInconsistencies
-                            ],
-                        "pruned_dependencies" .= (map snd <$> prunedDependencies)
-                      ]
-            }
+          -- Running for 100 iterations without terminating is (hopefully) enormously unlikely
+          -- unless we did something very wrong, so halt the process and abort with some
+          -- debugging information.
+          throwError
+            (err500 Unexpected "schema dependency resolution failed to terminate")
+              { qeInternal =
+                  Just $
+                    ExtraInternal $
+                      object
+                        [ "inconsistent_objects"
+                            .= object
+                              [ "old" .= inconsistencies,
+                                "new" .= newInconsistencies
+                              ],
+                          "pruned_dependencies" .= (map snd <$> prunedDependencies)
+                        ]
+              }
 
 pruneDanglingDependents ::
   BuildOutputs ->
@@ -124,27 +124,36 @@ pruneDanglingDependents cache =
             `onNothing` Left ("no such source exists: " <>> source)
       SORemoteSchema remoteSchemaName ->
         unless (remoteSchemaName `M.member` _boRemoteSchemas cache) $
-          Left $ "remote schema " <> remoteSchemaName <<> " is not found"
+          Left $
+            "remote schema " <> remoteSchemaName <<> " is not found"
       SORemoteSchemaPermission remoteSchemaName roleName -> do
         remoteSchema <-
           onNothing (M.lookup remoteSchemaName $ _boRemoteSchemas cache) $
-            Left $ "remote schema " <> remoteSchemaName <<> " is not found"
+            Left $
+              "remote schema " <> remoteSchemaName <<> " is not found"
         unless (roleName `M.member` _rscPermissions (fst remoteSchema)) $
           Left $
-            "no permission defined on remote schema " <> remoteSchemaName
-              <<> " for role " <>> roleName
+            "no permission defined on remote schema "
+              <> remoteSchemaName
+                <<> " for role "
+                <>> roleName
       SORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName -> do
         remoteSchema <-
           fmap fst $
             onNothing (M.lookup remoteSchemaName $ _boRemoteSchemas cache) $
-              Left $ "remote schema " <> remoteSchemaName <<> " is not found"
-        void $
-          onNothing
+              Left $
+                "remote schema " <> remoteSchemaName <<> " is not found"
+        void
+          $ onNothing
             (OMap.lookup typeName (_rscRemoteRelationships remoteSchema) >>= OMap.lookup relationshipName)
-            $ Left $
-              "remote relationship " <> relationshipName
-                <<> " on type " <> G.unName typeName <> " on " <> remoteSchemaName
-                <<> " is not found"
+          $ Left
+          $ "remote relationship "
+            <> relationshipName
+              <<> " on type "
+            <> G.unName typeName
+            <> " on "
+            <> remoteSchemaName
+              <<> " is not found"
       SOSourceObj source exists -> do
         AB.dispatchAnyBackend @Backend exists $ \sourceObjId -> do
           sourceInfo <- castSourceInfo source sourceObjId
@@ -170,12 +179,15 @@ pruneDanglingDependents cache =
                   let foreignKeys = _tciForeignKeys $ _tiCoreInfo tableInfo
                   unless (isJust $ find ((== constraintName) . _cName . _fkConstraint) foreignKeys) $
                     Left $
-                      "no foreign key constraint named " <> constraintName <<> " is "
+                      "no foreign key constraint named "
+                        <> constraintName <<> " is "
                         <> "defined for table " <>> tableName
                 TOPerm roleName permType -> do
                   unless (any (permissionIsDefined permType) (tableInfo ^? (tiRolePermInfoMap . ix roleName))) $
                     Left $
-                      "no " <> permTypeToCode permType <> " permission defined on table "
+                      "no "
+                        <> permTypeToCode permType
+                        <> " permission defined on table "
                         <> tableName <<> " for role " <>> roleName
                 TOTrigger triggerName ->
                   unless (M.member triggerName (_tiEventTriggerInfoMap tableInfo)) $

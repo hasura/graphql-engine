@@ -112,7 +112,9 @@ processOrderByItems sourcePrefix' fieldAlias' similarArrayFields distOnCols = \c
       (ordByAlias,) <$> case annObCol of
         AOCColumn pgColInfo ->
           pure $
-            S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) $ toIdentifier $ ciColumn pgColInfo
+            S.mkQIdenExp (mkBaseTableIdentifier sourcePrefix) $
+              toIdentifier $
+                ciColumn pgColInfo
         AOCObjectRelation relInfo relFilter rest -> withWriteObjectRelation $ do
           let RelInfo relName _ colMapping relTable _ _ = relInfo
               relSourcePrefix = mkObjectRelationTableAlias sourcePrefix relName

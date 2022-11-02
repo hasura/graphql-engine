@@ -127,7 +127,8 @@ getMaintenanceModeVersion ::
 getMaintenanceModeVersion sourceConfig =
   liftEitherM $
     liftIO $
-      runMSSQLSourceReadTx sourceConfig $ getMaintenanceModeVersionTx
+      runMSSQLSourceReadTx sourceConfig $
+        getMaintenanceModeVersionTx
 
 recordSuccess ::
   (MonadIO m) =>
@@ -570,11 +571,11 @@ getMaintenanceModeVersionTx = do
   if
       | catalogVersion == latestSourceCatalogVersion -> pure CurrentMMVersion
       | otherwise ->
-        throw500 $
-          "Maintenance mode is only supported with catalog versions: "
-            <> tshow latestSourceCatalogVersion
-            <> " but received "
-            <> tshow catalogVersion
+          throw500 $
+            "Maintenance mode is only supported with catalog versions: "
+              <> tshow latestSourceCatalogVersion
+              <> " but received "
+              <> tshow catalogVersion
 
 -- | Note: UTCTIME not supported in SQL Server
 --
@@ -898,7 +899,10 @@ addCleanupSchedules sourceConfig triggersWithcleanupConfig =
             )
             triggersWithcleanupConfig
     unless (null scheduledTriggersAndTimestamps) $
-      liftEitherM $ liftIO $ runMSSQLSourceWriteTx sourceConfig $ insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
+      liftEitherM $
+        liftIO $
+          runMSSQLSourceWriteTx sourceConfig $
+            insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
 
 -- | Insert the cleanup logs for the given trigger name and schedules
 insertEventTriggerCleanupLogsTx :: [(TriggerName, [Datetimeoffset])] -> TxET QErr IO ()

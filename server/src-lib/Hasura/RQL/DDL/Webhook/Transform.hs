@@ -268,7 +268,8 @@ requestL = lens getter setter
 
     setter :: HTTP.Request -> RequestData -> HTTP.Request
     setter req RequestFields {..} =
-      req & set HTTP.method (TE.encodeUtf8 $ CI.original $ coerce method)
+      req
+        & set HTTP.method (TE.encodeUtf8 $ CI.original $ coerce method)
         & set HTTP.body (serializeBody $ coerce body)
         & set HTTP.url (coerce url)
         & set HTTP.queryParams (unQueryParams $ coerce queryParams)

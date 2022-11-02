@@ -295,7 +295,8 @@ mkRequest headers timeout payload mRequestTransform (ResolvedWebhook webhook) =
         Left excp -> throwError $ HTTPError body (HClient $ HttpException excp)
         Right initReq ->
           let req =
-                initReq & set HTTP.method "POST"
+                initReq
+                  & set HTTP.method "POST"
                   & set HTTP.headers headers
                   & set HTTP.body (Just payload)
                   & set HTTP.timeout timeout

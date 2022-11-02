@@ -155,18 +155,18 @@ insertTable :: Schema.Table -> IO ()
 insertTable Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
-    run_ $
-      T.unpack $
-        T.unwords
-          [ "INSERT INTO",
-            T.pack Constants.cockroachDb <> "." <> wrapIdentifier tableName,
-            "(",
-            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-            ")",
-            "VALUES",
-            commaSeparated $ mkRow <$> tableData,
-            ";"
-          ]
+      run_ $
+        T.unpack $
+          T.unwords
+            [ "INSERT INTO",
+              T.pack Constants.cockroachDb <> "." <> wrapIdentifier tableName,
+              "(",
+              commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+              ")",
+              "VALUES",
+              commaSeparated $ mkRow <$> tableData,
+              ";"
+            ]
 
 -- | Identifiers which may be case-sensitive needs to be wrapped in @""@.
 --

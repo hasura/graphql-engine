@@ -417,7 +417,8 @@ createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverSta
                     -- once connection is accepted, check the status of the timer, and if it's expired, close the connection for `graphql-ws`
                     timeoutStatus <- liftIO $ getWSTimerState wsConnInitTimer
                     when (timeoutStatus == Done && subProtocol == GraphQLWS) $
-                      liftIO $ closeConnWithCode wsConn 4408 "Connection initialisation timed out"
+                      liftIO $
+                        closeConnWithCode wsConn 4408 "Connection initialisation timed out"
 
                     -- terminates on WS.ConnectionException and JWT expiry
                     let waitOnRefs = [keepAliveRef, onJwtExpiryRef, rcvRef, sendRef]

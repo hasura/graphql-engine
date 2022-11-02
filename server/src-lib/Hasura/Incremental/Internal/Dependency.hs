@@ -92,11 +92,11 @@ data DependencyKey a where
 instance GEq DependencyKey where
   DependencyRoot a `geq` DependencyRoot b
     | Just Refl <- a `geq` b =
-      Just Refl
+        Just Refl
   DependencyChild a1 a2 `geq` DependencyChild b1 b2
     | Just Refl <- a2 `geq` b2,
       Just Refl <- a1 `geq` b1 =
-      Just Refl
+        Just Refl
   _ `geq` _ = Nothing
 
 instance GCompare DependencyKey where

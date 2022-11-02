@@ -938,7 +938,8 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
 
   -- cors middleware
   unless (isCorsDisabled corsCfg) $
-    Spock.middleware $ corsMiddleware (mkDefaultCorsPolicy corsCfg)
+    Spock.middleware $
+      corsMiddleware (mkDefaultCorsPolicy corsCfg)
 
   -- API Console and Root Dir
   when (enableConsole && enableMetadata) serveApiConsole
@@ -1036,31 +1037,39 @@ httpApp setupHook corsCfg serverCtx enableConsole consoleAssetsDir consoleSentry
 
     Spock.post "v1/metadata" $
       spockAction encodeQErr id $
-        mkPostHandler $ fmap (emptyHttpLogMetadata @m,) <$> mkAPIRespHandler v1MetadataHandler
+        mkPostHandler $
+          fmap (emptyHttpLogMetadata @m,) <$> mkAPIRespHandler v1MetadataHandler
 
     Spock.post "v2/query" $
       spockAction encodeQErr id $
-        mkPostHandler $ fmap (emptyHttpLogMetadata @m,) <$> mkAPIRespHandler v2QueryHandler
+        mkPostHandler $
+          fmap (emptyHttpLogMetadata @m,) <$> mkAPIRespHandler v2QueryHandler
 
   when enablePGDump $
     Spock.post "v1alpha1/pg_dump" $
       spockAction encodeQErr id $
-        mkPostHandler $ fmap (emptyHttpLogMetadata @m,) <$> v1Alpha1PGDumpHandler
+        mkPostHandler $
+          fmap (emptyHttpLogMetadata @m,) <$> v1Alpha1PGDumpHandler
 
   when enableConfig $ runConfigApiHandler serverCtx consoleAssetsDir
 
   when enableGraphQL $ do
     Spock.post "v1alpha1/graphql" $
       spockAction GH.encodeGQErr id $
-        mkGQLRequestHandler $ mkGQLAPIRespHandler $ v1Alpha1GQHandler E.QueryHasura
+        mkGQLRequestHandler $
+          mkGQLAPIRespHandler $
+            v1Alpha1GQHandler E.QueryHasura
 
     Spock.post "v1/graphql" $
       spockAction GH.encodeGQErr allMod200 $
-        mkGQLRequestHandler $ mkGQLAPIRespHandler v1GQHandler
+        mkGQLRequestHandler $
+          mkGQLAPIRespHandler v1GQHandler
 
     Spock.post "v1beta1/relay" $
       spockAction GH.encodeGQErr allMod200 $
-        mkGQLRequestHandler $ mkGQLAPIRespHandler $ v1GQRelayHandler
+        mkGQLRequestHandler $
+          mkGQLAPIRespHandler $
+            v1GQRelayHandler
 
   -- This exposes some simple RTS stats when we run with `+RTS -T`. We want
   -- this to be available even when developer APIs are not compiled in, to

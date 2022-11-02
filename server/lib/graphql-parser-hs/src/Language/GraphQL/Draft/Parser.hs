@@ -112,7 +112,8 @@ variableDefinitions = parens (many1 variableDefinition)
 
 variableDefinition :: Parser AST.VariableDefinition
 variableDefinition =
-  AST.VariableDefinition <$> variable
+  AST.VariableDefinition
+    <$> variable
     <* tok ":"
     <*> graphQLType
     <*> optional defaultValue
@@ -500,7 +501,8 @@ nameParser :: AT.Parser AST.Name
 nameParser =
   AST.unsafeMkName
     <$> tok
-      ( (<>) <$> AT.takeWhile1 isFirstChar
+      ( (<>)
+          <$> AT.takeWhile1 isFirstChar
           <*> AT.takeWhile isNonFirstChar
       )
 {-# INLINE nameParser #-}

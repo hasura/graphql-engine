@@ -236,7 +236,8 @@ createMissingSQLTriggers sourceConfig table (allCols, _) triggerName opsDefiniti
             (Identity opTriggerName)
             True
       unless doesOpTriggerFunctionExist $
-        flip runReaderT serverConfigCtx $ mkTrigger triggerName table allCols op opSpec
+        flip runReaderT serverConfigCtx $
+          mkTrigger triggerName table allCols op opSpec
 
 createTableEventTrigger ::
   (Backend ('Postgres pgKind), MonadIO m, MonadBaseControl IO m) =>
@@ -404,9 +405,9 @@ getMaintenanceModeVersionTx = liftTx $ do
       | catalogVersion == MetadataCatalogVersion 43 -> pure CurrentMMVersion
       | catalogVersion == latestCatalogVersion -> pure CurrentMMVersion
       | otherwise ->
-        throw500 $
-          "Maintenance mode is only supported with catalog versions: 40, 43 and "
-            <> tshow latestCatalogVersionString
+          throw500 $
+            "Maintenance mode is only supported with catalog versions: 40, 43 and "
+              <> tshow latestCatalogVersionString
 
 -- | Lock and return events not yet being processed or completed, up to some
 -- limit. Process events approximately in created_at order, but we make no
@@ -732,7 +733,10 @@ mkTriggerFunctionQ triggerName (QualifiedObject schema table) allCols op (Subscr
 
     mkQId opVar strfyNum colInfo =
       toJSONableExp strfyNum (ciType colInfo) False Nothing $
-        SEQIdentifier $ QIdentifier (opToQual opVar) $ toIdentifier $ ciColumn colInfo
+        SEQIdentifier $
+          QIdentifier (opToQual opVar) $
+            toIdentifier $
+              ciColumn colInfo
 
     -- Generate the SQL expression
     toExtractor sqlExp column
@@ -854,7 +858,10 @@ addCleanupSchedules sourceConfig triggersWithcleanupConfig =
             )
             triggersWithcleanupConfig
     unless (null scheduledTriggersAndTimestamps) $
-      liftEitherM $ liftIO $ runPgSourceWriteTx sourceConfig $ insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
+      liftEitherM $
+        liftIO $
+          runPgSourceWriteTx sourceConfig $
+            insertEventTriggerCleanupLogsTx scheduledTriggersAndTimestamps
 
 -- | Insert the cleanup logs for the fiven trigger name and schedules
 insertEventTriggerCleanupLogsTx :: [(TriggerName, [Time.UTCTime])] -> PG.TxET QErr IO ()

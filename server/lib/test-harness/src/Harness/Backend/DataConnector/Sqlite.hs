@@ -216,7 +216,7 @@ mkReference _schemaName Schema.Reference {referenceLocalColumn, referenceTargetT
       ")",
       "REFERENCES",
       -- NOTE: Sqlite doesn't allow schema names in references. Can we resolve this with an alias?
-      --wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier referenceTargetTable,
+      -- wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier referenceTargetTable,
       wrapIdentifier referenceTargetTable,
       "(",
       wrapIdentifier referenceTargetColumn,
@@ -250,19 +250,19 @@ insertTable :: TestEnvironment -> Schema.Table -> IO ()
 insertTable testEnv Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
-    let schemaName = Schema.getSchemaName testEnv
-    runSql testEnv (Fixture.defaultSource Fixture.DataConnectorSqlite) $
-      Text.unpack $
-        Text.unwords
-          [ "INSERT INTO",
-            wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
-            "(",
-            Text.commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-            ")",
-            "VALUES",
-            Text.commaSeparated $ mkRow <$> tableData,
-            ";"
-          ]
+      let schemaName = Schema.getSchemaName testEnv
+      runSql testEnv (Fixture.defaultSource Fixture.DataConnectorSqlite) $
+        Text.unpack $
+          Text.unwords
+            [ "INSERT INTO",
+              wrapIdentifier (Schema.unSchemaName schemaName) <> "." <> wrapIdentifier tableName,
+              "(",
+              Text.commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+              ")",
+              "VALUES",
+              Text.commaSeparated $ mkRow <$> tableData,
+              ";"
+            ]
 
 mkRow :: [Schema.ScalarValue] -> Text
 mkRow row =

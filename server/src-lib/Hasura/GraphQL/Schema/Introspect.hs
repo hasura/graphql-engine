@@ -671,7 +671,9 @@ schemaSet =
             J.Array $
               V.fromList $
                 map (printer . schemaTypeToSomeType) $
-                  sortOn P.getName $ Map.elems $ sTypes partialSchema
+                  sortOn P.getName $
+                    Map.elems $
+                      sTypes partialSchema
         where
           schemaTypeToSomeType :: P.SomeDefinitionTypeInfo -> SomeType
           schemaTypeToSomeType (P.SomeDefinitionTypeInfo def) =

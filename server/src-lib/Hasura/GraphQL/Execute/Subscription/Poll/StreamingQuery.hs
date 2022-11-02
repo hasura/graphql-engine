@@ -222,7 +222,8 @@ pushResultToCohort result !respHashM (SubscriptionMetadata dTime) cursorValues r
 
     pushResultToSubscribers subscribers =
       unless isResponseEmpty $
-        flip A.mapConcurrently_ subscribers $ \Subscriber {..} -> _sOnChangeCallback response
+        flip A.mapConcurrently_ subscribers $
+          \Subscriber {..} -> _sOnChangeCallback response
 
 -- | A single iteration of the streaming query polling loop. Invocations on the
 -- same mutable objects may race.

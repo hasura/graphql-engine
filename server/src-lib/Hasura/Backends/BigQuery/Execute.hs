@@ -494,7 +494,8 @@ getJobResults ::
 getJobResults conn Job {jobId, location} Fetch {pageToken} = runExceptT $ do
   -- https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/get#query-parameters
   let url =
-        "GET " <> bigQueryProjectUrl (_bqProjectId conn)
+        "GET "
+          <> bigQueryProjectUrl (_bqProjectId conn)
           <> "/queries/"
           <> T.unpack jobId
           <> "?alt=json&prettyPrint=false"
@@ -521,10 +522,11 @@ getJobResults conn Job {jobId, location} Fetch {pageToken} = runExceptT $ do
       Aeson.eitherDecode (getResponseBody resp)
         `onLeft` (throwError . GetJobDecodeProblem)
     _ ->
-      throwError $
-        RESTRequestNonOK
+      throwError
+        $ RESTRequestNonOK
           (getResponseStatus resp)
-          $ parseAsJsonOrText $ getResponseBody resp
+        $ parseAsJsonOrText
+        $ getResponseBody resp
 
 --------------------------------------------------------------------------------
 -- Creating jobs
@@ -565,7 +567,8 @@ jsonRequestHeader =
 createQueryJob :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection -> BigQuery -> m Job
 createQueryJob conn BigQuery {..} = do
   let url =
-        "POST " <> bigQueryProjectUrl (_bqProjectId conn)
+        "POST "
+          <> bigQueryProjectUrl (_bqProjectId conn)
           <> "/jobs?alt=json&prettyPrint=false"
 
       req =
@@ -605,10 +608,11 @@ createQueryJob conn BigQuery {..} = do
       Aeson.eitherDecode (getResponseBody resp)
         `onLeft` (throwError . CreateQueryJobDecodeProblem)
     _ ->
-      throwError $
-        RESTRequestNonOK
+      throwError
+        $ RESTRequestNonOK
           (getResponseStatus resp)
-          $ parseAsJsonOrText $ getResponseBody resp
+        $ parseAsJsonOrText
+        $ getResponseBody resp
 
 data Dataset = Dataset
   { datasetId :: Text
@@ -628,7 +632,8 @@ instance Aeson.FromJSON Dataset where
 deleteDataset :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection -> Text -> m ()
 deleteDataset conn datasetId = do
   let url =
-        "DELETE " <> bigQueryProjectUrl (_bqProjectId conn)
+        "DELETE "
+          <> bigQueryProjectUrl (_bqProjectId conn)
           <> "/datasets/"
           <> T.unpack datasetId
           <> "/?force=true&deleteContents=true"
@@ -639,10 +644,11 @@ deleteDataset conn datasetId = do
   case getResponseStatusCode resp of
     204 -> pure ()
     _ ->
-      throwError $
-        RESTRequestNonOK
+      throwError
+        $ RESTRequestNonOK
           (getResponseStatus resp)
-          $ parseAsJsonOrText $ getResponseBody resp
+        $ parseAsJsonOrText
+        $ getResponseBody resp
 
 -- | Run request and map errors into ExecuteProblem
 runBigQueryExcept ::
@@ -660,7 +666,8 @@ insertDataset :: (MonadError ExecuteProblem m, MonadIO m) => BigQueryConnection 
 insertDataset conn datasetId =
   do
     let url =
-          "POST " <> bigQueryProjectUrl (_bqProjectId conn)
+          "POST "
+            <> bigQueryProjectUrl (_bqProjectId conn)
             <> "/datasets?alt=json&prettyPrint=false"
 
         req =
@@ -686,10 +693,11 @@ insertDataset conn datasetId =
         Aeson.eitherDecode (getResponseBody resp)
           `onLeft` (throwError . InsertDatasetDecodeProblem)
       _ ->
-        throwError $
-          RESTRequestNonOK
+        throwError
+          $ RESTRequestNonOK
             (getResponseStatus resp)
-            $ parseAsJsonOrText $ getResponseBody resp
+          $ parseAsJsonOrText
+          $ getResponseBody resp
 
 -- | Parse given @'ByteString' as JSON value. If not a valid JSON, encode to plain text.
 parseAsJsonOrText :: BL.ByteString -> Aeson.Value
@@ -885,7 +893,7 @@ instance Aeson.FromJSON BigQueryField where
               if
                   | flag == "NUMERIC" || flag == "DECIMAL" -> pure FieldDECIMAL
                   | flag == "BIGNUMERIC" || flag == "BIGDECIMAL" ->
-                    pure FieldBIGDECIMAL
+                      pure FieldBIGDECIMAL
                   | flag == "INT64" || flag == "INTEGER" -> pure FieldINTEGER
                   | flag == "FLOAT64" || flag == "FLOAT" -> pure FieldFLOAT
                   | flag == "BOOLEAN" || flag == "BOOL" -> pure FieldBOOL
@@ -897,9 +905,9 @@ instance Aeson.FromJSON BigQueryField where
                   | flag == "GEOGRAPHY" -> pure FieldGEOGRAPHY
                   | flag == "BYTES" -> pure FieldBYTES
                   | flag == "RECORD" || flag == "STRUCT" ->
-                    do
-                      fields <- o .: "fields"
-                      pure (FieldSTRUCT fields)
+                      do
+                        fields <- o .: "fields"
+                        pure (FieldSTRUCT fields)
                   | otherwise -> fail ("Unsupported field type: " ++ show flag)
           mode <- o .:? "mode" .!= Nullable
           pure BigQueryField {..}

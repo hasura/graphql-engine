@@ -172,9 +172,9 @@ instance HasCodec TableName where
         AC.object "MySQLTableName" $
           TableName
             <$> requiredField' "name"
-            AC..= name
+              AC..= name
             <*> optionalFieldOrIncludedNull' "schema"
-            AC..= schema
+              AC..= schema
       strCodec = flip TableName Nothing <$> codec
 
 instance FromJSON TableName where
@@ -183,9 +183,9 @@ instance FromJSON TableName where
   parseJSON (Object o) =
     TableName
       <$> o
-      .: "name"
+        .: "name"
       <*> o
-      .:? "schema"
+        .:? "schema"
   parseJSON _ =
     fail "expecting a string/object for TableName"
 
@@ -226,9 +226,9 @@ instance HasCodec ConnPoolSettings where
     AC.object "MySQLConnPoolSettings" $
       ConnPoolSettings
         <$> optionalFieldWithDefault' "idle_timeout" (_cscIdleTimeout defaultConnPoolSettings)
-        AC..= _cscIdleTimeout
+          AC..= _cscIdleTimeout
         <*> optionalFieldWithDefault' "max_connections" (_cscMaxConnections defaultConnPoolSettings)
-        AC..= _cscMaxConnections
+          AC..= _cscMaxConnections
 
 instance J.FromJSON ConnPoolSettings where
   parseJSON = J.withObject "MySQL pool settings" $ \o ->
@@ -250,17 +250,17 @@ instance HasCodec ConnSourceConfig where
     AC.object "MySQLConnSourceConfig" $
       ConnSourceConfig
         <$> requiredField "host" hostDoc
-        AC..= _cscHost
+          AC..= _cscHost
         <*> requiredField' "port"
-        AC..= _cscPort
+          AC..= _cscPort
         <*> requiredField' "user"
-        AC..= _cscUser
+          AC..= _cscUser
         <*> requiredField' "password"
-        AC..= _cscPassword
+          AC..= _cscPassword
         <*> requiredField' "database"
-        AC..= _cscDatabase
+          AC..= _cscDatabase
         <*> requiredField' "pool_settings"
-        AC..= _cscPoolSettings
+          AC..= _cscPoolSettings
     where
       hostDoc = "Works with `127.0.0.1` but not with `localhost`: https://mariadb.com/kb/en/troubleshooting-connection-issues/#localhost-and"
 

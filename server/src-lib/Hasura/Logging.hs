@@ -298,7 +298,9 @@ mkLogger (LoggerCtx loggerSet serverLogLevel timeGetter enabledLogTypes) = Logge
   localTime <- liftIO timeGetter
   let (logLevel, logTy, logDet) = toEngineLog l
   when (logLevel >= serverLogLevel && isLogTypeEnabled enabledLogTypes logTy) $
-    liftIO $ FL.pushLogStrLn loggerSet $ FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet)
+    liftIO $
+      FL.pushLogStrLn loggerSet $
+        FL.toLogStr (J.encode $ EngineLog localTime logLevel logTy logDet)
 
 nullLogger :: Logger Hasura
 nullLogger = Logger \_ -> pure ()

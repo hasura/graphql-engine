@@ -346,7 +346,8 @@ askTableInfo ::
 askTableInfo sourceName tableName = do
   rawSchemaCache <- askSchemaCache
   onNothing (unsafeTableInfo sourceName tableName $ scSources rawSchemaCache) $
-    throw400 NotExists $ "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
+    throw400 NotExists $
+      "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
 
 -- | Similar to 'askTableInfo', but drills further down to extract the
 -- underlying core info.
@@ -386,7 +387,8 @@ askTableMetadata ::
   m (TableMetadata b)
 askTableMetadata sourceName tableName = do
   onNothingM (getMetadata <&> preview focusTableMetadata) $
-    throw400 NotExists $ "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
+    throw400 NotExists $
+      "table " <> tableName <<> " does not exist in source: " <> sourceNameToText sourceName
   where
     focusTableMetadata :: Traversal' Metadata (TableMetadata b)
     focusTableMetadata =
@@ -435,7 +437,8 @@ askFunctionInfo ::
 askFunctionInfo sourceName functionName = do
   rawSchemaCache <- askSchemaCache
   onNothing (unsafeFunctionInfo sourceName functionName $ scSources rawSchemaCache) $
-    throw400 NotExists $ "function " <> functionName <<> " does not exist in source: " <> sourceNameToText sourceName
+    throw400 NotExists $
+      "function " <> functionName <<> " does not exist in source: " <> sourceNameToText sourceName
 
 -------------------------------------------------------------------------------
 
@@ -749,7 +752,8 @@ getColExpDeps bexp = do
             CFBEScalar opExps ->
               let computedFieldDep =
                     mkComputedFieldDep' $
-                      bool DRSessionVariable DROnType $ any hasStaticExp opExps
+                      bool DRSessionVariable DROnType $
+                        any hasStaticExp opExps
                in (computedFieldDep :) <$> getOpExpDeps opExps
             CFBETable cfTable cfTableBoolExp ->
               (mkComputedFieldDep' DROnType :) <$> local (\e -> e {currTable = cfTable}) (getBoolExpDeps' cfTableBoolExp)
@@ -778,4 +782,5 @@ askFieldInfoMapSource ::
 askFieldInfoMapSource tableName = do
   fmap _tciFieldInfoMap $
     onNothingM (lookupTableCoreInfo tableName) $
-      throw400 NotExists $ "table " <> tableName <<> " does not exist"
+      throw400 NotExists $
+        "table " <> tableName <<> " does not exist"

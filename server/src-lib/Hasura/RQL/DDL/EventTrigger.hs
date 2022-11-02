@@ -642,4 +642,5 @@ getAllETWithCleanupConfigInTableMetadata tMetadata =
         (triggerName,)
           <$> etcCleanupConfig triggerConf
     )
-    $ OMap.toList $ _tmEventTriggers tMetadata
+    $ OMap.toList
+    $ _tmEventTriggers tMetadata

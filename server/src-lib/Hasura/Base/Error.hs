@@ -247,14 +247,14 @@ encodeQErr _ = noInternalQErrEnc
 instance PG.FromPGConnErr QErr where
   fromPGConnErr c
     | "too many clients" `T.isInfixOf` (PG.getConnErr c) =
-      let e = err500 PostgresMaxConnectionsError "max connections reached on postgres"
-       in e {qeInternal = Just $ ExtraInternal $ toJSON c}
+        let e = err500 PostgresMaxConnectionsError "max connections reached on postgres"
+         in e {qeInternal = Just $ ExtraInternal $ toJSON c}
     | "root certificate file" `T.isInfixOf` (PG.getConnErr c) =
-      err500 PostgresError "root certificate error"
+        err500 PostgresError "root certificate error"
     | "certificate file" `T.isInfixOf` (PG.getConnErr c) =
-      err500 PostgresError "certificate error"
+        err500 PostgresError "certificate error"
     | "private key file" `T.isInfixOf` (PG.getConnErr c) =
-      err500 PostgresError "private-key error"
+        err500 PostgresError "private-key error"
   fromPGConnErr c =
     (err500 PostgresError "connection error")
       { qeInternal = Just $ ExtraInternal $ toJSON c

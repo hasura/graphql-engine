@@ -101,10 +101,10 @@ Likewise, we distinguish binders of names from uses of names: The types
 previously bound names.
 
 We want to ensure these are handled in an hygenic way:
-* 'TableAlias'es and 'ColumnAlias'es can be constructed freely, but
-* 'TableIdentifier' can only be constructed from a 'TableAlias' via
+\* 'TableAlias'es and 'ColumnAlias'es can be constructed freely, but
+\* 'TableIdentifier' can only be constructed from a 'TableAlias' via
   'tableAliasToIdentifier', and
-* 'ColumnIdentifier's can only be constructed from a 'ColumnAlias', and
+\* 'ColumnIdentifier's can only be constructed from a 'ColumnAlias', and
   potentially be qualified with a 'TableIdentifier'.
 
 -}
@@ -353,8 +353,10 @@ getIdentifierQualifiedObject obj@(QualifiedObject sn o) = do
   gqlIdents
     `onNothing` throw400
       ValidationFailed
-      ( "cannot include " <> obj <<> " in the GraphQL schema because " <> C.toSnakeT tLst
-          <<> " is not a valid GraphQL identifier"
+      ( "cannot include "
+          <> obj <<> " in the GraphQL schema because "
+          <> C.toSnakeT tLst
+            <<> " is not a valid GraphQL identifier"
       )
 
 namingConventionSupport :: SupportedNamingCase
@@ -365,8 +367,10 @@ qualifiedObjectToName objectName = do
   let textName = snakeCaseQualifiedObject objectName
   onNothing (G.mkName textName) $
     throw400 ValidationFailed $
-      "cannot include " <> objectName <<> " in the GraphQL schema because " <> textName
-        <<> " is not a valid GraphQL identifier"
+      "cannot include "
+        <> objectName <<> " in the GraphQL schema because "
+        <> textName
+          <<> " is not a valid GraphQL identifier"
 
 -- | Represents a database table qualified with the schema name.
 type QualifiedTable = QualifiedObject TableName
@@ -727,17 +731,20 @@ mkScalarTypeName (PGCompositeScalar compositeScalarType) =
   -- both these types (scalar and object type with same name).
   -- To avoid this, we suffix the table name with `_scalar`
   -- and create a new scalar type
-  (<> Name.__scalar) <$> G.mkName compositeScalarType
+  (<> Name.__scalar)
+    <$> G.mkName compositeScalarType
     `onNothing` throw400
       ValidationFailed
-      ( "cannot use SQL type " <> compositeScalarType <<> " in the GraphQL schema because its name is not a "
+      ( "cannot use SQL type "
+          <> compositeScalarType <<> " in the GraphQL schema because its name is not a "
           <> "valid GraphQL identifier"
       )
 mkScalarTypeName scalarType =
   G.mkName (pgScalarTypeToText scalarType)
     `onNothing` throw400
       ValidationFailed
-      ( "cannot use SQL type " <> scalarType <<> " in the GraphQL schema because its name is not a "
+      ( "cannot use SQL type "
+          <> scalarType <<> " in the GraphQL schema because its name is not a "
           <> "valid GraphQL identifier"
       )
 

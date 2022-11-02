@@ -120,7 +120,8 @@ conflictObjectParser sourceInfo tableInfo maybeUpdatePerms constraints = do
               _ ->
                 IR.OCCUpdate $
                   IR.OnConflictClauseData constraintTarget updateColumns presetColumns $
-                    IR.BoolAnd $ updateFilter : maybeToList whereExp
+                    IR.BoolAnd $
+                      updateFilter : maybeToList whereExp
   where
     tableName = tableInfoName tableInfo
 

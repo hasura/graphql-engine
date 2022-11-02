@@ -147,19 +147,19 @@ insertTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 insertTable testEnv Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
-    let schemaName = Schema.unSchemaName $ Schema.getSchemaName testEnv
-    run_ $
-      T.unpack $
-        T.unwords
-          [ "INSERT INTO",
-            T.pack Constants.citusDb <> "." <> wrapIdentifier schemaName <> "." <> wrapIdentifier tableName,
-            "(",
-            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-            ")",
-            "VALUES",
-            commaSeparated $ mkRow <$> tableData,
-            ";"
-          ]
+      let schemaName = Schema.unSchemaName $ Schema.getSchemaName testEnv
+      run_ $
+        T.unpack $
+          T.unwords
+            [ "INSERT INTO",
+              T.pack Constants.citusDb <> "." <> wrapIdentifier schemaName <> "." <> wrapIdentifier tableName,
+              "(",
+              commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+              ")",
+              "VALUES",
+              commaSeparated $ mkRow <$> tableData,
+              ";"
+            ]
 
 -- | Citus identifiers which may be case-sensitive needs to be wrapped in @""@.
 wrapIdentifier :: Text -> Text

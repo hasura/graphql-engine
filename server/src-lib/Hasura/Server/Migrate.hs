@@ -78,12 +78,15 @@ instance ToEngineLog MigrationResult Hasura where
           slKind = "catalog_migrate",
           slInfo = A.toJSON $ case result of
             MRNothingToDo ->
-              "Already at the latest catalog version (" <> latestCatalogVersionString
+              "Already at the latest catalog version ("
+                <> latestCatalogVersionString
                 <> "); nothing to do."
             MRInitialized ->
               "Successfully initialized the catalog (at version " <> latestCatalogVersionString <> ")."
             MRMigrated oldVersion ->
-              "Successfully migrated from catalog version " <> oldVersion <> " to version "
+              "Successfully migrated from catalog version "
+                <> oldVersion
+                <> " to version "
                 <> latestCatalogVersionString
                 <> "."
             MRMaintanenceMode ->
@@ -116,21 +119,21 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
   migrationResult <-
     if
         | maintenanceMode == (MaintenanceModeEnabled ()) -> do
-          if
-              | not catalogSchemaExists ->
-                throw500 "unexpected: hdb_catalog schema not found in maintenance mode"
-              | not versionTableExists ->
-                throw500 "unexpected: hdb_catalog.hdb_version table not found in maintenance mode"
-              | not metadataTableExists ->
-                throw500 $
-                  "the \"hdb_catalog.hdb_metadata\" table is expected to exist and contain"
-                    <> " the metadata of the graphql-engine"
-              | otherwise -> pure MRMaintanenceMode
+            if
+                | not catalogSchemaExists ->
+                    throw500 "unexpected: hdb_catalog schema not found in maintenance mode"
+                | not versionTableExists ->
+                    throw500 "unexpected: hdb_catalog.hdb_version table not found in maintenance mode"
+                | not metadataTableExists ->
+                    throw500 $
+                      "the \"hdb_catalog.hdb_metadata\" table is expected to exist and contain"
+                        <> " the metadata of the graphql-engine"
+                | otherwise -> pure MRMaintanenceMode
         | otherwise -> case catalogSchemaExists of
-          False -> initialize True
-          True -> case versionTableExists of
-            False -> initialize False
-            True -> migrateFrom =<< liftTx getCatalogVersion
+            False -> initialize True
+            True -> case versionTableExists of
+              False -> initialize False
+              True -> migrateFrom =<< liftTx getCatalogVersion
   metadata <- liftTx fetchMetadataFromCatalog
   pure (migrationResult, metadata)
   where
@@ -139,7 +142,8 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
     initialize createSchema = do
       liftTx $
         PG.catchE defaultTxErrorHandler $
-          when createSchema $ PG.unitQ "CREATE SCHEMA hdb_catalog" () False
+          when createSchema $
+            PG.unitQ "CREATE SCHEMA hdb_catalog" () False
       enablePgcryptoExtension extensionsSchema
       multiQ $(makeRelativeToProject "src-rsr/initialise.sql" >>= PG.sqlFromFile)
       updateCatalogVersion
@@ -171,21 +175,21 @@ migrateCatalog maybeDefaultSourceConfig extensionsSchema maintenanceMode migrati
     migrateFrom previousVersion
       | previousVersion == latestCatalogVersion = pure MRNothingToDo
       | otherwise = do
-        let upMigrations = migrations maybeDefaultSourceConfig False maintenanceMode
-        case neededMigrations previousVersion upMigrations of
-          [] ->
-            throw400 NotSupported $
-              "Cannot use database previously used with a newer version of graphql-engine (expected"
-                <> " a catalog version <="
-                <> latestCatalogVersionString
-                <> ", but the current version"
-                <> " is "
-                <> tshow previousVersion
-                <> ")."
-          migrationsToBeApplied -> do
-            traverse_ (mpMigrate . snd) migrationsToBeApplied
-            updateCatalogVersion
-            pure . MRMigrated $ tshow previousVersion
+          let upMigrations = migrations maybeDefaultSourceConfig False maintenanceMode
+          case neededMigrations previousVersion upMigrations of
+            [] ->
+              throw400 NotSupported $
+                "Cannot use database previously used with a newer version of graphql-engine (expected"
+                  <> " a catalog version <="
+                  <> latestCatalogVersionString
+                  <> ", but the current version"
+                  <> " is "
+                  <> tshow previousVersion
+                  <> ")."
+            migrationsToBeApplied -> do
+              traverse_ (mpMigrate . snd) migrationsToBeApplied
+              updateCatalogVersion
+              pure . MRMigrated $ tshow previousVersion
       where
         neededMigrations prevVersion upMigrations =
           dropWhile ((< prevVersion) . fst) upMigrations
@@ -211,20 +215,20 @@ downgradeCatalog defaultSourceConfig opts time = do
     downgradeFrom previousVersion targetVersion
       | previousVersion == targetVersion = pure MRNothingToDo
       | otherwise =
-        case neededDownMigrations targetVersion of
-          Left reason ->
-            throw400 NotSupported $
-              "This downgrade path (from "
-                <> tshow previousVersion
-                <> " to "
-                <> dgoTargetVersion opts
-                <> ") is not supported, because "
-                <> reason
-          Right path -> do
-            sequence_ path
-            unless (dgoDryRun opts) do
-              setCatalogVersion (dgoTargetVersion opts) time
-            pure (MRMigrated (dgoTargetVersion opts))
+          case neededDownMigrations targetVersion of
+            Left reason ->
+              throw400 NotSupported $
+                "This downgrade path (from "
+                  <> tshow previousVersion
+                  <> " to "
+                  <> dgoTargetVersion opts
+                  <> ") is not supported, because "
+                  <> reason
+            Right path -> do
+              sequence_ path
+              unless (dgoDryRun opts) do
+                setCatalogVersion (dgoTargetVersion opts) time
+              pure (MRMigrated (dgoTargetVersion opts))
       where
         neededDownMigrations newVersion =
           downgrade
@@ -297,18 +301,18 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
          -- source catalog changes and we'd like to keep source catalog migrations in a different
          -- path than metadata catalog migrations.
          $
-           [|(MetadataCatalogVersion08, MigrationPair $(migrationFromFile "08" "1") Nothing)|] :
-           migrationsFromFile [MetadataCatalogVersion 2 .. MetadataCatalogVersion 3]
-             ++ [|(MetadataCatalogVersion 3, MigrationPair from3To4 Nothing)|] :
-           (migrationsFromFile [MetadataCatalogVersion 5 .. MetadataCatalogVersion 40] ++ migrationsFromFile [MetadataCatalogVersion 42])
-             ++ [|(MetadataCatalogVersion 42, MigrationPair from42To43 (Just from43To42))|] :
-           migrationsFromFile [MetadataCatalogVersion 44 .. latestCatalogVersion]
+           [|(MetadataCatalogVersion08, MigrationPair $(migrationFromFile "08" "1") Nothing)|]
+             : migrationsFromFile [MetadataCatalogVersion 2 .. MetadataCatalogVersion 3]
+             ++ [|(MetadataCatalogVersion 3, MigrationPair from3To4 Nothing)|]
+             : (migrationsFromFile [MetadataCatalogVersion 5 .. MetadataCatalogVersion 40] ++ migrationsFromFile [MetadataCatalogVersion 42])
+             ++ [|(MetadataCatalogVersion 42, MigrationPair from42To43 (Just from43To42))|]
+             : migrationsFromFile [MetadataCatalogVersion 44 .. latestCatalogVersion]
    )
   where
     runTxOrPrint :: PG.Query -> m ()
     runTxOrPrint
       | dryRun =
-        liftIO . TIO.putStrLn . PG.getQueryText
+          liftIO . TIO.putStrLn . PG.getQueryText
       | otherwise = multiQ
 
     from42To43 = do

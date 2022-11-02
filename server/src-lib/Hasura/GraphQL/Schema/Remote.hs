@@ -598,13 +598,15 @@ remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition de
         <&> OMap.mapWithKey \alias ->
           handleTypename $
             const $
-              IR.FieldGraphQL $ IR.mkGraphQLField (Just alias) GName.___typename mempty mempty IR.SelectionSetNone
+              IR.FieldGraphQL $
+                IR.mkGraphQLField (Just alias) GName.___typename mempty mempty IR.SelectionSetNone
   where
     getInterface :: G.Name -> SchemaT r m (G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition)
     getInterface interfaceName =
       onNothing (lookupInterface schemaDoc interfaceName) $
         throw400 RemoteSchemaError $
-          "Could not find interface " <> squote interfaceName
+          "Could not find interface "
+            <> squote interfaceName
             <> " implemented by Object type "
             <> squote name
     validateImplementsFields :: G.InterfaceTypeDefinition [G.Name] RemoteSchemaInputValueDefinition -> SchemaT r m ()
@@ -615,14 +617,20 @@ remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition de
       case lookup (G._fldName interfaceField) (zip (fmap G._fldName subFields) subFields) of
         Nothing ->
           throw400 RemoteSchemaError $
-            "Interface field " <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
+            "Interface field "
+              <> squote interfaceName
+              <> "."
+              <> dquote (G._fldName interfaceField)
               <> " expected, but "
               <> squote name
               <> " does not provide it"
         Just f -> do
           unless (validateSubType (G._fldType f) (G._fldType interfaceField)) $
             throw400 RemoteSchemaError $
-              "The type of Object field " <> squote name <> "." <> dquote (G._fldName f)
+              "The type of Object field "
+                <> squote name
+                <> "."
+                <> dquote (G._fldName f)
                 <> " ("
                 <> G.showGT (G._fldType f)
                 <> ") is not the same type/sub type of Interface field "
@@ -650,7 +658,10 @@ remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition de
               case lookup (G._ivdName ifaceArgument) (zip (fmap G._ivdName objectFieldArgs) objectFieldArgs) of
                 Nothing ->
                   throw400 RemoteSchemaError $
-                    "Interface field argument " <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
+                    "Interface field argument "
+                      <> squote interfaceName
+                      <> "."
+                      <> dquote (G._fldName interfaceField)
                       <> "("
                       <> dquote (G._ivdName ifaceArgument)
                       <> ":) required, but Object field "
@@ -661,7 +672,10 @@ remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition de
                 Just a ->
                   unless (G._ivdType a == G._ivdType ifaceArgument) $
                     throw400 RemoteSchemaError $
-                      "Interface field argument " <> squote interfaceName <> "." <> dquote (G._fldName interfaceField)
+                      "Interface field argument "
+                        <> squote interfaceName
+                        <> "."
+                        <> dquote (G._fldName interfaceField)
                         <> "("
                         <> dquote (G._ivdName ifaceArgument)
                         <> ":) expects type "
@@ -681,7 +695,11 @@ remoteSchemaObject schemaDoc remoteRelationships defn@(G.ObjectTypeDefinition de
                 Nothing ->
                   unless (G.isNullable (G._ivdType objectFieldArg)) $
                     throw400 RemoteSchemaError $
-                      "Object field argument " <> squote name <> "." <> dquote (G._fldName f) <> "("
+                      "Object field argument "
+                        <> squote name
+                        <> "."
+                        <> dquote (G._fldName f)
+                        <> "("
                         <> dquote (G._ivdName objectFieldArg)
                         <> ":) is of required type "
                         <> G.showGT (G._ivdType objectFieldArg)
@@ -773,7 +791,8 @@ remoteSchemaInterface schemaDoc remoteRelationships defn@(G.InterfaceTypeDefinit
     -- implement superinterfaces.  In the future, we may need to support this
     -- here.
     when (null subFieldParsers) $
-      throw400 RemoteSchemaError $ "List of fields cannot be empty for interface " <> squote name
+      throw400 RemoteSchemaError $
+        "List of fields cannot be empty for interface " <> squote name
     -- TODO: another way to obtain 'possibleTypes' is to lookup all the object
     -- types in the schema document that claim to implement this interface.  We
     -- should have a check that expresses that that collection of objects is equal
@@ -790,12 +809,14 @@ remoteSchemaInterface schemaDoc remoteRelationships defn@(G.InterfaceTypeDefinit
         case lookupInterface schemaDoc objectName of
           Nothing ->
             throw400 RemoteSchemaError $
-              "Could not find type " <> squote objectName
+              "Could not find type "
+                <> squote objectName
                 <> ", which is defined as a member type of Interface "
                 <> squote name
           Just _ ->
             throw400 RemoteSchemaError $
-              "Interface type " <> squote name
+              "Interface type "
+                <> squote name
                 <> " can only include object types. It cannot include "
                 <> squote objectName
 
@@ -811,7 +832,8 @@ remoteSchemaUnion schemaDoc remoteRelationships defn@(G.UnionTypeDefinition desc
   P.memoizeOn 'remoteSchemaObject defn do
     objs <- traverse (getObjectParser schemaDoc remoteRelationships getObject) objectNames
     when (null objs) $
-      throw400 RemoteSchemaError $ "List of member types cannot be empty for union type " <> squote name
+      throw400 RemoteSchemaError $
+        "List of member types cannot be empty for union type " <> squote name
     typename <- mkTypename name
     pure $ P.selectionSetUnion typename description objs <&> IR.mkUnionSelectionSet
   where
@@ -821,12 +843,14 @@ remoteSchemaUnion schemaDoc remoteRelationships defn@(G.UnionTypeDefinition desc
         case lookupInterface schemaDoc objectName of
           Nothing ->
             throw400 RemoteSchemaError $
-              "Could not find type " <> squote objectName
+              "Could not find type "
+                <> squote objectName
                 <> ", which is defined as a member type of Union "
                 <> squote name
           Just _ ->
             throw400 RemoteSchemaError $
-              "Union type " <> squote name
+              "Union type "
+                <> squote name
                 <> " can only include object types. It cannot include "
                 <> squote objectName
 

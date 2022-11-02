@@ -310,7 +310,7 @@ purgeRelDep ::
   m (TableMetadata b -> TableMetadata b)
 purgeRelDep (SOSourceObj _ exists)
   | Just (SOITableObj _ (TOPerm rn pt)) <- AB.unpackAnyBackend @b exists =
-    pure $ dropPermissionInMetadata rn pt
+      pure $ dropPermissionInMetadata rn pt
 purgeRelDep d =
   throw500 $
     "unexpected dependency of relationship: "

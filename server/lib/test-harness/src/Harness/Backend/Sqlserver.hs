@@ -165,7 +165,10 @@ mkReference Schema.Reference {referenceLocalColumn, referenceTargetTable, refere
   where
     constraintName :: Text
     constraintName =
-      "FK_" <> referenceTargetTable <> "_" <> referenceTargetColumn
+      "FK_"
+        <> referenceTargetTable
+        <> "_"
+        <> referenceTargetColumn
         <> "_"
         <> referenceLocalColumn
 
@@ -174,18 +177,18 @@ insertTable :: HasCallStack => Schema.Table -> IO ()
 insertTable Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
-    run_ $
-      T.unpack $
-        T.unwords
-          [ "INSERT INTO",
-            T.pack Constants.sqlserverDb <> "." <> wrapIdentifier tableName,
-            "(",
-            commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
-            ")",
-            "VALUES",
-            commaSeparated $ mkRow <$> tableData,
-            ";"
-          ]
+      run_ $
+        T.unpack $
+          T.unwords
+            [ "INSERT INTO",
+              T.pack Constants.sqlserverDb <> "." <> wrapIdentifier tableName,
+              "(",
+              commaSeparated (wrapIdentifier . Schema.columnName <$> tableColumns),
+              ")",
+              "VALUES",
+              commaSeparated $ mkRow <$> tableData,
+              ";"
+            ]
 
 -- | MSSQL identifiers which may contain spaces or be case-sensitive needs to be wrapped in @[]@.
 --

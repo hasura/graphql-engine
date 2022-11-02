@@ -214,7 +214,8 @@ data CreateScheduledEvent = CreateScheduledEvent
 instance FromJSON CreateScheduledEvent where
   parseJSON =
     withObject "CreateScheduledEvent" $ \o ->
-      CreateScheduledEvent <$> o .: "webhook"
+      CreateScheduledEvent
+        <$> o .: "webhook"
         <*> o .: "schedule_at"
         <*> o .:? "payload"
         <*> o .:? "headers" .!= []
@@ -318,7 +319,9 @@ instance ToJSON ScheduledEventStatus where
 instance FromJSON ScheduledEventStatus where
   parseJSON = withText "String" $ \s ->
     onNothing (textToScheduledEventStatus s) $
-      fail $ T.unpack $ "unexpected status: " <> s
+      fail $
+        T.unpack $
+          "unexpected status: " <> s
 
 data OneOffScheduledEvent = OneOffScheduledEvent
   { _ooseId :: OneOffScheduledEventId,

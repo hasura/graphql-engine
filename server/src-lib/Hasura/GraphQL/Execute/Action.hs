@@ -194,19 +194,23 @@ validateResponse webhookResponse' outputType outputF =
         unless (isNullableType outputType) $ throwUnexpected "got null for the action webhook response"
       (J.Number _, (GraphQLType (G.TypeNamed _ name))) -> do
         unless (name == GName._Int || name == GName._Float) $
-          throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
+          throwUnexpected $
+            "got scalar String for the action webhook response, expecting " <> G.unName name
       (J.Bool _, (GraphQLType (G.TypeNamed _ name))) -> do
         unless (name == GName._Boolean) $
-          throwUnexpected $ "got scalar Boolean for the action webhook response, expecting " <> G.unName name
+          throwUnexpected $
+            "got scalar Boolean for the action webhook response, expecting " <> G.unName name
       (J.String _, (GraphQLType (G.TypeNamed _ name))) -> do
         unless (name == GName._String || name == GName._ID) $
-          throwUnexpected $ "got scalar String for the action webhook response, expecting " <> G.unName name
+          throwUnexpected $
+            "got scalar String for the action webhook response, expecting " <> G.unName name
       (J.Array _, (GraphQLType (G.TypeNamed _ name))) -> throwUnexpected $ "got array for the action webhook response, expecting " <> G.unName name
       (J.Array objs, (GraphQLType (G.TypeList _ outputType''))) -> do
         traverse_ (\o -> validateResponse o (GraphQLType outputType'') outputF) objs
       ((J.Object obj), (GraphQLType (G.TypeNamed _ name))) -> do
         when (isInBuiltScalar (G.unName name)) $
-          throwUnexpected $ "got object for the action webhook response, expecting " <> G.unName name
+          throwUnexpected $
+            "got object for the action webhook response, expecting " <> G.unName name
         validateResponseObject obj outputF
       (_, (GraphQLType (G.TypeList _ _))) ->
         throwUnexpected $ "expecting array for the action webhook response"
@@ -402,7 +406,10 @@ resolveAsyncActionQuery userInfo annAction =
           sessionVarValue =
             IR.UVParameter Nothing $
               ColumnValue (ColumnScalar PGJSONB) $
-                PGValJSONB $ PG.JSONB $ J.toJSON $ _uiSession userInfo
+                PGValJSONB $
+                  PG.JSONB $
+                    J.toJSON $
+                      _uiSession userInfo
           sessionVarsColumnEq = BoolField $ AVColumn sessionVarsColumnInfo [AEQ True sessionVarValue]
        in -- For non-admin roles, accessing an async action's response should be allowed only for the user
           -- who initiated the action through mutation. The action's response is accessible for a query/subscription
@@ -580,7 +587,8 @@ callWebhook
     case httpResponse of
       Left e ->
         throw500WithDetail "http exception when calling webhook" $
-          J.toJSON $ ActionInternalError (J.toJSON $ HttpException e) requestInfo Nothing
+          J.toJSON $
+            ActionInternalError (J.toJSON $ HttpException e) requestInfo Nothing
       Right responseWreq -> do
         -- TODO(SOLOMON): Remove 'wreq'
         let responseBody = responseWreq ^. Wreq.responseBody
@@ -589,7 +597,8 @@ callWebhook
             responseStatus = responseWreq ^. Wreq.responseStatus
             mkResponseInfo respBody =
               ActionResponseInfo (HTTP.statusCode responseStatus) respBody $
-                toHeadersConf $ responseWreq ^. Wreq.responseHeaders
+                toHeadersConf $
+                  responseWreq ^. Wreq.responseHeaders
 
         transformedResponseBody <- case metadataResponseTransform of
           Nothing -> pure responseBody
@@ -614,35 +623,38 @@ callWebhook
             let responseInfo = mkResponseInfo $ J.String $ bsToTxt $ BL.toStrict responseBody
             throw500WithDetail "not a valid json response from webhook" $
               J.toJSON $
-                ActionInternalError (J.toJSON $ "invalid json: " <> e) requestInfo $ Just responseInfo
+                ActionInternalError (J.toJSON $ "invalid json: " <> e) requestInfo $
+                  Just responseInfo
           Right responseValue -> do
             let responseInfo = mkResponseInfo responseValue
                 addInternalToErr e =
                   let actionInternalError =
                         J.toJSON $
-                          ActionInternalError (J.String "unexpected response") requestInfo $ Just responseInfo
+                          ActionInternalError (J.String "unexpected response") requestInfo $
+                            Just responseInfo
                    in e {qeInternal = Just $ ExtraInternal actionInternalError}
 
             if
                 | HTTP.statusIsSuccessful responseStatus -> do
-                  modifyQErr addInternalToErr $ do
-                    webhookResponse <- decodeValue responseValue
-                    validateResponse responseValue outputType outputFields
-                    pure (webhookResponse, mkSetCookieHeaders responseWreq)
+                    modifyQErr addInternalToErr $ do
+                      webhookResponse <- decodeValue responseValue
+                      validateResponse responseValue outputType outputFields
+                      pure (webhookResponse, mkSetCookieHeaders responseWreq)
                 | HTTP.statusIsClientError responseStatus -> do
-                  ActionWebhookErrorResponse message maybeCode maybeExtensions <-
-                    modifyQErr addInternalToErr $ decodeValue responseValue
-                  let code = maybe Unexpected ActionWebhookCode maybeCode
-                      qErr = QErr [] responseStatus message code (ExtraExtensions <$> maybeExtensions)
-                  throwError qErr
+                    ActionWebhookErrorResponse message maybeCode maybeExtensions <-
+                      modifyQErr addInternalToErr $ decodeValue responseValue
+                    let code = maybe Unexpected ActionWebhookCode maybeCode
+                        qErr = QErr [] responseStatus message code (ExtraExtensions <$> maybeExtensions)
+                    throwError qErr
                 | otherwise -> do
-                  let err =
-                        J.toJSON $
-                          "expecting 2xx or 4xx status code, but found "
-                            ++ show (HTTP.statusCode responseStatus)
-                  throw500WithDetail "internal error" $
-                    J.toJSON $
-                      ActionInternalError err requestInfo $ Just responseInfo
+                    let err =
+                          J.toJSON $
+                            "expecting 2xx or 4xx status code, but found "
+                              ++ show (HTTP.statusCode responseStatus)
+                    throw500WithDetail "internal error" $
+                      J.toJSON $
+                        ActionInternalError err requestInfo $
+                          Just responseInfo
 
 processOutputSelectionSet ::
   TF.ArgumentExp v ->

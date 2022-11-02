@@ -559,15 +559,15 @@ lhsRemoteServerMkLocalTestEnvironment _ = do
         flip foldMap orderByList \LHSHasuraTrackOrderBy {..} ->
           if
               | Just idOrder <- tob_id -> case idOrder of
-                Asc -> compare trackId1 trackId2
-                Desc -> compare trackId2 trackId1
+                  Asc -> compare trackId1 trackId2
+                  Desc -> compare trackId2 trackId1
               | Just titleOrder <- tob_title -> case titleOrder of
-                Asc -> compare trackTitle1 trackTitle2
-                Desc -> compare trackTitle2 trackTitle1
+                  Asc -> compare trackTitle1 trackTitle2
+                  Desc -> compare trackTitle2 trackTitle1
               | Just albumIdOrder <- tob_album_id ->
-                compareWithNullLast albumIdOrder trackAlbumId1 trackAlbumId2
+                  compareWithNullLast albumIdOrder trackAlbumId1 trackAlbumId2
               | otherwise ->
-                error "empty track_order object"
+                  error "empty track_order object"
     compareWithNullLast Desc x1 x2 = compareWithNullLast Asc x2 x1
     compareWithNullLast Asc Nothing Nothing = EQ
     compareWithNullLast Asc (Just _) Nothing = LT

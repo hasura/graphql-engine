@@ -103,7 +103,9 @@ import Language.GraphQL.Draft.Syntax qualified as G
 sourcesToOrdJSONList :: Sources -> AO.Array
 sourcesToOrdJSONList sources =
   Vector.fromList $
-    map sourceMetaToOrdJSON $ sortOn getSourceName $ OM.elems sources
+    map sourceMetaToOrdJSON $
+      sortOn getSourceName $
+        OM.elems sources
   where
     sourceMetaToOrdJSON :: BackendSourceMetadata -> AO.Value
     sourceMetaToOrdJSON (BackendSourceMetadata exists) =
@@ -472,12 +474,12 @@ customTypesToOrdJSON :: CustomTypes -> Maybe AO.Object
 customTypesToOrdJSON customTypes@(CustomTypes inpObjs objs scalars enums)
   | customTypes == emptyCustomTypes = Nothing
   | otherwise =
-    Just . AO.fromList . catMaybes $
-      [ listToMaybeOrdPair "input_objects" inputObjectToOrdJSON inpObjs,
-        listToMaybeOrdPair "objects" objectTypeToOrdJSON objs,
-        listToMaybeOrdPair "scalars" scalarTypeToOrdJSON scalars,
-        listToMaybeOrdPair "enums" enumTypeToOrdJSON enums
-      ]
+      Just . AO.fromList . catMaybes $
+        [ listToMaybeOrdPair "input_objects" inputObjectToOrdJSON inpObjs,
+          listToMaybeOrdPair "objects" objectTypeToOrdJSON objs,
+          listToMaybeOrdPair "scalars" scalarTypeToOrdJSON scalars,
+          listToMaybeOrdPair "enums" enumTypeToOrdJSON enums
+        ]
   where
     inputObjectToOrdJSON :: InputObjectTypeDefinition -> AO.Value
     inputObjectToOrdJSON (InputObjectTypeDefinition tyName descM fields) =

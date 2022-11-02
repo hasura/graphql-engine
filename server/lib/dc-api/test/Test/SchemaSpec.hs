@@ -38,11 +38,12 @@ spec TestData {..} api sourceName config API.Capabilities {..} = describe "schem
     -- We remove some properties here so that we don't compare them since they vary between agent implementations
     let extractJsonForComparison table =
           let columns = fmap toJSON . sortOn API._ciName $ API._tiColumns table
-           in columns & traverse %~ \column ->
-                column
-                  & _Object . at "type" .~ Nothing -- Types can vary between agents since underlying datatypes can change
-                  & _Object . at "description" .~ Nothing -- Descriptions are not supported by all agents
-                  -- If the agent only supports nullable columns, we make all columns nullable
+           in columns
+                & traverse %~ \column ->
+                  column
+                    & _Object . at "type" .~ Nothing -- Types can vary between agents since underlying datatypes can change
+                    & _Object . at "description" .~ Nothing -- Descriptions are not supported by all agents
+                    -- If the agent only supports nullable columns, we make all columns nullable
     let setExpectedColumnNullability columns =
           if API._dscColumnNullability _cDataSchema == API.OnlyNullableColumns
             then columns & traverse %~ (_Object . at "nullable" ?~ Bool True)

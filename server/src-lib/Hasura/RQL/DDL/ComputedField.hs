@@ -122,7 +122,7 @@ runDropComputedField (DropComputedField source table computedField cascade) = do
       SOSourceObj _ exists
         | Just (SOITableObj _ (TOPerm roleName permType)) <-
             AB.unpackAnyBackend @b exists ->
-          pure $ dropPermissionInMetadata roleName permType
+            pure $ dropPermissionInMetadata roleName permType
       d ->
         throw500 $
           "unexpected dependency for computed field "

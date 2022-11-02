@@ -329,7 +329,8 @@ validateVariables sourceConfig sessionVariableValues prepState = do
         map
           ( \(n, v) -> Aliased (ValueExpression (RQLColumn.cvValue v)) (G.unName n)
           )
-          $ Map.toList $ namedArguments
+          $ Map.toList
+          $ namedArguments
 
       -- For positional args we need to be a bit careful not to capture names
       -- from expNamed and expSes (however unlikely)

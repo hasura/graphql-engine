@@ -145,7 +145,8 @@ execRemoteGQ env manager userInfo reqHdrs rsdef gqlReq@GQLReq {..} = do
       finalHeaders = addDefaultHeaders headers
   initReq <- onLeft (HTTP.mkRequestEither $ tshow url) (throwRemoteSchemaHttp webhookEnvRecord)
   let req =
-        initReq & set HTTP.method "POST"
+        initReq
+          & set HTTP.method "POST"
           & set HTTP.headers finalHeaders
           & set HTTP.body (Just $ J.encode gqlReqUnparsed)
           & set HTTP.timeout (HTTP.responseTimeoutMicro (timeout * 1000000))
@@ -194,15 +195,15 @@ validateSchemaCustomizationsConsistent remoteSchemaCustomizer (RemoteSchemaIntro
               throwRemoteSchema $
                 "Remote schema customization inconsistency: field name mapping for field "
                   <> _fldName
-                  <<> " of interface "
+                    <<> " of interface "
                   <> _itdName
-                  <<> " is inconsistent with mapping for type "
+                    <<> " is inconsistent with mapping for type "
                   <> typeName
-                  <<> ". Interface field name maps to "
+                    <<> ". Interface field name maps to "
                   <> interfaceCustomizedFieldName
-                  <<> ". Type field name maps to "
+                    <<> ". Type field name maps to "
                   <> typeCustomizedFieldName
-                  <<> "."
+                    <<> "."
       _ -> pure ()
 
 validateSchemaCustomizationsDistinct ::
@@ -232,15 +233,17 @@ validateSchemaCustomizationsDistinct remoteSchemaCustomizer (RemoteSchemaIntrosp
         let dups = duplicates $ customizeFieldName _itdName . G._fldName <$> _itdFieldsDefinition
         unless (Set.null dups) $
           throwRemoteSchema $
-            "Field name mappings for interface type " <> _itdName
-              <<> " are not distinct; the following fields appear more than once: "
+            "Field name mappings for interface type "
+              <> _itdName
+                <<> " are not distinct; the following fields appear more than once: "
               <> dquoteList dups
       G.TypeDefinitionObject G.ObjectTypeDefinition {..} -> do
         let dups = duplicates $ customizeFieldName _otdName . G._fldName <$> _otdFieldsDefinition
         unless (Set.null dups) $
           throwRemoteSchema $
-            "Field name mappings for object type " <> _otdName
-              <<> " are not distinct; the following fields appear more than once: "
+            "Field name mappings for object type "
+              <> _otdName
+                <<> " are not distinct; the following fields appear more than once: "
               <> dquoteList dups
       _ -> pure ()
 

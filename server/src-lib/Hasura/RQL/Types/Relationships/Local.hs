@@ -290,10 +290,10 @@ instance Backend b => HasCodec (ArrRelUsingFKeyOn b) where
 instance (Backend b) => ToJSON (ArrRelUsingFKeyOn b) where
   toJSON ArrRelUsingFKeyOn {arufTable = _arufTable, arufColumns = _arufColumns} =
     object $
-      ("table" .= _arufTable) :
-      case _arufColumns of
-        col :| [] -> ["column" .= col]
-        cols -> ["columns" .= cols]
+      ("table" .= _arufTable)
+        : case _arufColumns of
+          col :| [] -> ["column" .= col]
+          cols -> ["columns" .= cols]
 
 instance (Backend b) => FromJSON (ArrRelUsingFKeyOn b) where
   parseJSON = \case

@@ -89,7 +89,8 @@ generateSQLSelect joinCondition selectSource selectNode =
     leftOuterJoin current new =
       S.FIJoin $
         S.JoinExpr current S.LeftOuter new $
-          S.JoinOn $ S.BELit True
+          S.JoinOn $
+            S.BELit True
 
     -- this is the from eexp for the final select
     joinedFrom :: S.FromItem
@@ -153,7 +154,8 @@ generateSQLSelectFromArrayNode selectSource (MultiRowSelectNode topExtractors se
           S.FromExp
             [ S.mkSelFromItem
                 (generateSQLSelect joinCondition selectSource selectNode)
-                $ S.toTableAlias $ _ssPrefix selectSource
+                $ S.toTableAlias
+                $ _ssPrefix selectSource
             ]
     }
 
@@ -210,7 +212,8 @@ connectionToSelectWith rootSelectAlias arrayConnectionSource arraySelectNode =
           baseSelectFrom =
             S.mkSelFromItem
               (generateSQLSelect joinCond selectSource selectNode)
-              $ S.toTableAlias $ _ssPrefix selectSource
+              $ S.toTableAlias
+              $ _ssPrefix selectSource
           select =
             S.mkSelect
               { S.selExtr =

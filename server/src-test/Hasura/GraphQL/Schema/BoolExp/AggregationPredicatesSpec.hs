@@ -230,8 +230,8 @@ spec = do
     describe "When SchemaOptions dictate exclusion of aggregation predicates" do
       it "Yields no parsers" do
         let maybeParser =
-              runSchemaTest $
-                local
+              runSchemaTest
+                $ local
                   ( modifier
                       ( \so ->
                           so
@@ -239,16 +239,16 @@ spec = do
                             }
                       )
                   )
-                  $ defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
-                    [ FunctionSignature
-                        { fnName = "count",
-                          fnGQLName = [G.name|count|],
-                          fnArguments = ArgumentsStar,
-                          fnReturnType = PGInteger
-                        }
-                    ]
-                    sourceInfo
-                    albumTableInfo
+                $ defaultAggregationPredicatesParser @('Postgres 'Vanilla) @_ @_ @ParserTest
+                  [ FunctionSignature
+                      { fnName = "count",
+                        fnGQLName = [G.name|count|],
+                        fnArguments = ArgumentsStar,
+                        fnReturnType = PGInteger
+                      }
+                  ]
+                  sourceInfo
+                  albumTableInfo
         (Unshowable maybeParser) `shouldSatisfy` (isNothing . unUnshowable)
   where
     albumTableInfo :: TableInfo ('Postgres 'Vanilla)

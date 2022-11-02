@@ -186,7 +186,8 @@ translateBoolExp = \case
           let functionIdentifier = S.tableAliasToIdentifier functionAlias
               functionExp =
                 mkComputedFieldFunctionExp currTableReference function sessionArgPresence $
-                  Just $ functionAlias
+                  Just $
+                    functionAlias
           S.mkExists (S.FIFunc functionExp) <$> withCurrentTable (S.QualifiedIdentifier functionIdentifier Nothing) (translateBoolExp be)
     AVAggregationPredicates aggPreds -> translateAVAggregationPredicates aggPreds
 
@@ -201,7 +202,9 @@ freshIdentifier obj = do
   put $ curVarNum + 1
   let newIdentifier =
         Identifier $
-          "_be_" <> tshow curVarNum <> "_"
+          "_be_"
+            <> tshow curVarNum
+            <> "_"
             <> snakeCaseQualifiedObject obj
   return newIdentifier
 

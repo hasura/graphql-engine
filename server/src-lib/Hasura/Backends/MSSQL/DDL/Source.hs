@@ -143,13 +143,13 @@ prepareCatalog sourceConfig = mssqlRunSerializableTx (_mscExecCtx sourceConfig) 
   if
       -- Fresh database
       | not hdbCatalogExist -> liftMSSQLTx do
-        unitQueryE HGE.defaultMSSQLTxErrorHandler "CREATE SCHEMA hdb_catalog"
-        initSourceCatalog
-        return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
+          unitQueryE HGE.defaultMSSQLTxErrorHandler "CREATE SCHEMA hdb_catalog"
+          initSourceCatalog
+          return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
       -- Only 'hdb_catalog' schema defined
       | not (sourceVersionTableExist || eventLogTableExist) -> do
-        liftMSSQLTx initSourceCatalog
-        return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
+          liftMSSQLTx initSourceCatalog
+          return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
       | otherwise -> migrateSourceCatalog
   where
     initSourceCatalog = do
@@ -169,15 +169,15 @@ migrateSourceCatalogFrom :: MonadMSSQLTx m => SourceCatalogVersion -> m (Recreat
 migrateSourceCatalogFrom prevVersion
   | prevVersion == latestSourceCatalogVersion = pure (RETDoNothing, SCMSNothingToDo $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
   | [] <- neededMigrations =
-    throw400 NotSupported $
-      "Expected source catalog version <= "
-        <> tshow latestSourceCatalogVersion
-        <> ", but the current version is "
-        <> tshow prevVersion
+      throw400 NotSupported $
+        "Expected source catalog version <= "
+          <> tshow latestSourceCatalogVersion
+          <> ", but the current version is "
+          <> tshow prevVersion
   | otherwise = do
-    liftMSSQLTx $ traverse_ snd neededMigrations
-    setSourceCatalogVersion latestSourceCatalogVersion
-    pure (RETRecreate, SCMSMigratedTo (Version.unSourceCatalogVersion prevVersion) (Version.unSourceCatalogVersion latestSourceCatalogVersion))
+      liftMSSQLTx $ traverse_ snd neededMigrations
+      setSourceCatalogVersion latestSourceCatalogVersion
+      pure (RETRecreate, SCMSMigratedTo (Version.unSourceCatalogVersion prevVersion) (Version.unSourceCatalogVersion latestSourceCatalogVersion))
   where
     neededMigrations =
       dropWhile ((/= prevVersion) . fst) sourceMigrations

@@ -230,7 +230,9 @@ instance ToEngineLog ImmortalThreadLog Hasura where
     (LevelError, ELTInternal ILTUnstructured, toJSON msg)
     where
       msg =
-        "Unexpected exception in immortal thread " <> label <> " (it will be restarted):\n"
+        "Unexpected exception in immortal thread "
+          <> label
+          <> " (it will be restarted):\n"
           <> show e
   toEngineLog (ImmortalThreadRestarted label) =
     (LevelInfo, ELTInternal ILTUnstructured, toJSON msg)

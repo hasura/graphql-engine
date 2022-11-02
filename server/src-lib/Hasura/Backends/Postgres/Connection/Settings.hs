@@ -81,7 +81,7 @@ instance HasCodec PostgresPoolSettings where
           <*> optionalFieldOrNull "idle_timeout" idleTimeoutDoc .== _ppsIdleTimeout
           <*> optionalFieldOrNull "retries" retriesDoc .== _ppsRetries
           <*> optionalFieldOrNull "pool_timeout" poolTimeoutDoc .== _ppsPoolTimeout
-          <*> parseConnLifeTime `rmapCodec` optionalFieldOrNull "connection_lifetime" connectionLifetimeDoc .== _ppsConnectionLifetime
+          <*> (parseConnLifeTime `rmapCodec` optionalFieldOrNull "connection_lifetime" connectionLifetimeDoc) .== _ppsConnectionLifetime
     where
       maxConnectionsDoc = "Maximum number of connections to be kept in the pool (default: 50)"
       totalMaxConnectionsDoc = "Total maximum number of connections across all instances (cloud only, default: null)"
@@ -95,6 +95,7 @@ instance HasCodec PostgresPoolSettings where
             "never destroy an active connection. If 0 is passed, memory from large",
             "query results may not be reclaimed. (default: 600 sec)"
           ]
+      infix 8 .==
       (.==) = (AC..=)
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''PostgresPoolSettings)
@@ -209,6 +210,7 @@ instance HasCodec CertVar where
     AC.object "CertVar" $ CertVar <$> requiredField' "from_env" .== unCertVar
     where
       unCertVar (CertVar t) = t
+      infix 8 .==
       (.==) = (AC..=)
 
 instance ToJSON CertVar where
@@ -251,6 +253,7 @@ instance (HasCodec p, HasCodec a) => HasCodec (PGClientCerts p a) where
       sslrootcertDoc = "Environment variable which stores trusted certificate authorities."
       sslmodeDoc = "The SSL connection mode. See the libpq ssl support docs <https://www.postgresql.org/docs/9.1/libpq-ssl.html> for more details."
       sslpasswordDoc = "Password in the case where the sslkey is encrypted."
+      infix 8 .==
       (.==) = (AC..=)
 
 $(deriveFromJSON (aesonDrop 3 (fmap toLower)) ''PGClientCerts)
@@ -352,6 +355,7 @@ instance HasCodec PostgresSourceConnInfo where
             "source will be run with (default: read-committed)."
           ]
       sslConfigurationDoc = "The client SSL certificate settings for the database (Only available in Cloud)."
+      infix 8 .==
       (.==) = (AC..=)
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''PostgresSourceConnInfo)
@@ -408,6 +412,7 @@ instance HasCodec PostgresConnConfiguration where
       connectionInfoDoc = "Connection parameters for the source"
       readReplicasDoc = "Optional list of read replica configuration (supported only in cloud/enterprise versions)"
       extensionsSchemaDoc = "Name of the schema where the graphql-engine will install database extensions (default: public)"
+      infix 8 .==
       (.==) = (AC..=)
 
 $(makeLenses ''PostgresConnConfiguration)

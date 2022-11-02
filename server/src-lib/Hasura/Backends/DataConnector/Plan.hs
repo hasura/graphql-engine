@@ -450,7 +450,8 @@ mkPlan session (SourceConfig {}) ir = do
       where
         parseValue :: J.FromJSON a => (a -> Literal) -> Text -> m Literal
         parseValue toLiteral description =
-          toLiteral <$> J.eitherDecodeStrict' valValueBS
+          toLiteral
+            <$> J.eitherDecodeStrict' valValueBS
             `onLeft` (\err -> throw400 ParseFailed ("Expected " <> description <> " for session variable " <> varName <<> ". " <> T.pack err))
 
         valValueBS :: BS.ByteString

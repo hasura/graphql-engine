@@ -38,9 +38,9 @@ saveLockedEvents eventIds lockedEvents =
   liftIO $
     atomically $ do
       lockedEventsVals <- readTVar lockedEvents
-      writeTVar lockedEvents
-        $! Set.union lockedEventsVals
-        $ Set.fromList eventIds
+      writeTVar lockedEvents $!
+        Set.union lockedEventsVals $
+          Set.fromList eventIds
 
 -- | Remove an event from the 'LockedEventsCtx' after it has been processed
 removeEventFromLockedEvents ::

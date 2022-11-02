@@ -335,7 +335,7 @@ msComparisonExps = P.memoize 'comparisonExps \columnType -> do
         G.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
-            <<> ". All fields are combined with logical 'AND'."
+              <<> ". All fields are combined with logical 'AND'."
 
   -- Naming convention
   tCase <- asks getter

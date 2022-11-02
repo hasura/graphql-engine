@@ -90,7 +90,8 @@ parseInterpolated = Bifunctor.first show . P.parse parseParts "yamlQQ"
     parseParts :: Parser [InterpolatePart]
     parseParts =
       P.many
-        ( P.try parseInterpolatedExpr <|> P.try parseComment
+        ( P.try parseInterpolatedExpr
+            <|> P.try parseComment
             <|> parseRaw
         )
 

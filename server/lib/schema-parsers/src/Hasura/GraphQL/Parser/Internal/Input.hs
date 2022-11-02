@@ -380,7 +380,8 @@ object name description parser =
       for_ (M.keys fields) \fieldName ->
         unless (fieldName `S.member` fieldNames) $
           withKey (A.Key (K.fromText (unName fieldName))) $
-            parseError $ "field " <> toErrorValue fieldName <> " not found in type: " <> toErrorValue name
+            parseError $
+              "field " <> toErrorValue fieldName <> " not found in type: " <> toErrorValue name
       ifParser parser fields
     invalidName key = parseError $ "variable value contains object with key " <> ErrorValue.dquote key <> ", which is not a legal GraphQL name"
 

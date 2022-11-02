@@ -326,60 +326,60 @@ functionArgs sourceInfo functionTrackedAs (toList -> inputArgs) = do
 
   if
       | length session > 1 ->
-        -- We somehow found more than one session argument; this should never
-        -- happen and is an error on our side.
-        throw500 "there shouldn't be more than one session argument"
+          -- We somehow found more than one session argument; this should never
+          -- happen and is an error on our side.
+          throw500 "there shouldn't be more than one session argument"
       | null optional && null mandatory ->
-        -- There are no user-provided arguments to the function: there will be
-        -- no args field.
-        pure $ pure defaultArguments
+          -- There are no user-provided arguments to the function: there will be
+          -- no args field.
+          pure $ pure defaultArguments
       | otherwise -> do
-        -- There are user-provided arguments: we need to parse an args object.
-        argumentParsers <- sequenceA $ optional <> mandatory
-        objectName <-
-          mkTypename . applyTypeNameCaseIdentifier tCase
-            =<< case functionTrackedAs of
-              FTAComputedField computedFieldName _sourceName tableName -> do
-                tableInfo <- askTableInfo sourceInfo tableName
-                computedFieldGQLName <- textToName $ computedFieldNameToText computedFieldName
-                tableGQLName <- getTableIdentifierName @('Postgres pgKind) tableInfo
-                pure $ mkFunctionArgsTypeName computedFieldGQLName tableGQLName
-              FTACustomFunction (CustomFunctionNames {cfnArgsName}) ->
-                pure $ C.fromCustomName cfnArgsName
-        let fieldName = Name._args
-            fieldDesc =
-              case functionTrackedAs of
-                FTAComputedField computedFieldName _sourceName tableName ->
-                  G.Description $
-                    "input parameters for computed field "
-                      <> computedFieldName <<> " defined on table " <>> tableName
-                FTACustomFunction (CustomFunctionNames {cfnFunctionName}) ->
-                  G.Description $ "input parameters for function " <>> cfnFunctionName
-            objectParser =
-              P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
-                -- After successfully parsing, we create a dictionary of the parsed fields
-                -- and we re-iterate through the original list of sql arguments, now with
-                -- the knowledge of their graphql name.
-                let foundArguments = Map.fromList $ catMaybes arguments <> session
-                    argsWithNames = zip names inputArgs
+          -- There are user-provided arguments: we need to parse an args object.
+          argumentParsers <- sequenceA $ optional <> mandatory
+          objectName <-
+            mkTypename . applyTypeNameCaseIdentifier tCase
+              =<< case functionTrackedAs of
+                FTAComputedField computedFieldName _sourceName tableName -> do
+                  tableInfo <- askTableInfo sourceInfo tableName
+                  computedFieldGQLName <- textToName $ computedFieldNameToText computedFieldName
+                  tableGQLName <- getTableIdentifierName @('Postgres pgKind) tableInfo
+                  pure $ mkFunctionArgsTypeName computedFieldGQLName tableGQLName
+                FTACustomFunction (CustomFunctionNames {cfnArgsName}) ->
+                  pure $ C.fromCustomName cfnArgsName
+          let fieldName = Name._args
+              fieldDesc =
+                case functionTrackedAs of
+                  FTAComputedField computedFieldName _sourceName tableName ->
+                    G.Description $
+                      "input parameters for computed field "
+                        <> computedFieldName <<> " defined on table " <>> tableName
+                  FTACustomFunction (CustomFunctionNames {cfnFunctionName}) ->
+                    G.Description $ "input parameters for function " <>> cfnFunctionName
+              objectParser =
+                P.object objectName Nothing (sequenceA argumentParsers) `P.bind` \arguments -> do
+                  -- After successfully parsing, we create a dictionary of the parsed fields
+                  -- and we re-iterate through the original list of sql arguments, now with
+                  -- the knowledge of their graphql name.
+                  let foundArguments = Map.fromList $ catMaybes arguments <> session
+                      argsWithNames = zip names inputArgs
 
-                -- All elements (in the orignal sql order) that are found in the result map
-                -- are treated as positional arguments, whether they were originally named or
-                -- not.
-                (positional, left) <- spanMaybeM (\(name, _) -> pure $ Map.lookup name foundArguments) argsWithNames
+                  -- All elements (in the orignal sql order) that are found in the result map
+                  -- are treated as positional arguments, whether they were originally named or
+                  -- not.
+                  (positional, left) <- spanMaybeM (\(name, _) -> pure $ Map.lookup name foundArguments) argsWithNames
 
-                -- If there are arguments left, it means we found one that was not passed
-                -- positionally. As a result, any remaining argument will have to be passed
-                -- by name. We fail with a parse error if we encounter a positional sql
-                -- argument (that does not have a name in the sql function), as:
-                --   * only the last positional arguments can be omitted;
-                --   * it has no name we can use.
-                -- We also fail if we find a mandatory argument that was not
-                -- provided by the user.
-                named <- Map.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
-                pure $ FunctionArgsExp positional named
+                  -- If there are arguments left, it means we found one that was not passed
+                  -- positionally. As a result, any remaining argument will have to be passed
+                  -- by name. We fail with a parse error if we encounter a positional sql
+                  -- argument (that does not have a name in the sql function), as:
+                  --   * only the last positional arguments can be omitted;
+                  --   * it has no name we can use.
+                  -- We also fail if we find a mandatory argument that was not
+                  -- provided by the user.
+                  named <- Map.fromList . catMaybes <$> traverse (namedArgument foundArguments) left
+                  pure $ FunctionArgsExp positional named
 
-        pure $ P.field fieldName (Just fieldDesc) objectParser
+          pure $ P.field fieldName (Just fieldDesc) objectParser
   where
     sessionPlaceholder :: Postgres.ArgumentExp (IR.UnpreparedValue b)
     sessionPlaceholder = Postgres.AEInput IR.UVSession
@@ -453,7 +453,8 @@ buildFunctionQueryFieldsPG mkRootFieldName sourceInfo functionName functionInfo 
   let -- select function
       funcDesc =
         Just . G.Description $
-          flip fromMaybe (_fiComment functionInfo) $ "execute function " <> functionName <<> " which returns " <>> tableName
+          flip fromMaybe (_fiComment functionInfo) $
+            "execute function " <> functionName <<> " which returns " <>> tableName
       -- select function agg
       funcAggDesc =
         Just $ G.Description $ "execute function " <> functionName <<> " and query aggregates on result of table type " <>> tableName

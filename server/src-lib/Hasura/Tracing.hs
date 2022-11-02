@@ -233,11 +233,11 @@ instance MonadTrace m => MonadTrace (ExceptT e m) where
 -- | Inject the trace context as a set of HTTP headers.
 injectB3HttpContext :: TraceContext -> [HTTP.Header]
 injectB3HttpContext TraceContext {..} =
-  ("X-B3-TraceId", traceIdToHex tcCurrentTrace) :
-  ("X-B3-SpanId", spanIdToHex tcCurrentSpan) :
-    [ ("X-B3-ParentSpanId", spanIdToHex parentID)
-      | parentID <- maybeToList tcCurrentParent
-    ]
+  ("X-B3-TraceId", traceIdToHex tcCurrentTrace)
+    : ("X-B3-SpanId", spanIdToHex tcCurrentSpan)
+    : [ ("X-B3-ParentSpanId", spanIdToHex parentID)
+        | parentID <- maybeToList tcCurrentParent
+      ]
 
 -- | Extract the trace and parent span headers from a HTTP request
 -- and create a new 'TraceContext'. The new context will contain
@@ -253,11 +253,11 @@ extractB3HttpContext hdrs = do
         lookup "X-B3-TraceId" hdrs >>= \rawTraceId ->
           if
               | Char8.length rawTraceId == 32 ->
-                traceIdFromHex rawTraceId
+                  traceIdFromHex rawTraceId
               | Char8.length rawTraceId == 16 ->
-                traceIdFromHex $ Char8.replicate 16 '0' <> rawTraceId
+                  traceIdFromHex $ Char8.replicate 16 '0' <> rawTraceId
               | otherwise ->
-                Nothing
+                  Nothing
   pure $
     TraceContext
       <$> traceId

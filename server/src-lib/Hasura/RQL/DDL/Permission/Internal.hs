@@ -59,12 +59,14 @@ assertPermDefined ::
 assertPermDefined role pt tableInfo =
   unless (any (permissionIsDefined pt) rpi) $
     throw400 PermissionDenied $
-      "'" <> tshow pt <> "'"
+      "'"
+        <> tshow pt
+        <> "'"
         <> " permission on "
         <> tableInfoName tableInfo
-        <<> " for role "
+          <<> " for role "
         <> role
-        <<> " does not exist"
+          <<> " does not exist"
   where
     rpi = M.lookup role $ _tiRolePermInfoMap tableInfo
 

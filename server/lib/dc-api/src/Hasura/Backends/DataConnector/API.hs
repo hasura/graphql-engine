@@ -124,7 +124,7 @@ data Prometheus
 --       we can just demand that agent authors pick one of the following.
 instance Accept Prometheus where
   contentTypes _ =
-    "text" // "plain" /: ("version", "0.0.4") /: ("charset", "utf-8")
+    ("text" // "plain" /: ("version", "0.0.4") /: ("charset", "utf-8"))
       :| ["application" // "openmetrics-text" /: ("version", "0.0.1")]
 
 instance MimeRender Prometheus Text where

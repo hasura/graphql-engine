@@ -101,7 +101,8 @@ withJsonAggExtr permLimitSubQuery ordBy alias =
           fromExp =
             S.FromExp $
               pure $
-                S.mkSelFromItem subSelect $ S.toTableAlias subSelAls
+                S.mkSelFromItem subSelect $
+                  S.toTableAlias subSelAls
        in S.SESelect $
             S.mkSelect
               { S.selExtr = pure extr,

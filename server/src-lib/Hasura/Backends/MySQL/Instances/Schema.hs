@@ -203,7 +203,7 @@ comparisonExps' = P.memoize 'comparisonExps $ \columnType -> do
         GQL.Description $
           "Boolean expression to compare columns of type "
             <> P.getName typedParser
-            <<> ". All fields are combined with logical 'AND'."
+              <<> ". All fields are combined with logical 'AND'."
   pure $
     P.object name (Just desc) $
       catMaybes

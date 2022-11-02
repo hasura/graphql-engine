@@ -317,7 +317,8 @@ textToName textName =
   G.mkName textName
     `onNothing` throw400
       ValidationFailed
-      ( "cannot include " <> textName <<> " in the GraphQL schema because "
+      ( "cannot include "
+          <> textName <<> " in the GraphQL schema because "
           <> " it is not a valid GraphQL identifier"
       )
 
@@ -427,10 +428,10 @@ getIntrospectionResult remoteSchemaPermsCtx role remoteSchemaContext =
   if
       | -- admin doesn't have a custom annotated introspection, defaulting to the original one
         role == adminRoleName ->
-        pure $ _rscIntroOriginal remoteSchemaContext
+          pure $ _rscIntroOriginal remoteSchemaContext
       | -- if permissions are disabled, the role map will be empty, defaulting to the original one
         remoteSchemaPermsCtx == Options.DisableRemoteSchemaPermissions ->
-        pure $ _rscIntroOriginal remoteSchemaContext
+          pure $ _rscIntroOriginal remoteSchemaContext
       | -- otherwise, look the role up in the map; if we find nothing, then the role doesn't have access
         otherwise ->
-        Map.lookup role (_rscPermissions remoteSchemaContext)
+          Map.lookup role (_rscPermissions remoteSchemaContext)

@@ -1,0 +1,2 @@
+infixr 8 .=
+infixr 8 .==

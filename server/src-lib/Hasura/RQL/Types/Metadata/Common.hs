@@ -124,7 +124,9 @@ parseListAsMap things mapFn listP = do
   unless (null duplicates) $
     fail $
       T.unpack $
-        "multiple declarations exist for the following " <> things <> ": "
+        "multiple declarations exist for the following "
+          <> things
+          <> ": "
           <> T.commaSeparated duplicates
   pure $ oMapFromL mapFn list
 
@@ -358,12 +360,12 @@ instance (Backend b) => HasCodec (FunctionMetadata b) where
             "https://hasura.io/docs/latest/graphql/core/api-reference/schema-metadata-api/custom-functions.html#args-syntax"
           ]
       )
-      $ AC.object (codecNamePrefix @b <> "FunctionMetadata") $
-        FunctionMetadata
-          <$> requiredFieldWith "function" placeholderCodecViaJSON nameDoc .== _fmFunction
-          <*> optionalFieldWithOmittedDefaultWith "configuration" placeholderCodecViaJSON emptyFunctionConfig configDoc .== _fmConfiguration
-          <*> optionalFieldWithOmittedDefaultWith' "permissions" (listCodec placeholderCodecViaJSON) [] .== _fmPermissions
-          <*> optionalField' "comment" .== _fmComment
+      $ AC.object (codecNamePrefix @b <> "FunctionMetadata")
+      $ FunctionMetadata
+        <$> requiredFieldWith "function" placeholderCodecViaJSON nameDoc .== _fmFunction
+        <*> optionalFieldWithOmittedDefaultWith "configuration" placeholderCodecViaJSON emptyFunctionConfig configDoc .== _fmConfiguration
+        <*> optionalFieldWithOmittedDefaultWith' "permissions" (listCodec placeholderCodecViaJSON) [] .== _fmPermissions
+        <*> optionalField' "comment" .== _fmComment
     where
       nameDoc = "Name of the SQL function"
       configDoc = "Configuration for the SQL function"

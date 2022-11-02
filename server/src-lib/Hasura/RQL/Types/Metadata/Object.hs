@@ -152,7 +152,10 @@ moiName objectId =
     MORemoteSchemaPermissions name roleName ->
       toTxt roleName <> " permission in remote schema " <> toTxt name
     MORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName ->
-      "remote_relationship " <> toTxt relationshipName <> " on type " <> G.unName typeName
+      "remote_relationship "
+        <> toTxt relationshipName
+        <> " on type "
+        <> G.unName typeName
         <> " in remote schema "
         <> toTxt remoteSchemaName
     MOCronTrigger name -> toTxt name
@@ -175,7 +178,8 @@ moiName objectId =
       SMOTable name -> toTxt name <> " in source " <> toTxt source
       SMOFunction name -> toTxt name <> " in source " <> toTxt source
       SMOFunctionPermission functionName roleName ->
-        toTxt roleName <> " permission for function "
+        toTxt roleName
+          <> " permission for function "
           <> toTxt functionName
           <> " in source "
           <> toTxt source

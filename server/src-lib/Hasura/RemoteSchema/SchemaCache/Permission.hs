@@ -266,14 +266,20 @@ The Remote schema permissions feature is designed in the following way:
 showRoleBasedSchemaValidationError :: RoleBasedSchemaValidationError -> Text
 showRoleBasedSchemaValidationError = \case
   NonMatchingType fldName fldType expectedType providedType ->
-    "expected type of " <> dquote fldName <> "(" <> dquote fldType <> ")" <> " to be "
+    "expected type of "
+      <> dquote fldName
+      <> "("
+      <> dquote fldType
+      <> ")"
+      <> " to be "
       <> (G.showGT expectedType)
       <> " but received "
       <> (G.showGT providedType)
   TypeDoesNotExist graphQLType typeName ->
     graphQLType <<> ": " <> typeName <<> " does not exist in the upstream remote schema"
   NonMatchingDefaultValue inpObjName inpValName expectedVal providedVal ->
-    "expected default value of input value: " <> inpValName <<> "of input object "
+    "expected default value of input value: "
+      <> inpValName <<> "of input object "
       <> inpObjName <<> " to be "
       <> defaultValueToText expectedVal
       <> " but received "
@@ -281,35 +287,42 @@ showRoleBasedSchemaValidationError = \case
   NonExistingInputArgument inpObjName inpArgName ->
     "input argument " <> inpArgName <<> " does not exist in the input object:" <>> inpObjName
   MissingNonNullableArguments fieldName nonNullableArgs ->
-    "field: " <> fieldName <<> " expects the following non nullable arguments to "
+    "field: "
+      <> fieldName <<> " expects the following non nullable arguments to "
       <> "be present: "
       <> englishList "and" (fmap dquote nonNullableArgs)
   NonExistingDirectiveArgument parentName parentType directiveName nonExistingArgs ->
     "the following directive argument(s) defined in the directive: "
       <> directiveName
-      <<> " defined with the type name: "
+        <<> " defined with the type name: "
       <> parentName
-      <<> " of type "
+        <<> " of type "
       <> parentType
-      <<> " do not exist in the corresponding upstream directive: "
+        <<> " do not exist in the corresponding upstream directive: "
       <> englishList "and" (fmap dquote nonExistingArgs)
   NonExistingField (fldDefnType, parentTypeName) providedName ->
-    "field " <> providedName <<> " does not exist in the "
+    "field "
+      <> providedName <<> " does not exist in the "
       <> fldDefnType <<> ": " <>> parentTypeName
   NonExistingUnionMemberTypes unionName nonExistingMembers ->
-    "union " <> unionName <<> " contains members which do not exist in the members"
+    "union "
+      <> unionName <<> " contains members which do not exist in the members"
       <> " of the remote schema union :"
       <> englishList "and" (fmap dquote nonExistingMembers)
   CustomInterfacesNotAllowed objName customInterfaces ->
-    "custom interfaces are not supported. " <> "Object" <> objName
-      <<> " implements the following custom interfaces: "
+    "custom interfaces are not supported. "
+      <> "Object"
+      <> objName
+        <<> " implements the following custom interfaces: "
       <> englishList "and" (fmap dquote customInterfaces)
   ObjectImplementsNonExistingInterfaces objName nonExistentInterfaces ->
-    "object " <> objName <<> " is trying to implement the following interfaces"
+    "object "
+      <> objName <<> " is trying to implement the following interfaces"
       <> " that do not exist in the corresponding upstream remote object: "
       <> englishList "and" (fmap dquote nonExistentInterfaces)
   NonExistingEnumValues enumName nonExistentEnumVals ->
-    "enum " <> enumName <<> " contains the following enum values that do not exist "
+    "enum "
+      <> enumName <<> " contains the following enum values that do not exist "
       <> "in the corresponding upstream remote enum: "
       <> englishList "and" (fmap dquote nonExistentEnumVals)
   MissingQueryRoot -> "query root does not exist in the schema definition"
@@ -318,11 +331,13 @@ showRoleBasedSchemaValidationError = \case
     "duplicate type names found: "
       <> englishList "and" (fmap dquote typeNames)
   DuplicateDirectives (parentType, parentName) directiveNames ->
-    "duplicate directives: " <> englishList "and" (fmap dquote directiveNames)
+    "duplicate directives: "
+      <> englishList "and" (fmap dquote directiveNames)
       <> "found in the "
       <> parentType <<> " " <>> parentName
   DuplicateFields (parentType, parentName) fieldNames ->
-    "duplicate fields: " <> englishList "and" (fmap dquote fieldNames)
+    "duplicate fields: "
+      <> englishList "and" (fmap dquote fieldNames)
       <> "found in the "
       <> parentType <<> " " <>> parentName
   DuplicateArguments fieldName args ->
@@ -330,7 +345,8 @@ showRoleBasedSchemaValidationError = \case
       <> englishList "and" (fmap dquote args)
       <> "found in the field: " <>> fieldName
   DuplicateEnumValues enumName enumValues ->
-    "duplicate enum values: " <> englishList "and" (fmap dquote enumValues)
+    "duplicate enum values: "
+      <> englishList "and" (fmap dquote enumValues)
       <> " found in the "
       <> enumName <<> " enum"
   InvalidPresetDirectiveLocation ->
@@ -343,17 +359,23 @@ showRoleBasedSchemaValidationError = \case
   ExpectedInputTypeButGotOutputType typeName -> "expected " <> typeName <<> " to be an input type, but it's an output type"
   EnumValueNotFound enumName enumValue -> enumValue <<> " not found in the enum: " <>> enumName
   ExpectedEnumValue typeName presetValue ->
-    "expected preset value " <> presetValue
-      <<> " of type " <> typeName
-      <<> " to be an enum value"
+    "expected preset value "
+      <> presetValue
+        <<> " of type "
+      <> typeName
+        <<> " to be an enum value"
   ExpectedScalarValue typeName presetValue ->
-    "expected preset value " <> presetValue
-      <<> " of type " <> typeName
-      <<> " to be a scalar value"
+    "expected preset value "
+      <> presetValue
+        <<> " of type "
+      <> typeName
+        <<> " to be a scalar value"
   ExpectedInputObject typeName presetValue ->
-    "expected preset value " <> presetValue
-      <<> " of type " <> typeName
-      <<> " to be an input object value"
+    "expected preset value "
+      <> presetValue
+        <<> " of type "
+      <> typeName
+        <<> " to be an input object value"
   KeyDoesNotExistInInputObject key' inpObjTypeName ->
     key' <<> " does not exist in the input object " <>> inpObjTypeName
   DisallowSessionVarForListType name ->
@@ -361,8 +383,11 @@ showRoleBasedSchemaValidationError = \case
   InvalidStaticValue ->
     "expected preset static value to be a Boolean value"
   UnexpectedNonMatchingNames providedName upstreamName gType ->
-    "unexpected: trying to compare " <> gType <<> " with name " <> providedName
-      <<> " with " <>> upstreamName
+    "unexpected: trying to compare "
+      <> gType <<> " with name "
+      <> providedName
+        <<> " with "
+        <>> upstreamName
   where
     defaultValueToText = \case
       Just defaultValue -> toTxt defaultValue
@@ -503,15 +528,17 @@ parsePresetDirective gType parentArgName (G.Directive _name args) = do
   if
       | Map.null args -> refute $ pure $ NoPresetArgumentFound
       | otherwise -> do
-        val <-
-          onNothing (Map.lookup Name._value args) $
-            refute $ pure $ InvalidPresetArgument parentArgName
-        isStatic <-
-          case (Map.lookup Name._static args) of
-            Nothing -> pure False
-            (Just (G.VBoolean b)) -> pure b
-            _ -> refute $ pure $ InvalidStaticValue
-        parsePresetValue gType parentArgName isStatic val
+          val <-
+            onNothing (Map.lookup Name._value args) $
+              refute $
+                pure $
+                  InvalidPresetArgument parentArgName
+          isStatic <-
+            case (Map.lookup Name._static args) of
+              Nothing -> pure False
+              (Just (G.VBoolean b)) -> pure b
+              _ -> refute $ pure $ InvalidStaticValue
+          parsePresetValue gType parentArgName isStatic val
 
 -- | validateDirective checks if the arguments of a given directive
 --   is a subset of the corresponding upstream directive arguments
@@ -558,7 +585,9 @@ validateDirectives providedDirectives upstreamDirectives directiveLocation paren
     let directiveName = G._dName dir
     upstreamDir <-
       onNothing (Map.lookup directiveName upstreamDirectivesMap) $
-        refute $ pure $ TypeDoesNotExist Directive directiveName
+        refute $
+          pure $
+            TypeDoesNotExist Directive directiveName
     validateDirective dir upstreamDir parentType
   case presetDirectives of
     [] -> pure Nothing
@@ -673,7 +702,9 @@ validateArguments providedArgs upstreamArgs parentTypeName = do
   for providedArgs $ \providedArg@(G.InputValueDefinition _ name _ _ _) -> do
     upstreamArg <-
       onNothing (Map.lookup name upstreamArgsMap) $
-        refute $ pure $ NonExistingInputArgument parentTypeName name
+        refute $
+          pure $
+            NonExistingInputArgument parentTypeName name
     validateInputValueDefinition providedArg upstreamArg parentTypeName
   where
     upstreamArgsMap = mapFromL G._ivdName $ map _rsitdDefinition upstreamArgs
@@ -717,7 +748,9 @@ validateFieldDefinition providedFieldDefinition upstreamFieldDefinition (parentT
         UnexpectedNonMatchingNames providedName upstreamName (Field parentType)
   void $ validateDirectives providedDirectives upstreamDirectives G.TSDLFIELD_DEFINITION $ (Field parentType, parentTypeName)
   when (providedType /= upstreamType) $
-    dispute $ pure $ NonMatchingType providedName (Field parentType) upstreamType providedType
+    dispute $
+      pure $
+        NonMatchingType providedName (Field parentType) upstreamType providedType
   args <- validateArguments providedArgs upstreamArgs $ providedName
   pure $ providedFieldDefinition {G._fldArgumentsDefinition = args}
   where
@@ -740,7 +773,9 @@ validateFieldDefinitions providedFldDefnitions upstreamFldDefinitions parentType
   for providedFldDefnitions $ \fldDefn@(G.FieldDefinition _ name _ _ _) -> do
     upstreamFldDefn <-
       onNothing (Map.lookup name upstreamFldDefinitionsMap) $
-        refute $ pure $ NonExistingField parentType name
+        refute $
+          pure $
+            NonExistingField parentType name
     validateFieldDefinition fldDefn upstreamFldDefn parentType
   where
     upstreamFldDefinitionsMap = mapFromL G._fldName upstreamFldDefinitions
@@ -997,7 +1032,8 @@ resolveRoleBasedRemoteSchema roleName remoteSchemaName remoteSchemaIntrospection
     flip onLeft (throw400 ValidationFailed . showErrors)
       =<< runValidateT
         ( flip runReaderT providedSchemaDocWithDefaultScalars $
-            validateRemoteSchema $ irDoc remoteSchemaIntrospection
+            validateRemoteSchema $
+              irDoc remoteSchemaIntrospection
         )
   pure (introspectionRes, [schemaDependency])
   where

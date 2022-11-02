@@ -137,7 +137,9 @@ instance Backend 'MySQL where
         maxConnections =
           fromInteger $
             toInteger $
-              MySQL._cscMaxConnections $ MySQL._cscPoolSettings $ MySQL.scConfig sourceConfig
+              MySQL._cscMaxConnections $
+                MySQL._cscPoolSettings $
+                  MySQL.scConfig sourceConfig
     -- Resize the pool max resources
     Pool.resizePool pool (maxConnections `div` getServerReplicasInt serverReplicas)
     -- Trim pool by destroying excess resources, if any

@@ -268,7 +268,8 @@ listener logger pool metaVersionRef interval = L.iterateM_ listenerLoop defaultE
               pure errorState
         Right _ -> do
           when (isInErrorState errorState) $
-            logInfo logger TTListener $ object ["message" .= ("SchemaSync Restored..." :: Text)]
+            logInfo logger TTListener $
+              object ["message" .= ("SchemaSync Restored..." :: Text)]
           pure defaultErrorState
       liftIO $ C.sleep $ milliseconds interval
       pure nextErr
@@ -362,7 +363,8 @@ refreshSchemaCache
                                     ciSources = HS.fromList $ HM.keys $ scSources schemaCache,
                                     ciDataConnectors =
                                       maybe mempty (HS.fromList . HM.keys . unBackendInfoWrapper) $
-                                        BackendMap.lookup @'DataConnector $ scBackendCache schemaCache
+                                        BackendMap.lookup @'DataConnector $
+                                          scBackendCache schemaCache
                                   }
                       logInfo logger threadType $ object ["currentVersion" .= engineResourceVersion, "latestResourceVersion" .= latestResourceVersion]
                       buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata
@@ -387,4 +389,5 @@ logError logger threadType err =
 logDebug :: (MonadIO m) => Logger Hasura -> ThreadType -> String -> m ()
 logDebug logger threadType msg =
   unLogger logger $
-    SchemaSyncThreadLog LevelDebug threadType $ object ["message" .= msg]
+    SchemaSyncThreadLog LevelDebug threadType $
+      object ["message" .= msg]

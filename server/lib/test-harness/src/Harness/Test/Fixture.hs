@@ -162,11 +162,11 @@ runSetupActions testEnv acts = go acts []
           Left (exn :: SomeException) -> do
             testLog testEnv $ "Setup failed for step " ++ show (length cleanupAcc) ++ "."
             rethrowAll
-              ( throwIO exn :
-                ( testLog testEnv ("Teardown failed for step " ++ show (length cleanupAcc) ++ ".")
-                    >> teardownAction Nothing
-                ) :
-                cleanupAcc
+              ( throwIO exn
+                  : ( testLog testEnv ("Teardown failed for step " ++ show (length cleanupAcc) ++ ".")
+                        >> teardownAction Nothing
+                    )
+                  : cleanupAcc
               )
             return (return ())
           Right x -> do
@@ -175,8 +175,8 @@ runSetupActions testEnv acts = go acts []
               rest
               ( ( testLog testEnv ("Teardown for step " ++ show (length cleanupAcc) ++ " succeeded.")
                     >> teardownAction (Just x)
-                ) :
-                cleanupAcc
+                )
+                  : cleanupAcc
               )
 
 --------------------------------------------------------------------------------

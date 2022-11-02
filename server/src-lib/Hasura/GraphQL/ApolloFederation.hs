@@ -112,7 +112,8 @@ modifyApolloFedParserFunc
           Just va -> liftQErr $ parseScalarValueColumnType (ciType columnInfo) va
         pure $
           IR.BoolField . IR.AVColumn columnInfo . pure . IR.AEQ True . IR.mkParameter $
-            ValueNoOrigin $ ColumnValue {..}
+            ValueNoOrigin $
+              ColumnValue {..}
     let whereExpr = Just $ IR.BoolAnd $ toList allConstraints
         sourceName = _siName
         sourceConfig = _siConfiguration
@@ -176,9 +177,9 @@ apolloRootFields expFeatures apolloFedTableParsers =
       -- is essential only if we have types that has @key directive
       if
           | EFApolloFederation `elem` expFeatures && not (null apolloFedTableParsers) ->
-            [serviceField, entityField]
+              [serviceField, entityField]
           | EFApolloFederation `elem` expFeatures ->
-            [serviceField]
+              [serviceField]
           | otherwise -> []
 
 -- helpers

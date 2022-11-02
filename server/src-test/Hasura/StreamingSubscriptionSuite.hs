@@ -60,7 +60,8 @@ buildStreamingSubscriptionSuite = do
       let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
       onNothing maybeV $
-        throwError $ "Expected: " <> envVar
+        throwError $
+          "Expected: " <> envVar
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 
@@ -70,7 +71,8 @@ buildStreamingSubscriptionSuite = do
       dbSourceConfig = PGSourceConfig pgContext pgConnInfo Nothing (pure ()) defaultPostgresExtensionsSchema
 
   pure $
-    describe "Streaming subscriptions polling tests" $ streamingSubscriptionPollingSpec dbSourceConfig
+    describe "Streaming subscriptions polling tests" $
+      streamingSubscriptionPollingSpec dbSourceConfig
 
 mkRoleNameE :: Text -> RoleName
 mkRoleNameE = fromMaybe (error "Use a non empty string") . mkRoleName

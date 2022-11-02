@@ -61,12 +61,15 @@ trackFunctionP1 ::
 trackFunctionP1 sourceName qf = do
   rawSchemaCache <- askSchemaCache
   unless (isJust $ AB.unpackAnyBackend @b =<< Map.lookup sourceName (scSources rawSchemaCache)) $
-    throw400 NotExists $ sourceName <<> " is not a known " <> reify (backendTag @b) <<> " source"
+    throw400 NotExists $
+      sourceName <<> " is not a known " <> reify (backendTag @b) <<> " source"
   when (isJust $ unsafeFunctionInfo @b sourceName qf $ scSources rawSchemaCache) $
-    throw400 AlreadyTracked $ "function already tracked: " <>> qf
+    throw400 AlreadyTracked $
+      "function already tracked: " <>> qf
   let qt = functionToTable @b qf
   when (isJust $ unsafeTableInfo @b sourceName qt $ scSources rawSchemaCache) $
-    throw400 NotSupported $ "table with name " <> qf <<> " already exists"
+    throw400 NotSupported $
+      "table with name " <> qf <<> " already exists"
 
 trackFunctionP2 ::
   forall b m.
@@ -79,9 +82,9 @@ trackFunctionP2 ::
 trackFunctionP2 sourceName qf config comment = do
   buildSchemaCacheFor
     (MOSourceObjId sourceName $ AB.mkAnyBackend $ SMOFunction @b qf)
-    $ MetadataModifier $
-      metaSources . ix sourceName . toSourceMetadata . (smFunctions @b)
-        %~ OMap.insert qf (FunctionMetadata qf config mempty comment)
+    $ MetadataModifier
+    $ metaSources . ix sourceName . toSourceMetadata . (smFunctions @b)
+      %~ OMap.insert qf (FunctionMetadata qf config mempty comment)
   pure successMsg
 
 handleMultipleFunctions ::
@@ -247,15 +250,15 @@ runCreateFunctionPermission (FunctionPermissionArgument functionName source role
     ( MOSourceObjId source $
         AB.mkAnyBackend (SMOFunctionPermission @b functionName role)
     )
-    $ MetadataModifier $
-      metaSources
-        . ix
-          source
-        . toSourceMetadata
-        . (smFunctions @b)
-        . ix functionName
-        . fmPermissions
-        %~ (:) (FunctionPermissionInfo role)
+    $ MetadataModifier
+    $ metaSources
+      . ix
+        source
+      . toSourceMetadata
+      . (smFunctions @b)
+      . ix functionName
+      . fmPermissions
+      %~ (:) (FunctionPermissionInfo role)
   pure successMsg
 
 dropFunctionPermissionInMetadata ::
@@ -327,6 +330,6 @@ runSetFunctionCustomization (SetFunctionCustomization source function config) = 
   void $ askFunctionInfo @b source function
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOFunction @b function)
-    $ MetadataModifier $
-      ((functionMetadataSetter @b source function) . fmConfiguration) .~ config
+    $ MetadataModifier
+    $ ((functionMetadataSetter @b source function) . fmConfiguration) .~ config
   return successMsg

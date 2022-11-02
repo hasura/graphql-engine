@@ -694,7 +694,8 @@ extractFieldFromResponse fieldName resultCustomizer resp = do
   dataObj <- onLeft (JO.asObject dataVal) do400
   fieldVal <-
     onNothing (JO.lookup fieldName' dataObj) $
-      do400 $ "expecting key " <> fieldName'
+      do400 $
+        "expecting key " <> fieldName'
   return fieldVal
   where
     do400 = withExceptT Right . throw400 RemoteSchemaError

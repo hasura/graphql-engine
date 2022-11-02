@@ -223,7 +223,8 @@ instance ToJSON PostgresConnDetailsRaw where
 rawConnDetailsToUrlText :: PostgresConnDetailsRaw -> Text
 rawConnDetailsToUrlText PostgresConnDetailsRaw {..} =
   Text.pack $
-    "postgresql://" <> connUser
+    "postgresql://"
+      <> connUser
       <> ":"
       <> connPassword
       <> "@"

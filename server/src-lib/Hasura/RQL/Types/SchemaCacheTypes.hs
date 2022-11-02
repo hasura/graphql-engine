@@ -110,7 +110,10 @@ reportSchemaObj = \case
       <> unNonEmptyText (unRemoteSchemaName remoteSchemaName)
       <> "." <>> roleName
   SORemoteSchemaRemoteRelationship remoteSchemaName typeName relationshipName ->
-    "remote_relationship " <> toTxt relationshipName <> " on type " <> G.unName typeName
+    "remote_relationship "
+      <> toTxt relationshipName
+      <> " on type "
+      <> G.unName typeName
       <> " in remote schema "
       <> toTxt remoteSchemaName
   SORole roleName -> "role " <> roleNameToTxt roleName

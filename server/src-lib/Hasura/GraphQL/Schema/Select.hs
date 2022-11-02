@@ -953,12 +953,12 @@ tableAggregationFields sourceInfo tableInfo =
     mkNumericAggFields name
       | name == Name._sum = traverse mkColumnAggField
       | otherwise = traverse \columnInfo ->
-        pure $
-          P.selection_
-            (ciName columnInfo)
-            (ciDescription columnInfo)
-            (P.nullable P.float)
-            $> IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
+          pure $
+            P.selection_
+              (ciName columnInfo)
+              (ciDescription columnInfo)
+              (P.nullable P.float)
+              $> IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
 
     mkColumnAggField :: ColumnInfo b -> SchemaT r m (FieldParser n (IR.ColFld b))
     mkColumnAggField columnInfo =

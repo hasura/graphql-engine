@@ -195,25 +195,25 @@ prepareCatalog sourceConfig = runTx (_pscExecCtx sourceConfig) PG.ReadWrite do
   if
       -- Fresh database
       | not hdbCatalogExist -> liftTx do
-        PG.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
-        enablePgcryptoExtension $ _pscExtensionsSchema sourceConfig
-        initPgSourceCatalog
-        return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
+          PG.unitQE defaultTxErrorHandler "CREATE SCHEMA hdb_catalog" () False
+          enablePgcryptoExtension $ _pscExtensionsSchema sourceConfig
+          initPgSourceCatalog
+          return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
       -- Only 'hdb_catalog' schema defined
       | not (sourceVersionTableExist || eventLogTableExist) -> do
-        liftTx initPgSourceCatalog
-        return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
+          liftTx initPgSourceCatalog
+          return (RETDoNothing, Version.SCMSInitialized $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
       -- Source is initialised by pre multisource support servers
       | not sourceVersionTableExist && eventLogTableExist -> do
-        -- Update the Source Catalog to v43 to include the new migration
-        -- changes. Skipping this step will result in errors.
-        currMetadataCatalogVersion <- liftTx getCatalogVersion
-        -- we migrate to the 43 version, which is the migration where
-        -- metadata separation is introduced
-        migrateTo43MetadataCatalog currMetadataCatalogVersion
-        liftTx createVersionTable
-        -- Migrate the catalog from initial version i.e '0'
-        migrateSourceCatalogFrom initialSourceCatalogVersion
+          -- Update the Source Catalog to v43 to include the new migration
+          -- changes. Skipping this step will result in errors.
+          currMetadataCatalogVersion <- liftTx getCatalogVersion
+          -- we migrate to the 43 version, which is the migration where
+          -- metadata separation is introduced
+          migrateTo43MetadataCatalog currMetadataCatalogVersion
+          liftTx createVersionTable
+          -- Migrate the catalog from initial version i.e '0'
+          migrateSourceCatalogFrom initialSourceCatalogVersion
       | otherwise -> migrateSourceCatalog
   where
     initPgSourceCatalog = do
@@ -280,20 +280,20 @@ migrateSourceCatalogFrom ::
 migrateSourceCatalogFrom prevVersion
   | prevVersion == latestSourceCatalogVersion = pure (RETDoNothing, Version.SCMSNothingToDo $ Version.unSourceCatalogVersion latestSourceCatalogVersion)
   | [] <- neededMigrations =
-    throw400 NotSupported $
-      "Expected source catalog version <= "
-        <> tshow latestSourceCatalogVersion
-        <> ", but the current version is "
-        <> tshow prevVersion
+      throw400 NotSupported $
+        "Expected source catalog version <= "
+          <> tshow latestSourceCatalogVersion
+          <> ", but the current version is "
+          <> tshow prevVersion
   | otherwise = do
-    liftTx $ traverse_ snd neededMigrations
-    setSourceCatalogVersion
-    pure
-      ( RETRecreate,
-        Version.SCMSMigratedTo
-          (Version.unSourceCatalogVersion prevVersion)
-          (Version.unSourceCatalogVersion latestSourceCatalogVersion)
-      )
+      liftTx $ traverse_ snd neededMigrations
+      setSourceCatalogVersion
+      pure
+        ( RETRecreate,
+          Version.SCMSMigratedTo
+            (Version.unSourceCatalogVersion prevVersion)
+            (Version.unSourceCatalogVersion latestSourceCatalogVersion)
+        )
   where
     neededMigrations =
       dropWhile ((/= prevVersion) . fst) sourceMigrations
@@ -332,10 +332,11 @@ upMigrationsUntil43 =
          -- moved to source catalog migrations and the 41st up migration is removed
          -- entirely.
          $
-           [|(Version.MetadataCatalogVersion08, $(migrationFromFile "08" "1"))|] :
-           migrationsFromFile [2 .. 3]
-             ++ [|(Version.MetadataCatalogVersion 3, from3To4)|] :
-           (migrationsFromFile [5 .. 40]) ++ migrationsFromFile [42 .. 43]
+           [|(Version.MetadataCatalogVersion08, $(migrationFromFile "08" "1"))|]
+             : migrationsFromFile [2 .. 3]
+             ++ [|(Version.MetadataCatalogVersion 3, from3To4)|]
+             : migrationsFromFile [5 .. 40]
+             ++ migrationsFromFile [42 .. 43]
    )
 
 -- | We differentiate for CockroachDB and other PG implementations
@@ -485,17 +486,17 @@ postDropSourceHook sourceConfig tableTriggersMap = do
           -- database, and for default databases, we drop only source-related
           -- tables from the database's "hdb_catalog" schema.
           | hdbMetadataTableExist -> do
-            -- drop the event trigger functions from the table for default sources
-            for_ (HM.toList tableTriggersMap) $ \(_table, triggers) ->
-              for_ triggers $ \triggerName ->
-                liftTx $ dropTriggerQ triggerName
-            PG.multiQE
-              defaultTxErrorHandler
-              $(makeRelativeToProject "src-rsr/drop_pg_source.sql" >>= PG.sqlFromFile)
+              -- drop the event trigger functions from the table for default sources
+              for_ (HM.toList tableTriggersMap) $ \(_table, triggers) ->
+                for_ triggers $ \triggerName ->
+                  liftTx $ dropTriggerQ triggerName
+              PG.multiQE
+                defaultTxErrorHandler
+                $(makeRelativeToProject "src-rsr/drop_pg_source.sql" >>= PG.sqlFromFile)
           -- Otherwise, we have a non-default postgres source, which has no metadata tables.
           -- We drop the entire "hdb_catalog" schema as discussed above.
           | otherwise ->
-            dropHdbCatalogSchema
+              dropHdbCatalogSchema
 
   -- Destory postgres source connection
   liftIO $ _pecDestroyConn $ _pscExecCtx sourceConfig

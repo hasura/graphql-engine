@@ -275,7 +275,8 @@ tests opts = do
 
     actual
       `sqlShouldSatisfy` ( \sql ->
-                             "'horse'" `T.isInfixOf` sql
+                             "'horse'"
+                               `T.isInfixOf` sql
                                && not ("N'horse'" `T.isInfixOf` sql)
                          )
 
@@ -297,7 +298,8 @@ tests opts = do
 
     actual
       `sqlShouldSatisfy` ( \sql ->
-                             "'horse'" `T.isInfixOf` sql
+                             "'horse'"
+                               `T.isInfixOf` sql
                                && not ("N'horse'" `T.isInfixOf` sql)
                          )
 

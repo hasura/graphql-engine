@@ -161,18 +161,18 @@ insertTable :: Schema.Table -> IO ()
 insertTable Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
-    run_ $
-      T.unpack $
-        T.unwords
-          [ "INSERT INTO",
-            T.pack Constants.mysqlDb <> "." <> tableName,
-            "(",
-            commaSeparated (Schema.columnName <$> tableColumns),
-            ")",
-            "VALUES",
-            commaSeparated $ mkRow <$> tableData,
-            ";"
-          ]
+      run_ $
+        T.unpack $
+          T.unwords
+            [ "INSERT INTO",
+              T.pack Constants.mysqlDb <> "." <> tableName,
+              "(",
+              commaSeparated (Schema.columnName <$> tableColumns),
+              ")",
+              "VALUES",
+              commaSeparated $ mkRow <$> tableData,
+              ";"
+            ]
 
 -- | 'ScalarValue' serializer for Mysql
 serialize :: ScalarValue -> Text

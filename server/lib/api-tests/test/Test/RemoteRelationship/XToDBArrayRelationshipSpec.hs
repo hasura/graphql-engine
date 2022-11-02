@@ -601,12 +601,12 @@ lhsRemoteServerMkLocalTestEnvironment _ = do
         flip foldMap orderByList \HasuraArtistOrderBy {..} ->
           if
               | Just idOrder <- aob_id ->
-                compareWithNullLast idOrder artistId1 artistId2
+                  compareWithNullLast idOrder artistId1 artistId2
               | Just nameOrder <- aob_name -> case nameOrder of
-                Asc -> compare artistName1 artistName2
-                Desc -> compare artistName2 artistName1
+                  Asc -> compare artistName1 artistName2
+                  Desc -> compare artistName2 artistName1
               | otherwise ->
-                error "empty artist_order object"
+                  error "empty artist_order object"
     compareWithNullLast Desc x1 x2 = compareWithNullLast Asc x2 x1
     compareWithNullLast Asc Nothing Nothing = EQ
     compareWithNullLast Asc (Just _) Nothing = LT

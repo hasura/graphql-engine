@@ -599,7 +599,9 @@ mkMSSQLScalarTypeName = \case
     G.mkName (scalarTypeDBName DataLengthUnspecified scalarType)
       `onNothing` throw400
         ValidationFailed
-        ( "cannot use SQL type " <> scalarTypeDBName DataLengthUnspecified scalarType <> " in the GraphQL schema because its name is not a "
+        ( "cannot use SQL type "
+            <> scalarTypeDBName DataLengthUnspecified scalarType
+            <> " in the GraphQL schema because its name is not a "
             <> "valid GraphQL identifier"
         )
 

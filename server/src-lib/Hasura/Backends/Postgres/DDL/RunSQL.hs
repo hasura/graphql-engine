@@ -391,7 +391,7 @@ runTxWithMetadataCheck source sourceConfig txAccess tableCache functionCache cas
       flip mapMaybe deps \case
         SOSourceObj _ objectID
           | Just (SOIFunction qf) <- AB.unpackAnyBackend @('Postgres pgKind) objectID ->
-            Just qf
+              Just qf
         _ -> Nothing
 
 -- | Fetch list of tables and functions with provided oids

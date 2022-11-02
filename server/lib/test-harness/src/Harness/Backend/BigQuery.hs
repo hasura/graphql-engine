@@ -285,8 +285,10 @@ retryIfJobRateLimitExceeded action = retry 0
   where
     retry retryNumber = do
       action `catch` \(SomeException err) ->
-        if "jobRateLimitExceeded" `T.isInfixOf` (tshow err)
-          && retryNumber < maxRetriesRateLimitExceeded
+        if "jobRateLimitExceeded"
+          `T.isInfixOf` (tshow err)
+          && retryNumber
+          < maxRetriesRateLimitExceeded
           then do
             -- exponential backoff
             sleep (seconds $ 2 ^ retryNumber)
@@ -307,8 +309,8 @@ runWithRetry action = do
             | "Retrying the job with back-off as described in the BigQuery SLA should solve the problem"
                 `T.isInfixOf` Execute.executeProblemMessage Execute.InsecurelyShowDetails e,
               retryNumber <= maxRetriesRateLimitExceeded -> do
-              -- exponential backoff
-              sleep (seconds $ 2 ^ retryNumber)
-              retry (retryNumber + 1)
+                -- exponential backoff
+                sleep (seconds $ 2 ^ retryNumber)
+                retry (retryNumber + 1)
           Left e -> bigQueryError e mempty
   retry 0

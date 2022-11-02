@@ -172,7 +172,8 @@ args:
         eitherDecode responseBody
           `onLeft` \err ->
             assertFailure
-              ( "In request: " ++ "/v2/query"
+              ( "In request: "
+                  ++ "/v2/query"
                   ++ "Couldn't decode JSON body:"
                   ++ show err
                   ++ "Body was:"

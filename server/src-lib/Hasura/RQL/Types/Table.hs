@@ -426,8 +426,8 @@ combinedSelPermInfoToSelPermInfo selPermsCount CombinedSelPermInfo {..} =
       -- the select permissions exists.
       | selPermsCount == length booleanExpressions = Nothing
       | otherwise =
-        let nonNothingBoolExps = catMaybes $ toList booleanExpressions
-         in bool (Just $ BoolOr nonNothingBoolExps) Nothing $ null nonNothingBoolExps
+          let nonNothingBoolExps = catMaybes $ toList booleanExpressions
+           in bool (Just $ BoolOr nonNothingBoolExps) Nothing $ null nonNothingBoolExps
 
 data SelPermInfo (b :: BackendType) = SelPermInfo
   { -- | HashMap of accessible columns to the role, the `Column` may be mapped to
@@ -937,9 +937,9 @@ getRolePermInfo :: RoleName -> TableInfo b -> RolePermInfo b
 getRolePermInfo role tableInfo
   | role == adminRoleName = _tiAdminRolePermInfo tableInfo
   | otherwise =
-    fromMaybe
-      (RolePermInfo Nothing Nothing Nothing Nothing)
-      (M.lookup role $ _tiRolePermInfoMap tableInfo)
+      fromMaybe
+        (RolePermInfo Nothing Nothing Nothing Nothing)
+        (M.lookup role $ _tiRolePermInfoMap tableInfo)
 
 type TableCoreCache b = M.HashMap (TableName b) (TableCoreInfo b)
 
@@ -1071,7 +1071,8 @@ askComputedFieldInfo ::
 askComputedFieldInfo fields computedField = do
   fieldInfo <-
     modifyErr ("computed field " <>) $
-      askFieldInfo fields $ fromComputedField computedField
+      askFieldInfo fields $
+        fromComputedField computedField
   case fieldInfo of
     (FIColumn _) -> throwErr "column"
     (FIRelationship _) -> throwErr "relationship"

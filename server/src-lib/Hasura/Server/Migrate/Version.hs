@@ -43,9 +43,9 @@ instance Show MetadataCatalogVersion where
 instance Read MetadataCatalogVersion where
   readsPrec prec s
     | "0.8" `isPrefixOf` s =
-      [(MetadataCatalogVersion08, drop 3 s)]
+        [(MetadataCatalogVersion08, drop 3 s)]
     | otherwise =
-      map (first MetadataCatalogVersion) $ filter ((>= 0) . fst) $ readsPrec @Int prec s
+        map (first MetadataCatalogVersion) $ filter ((>= 0) . fst) $ readsPrec @Int prec s
 
 -- | This is the source catalog version, used when deciding whether to (re-)create event triggers.
 newtype SourceCatalogVersion (backend :: BackendType) = SourceCatalogVersion {unSourceCatalogVersion :: Int}
@@ -71,13 +71,15 @@ instance ToEngineLog (SourceName, SourceCatalogMigrationState) Hasura where
           case migrationStatus of
             SCMSUninitializedSource -> "source " <> sourceName <<> " has not been initialized yet."
             SCMSNothingToDo catalogVersion ->
-              "source " <> sourceName
-                <<> " is already at the latest catalog version ("
+              "source "
+                <> sourceName
+                  <<> " is already at the latest catalog version ("
                 <> tshow catalogVersion
                 <> ")."
             SCMSInitialized catalogVersion ->
-              "source " <> sourceName
-                <<> " has the source catalog version successfully initialized (at version "
+              "source "
+                <> sourceName
+                  <<> " has the source catalog version successfully initialized (at version "
                 <> tshow catalogVersion
                 <> ")."
             SCMSMigratedTo oldCatalogVersion newCatalogVersion ->

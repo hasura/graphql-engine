@@ -138,10 +138,12 @@ trackExistingTableOrViewP1 ::
 trackExistingTableOrViewP1 source tableName = do
   sourceInfo <- askSourceInfo source
   when (isTableTracked @b sourceInfo tableName) $
-    throw400 AlreadyTracked $ "view/table already tracked: " <>> tableName
+    throw400 AlreadyTracked $
+      "view/table already tracked: " <>> tableName
   let functionName = tableToFunction @b tableName
   when (isJust $ Map.lookup functionName $ _siFunctions @b sourceInfo) $
-    throw400 NotSupported $ "function with name " <> tableName <<> " already exists"
+    throw400 NotSupported $
+      "function with name " <> tableName <<> " already exists"
 
 -- | Check whether a given name would conflict with the current schema by doing
 -- an internal introspection
@@ -210,7 +212,8 @@ checkConflictingNode sc tnGQL = do
             Just ns ->
               when (tnGQL `elem` ns) $
                 throw400 RemoteSchemaConflicts $
-                  "node " <> tnGQL
+                  "node "
+                    <> tnGQL
                     <> " already exists in current graphql schema"
         _ -> pure ()
 
@@ -240,8 +243,8 @@ trackExistingTableOrViewP2 source tableName isEnum config apolloFedConfig = do
         AB.mkAnyBackend $
           SMOTable @b tableName
     )
-    $ MetadataModifier $
-      metaSources . ix source . toSourceMetadata . smTables %~ OMap.insert tableName metadata
+    $ MetadataModifier
+    $ metaSources . ix source . toSourceMetadata . smTables %~ OMap.insert tableName metadata
   pure successMsg
 
 runTrackTableQ ::
@@ -279,8 +282,8 @@ runSetExistingTableIsEnumQ (SetTableIsEnum source tableName isEnum) = do
   void $ askTableInfo @b source tableName -- assert that table is tracked
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @b tableName)
-    $ MetadataModifier $
-      tableMetadataSetter @b source tableName . tmIsEnum .~ isEnum
+    $ MetadataModifier
+    $ tableMetadataSetter @b source tableName . tmIsEnum .~ isEnum
   return successMsg
 
 data SetTableCustomization b = SetTableCustomization
@@ -321,8 +324,8 @@ runSetTableCustomFieldsQV2 (SetTableCustomFields source tableName rootFields col
   let tableConfig = TableConfig @('Postgres 'Vanilla) rootFields columnConfig Nothing Automatic
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @('Postgres 'Vanilla) tableName)
-    $ MetadataModifier $
-      tableMetadataSetter source tableName . tmConfiguration .~ tableConfig
+    $ MetadataModifier
+    $ tableMetadataSetter source tableName . tmConfiguration .~ tableConfig
   return successMsg
 
 runSetTableCustomization ::
@@ -334,8 +337,8 @@ runSetTableCustomization (SetTableCustomization source table config) = do
   void $ askTableInfo @b source table
   buildSchemaCacheFor
     (MOSourceObjId source $ AB.mkAnyBackend $ SMOTable @b table)
-    $ MetadataModifier $
-      tableMetadataSetter source table . tmConfiguration .~ config
+    $ MetadataModifier
+    $ tableMetadataSetter source table . tmConfiguration .~ config
   return successMsg
 
 unTrackExistingTableOrViewP1 ::
@@ -626,8 +629,10 @@ buildTableCache = Inc.cache proc (source, sourceConfig, dbTablesMeta, tableBuild
             -- multiple referenced enums? the schema is strange, so let’s reject it
             Just enumReferences ->
               throw400 ConstraintViolation $
-                "column " <> rciName rawInfo <<> " in table " <> tableName
-                  <<> " references multiple enum tables ("
+                "column "
+                  <> rciName rawInfo <<> " in table "
+                  <> tableName
+                    <<> " references multiple enum tables ("
                   <> commaSeparated (map (dquote . erTable) $ toList enumReferences)
                   <> ")"
 
@@ -678,6 +683,6 @@ runSetApolloFederationConfig (SetApolloFederationConfig source table apolloFedCo
     -- the `ApolloFederationConfig` is complex, we should probably reconsider
     -- this approach of replacing the configuration everytime the API is called
     -- and maybe throw some error if the configuration is already there.
-    $ MetadataModifier $
-      tableMetadataSetter @b source table . tmApolloFederationConfig .~ apolloFedConfig
+    $ MetadataModifier
+    $ tableMetadataSetter @b source table . tmApolloFederationConfig .~ apolloFedConfig
   return successMsg

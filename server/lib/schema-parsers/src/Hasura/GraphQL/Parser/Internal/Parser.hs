@@ -203,9 +203,9 @@ safeSelectionSet name description fields =
        in if
               | null origins -> toErrorValue fieldName
               | any Maybe.isNothing originsM ->
-                toErrorValue fieldName <> " defined in " <> toErrorValue origins <> " and of unknown origin"
+                  toErrorValue fieldName <> " defined in " <> toErrorValue origins <> " and of unknown origin"
               | otherwise ->
-                toErrorValue fieldName <> " defined in " <> toErrorValue origins
+                  toErrorValue fieldName <> " defined in " <> toErrorValue origins
     duplicatesList = printEntry <$> M.toList duplicates
 
 -- Should this rather take a non-empty `FieldParser` list?
@@ -229,7 +229,8 @@ selectionSetObject name description parsers implementsInterfaces =
     { pType =
         TNamed Nullable $
           Definition name description Nothing [] $
-            TIObject $ ObjectInfo (map fDefinition parsers) interfaces,
+            TIObject $
+              ObjectInfo (map fDefinition parsers) interfaces,
       pParser = \input -> withKey (Key "selectionSet") do
         -- Not all fields have a selection set, but if they have one, it
         -- must contain at least one field. The GraphQL parser returns a
@@ -242,7 +243,8 @@ selectionSetObject name description parsers implementsInterfaces =
         -- this field needs a selection set, and if none was provided,
         -- we must fail.
         when (null input) $
-          parseError $ "missing selection set for " <> toErrorValue name
+          parseError $
+            "missing selection set for " <> toErrorValue name
 
         -- TODO(PDV) This probably accepts invalid queries, namely queries that use
         -- type names that do not exist.
@@ -251,13 +253,14 @@ selectionSetObject name description parsers implementsInterfaces =
           parsedValue <-
             if
                 | _fName == $$(litName "__typename") ->
-                  pure $ SelectTypename $ getName name
+                    pure $ SelectTypename $ getName name
                 | Just parser <- M.lookup _fName parserMap ->
-                  withKey (Key (K.fromText (unName _fName))) $
-                    SelectField <$> parser selectionField
+                    withKey (Key (K.fromText (unName _fName))) $
+                      SelectField <$> parser selectionField
                 | otherwise ->
-                  withKey (Key (K.fromText (unName _fName))) $
-                    parseError $ "field " <> toErrorValue _fName <> " not found in type: " <> toErrorValue name
+                    withKey (Key (K.fromText (unName _fName))) $
+                      parseError $
+                        "field " <> toErrorValue _fName <> " not found in type: " <> toErrorValue name
           _dirMap <- parseDirectives customDirectives (DLExecutable EDLFIELD) _fDirectives
           -- insert processing of custom directives here
           pure parsedValue
@@ -285,7 +288,8 @@ selectionSetInterface name description fields objectImplementations =
     { pType =
         TNamed Nullable $
           Definition name description Nothing [] $
-            TIInterface $ InterfaceInfo (map fDefinition fields) objects,
+            TIInterface $
+              InterfaceInfo (map fDefinition fields) objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
       -- Note: This is somewhat suboptimal, since it parses a query against every
       -- possible object implementing this interface, possibly duplicating work for
@@ -312,7 +316,8 @@ selectionSetUnion name description objectImplementations =
     { pType =
         TNamed Nullable $
           Definition name description Nothing [] $
-            TIUnion $ UnionInfo objects,
+            TIUnion $
+              UnionInfo objects,
       pParser = \input -> for objectImplementations (($ input) . pParser)
     }
   where
@@ -360,7 +365,8 @@ rawSelection name description argumentsParser resultParser =
         -- handles parsing the fields it cares about
         for_ (M.keys _fArguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
-            parseError $ toErrorValue name <> " has no argument named " <> toErrorValue argumentName
+            parseError $
+              toErrorValue name <> " has no argument named " <> toErrorValue argumentName
         fmap (_fAlias,_fArguments,) $ withKey (Key "args") $ ifParser argumentsParser $ GraphQLValue <$> _fArguments
     }
   where
@@ -414,8 +420,10 @@ rawSubselection name description argumentsParser bodyParser =
         -- handles parsing the fields it cares about
         for_ (M.keys _fArguments) \argumentName ->
           unless (argumentName `S.member` argumentNames) $
-            parseError $ toErrorValue name <> " has no argument named " <> toErrorValue argumentName
-        (_fAlias,_fArguments,,) <$> withKey (Key "args") (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
+            parseError $
+              toErrorValue name <> " has no argument named " <> toErrorValue argumentName
+        (_fAlias,_fArguments,,)
+          <$> withKey (Key "args") (ifParser argumentsParser $ GraphQLValue <$> _fArguments)
           <*> pParser bodyParser _fSelectionSet
     }
   where

@@ -71,11 +71,11 @@ instance HasCodec QueryRequest where
     object "QueryRequest" $
       QueryRequest
         <$> requiredField "table" "The name of the table to query"
-        .= _qrTable
+          .= _qrTable
         <*> requiredField "table_relationships" "The relationships between tables involved in the entire query request"
-        .= _qrTableRelationships
+          .= _qrTableRelationships
         <*> requiredField "query" "The details of the query against the table"
-        .= _qrQuery
+          .= _qrQuery
 
 newtype FieldName = FieldName {unFieldName :: Text}
   deriving stock (Eq, Ord, Show, Generic, Data)
@@ -104,17 +104,17 @@ instance HasCodec Query where
     named "Query" . object "Query" $
       Query
         <$> optionalFieldOrNull "fields" "Fields of the query"
-        .= _qFields
+          .= _qFields
         <*> optionalFieldOrNull "aggregates" "Aggregate fields of the query"
-        .= _qAggregates
+          .= _qAggregates
         <*> optionalFieldOrNull "limit" "Optionally limit to N results"
-        .= _qLimit
+          .= _qLimit
         <*> optionalFieldOrNull "offset" "Optionally offset from the Nth result"
-        .= _qOffset
+          .= _qOffset
         <*> optionalFieldOrNull "where" "Optionally constrain the results to satisfy some predicate"
-        .= _qWhere
+          .= _qWhere
         <*> optionalFieldOrNull "order_by" "Optionally order the results by the value of one or more fields"
-        .= _qOrderBy
+          .= _qOrderBy
 
 -- | A relationship consists of the following components:
 --   - a sub-query, from the perspective that a relationship field will occur
@@ -132,9 +132,9 @@ relationshipFieldObjectCodec :: JSONObjectCodec RelationshipField
 relationshipFieldObjectCodec =
   RelationshipField
     <$> requiredField "relationship" "The name of the relationship to follow for the subquery"
-    .= _rfRelationship
+      .= _rfRelationship
     <*> requiredField "query" "Relationship query"
-    .= _rfQuery
+      .= _rfQuery
 
 -- | The specific fields that are targeted by a 'Query'.
 --
@@ -181,9 +181,9 @@ instance HasCodec QueryResponse where
     named "QueryResponse" . object "QueryResponse" $
       QueryResponse
         <$> optionalFieldOrNull "rows" "The rows returned by the query, corresponding to the query's fields"
-        .= _qrRows
+          .= _qrRows
         <*> optionalFieldOrNull "aggregates" "The results of the aggregates returned by the query"
-        .= _qrAggregates
+          .= _qrAggregates
 
 instance HasStatus QueryResponse where
   type StatusOf QueryResponse = 200

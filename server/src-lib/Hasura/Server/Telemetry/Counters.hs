@@ -159,7 +159,8 @@ recordTimingMetric reqDimensions RequestTimings {..} = liftIO $ do
         fromMaybe (RunningTimeBucket 0) $ -- although we expect 'head' would be safe here
           listToMaybe $
             dropWhile (> coerce telemTimeTot) $
-              reverse $ sort totalTimeBuckets
+              reverse $
+                sort totalTimeBuckets
   atomicModifyIORef' requestCounters $
     (,())
       . HM.insertWith (<>) (reqDimensions, ourBucket) RequestTimingsCount {telemCount = 1, ..}

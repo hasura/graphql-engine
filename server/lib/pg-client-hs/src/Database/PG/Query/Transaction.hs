@@ -191,7 +191,8 @@ rawQE ef q args prep = TxET $
   ReaderT $ \pgConn ->
     withExceptT (ef . txErrF) $
       hoist liftIO $
-        execQuery pgConn $ PGQuery (mkTemplate stmt) args prep fromRes
+        execQuery pgConn $
+          PGQuery (mkTemplate stmt) args prep fromRes
   where
     txErrF = PGTxErr stmt args prep
     stmt = getQueryText q

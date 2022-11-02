@@ -317,26 +317,26 @@ processEventQueue logger httpMgr getSchemaCache EventEngineCtx {..} LockedEvents
       let lenEvents = length events
       if
           | lenEvents == fetchBatchSize -> do
-            -- If we've seen N fetches in a row from the DB come back full (i.e. only limited
-            -- by our LIMIT clause), then we say we're clearly falling behind:
-            let clearlyBehind = fullFetchCount >= 3
-            unless alreadyWarned $
-              when clearlyBehind $
+              -- If we've seen N fetches in a row from the DB come back full (i.e. only limited
+              -- by our LIMIT clause), then we say we're clearly falling behind:
+              let clearlyBehind = fullFetchCount >= 3
+              unless alreadyWarned $
+                when clearlyBehind $
+                  L.unLogger logger $
+                    L.UnstructuredLog L.LevelWarn $
+                      fromString $
+                        "Events processor may not be keeping up with events generated in postgres, "
+                          <> "or we're working on a backlog of events. Consider increasing "
+                          <> "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
+              return (eventsNext, (fullFetchCount + 1), (alreadyWarned || clearlyBehind))
+          | otherwise -> do
+              when (lenEvents /= fetchBatchSize && alreadyWarned) $
+                -- emit as warning in case users are only logging warning severity and saw above
                 L.unLogger logger $
                   L.UnstructuredLog L.LevelWarn $
                     fromString $
-                      "Events processor may not be keeping up with events generated in postgres, "
-                        <> "or we're working on a backlog of events. Consider increasing "
-                        <> "HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE"
-            return (eventsNext, (fullFetchCount + 1), (alreadyWarned || clearlyBehind))
-          | otherwise -> do
-            when (lenEvents /= fetchBatchSize && alreadyWarned) $
-              -- emit as warning in case users are only logging warning severity and saw above
-              L.unLogger logger $
-                L.UnstructuredLog L.LevelWarn $
-                  fromString $
-                    "It looks like the events processor is keeping up again."
-            return (eventsNext, 0, False)
+                      "It looks like the events processor is keeping up again."
+              return (eventsNext, 0, False)
 
     processEvent ::
       forall io r b.
@@ -563,7 +563,8 @@ getEventTriggerInfoFromEvent sc e = do
       mEventTriggerInfo = M.lookup triggerName (_tiEventTriggerInfoMap tableInfo)
   onNothing mEventTriggerInfo $
     Left
-      ( "event trigger '" <> triggerNameToTxt triggerName
+      ( "event trigger '"
+          <> triggerNameToTxt triggerName
           <> "' on table '"
           <> table <<> "' not found"
       )

@@ -35,7 +35,8 @@ buildEventTriggerCleanupSuite = do
       let envVar = _envVar databaseUrlOption
       maybeV <- considerEnv envVar
       onNothing maybeV $
-        throwError $ "Expected: " <> envVar
+        throwError $
+          "Expected: " <> envVar
 
   let pgConnInfo = PG.ConnInfo 1 $ PG.CDDatabaseURI $ txtToBs pgUrlText
 

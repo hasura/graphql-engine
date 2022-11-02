@@ -335,7 +335,8 @@ reduceAbstractTypeSelectionSet (DeduplicatedSelectionSet baseMemberFields select
       -- remove member selection sets that are subsumed by base selection set
       filter (not . null . snd) $
         -- remove the common prefix from member selection sets
-        map (second (OMap.fromList . drop (OMap.size baseSelectionSet) . OMap.toList)) $ Map.toList selectionSets
+        map (second (OMap.fromList . drop (OMap.size baseSelectionSet) . OMap.toList)) $
+          Map.toList selectionSets
 
 -------------------------------------------------------------------------------
 -- TH lens generation

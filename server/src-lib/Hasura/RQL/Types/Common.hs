@@ -375,15 +375,15 @@ instance HasCodec PGConnectionParams where
     AC.object "PGConnectionParams" $
       PGConnectionParams
         <$> requiredField' "host"
-        AC..= _pgcpHost
+          AC..= _pgcpHost
         <*> requiredField' "username"
-        AC..= _pgcpUsername
+          AC..= _pgcpUsername
         <*> optionalFieldOrNull' "password"
-        AC..= _pgcpPassword
+          AC..= _pgcpPassword
         <*> requiredField' "port"
-        AC..= _pgcpPort
+          AC..= _pgcpPort
         <*> requiredField' "database"
-        AC..= _pgcpDatabase
+          AC..= _pgcpDatabase
 
 $(deriveToJSON hasuraJSON {omitNothingFields = True} ''PGConnectionParams)
 
@@ -391,15 +391,15 @@ instance FromJSON PGConnectionParams where
   parseJSON = withObject "PGConnectionParams" $ \o ->
     PGConnectionParams
       <$> o
-      .: "host"
+        .: "host"
       <*> o
-      .: "username"
+        .: "username"
       <*> o
-      .:? "password"
+        .:? "password"
       <*> o
-      .: "port"
+        .: "port"
       <*> o
-      .: "database"
+        .: "database"
 
 data UrlConf
   = -- | the database connection string

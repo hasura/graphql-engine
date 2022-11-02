@@ -585,8 +585,8 @@ processHeaderSimple ::
   -- requested Cookie name is not present (returns "m Nothing")
   m (ClaimsMap, Maybe UTCTime)
 processHeaderSimple jwtCtx jwt = do
-  --iss <- _ <$> Jose.decodeCompact (BL.fromStrict token)
-  --let ctx = M.lookup iss jwtCtx
+  -- iss <- _ <$> Jose.decodeCompact (BL.fromStrict token)
+  -- let ctx = M.lookup iss jwtCtx
 
   -- try to parse JWT token from Authorization or Cookie header
   -- verify the JWT
@@ -676,19 +676,23 @@ parseClaimsMap claimsSet jcxClaims = do
     parseAllowedRolesClaim defaultVal = \case
       Nothing ->
         onNothing defaultVal $
-          throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> sessionVariableToText allowedRolesClaim
+          throw400 JWTRoleClaimMissing $
+            "JWT claim does not contain " <> sessionVariableToText allowedRolesClaim
       Just v ->
         parseJwtClaim v $
-          "invalid " <> sessionVariableToText allowedRolesClaim
+          "invalid "
+            <> sessionVariableToText allowedRolesClaim
             <> "; should be a list of roles"
 
     parseDefaultRoleClaim defaultVal = \case
       Nothing ->
         onNothing defaultVal $
-          throw400 JWTRoleClaimMissing $ "JWT claim does not contain " <> sessionVariableToText defaultRoleClaim
+          throw400 JWTRoleClaimMissing $
+            "JWT claim does not contain " <> sessionVariableToText defaultRoleClaim
       Just v ->
         parseJwtClaim v $
-          "invalid " <> sessionVariableToText defaultRoleClaim
+          "invalid "
+            <> sessionVariableToText defaultRoleClaim
             <> "; should be a role"
 
     claimsNotFound namespace =

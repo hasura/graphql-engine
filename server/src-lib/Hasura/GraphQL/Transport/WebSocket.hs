@@ -269,8 +269,8 @@ sendMsgWithMetadata wsConn msg opName paramQueryHash (ES.SubscriptionMetadata ex
       (SMData (DataMsg opId _)) -> (Just SMT_GQL_DATA, Just opId)
       _ -> (Nothing, Nothing)
     wsInfo =
-      Just
-        $! WS.WSEventInfo
+      Just $!
+        WS.WSEventInfo
           { WS._wseiEventType = msgType,
             WS._wseiOperationId = operationId,
             WS._wseiOperationName = opName,
@@ -545,7 +545,8 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
               --       the WS client will respond correctly to multiple messages.
               void $
                 Tracing.interpTraceT (withExceptT mempty) $
-                  cacheStore cacheKey cachedDirective $ encodeAnnotatedResponseParts results
+                  cacheStore cacheKey cachedDirective $
+                    encodeAnnotatedResponseParts results
 
       liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
     E.MutationExecutionPlan mutationPlan -> do
@@ -736,7 +737,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         totalTime <- timerTot
         let telemTimeTot = Seconds totalTime
         sendSuccResp (encodeAnnotatedResponseParts results) opName pqh $
-          ES.SubscriptionMetadata $ sum $ fmap arpTimeIO results
+          ES.SubscriptionMetadata $
+            sum $
+              fmap arpTimeIO results
         -- Telemetry. NOTE: don't time network IO:
         Telem.recordTimingMetric Telem.RequestDimensions {..} Telem.RequestTimings {..}
         liftIO $ recordGQLQuerySuccess totalTime gqlOpType
@@ -803,7 +806,10 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
     sendStartErr e = do
       let errFn = getErrFn errRespTy
       sendMsg wsConn $
-        SMErr $ ErrorMsg opId $ errFn False $ err400 StartFailed e
+        SMErr $
+          ErrorMsg opId $
+            errFn False $
+              err400 StartFailed e
       liftIO $ logOpEv (ODProtoErr e) Nothing Nothing
       liftIO $ reportGQLQueryError Nothing
       liftIO $ closeConnAction wsConn opId (T.unpack e)
@@ -927,7 +933,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
           (ES.SubscriptionMetadata dTime)
       resp ->
         sendMsg wsConn $
-          sendDataMsg $ DataMsg opId $ LBS.fromStrict . ES._lqrPayload <$> resp
+          sendDataMsg $
+            DataMsg opId $
+              LBS.fromStrict . ES._lqrPayload <$> resp
 
     -- If the source has a namespace then we need to wrap the response
     -- from the DB in that namespace.

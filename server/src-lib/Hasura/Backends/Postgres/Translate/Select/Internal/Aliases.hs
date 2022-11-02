@@ -118,5 +118,6 @@ mkArrayRelationAlias parentFieldName similarFieldsMap fieldName =
 mkUniqArrayRelationAlias :: FieldName -> [FieldName] -> Text
 mkUniqArrayRelationAlias parAls flds =
   let sortedFields = sort flds
-   in getFieldNameTxt parAls <> "."
+   in getFieldNameTxt parAls
+        <> "."
         <> T.intercalate "." (map getFieldNameTxt sortedFields)

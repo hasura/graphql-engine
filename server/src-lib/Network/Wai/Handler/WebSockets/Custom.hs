@@ -83,9 +83,9 @@ websocketsApp ::
   Maybe Wai.Response
 websocketsApp opts app req
   | isWebSocketsReq req =
-    Just $
-      flip Wai.responseRaw backup $ \src sink ->
-        runWebSockets opts req' ipAddress app src sink
+      Just $
+        flip Wai.responseRaw backup $ \src sink ->
+          runWebSockets opts req' ipAddress app src sink
   | otherwise = Nothing
   where
     (req', ipAddress) = getRequestHead req

@@ -56,7 +56,8 @@ getActionInfo ::
 getActionInfo actionName = do
   actionMap <- scActions <$> askSchemaCache
   onNothing (Map.lookup actionName actionMap) $
-    throw400 NotExists $ "action with name " <> actionName <<> " does not exist"
+    throw400 NotExists $
+      "action with name " <> actionName <<> " does not exist"
 
 data CreateAction = CreateAction
   { _caName :: ActionName,
@@ -128,13 +129,14 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
       (gType,)
         <$> if
             | Just noCTScalar <- lookupBackendScalar allScalars argumentBaseType ->
-              pure $ NOCTScalar noCTScalar
+                pure $ NOCTScalar noCTScalar
             | Just nonObjectType <- Map.lookup argumentBaseType _actInputTypes ->
-              pure nonObjectType
+                pure nonObjectType
             | otherwise ->
-              throw400 InvalidParams $
-                "the type: " <> dquote argumentBaseType
-                  <> " is not defined in custom types or it is not a scalar/enum/input_object"
+                throw400 InvalidParams $
+                  "the type: "
+                    <> dquote argumentBaseType
+                    <> " is not defined in custom types or it is not a scalar/enum/input_object"
 
   -- Check if the response type is an object
   let outputType = unGraphQLType _adOutputType
@@ -143,13 +145,13 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
     aot <-
       if
           | Just aoTScalar <- lookupBackendScalar allScalars outputBaseType ->
-            pure $ AOTScalar aoTScalar
+              pure $ AOTScalar aoTScalar
           | Just objectType <- Map.lookup outputBaseType _actObjectTypes ->
-            pure $ AOTObject objectType
+              pure $ AOTObject objectType
           | Just (NOCTScalar s) <- Map.lookup outputBaseType _actInputTypes ->
-            pure (AOTScalar s)
+              pure (AOTScalar s)
           | otherwise ->
-            throw400 NotExists ("the type: " <> dquote outputBaseType <> " is not an object or scalar type defined in custom types")
+              throw400 NotExists ("the type: " <> dquote outputBaseType <> " is not an object or scalar type defined in custom types")
     -- If the Action is sync:
     --      1. Check if the output type has only top level relations (if any)
     --   If the Action is async:
@@ -189,7 +191,8 @@ resolveAction env AnnotatedCustomTypes {..} ActionDefinition {..} allScalars = d
         AOTScalar _ -> pure ()
         AOTObject aot' ->
           unless (null (_aotRelationships aot') || null nestedObjects) $
-            throw400 ConstraintError $ "Async action relations cannot be used with object fields: " <> commaSeparated (dquote . _ofdName <$> nestedObjects)
+            throw400 ConstraintError $
+              "Async action relations cannot be used with object fields: " <> commaSeparated (dquote . _ofdName <$> nestedObjects)
     pure aot
   resolvedWebhook <- resolveWebhook env _adHandler
   let webhookEnvRecord = EnvRecord (printURLTemplate $ unInputWebhook _adHandler) resolvedWebhook
@@ -226,7 +229,8 @@ runUpdateAction (UpdateAction actionName actionDefinition actionComment) = do
   let actionsMap = scActions sc
   void $
     onNothing (Map.lookup actionName actionsMap) $
-      throw400 NotExists $ "action with name " <> actionName <<> " does not exist"
+      throw400 NotExists $
+        "action with name " <> actionName <<> " does not exist"
   buildSchemaCacheFor (MOAction actionName) $ updateActionMetadataModifier actionDefinition actionComment
   pure successMsg
   where
@@ -300,8 +304,10 @@ runCreateActionPermission createActionPermission = do
   metadata <- getMetadata
   when (doesActionPermissionExist metadata actionName roleName) $
     throw400 AlreadyExists $
-      "permission for role " <> roleName
-        <<> " is already defined on " <>> actionName
+      "permission for role "
+        <> roleName
+          <<> " is already defined on "
+          <>> actionName
   buildSchemaCacheFor (MOActionPermission actionName roleName) $
     MetadataModifier $
       metaActions . ix actionName . amPermissions

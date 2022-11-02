@@ -588,7 +588,7 @@ pgScalarSelectionArgumentsParser ::
   InputFieldsParser n (Maybe (ScalarSelectionArguments ('Postgres pgKind)))
 pgScalarSelectionArgumentsParser columnType
   | isScalarColumnWhere Postgres.isJSONType columnType =
-    P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
+      P.fieldOptional fieldName description P.string `P.bindFields` fmap join . traverse toColExp
   | otherwise = pure Nothing
   where
     fieldName = Name._path

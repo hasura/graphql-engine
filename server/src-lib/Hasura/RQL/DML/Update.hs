@@ -96,7 +96,8 @@ convOp fieldInfoMap preSetCols updPerm objs conv =
     throwNotUpdErr c = do
       roleName <- _uiRole <$> askUserInfo
       throw400 NotSupported $
-        "column " <> c <<> " is not updatable"
+        "column "
+          <> c <<> " is not updatable"
           <> " for role "
           <> roleName <<> "; its value is predefined in permission"
 
@@ -137,15 +138,18 @@ validateUpdateQueryWith sessVarBldr prepValBldr uq = do
   -- convert the object to SQL set expression
   setItems <-
     withPathK "$set" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $ convSet prepValBldr
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqSet uq) $
+        convSet prepValBldr
 
   incItems <-
     withPathK "$inc" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $ convInc prepValBldr
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqInc uq) $
+        convInc prepValBldr
 
   mulItems <-
     withPathK "$mul" $
-      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $ convMul prepValBldr
+      convOp fieldInfoMap preSetCols updPerm (M.toList $ uqMul uq) $
+        convMul prepValBldr
 
   defItems <-
     withPathK "$default" $

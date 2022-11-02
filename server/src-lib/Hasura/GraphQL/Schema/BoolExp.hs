@@ -89,8 +89,9 @@ boolExp sourceInfo tableInfo = P.memoizeOn 'boolExp (_siName sourceInfo, tableNa
   name <- mkTypename $ applyTypeNameCaseIdentifier tCase $ mkTableBoolExpTypeName tableGQLName
   let description =
         G.Description $
-          "Boolean expression to filter rows from the table " <> tableName
-            <<> ". All fields are combined with a logical 'AND'."
+          "Boolean expression to filter rows from the table "
+            <> tableName
+              <<> ". All fields are combined with a logical 'AND'."
 
   fieldInfos <- tableSelectFields sourceInfo tableInfo
   tableFieldParsers <- catMaybes <$> traverse mkField fieldInfos

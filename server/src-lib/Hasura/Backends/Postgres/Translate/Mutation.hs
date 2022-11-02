@@ -55,7 +55,8 @@ mkSelectExpFromColumnValues qt allCols = \case
           let pgCol = ciColumn ci
           val <-
             onNothing (Map.lookup pgCol colVal) $
-              throw500 $ "column " <> pgCol <<> " not found in returning values"
+              throw500 $
+                "column " <> pgCol <<> " not found in returning values"
           pure $ txtEncodedToSQLExp (ciType ci) val
 
     selNoRows =
