@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/mitchellh/mapstructure"
+
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 )
 
 type HasuraInterfaceBulk struct {
@@ -137,15 +139,16 @@ func (h HasuraError) Error() string {
 
 // NewHasuraError - returns error based on data and isCmd
 func NewHasuraError(data []byte, isCmd bool) error {
+	var op errors.Op = "hasuradb.NewHasuraError"
 	switch isCmd {
 	case true:
 		var herror HasuraError
 		err := json.Unmarshal(data, &herror)
 		if err != nil {
-			return fmt.Errorf("failed parsing json: %w; response from API: %s", err, string(data))
+			return errors.E(op, fmt.Errorf("failed parsing json: %w; response from API: %s", err, string(data)))
 		}
 		return herror
 	default:
-		return fmt.Errorf("Data Error: %s", string(data))
+		return errors.E(op, fmt.Errorf("Data Error: %s", string(data)))
 	}
 }
