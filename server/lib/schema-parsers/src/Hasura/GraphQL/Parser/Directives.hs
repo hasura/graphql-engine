@@ -110,6 +110,7 @@ parseDirectives ::
   G.DirectiveLocation ->
   [G.Directive Variable] ->
   m DirectiveMap
+{-# INLINE parseDirectives #-}
 parseDirectives directiveParsers location givenDirectives = do
   result <-
     catMaybes <$> for givenDirectives \directive -> do
@@ -276,6 +277,7 @@ mkDirective ::
   [G.DirectiveLocation] ->
   InputFieldsParser origin m a ->
   Directive origin m
+{-# INLINE mkDirective #-}
 mkDirective name description advertised location argsParser =
   Directive
     { dDefinition = DirectiveInfo name description (ifDefinitions argsParser) location,
