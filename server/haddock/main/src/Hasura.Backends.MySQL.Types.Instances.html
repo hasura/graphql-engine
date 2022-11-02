@@ -195,7 +195,7 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
-</span><span id="line-175"></span><span>            </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-175"></span><span>              </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Text
@@ -206,7 +206,7 @@ HasCodec output =&gt;
 Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><a href="Autodocodec.Extended.html#optionalFieldOrIncludedNull%27"><span class="hs-identifier hs-var">optionalFieldOrIncludedNull'</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;schema&quot;</span></span><span>
-</span><span id="line-177"></span><span>            </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-177"></span><span>              </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">TableName -&gt; Maybe Text
@@ -239,13 +239,13 @@ ObjectCodec oldInput output
 </span><span id="line-185"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690409297"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-186"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span id="line-186"></span><span>        </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;name&quot;</span></span><span>
 </span><span id="line-187"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690409297"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-188"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><span id="line-188"></span><span>        </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;schema&quot;</span></span><span>
 </span><span id="line-189"></span><span>  </span><span class="annot"><span class="hs-identifier hs-var">parseJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
@@ -364,7 +364,7 @@ Text -&gt; output -&gt; ObjectCodec output output
 </span><span class="hs-string">&quot;idle_timeout&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ConnPoolSettings -&gt; Word
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscIdleTimeout"><span class="hs-identifier hs-var">_cscIdleTimeout</span></a></span><span> </span><span class="annot"><span class="annottext">ConnPoolSettings
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#defaultConnPoolSettings"><span class="hs-identifier hs-var">defaultConnPoolSettings</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-229"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-229"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ConnPoolSettings -&gt; Word
@@ -377,7 +377,7 @@ Text -&gt; output -&gt; ObjectCodec output output
 </span><span class="hs-string">&quot;max_connections&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ConnPoolSettings -&gt; Word
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscMaxConnections"><span class="hs-identifier hs-var">_cscMaxConnections</span></a></span><span> </span><span class="annot"><span class="annottext">ConnPoolSettings
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#defaultConnPoolSettings"><span class="hs-identifier hs-var">defaultConnPoolSettings</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-231"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-231"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ConnPoolSettings -&gt; Word
@@ -458,7 +458,7 @@ Text -&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;host&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690409054"><span class="hs-identifier hs-var">hostDoc</span></a></span><span>
-</span><span id="line-253"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-253"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ConnSourceConfig -&gt; Text
@@ -467,7 +467,7 @@ ObjectCodec oldInput output
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;port&quot;</span></span><span>
-</span><span id="line-255"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-255"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ConnSourceConfig -&gt; Word16
@@ -476,7 +476,7 @@ ObjectCodec oldInput output
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;user&quot;</span></span><span>
-</span><span id="line-257"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-257"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ConnSourceConfig -&gt; Text
@@ -485,7 +485,7 @@ ObjectCodec oldInput output
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;password&quot;</span></span><span>
-</span><span id="line-259"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-259"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ConnSourceConfig -&gt; Text
@@ -494,7 +494,7 @@ ObjectCodec oldInput output
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;database&quot;</span></span><span>
-</span><span id="line-261"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-261"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ConnSourceConfig -&gt; Text
@@ -503,7 +503,7 @@ ObjectCodec oldInput output
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;pool_settings&quot;</span></span><span>
-</span><span id="line-263"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-263"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ConnPoolSettings

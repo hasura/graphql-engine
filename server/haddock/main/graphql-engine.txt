@@ -9670,7 +9670,6 @@ newtype OffsetExp
 OffsetExp :: SQLExp -> OffsetExp
 newtype OrderByExp
 OrderByExp :: NonEmpty OrderByItem -> OrderByExp
-
 data OrderByItem
 OrderByItem :: SQLExp -> Maybe OrderType -> Maybe NullsOrder -> OrderByItem
 

@@ -927,17 +927,18 @@ positionalArguments :: [ColumnValue 'MSSQL]
 </span><span id="line-331"></span><span>          </span><span class="hs-special">)</span><span>
 </span><span id="line-332"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [(k, v)]
-</span><span class="hs-identifier hs-var">Map.toList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">Map.toList</span></span><span>
+</span><span id="line-333"></span><span>          </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (ColumnValue 'MSSQL)
 </span><a href="#local-6989586621690645838"><span class="hs-identifier hs-var">namedArguments</span></a></span><span>
-</span><span id="line-333"></span><span>
-</span><span id="line-334"></span><span>      </span><span class="hs-comment">-- For positional args we need to be a bit careful not to capture names</span><span>
-</span><span id="line-335"></span><span>      </span><span class="hs-comment">-- from expNamed and expSes (however unlikely)</span><span>
-</span><span id="line-336"></span><span>      </span><span id="local-6989586621690645828"><span class="annot"><span class="annottext">expPos :: [Aliased Expression]
+</span><span id="line-334"></span><span>
+</span><span id="line-335"></span><span>      </span><span class="hs-comment">-- For positional args we need to be a bit careful not to capture names</span><span>
+</span><span id="line-336"></span><span>      </span><span class="hs-comment">-- from expNamed and expSes (however unlikely)</span><span>
+</span><span id="line-337"></span><span>      </span><span id="local-6989586621690645828"><span class="annot"><span class="annottext">expPos :: [Aliased Expression]
 </span><a href="#local-6989586621690645828"><span class="hs-identifier hs-var hs-var">expPos</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-337"></span><span>        </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; [a] -&gt; [b] -&gt; [c]
+</span><span id="line-338"></span><span>        </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; [a] -&gt; [b] -&gt; [c]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">zipWith</span></a></span><span>
-</span><span id="line-338"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690645819"><span class="annot"><span class="annottext">Text
+</span><span id="line-339"></span><span>          </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690645819"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690645819"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621690645818"><span class="annot"><span class="annottext">ColumnValue 'MSSQL
 </span><a href="#local-6989586621690645818"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Expression
@@ -945,16 +946,16 @@ positionalArguments :: [ColumnValue 'MSSQL]
 </span><a href="Hasura.RQL.Types.Column.html#cvValue"><span class="hs-identifier hs-var">RQLColumn.cvValue</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnValue 'MSSQL
 </span><a href="#local-6989586621690645818"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690645819"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-339"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. [Aliased a] -&gt; [Text]
+</span><span id="line-340"></span><span>          </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. [Aliased a] -&gt; [Text]
 </span><a href="#local-6989586621690645817"><span class="hs-identifier hs-var">freshVars</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Aliased Expression]
 </span><a href="#local-6989586621690645829"><span class="hs-identifier hs-var">expNamed</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[Aliased Expression]
 </span><a href="#local-6989586621690645830"><span class="hs-identifier hs-var">expSes</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-340"></span><span>          </span><span class="annot"><span class="annottext">[ColumnValue 'MSSQL]
+</span><span id="line-341"></span><span>          </span><span class="annot"><span class="annottext">[ColumnValue 'MSSQL]
 </span><a href="#local-6989586621690645836"><span class="hs-identifier hs-var">positionalArguments</span></a></span><span>
-</span><span id="line-341"></span><span>
-</span><span id="line-342"></span><span>      </span><span class="annot"><a href="#local-6989586621690645816"><span class="hs-identifier hs-type">projAll</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Projection"><span class="hs-identifier hs-type">Projection</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-343"></span><span>      </span><span id="local-6989586621690645816"><span class="annot"><span class="annottext">projAll :: [Projection]
+</span><span id="line-342"></span><span>
+</span><span id="line-343"></span><span>      </span><span class="annot"><a href="#local-6989586621690645816"><span class="hs-identifier hs-type">projAll</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Projection"><span class="hs-identifier hs-type">Projection</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-344"></span><span>      </span><span id="local-6989586621690645816"><span class="annot"><span class="annottext">projAll :: [Projection]
 </span><a href="#local-6989586621690645816"><span class="hs-identifier hs-var hs-var">projAll</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">Aliased Expression -&gt; Projection
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ExpressionProjection"><span class="hs-identifier hs-var">ExpressionProjection</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Aliased Expression]
@@ -963,40 +964,40 @@ positionalArguments :: [ColumnValue 'MSSQL]
 </span><a href="#local-6989586621690645829"><span class="hs-identifier hs-var">expNamed</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[Aliased Expression]
 </span><a href="#local-6989586621690645828"><span class="hs-identifier hs-var">expPos</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-344"></span><span>
-</span><span id="line-345"></span><span>      </span><span id="local-6989586621690645815"><span class="annot"><span class="annottext">canaryQuery :: Maybe Query
+</span><span id="line-345"></span><span>
+</span><span id="line-346"></span><span>      </span><span id="local-6989586621690645815"><span class="annot"><span class="annottext">canaryQuery :: Maybe Query
 </span><a href="#local-6989586621690645815"><span class="hs-identifier hs-var hs-var">canaryQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-346"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span id="line-347"></span><span>        </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">[Projection]
 </span><a href="#local-6989586621690645816"><span class="hs-identifier hs-var">projAll</span></a></span><span>
-</span><span id="line-347"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><span id="line-348"></span><span>          </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-348"></span><span>          </span><span class="hs-keyword">else</span><span>
-</span><span id="line-349"></span><span>            </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><span id="line-349"></span><span>          </span><span class="hs-keyword">else</span><span>
+</span><span id="line-350"></span><span>            </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-350"></span><span>              </span><span class="annot"><span class="annottext">Select -&gt; Query
+</span><span id="line-351"></span><span>              </span><span class="annot"><span class="annottext">Select -&gt; Query
 </span><a href="#local-6989586621690645813"><span class="hs-identifier hs-var">renderQuery</span></a></span><span>
-</span><span id="line-351"></span><span>                </span><span class="annot"><span class="annottext">Select
+</span><span id="line-352"></span><span>                </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#emptySelect"><span class="hs-identifier hs-var">emptySelect</span></a></span><span>
-</span><span id="line-352"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
+</span><span id="line-353"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:selectProjections:Select :: [Projection]
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectProjections%3ASelect"><span class="hs-identifier hs-var">selectProjections</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Projection]
 </span><a href="#local-6989586621690645816"><span class="hs-identifier hs-var">projAll</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-353"></span><span>                    </span><span class="annot"><span class="annottext">$sel:selectFrom:Select :: Maybe From
+</span><span id="line-354"></span><span>                    </span><span class="annot"><span class="annottext">$sel:selectFrom:Select :: Maybe From
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AselectFrom%3ASelect"><span class="hs-identifier hs-var">selectFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SessionVariables -&gt; Maybe From
 </span><a href="#local-6989586621690645812"><span class="hs-identifier hs-var">sessionOpenJson</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
 </span><a href="#local-6989586621690645834"><span class="hs-identifier hs-var">occSessionVars</span></a></span><span>
-</span><span id="line-354"></span><span>                  </span><span class="hs-special">}</span><span>
-</span><span id="line-355"></span><span>
-</span><span id="line-356"></span><span>  </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
+</span><span id="line-355"></span><span>                  </span><span class="hs-special">}</span><span>
+</span><span id="line-356"></span><span>
+</span><span id="line-357"></span><span>  </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a b.
 (Foldable t, Applicative f) =&gt;
 t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">for_</span></a></span><span>
-</span><span id="line-357"></span><span>    </span><span class="annot"><span class="annottext">Maybe Query
+</span><span id="line-358"></span><span>    </span><span class="annot"><span class="annottext">Maybe Query
 </span><a href="#local-6989586621690645815"><span class="hs-identifier hs-var">canaryQuery</span></a></span><span>
-</span><span id="line-358"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690645810"><span class="annot"><span class="annottext">Query
+</span><span id="line-359"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690645810"><span class="annot"><span class="annottext">Query
 </span><a href="#local-6989586621690645810"><span class="hs-identifier hs-var">q</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-359"></span><span>        </span><span class="annot"><span class="annottext">[[Value]]
+</span><span id="line-360"></span><span>        </span><span class="annot"><span class="annottext">[[Value]]
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">ODBC.Value</span></span><span class="hs-special">]</span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
@@ -1010,35 +1011,35 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="Database.MSSQL.Transaction.html#multiRowQueryE"><span class="hs-identifier hs-var">Tx.multiRowQueryE</span></a></span><span> </span><span class="annot"><span class="annottext">MSSQLTxError -&gt; QErr
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="annot"><span class="annottext">Query
 </span><a href="#local-6989586621690645810"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-360"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-361"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-361"></span><span>    </span><span class="hs-special">)</span><span>
-</span><span id="line-362"></span><span>
-</span><span id="line-363"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-362"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-363"></span><span>
+</span><span id="line-364"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
-</span><span id="line-364"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). f TxtEncodedVal -&gt; ValidatedVariables f
+</span><span id="line-365"></span><span>    </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). f TxtEncodedVal -&gt; ValidatedVariables f
 </span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-var">ValidatedVariables</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnValue 'MSSQL -&gt; TxtEncodedVal
 </span><a href="Hasura.Backends.MSSQL.SQL.Value.html#txtEncodedColVal"><span class="hs-identifier hs-var">txtEncodedColVal</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Name (ColumnValue 'MSSQL)
 </span><a href="#local-6989586621690645838"><span class="hs-identifier hs-var">namedArguments</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-365"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). f TxtEncodedVal -&gt; ValidatedVariables f
+</span><span id="line-366"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). f TxtEncodedVal -&gt; ValidatedVariables f
 </span><a href="Hasura.GraphQL.Execute.Subscription.Plan.html#ValidatedVariables"><span class="hs-identifier hs-var">ValidatedVariables</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnValue 'MSSQL -&gt; TxtEncodedVal
 </span><a href="Hasura.Backends.MSSQL.SQL.Value.html#txtEncodedColVal"><span class="hs-identifier hs-var">txtEncodedColVal</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[ColumnValue 'MSSQL]
 </span><a href="#local-6989586621690645836"><span class="hs-identifier hs-var">positionalArguments</span></a></span><span>
-</span><span id="line-366"></span><span>    </span><span class="hs-special">)</span><span>
-</span><span id="line-367"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-368"></span><span>    </span><span class="annot"><a href="#local-6989586621690645813"><span class="hs-identifier hs-type">renderQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span>
-</span><span id="line-369"></span><span>    </span><span id="local-6989586621690645813"><span class="annot"><span class="annottext">renderQuery :: Select -&gt; Query
+</span><span id="line-367"></span><span>    </span><span class="hs-special">)</span><span>
+</span><span id="line-368"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-369"></span><span>    </span><span class="annot"><a href="#local-6989586621690645813"><span class="hs-identifier hs-type">renderQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Select"><span class="hs-identifier hs-type">Select</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ODBC.Query</span></span><span>
+</span><span id="line-370"></span><span>    </span><span id="local-6989586621690645813"><span class="annot"><span class="annottext">renderQuery :: Select -&gt; Query
 </span><a href="#local-6989586621690645813"><span class="hs-identifier hs-var hs-var">renderQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Select -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromSelect"><span class="hs-identifier hs-var">fromSelect</span></a></span><span>
-</span><span id="line-370"></span><span>
-</span><span id="line-371"></span><span>    </span><span id="local-6989586621690646309"><span class="annot"><a href="#local-6989586621690645817"><span class="hs-identifier hs-type">freshVars</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690646309"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span></span><span>
-</span><span id="line-372"></span><span>    </span><span id="local-6989586621690645817"><span class="annot"><span class="annottext">freshVars :: forall a. [Aliased a] -&gt; [Text]
+</span><span id="line-371"></span><span>
+</span><span id="line-372"></span><span>    </span><span id="local-6989586621690646309"><span class="annot"><a href="#local-6989586621690645817"><span class="hs-identifier hs-type">freshVars</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690646309"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span></span><span>
+</span><span id="line-373"></span><span>    </span><span id="local-6989586621690645817"><span class="annot"><span class="annottext">freshVars :: forall a. [Aliased a] -&gt; [Text]
 </span><a href="#local-6989586621690645817"><span class="hs-identifier hs-var hs-var">freshVars</span></a></span></span><span> </span><span id="local-6989586621690645803"><span class="annot"><span class="annottext">[Aliased a]
 </span><a href="#local-6989586621690645803"><span class="hs-identifier hs-var">boundNames</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
@@ -1049,10 +1050,10 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#%24sel%3AaliasedAlias%3AAliased"><span class="hs-identifier hs-var">aliasedAlias</span></a></span><span> </span><span class="annot"><span class="annottext">[Aliased a]
 </span><a href="#local-6989586621690645803"><span class="hs-identifier hs-var">boundNames</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Text]
 </span><a href="#local-6989586621690645800"><span class="hs-identifier hs-var">chars</span></a></span><span>
-</span><span id="line-373"></span><span>
-</span><span id="line-374"></span><span>    </span><span class="hs-comment">-- Infinite list of expression aliases.</span><span>
-</span><span id="line-375"></span><span>    </span><span class="annot"><a href="#local-6989586621690645800"><span class="hs-identifier hs-type">chars</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span>
-</span><span id="line-376"></span><span>    </span><span id="local-6989586621690645800"><span class="annot"><span class="annottext">chars :: [Text]
+</span><span id="line-374"></span><span>
+</span><span id="line-375"></span><span>    </span><span class="hs-comment">-- Infinite list of expression aliases.</span><span>
+</span><span id="line-376"></span><span>    </span><span class="annot"><a href="#local-6989586621690645800"><span class="hs-identifier hs-type">chars</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">]</span><span>
+</span><span id="line-377"></span><span>    </span><span id="local-6989586621690645800"><span class="annot"><span class="annottext">chars :: [Text]
 </span><a href="#local-6989586621690645800"><span class="hs-identifier hs-var hs-var">chars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690645799"><span class="hs-identifier hs-var">y</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">T.&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Char
@@ -1064,26 +1065,26 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="#local-6989586621690645797"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'a'</span></span><span> </span><span class="hs-glyph">..</span><span> </span><span class="annot"><span class="annottext">Char
 </span><span class="hs-char">'z'</span></span><span class="hs-special">]</span><span class="hs-special">]</span><span>
-</span><span id="line-377"></span><span>
-</span><span id="line-378"></span><span>    </span><span class="annot"><a href="#local-6989586621690645812"><span class="hs-identifier hs-type">sessionOpenJson</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#From"><span class="hs-identifier hs-type">From</span></a></span><span>
-</span><span id="line-379"></span><span>    </span><span id="local-6989586621690645812"><span class="annot"><span class="annottext">sessionOpenJson :: SessionVariables -&gt; Maybe From
+</span><span id="line-378"></span><span>
+</span><span id="line-379"></span><span>    </span><span class="annot"><a href="#local-6989586621690645812"><span class="hs-identifier hs-type">sessionOpenJson</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#From"><span class="hs-identifier hs-type">From</span></a></span><span>
+</span><span id="line-380"></span><span>    </span><span id="local-6989586621690645812"><span class="annot"><span class="annottext">sessionOpenJson :: SessionVariables -&gt; Maybe From
 </span><a href="#local-6989586621690645812"><span class="hs-identifier hs-var hs-var">sessionOpenJson</span></a></span></span><span> </span><span id="local-6989586621690645795"><span class="annot"><span class="annottext">SessionVariables
 </span><a href="#local-6989586621690645795"><span class="hs-identifier hs-var">occSessionVars</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-380"></span><span>      </span><span class="annot"><span class="annottext">forall a. [a] -&gt; Maybe (NonEmpty a)
+</span><span id="line-381"></span><span>      </span><span class="annot"><span class="annottext">forall a. [a] -&gt; Maybe (NonEmpty a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">nonEmpty</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SessionVariables -&gt; [Text]
 </span><a href="Hasura.Session.html#getSessionVariables"><span class="hs-identifier hs-var">getSessionVariables</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariables
 </span><a href="#local-6989586621690645795"><span class="hs-identifier hs-var">occSessionVars</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-381"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span id="line-382"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&amp;&gt;</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690645792"><span class="annot"><span class="annottext">NonEmpty Text
 </span><a href="#local-6989586621690645792"><span class="hs-identifier hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-382"></span><span>          </span><span class="annot"><span class="annottext">Aliased OpenJson -&gt; From
+</span><span id="line-383"></span><span>          </span><span class="annot"><span class="annottext">Aliased OpenJson -&gt; From
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#FromOpenJson"><span class="hs-identifier hs-var">FromOpenJson</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-383"></span><span>            </span><span class="annot"><span class="annottext">forall a. a -&gt; Text -&gt; Aliased a
+</span><span id="line-384"></span><span>            </span><span class="annot"><span class="annottext">forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span><span>
-</span><span id="line-384"></span><span>              </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Maybe (NonEmpty JsonFieldSpec) -&gt; OpenJson
+</span><span id="line-385"></span><span>              </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Expression -&gt; Maybe (NonEmpty JsonFieldSpec) -&gt; OpenJson
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#OpenJson"><span class="hs-identifier hs-var">OpenJson</span></a></span><span>
-</span><span id="line-385"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Expression
+</span><span id="line-386"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Value -&gt; Expression
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ValueExpression"><span class="hs-identifier hs-var">ValueExpression</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">ODBC.TextValue</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1092,25 +1093,25 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
 </span><span class="hs-identifier hs-var">J.encode</span></span><span> </span><span class="annot"><span class="annottext">SessionVariables
 </span><a href="#local-6989586621690645795"><span class="hs-identifier hs-var">occSessionVars</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-386"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-387"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; JsonFieldSpec
 </span><a href="#local-6989586621690645791"><span class="hs-identifier hs-var">sessField</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">NonEmpty Text
 </span><a href="#local-6989586621690645792"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-387"></span><span>              </span><span class="hs-special">)</span><span>
-</span><span id="line-388"></span><span>              </span><span class="annot"><span class="annottext">Text
+</span><span id="line-388"></span><span>              </span><span class="hs-special">)</span><span>
+</span><span id="line-389"></span><span>              </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;session&quot;</span></span><span>
-</span><span id="line-389"></span><span>
-</span><span id="line-390"></span><span>    </span><span class="annot"><a href="#local-6989586621690645791"><span class="hs-identifier hs-type">sessField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#JsonFieldSpec"><span class="hs-identifier hs-type">JsonFieldSpec</span></a></span><span>
-</span><span id="line-391"></span><span>    </span><span id="local-6989586621690645791"><span class="annot"><span class="annottext">sessField :: Text -&gt; JsonFieldSpec
+</span><span id="line-390"></span><span>
+</span><span id="line-391"></span><span>    </span><span class="annot"><a href="#local-6989586621690645791"><span class="hs-identifier hs-type">sessField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#JsonFieldSpec"><span class="hs-identifier hs-type">JsonFieldSpec</span></a></span><span>
+</span><span id="line-392"></span><span>    </span><span id="local-6989586621690645791"><span class="annot"><span class="annottext">sessField :: Text -&gt; JsonFieldSpec
 </span><a href="#local-6989586621690645791"><span class="hs-identifier hs-var hs-var">sessField</span></a></span></span><span> </span><span id="local-6989586621690645790"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690645790"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Maybe JsonPath -&gt; JsonFieldSpec
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#StringField"><span class="hs-identifier hs-var">StringField</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690645790"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-392"></span><span>
-</span><span id="line-393"></span><span>    </span><span class="annot"><a href="#local-6989586621690645827"><span class="hs-identifier hs-type">sessionReference</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
-</span><span id="line-394"></span><span>    </span><span id="local-6989586621690645827"><span class="annot"><span class="annottext">sessionReference :: Text -&gt; Aliased Expression
+</span><span id="line-393"></span><span>
+</span><span id="line-394"></span><span>    </span><span class="annot"><a href="#local-6989586621690645827"><span class="hs-identifier hs-type">sessionReference</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-type">Aliased</span></a></span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Expression"><span class="hs-identifier hs-type">Expression</span></a></span><span>
+</span><span id="line-395"></span><span>    </span><span id="local-6989586621690645827"><span class="annot"><span class="annottext">sessionReference :: Text -&gt; Aliased Expression
 </span><a href="#local-6989586621690645827"><span class="hs-identifier hs-var hs-var">sessionReference</span></a></span></span><span> </span><span id="local-6989586621690645788"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690645788"><span class="hs-identifier hs-var">var</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Text -&gt; Aliased a
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Aliased"><span class="hs-identifier hs-var">Aliased</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">FieldName -&gt; Expression
@@ -1119,42 +1120,42 @@ t a -&gt; (a -&gt; f b) -&gt; f ()
 </span><a href="#local-6989586621690645788"><span class="hs-identifier hs-var">var</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;session&quot;</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690645788"><span class="hs-identifier hs-var">var</span></a></span><span>
-</span><span id="line-395"></span><span>
-</span><span id="line-396"></span><span class="hs-comment">-- * Remote Relationships (e.g. DB-to-DB Joins, remote schema joins, etc.)</span><span>
-</span><span id="line-397"></span><span>
-</span><span id="line-398"></span><span class="hs-comment">-- | Construct an action (i.e. 'DBStepInfo') which can marshal some remote</span><span>
-</span><span id="line-399"></span><span class="hs-comment">-- relationship information into a form that SQL Server can query against.</span><span>
-</span><span id="line-400"></span><span class="hs-comment">--</span><span>
-</span><span id="line-401"></span><span class="hs-comment">-- XXX: Currently unimplemented; the Postgres implementation uses</span><span>
-</span><span id="line-402"></span><span class="hs-comment">-- @jsonb_to_recordset@ to query the remote relationship, however this</span><span>
-</span><span id="line-403"></span><span class="hs-comment">-- functionality doesn't exist in SQL Server.</span><span>
-</span><span id="line-404"></span><span class="hs-comment">--</span><span>
-</span><span id="line-405"></span><span class="hs-comment">-- NOTE: The following typeclass constraints will be necessary when implementing</span><span>
-</span><span id="line-406"></span><span class="hs-comment">-- this function for real:</span><span>
-</span><span id="line-407"></span><span class="hs-comment">--</span><span>
-</span><span id="line-408"></span><span class="hs-comment">-- @</span><span>
-</span><span id="line-409"></span><span class="hs-comment">--   MonadQueryTags m</span><span>
-</span><span id="line-410"></span><span class="hs-comment">--   Backend 'MSSQL</span><span>
-</span><span id="line-411"></span><span class="hs-comment">-- @</span><span>
-</span><span id="line-412"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Instances.Execute.html#msDBRemoteRelationshipPlan"><span class="hs-identifier hs-type">msDBRemoteRelationshipPlan</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-413"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690646452"><span class="annot"><a href="#local-6989586621690646452"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-414"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690646452"><span class="hs-identifier hs-type">m</span></a></span><span>
-</span><span id="line-415"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-416"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-417"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-418"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-419"></span><span>  </span><span class="hs-comment">-- | List of json objects, each of which becomes a row of the table.</span><span>
-</span><span id="line-420"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-421"></span><span>  </span><span class="hs-comment">-- | The above objects have this schema</span><span>
-</span><span id="line-422"></span><span>  </span><span class="hs-comment">--</span><span>
-</span><span id="line-423"></span><span>  </span><span class="hs-comment">-- XXX: What is this for/what does this mean?</span><span>
-</span><span id="line-424"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">RQLTypes.FieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">RQLTypes.Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">RQLTypes.ScalarType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-425"></span><span>  </span><span class="hs-comment">-- | This is a field name from the lhs that *has* to be selected in the</span><span>
-</span><span id="line-426"></span><span>  </span><span class="hs-comment">-- response along with the relationship.</span><span>
-</span><span id="line-427"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">RQLTypes.FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-428"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">RQLTypes.FieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SourceRelationshipSelection"><span class="hs-identifier hs-type">SourceRelationshipSelection</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Void</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-429"></span><span>  </span><span class="annot"><a href="#local-6989586621690646452"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-430"></span><span id="msDBRemoteRelationshipPlan"><span class="annot"><span class="annottext">msDBRemoteRelationshipPlan :: forall (m :: * -&gt; *).
+</span><span id="line-396"></span><span>
+</span><span id="line-397"></span><span class="hs-comment">-- * Remote Relationships (e.g. DB-to-DB Joins, remote schema joins, etc.)</span><span>
+</span><span id="line-398"></span><span>
+</span><span id="line-399"></span><span class="hs-comment">-- | Construct an action (i.e. 'DBStepInfo') which can marshal some remote</span><span>
+</span><span id="line-400"></span><span class="hs-comment">-- relationship information into a form that SQL Server can query against.</span><span>
+</span><span id="line-401"></span><span class="hs-comment">--</span><span>
+</span><span id="line-402"></span><span class="hs-comment">-- XXX: Currently unimplemented; the Postgres implementation uses</span><span>
+</span><span id="line-403"></span><span class="hs-comment">-- @jsonb_to_recordset@ to query the remote relationship, however this</span><span>
+</span><span id="line-404"></span><span class="hs-comment">-- functionality doesn't exist in SQL Server.</span><span>
+</span><span id="line-405"></span><span class="hs-comment">--</span><span>
+</span><span id="line-406"></span><span class="hs-comment">-- NOTE: The following typeclass constraints will be necessary when implementing</span><span>
+</span><span id="line-407"></span><span class="hs-comment">-- this function for real:</span><span>
+</span><span id="line-408"></span><span class="hs-comment">--</span><span>
+</span><span id="line-409"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-410"></span><span class="hs-comment">--   MonadQueryTags m</span><span>
+</span><span id="line-411"></span><span class="hs-comment">--   Backend 'MSSQL</span><span>
+</span><span id="line-412"></span><span class="hs-comment">-- @</span><span>
+</span><span id="line-413"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Instances.Execute.html#msDBRemoteRelationshipPlan"><span class="hs-identifier hs-type">msDBRemoteRelationshipPlan</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-414"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690646452"><span class="annot"><a href="#local-6989586621690646452"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-415"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690646452"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-416"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-417"></span><span>  </span><span class="annot"><a href="Hasura.Session.html#UserInfo"><span class="hs-identifier hs-type">UserInfo</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-418"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#SourceName"><span class="hs-identifier hs-type">SourceName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-419"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#SourceConfig"><span class="hs-identifier hs-type">SourceConfig</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-420"></span><span>  </span><span class="hs-comment">-- | List of json objects, each of which becomes a row of the table.</span><span>
+</span><span id="line-421"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">NonEmpty</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-422"></span><span>  </span><span class="hs-comment">-- | The above objects have this schema</span><span>
+</span><span id="line-423"></span><span>  </span><span class="hs-comment">--</span><span>
+</span><span id="line-424"></span><span>  </span><span class="hs-comment">-- XXX: What is this for/what does this mean?</span><span>
+</span><span id="line-425"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">HashMap</span></span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">RQLTypes.FieldName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">RQLTypes.Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#ScalarType"><span class="hs-identifier hs-type">RQLTypes.ScalarType</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-426"></span><span>  </span><span class="hs-comment">-- | This is a field name from the lhs that *has* to be selected in the</span><span>
+</span><span id="line-427"></span><span>  </span><span class="hs-comment">-- response along with the relationship.</span><span>
+</span><span id="line-428"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">RQLTypes.FieldName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-429"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-type">RQLTypes.FieldName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#SourceRelationshipSelection"><span class="hs-identifier hs-type">SourceRelationshipSelection</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Void</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">UnpreparedValue</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-430"></span><span>  </span><span class="annot"><a href="#local-6989586621690646452"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Execute.Backend.html#DBStepInfo"><span class="hs-identifier hs-type">DBStepInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-431"></span><span id="msDBRemoteRelationshipPlan"><span class="annot"><span class="annottext">msDBRemoteRelationshipPlan :: forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 UserInfo
 -&gt; SourceName
@@ -1174,7 +1175,7 @@ UserInfo
 </span><a href="#local-6989586621690645770"><span class="hs-identifier hs-var">argumentId</span></a></span></span><span> </span><span id="local-6989586621690645769"><span class="annot"><span class="annottext">(FieldName,
  SourceRelationshipSelection 'MSSQL Void UnpreparedValue)
 </span><a href="#local-6989586621690645769"><span class="hs-identifier hs-var">relationship</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-431"></span><span>  </span><span id="local-6989586621690645768"><span class="annot"><span class="annottext">Select
+</span><span id="line-432"></span><span>  </span><span id="local-6989586621690645768"><span class="annot"><span class="annottext">Select
 </span><a href="#local-6989586621690645768"><span class="hs-identifier hs-var">statement</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 SessionVariables
@@ -1192,23 +1193,23 @@ SessionVariables
 </span><a href="#local-6989586621690645770"><span class="hs-identifier hs-var">argumentId</span></a></span><span> </span><span class="annot"><span class="annottext">(FieldName,
  SourceRelationshipSelection 'MSSQL Void UnpreparedValue)
 </span><a href="#local-6989586621690645769"><span class="hs-identifier hs-var">relationship</span></a></span><span>
-</span><span id="line-432"></span><span>
-</span><span id="line-433"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690645766"><span class="annot"><span class="annottext">printer :: Printer
+</span><span id="line-433"></span><span>
+</span><span id="line-434"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690645766"><span class="annot"><span class="annottext">printer :: Printer
 </span><a href="#local-6989586621690645766"><span class="hs-identifier hs-var hs-var">printer</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Select -&gt; Printer
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#fromSelect"><span class="hs-identifier hs-var">fromSelect</span></a></span><span> </span><span class="annot"><span class="annottext">Select
 </span><a href="#local-6989586621690645768"><span class="hs-identifier hs-var">statement</span></a></span><span>
-</span><span id="line-434"></span><span>      </span><span id="local-6989586621690645765"><span class="annot"><span class="annottext">queryString :: Text
+</span><span id="line-435"></span><span>      </span><span id="local-6989586621690645765"><span class="annot"><span class="annottext">queryString :: Text
 </span><a href="#local-6989586621690645765"><span class="hs-identifier hs-var hs-var">queryString</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Query -&gt; Text
 </span><span class="hs-identifier hs-var">ODBC.renderQuery</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryPretty"><span class="hs-identifier hs-var">toQueryPretty</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
 </span><a href="#local-6989586621690645766"><span class="hs-identifier hs-var">printer</span></a></span><span>
-</span><span id="line-435"></span><span>      </span><span id="local-6989586621690645764"><span class="annot"><span class="annottext">odbcQuery :: ExceptT QErr IO EncJSON
+</span><span id="line-436"></span><span>      </span><span id="local-6989586621690645764"><span class="annot"><span class="annottext">odbcQuery :: ExceptT QErr IO EncJSON
 </span><a href="#local-6989586621690645764"><span class="hs-identifier hs-var hs-var">odbcQuery</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Printer -&gt; ExceptT QErr IO EncJSON
 </span><a href="#local-6989586621690645763"><span class="hs-identifier hs-var">runSelectQuery</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
 </span><a href="#local-6989586621690645766"><span class="hs-identifier hs-var">printer</span></a></span><span>
-</span><span id="line-436"></span><span>
-</span><span id="line-437"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-437"></span><span>
+</span><span id="line-438"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 SourceName
@@ -1222,12 +1223,12 @@ SourceName
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690645765"><span class="hs-identifier hs-var">queryString</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ExceptT QErr IO EncJSON
 </span><a href="#local-6989586621690645764"><span class="hs-identifier hs-var">odbcQuery</span></a></span><span>
-</span><span id="line-438"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-439"></span><span>    </span><span class="annot"><a href="#local-6989586621690645763"><span class="hs-identifier hs-type">runSelectQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.ToQuery.html#Printer"><span class="hs-identifier hs-type">Printer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
-</span><span id="line-440"></span><span>    </span><span id="local-6989586621690645763"><span class="annot"><span class="annottext">runSelectQuery :: Printer -&gt; ExceptT QErr IO EncJSON
+</span><span id="line-439"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-440"></span><span>    </span><span class="annot"><a href="#local-6989586621690645763"><span class="hs-identifier hs-type">runSelectQuery</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.ToQuery.html#Printer"><span class="hs-identifier hs-type">Printer</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-type">ExceptT</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">IO</span></a></span><span> </span><span class="annot"><a href="Hasura.EncJSON.html#EncJSON"><span class="hs-identifier hs-type">EncJSON</span></a></span><span>
+</span><span id="line-441"></span><span>    </span><span id="local-6989586621690645763"><span class="annot"><span class="annottext">runSelectQuery :: Printer -&gt; ExceptT QErr IO EncJSON
 </span><a href="#local-6989586621690645763"><span class="hs-identifier hs-var hs-var">runSelectQuery</span></a></span></span><span> </span><span id="local-6989586621690645762"><span class="annot"><span class="annottext">Printer
 </span><a href="#local-6989586621690645762"><span class="hs-identifier hs-var">queryPrinter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-441"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690645761"><span class="annot"><span class="annottext">queryTx :: TxET QErr IO EncJSON
+</span><span id="line-442"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690645761"><span class="annot"><span class="annottext">queryTx :: TxET QErr IO EncJSON
 </span><a href="#local-6989586621690645761"><span class="hs-identifier hs-var hs-var">queryTx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; EncJSON
 </span><a href="Hasura.EncJSON.html#encJFromText"><span class="hs-identifier hs-var">encJFromText</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a e.
@@ -1237,9 +1238,9 @@ SourceName
 </span><a href="Hasura.Backends.MSSQL.SQL.Error.html#defaultMSSQLTxErrorHandler"><span class="hs-identifier hs-var">defaultMSSQLTxErrorHandler</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Printer -&gt; Query
 </span><a href="Hasura.Backends.MSSQL.ToQuery.html#toQueryFlat"><span class="hs-identifier hs-var">toQueryFlat</span></a></span><span> </span><span class="annot"><span class="annottext">Printer
 </span><a href="#local-6989586621690645762"><span class="hs-identifier hs-var">queryPrinter</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-442"></span><span>      </span><span class="annot"><span class="annottext">MSSQLExecCtx -&gt; MSSQLRunTx
+</span><span id="line-443"></span><span>      </span><span class="annot"><span class="annottext">MSSQLExecCtx -&gt; MSSQLRunTx
 </span><a href="Hasura.Backends.MSSQL.Connection.html#mssqlRunReadOnly"><span class="hs-identifier hs-var">mssqlRunReadOnly</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">MSSQLSourceConfig -&gt; MSSQLExecCtx
 </span><a href="Hasura.Backends.MSSQL.Connection.html#_mscExecCtx"><span class="hs-identifier hs-var">_mscExecCtx</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MSSQL
 </span><a href="#local-6989586621690645773"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TxET QErr IO EncJSON
 </span><a href="#local-6989586621690645761"><span class="hs-identifier hs-var">queryTx</span></a></span><span>
-</span><span id="line-443"></span></pre></body></html>
+</span><span id="line-444"></span></pre></body></html>

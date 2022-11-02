@@ -127,10 +127,10 @@
 </span><span id="line-85"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Request -&gt; Bool
 </span><a href="Network.Wai.Handler.WebSockets.Custom.html#isWebSocketsReq"><span class="hs-identifier hs-var">isWebSocketsReq</span></a></span><span> </span><span class="annot"><span class="annottext">Request
 </span><a href="#local-6989586621690677257"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-86"></span><span>    </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
+</span><span id="line-86"></span><span>      </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-87"></span><span>      </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span id="line-87"></span><span>        </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">(IO ByteString -&gt; (ByteString -&gt; IO ()) -&gt; IO ())
 -&gt; Response -&gt; Response
 </span><span class="hs-identifier hs-var">Wai.responseRaw</span></span><span> </span><span class="annot"><span class="annottext">Response
@@ -138,7 +138,7 @@
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690677253"><span class="annot"><span class="annottext">IO ByteString
 </span><a href="#local-6989586621690677253"><span class="hs-identifier hs-var">src</span></a></span></span><span> </span><span id="local-6989586621690677252"><span class="annot"><span class="annottext">ByteString -&gt; IO ()
 </span><a href="#local-6989586621690677252"><span class="hs-identifier hs-var">sink</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">forall a.
+</span><span id="line-88"></span><span>          </span><span class="annot"><span class="annottext">forall a.
 ConnectionOptions
 -&gt; RequestHead
 -&gt; IpAddress

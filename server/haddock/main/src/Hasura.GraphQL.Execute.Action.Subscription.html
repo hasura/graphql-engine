@@ -174,7 +174,8 @@ t ActionId -&gt; m (ActionLogResponseMap, Bool)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-82"></span><span>                        </span><span class="annot"><span class="annottext">LiveAsyncActionQueryOnSource -&gt; LiveAsyncActionQuery
 </span><a href="Hasura.GraphQL.Execute.Subscription.State.html#LAAQOnSourceDB"><span class="hs-identifier hs-var">LAAQOnSourceDB</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-83"></span><span>                          </span><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
 -&gt; ActionLogResponseMap
 -&gt; (LiveQuerySubscriberDetails
     -&gt; ActionLogResponseMap -&gt; IO (Maybe LiveQuerySubscriberDetails))
@@ -184,12 +185,12 @@ t ActionId -&gt; m (ActionLogResponseMap, Bool)
 </span><a href="#local-6989586621690668986"><span class="hs-identifier hs-var">actionLogMap</span></a></span><span> </span><span class="annot"><span class="annottext">LiveQuerySubscriberDetails
 -&gt; ActionLogResponseMap -&gt; IO (Maybe LiveQuerySubscriberDetails)
 </span><a href="#local-6989586621690668975"><span class="hs-identifier hs-var">lqRestarter</span></a></span><span>
-</span><span id="line-83"></span><span>  </span><span class="hs-comment">-- Sleep for a second</span><span>
-</span><span id="line-84"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
+</span><span id="line-84"></span><span>  </span><span class="hs-comment">-- Sleep for a second</span><span>
+</span><span id="line-85"></span><span>  </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">DiffTime -&gt; IO ()
 </span><a href="Control.Concurrent.Extended.html#sleep"><span class="hs-identifier hs-var">C.sleep</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds -&gt; DiffTime
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">seconds</span></a></span><span> </span><span class="annot"><span class="annottext">Seconds
 </span><span class="hs-number">1</span></span><span>
-</span><span id="line-85"></span></pre></body></html>
+</span><span id="line-86"></span></pre></body></html>

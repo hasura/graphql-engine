@@ -296,20 +296,21 @@ _scEndpoint :: SourceConfig -&gt; BaseUrl
 </span><span class="hs-identifier">_</span></span><span> </span><span id="local-6989586621690644685"><span class="annot"><span class="annottext">ExecutionMonad 'DataConnector EncJSON
 </span><a href="#local-6989586621690644685"><span class="hs-identifier hs-var">action</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-82"></span><span>  </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; m (Either e a) -&gt; m a
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">liftEitherM</span></a></span><span>
+</span><span id="line-83"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span>
-</span><span id="line-83"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. ExceptT e m a -&gt; m (Either e a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runExceptT</span></a></span><span>
-</span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 MonadIO m =&gt;
 Reporter -&gt; Text -&gt; TraceT m a -&gt; m a
 </span><a href="Hasura.Tracing.html#runTraceTWithReporter"><span class="hs-identifier hs-var">Tracing.runTraceTWithReporter</span></a></span><span> </span><span class="annot"><span class="annottext">Reporter
 </span><a href="Hasura.Tracing.html#noReporter"><span class="hs-identifier hs-var">Tracing.noReporter</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;explain&quot;</span></span><span>
-</span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span id="line-86"></span><span>    </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 AgentClientT m a -&gt; AgentClientContext -&gt; m a
@@ -320,7 +321,7 @@ AgentClientT m a -&gt; AgentClientContext -&gt; m a
 </span><a href="#local-6989586621690644693"><span class="hs-identifier hs-var">_scEndpoint</span></a></span><span> </span><span class="annot"><span class="annottext">Manager
 </span><a href="#local-6989586621690644688"><span class="hs-identifier hs-var">_scManager</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Int
 </span><a href="#local-6989586621690644687"><span class="hs-identifier hs-var">_scTimeoutMicroseconds</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-86"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span id="line-87"></span><span>    </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ExecutionMonad 'DataConnector EncJSON
 </span><a href="#local-6989586621690644685"><span class="hs-identifier hs-var">action</span></a></span><span>
-</span><span id="line-87"></span></pre></body></html>
+</span><span id="line-88"></span></pre></body></html>

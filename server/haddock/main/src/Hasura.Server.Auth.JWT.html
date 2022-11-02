@@ -1953,8 +1953,8 @@ JWTCtx
 </span><a href="Hasura.Server.Auth.JWT.html#processHeaderSimple"><span class="hs-identifier hs-var hs-var">processHeaderSimple</span></a></span></span><span> </span><span id="local-6989586621690311756"><span class="annot"><span class="annottext">JWTCtx
 </span><a href="#local-6989586621690311756"><span class="hs-identifier hs-var">jwtCtx</span></a></span></span><span> </span><span id="local-6989586621690311755"><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690311755"><span class="hs-identifier hs-var">jwt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-588"></span><span>  </span><span class="hs-comment">--iss &lt;- _ &lt;$&gt; Jose.decodeCompact (BL.fromStrict token)</span><span>
-</span><span id="line-589"></span><span>  </span><span class="hs-comment">--let ctx = M.lookup iss jwtCtx</span><span>
+</span><span id="line-588"></span><span>  </span><span class="hs-comment">-- iss &lt;- _ &lt;$&gt; Jose.decodeCompact (BL.fromStrict token)</span><span>
+</span><span id="line-589"></span><span>  </span><span class="hs-comment">-- let ctx = M.lookup iss jwtCtx</span><span>
 </span><span id="line-590"></span><span>
 </span><span id="line-591"></span><span>  </span><span class="hs-comment">-- try to parse JWT token from Authorization or Cookie header</span><span>
 </span><span id="line-592"></span><span>  </span><span class="hs-comment">-- verify the JWT</span><span>
@@ -2261,101 +2261,105 @@ Applicative f =&gt;
 </span><span id="line-679"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#JWTRoleClaimMissing"><span class="hs-identifier hs-var">JWTRoleClaimMissing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-680"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;JWT claim does not contain &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
 </span><a href="Hasura.Server.Auth.JWT.html#allowedRolesClaim"><span class="hs-identifier hs-var">allowedRolesClaim</span></a></span><span>
-</span><span id="line-680"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311622"><span class="annot"><span class="annottext">Value
+</span><span id="line-681"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311622"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690311622"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-681"></span><span>        </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
+</span><span id="line-682"></span><span>        </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (FromJSON a, MonadError QErr m) =&gt;
 Value -&gt; Text -&gt; m a
 </span><a href="Hasura.Server.Auth.JWT.html#parseJwtClaim"><span class="hs-identifier hs-var">parseJwtClaim</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690311622"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-682"></span><span>          </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;invalid &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-683"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;invalid &quot;</span></span><span>
+</span><span id="line-684"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
 </span><a href="Hasura.Server.Auth.JWT.html#allowedRolesClaim"><span class="hs-identifier hs-var">allowedRolesClaim</span></a></span><span>
-</span><span id="line-683"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-685"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;; should be a list of roles&quot;</span></span><span>
-</span><span id="line-684"></span><span>
-</span><span id="line-685"></span><span>    </span><span id="local-6989586621690311648"><span class="annot"><span class="annottext">parseDefaultRoleClaim :: Maybe a -&gt; Maybe Value -&gt; m a
+</span><span id="line-686"></span><span>
+</span><span id="line-687"></span><span>    </span><span id="local-6989586621690311648"><span class="annot"><span class="annottext">parseDefaultRoleClaim :: Maybe a -&gt; Maybe Value -&gt; m a
 </span><a href="#local-6989586621690311648"><span class="hs-identifier hs-var hs-var">parseDefaultRoleClaim</span></a></span></span><span> </span><span id="local-6989586621690311607"><span class="annot"><span class="annottext">Maybe a
 </span><a href="#local-6989586621690311607"><span class="hs-identifier hs-var">defaultVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-686"></span><span>      </span><span class="annot"><span class="annottext">Maybe Value
+</span><span id="line-688"></span><span>      </span><span class="annot"><span class="annottext">Maybe Value
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-687"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
+</span><span id="line-689"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe a
 </span><a href="#local-6989586621690311607"><span class="hs-identifier hs-var">defaultVal</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-688"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><span id="line-690"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#JWTRoleClaimMissing"><span class="hs-identifier hs-var">JWTRoleClaimMissing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-691"></span><span>            </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;JWT claim does not contain &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
 </span><a href="Hasura.Server.Auth.JWT.html#defaultRoleClaim"><span class="hs-identifier hs-var">defaultRoleClaim</span></a></span><span>
-</span><span id="line-689"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311606"><span class="annot"><span class="annottext">Value
+</span><span id="line-692"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311606"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690311606"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-690"></span><span>        </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
+</span><span id="line-693"></span><span>        </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (FromJSON a, MonadError QErr m) =&gt;
 Value -&gt; Text -&gt; m a
 </span><a href="Hasura.Server.Auth.JWT.html#parseJwtClaim"><span class="hs-identifier hs-var">parseJwtClaim</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690311606"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-691"></span><span>          </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;invalid &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-694"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;invalid &quot;</span></span><span>
+</span><span id="line-695"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
 </span><a href="Hasura.Server.Auth.JWT.html#defaultRoleClaim"><span class="hs-identifier hs-var">defaultRoleClaim</span></a></span><span>
-</span><span id="line-692"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-696"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;; should be a role&quot;</span></span><span>
-</span><span id="line-693"></span><span>
-</span><span id="line-694"></span><span>    </span><span id="local-6989586621690311668"><span class="annot"><span class="annottext">claimsNotFound :: JWTNamespace -&gt; m a
+</span><span id="line-697"></span><span>
+</span><span id="line-698"></span><span>    </span><span id="local-6989586621690311668"><span class="annot"><span class="annottext">claimsNotFound :: JWTNamespace -&gt; m a
 </span><a href="#local-6989586621690311668"><span class="hs-identifier hs-var hs-var">claimsNotFound</span></a></span></span><span> </span><span id="local-6989586621690311595"><span class="annot"><span class="annottext">JWTNamespace
 </span><a href="#local-6989586621690311595"><span class="hs-identifier hs-var">namespace</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-695"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><span id="line-699"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#JWTInvalidClaims"><span class="hs-identifier hs-var">JWTInvalidClaims</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTNamespace
 </span><a href="#local-6989586621690311595"><span class="hs-identifier hs-var">namespace</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-696"></span><span>        </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNsPath"><span class="hs-identifier hs-type">ClaimNsPath</span></a></span><span> </span><span id="local-6989586621690311594"><span class="annot"><span class="annottext">JSONPath
+</span><span id="line-700"></span><span>        </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNsPath"><span class="hs-identifier hs-type">ClaimNsPath</span></a></span><span> </span><span id="local-6989586621690311594"><span class="annot"><span class="annottext">JSONPath
 </span><a href="#local-6989586621690311594"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-697"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-701"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;claims not found at claims_namespace_path: '&quot;</span></span><span>
-</span><span id="line-698"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-702"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Text
 </span><a href="Data.Parser.JSONPath.html#encodeJSONPath"><span class="hs-identifier hs-var">encodeJSONPath</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPath
 </span><a href="#local-6989586621690311594"><span class="hs-identifier hs-var">path</span></a></span><span>
-</span><span id="line-699"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-703"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;'&quot;</span></span><span>
-</span><span id="line-700"></span><span>        </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNs"><span class="hs-identifier hs-type">ClaimNs</span></a></span><span> </span><span id="local-6989586621690311593"><span class="annot"><span class="annottext">Text
+</span><span id="line-704"></span><span>        </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNs"><span class="hs-identifier hs-type">ClaimNs</span></a></span><span> </span><span id="local-6989586621690311593"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311593"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;claims key: '&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311593"><span class="hs-identifier hs-var">ns</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' not found&quot;</span></span><span>
-</span><span id="line-701"></span><span>
-</span><span id="line-702"></span><span>    </span><span id="local-6989586621690311662"><span class="annot"><span class="annottext">parseObjectFromString :: JWTNamespace -&gt; JWTClaimsFormat -&gt; Value -&gt; m Object
+</span><span id="line-705"></span><span>
+</span><span id="line-706"></span><span>    </span><span id="local-6989586621690311662"><span class="annot"><span class="annottext">parseObjectFromString :: JWTNamespace -&gt; JWTClaimsFormat -&gt; Value -&gt; m Object
 </span><a href="#local-6989586621690311662"><span class="hs-identifier hs-var hs-var">parseObjectFromString</span></a></span></span><span> </span><span id="local-6989586621690311572"><span class="annot"><span class="annottext">JWTNamespace
 </span><a href="#local-6989586621690311572"><span class="hs-identifier hs-var">namespace</span></a></span></span><span> </span><span id="local-6989586621690311571"><span class="annot"><span class="annottext">JWTClaimsFormat
 </span><a href="#local-6989586621690311571"><span class="hs-identifier hs-var">claimsFmt</span></a></span></span><span> </span><span id="local-6989586621690311570"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690311570"><span class="hs-identifier hs-var">jVal</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-703"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JWTClaimsFormat
+</span><span id="line-707"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JWTClaimsFormat
 </span><a href="#local-6989586621690311571"><span class="hs-identifier hs-var">claimsFmt</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690311570"><span class="hs-identifier hs-var">jVal</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-704"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JWTClaimsFormat
+</span><span id="line-708"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JWTClaimsFormat
 </span><a href="Hasura.Server.Auth.JWT.html#JCFStringifiedJson"><span class="hs-identifier hs-var">JCFStringifiedJson</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.String</span></span><span> </span><span id="local-6989586621690311569"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311569"><span class="hs-identifier hs-var">v</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-705"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
+</span><span id="line-709"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) e a.
 Applicative m =&gt;
 Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onLeft</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; ByteString -&gt; Either String a
@@ -2369,73 +2373,73 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><a href="#local-6989586621690311566"><span class="hs-identifier hs-var">strngfyErr</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311569"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-706"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JWTClaimsFormat
+</span><span id="line-710"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JWTClaimsFormat
 </span><a href="Hasura.Server.Auth.JWT.html#JCFStringifiedJson"><span class="hs-identifier hs-var">JCFStringifiedJson</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-707"></span><span>          </span><span class="annot"><span class="annottext">forall {a}. Text -&gt; m a
+</span><span id="line-711"></span><span>          </span><span class="annot"><span class="annottext">forall {a}. Text -&gt; m a
 </span><a href="#local-6989586621690311567"><span class="hs-identifier hs-var">claimsErr</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expecting a string when claims_format is stringified_json&quot;</span></span><span>
-</span><span id="line-708"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JWTClaimsFormat
+</span><span id="line-712"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JWTClaimsFormat
 </span><a href="Hasura.Server.Auth.JWT.html#JCFJson"><span class="hs-identifier hs-var">JCFJson</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Object</span></span><span> </span><span id="local-6989586621690311565"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311565"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311565"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-709"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JWTClaimsFormat
+</span><span id="line-713"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JWTClaimsFormat
 </span><a href="Hasura.Server.Auth.JWT.html#JCFJson"><span class="hs-identifier hs-var">JCFJson</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-710"></span><span>          </span><span class="annot"><span class="annottext">forall {a}. Text -&gt; m a
+</span><span id="line-714"></span><span>          </span><span class="annot"><span class="annottext">forall {a}. Text -&gt; m a
 </span><a href="#local-6989586621690311567"><span class="hs-identifier hs-var">claimsErr</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expecting a json object when claims_format is json&quot;</span></span><span>
-</span><span id="line-711"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-712"></span><span>        </span><span id="local-6989586621690311566"><span class="annot"><span class="annottext">strngfyErr :: Text -&gt; Text
+</span><span id="line-715"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-716"></span><span>        </span><span id="local-6989586621690311566"><span class="annot"><span class="annottext">strngfyErr :: Text -&gt; Text
 </span><a href="#local-6989586621690311566"><span class="hs-identifier hs-var hs-var">strngfyErr</span></a></span></span><span> </span><span id="local-6989586621690311564"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311564"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-713"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690311563"><span class="annot"><span class="annottext">claimsLocation :: Text
+</span><span id="line-717"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690311563"><span class="annot"><span class="annottext">claimsLocation :: Text
 </span><a href="#local-6989586621690311563"><span class="hs-identifier hs-var hs-var">claimsLocation</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTNamespace
 </span><a href="#local-6989586621690311572"><span class="hs-identifier hs-var">namespace</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-714"></span><span>                </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNsPath"><span class="hs-identifier hs-type">ClaimNsPath</span></a></span><span> </span><span id="local-6989586621690311562"><span class="annot"><span class="annottext">JSONPath
+</span><span id="line-718"></span><span>                </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNsPath"><span class="hs-identifier hs-type">ClaimNsPath</span></a></span><span> </span><span id="local-6989586621690311562"><span class="annot"><span class="annottext">JSONPath
 </span><a href="#local-6989586621690311562"><span class="hs-identifier hs-var">path</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;claims_namespace_path &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Text
 </span><a href="Data.Parser.JSONPath.html#encodeJSONPath"><span class="hs-identifier hs-var">encodeJSONPath</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPath
 </span><a href="#local-6989586621690311562"><span class="hs-identifier hs-var">path</span></a></span><span>
-</span><span id="line-715"></span><span>                </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNs"><span class="hs-identifier hs-type">ClaimNs</span></a></span><span> </span><span id="local-6989586621690311561"><span class="annot"><span class="annottext">Text
+</span><span id="line-719"></span><span>                </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNs"><span class="hs-identifier hs-type">ClaimNs</span></a></span><span> </span><span id="local-6989586621690311561"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311561"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;claims_namespace &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311561"><span class="hs-identifier hs-var">ns</span></a></span><span>
-</span><span id="line-716"></span><span>           </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-720"></span><span>           </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expecting stringified json at: '&quot;</span></span><span>
-</span><span id="line-717"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-721"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311563"><span class="hs-identifier hs-var">claimsLocation</span></a></span><span>
-</span><span id="line-718"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-722"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;', but found: &quot;</span></span><span>
-</span><span id="line-719"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-723"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311564"><span class="hs-identifier hs-var">v</span></a></span><span>
-</span><span id="line-720"></span><span>
-</span><span id="line-721"></span><span>        </span><span id="local-6989586621690311567"><span class="annot"><span class="annottext">claimsErr :: Text -&gt; m a
+</span><span id="line-724"></span><span>
+</span><span id="line-725"></span><span>        </span><span id="local-6989586621690311567"><span class="annot"><span class="annottext">claimsErr :: Text -&gt; m a
 </span><a href="#local-6989586621690311567"><span class="hs-identifier hs-var hs-var">claimsErr</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#JWTInvalidClaims"><span class="hs-identifier hs-var">JWTInvalidClaims</span></a></span><span>
-</span><span id="line-722"></span><span>
-</span><span id="line-723"></span><span class="hs-comment">-- | Verify the JWT against given JWK</span><span>
-</span><span id="line-724"></span><span id="local-6989586621690313302"><span class="annot"><a href="Hasura.Server.Auth.JWT.html#verifyJwt"><span class="hs-identifier hs-type">verifyJwt</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-725"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Jose.JWTError</span></span><span> </span><span class="annot"><a href="#local-6989586621690313302"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-726"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690313302"><span class="hs-identifier hs-type">m</span></a></span><span>
-</span><span id="line-727"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-728"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTCtx"><span class="hs-identifier hs-type">JWTCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-729"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#RawJWT"><span class="hs-identifier hs-type">RawJWT</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-730"></span><span>  </span><span class="annot"><a href="#local-6989586621690313302"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Jose.ClaimsSet</span></span></span><span>
-</span><span id="line-731"></span><span id="verifyJwt"><span class="annot"><span class="annottext">verifyJwt :: forall (m :: * -&gt; *).
+</span><span id="line-726"></span><span>
+</span><span id="line-727"></span><span class="hs-comment">-- | Verify the JWT against given JWK</span><span>
+</span><span id="line-728"></span><span id="local-6989586621690313302"><span class="annot"><a href="Hasura.Server.Auth.JWT.html#verifyJwt"><span class="hs-identifier hs-type">verifyJwt</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-729"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Jose.JWTError</span></span><span> </span><span class="annot"><a href="#local-6989586621690313302"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-730"></span><span>    </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">MonadIO</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690313302"><span class="hs-identifier hs-type">m</span></a></span><span>
+</span><span id="line-731"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-732"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTCtx"><span class="hs-identifier hs-type">JWTCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-733"></span><span>  </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#RawJWT"><span class="hs-identifier hs-type">RawJWT</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-734"></span><span>  </span><span class="annot"><a href="#local-6989586621690313302"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Jose.ClaimsSet</span></span></span><span>
+</span><span id="line-735"></span><span id="verifyJwt"><span class="annot"><span class="annottext">verifyJwt :: forall (m :: * -&gt; *).
 (MonadError JWTError m, MonadIO m) =&gt;
 JWTCtx -&gt; RawJWT -&gt; m ClaimsSet
 </span><a href="Hasura.Server.Auth.JWT.html#verifyJwt"><span class="hs-identifier hs-var hs-var">verifyJwt</span></a></span></span><span> </span><span id="local-6989586621690311516"><span class="annot"><span class="annottext">JWTCtx
 </span><a href="#local-6989586621690311516"><span class="hs-identifier hs-var">ctx</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#RawJWT"><span class="hs-identifier hs-type">RawJWT</span></a></span><span> </span><span id="local-6989586621690311515"><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690311515"><span class="hs-identifier hs-var">rawJWT</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-732"></span><span>  </span><span id="local-6989586621690311514"><span class="annot"><span class="annottext">JWKSet
+</span><span id="line-736"></span><span>  </span><span id="local-6989586621690311514"><span class="annot"><span class="annottext">JWKSet
 </span><a href="#local-6989586621690311514"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IORef a -&gt; IO a
@@ -2443,17 +2447,17 @@ JWTCtx -&gt; RawJWT -&gt; m ClaimsSet
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">JWTCtx -&gt; IORef JWKSet
 </span><a href="Hasura.Server.Auth.JWT.html#jcxKey"><span class="hs-identifier hs-var">jcxKey</span></a></span><span> </span><span class="annot"><span class="annottext">JWTCtx
 </span><a href="#local-6989586621690311516"><span class="hs-identifier hs-var">ctx</span></a></span><span>
-</span><span id="line-733"></span><span>  </span><span id="local-6989586621690311513"><span class="annot"><span class="annottext">SignedJWT
+</span><span id="line-737"></span><span>  </span><span id="local-6989586621690311513"><span class="annot"><span class="annottext">SignedJWT
 </span><a href="#local-6989586621690311513"><span class="hs-identifier hs-var">jwt</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a e (m :: * -&gt; *).
 (FromCompact a, AsError e, MonadError e m) =&gt;
 ByteString -&gt; m a
 </span><span class="hs-identifier hs-var">Jose.decodeCompact</span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690311515"><span class="hs-identifier hs-var">rawJWT</span></a></span><span>
-</span><span id="line-734"></span><span>  </span><span id="local-6989586621690311511"><span class="annot"><span class="annottext">UTCTime
+</span><span id="line-738"></span><span>  </span><span id="local-6989586621690311511"><span class="annot"><span class="annottext">UTCTime
 </span><a href="#local-6989586621690311511"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">IO UTCTime
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/time-1.11.1.1/src"><span class="hs-identifier hs-var">getCurrentTime</span></a></span><span>
-</span><span id="line-735"></span><span>  </span><span class="annot"><span class="annottext">forall a e (m :: * -&gt; *) k.
+</span><span id="line-739"></span><span>  </span><span class="annot"><span class="annottext">forall a e (m :: * -&gt; *) k.
 (HasAllowedSkew a, HasAudiencePredicate a, HasIssuerPredicate a,
  HasCheckIssuedAt a, HasValidationSettings a, AsError e,
  AsJWTError e, MonadError e m,
@@ -2465,13 +2469,13 @@ a -&gt; k -&gt; UTCTime -&gt; SignedJWT -&gt; m ClaimsSet
 </span><a href="#local-6989586621690311514"><span class="hs-identifier hs-var">key</span></a></span><span> </span><span class="annot"><span class="annottext">UTCTime
 </span><a href="#local-6989586621690311511"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">SignedJWT
 </span><a href="#local-6989586621690311513"><span class="hs-identifier hs-var">jwt</span></a></span><span>
-</span><span id="line-736"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-737"></span><span>    </span><span id="local-6989586621690311508"><span class="annot"><span class="annottext">validationSettingsWithSkew :: JWTValidationSettings
+</span><span id="line-740"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-741"></span><span>    </span><span id="local-6989586621690311508"><span class="annot"><span class="annottext">validationSettingsWithSkew :: JWTValidationSettings
 </span><a href="#local-6989586621690311508"><span class="hs-identifier hs-var hs-var">validationSettingsWithSkew</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-738"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTCtx -&gt; Maybe NominalDiffTime
+</span><span id="line-742"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTCtx -&gt; Maybe NominalDiffTime
 </span><a href="Hasura.Server.Auth.JWT.html#jcxAllowedSkew"><span class="hs-identifier hs-var">jcxAllowedSkew</span></a></span><span> </span><span class="annot"><span class="annottext">JWTCtx
 </span><a href="#local-6989586621690311516"><span class="hs-identifier hs-var">ctx</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-739"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311507"><span class="annot"><span class="annottext">NominalDiffTime
+</span><span id="line-743"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311507"><span class="annot"><span class="annottext">NominalDiffTime
 </span><a href="#local-6989586621690311507"><span class="hs-identifier hs-var">allowedSkew</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(StringOrURI -&gt; Bool) -&gt; JWTValidationSettings
 </span><span class="hs-identifier hs-var">Jose.defaultJWTValidationSettings</span></span><span> </span><span class="annot"><span class="annottext">StringOrURI -&gt; Bool
 </span><a href="#local-6989586621690311505"><span class="hs-identifier hs-var">audCheck</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
@@ -2479,20 +2483,20 @@ a -&gt; k -&gt; UTCTime -&gt; SignedJWT -&gt; m ClaimsSet
 </span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">forall s. HasAllowedSkew s =&gt; Lens' s NominalDiffTime
 </span><span class="hs-identifier hs-var">Jose.allowedSkew</span></span><span> </span><span class="annot"><span class="annottext">NominalDiffTime
 </span><a href="#local-6989586621690311507"><span class="hs-identifier hs-var">allowedSkew</span></a></span><span>
-</span><span id="line-740"></span><span>        </span><span class="hs-comment">-- In `Jose.defaultJWTValidationSettings`, the `allowedSkew` is 0</span><span>
-</span><span id="line-741"></span><span>        </span><span class="annot"><span class="annottext">Maybe NominalDiffTime
+</span><span id="line-744"></span><span>        </span><span class="hs-comment">-- In `Jose.defaultJWTValidationSettings`, the `allowedSkew` is 0</span><span>
+</span><span id="line-745"></span><span>        </span><span class="annot"><span class="annottext">Maybe NominalDiffTime
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">(StringOrURI -&gt; Bool) -&gt; JWTValidationSettings
 </span><span class="hs-identifier hs-var">Jose.defaultJWTValidationSettings</span></span><span> </span><span class="annot"><span class="annottext">StringOrURI -&gt; Bool
 </span><a href="#local-6989586621690311505"><span class="hs-identifier hs-var">audCheck</span></a></span><span>
-</span><span id="line-742"></span><span>
-</span><span id="line-743"></span><span>    </span><span id="local-6989586621690311509"><span class="annot"><span class="annottext">config :: JWTValidationSettings
+</span><span id="line-746"></span><span>
+</span><span id="line-747"></span><span>    </span><span id="local-6989586621690311509"><span class="annot"><span class="annottext">config :: JWTValidationSettings
 </span><a href="#local-6989586621690311509"><span class="hs-identifier hs-var hs-var">config</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTCtx -&gt; Maybe StringOrURI
 </span><a href="Hasura.Server.Auth.JWT.html#jcxIssuer"><span class="hs-identifier hs-var">jcxIssuer</span></a></span><span> </span><span class="annot"><span class="annottext">JWTCtx
 </span><a href="#local-6989586621690311516"><span class="hs-identifier hs-var">ctx</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-744"></span><span>      </span><span class="annot"><span class="annottext">Maybe StringOrURI
+</span><span id="line-748"></span><span>      </span><span class="annot"><span class="annottext">Maybe StringOrURI
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">JWTValidationSettings
 </span><a href="#local-6989586621690311508"><span class="hs-identifier hs-var">validationSettingsWithSkew</span></a></span><span>
-</span><span id="line-745"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311502"><span class="annot"><span class="annottext">StringOrURI
+</span><span id="line-749"></span><span>      </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311502"><span class="annot"><span class="annottext">StringOrURI
 </span><a href="#local-6989586621690311502"><span class="hs-identifier hs-var">iss</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">JWTValidationSettings
 </span><a href="#local-6989586621690311508"><span class="hs-identifier hs-var">validationSettingsWithSkew</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
@@ -2500,24 +2504,24 @@ a -&gt; k -&gt; UTCTime -&gt; SignedJWT -&gt; m ClaimsSet
 </span><span class="hs-identifier hs-var">Jose.issuerPredicate</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">StringOrURI
 </span><a href="#local-6989586621690311502"><span class="hs-identifier hs-var">iss</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-746"></span><span>    </span><span id="local-6989586621690311505"><span class="annot"><span class="annottext">audCheck :: StringOrURI -&gt; Bool
+</span><span id="line-750"></span><span>    </span><span id="local-6989586621690311505"><span class="annot"><span class="annottext">audCheck :: StringOrURI -&gt; Bool
 </span><a href="#local-6989586621690311505"><span class="hs-identifier hs-var hs-var">audCheck</span></a></span></span><span> </span><span id="local-6989586621690311500"><span class="annot"><span class="annottext">StringOrURI
 </span><a href="#local-6989586621690311500"><span class="hs-identifier hs-var">audience</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-747"></span><span>      </span><span class="hs-comment">-- dont perform the check if there are no audiences in the conf</span><span>
-</span><span id="line-748"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTCtx -&gt; Maybe Audience
+</span><span id="line-751"></span><span>      </span><span class="hs-comment">-- dont perform the check if there are no audiences in the conf</span><span>
+</span><span id="line-752"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTCtx -&gt; Maybe Audience
 </span><a href="Hasura.Server.Auth.JWT.html#jcxAudience"><span class="hs-identifier hs-var">jcxAudience</span></a></span><span> </span><span class="annot"><span class="annottext">JWTCtx
 </span><a href="#local-6989586621690311516"><span class="hs-identifier hs-var">ctx</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-749"></span><span>        </span><span class="annot"><span class="annottext">Maybe Audience
+</span><span id="line-753"></span><span>        </span><span class="annot"><span class="annottext">Maybe Audience
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
-</span><span id="line-750"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Jose.Audience</span></span><span> </span><span id="local-6989586621690311498"><span class="annot"><span class="annottext">[StringOrURI]
+</span><span id="line-754"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Jose.Audience</span></span><span> </span><span id="local-6989586621690311498"><span class="annot"><span class="annottext">[StringOrURI]
 </span><a href="#local-6989586621690311498"><span class="hs-identifier hs-var">audiences</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">StringOrURI
 </span><a href="#local-6989586621690311500"><span class="hs-identifier hs-var">audience</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">`elem`</span></a></span><span> </span><span class="annot"><span class="annottext">[StringOrURI]
 </span><a href="#local-6989586621690311498"><span class="hs-identifier hs-var">audiences</span></a></span><span>
-</span><span id="line-751"></span><span>
-</span><span id="line-752"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690311490"><span id="local-6989586621690311492"><span id="local-6989586621690311494"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTConfig"><span class="hs-identifier hs-type">JWTConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-753"></span><span>  </span><span id="local-6989586621690311444"><span class="annot"><span class="annottext">toJSON :: JWTConfig -&gt; Value
+</span><span id="line-755"></span><span>
+</span><span id="line-756"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690311490"><span id="local-6989586621690311492"><span id="local-6989586621690311494"><span class="annot"><span class="hs-identifier hs-type">J.ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTConfig"><span class="hs-identifier hs-type">JWTConfig</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-757"></span><span>  </span><span id="local-6989586621690311444"><span class="annot"><span class="annottext">toJSON :: JWTConfig -&gt; Value
 </span><a href="#local-6989586621690311444"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTConfig"><span class="hs-identifier hs-type">JWTConfig</span></a></span><span> </span><span id="local-6989586621690311443"><span class="annot"><span class="annottext">Either JWK URI
 </span><a href="#local-6989586621690311443"><span class="hs-identifier hs-var">keyOrUrl</span></a></span></span><span> </span><span id="local-6989586621690311442"><span class="annot"><span class="annottext">Maybe Audience
 </span><a href="#local-6989586621690311442"><span class="hs-identifier hs-var">aud</span></a></span></span><span> </span><span id="local-6989586621690311441"><span class="annot"><span class="annottext">Maybe StringOrURI
@@ -2525,83 +2529,83 @@ a -&gt; k -&gt; UTCTime -&gt; SignedJWT -&gt; m ClaimsSet
 </span><a href="#local-6989586621690311440"><span class="hs-identifier hs-var">claims</span></a></span></span><span> </span><span id="local-6989586621690311439"><span class="annot"><span class="annottext">Maybe NominalDiffTime
 </span><a href="#local-6989586621690311439"><span class="hs-identifier hs-var">allowedSkew</span></a></span></span><span> </span><span id="local-6989586621690311438"><span class="annot"><span class="annottext">Maybe JWTHeader
 </span><a href="#local-6989586621690311438"><span class="hs-identifier hs-var">jwtHeader</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-754"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690311437"><span class="annot"><span class="annottext">keyOrUrlPairs :: [Pair]
+</span><span id="line-758"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690311437"><span class="annot"><span class="annottext">keyOrUrlPairs :: [Pair]
 </span><a href="#local-6989586621690311437"><span class="hs-identifier hs-var hs-var">keyOrUrlPairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Either JWK URI
 </span><a href="#local-6989586621690311443"><span class="hs-identifier hs-var">keyOrUrl</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-755"></span><span>          </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span class="annot"><span class="annottext">JWK
+</span><span id="line-759"></span><span>          </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Left</span></a></span><span> </span><span class="annot"><span class="annottext">JWK
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-756"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span id="line-760"></span><span>            </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;type&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;&lt;TYPE REDACTED&gt;&quot;</span></span><span class="hs-special">,</span><span>
-</span><span id="line-757"></span><span>              </span><span class="annot"><span class="annottext">Key
+</span><span id="line-761"></span><span>              </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;key&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;&lt;JWK REDACTED&gt;&quot;</span></span><span>
-</span><span id="line-758"></span><span>            </span><span class="hs-special">]</span><span>
-</span><span id="line-759"></span><span>          </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621690311436"><span class="annot"><span class="annottext">URI
+</span><span id="line-762"></span><span>            </span><span class="hs-special">]</span><span>
+</span><span id="line-763"></span><span>          </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Right</span></a></span><span> </span><span id="local-6989586621690311436"><span class="annot"><span class="annottext">URI
 </span><a href="#local-6989586621690311436"><span class="hs-identifier hs-var">url</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;jwk_url&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">URI
 </span><a href="#local-6989586621690311436"><span class="hs-identifier hs-var">url</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-760"></span><span>        </span><span id="local-6989586621690311435"><span class="annot"><span class="annottext">claimsPairs :: [Pair]
+</span><span id="line-764"></span><span>        </span><span id="local-6989586621690311435"><span class="annot"><span class="annottext">claimsPairs :: [Pair]
 </span><a href="#local-6989586621690311435"><span class="hs-identifier hs-var hs-var">claimsPairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTClaims
 </span><a href="#local-6989586621690311440"><span class="hs-identifier hs-var">claims</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-761"></span><span>          </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JCNamespace"><span class="hs-identifier hs-type">JCNamespace</span></a></span><span> </span><span id="local-6989586621690311434"><span class="annot"><span class="annottext">JWTNamespace
+</span><span id="line-765"></span><span>          </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JCNamespace"><span class="hs-identifier hs-type">JCNamespace</span></a></span><span> </span><span id="local-6989586621690311434"><span class="annot"><span class="annottext">JWTNamespace
 </span><a href="#local-6989586621690311434"><span class="hs-identifier hs-var">namespace</span></a></span></span><span> </span><span id="local-6989586621690311433"><span class="annot"><span class="annottext">JWTClaimsFormat
 </span><a href="#local-6989586621690311433"><span class="hs-identifier hs-var">claimsFormat</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-762"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690311432"><span class="annot"><span class="annottext">namespacePairs :: [Pair]
+</span><span id="line-766"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690311432"><span class="annot"><span class="annottext">namespacePairs :: [Pair]
 </span><a href="#local-6989586621690311432"><span class="hs-identifier hs-var hs-var">namespacePairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">JWTNamespace
 </span><a href="#local-6989586621690311434"><span class="hs-identifier hs-var">namespace</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-763"></span><span>                  </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNsPath"><span class="hs-identifier hs-type">ClaimNsPath</span></a></span><span> </span><span id="local-6989586621690311431"><span class="annot"><span class="annottext">JSONPath
+</span><span id="line-767"></span><span>                  </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNsPath"><span class="hs-identifier hs-type">ClaimNsPath</span></a></span><span> </span><span id="local-6989586621690311431"><span class="annot"><span class="annottext">JSONPath
 </span><a href="#local-6989586621690311431"><span class="hs-identifier hs-var">nsPath</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-764"></span><span>                    </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
+</span><span id="line-768"></span><span>                    </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;claims_namespace_path&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">JSONPath -&gt; Text
 </span><a href="Data.Parser.JSONPath.html#encodeJSONPath"><span class="hs-identifier hs-var">encodeJSONPath</span></a></span><span> </span><span class="annot"><span class="annottext">JSONPath
 </span><a href="#local-6989586621690311431"><span class="hs-identifier hs-var">nsPath</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-765"></span><span>                  </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNs"><span class="hs-identifier hs-type">ClaimNs</span></a></span><span> </span><span id="local-6989586621690311430"><span class="annot"><span class="annottext">Text
+</span><span id="line-769"></span><span>                  </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimNs"><span class="hs-identifier hs-type">ClaimNs</span></a></span><span> </span><span id="local-6989586621690311430"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311430"><span class="hs-identifier hs-var">ns</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;claims_namespace&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">J.String</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311430"><span class="hs-identifier hs-var">ns</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-766"></span><span>             </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[Pair]
+</span><span id="line-770"></span><span>             </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[Pair]
 </span><a href="#local-6989586621690311432"><span class="hs-identifier hs-var">namespacePairs</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;claims_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">JWTClaimsFormat
 </span><a href="#local-6989586621690311433"><span class="hs-identifier hs-var">claimsFormat</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-767"></span><span>          </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JCMap"><span class="hs-identifier hs-type">JCMap</span></a></span><span> </span><span id="local-6989586621690311429"><span class="annot"><span class="annottext">JWTCustomClaimsMap
+</span><span id="line-771"></span><span>          </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JCMap"><span class="hs-identifier hs-type">JCMap</span></a></span><span> </span><span id="local-6989586621690311429"><span class="annot"><span class="annottext">JWTCustomClaimsMap
 </span><a href="#local-6989586621690311429"><span class="hs-identifier hs-var">claimsMap</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;claims_map&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">JWTCustomClaimsMap
 </span><a href="#local-6989586621690311429"><span class="hs-identifier hs-var">claimsMap</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-768"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
+</span><span id="line-772"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[Pair] -&gt; Value
 </span><span class="hs-identifier hs-var">J.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-769"></span><span>          </span><span class="annot"><span class="annottext">[Pair]
+</span><span id="line-773"></span><span>          </span><span class="annot"><span class="annottext">[Pair]
 </span><a href="#local-6989586621690311437"><span class="hs-identifier hs-var">keyOrUrlPairs</span></a></span><span>
-</span><span id="line-770"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-774"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;audience&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Maybe Audience
 </span><a href="#local-6989586621690311442"><span class="hs-identifier hs-var">aud</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-771"></span><span>                 </span><span class="annot"><span class="annottext">Key
+</span><span id="line-775"></span><span>                 </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;issuer&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Maybe StringOrURI
 </span><a href="#local-6989586621690311441"><span class="hs-identifier hs-var">iss</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-772"></span><span>                 </span><span class="annot"><span class="annottext">Key
+</span><span id="line-776"></span><span>                 </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;header&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">Maybe JWTHeader
 </span><a href="#local-6989586621690311438"><span class="hs-identifier hs-var">jwtHeader</span></a></span><span>
-</span><span id="line-773"></span><span>               </span><span class="hs-special">]</span><span>
-</span><span id="line-774"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-777"></span><span>               </span><span class="hs-special">]</span><span>
+</span><span id="line-778"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[Pair]
 </span><a href="#local-6989586621690311435"><span class="hs-identifier hs-var">claimsPairs</span></a></span><span>
-</span><span id="line-775"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-779"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621690311428"><span class="annot"><span class="annottext">NominalDiffTime
 </span><a href="#local-6989586621690311428"><span class="hs-identifier hs-var">skew</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Key
@@ -2609,83 +2613,83 @@ a -&gt; k -&gt; UTCTime -&gt; SignedJWT -&gt; m ClaimsSet
 </span><span class="hs-operator hs-var">J..=</span></span><span> </span><span class="annot"><span class="annottext">NominalDiffTime
 </span><a href="#local-6989586621690311428"><span class="hs-identifier hs-var">skew</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Maybe NominalDiffTime
 </span><a href="#local-6989586621690311439"><span class="hs-identifier hs-var">allowedSkew</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-776"></span><span>
-</span><span id="line-777"></span><span class="hs-comment">-- | Parse from a json string like:</span><span>
-</span><span id="line-778"></span><span class="hs-comment">-- | `{&quot;type&quot;: &quot;RS256&quot;, &quot;key&quot;: &quot;&lt;PEM-encoded-public-key-or-X509-cert&gt;&quot;}`</span><span>
-</span><span id="line-779"></span><span class="hs-comment">-- | to JWTConfig</span><span>
-</span><span id="line-780"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690311425"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTConfig"><span class="hs-identifier hs-type">JWTConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-781"></span><span>  </span><span id="local-6989586621690311351"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser JWTConfig
+</span><span id="line-780"></span><span>
+</span><span id="line-781"></span><span class="hs-comment">-- | Parse from a json string like:</span><span>
+</span><span id="line-782"></span><span class="hs-comment">-- | `{&quot;type&quot;: &quot;RS256&quot;, &quot;key&quot;: &quot;&lt;PEM-encoded-public-key-or-X509-cert&gt;&quot;}`</span><span>
+</span><span id="line-783"></span><span class="hs-comment">-- | to JWTConfig</span><span>
+</span><span id="line-784"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690311425"><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#JWTConfig"><span class="hs-identifier hs-type">JWTConfig</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-785"></span><span>  </span><span id="local-6989586621690311351"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser JWTConfig
 </span><a href="#local-6989586621690311351"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">J.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;JWTConfig&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690311350"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-782"></span><span>    </span><span id="local-6989586621690311349"><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-786"></span><span>    </span><span id="local-6989586621690311349"><span class="annot"><span class="annottext">Maybe Text
 </span><a href="#local-6989586621690311349"><span class="hs-identifier hs-var">mRawKey</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;key&quot;</span></span><span>
-</span><span id="line-783"></span><span>    </span><span id="local-6989586621690311348"><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-787"></span><span>    </span><span id="local-6989586621690311348"><span class="annot"><span class="annottext">Maybe Text
 </span><a href="#local-6989586621690311348"><span class="hs-identifier hs-var">claimsNs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;claims_namespace&quot;</span></span><span>
-</span><span id="line-784"></span><span>    </span><span id="local-6989586621690311347"><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-788"></span><span>    </span><span id="local-6989586621690311347"><span class="annot"><span class="annottext">Maybe Text
 </span><a href="#local-6989586621690311347"><span class="hs-identifier hs-var">claimsNsPath</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;claims_namespace_path&quot;</span></span><span>
-</span><span id="line-785"></span><span>    </span><span id="local-6989586621690311346"><span class="annot"><span class="annottext">Maybe Audience
+</span><span id="line-789"></span><span>    </span><span id="local-6989586621690311346"><span class="annot"><span class="annottext">Maybe Audience
 </span><a href="#local-6989586621690311346"><span class="hs-identifier hs-var">aud</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;audience&quot;</span></span><span>
-</span><span id="line-786"></span><span>    </span><span id="local-6989586621690311345"><span class="annot"><span class="annottext">Maybe StringOrURI
+</span><span id="line-790"></span><span>    </span><span id="local-6989586621690311345"><span class="annot"><span class="annottext">Maybe StringOrURI
 </span><a href="#local-6989586621690311345"><span class="hs-identifier hs-var">iss</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;issuer&quot;</span></span><span>
-</span><span id="line-787"></span><span>    </span><span id="local-6989586621690311344"><span class="annot"><span class="annottext">Maybe URI
+</span><span id="line-791"></span><span>    </span><span id="local-6989586621690311344"><span class="annot"><span class="annottext">Maybe URI
 </span><a href="#local-6989586621690311344"><span class="hs-identifier hs-var">jwkUrl</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;jwk_url&quot;</span></span><span>
-</span><span id="line-788"></span><span>    </span><span id="local-6989586621690311343"><span class="annot"><span class="annottext">JWTClaimsFormat
+</span><span id="line-792"></span><span>    </span><span id="local-6989586621690311343"><span class="annot"><span class="annottext">JWTClaimsFormat
 </span><a href="#local-6989586621690311343"><span class="hs-identifier hs-var">claimsFormat</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;claims_format&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">J..!=</span></span><span> </span><span class="annot"><span class="annottext">JWTClaimsFormat
 </span><a href="Hasura.Server.Auth.JWT.html#defaultClaimsFormat"><span class="hs-identifier hs-var">defaultClaimsFormat</span></a></span><span>
-</span><span id="line-789"></span><span>    </span><span id="local-6989586621690311341"><span class="annot"><span class="annottext">Maybe JWTCustomClaimsMap
+</span><span id="line-793"></span><span>    </span><span id="local-6989586621690311341"><span class="annot"><span class="annottext">Maybe JWTCustomClaimsMap
 </span><a href="#local-6989586621690311341"><span class="hs-identifier hs-var">claimsMap</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;claims_map&quot;</span></span><span>
-</span><span id="line-790"></span><span>    </span><span id="local-6989586621690311340"><span class="annot"><span class="annottext">Maybe NominalDiffTime
+</span><span id="line-794"></span><span>    </span><span id="local-6989586621690311340"><span class="annot"><span class="annottext">Maybe NominalDiffTime
 </span><a href="#local-6989586621690311340"><span class="hs-identifier hs-var">allowedSkew</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;allowed_skew&quot;</span></span><span>
-</span><span id="line-791"></span><span>    </span><span id="local-6989586621690311339"><span class="annot"><span class="annottext">Maybe JWTHeader
+</span><span id="line-795"></span><span>    </span><span id="local-6989586621690311339"><span class="annot"><span class="annottext">Maybe JWTHeader
 </span><a href="#local-6989586621690311339"><span class="hs-identifier hs-var">jwtHeader</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">J..:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;header&quot;</span></span><span>
-</span><span id="line-792"></span><span>
-</span><span id="line-793"></span><span>    </span><span id="local-6989586621690311338"><span class="annot"><span class="annottext">JWTNamespace
+</span><span id="line-796"></span><span>
+</span><span id="line-797"></span><span>    </span><span id="local-6989586621690311338"><span class="annot"><span class="annottext">JWTNamespace
 </span><a href="#local-6989586621690311338"><span class="hs-identifier hs-var">hasuraClaimsNs</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-794"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-798"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="#local-6989586621690311347"><span class="hs-identifier hs-var">claimsNsPath</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="#local-6989586621690311348"><span class="hs-identifier hs-var">claimsNs</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-795"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-799"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; JWTNamespace
 </span><a href="Hasura.Server.Auth.JWT.html#ClaimNs"><span class="hs-identifier hs-var">ClaimNs</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="Hasura.Server.Auth.JWT.html#defaultClaimsNamespace"><span class="hs-identifier hs-var">defaultClaimsNamespace</span></a></span><span>
-</span><span id="line-796"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311337"><span class="annot"><span class="annottext">Text
+</span><span id="line-800"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311337"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311337"><span class="hs-identifier hs-var">nsPath</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">either</span></a></span><span> </span><span class="annot"><span class="annottext">forall {m :: * -&gt; *} {a}. MonadFail m =&gt; Text -&gt; m a
@@ -2697,60 +2701,60 @@ a -&gt; k -&gt; UTCTime -&gt; SignedJWT -&gt; m ClaimsSet
 </span><a href="Data.Parser.JSONPath.html#parseJSONPath"><span class="hs-identifier hs-var">parseJSONPath</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311337"><span class="hs-identifier hs-var">nsPath</span></a></span><span>
-</span><span id="line-797"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-801"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311335"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311335"><span class="hs-identifier hs-var">ns</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; JWTNamespace
 </span><a href="Hasura.Server.Auth.JWT.html#ClaimNs"><span class="hs-identifier hs-var">ClaimNs</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311335"><span class="hs-identifier hs-var">ns</span></a></span><span>
-</span><span id="line-798"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-802"></span><span>        </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;claims_namespace and claims_namespace_path both cannot be set&quot;</span></span><span>
-</span><span id="line-799"></span><span>
-</span><span id="line-800"></span><span>    </span><span id="local-6989586621690311334"><span class="annot"><span class="annottext">Either JWK URI
+</span><span id="line-803"></span><span>
+</span><span id="line-804"></span><span>    </span><span id="local-6989586621690311334"><span class="annot"><span class="annottext">Either JWK URI
 </span><a href="#local-6989586621690311334"><span class="hs-identifier hs-var">keyOrUrl</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="#local-6989586621690311349"><span class="hs-identifier hs-var">mRawKey</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe URI
 </span><a href="#local-6989586621690311344"><span class="hs-identifier hs-var">jwkUrl</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-801"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-805"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe URI
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;key and jwk_url both cannot be empty&quot;</span></span><span>
-</span><span id="line-802"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-806"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="annot"><span class="annottext">URI
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;key, jwk_url both cannot be present&quot;</span></span><span>
-</span><span id="line-803"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311333"><span class="annot"><span class="annottext">Text
+</span><span id="line-807"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311333"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311333"><span class="hs-identifier hs-var">rawKey</span></a></span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Maybe URI
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-804"></span><span>        </span><span id="local-6989586621690311332"><span class="annot"><span class="annottext">Text
+</span><span id="line-808"></span><span>        </span><span id="local-6989586621690311332"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311332"><span class="hs-identifier hs-var">keyType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690311350"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">J..:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;type&quot;</span></span><span>
-</span><span id="line-805"></span><span>        </span><span id="local-6989586621690311331"><span class="annot"><span class="annottext">JWK
+</span><span id="line-809"></span><span>        </span><span id="local-6989586621690311331"><span class="annot"><span class="annottext">JWK
 </span><a href="#local-6989586621690311331"><span class="hs-identifier hs-var">key</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Parser JWK
 </span><a href="#local-6989586621690311330"><span class="hs-identifier hs-var">parseKey</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311332"><span class="hs-identifier hs-var">keyType</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311333"><span class="hs-identifier hs-var">rawKey</span></a></span><span>
-</span><span id="line-806"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-810"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; Either a b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span> </span><span class="annot"><span class="annottext">JWK
 </span><a href="#local-6989586621690311331"><span class="hs-identifier hs-var">key</span></a></span><span>
-</span><span id="line-807"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Text
+</span><span id="line-811"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690311329"><span class="annot"><span class="annottext">URI
 </span><a href="#local-6989586621690311329"><span class="hs-identifier hs-var">url</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. b -&gt; Either a b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Right</span></a></span><span> </span><span class="annot"><span class="annottext">URI
 </span><a href="#local-6989586621690311329"><span class="hs-identifier hs-var">url</span></a></span><span>
-</span><span id="line-808"></span><span>
-</span><span id="line-809"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690311328"><span class="annot"><span class="annottext">jwtClaims :: JWTClaims
+</span><span id="line-812"></span><span>
+</span><span id="line-813"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690311328"><span class="annot"><span class="annottext">jwtClaims :: JWTClaims
 </span><a href="#local-6989586621690311328"><span class="hs-identifier hs-var hs-var">jwtClaims</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall b a. b -&gt; (a -&gt; b) -&gt; Maybe a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">JWTNamespace -&gt; JWTClaimsFormat -&gt; JWTClaims
 </span><a href="Hasura.Server.Auth.JWT.html#JCNamespace"><span class="hs-identifier hs-var">JCNamespace</span></a></span><span> </span><span class="annot"><span class="annottext">JWTNamespace
@@ -2758,8 +2762,8 @@ a -&gt; k -&gt; UTCTime -&gt; SignedJWT -&gt; m ClaimsSet
 </span><a href="#local-6989586621690311343"><span class="hs-identifier hs-var">claimsFormat</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">JWTCustomClaimsMap -&gt; JWTClaims
 </span><a href="Hasura.Server.Auth.JWT.html#JCMap"><span class="hs-identifier hs-var">JCMap</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe JWTCustomClaimsMap
 </span><a href="#local-6989586621690311341"><span class="hs-identifier hs-var">claimsMap</span></a></span><span>
-</span><span id="line-810"></span><span>
-</span><span id="line-811"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-814"></span><span>
+</span><span id="line-815"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Either JWK URI
 -&gt; Maybe Audience
@@ -2775,60 +2779,60 @@ a -&gt; k -&gt; UTCTime -&gt; SignedJWT -&gt; m ClaimsSet
 </span><a href="#local-6989586621690311328"><span class="hs-identifier hs-var">jwtClaims</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe NominalDiffTime
 </span><a href="#local-6989586621690311340"><span class="hs-identifier hs-var">allowedSkew</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe JWTHeader
 </span><a href="#local-6989586621690311339"><span class="hs-identifier hs-var">jwtHeader</span></a></span><span>
-</span><span id="line-812"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-813"></span><span>      </span><span id="local-6989586621690311330"><span class="annot"><span class="annottext">parseKey :: Text -&gt; Text -&gt; Parser JWK
+</span><span id="line-816"></span><span>    </span><span class="hs-keyword">where</span><span>
+</span><span id="line-817"></span><span>      </span><span id="local-6989586621690311330"><span class="annot"><span class="annottext">parseKey :: Text -&gt; Text -&gt; Parser JWK
 </span><a href="#local-6989586621690311330"><span class="hs-identifier hs-var hs-var">parseKey</span></a></span></span><span> </span><span id="local-6989586621690311327"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311327"><span class="hs-identifier hs-var">keyType</span></a></span></span><span> </span><span id="local-6989586621690311326"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311326"><span class="hs-identifier hs-var">rawKey</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-814"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text
+</span><span id="line-818"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311327"><span class="hs-identifier hs-var">keyType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-815"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-819"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;HS256&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall {a}. Either Text a -&gt; Parser a
 </span><a href="#local-6989586621690311325"><span class="hs-identifier hs-var">runEither</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Int64 -&gt; Either Text JWK
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#parseHmacKey"><span class="hs-identifier hs-var">parseHmacKey</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311326"><span class="hs-identifier hs-var">rawKey</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><span class="hs-number">256</span></span><span>
-</span><span id="line-816"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-820"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;HS384&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall {a}. Either Text a -&gt; Parser a
 </span><a href="#local-6989586621690311325"><span class="hs-identifier hs-var">runEither</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Int64 -&gt; Either Text JWK
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#parseHmacKey"><span class="hs-identifier hs-var">parseHmacKey</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311326"><span class="hs-identifier hs-var">rawKey</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><span class="hs-number">384</span></span><span>
-</span><span id="line-817"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-821"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;HS512&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall {a}. Either Text a -&gt; Parser a
 </span><a href="#local-6989586621690311325"><span class="hs-identifier hs-var">runEither</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Int64 -&gt; Either Text JWK
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#parseHmacKey"><span class="hs-identifier hs-var">parseHmacKey</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311326"><span class="hs-identifier hs-var">rawKey</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><span class="hs-number">512</span></span><span>
-</span><span id="line-818"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-822"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;RS256&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall {a}. Either Text a -&gt; Parser a
 </span><a href="#local-6989586621690311325"><span class="hs-identifier hs-var">runEither</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text JWK
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#parseRsaKey"><span class="hs-identifier hs-var">parseRsaKey</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311326"><span class="hs-identifier hs-var">rawKey</span></a></span><span>
-</span><span id="line-819"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-823"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;RS384&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall {a}. Either Text a -&gt; Parser a
 </span><a href="#local-6989586621690311325"><span class="hs-identifier hs-var">runEither</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text JWK
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#parseRsaKey"><span class="hs-identifier hs-var">parseRsaKey</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311326"><span class="hs-identifier hs-var">rawKey</span></a></span><span>
-</span><span id="line-820"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-824"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;RS512&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall {a}. Either Text a -&gt; Parser a
 </span><a href="#local-6989586621690311325"><span class="hs-identifier hs-var">runEither</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text JWK
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#parseRsaKey"><span class="hs-identifier hs-var">parseRsaKey</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311326"><span class="hs-identifier hs-var">rawKey</span></a></span><span>
-</span><span id="line-821"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-825"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;Ed25519&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall {a}. Either Text a -&gt; Parser a
 </span><a href="#local-6989586621690311325"><span class="hs-identifier hs-var">runEither</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either Text JWK
 </span><a href="Hasura.Server.Auth.JWT.Internal.html#parseEdDSAKey"><span class="hs-identifier hs-var">parseEdDSAKey</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311326"><span class="hs-identifier hs-var">rawKey</span></a></span><span>
-</span><span id="line-822"></span><span>          </span><span class="hs-comment">-- TODO(from master): support ES256, ES384, ES512, PS256, PS384, Ed448 (JOSE doesn't support it as of now)</span><span>
-</span><span id="line-823"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-826"></span><span>          </span><span class="hs-comment">-- TODO(from master): support ES256, ES384, ES512, PS256, PS384, Ed448 (JOSE doesn't support it as of now)</span><span>
+</span><span id="line-827"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall {m :: * -&gt; *} {a}. MonadFail m =&gt; String -&gt; m a
 </span><a href="#local-6989586621690311324"><span class="hs-identifier hs-var">invalidJwk</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Key type: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -2837,24 +2841,24 @@ a -&gt; k -&gt; UTCTime -&gt; SignedJWT -&gt; m ClaimsSet
 </span><a href="#local-6989586621690311327"><span class="hs-identifier hs-var">keyType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot; is not supported&quot;</span></span><span class="hs-special">)</span><span>
-</span><span id="line-824"></span><span>
-</span><span id="line-825"></span><span>      </span><span id="local-6989586621690311325"><span class="annot"><span class="annottext">runEither :: Either Text a -&gt; Parser a
+</span><span id="line-828"></span><span>
+</span><span id="line-829"></span><span>      </span><span id="local-6989586621690311325"><span class="annot"><span class="annottext">runEither :: Either Text a -&gt; Parser a
 </span><a href="#local-6989586621690311325"><span class="hs-identifier hs-var hs-var">runEither</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">either</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall {m :: * -&gt; *} {a}. MonadFail m =&gt; String -&gt; m a
 </span><a href="#local-6989586621690311324"><span class="hs-identifier hs-var">invalidJwk</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; String
 </span><span class="hs-identifier hs-var">T.unpack</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span>
-</span><span id="line-826"></span><span>
-</span><span id="line-827"></span><span>      </span><span id="local-6989586621690311324"><span class="annot"><span class="annottext">invalidJwk :: String -&gt; m a
+</span><span id="line-830"></span><span>
+</span><span id="line-831"></span><span>      </span><span id="local-6989586621690311324"><span class="annot"><span class="annottext">invalidJwk :: String -&gt; m a
 </span><a href="#local-6989586621690311324"><span class="hs-identifier hs-var hs-var">invalidJwk</span></a></span></span><span> </span><span id="local-6989586621690311316"><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690311316"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Invalid JWK: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690311316"><span class="hs-identifier hs-var">msg</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-828"></span><span>
-</span><span id="line-829"></span><span>      </span><span id="local-6989586621690311336"><span class="annot"><span class="annottext">failJSONPathParsing :: Text -&gt; m a
+</span><span id="line-832"></span><span>
+</span><span id="line-833"></span><span>      </span><span id="local-6989586621690311336"><span class="annot"><span class="annottext">failJSONPathParsing :: Text -&gt; m a
 </span><a href="#local-6989586621690311336"><span class="hs-identifier hs-var hs-var">failJSONPathParsing</span></a></span></span><span> </span><span id="local-6989586621690311311"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311311"><span class="hs-identifier hs-var">err</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fail</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -2864,40 +2868,40 @@ a -&gt; k -&gt; UTCTime -&gt; SignedJWT -&gt; m ClaimsSet
 </span><span class="hs-string">&quot;invalid JSON path claims_namespace_path error: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311311"><span class="hs-identifier hs-var">err</span></a></span><span>
-</span><span id="line-830"></span><span>
-</span><span id="line-831"></span><span class="hs-comment">-- parse x-hasura-allowed-roles, x-hasura-default-role from JWT claims</span><span>
-</span><span id="line-832"></span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#parseHasuraClaims"><span class="hs-identifier hs-type">parseHasuraClaims</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690313320"><span class="annot"><a href="#local-6989586621690313320"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690313320"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimsMap"><span class="hs-identifier hs-type">ClaimsMap</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690313320"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#HasuraClaims"><span class="hs-identifier hs-type">HasuraClaims</span></a></span><span>
-</span><span id="line-833"></span><span id="parseHasuraClaims"><span class="annot"><span class="annottext">parseHasuraClaims :: forall (m :: * -&gt; *).
+</span><span id="line-834"></span><span>
+</span><span id="line-835"></span><span class="hs-comment">-- parse x-hasura-allowed-roles, x-hasura-default-role from JWT claims</span><span>
+</span><span id="line-836"></span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#parseHasuraClaims"><span class="hs-identifier hs-type">parseHasuraClaims</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690313320"><span class="annot"><a href="#local-6989586621690313320"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690313320"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#ClaimsMap"><span class="hs-identifier hs-type">ClaimsMap</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690313320"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Hasura.Server.Auth.JWT.html#HasuraClaims"><span class="hs-identifier hs-type">HasuraClaims</span></a></span><span>
+</span><span id="line-837"></span><span id="parseHasuraClaims"><span class="annot"><span class="annottext">parseHasuraClaims :: forall (m :: * -&gt; *).
 MonadError QErr m =&gt;
 HashMap SessionVariable Value -&gt; m HasuraClaims
 </span><a href="Hasura.Server.Auth.JWT.html#parseHasuraClaims"><span class="hs-identifier hs-var hs-var">parseHasuraClaims</span></a></span></span><span> </span><span id="local-6989586621690311299"><span class="annot"><span class="annottext">HashMap SessionVariable Value
 </span><a href="#local-6989586621690311299"><span class="hs-identifier hs-var">claimsMap</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-834"></span><span>  </span><span class="annot"><span class="annottext">[RoleName] -&gt; RoleName -&gt; HasuraClaims
+</span><span id="line-838"></span><span>  </span><span class="annot"><span class="annottext">[RoleName] -&gt; RoleName -&gt; HasuraClaims
 </span><a href="Hasura.Server.Auth.JWT.html#HasuraClaims"><span class="hs-identifier hs-var">HasuraClaims</span></a></span><span>
-</span><span id="line-835"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-839"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; SessionVariable -&gt; Text -&gt; m a
 </span><a href="#local-6989586621690311298"><span class="hs-identifier hs-var">parseClaim</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
 </span><a href="Hasura.Server.Auth.JWT.html#allowedRolesClaim"><span class="hs-identifier hs-var">allowedRolesClaim</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;should be a list of roles&quot;</span></span><span>
-</span><span id="line-836"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-840"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; SessionVariable -&gt; Text -&gt; m a
 </span><a href="#local-6989586621690311298"><span class="hs-identifier hs-var">parseClaim</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
 </span><a href="Hasura.Server.Auth.JWT.html#defaultRoleClaim"><span class="hs-identifier hs-var">defaultRoleClaim</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;should be a single role name&quot;</span></span><span>
-</span><span id="line-837"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-838"></span><span>    </span><span id="local-6989586621690313224"><span class="annot"><a href="#local-6989586621690311298"><span class="hs-identifier hs-type">parseClaim</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621690313224"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690313320"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690313224"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-839"></span><span>    </span><span id="local-6989586621690311298"><span class="annot"><span class="annottext">parseClaim :: forall a. FromJSON a =&gt; SessionVariable -&gt; Text -&gt; m a
+</span><span id="line-841"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-842"></span><span>    </span><span id="local-6989586621690313224"><span class="annot"><a href="#local-6989586621690311298"><span class="hs-identifier hs-type">parseClaim</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621690313224"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariable"><span class="hs-identifier hs-type">SessionVariable</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690313320"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690313224"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-843"></span><span>    </span><span id="local-6989586621690311298"><span class="annot"><span class="annottext">parseClaim :: forall a. FromJSON a =&gt; SessionVariable -&gt; Text -&gt; m a
 </span><a href="#local-6989586621690311298"><span class="hs-identifier hs-var hs-var">parseClaim</span></a></span></span><span> </span><span id="local-6989586621690311282"><span class="annot"><span class="annottext">SessionVariable
 </span><a href="#local-6989586621690311282"><span class="hs-identifier hs-var">claim</span></a></span></span><span> </span><span id="local-6989586621690311281"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311281"><span class="hs-identifier hs-var">hint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-840"></span><span>      </span><span id="local-6989586621690311280"><span class="annot"><span class="annottext">Value
+</span><span id="line-844"></span><span>      </span><span id="local-6989586621690311280"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690311280"><span class="hs-identifier hs-var">claimV</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Applicative m =&gt; Maybe a -&gt; m a -&gt; m a
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">onNothing</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">HM.lookup</span></span><span> </span><span class="annot"><span class="annottext">SessionVariable
 </span><a href="#local-6989586621690311282"><span class="hs-identifier hs-var">claim</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap SessionVariable Value
 </span><a href="#local-6989586621690311299"><span class="hs-identifier hs-var">claimsMap</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">m Value
 </span><a href="#local-6989586621690311278"><span class="hs-identifier hs-var">missingClaim</span></a></span><span>
-</span><span id="line-841"></span><span>      </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
+</span><span id="line-845"></span><span>      </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (FromJSON a, MonadError QErr m) =&gt;
 Value -&gt; Text -&gt; m a
 </span><a href="Hasura.Server.Auth.JWT.html#parseJwtClaim"><span class="hs-identifier hs-var">parseJwtClaim</span></a></span><span> </span><span class="annot"><span class="annottext">Value
@@ -2910,8 +2914,8 @@ Value -&gt; Text -&gt; m a
 </span><span class="hs-string">&quot;; &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311281"><span class="hs-identifier hs-var">hint</span></a></span><span>
-</span><span id="line-842"></span><span>      </span><span class="hs-keyword">where</span><span>
-</span><span id="line-843"></span><span>        </span><span id="local-6989586621690311278"><span class="annot"><span class="annottext">missingClaim :: m Value
+</span><span id="line-846"></span><span>      </span><span class="hs-keyword">where</span><span>
+</span><span id="line-847"></span><span>        </span><span id="local-6989586621690311278"><span class="annot"><span class="annottext">missingClaim :: m Value
 </span><a href="#local-6989586621690311278"><span class="hs-identifier hs-var hs-var">missingClaim</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#JWTRoleClaimMissing"><span class="hs-identifier hs-var">JWTRoleClaimMissing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -2919,27 +2923,27 @@ Value -&gt; Text -&gt; m a
 </span><span class="hs-string">&quot;JWT claim does not contain &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311277"><span class="hs-identifier hs-var">claimText</span></a></span><span>
-</span><span id="line-844"></span><span>        </span><span id="local-6989586621690311277"><span class="annot"><span class="annottext">claimText :: Text
+</span><span id="line-848"></span><span>        </span><span id="local-6989586621690311277"><span class="annot"><span class="annottext">claimText :: Text
 </span><a href="#local-6989586621690311277"><span class="hs-identifier hs-var hs-var">claimText</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SessionVariable -&gt; Text
 </span><a href="Hasura.Session.html#sessionVariableToText"><span class="hs-identifier hs-var">sessionVariableToText</span></a></span><span> </span><span class="annot"><span class="annottext">SessionVariable
 </span><a href="#local-6989586621690311282"><span class="hs-identifier hs-var">claim</span></a></span><span>
-</span><span id="line-845"></span><span>
-</span><span id="line-846"></span><span class="hs-comment">-- Utility:</span><span>
-</span><span id="line-847"></span><span id="local-6989586621690313315"><span id="local-6989586621690313316"><span class="annot"><a href="Hasura.Server.Auth.JWT.html#parseJwtClaim"><span class="hs-identifier hs-type">parseJwtClaim</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621690313316"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690313315"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690313315"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690313316"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
-</span><span id="line-848"></span><span id="parseJwtClaim"><span class="annot"><span class="annottext">parseJwtClaim :: forall a (m :: * -&gt; *).
+</span><span id="line-849"></span><span>
+</span><span id="line-850"></span><span class="hs-comment">-- Utility:</span><span>
+</span><span id="line-851"></span><span id="local-6989586621690313315"><span id="local-6989586621690313316"><span class="annot"><a href="Hasura.Server.Auth.JWT.html#parseJwtClaim"><span class="hs-identifier hs-type">parseJwtClaim</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">J.FromJSON</span></span><span> </span><span class="annot"><a href="#local-6989586621690313316"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690313315"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690313315"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690313316"><span class="hs-identifier hs-type">a</span></a></span></span></span><span>
+</span><span id="line-852"></span><span id="parseJwtClaim"><span class="annot"><span class="annottext">parseJwtClaim :: forall a (m :: * -&gt; *).
 (FromJSON a, MonadError QErr m) =&gt;
 Value -&gt; Text -&gt; m a
 </span><a href="Hasura.Server.Auth.JWT.html#parseJwtClaim"><span class="hs-identifier hs-var hs-var">parseJwtClaim</span></a></span></span><span> </span><span id="local-6989586621690311267"><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690311267"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span id="local-6989586621690311266"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690311266"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-849"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Result a
+</span><span id="line-853"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Value -&gt; Result a
 </span><span class="hs-identifier hs-var">J.fromJSON</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690311267"><span class="hs-identifier hs-var">v</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-850"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.Success</span></span><span> </span><span id="local-6989586621690311263"><span class="annot"><span class="annottext">a
+</span><span id="line-854"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.Success</span></span><span> </span><span id="local-6989586621690311263"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621690311263"><span class="hs-identifier hs-var">val</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621690311263"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-851"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.Error</span></span><span> </span><span id="local-6989586621690311261"><span class="annot"><span class="annottext">String
+</span><span id="line-855"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">J.Error</span></span><span> </span><span id="local-6989586621690311261"><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690311261"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#JWTInvalidClaims"><span class="hs-identifier hs-var">JWTInvalidClaims</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -2950,4 +2954,4 @@ Value -&gt; Text -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690311261"><span class="hs-identifier hs-var">e</span></a></span><span>
-</span><span id="line-852"></span></pre></body></html>
+</span><span id="line-856"></span></pre></body></html>

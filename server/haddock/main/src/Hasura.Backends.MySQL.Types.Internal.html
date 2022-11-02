@@ -991,170 +991,172 @@ schema :: TableName -&gt; Maybe Text
 </span><span id="line-304"></span><span>        </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#ValidationFailed"><span class="hs-identifier hs-var">ValidationFailed</span></a></span><span>
 </span><span id="line-305"></span><span>        </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;cannot use SQL type &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-string">&quot;cannot use SQL type &quot;</span></span><span>
+</span><span id="line-306"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#scalarTypeDBName"><span class="hs-identifier hs-var">scalarTypeDBName</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarType
-</span><a href="#local-6989586621690405593"><span class="hs-identifier hs-var">scalarType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="#local-6989586621690405593"><span class="hs-identifier hs-var">scalarType</span></a></span><span>
+</span><span id="line-307"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; in the GraphQL schema because its name is not a &quot;</span></span><span>
-</span><span id="line-306"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-308"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;valid GraphQL identifier&quot;</span></span><span>
-</span><span id="line-307"></span><span>        </span><span class="hs-special">)</span><span>
-</span><span id="line-308"></span><span>
-</span><span id="line-309"></span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#scalarTypeDBName"><span class="hs-identifier hs-type">scalarTypeDBName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
-</span><span id="line-310"></span><span id="scalarTypeDBName"><span class="annot"><span class="annottext">scalarTypeDBName :: ScalarType -&gt; Text
+</span><span id="line-309"></span><span>        </span><span class="hs-special">)</span><span>
+</span><span id="line-310"></span><span>
+</span><span id="line-311"></span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#scalarTypeDBName"><span class="hs-identifier hs-type">scalarTypeDBName</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span>
+</span><span id="line-312"></span><span id="scalarTypeDBName"><span class="annot"><span class="annottext">scalarTypeDBName :: ScalarType -&gt; Text
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#scalarTypeDBName"><span class="hs-identifier hs-var hs-var">scalarTypeDBName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;scalarTypeDBName: not implemented&quot;</span></span><span>
-</span><span id="line-311"></span><span>
-</span><span id="line-312"></span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#defaultConnPoolSettings"><span class="hs-identifier hs-type">defaultConnPoolSettings</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnPoolSettings"><span class="hs-identifier hs-type">ConnPoolSettings</span></a></span><span>
-</span><span id="line-313"></span><span id="defaultConnPoolSettings"><span class="annot"><span class="annottext">defaultConnPoolSettings :: ConnPoolSettings
+</span><span id="line-313"></span><span>
+</span><span id="line-314"></span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#defaultConnPoolSettings"><span class="hs-identifier hs-type">defaultConnPoolSettings</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnPoolSettings"><span class="hs-identifier hs-type">ConnPoolSettings</span></a></span><span>
+</span><span id="line-315"></span><span id="defaultConnPoolSettings"><span class="annot"><span class="annottext">defaultConnPoolSettings :: ConnPoolSettings
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#defaultConnPoolSettings"><span class="hs-identifier hs-var hs-var">defaultConnPoolSettings</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-314"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnPoolSettings"><span class="hs-identifier hs-type">ConnPoolSettings</span></a></span><span>
-</span><span id="line-315"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_cscIdleTimeout :: Word
+</span><span id="line-316"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ConnPoolSettings"><span class="hs-identifier hs-type">ConnPoolSettings</span></a></span><span>
+</span><span id="line-317"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">_cscIdleTimeout :: Word
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscIdleTimeout"><span class="hs-identifier hs-var">_cscIdleTimeout</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word
 </span><span class="hs-number">5</span></span><span class="hs-special">,</span><span>
-</span><span id="line-316"></span><span>      </span><span class="annot"><span class="annottext">_cscMaxConnections :: Word
+</span><span id="line-318"></span><span>      </span><span class="annot"><span class="annottext">_cscMaxConnections :: Word
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscMaxConnections"><span class="hs-identifier hs-var">_cscMaxConnections</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word
 </span><span class="hs-number">50</span></span><span>
-</span><span id="line-317"></span><span>    </span><span class="hs-special">}</span><span>
-</span><span id="line-318"></span><span>
-</span><span id="line-319"></span><span class="hs-comment">-- | ref: https://dev.mysql.com/doc/c-api/8.0/en/c-api-data-structures.html</span><span>
-</span><span id="line-320"></span><span class="hs-comment">--</span><span>
-</span><span id="line-321"></span><span class="hs-comment">-- DB has CHAR, BINARY, VARCHAR and VARBINARY</span><span>
-</span><span id="line-322"></span><span class="hs-comment">-- C API only has STRING and VARSTRING</span><span>
-</span><span id="line-323"></span><span class="hs-comment">-- Database.MySQL.Base.Types.Type has String, VarString and VarChar for some reason</span><span>
-</span><span id="line-324"></span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#parseMySQLScalarType"><span class="hs-identifier hs-type">parseMySQLScalarType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span>
-</span><span id="line-325"></span><span id="parseMySQLScalarType"><span class="annot"><span class="annottext">parseMySQLScalarType :: Text -&gt; ScalarType
+</span><span id="line-319"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-320"></span><span>
+</span><span id="line-321"></span><span class="hs-comment">-- | ref: https://dev.mysql.com/doc/c-api/8.0/en/c-api-data-structures.html</span><span>
+</span><span id="line-322"></span><span class="hs-comment">--</span><span>
+</span><span id="line-323"></span><span class="hs-comment">-- DB has CHAR, BINARY, VARCHAR and VARBINARY</span><span>
+</span><span id="line-324"></span><span class="hs-comment">-- C API only has STRING and VARSTRING</span><span>
+</span><span id="line-325"></span><span class="hs-comment">-- Database.MySQL.Base.Types.Type has String, VarString and VarChar for some reason</span><span>
+</span><span id="line-326"></span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#parseMySQLScalarType"><span class="hs-identifier hs-type">parseMySQLScalarType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span>
+</span><span id="line-327"></span><span id="parseMySQLScalarType"><span class="annot"><span class="annottext">parseMySQLScalarType :: Text -&gt; ScalarType
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#parseMySQLScalarType"><span class="hs-identifier hs-var hs-var">parseMySQLScalarType</span></a></span></span><span> </span><span id="local-6989586621690405586"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690405586"><span class="hs-identifier hs-var">scalarType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-326"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text
+</span><span id="line-328"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.toUpper</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690405586"><span class="hs-identifier hs-var">scalarType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-327"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-329"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;BIGINT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.LongLong</span></span><span>
-</span><span id="line-328"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-330"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;BINARY&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.String</span></span><span>
-</span><span id="line-329"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-331"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;BIT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Bit</span></span><span>
-</span><span id="line-330"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-332"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;BLOB&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Blob</span></span><span> </span><span class="hs-comment">-- TinyBlob, MediumBlob, LongBlob</span><span>
-</span><span id="line-331"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-333"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;CHAR&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.String</span></span><span>
-</span><span id="line-332"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-334"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;DATE&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Date</span></span><span> </span><span class="hs-comment">-- Or NewDate. REVIEW: When to use NewDate :: Database.MySQL.Base.Types.Type then?</span><span>
-</span><span id="line-333"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-335"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;DATETIME&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.DateTime</span></span><span>
-</span><span id="line-334"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-336"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;DECIMAL&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Decimal</span></span><span> </span><span class="hs-comment">-- Or NewDecimal</span><span>
-</span><span id="line-335"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-337"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;DOUBLE&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Double</span></span><span>
-</span><span id="line-336"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-338"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;ENUM&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Enum</span></span><span>
-</span><span id="line-337"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-339"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;FLOAT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Float</span></span><span>
-</span><span id="line-338"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-340"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;GEOMETRYCOLLECTION&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Geometry</span></span><span>
-</span><span id="line-339"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-341"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;GEOMETRY&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Geometry</span></span><span> </span><span class="hs-comment">-- For all Geometry types. TODO: Check how to distinguish between these types when it becomes necessary</span><span>
-</span><span id="line-340"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-342"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;INT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Long</span></span><span>
-</span><span id="line-341"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-343"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;JSON&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Json</span></span><span>
-</span><span id="line-342"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-344"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;LINESTRING&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Geometry</span></span><span> </span><span class="hs-comment">-- For now Geometry could be considered as Text</span><span>
-</span><span id="line-343"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-345"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MEDIUMINT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Int24</span></span><span>
-</span><span id="line-344"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-346"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MULTILINESTRING&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Geometry</span></span><span>
-</span><span id="line-345"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-347"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MULTIPOINT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Geometry</span></span><span>
-</span><span id="line-346"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-348"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MULTIPOLYGON&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Geometry</span></span><span>
-</span><span id="line-347"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-349"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;NULL&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Null</span></span><span> </span><span class="hs-comment">-- Not a column type, but we retain it as part of this definition to enumerate all possible types</span><span>
-</span><span id="line-348"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-350"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;NUMERIC&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Decimal</span></span><span> </span><span class="hs-comment">-- Or NewDecimal</span><span>
-</span><span id="line-349"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-351"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;POINT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Geometry</span></span><span>
-</span><span id="line-350"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-352"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;POLYGON&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Geometry</span></span><span>
-</span><span id="line-351"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-353"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;SET&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Set</span></span><span>
-</span><span id="line-352"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-354"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;SMALLINT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Short</span></span><span>
-</span><span id="line-353"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-355"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;TEXT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Blob</span></span><span>
-</span><span id="line-354"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-356"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;TIME&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Time</span></span><span>
-</span><span id="line-355"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-357"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;TIMESTAMP&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Timestamp</span></span><span>
-</span><span id="line-356"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-358"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;TINYINT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Tiny</span></span><span>
-</span><span id="line-357"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-359"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;VARBINARY&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.VarString</span></span><span>
-</span><span id="line-358"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-360"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;VARCHAR&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.VarChar</span></span><span>
-</span><span id="line-359"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-361"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;YEAR&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Year</span></span><span>
-</span><span id="line-360"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-362"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;TINYTEXT&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.String</span></span><span>
-</span><span id="line-361"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-363"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;VARCHAR(45)&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.VarChar</span></span><span>
-</span><span id="line-362"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-364"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;VARCHAR(450)&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.VarChar</span></span><span>
-</span><span id="line-363"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-365"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;INT UNSIGNED&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Long</span></span><span>
-</span><span id="line-364"></span><span>    </span><span class="annot"><span class="annottext">Text
+</span><span id="line-366"></span><span>    </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;BIT(1)&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Bit</span></span><span>
-</span><span id="line-365"></span><span>    </span><span class="hs-comment">-- _ -&gt; MySQLTypes.Null</span><span>
-</span><span id="line-366"></span><span>
-</span><span id="line-367"></span><span>    </span><span id="local-6989586621690405561"><span class="annot"><span class="annottext">Text
+</span><span id="line-367"></span><span>    </span><span class="hs-comment">-- _ -&gt; MySQLTypes.Null</span><span>
+</span><span id="line-368"></span><span>
+</span><span id="line-369"></span><span>    </span><span id="local-6989586621690405561"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690405561"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;INT&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isPrefixOf`</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690405561"><span class="hs-identifier hs-var">txt</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><span class="hs-identifier hs-var">MySQLTypes.Long</span></span><span>
-</span><span id="line-368"></span><span>    </span><span id="local-6989586621690405559"><span class="annot"><span class="annottext">Text
+</span><span id="line-370"></span><span>    </span><span id="local-6989586621690405559"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690405559"><span class="hs-identifier hs-var">txt</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
@@ -1162,10 +1164,10 @@ schema :: TableName -&gt; Maybe Text
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; [Char]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">show</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690405559"><span class="hs-identifier hs-var">txt</span></a></span><span>
-</span><span id="line-369"></span><span>
-</span><span id="line-370"></span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#parseScalarValue"><span class="hs-identifier hs-type">parseScalarValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-371"></span><span id="parseScalarValue"><span class="annot"><span class="annottext">parseScalarValue :: ScalarType -&gt; Value -&gt; Either QErr ScalarValue
+</span><span id="line-371"></span><span>
+</span><span id="line-372"></span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#parseScalarValue"><span class="hs-identifier hs-type">parseScalarValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">J.Value</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MySQL.Types.Internal.html#ScalarValue"><span class="hs-identifier hs-type">ScalarValue</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-373"></span><span id="parseScalarValue"><span class="annot"><span class="annottext">parseScalarValue :: ScalarType -&gt; Value -&gt; Either QErr ScalarValue
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#parseScalarValue"><span class="hs-identifier hs-var hs-var">parseScalarValue</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">error</span></a></span><span> </span><span class="annot"><span class="annottext">[Char]
 </span><span class="hs-string">&quot;parseScalarValue is yet to be implemented.&quot;</span></span><span>
-</span><span id="line-372"></span></pre></body></html>
+</span><span id="line-374"></span></pre></body></html>

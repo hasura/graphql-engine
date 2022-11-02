@@ -135,32 +135,33 @@ SourcePrefixes
 </span><a href="Hasura.Backends.Postgres.Translate.Select.Internal.GenerateSelect.html#generateSQLSelectFromArrayNode"><span class="hs-identifier hs-var">generateSQLSelectFromArrayNode</span></a></span><span> </span><span class="annot"><span class="annottext">SelectSource
 </span><a href="#local-6989586621690578225"><span class="hs-identifier hs-var">selectSource</span></a></span><span> </span><span class="annot"><span class="annottext">MultiRowSelectNode
 </span><a href="#local-6989586621690578212"><span class="hs-identifier hs-var">arrayNode</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; BoolExp
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-71"></span><span>          </span><span class="annot"><span class="annottext">Bool -&gt; BoolExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#BELit"><span class="hs-identifier hs-var">S.BELit</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span>
-</span><span id="line-71"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-72"></span><span>    </span><span id="local-6989586621690578220"><span class="annot"><span class="annottext">strfyNum :: StringifyNumbers
+</span><span id="line-72"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-73"></span><span>    </span><span id="local-6989586621690578220"><span class="annot"><span class="annottext">strfyNum :: StringifyNumbers
 </span><a href="#local-6989586621690578220"><span class="hs-identifier hs-var hs-var">strfyNum</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (f :: * -&gt; *) v.
 AnnSelectG b f v -&gt; StringifyNumbers
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnStrfyNum%3AAnnSelectG"><span class="hs-identifier hs-var">_asnStrfyNum</span></a></span><span> </span><span class="annot"><span class="annottext">AnnSimpleSelect ('Postgres pgKind)
 </span><a href="#local-6989586621690578228"><span class="hs-identifier hs-var">annSel</span></a></span><span>
-</span><span id="line-73"></span><span>    </span><span id="local-6989586621690578207"><span class="annot"><span class="annottext">rootFldIdentifier :: Identifier
+</span><span id="line-74"></span><span>    </span><span id="local-6989586621690578207"><span class="annot"><span class="annottext">rootFldIdentifier :: Identifier
 </span><a href="#local-6989586621690578207"><span class="hs-identifier hs-var hs-var">rootFldIdentifier</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. IsIdentifier a =&gt; a -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#toIdentifier"><span class="hs-identifier hs-var">toIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621690578218"><span class="hs-identifier hs-var">rootFldName</span></a></span><span>
-</span><span id="line-74"></span><span>    </span><span id="local-6989586621690578219"><span class="annot"><span class="annottext">sourcePrefixes :: SourcePrefixes
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621690578219"><span class="annot"><span class="annottext">sourcePrefixes :: SourcePrefixes
 </span><a href="#local-6989586621690578219"><span class="hs-identifier hs-var hs-var">sourcePrefixes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Identifier -&gt; Identifier -&gt; SourcePrefixes
 </span><a href="Hasura.Backends.Postgres.Translate.Types.html#SourcePrefixes"><span class="hs-identifier hs-var">SourcePrefixes</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
 </span><a href="#local-6989586621690578207"><span class="hs-identifier hs-var">rootFldIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">Identifier
 </span><a href="#local-6989586621690578207"><span class="hs-identifier hs-var">rootFldIdentifier</span></a></span><span>
-</span><span id="line-75"></span><span>    </span><span id="local-6989586621690578218"><span class="annot"><span class="annottext">rootFldName :: FieldName
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621690578218"><span class="annot"><span class="annottext">rootFldName :: FieldName
 </span><a href="#local-6989586621690578218"><span class="hs-identifier hs-var hs-var">rootFldName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Common.html#FieldName"><span class="hs-identifier hs-var">FieldName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;root&quot;</span></span><span>
-</span><span id="line-76"></span><span>    </span><span id="local-6989586621690578214"><span class="annot"><span class="annottext">rootFldAls :: ColumnAlias
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621690578214"><span class="annot"><span class="annottext">rootFldAls :: ColumnAlias
 </span><a href="#local-6989586621690578214"><span class="hs-identifier hs-var hs-var">rootFldAls</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. IsIdentifier a =&gt; a -&gt; ColumnAlias
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#toColumnAlias"><span class="hs-identifier hs-var">S.toColumnAlias</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. IsIdentifier a =&gt; a -&gt; Identifier
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#toIdentifier"><span class="hs-identifier hs-var">toIdentifier</span></a></span><span> </span><span class="annot"><span class="annottext">FieldName
 </span><a href="#local-6989586621690578218"><span class="hs-identifier hs-var">rootFldName</span></a></span><span>
-</span><span id="line-77"></span></pre></body></html>
+</span><span id="line-78"></span></pre></body></html>

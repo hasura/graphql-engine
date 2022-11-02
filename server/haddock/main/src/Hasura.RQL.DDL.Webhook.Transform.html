@@ -759,7 +759,8 @@ url :: forall (f :: * -&gt; *). RequestFields f -&gt; f Url
 method :: forall (f :: * -&gt; *). RequestFields f -&gt; f Method
 </span><a href="#local-6989586621690325805"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-271"></span><span>      </span><span class="annot"><span class="annottext">Request
-</span><a href="#local-6989586621690325810"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><a href="#local-6989586621690325810"><span class="hs-identifier hs-var">req</span></a></span><span>
+</span><span id="line-272"></span><span>        </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">Lens' Request ByteString
 </span><a href="Network.HTTP.Client.Transformable.html#method"><span class="hs-identifier hs-var">HTTP.method</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ByteString
@@ -769,7 +770,7 @@ method :: forall (f :: * -&gt; *). RequestFields f -&gt; f Method
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">coerce :: forall a b. Coercible a b =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">coerce</span></a></span><span> </span><span class="annot"><span class="annottext">Identity Method
 </span><a href="#local-6989586621690325809"><span class="hs-identifier hs-var">method</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-272"></span><span>        </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span id="line-273"></span><span>        </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">Lens' Request (Maybe ByteString)
 </span><a href="Network.HTTP.Client.Transformable.html#body"><span class="hs-identifier hs-var">HTTP.body</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Body -&gt; Maybe ByteString
@@ -777,13 +778,13 @@ method :: forall (f :: * -&gt; *). RequestFields f -&gt; f Method
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">coerce :: forall a b. Coercible a b =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">coerce</span></a></span><span> </span><span class="annot"><span class="annottext">Identity Body
 </span><a href="#local-6989586621690325807"><span class="hs-identifier hs-var">body</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-273"></span><span>        </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span id="line-274"></span><span>        </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">Lens' Request Text
 </span><a href="Network.HTTP.Client.Transformable.html#url"><span class="hs-identifier hs-var">HTTP.url</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">coerce :: forall a b. Coercible a b =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">coerce</span></a></span><span> </span><span class="annot"><span class="annottext">Identity Url
 </span><a href="#local-6989586621690325808"><span class="hs-identifier hs-var">url</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-274"></span><span>        </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span id="line-275"></span><span>        </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">Lens' Request Query
 </span><a href="Network.HTTP.Client.Transformable.html#queryParams"><span class="hs-identifier hs-var">HTTP.queryParams</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">QueryParams -&gt; Query
@@ -791,31 +792,31 @@ method :: forall (f :: * -&gt; *). RequestFields f -&gt; f Method
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">coerce :: forall a b. Coercible a b =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">coerce</span></a></span><span> </span><span class="annot"><span class="annottext">Identity QueryParams
 </span><a href="#local-6989586621690325806"><span class="hs-identifier hs-var">queryParams</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-275"></span><span>        </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
+</span><span id="line-276"></span><span>        </span><span class="annot"><span class="annottext">forall a b. a -&gt; (a -&gt; b) -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">forall s t a b. ASetter s t a b -&gt; b -&gt; s -&gt; t
 </span><span class="hs-identifier hs-var">set</span></span><span> </span><span class="annot"><span class="annottext">Lens' Request [Header]
 </span><a href="Network.HTTP.Client.Transformable.html#headers"><span class="hs-identifier hs-var">HTTP.headers</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">coerce :: forall a b. Coercible a b =&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-type">coerce</span></a></span><span> </span><span class="annot"><span class="annottext">Identity Headers
 </span><a href="#local-6989586621690325805"><span class="hs-identifier hs-var">requestHeaders</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-276"></span><span>
-</span><span id="line-277"></span><span class="hs-comment">-- | Transform an 'HTTP.Request' with a 'RequestTransform'.</span><span>
-</span><span id="line-278"></span><span class="hs-comment">--</span><span>
-</span><span id="line-279"></span><span class="hs-comment">-- Note: we pass in the request url explicitly for use in the</span><span>
-</span><span id="line-280"></span><span class="hs-comment">-- 'ReqTransformCtx'. We do this so that we can ensure that the url</span><span>
-</span><span id="line-281"></span><span class="hs-comment">-- is syntactically identical to what the use submits. If we use the</span><span>
-</span><span id="line-282"></span><span class="hs-comment">-- parsed request from the 'HTTP.Request' term then it is possible</span><span>
-</span><span id="line-283"></span><span class="hs-comment">-- that the url is semantically equivalent but syntactically</span><span>
-</span><span id="line-284"></span><span class="hs-comment">-- different. An example of this is the presence or lack of a trailing</span><span>
-</span><span id="line-285"></span><span class="hs-comment">-- slash on the URL path. This important when performing string</span><span>
-</span><span id="line-286"></span><span class="hs-comment">-- interpolation on the request url.</span><span>
-</span><span id="line-287"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#applyRequestTransform"><span class="hs-identifier hs-type">applyRequestTransform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-288"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690326796"><span class="annot"><a href="#local-6989586621690326796"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-289"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690326796"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-290"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestContext"><span class="hs-identifier hs-type">RequestContext</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-291"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransformFns"><span class="hs-identifier hs-type">RequestTransformFns</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-292"></span><span>  </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-293"></span><span>  </span><span class="annot"><a href="#local-6989586621690326796"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span>
-</span><span id="line-294"></span><span id="applyRequestTransform"><span class="annot"><span class="annottext">applyRequestTransform :: forall (m :: * -&gt; *).
+</span><span id="line-277"></span><span>
+</span><span id="line-278"></span><span class="hs-comment">-- | Transform an 'HTTP.Request' with a 'RequestTransform'.</span><span>
+</span><span id="line-279"></span><span class="hs-comment">--</span><span>
+</span><span id="line-280"></span><span class="hs-comment">-- Note: we pass in the request url explicitly for use in the</span><span>
+</span><span id="line-281"></span><span class="hs-comment">-- 'ReqTransformCtx'. We do this so that we can ensure that the url</span><span>
+</span><span id="line-282"></span><span class="hs-comment">-- is syntactically identical to what the use submits. If we use the</span><span>
+</span><span id="line-283"></span><span class="hs-comment">-- parsed request from the 'HTTP.Request' term then it is possible</span><span>
+</span><span id="line-284"></span><span class="hs-comment">-- that the url is semantically equivalent but syntactically</span><span>
+</span><span id="line-285"></span><span class="hs-comment">-- different. An example of this is the presence or lack of a trailing</span><span>
+</span><span id="line-286"></span><span class="hs-comment">-- slash on the URL path. This important when performing string</span><span>
+</span><span id="line-287"></span><span class="hs-comment">-- interpolation on the request url.</span><span>
+</span><span id="line-288"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#applyRequestTransform"><span class="hs-identifier hs-type">applyRequestTransform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-289"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690326796"><span class="annot"><a href="#local-6989586621690326796"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-290"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690326796"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-291"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestContext"><span class="hs-identifier hs-type">RequestContext</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-292"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestTransformFns"><span class="hs-identifier hs-type">RequestTransformFns</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-293"></span><span>  </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-294"></span><span>  </span><span class="annot"><a href="#local-6989586621690326796"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="Network.HTTP.Client.Transformable.html#Request"><span class="hs-identifier hs-type">HTTP.Request</span></a></span><span>
+</span><span id="line-295"></span><span id="applyRequestTransform"><span class="annot"><span class="annottext">applyRequestTransform :: forall (m :: * -&gt; *).
 MonadError TransformErrorBundle m =&gt;
 (Request -&gt; RequestContext)
 -&gt; RequestTransformFns -&gt; Request -&gt; m Request
@@ -823,59 +824,59 @@ MonadError TransformErrorBundle m =&gt;
 </span><a href="#local-6989586621690325773"><span class="hs-identifier hs-var">mkCtx</span></a></span></span><span> </span><span id="local-6989586621690325772"><span class="annot"><span class="annottext">RequestTransformFns
 </span><a href="#local-6989586621690325772"><span class="hs-identifier hs-var">transformations</span></a></span></span><span> </span><span id="local-6989586621690325771"><span class="annot"><span class="annottext">Request
 </span><a href="#local-6989586621690325771"><span class="hs-identifier hs-var">request</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-295"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) s t a b.
+</span><span id="line-296"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) s t a b.
 LensLike f s t a b -&gt; LensLike f s t a b
 </span><span class="hs-identifier hs-var">traverseOf</span></span><span>
-</span><span id="line-296"></span><span>    </span><span class="annot"><span class="annottext">Lens' Request RequestData
+</span><span id="line-297"></span><span>    </span><span class="annot"><span class="annottext">Lens' Request RequestData
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#requestL"><span class="hs-identifier hs-var">requestL</span></a></span><span>
-</span><span id="line-297"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RequestContext -&gt; RequestData -&gt; m RequestData
+</span><span id="line-298"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RequestContext -&gt; RequestData -&gt; m RequestData
 </span><a href="#local-6989586621690325770"><span class="hs-identifier hs-var">transformReqData</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Request -&gt; RequestContext
 </span><a href="#local-6989586621690325773"><span class="hs-identifier hs-var">mkCtx</span></a></span><span> </span><span class="annot"><span class="annottext">Request
 </span><a href="#local-6989586621690325771"><span class="hs-identifier hs-var">request</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-298"></span><span>    </span><span class="annot"><span class="annottext">Request
+</span><span id="line-299"></span><span>    </span><span class="annot"><span class="annottext">Request
 </span><a href="#local-6989586621690325771"><span class="hs-identifier hs-var">request</span></a></span><span>
-</span><span id="line-299"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-300"></span><span>    </span><span class="hs-comment">-- Apply all of the provided request transformation functions to the</span><span>
-</span><span id="line-301"></span><span>    </span><span class="hs-comment">-- request data extracted from the given 'HTTP.Request'.</span><span>
-</span><span id="line-302"></span><span>    </span><span id="local-6989586621690325770"><span class="annot"><span class="annottext">transformReqData :: RequestContext -&gt; RequestData -&gt; m RequestData
+</span><span id="line-300"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-301"></span><span>    </span><span class="hs-comment">-- Apply all of the provided request transformation functions to the</span><span>
+</span><span id="line-302"></span><span>    </span><span class="hs-comment">-- request data extracted from the given 'HTTP.Request'.</span><span>
+</span><span id="line-303"></span><span>    </span><span id="local-6989586621690325770"><span class="annot"><span class="annottext">transformReqData :: RequestContext -&gt; RequestData -&gt; m RequestData
 </span><a href="#local-6989586621690325770"><span class="hs-identifier hs-var hs-var">transformReqData</span></a></span></span><span> </span><span id="local-6989586621690325769"><span class="annot"><span class="annottext">RequestContext
 </span><a href="#local-6989586621690325769"><span class="hs-identifier hs-var">transformCtx</span></a></span></span><span> </span><span id="local-6989586621690325768"><span class="annot"><span class="annottext">RequestData
 </span><a href="#local-6989586621690325768"><span class="hs-identifier hs-var">reqData</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-303"></span><span>      </span><span class="annot"><span class="annottext">forall (e :: * -&gt; *) (b :: (* -&gt; *) -&gt; *).
+</span><span id="line-304"></span><span>      </span><span class="annot"><span class="annottext">forall (e :: * -&gt; *) (b :: (* -&gt; *) -&gt; *).
 (Applicative e, TraversableB b) =&gt;
 b e -&gt; e (b Identity)
 </span><span class="hs-identifier hs-var">B.bsequence'</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-304"></span><span>        </span><span class="annot"><span class="annottext">forall {k} (c :: k -&gt; Constraint) (b :: (k -&gt; *) -&gt; *)
+</span><span id="line-305"></span><span>        </span><span class="annot"><span class="annottext">forall {k} (c :: k -&gt; Constraint) (b :: (k -&gt; *) -&gt; *)
        (f :: k -&gt; *) (g :: k -&gt; *) (h :: k -&gt; *) (i :: k -&gt; *).
 (AllB c b, ConstraintsB b, ApplicativeB b) =&gt;
 (forall (a :: k). c a =&gt; f a -&gt; g a -&gt; h a -&gt; i a)
 -&gt; b f -&gt; b g -&gt; b h -&gt; b i
 </span><span class="hs-identifier hs-var">B.bzipWith3C</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#Transform"><span class="hs-identifier hs-type">Transform</span></a></span><span>
-</span><span id="line-305"></span><span>          </span><span class="annot"><span class="annottext">forall {f :: * -&gt; *} {a}.
+</span><span id="line-306"></span><span>          </span><span class="annot"><span class="annottext">forall {f :: * -&gt; *} {a}.
 (Transform a, MonadError TransformErrorBundle f) =&gt;
 TransformCtx a -&gt; WithOptional TransformFn a -&gt; Identity a -&gt; f a
 </span><a href="#local-6989586621690325765"><span class="hs-identifier hs-var">transformField</span></a></span><span>
-</span><span id="line-306"></span><span>          </span><span class="annot"><span class="annottext">RequestContext
+</span><span id="line-307"></span><span>          </span><span class="annot"><span class="annottext">RequestContext
 </span><a href="#local-6989586621690325769"><span class="hs-identifier hs-var">transformCtx</span></a></span><span>
-</span><span id="line-307"></span><span>          </span><span class="annot"><span class="annottext">RequestTransformFns
+</span><span id="line-308"></span><span>          </span><span class="annot"><span class="annottext">RequestTransformFns
 </span><a href="#local-6989586621690325772"><span class="hs-identifier hs-var">transformations</span></a></span><span>
-</span><span id="line-308"></span><span>          </span><span class="annot"><span class="annottext">RequestData
+</span><span id="line-309"></span><span>          </span><span class="annot"><span class="annottext">RequestData
 </span><a href="#local-6989586621690325768"><span class="hs-identifier hs-var">reqData</span></a></span><span>
-</span><span id="line-309"></span><span>    </span><span class="hs-comment">-- Apply a transformation to some request data, if it exists; otherwise</span><span>
-</span><span id="line-310"></span><span>    </span><span class="hs-comment">-- return the original request data.</span><span>
-</span><span id="line-311"></span><span>    </span><span id="local-6989586621690325765"><span class="annot"><span class="annottext">transformField :: TransformCtx a -&gt; WithOptional TransformFn a -&gt; Identity a -&gt; f a
+</span><span id="line-310"></span><span>    </span><span class="hs-comment">-- Apply a transformation to some request data, if it exists; otherwise</span><span>
+</span><span id="line-311"></span><span>    </span><span class="hs-comment">-- return the original request data.</span><span>
+</span><span id="line-312"></span><span>    </span><span id="local-6989586621690325765"><span class="annot"><span class="annottext">transformField :: TransformCtx a -&gt; WithOptional TransformFn a -&gt; Identity a -&gt; f a
 </span><a href="#local-6989586621690325765"><span class="hs-identifier hs-var hs-var">transformField</span></a></span></span><span> </span><span id="local-6989586621690325754"><span class="annot"><span class="annottext">TransformCtx a
 </span><a href="#local-6989586621690325754"><span class="hs-identifier hs-var">ctx</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.WithOptional.html#WithOptional"><span class="hs-identifier hs-type">WithOptional</span></a></span><span> </span><span id="local-6989586621690325752"><span class="annot"><span class="annottext">Maybe (TransformFn a)
 </span><a href="#local-6989586621690325752"><span class="hs-identifier hs-var">maybeFn</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Identity</span></a></span><span> </span><span id="local-6989586621690325750"><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621690325750"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-312"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (TransformFn a)
+</span><span id="line-313"></span><span>      </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (TransformFn a)
 </span><a href="#local-6989586621690325752"><span class="hs-identifier hs-var">maybeFn</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-313"></span><span>        </span><span class="annot"><span class="annottext">Maybe (TransformFn a)
+</span><span id="line-314"></span><span>        </span><span class="annot"><span class="annottext">Maybe (TransformFn a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621690325750"><span class="hs-identifier hs-var">a</span></a></span><span>
-</span><span id="line-314"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690325749"><span class="annot"><span class="annottext">TransformFn a
+</span><span id="line-315"></span><span>        </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690325749"><span class="annot"><span class="annottext">TransformFn a
 </span><a href="#local-6989586621690325749"><span class="hs-identifier hs-var">fn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a (m :: * -&gt; *).
 (Transform a, MonadError TransformErrorBundle m) =&gt;
 TransformFn a -&gt; TransformCtx a -&gt; a -&gt; m a
@@ -883,31 +884,31 @@ TransformFn a -&gt; TransformCtx a -&gt; a -&gt; m a
 </span><a href="#local-6989586621690325749"><span class="hs-identifier hs-var">fn</span></a></span><span> </span><span class="annot"><span class="annottext">TransformCtx a
 </span><a href="#local-6989586621690325754"><span class="hs-identifier hs-var">ctx</span></a></span><span> </span><span class="annot"><span class="annottext">a
 </span><a href="#local-6989586621690325750"><span class="hs-identifier hs-var">a</span></a></span><span>
-</span><span id="line-315"></span><span>
-</span><span id="line-316"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
-</span><span id="line-317"></span><span class="hs-comment">-- TODO(SOLOMON): Rewrite with HKD</span><span>
-</span><span id="line-318"></span><span>
-</span><span id="line-319"></span><span class="hs-comment">-- | A set of data transformation functions generated from a</span><span>
-</span><span id="line-320"></span><span class="hs-comment">-- 'MetadataResponseTransform'. 'Nothing' means use the original</span><span>
-</span><span id="line-321"></span><span class="hs-comment">-- response value.</span><span>
-</span><span id="line-322"></span><span class="hs-keyword">data</span><span> </span><span id="ResponseTransform"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#ResponseTransform"><span class="hs-identifier hs-var">ResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ResponseTransform"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#ResponseTransform"><span class="hs-identifier hs-var">ResponseTransform</span></a></span></span><span>
-</span><span id="line-323"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="respTransformBody"><span class="annot"><span class="annottext">ResponseTransform
+</span><span id="line-316"></span><span>
+</span><span id="line-317"></span><span class="hs-comment">-------------------------------------------------------------------------------</span><span>
+</span><span id="line-318"></span><span class="hs-comment">-- TODO(SOLOMON): Rewrite with HKD</span><span>
+</span><span id="line-319"></span><span>
+</span><span id="line-320"></span><span class="hs-comment">-- | A set of data transformation functions generated from a</span><span>
+</span><span id="line-321"></span><span class="hs-comment">-- 'MetadataResponseTransform'. 'Nothing' means use the original</span><span>
+</span><span id="line-322"></span><span class="hs-comment">-- response value.</span><span>
+</span><span id="line-323"></span><span class="hs-keyword">data</span><span> </span><span id="ResponseTransform"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#ResponseTransform"><span class="hs-identifier hs-var">ResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ResponseTransform"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#ResponseTransform"><span class="hs-identifier hs-var">ResponseTransform</span></a></span></span><span>
+</span><span id="line-324"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="respTransformBody"><span class="annot"><span class="annottext">ResponseTransform
 -&gt; Maybe
      (ResponseTransformCtx -&gt; Either TransformErrorBundle Value)
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#respTransformBody"><span class="hs-identifier hs-var hs-var">respTransformBody</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#ResponseTransformCtx"><span class="hs-identifier hs-type">ResponseTransformCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-324"></span><span>    </span><span id="respTransformTemplateEngine"><span class="annot"><span class="annottext">ResponseTransform -&gt; TemplatingEngine
+</span><span id="line-325"></span><span>    </span><span id="respTransformTemplateEngine"><span class="annot"><span class="annottext">ResponseTransform -&gt; TemplatingEngine
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#respTransformTemplateEngine"><span class="hs-identifier hs-var hs-var">respTransformTemplateEngine</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span><span>
-</span><span id="line-325"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-326"></span><span>
-</span><span id="line-327"></span><span id="local-6989586621690325743"><span id="local-6989586621690325744"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataResponseTransform"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-var">MetadataResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetadataResponseTransform"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-var">MetadataResponseTransform</span></a></span></span><span>
-</span><span id="line-328"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="mrtVersion"><span class="annot"><span class="annottext">MetadataResponseTransform -&gt; Version
+</span><span id="line-326"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-327"></span><span>
+</span><span id="line-328"></span><span id="local-6989586621690325743"><span id="local-6989586621690325744"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataResponseTransform"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-var">MetadataResponseTransform</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetadataResponseTransform"><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-var">MetadataResponseTransform</span></a></span></span><span>
+</span><span id="line-329"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="mrtVersion"><span class="annot"><span class="annottext">MetadataResponseTransform -&gt; Version
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#mrtVersion"><span class="hs-identifier hs-var hs-var">mrtVersion</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Request.html#Version"><span class="hs-identifier hs-type">Version</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-329"></span><span>    </span><span id="mrtBodyTransform"><span class="annot"><span class="annottext">MetadataResponseTransform -&gt; Maybe BodyTransformFn
+</span><span id="line-330"></span><span>    </span><span id="mrtBodyTransform"><span class="annot"><span class="annottext">MetadataResponseTransform -&gt; Maybe BodyTransformFn
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#mrtBodyTransform"><span class="hs-identifier hs-var hs-var">mrtBodyTransform</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#BodyTransformFn"><span class="hs-identifier hs-type">BodyTransformFn</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-330"></span><span>    </span><span id="mrtTemplatingEngine"><span class="annot"><span class="annottext">MetadataResponseTransform -&gt; TemplatingEngine
+</span><span id="line-331"></span><span>    </span><span id="mrtTemplatingEngine"><span class="annot"><span class="annottext">MetadataResponseTransform -&gt; TemplatingEngine
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#mrtTemplatingEngine"><span class="hs-identifier hs-var hs-var">mrtTemplatingEngine</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span><span>
-</span><span id="line-331"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-332"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690325727"><span id="local-6989586621690325729"><span id="local-6989586621690325737"><span class="annot"><span class="annottext">Int -&gt; MetadataResponseTransform -&gt; ShowS
+</span><span id="line-332"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-333"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690325727"><span id="local-6989586621690325729"><span id="local-6989586621690325737"><span class="annot"><span class="annottext">Int -&gt; MetadataResponseTransform -&gt; ShowS
 [MetadataResponseTransform] -&gt; ShowS
 MetadataResponseTransform -&gt; String
 forall a.
@@ -935,7 +936,7 @@ Rep MetadataResponseTransform x -&gt; MetadataResponseTransform
 $cfrom :: forall x.
 MetadataResponseTransform -&gt; Rep MetadataResponseTransform x
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-333"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690325712"><span class="annot"><span class="annottext">MetadataResponseTransform -&gt; ()
+</span><span id="line-334"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">anyclass</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690325712"><span class="annot"><span class="annottext">MetadataResponseTransform -&gt; ()
 forall a. (a -&gt; ()) -&gt; NFData a
 rnf :: MetadataResponseTransform -&gt; ()
 $crnf :: MetadataResponseTransform -&gt; ()
@@ -948,53 +949,53 @@ unchanged :: Accesses
 $cunchanged :: Accesses
 -&gt; MetadataResponseTransform -&gt; MetadataResponseTransform -&gt; Bool
 </span><a href="#local-6989586621690325708"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">Cacheable</span></a></span></span><span class="hs-special">)</span><span>
-</span><span id="line-334"></span><span>
-</span><span id="line-335"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690325705"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-336"></span><span>  </span><span id="local-6989586621690325689"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser MetadataResponseTransform
+</span><span id="line-335"></span><span>
+</span><span id="line-336"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690325705"><span class="annot"><span class="hs-identifier hs-type">FromJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-337"></span><span>  </span><span id="local-6989586621690325689"><span class="annot"><span class="annottext">parseJSON :: Value -&gt; Parser MetadataResponseTransform
 </span><a href="#local-6989586621690325689"><span class="hs-identifier hs-var hs-var hs-var hs-var">parseJSON</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. String -&gt; (Object -&gt; Parser a) -&gt; Value -&gt; Parser a
 </span><span class="hs-identifier hs-var">Aeson.withObject</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;MetadataResponseTransform&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690325688"><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690325688"><span class="hs-identifier hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-337"></span><span>    </span><span id="local-6989586621690325687"><span class="annot"><span class="annottext">Version
+</span><span id="line-338"></span><span>    </span><span id="local-6989586621690325687"><span class="annot"><span class="annottext">Version
 </span><a href="#local-6989586621690325687"><span class="hs-identifier hs-var">mrtVersion</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690325688"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Parser (Maybe a) -&gt; a -&gt; Parser a
 </span><span class="hs-operator hs-var">.!=</span></span><span> </span><span class="annot"><span class="annottext">Version
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Request.html#V1"><span class="hs-identifier hs-var">V1</span></a></span><span>
-</span><span id="line-338"></span><span>    </span><span id="local-6989586621690325686"><span class="annot"><span class="annottext">Maybe BodyTransformFn
+</span><span id="line-339"></span><span>    </span><span id="local-6989586621690325686"><span class="annot"><span class="annottext">Maybe BodyTransformFn
 </span><a href="#local-6989586621690325686"><span class="hs-identifier hs-var">mrtBodyTransform</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Version
 </span><a href="#local-6989586621690325687"><span class="hs-identifier hs-var">mrtVersion</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-339"></span><span>      </span><span class="annot"><span class="annottext">Version
+</span><span id="line-340"></span><span>      </span><span class="annot"><span class="annottext">Version
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Request.html#V1"><span class="hs-identifier hs-var">V1</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-340"></span><span>        </span><span id="local-6989586621690325685"><span class="annot"><span class="annottext">Maybe Template
+</span><span id="line-341"></span><span>        </span><span id="local-6989586621690325685"><span class="annot"><span class="annottext">Maybe Template
 </span><a href="#local-6989586621690325685"><span class="hs-identifier hs-var">template</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#Template"><span class="hs-identifier hs-type">Template</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690325688"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;body&quot;</span></span><span>
-</span><span id="line-341"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-342"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="annot"><span class="annottext">Template -&gt; BodyTransformFn
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#ModifyAsJSON"><span class="hs-identifier hs-var">Body.ModifyAsJSON</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Template
 </span><a href="#local-6989586621690325685"><span class="hs-identifier hs-var">template</span></a></span><span>
-</span><span id="line-342"></span><span>      </span><span class="annot"><span class="annottext">Version
+</span><span id="line-343"></span><span>      </span><span class="annot"><span class="annottext">Version
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Request.html#V2"><span class="hs-identifier hs-var">V2</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690325688"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;body&quot;</span></span><span>
-</span><span id="line-343"></span><span>    </span><span id="local-6989586621690325684"><span class="annot"><span class="annottext">Maybe TemplatingEngine
+</span><span id="line-344"></span><span>    </span><span id="local-6989586621690325684"><span class="annot"><span class="annottext">Maybe TemplatingEngine
 </span><a href="#local-6989586621690325684"><span class="hs-identifier hs-var">templateEngine</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690325688"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;template_engine&quot;</span></span><span>
-</span><span id="line-344"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690325683"><span class="annot"><span class="annottext">mrtTemplatingEngine :: TemplatingEngine
+</span><span id="line-345"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690325683"><span class="annot"><span class="annottext">mrtTemplatingEngine :: TemplatingEngine
 </span><a href="#local-6989586621690325683"><span class="hs-identifier hs-var hs-var">mrtTemplatingEngine</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#Kriti"><span class="hs-identifier hs-var">Kriti</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe TemplatingEngine
 </span><a href="#local-6989586621690325684"><span class="hs-identifier hs-var">templateEngine</span></a></span><span>
-</span><span id="line-345"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-346"></span><span>    </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Maybe BodyTransformFn
 TemplatingEngine
@@ -1006,9 +1007,9 @@ mrtTemplatingEngine :: TemplatingEngine
 mrtBodyTransform :: Maybe BodyTransformFn
 mrtVersion :: Version
 </span><a href="#local-6989586621690325683"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-346"></span><span>
-</span><span id="line-347"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690325675"><span id="local-6989586621690325677"><span id="local-6989586621690325679"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-348"></span><span>  </span><span id="local-6989586621690325661"><span class="annot"><span class="annottext">toJSON :: MetadataResponseTransform -&gt; Value
+</span><span id="line-347"></span><span>
+</span><span id="line-348"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690325675"><span id="local-6989586621690325677"><span id="local-6989586621690325679"><span class="annot"><span class="hs-identifier hs-type">ToJSON</span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-349"></span><span>  </span><span id="local-6989586621690325661"><span class="annot"><span class="annottext">toJSON :: MetadataResponseTransform -&gt; Value
 </span><a href="#local-6989586621690325661"><span class="hs-identifier hs-var hs-var hs-var hs-var">toJSON</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690325658"><span id="local-6989586621690325659"><span id="local-6989586621690325660"><span class="annot"><span class="annottext">Maybe BodyTransformFn
 TemplatingEngine
 Version
@@ -1019,46 +1020,46 @@ mrtTemplatingEngine :: MetadataResponseTransform -&gt; TemplatingEngine
 mrtBodyTransform :: MetadataResponseTransform -&gt; Maybe BodyTransformFn
 mrtVersion :: MetadataResponseTransform -&gt; Version
 </span><a href="#local-6989586621690325658"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-349"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690325657"><span class="annot"><span class="annottext">body :: Maybe (Key, Value)
+</span><span id="line-350"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690325657"><span class="annot"><span class="annottext">body :: Maybe (Key, Value)
 </span><a href="#local-6989586621690325657"><span class="hs-identifier hs-var hs-var">body</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Version
 </span><a href="#local-6989586621690325660"><span class="hs-identifier hs-var">mrtVersion</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-350"></span><span>          </span><span class="annot"><span class="annottext">Version
+</span><span id="line-351"></span><span>          </span><span class="annot"><span class="annottext">Version
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Request.html#V1"><span class="hs-identifier hs-var">V1</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe BodyTransformFn
 </span><a href="#local-6989586621690325659"><span class="hs-identifier hs-var">mrtBodyTransform</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-351"></span><span>            </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#ModifyAsJSON"><span class="hs-identifier hs-type">Body.ModifyAsJSON</span></a></span><span> </span><span id="local-6989586621690325656"><span class="annot"><span class="annottext">Template
+</span><span id="line-352"></span><span>            </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#ModifyAsJSON"><span class="hs-identifier hs-type">Body.ModifyAsJSON</span></a></span><span> </span><span id="local-6989586621690325656"><span class="annot"><span class="annottext">Template
 </span><a href="#local-6989586621690325656"><span class="hs-identifier hs-var">template</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;body&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Template
 </span><a href="#local-6989586621690325656"><span class="hs-identifier hs-var">template</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-352"></span><span>            </span><span class="annot"><span class="annottext">Maybe BodyTransformFn
+</span><span id="line-353"></span><span>            </span><span class="annot"><span class="annottext">Maybe BodyTransformFn
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-353"></span><span>          </span><span class="annot"><span class="annottext">Version
+</span><span id="line-354"></span><span>          </span><span class="annot"><span class="annottext">Version
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Request.html#V2"><span class="hs-identifier hs-var">V2</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;body&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall v kv. (ToJSON v, KeyValue kv) =&gt; Key -&gt; Maybe v -&gt; Maybe kv
 </span><a href="Data.Aeson.Extended.html#.%3D%3F"><span class="hs-operator hs-var">.=?</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe BodyTransformFn
 </span><a href="#local-6989586621690325659"><span class="hs-identifier hs-var">mrtBodyTransform</span></a></span><span>
-</span><span id="line-354"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
+</span><span id="line-355"></span><span>     </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">[(Key, Value)] -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.object</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-355"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
+</span><span id="line-356"></span><span>          </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;template_engine&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
 </span><a href="#local-6989586621690325658"><span class="hs-identifier hs-var">mrtTemplatingEngine</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-356"></span><span>            </span><span class="annot"><span class="annottext">Key
+</span><span id="line-357"></span><span>            </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;version&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall kv v. (KeyValue kv, ToJSON v) =&gt; Key -&gt; v -&gt; kv
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">Version
 </span><a href="#local-6989586621690325660"><span class="hs-identifier hs-var">mrtVersion</span></a></span><span>
-</span><span id="line-357"></span><span>          </span><span class="hs-special">]</span><span>
-</span><span id="line-358"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-358"></span><span>          </span><span class="hs-special">]</span><span>
+</span><span id="line-359"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">maybeToList</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (Key, Value)
 </span><a href="#local-6989586621690325657"><span class="hs-identifier hs-var">body</span></a></span><span>
-</span><span id="line-359"></span><span>
-</span><span id="line-360"></span><span class="hs-comment">-- | A helper function for constructing the 'ResponseTransformCtx'</span><span>
-</span><span id="line-361"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#buildRespTransformCtx"><span class="hs-identifier hs-type">buildRespTransformCtx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestContext"><span class="hs-identifier hs-type">RequestContext</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#ResponseTransformCtx"><span class="hs-identifier hs-type">ResponseTransformCtx</span></a></span><span>
-</span><span id="line-362"></span><span id="buildRespTransformCtx"><span class="annot"><span class="annottext">buildRespTransformCtx :: Maybe RequestContext
+</span><span id="line-360"></span><span>
+</span><span id="line-361"></span><span class="hs-comment">-- | A helper function for constructing the 'ResponseTransformCtx'</span><span>
+</span><span id="line-362"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#buildRespTransformCtx"><span class="hs-identifier hs-type">buildRespTransformCtx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#RequestContext"><span class="hs-identifier hs-type">RequestContext</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Session.html#SessionVariables"><span class="hs-identifier hs-type">SessionVariables</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TemplatingEngine"><span class="hs-identifier hs-type">TemplatingEngine</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#ResponseTransformCtx"><span class="hs-identifier hs-type">ResponseTransformCtx</span></a></span><span>
+</span><span id="line-363"></span><span id="buildRespTransformCtx"><span class="annot"><span class="annottext">buildRespTransformCtx :: Maybe RequestContext
 -&gt; Maybe SessionVariables
 -&gt; TemplatingEngine
 -&gt; ByteString
@@ -1068,56 +1069,56 @@ mrtVersion :: MetadataResponseTransform -&gt; Version
 </span><a href="#local-6989586621690325653"><span class="hs-identifier hs-var">sessionVars</span></a></span></span><span> </span><span id="local-6989586621690325652"><span class="annot"><span class="annottext">TemplatingEngine
 </span><a href="#local-6989586621690325652"><span class="hs-identifier hs-var">engine</span></a></span></span><span> </span><span id="local-6989586621690325651"><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690325651"><span class="hs-identifier hs-var">respBody</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-363"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#ResponseTransformCtx"><span class="hs-identifier hs-type">ResponseTransformCtx</span></a></span><span>
-</span><span id="line-364"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">responseTransformBody :: Value
+</span><span id="line-364"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#ResponseTransformCtx"><span class="hs-identifier hs-type">ResponseTransformCtx</span></a></span><span>
+</span><span id="line-365"></span><span>    </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">responseTransformBody :: Value
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#responseTransformBody"><span class="hs-identifier hs-var">responseTransformBody</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">Aeson.Null</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; ByteString -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Aeson.decode</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690325651"><span class="hs-identifier hs-var">respBody</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-365"></span><span>      </span><span class="annot"><span class="annottext">responseTransformReqCtx :: Value
+</span><span id="line-366"></span><span>      </span><span class="annot"><span class="annottext">responseTransformReqCtx :: Value
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#responseTransformReqCtx"><span class="hs-identifier hs-var">responseTransformReqCtx</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.toJSON</span></span><span> </span><span class="annot"><span class="annottext">Maybe RequestContext
 </span><a href="#local-6989586621690325654"><span class="hs-identifier hs-var">requestContext</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-366"></span><span>      </span><span class="annot"><span class="annottext">responseSessionVariables :: Maybe SessionVariables
+</span><span id="line-367"></span><span>      </span><span class="annot"><span class="annottext">responseSessionVariables :: Maybe SessionVariables
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#responseSessionVariables"><span class="hs-identifier hs-var">responseSessionVariables</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe SessionVariables
 </span><a href="#local-6989586621690325653"><span class="hs-identifier hs-var">sessionVars</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-367"></span><span>      </span><span class="annot"><span class="annottext">responseTransformEngine :: TemplatingEngine
+</span><span id="line-368"></span><span>      </span><span class="annot"><span class="annottext">responseTransformEngine :: TemplatingEngine
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#responseTransformEngine"><span class="hs-identifier hs-var">responseTransformEngine</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
 </span><a href="#local-6989586621690325652"><span class="hs-identifier hs-var">engine</span></a></span><span>
-</span><span id="line-368"></span><span>    </span><span class="hs-special">}</span><span>
-</span><span id="line-369"></span><span>
-</span><span id="line-370"></span><span class="hs-comment">-- | Construct a Template Transformation function for Responses</span><span>
-</span><span id="line-371"></span><span class="hs-comment">--</span><span>
-</span><span id="line-372"></span><span class="hs-comment">-- XXX: This function makes internal usage of 'TE.decodeUtf8', which throws an</span><span>
-</span><span id="line-373"></span><span class="hs-comment">-- impure exception when the supplied 'ByteString' cannot be decoded into valid</span><span>
-</span><span id="line-374"></span><span class="hs-comment">-- UTF8 text!</span><span>
-</span><span id="line-375"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#mkRespTemplateTransform"><span class="hs-identifier hs-type">mkRespTemplateTransform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-376"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#BodyTransformFn"><span class="hs-identifier hs-type">BodyTransformFn</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-377"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#ResponseTransformCtx"><span class="hs-identifier hs-type">ResponseTransformCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-378"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span>
-</span><span id="line-379"></span><span id="mkRespTemplateTransform"><span class="annot"><span class="annottext">mkRespTemplateTransform :: BodyTransformFn
+</span><span id="line-369"></span><span>    </span><span class="hs-special">}</span><span>
+</span><span id="line-370"></span><span>
+</span><span id="line-371"></span><span class="hs-comment">-- | Construct a Template Transformation function for Responses</span><span>
+</span><span id="line-372"></span><span class="hs-comment">--</span><span>
+</span><span id="line-373"></span><span class="hs-comment">-- XXX: This function makes internal usage of 'TE.decodeUtf8', which throws an</span><span>
+</span><span id="line-374"></span><span class="hs-comment">-- impure exception when the supplied 'ByteString' cannot be decoded into valid</span><span>
+</span><span id="line-375"></span><span class="hs-comment">-- UTF8 text!</span><span>
+</span><span id="line-376"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#mkRespTemplateTransform"><span class="hs-identifier hs-type">mkRespTemplateTransform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-377"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#BodyTransformFn"><span class="hs-identifier hs-type">BodyTransformFn</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-378"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#ResponseTransformCtx"><span class="hs-identifier hs-type">ResponseTransformCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-379"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Aeson.Value</span></span><span>
+</span><span id="line-380"></span><span id="mkRespTemplateTransform"><span class="annot"><span class="annottext">mkRespTemplateTransform :: BodyTransformFn
 -&gt; ResponseTransformCtx -&gt; Either TransformErrorBundle Value
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#mkRespTemplateTransform"><span class="hs-identifier hs-var hs-var">mkRespTemplateTransform</span></a></span></span><span> </span><span class="annot"><span class="annottext">BodyTransformFn
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#Remove"><span class="hs-identifier hs-var">Body.Remove</span></a></span><span> </span><span class="annot"><span class="annottext">ResponseTransformCtx
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><span class="hs-identifier hs-var">Aeson.Null</span></span><span>
-</span><span id="line-380"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#mkRespTemplateTransform"><span class="hs-identifier hs-var">mkRespTemplateTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#ModifyAsJSON"><span class="hs-identifier hs-type">Body.ModifyAsJSON</span></a></span><span> </span><span id="local-6989586621690325642"><span class="annot"><span class="annottext">Template
+</span><span id="line-381"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#mkRespTemplateTransform"><span class="hs-identifier hs-var">mkRespTemplateTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#ModifyAsJSON"><span class="hs-identifier hs-type">Body.ModifyAsJSON</span></a></span><span> </span><span id="local-6989586621690325642"><span class="annot"><span class="annottext">Template
 </span><a href="#local-6989586621690325642"><span class="hs-identifier hs-var">template</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621690325641"><span class="annot"><span class="annottext">ResponseTransformCtx
 </span><a href="#local-6989586621690325641"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-381"></span><span>  </span><span class="annot"><span class="annottext">Template
+</span><span id="line-382"></span><span>  </span><span class="annot"><span class="annottext">Template
 -&gt; ResponseTransformCtx -&gt; Either TransformErrorBundle Value
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runResponseTemplateTransform"><span class="hs-identifier hs-var">runResponseTemplateTransform</span></a></span><span> </span><span class="annot"><span class="annottext">Template
 </span><a href="#local-6989586621690325642"><span class="hs-identifier hs-var">template</span></a></span><span> </span><span class="annot"><span class="annottext">ResponseTransformCtx
 </span><a href="#local-6989586621690325641"><span class="hs-identifier hs-var">context</span></a></span><span>
-</span><span id="line-382"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#mkRespTemplateTransform"><span class="hs-identifier hs-var">mkRespTemplateTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#ModifyAsFormURLEncoded"><span class="hs-identifier hs-type">Body.ModifyAsFormURLEncoded</span></a></span><span> </span><span id="local-6989586621690325638"><span class="annot"><span class="annottext">HashMap Text UnescapedTemplate
+</span><span id="line-383"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#mkRespTemplateTransform"><span class="hs-identifier hs-var">mkRespTemplateTransform</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#ModifyAsFormURLEncoded"><span class="hs-identifier hs-type">Body.ModifyAsFormURLEncoded</span></a></span><span> </span><span id="local-6989586621690325638"><span class="annot"><span class="annottext">HashMap Text UnescapedTemplate
 </span><a href="#local-6989586621690325638"><span class="hs-identifier hs-var">formTemplates</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621690325637"><span class="annot"><span class="annottext">ResponseTransformCtx
 </span><a href="#local-6989586621690325637"><span class="hs-identifier hs-var">context</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-383"></span><span>  </span><span id="local-6989586621690325636"><span class="annot"><span class="annottext">HashMap Text ByteString
+</span><span id="line-384"></span><span>  </span><span id="local-6989586621690325636"><span class="annot"><span class="annottext">HashMap Text ByteString
 </span><a href="#local-6989586621690325636"><span class="hs-identifier hs-var">result</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-384"></span><span>    </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; Either e a -&gt; m a
+</span><span id="line-385"></span><span>    </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; Either e a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">liftEither</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall e a. Validation e a -&gt; Either e a
 </span><span class="hs-identifier hs-var">V.toEither</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -1127,11 +1128,11 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">for</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text UnescapedTemplate
 </span><a href="#local-6989586621690325638"><span class="hs-identifier hs-var">formTemplates</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-385"></span><span>      </span><span class="annot"><span class="annottext">ResponseTransformCtx
+</span><span id="line-386"></span><span>      </span><span class="annot"><span class="annottext">ResponseTransformCtx
 -&gt; UnescapedTemplate -&gt; Validation TransformErrorBundle ByteString
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#runUnescapedResponseTemplateTransform%27"><span class="hs-identifier hs-var">runUnescapedResponseTemplateTransform'</span></a></span><span> </span><span class="annot"><span class="annottext">ResponseTransformCtx
 </span><a href="#local-6989586621690325637"><span class="hs-identifier hs-var">context</span></a></span><span>
-</span><span id="line-386"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-387"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Value
 </span><span class="hs-identifier hs-var">Aeson.String</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -1142,9 +1143,9 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text ByteString -&gt; ByteString
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.Body.html#foldFormEncoded"><span class="hs-identifier hs-var">Body.foldFormEncoded</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text ByteString
 </span><a href="#local-6989586621690325636"><span class="hs-identifier hs-var">result</span></a></span><span>
-</span><span id="line-387"></span><span>
-</span><span id="line-388"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#mkResponseTransform"><span class="hs-identifier hs-type">mkResponseTransform</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#ResponseTransform"><span class="hs-identifier hs-type">ResponseTransform</span></a></span><span>
-</span><span id="line-389"></span><span id="mkResponseTransform"><span class="annot"><span class="annottext">mkResponseTransform :: MetadataResponseTransform -&gt; ResponseTransform
+</span><span id="line-388"></span><span>
+</span><span id="line-389"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#mkResponseTransform"><span class="hs-identifier hs-type">mkResponseTransform</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#ResponseTransform"><span class="hs-identifier hs-type">ResponseTransform</span></a></span><span>
+</span><span id="line-390"></span><span id="mkResponseTransform"><span class="annot"><span class="annottext">mkResponseTransform :: MetadataResponseTransform -&gt; ResponseTransform
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#mkResponseTransform"><span class="hs-identifier hs-var hs-var">mkResponseTransform</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#MetadataResponseTransform"><span class="hs-identifier hs-type">MetadataResponseTransform</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690325626"><span id="local-6989586621690325627"><span id="local-6989586621690325628"><span class="annot"><span class="annottext">Maybe BodyTransformFn
 TemplatingEngine
 Version
@@ -1155,27 +1156,27 @@ mrtTemplatingEngine :: MetadataResponseTransform -&gt; TemplatingEngine
 mrtBodyTransform :: MetadataResponseTransform -&gt; Maybe BodyTransformFn
 mrtVersion :: MetadataResponseTransform -&gt; Version
 </span><a href="#local-6989586621690325626"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-390"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690325625"><span class="annot"><span class="annottext">bodyTransform :: Maybe (ResponseTransformCtx -&gt; Either TransformErrorBundle Value)
+</span><span id="line-391"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690325625"><span class="annot"><span class="annottext">bodyTransform :: Maybe (ResponseTransformCtx -&gt; Either TransformErrorBundle Value)
 </span><a href="#local-6989586621690325625"><span class="hs-identifier hs-var hs-var">bodyTransform</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BodyTransformFn
 -&gt; ResponseTransformCtx -&gt; Either TransformErrorBundle Value
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#mkRespTemplateTransform"><span class="hs-identifier hs-var">mkRespTemplateTransform</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe BodyTransformFn
 </span><a href="#local-6989586621690325627"><span class="hs-identifier hs-var">mrtBodyTransform</span></a></span><span>
-</span><span id="line-391"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Maybe (ResponseTransformCtx -&gt; Either TransformErrorBundle Value)
+</span><span id="line-392"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">Maybe (ResponseTransformCtx -&gt; Either TransformErrorBundle Value)
 -&gt; TemplatingEngine -&gt; ResponseTransform
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#ResponseTransform"><span class="hs-identifier hs-var">ResponseTransform</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe (ResponseTransformCtx -&gt; Either TransformErrorBundle Value)
 </span><a href="#local-6989586621690325625"><span class="hs-identifier hs-var">bodyTransform</span></a></span><span> </span><span class="annot"><span class="annottext">TemplatingEngine
 </span><a href="#local-6989586621690325626"><span class="hs-identifier hs-var">mrtTemplatingEngine</span></a></span><span>
-</span><span id="line-392"></span><span>
-</span><span id="line-393"></span><span class="hs-comment">-- | At the moment we only transform the body of</span><span>
-</span><span id="line-394"></span><span class="hs-comment">-- Responses. 'http-client' does not export the constructors for</span><span>
-</span><span id="line-395"></span><span class="hs-comment">-- 'Response'. If we want to transform other fields then we will need</span><span>
-</span><span id="line-396"></span><span class="hs-comment">-- additional 'apply' functions.</span><span>
-</span><span id="line-397"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#applyResponseTransform"><span class="hs-identifier hs-type">applyResponseTransform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-398"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#ResponseTransform"><span class="hs-identifier hs-type">ResponseTransform</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-399"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#ResponseTransformCtx"><span class="hs-identifier hs-type">ResponseTransformCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-400"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span>
-</span><span id="line-401"></span><span id="applyResponseTransform"><span class="annot"><span class="annottext">applyResponseTransform :: ResponseTransform
+</span><span id="line-393"></span><span>
+</span><span id="line-394"></span><span class="hs-comment">-- | At the moment we only transform the body of</span><span>
+</span><span id="line-395"></span><span class="hs-comment">-- Responses. 'http-client' does not export the constructors for</span><span>
+</span><span id="line-396"></span><span class="hs-comment">-- 'Response'. If we want to transform other fields then we will need</span><span>
+</span><span id="line-397"></span><span class="hs-comment">-- additional 'apply' functions.</span><span>
+</span><span id="line-398"></span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#applyResponseTransform"><span class="hs-identifier hs-type">applyResponseTransform</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-399"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#ResponseTransform"><span class="hs-identifier hs-type">ResponseTransform</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-400"></span><span>  </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Response.html#ResponseTransformCtx"><span class="hs-identifier hs-type">ResponseTransformCtx</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-401"></span><span>  </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span>
+</span><span id="line-402"></span><span id="applyResponseTransform"><span class="annot"><span class="annottext">applyResponseTransform :: ResponseTransform
 -&gt; ResponseTransformCtx -&gt; Either TransformErrorBundle ByteString
 </span><a href="Hasura.RQL.DDL.Webhook.Transform.html#applyResponseTransform"><span class="hs-identifier hs-var hs-var">applyResponseTransform</span></a></span></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.html#ResponseTransform"><span class="hs-identifier hs-type">ResponseTransform</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690325622"><span id="local-6989586621690325623"><span class="annot"><span class="annottext">Maybe (ResponseTransformCtx -&gt; Either TransformErrorBundle Value)
 TemplatingEngine
@@ -1198,24 +1199,24 @@ responseSessionVariables :: ResponseTransformCtx -&gt; Maybe SessionVariables
 responseTransformReqCtx :: ResponseTransformCtx -&gt; Value
 responseTransformBody :: ResponseTransformCtx -&gt; Value
 </span><a href="#local-6989586621690325617"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-402"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621690325616"><span class="hs-identifier hs-type">bodyFunc</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span>
-</span><span id="line-403"></span><span>      </span><span id="local-6989586621690325616"><span class="annot"><span class="annottext">bodyFunc :: ByteString -&gt; Either TransformErrorBundle ByteString
+</span><span id="line-403"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span class="annot"><a href="#local-6989586621690325616"><span class="hs-identifier hs-type">bodyFunc</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Either</span></a></span><span> </span><span class="annot"><a href="Hasura.RQL.DDL.Webhook.Transform.Class.html#TransformErrorBundle"><span class="hs-identifier hs-type">TransformErrorBundle</span></a></span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-type">BL.ByteString</span></a></span><span>
+</span><span id="line-404"></span><span>      </span><span id="local-6989586621690325616"><span class="annot"><span class="annottext">bodyFunc :: ByteString -&gt; Either TransformErrorBundle ByteString
 </span><a href="#local-6989586621690325616"><span class="hs-identifier hs-var hs-var">bodyFunc</span></a></span></span><span> </span><span id="local-6989586621690325615"><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690325615"><span class="hs-identifier hs-var">body</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-404"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (ResponseTransformCtx -&gt; Either TransformErrorBundle Value)
+</span><span id="line-405"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Maybe (ResponseTransformCtx -&gt; Either TransformErrorBundle Value)
 </span><a href="#local-6989586621690325623"><span class="hs-identifier hs-var">respTransformBody</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-405"></span><span>          </span><span class="annot"><span class="annottext">Maybe (ResponseTransformCtx -&gt; Either TransformErrorBundle Value)
+</span><span id="line-406"></span><span>          </span><span class="annot"><span class="annottext">Maybe (ResponseTransformCtx -&gt; Either TransformErrorBundle Value)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690325615"><span class="hs-identifier hs-var">body</span></a></span><span>
-</span><span id="line-406"></span><span>          </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690325614"><span class="annot"><span class="annottext">ResponseTransformCtx -&gt; Either TransformErrorBundle Value
+</span><span id="line-407"></span><span>          </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690325614"><span class="annot"><span class="annottext">ResponseTransformCtx -&gt; Either TransformErrorBundle Value
 </span><a href="#local-6989586621690325614"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
 </span><span class="hs-identifier hs-var">Aeson.encode</span></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ResponseTransformCtx -&gt; Either TransformErrorBundle Value
 </span><a href="#local-6989586621690325614"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">ResponseTransformCtx
 </span><a href="#local-6989586621690325621"><span class="hs-identifier hs-var">ctx</span></a></span><span>
-</span><span id="line-407"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either TransformErrorBundle ByteString
+</span><span id="line-408"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either TransformErrorBundle ByteString
 </span><a href="#local-6989586621690325616"><span class="hs-identifier hs-var">bodyFunc</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
 </span><span class="hs-identifier hs-var">Aeson.encode</span></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690325620"><span class="hs-identifier hs-var">responseTransformBody</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-408"></span></pre></body></html>
+</span><span id="line-409"></span></pre></body></html>

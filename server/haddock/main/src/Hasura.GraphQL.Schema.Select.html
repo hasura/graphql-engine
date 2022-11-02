@@ -3336,30 +3336,30 @@ ciColumn :: forall (b :: BackendType). ColumnInfo b -&gt; Column b
 (a -&gt; f b) -&gt; t a -&gt; f (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">traverse</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690537719"><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621690537719"><span class="hs-identifier hs-var">columnInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-956"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-956"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-957"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
+</span><span id="line-957"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 MonadParse m =&gt;
 Name
 -&gt; Maybe Description
 -&gt; Parser origin 'Both m a
 -&gt; FieldParser origin m ()
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.selection_</span></a></span><span>
-</span><span id="line-958"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Name
+</span><span id="line-958"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Name
 </span><a href="Hasura.RQL.Types.Column.html#ciName"><span class="hs-identifier hs-var">ciName</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621690537719"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-959"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Maybe Description
+</span><span id="line-959"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Maybe Description
 </span><a href="Hasura.RQL.Types.Column.html#ciDescription"><span class="hs-identifier hs-var">ciDescription</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621690537719"><span class="hs-identifier hs-var">columnInfo</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-960"></span><span>            </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
+</span><span id="line-960"></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall origin (k :: Kind) (m :: * -&gt; *) a.
 (MonadParse m, 'Input &lt;: k) =&gt;
 Parser origin k m a -&gt; Parser origin k m (Maybe a)
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.nullable</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin.
 MonadParse m =&gt;
 Parser origin 'Both m Double
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.float</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-961"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span id="line-961"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). Column b -&gt; ColumnType b -&gt; ColFld b
 </span><a href="Hasura.RQL.IR.Select.html#CFCol"><span class="hs-identifier hs-var">IR.CFCol</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b

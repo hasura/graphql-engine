@@ -56,13 +56,13 @@ MonadIO m =&gt;
 </span><a href="#local-6989586621690476816"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span>
 </span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">forall a. TVar a -&gt; a -&gt; STM ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">writeTVar</span></a></span><span> </span><span class="annot"><span class="annottext">TVar (Set CronEventId)
-</span><a href="#local-6989586621690476816"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span>
-</span><span id="line-42"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$!</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
+</span><a href="#local-6989586621690476816"><span class="hs-identifier hs-var">lockedEvents</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$!</span></a></span><span>
+</span><span id="line-42"></span><span>        </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; Set a -&gt; Set a -&gt; Set a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-var">Set.union</span></a></span><span> </span><span class="annot"><span class="annottext">Set CronEventId
-</span><a href="#local-6989586621690476813"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span><span>
-</span><span id="line-43"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; [a] -&gt; Set a
+</span><a href="#local-6989586621690476813"><span class="hs-identifier hs-var">lockedEventsVals</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-43"></span><span>          </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; [a] -&gt; Set a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/containers-0.6.5.1/src"><span class="hs-identifier hs-var">Set.fromList</span></a></span><span> </span><span class="annot"><span class="annottext">[CronEventId]
 </span><a href="#local-6989586621690476817"><span class="hs-identifier hs-var">eventIds</span></a></span><span>
 </span><span id="line-44"></span><span>

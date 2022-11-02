@@ -515,12 +515,12 @@ $c== :: QErrExtra -&gt; QErrExtra -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isInfixOf`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGConnErr -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.getConnErr</span></a></span><span> </span><span class="annot"><span class="annottext">PGConnErr
 </span><a href="#local-6989586621690283037"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-250"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690283033"><span class="annot"><span class="annottext">e :: QErr
+</span><span id="line-250"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690283033"><span class="annot"><span class="annottext">e :: QErr
 </span><a href="#local-6989586621690283033"><span class="hs-identifier hs-var hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="Hasura.Base.Error.html#err500"><span class="hs-identifier hs-var">err500</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#PostgresMaxConnectionsError"><span class="hs-identifier hs-var">PostgresMaxConnectionsError</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;max connections reached on postgres&quot;</span></span><span>
-</span><span id="line-251"></span><span>       </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">QErr
+</span><span id="line-251"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">QErr
 </span><a href="#local-6989586621690283033"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">qeInternal :: Maybe QErrExtra
 </span><a href="Hasura.Base.Error.html#qeInternal"><span class="hs-identifier hs-var">qeInternal</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -534,7 +534,7 @@ $c== :: QErrExtra -&gt; QErrExtra -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isInfixOf`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGConnErr -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.getConnErr</span></a></span><span> </span><span class="annot"><span class="annottext">PGConnErr
 </span><a href="#local-6989586621690283037"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-253"></span><span>      </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
+</span><span id="line-253"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="Hasura.Base.Error.html#err500"><span class="hs-identifier hs-var">err500</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#PostgresError"><span class="hs-identifier hs-var">PostgresError</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;root certificate error&quot;</span></span><span>
@@ -543,7 +543,7 @@ $c== :: QErrExtra -&gt; QErrExtra -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isInfixOf`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGConnErr -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.getConnErr</span></a></span><span> </span><span class="annot"><span class="annottext">PGConnErr
 </span><a href="#local-6989586621690283037"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-255"></span><span>      </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
+</span><span id="line-255"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="Hasura.Base.Error.html#err500"><span class="hs-identifier hs-var">err500</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#PostgresError"><span class="hs-identifier hs-var">PostgresError</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;certificate error&quot;</span></span><span>
@@ -552,7 +552,7 @@ $c== :: QErrExtra -&gt; QErrExtra -&gt; Bool
 </span><span class="hs-operator hs-var">`T.isInfixOf`</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">PGConnErr -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/pg-client-0.1.0/opt/doc/html/pg-client/src"><span class="hs-identifier hs-var">PG.getConnErr</span></a></span><span> </span><span class="annot"><span class="annottext">PGConnErr
 </span><a href="#local-6989586621690283037"><span class="hs-identifier hs-var">c</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-257"></span><span>      </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
+</span><span id="line-257"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="Hasura.Base.Error.html#err500"><span class="hs-identifier hs-var">err500</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#PostgresError"><span class="hs-identifier hs-var">PostgresError</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;private-key error&quot;</span></span><span>

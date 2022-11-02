@@ -1107,7 +1107,7 @@ ColumnType b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. HasName a =&gt; a -&gt; Name
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">P.getName</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery))
 </span><a href="#local-6989586621690559915"><span class="hs-identifier hs-var">typedParser</span></a></span><span>
-</span><span id="line-240"></span><span>            </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
+</span><span id="line-240"></span><span>              </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;. All fields are combined with logical 'AND'.&quot;</span></span><span>
 </span><span id="line-241"></span><span>      </span><span class="hs-comment">-- textListParser = fmap openValueOrigin &lt;$&gt; P.list textParser</span><span>
@@ -1635,7 +1635,8 @@ Name
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-363"></span><span>      </span><span class="annot"><span class="annottext">forall field. field -&gt; field -&gt; field -&gt; DWithinGeogOp field
-</span><a href="Hasura.RQL.IR.BoolExp.html#DWithinGeogOp"><span class="hs-identifier hs-var">DWithinGeogOp</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="Hasura.RQL.IR.BoolExp.html#DWithinGeogOp"><span class="hs-identifier hs-var">DWithinGeogOp</span></a></span><span>
+</span><span id="line-364"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><a href="Hasura.RQL.IR.Value.html#mkParameter"><span class="hs-identifier hs-var">IR.mkParameter</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1649,7 +1650,7 @@ Name
 </span><a href="Hasura.Name.html#_distance"><span class="hs-identifier hs-var">Name._distance</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery))
 </span><a href="#local-6989586621690559814"><span class="hs-identifier hs-var">floatParser</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-364"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-365"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><a href="Hasura.RQL.IR.Value.html#mkParameter"><span class="hs-identifier hs-var">IR.mkParameter</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1663,7 +1664,7 @@ Name
 </span><a href="Hasura.Name.html#_from"><span class="hs-identifier hs-var">Name._from</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery))
 </span><a href="#local-6989586621690559816"><span class="hs-identifier hs-var">geographyParser</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-365"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-366"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><a href="Hasura.RQL.IR.Value.html#mkParameter"><span class="hs-identifier hs-var">IR.mkParameter</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -1680,17 +1681,17 @@ Name
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.VBoolean</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery))
 </span><a href="#local-6989586621690559815"><span class="hs-identifier hs-var">booleanParser</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-366"></span><span>
-</span><span id="line-367"></span><span class="hs-comment">-- | Computed field parser.</span><span>
-</span><span id="line-368"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Instances.Schema.html#bqComputedField"><span class="hs-identifier hs-type">bqComputedField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-369"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690559805"><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621690559804"><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621690559803"><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-370"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-371"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-372"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-373"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-374"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-375"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedField"><span class="hs-identifier hs-type">AnnotatedField</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-376"></span><span id="bqComputedField"><span class="annot"><span class="annottext">bqComputedField :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
+</span><span id="line-367"></span><span>
+</span><span id="line-368"></span><span class="hs-comment">-- | Computed field parser.</span><span>
+</span><span id="line-369"></span><span class="annot"><a href="Hasura.Backends.BigQuery.Instances.Schema.html#bqComputedField"><span class="hs-identifier hs-type">bqComputedField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-370"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690559805"><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span></span><span> </span><span id="local-6989586621690559804"><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span></span><span> </span><span id="local-6989586621690559803"><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-371"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Backend.html#MonadBuildSchema"><span class="hs-identifier hs-type">MonadBuildSchema</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-372"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Source.html#SourceInfo"><span class="hs-identifier hs-type">SourceInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-373"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldInfo"><span class="hs-identifier hs-type">ComputedFieldInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-374"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-375"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableInfo"><span class="hs-identifier hs-type">TableInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-376"></span><span>  </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedField"><span class="hs-identifier hs-type">AnnotatedField</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-377"></span><span id="bqComputedField"><span class="annot"><span class="annottext">bqComputedField :: forall r (m :: * -&gt; *) (n :: * -&gt; *).
 MonadBuildSchema 'BigQuery r m n =&gt;
 SourceInfo 'BigQuery
 -&gt; ComputedFieldInfo 'BigQuery
@@ -1719,19 +1720,19 @@ _cfiXComputedFieldInfo :: XComputedField 'BigQuery
 </span><a href="#local-6989586621690559621"><span class="hs-identifier hs-var">tableName</span></a></span></span><span> </span><span id="local-6989586621690559620"><span class="annot"><span class="annottext">TableInfo 'BigQuery
 </span><a href="#local-6989586621690559620"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MaybeT m a -&gt; m (Maybe a)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">runMaybeT</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-377"></span><span>  </span><span id="local-6989586621690559618"><span class="annot"><span class="annottext">StringifyNumbers
+</span><span id="line-378"></span><span>  </span><span id="local-6989586621690559618"><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="#local-6989586621690559618"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a b.
 (MonadReader r m, Has a r) =&gt;
 (a -&gt; b) -&gt; m b
 </span><a href="Hasura.GraphQL.Schema.Common.html#retrieve"><span class="hs-identifier hs-var">retrieve</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaOptions -&gt; StringifyNumbers
 </span><a href="Hasura.GraphQL.Schema.Options.html#soStringifyNumbers"><span class="hs-identifier hs-var">Options.soStringifyNumbers</span></a></span><span>
-</span><span id="line-378"></span><span>  </span><span id="local-6989586621690559616"><span class="annot"><span class="annottext">RoleName
+</span><span id="line-379"></span><span>  </span><span id="local-6989586621690559616"><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621690559616"><span class="hs-identifier hs-var">roleName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *) a b.
 (MonadReader r m, Has a r) =&gt;
 (a -&gt; b) -&gt; m b
 </span><a href="Hasura.GraphQL.Schema.Common.html#retrieve"><span class="hs-identifier hs-var">retrieve</span></a></span><span> </span><span class="annot"><span class="annottext">SchemaContext -&gt; RoleName
 </span><a href="Hasura.GraphQL.Schema.Common.html#scRole"><span class="hs-identifier hs-var">scRole</span></a></span><span>
-</span><span id="line-379"></span><span>  </span><span id="local-6989586621690559614"><span class="annot"><span class="annottext">Name
+</span><span id="line-380"></span><span>  </span><span id="local-6989586621690559614"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690559614"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
@@ -1741,7 +1742,7 @@ m a -&gt; t m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.ComputedField.html#computedFieldNameToText"><span class="hs-identifier hs-var">computedFieldNameToText</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
 </span><a href="#local-6989586621690559630"><span class="hs-identifier hs-var">_cfiName</span></a></span><span>
-</span><span id="line-380"></span><span>  </span><span id="local-6989586621690559610"><span class="annot"><span class="annottext">InputFieldsParser
+</span><span id="line-381"></span><span>  </span><span id="local-6989586621690559610"><span class="annot"><span class="annottext">InputFieldsParser
   MetadataObjId
   n
   (FunctionArgsExpG (ArgumentExp (UnpreparedValue 'BigQuery)))
@@ -1757,11 +1758,11 @@ m a -&gt; t m a
         n (FunctionArgsExp 'BigQuery (UnpreparedValue 'BigQuery)))
 </span><a href="#local-6989586621690559609"><span class="hs-identifier hs-var">computedFieldFunctionArgs</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldFunction 'BigQuery
 </span><a href="#local-6989586621690559629"><span class="hs-identifier hs-var">_cfiFunction</span></a></span><span>
-</span><span id="line-381"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ComputedFieldReturn 'BigQuery
+</span><span id="line-382"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">ComputedFieldReturn 'BigQuery
 </span><a href="#local-6989586621690559628"><span class="hs-identifier hs-var">_cfiReturnType</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-382"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ReturnExistingTable"><span class="hs-identifier hs-type">BigQuery.ReturnExistingTable</span></a></span><span> </span><span id="local-6989586621690559607"><span class="annot"><span class="annottext">TableName
+</span><span id="line-383"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ReturnExistingTable"><span class="hs-identifier hs-type">BigQuery.ReturnExistingTable</span></a></span><span> </span><span id="local-6989586621690559607"><span class="annot"><span class="annottext">TableName
 </span><a href="#local-6989586621690559607"><span class="hs-identifier hs-var">returnTable</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-383"></span><span>      </span><span id="local-6989586621690559606"><span class="annot"><span class="annottext">TableInfo 'BigQuery
+</span><span id="line-384"></span><span>      </span><span id="local-6989586621690559606"><span class="annot"><span class="annottext">TableInfo 'BigQuery
 </span><a href="#local-6989586621690559606"><span class="hs-identifier hs-var">returnTableInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
@@ -1772,7 +1773,7 @@ SourceInfo b -&gt; TableName b -&gt; m (TableInfo b)
 </span><a href="Hasura.GraphQL.Schema.Common.html#askTableInfo"><span class="hs-identifier hs-var">askTableInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo 'BigQuery
 </span><a href="#local-6989586621690559633"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
 </span><a href="#local-6989586621690559607"><span class="hs-identifier hs-var">returnTable</span></a></span><span>
-</span><span id="line-384"></span><span>      </span><span id="local-6989586621690559604"><span class="annot"><span class="annottext">SelPermInfo 'BigQuery
+</span><span id="line-385"></span><span>      </span><span id="local-6989586621690559604"><span class="annot"><span class="annottext">SelPermInfo 'BigQuery
 </span><a href="#local-6989586621690559604"><span class="hs-identifier hs-var">returnTablePermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) b. Applicative m =&gt; Maybe b -&gt; MaybeT m b
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hoistMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -1780,7 +1781,7 @@ RoleName -&gt; TableInfo b -&gt; Maybe (SelPermInfo b)
 </span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var">tableSelectPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621690559616"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'BigQuery
 </span><a href="#local-6989586621690559606"><span class="hs-identifier hs-var">returnTableInfo</span></a></span><span>
-</span><span id="line-385"></span><span>      </span><span id="local-6989586621690559601"><span class="annot"><span class="annottext">Parser MetadataObjId 'Output n (AnnotatedFields 'BigQuery)
+</span><span id="line-386"></span><span>      </span><span id="local-6989586621690559601"><span class="annot"><span class="annottext">Parser MetadataObjId 'Output n (AnnotatedFields 'BigQuery)
 </span><a href="#local-6989586621690559601"><span class="hs-identifier hs-var">selectionSetParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. m (Maybe a) -&gt; MaybeT m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">MaybeT</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fmap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
@@ -1797,7 +1798,7 @@ SourceInfo b
 </span><a href="Hasura.GraphQL.Schema.Backend.html#tableSelectionSet"><span class="hs-identifier hs-var">tableSelectionSet</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo 'BigQuery
 </span><a href="#local-6989586621690559633"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'BigQuery
 </span><a href="#local-6989586621690559606"><span class="hs-identifier hs-var">returnTableInfo</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-386"></span><span>      </span><span id="local-6989586621690559597"><span class="annot"><span class="annottext">InputFieldsParser
+</span><span id="line-387"></span><span>      </span><span id="local-6989586621690559597"><span class="annot"><span class="annottext">InputFieldsParser
   n (SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery))
 </span><a href="#local-6989586621690559597"><span class="hs-identifier hs-var">selectArgsParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
@@ -1812,7 +1813,7 @@ SourceInfo b
 </span><a href="Hasura.GraphQL.Schema.Backend.html#tableArguments"><span class="hs-identifier hs-var">tableArguments</span></a></span><span> </span><span class="annot"><span class="annottext">SourceInfo 'BigQuery
 </span><a href="#local-6989586621690559633"><span class="hs-identifier hs-var">sourceName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'BigQuery
 </span><a href="#local-6989586621690559606"><span class="hs-identifier hs-var">returnTableInfo</span></a></span><span>
-</span><span id="line-387"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559596"><span class="annot"><span class="annottext">fieldArgsParser :: InputFieldsParser
+</span><span id="line-388"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559596"><span class="annot"><span class="annottext">fieldArgsParser :: InputFieldsParser
   MetadataObjId
   n
   (FunctionArgsExpG (ArgumentExp (UnpreparedValue 'BigQuery)),
@@ -1827,8 +1828,8 @@ Applicative f =&gt;
 </span><a href="#local-6989586621690559610"><span class="hs-identifier hs-var">functionArgsParser</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
   n (SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery))
 </span><a href="#local-6989586621690559597"><span class="hs-identifier hs-var">selectArgsParser</span></a></span><span>
-</span><span id="line-388"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
-</span><span id="line-389"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a b.
+</span><span id="line-389"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
+</span><span id="line-390"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a b.
 MonadParse m =&gt;
 Name
 -&gt; Maybe Description
@@ -1844,12 +1845,12 @@ Name
    SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery))
 </span><a href="#local-6989586621690559596"><span class="hs-identifier hs-var">fieldArgsParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Output n (AnnotatedFields 'BigQuery)
 </span><a href="#local-6989586621690559601"><span class="hs-identifier hs-var">selectionSetParser</span></a></span><span>
-</span><span id="line-390"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span id="line-391"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&amp;&gt;</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="hs-special">(</span><span id="local-6989586621690559591"><span class="annot"><span class="annottext">FunctionArgsExpG (ArgumentExp (UnpreparedValue 'BigQuery))
 </span><a href="#local-6989586621690559591"><span class="hs-identifier hs-var">functionArgs'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690559590"><span class="annot"><span class="annottext">SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery)
 </span><a href="#local-6989586621690559590"><span class="hs-identifier hs-var">args</span></a></span></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span id="local-6989586621690559589"><span class="annot"><span class="annottext">AnnotatedFields 'BigQuery
 </span><a href="#local-6989586621690559589"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-391"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
+</span><span id="line-392"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 XComputedField b
 -&gt; ComputedFieldName
 -&gt; ComputedFieldSelect b r v
@@ -1858,17 +1859,17 @@ XComputedField b
 </span><a href="#local-6989586621690559631"><span class="hs-identifier hs-var">_cfiXComputedFieldInfo</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
 </span><a href="#local-6989586621690559630"><span class="hs-identifier hs-var">_cfiName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-392"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
+</span><span id="line-393"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 JsonAggSelect
 -&gt; AnnSimpleSelectG b r v -&gt; ComputedFieldSelect b r v
 </span><a href="Hasura.RQL.IR.Select.html#CFSTable"><span class="hs-identifier hs-var">IR.CFSTable</span></a></span><span> </span><span class="annot"><span class="annottext">JsonAggSelect
 </span><a href="Hasura.RQL.Types.Common.html#JASMultipleRows"><span class="hs-identifier hs-var">JASMultipleRows</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-393"></span><span>                </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AnnSelectG"><span class="hs-identifier hs-type">IR.AnnSelectG</span></a></span><span>
-</span><span id="line-394"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:_asnFields:AnnSelectG :: AnnotatedFields 'BigQuery
+</span><span id="line-394"></span><span>                </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AnnSelectG"><span class="hs-identifier hs-type">IR.AnnSelectG</span></a></span><span>
+</span><span id="line-395"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:_asnFields:AnnSelectG :: AnnotatedFields 'BigQuery
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnFields%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnotatedFields 'BigQuery
 </span><a href="#local-6989586621690559589"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-395"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnFrom:AnnSelectG :: SelectFromG 'BigQuery (UnpreparedValue 'BigQuery)
+</span><span id="line-396"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnFrom:AnnSelectG :: SelectFromG 'BigQuery (UnpreparedValue 'BigQuery)
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnFrom%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) v.
 FunctionName b
 -&gt; FunctionArgsExp b v
@@ -1880,26 +1881,26 @@ ComputedFieldFunction b -&gt; FunctionName b
 </span><a href="#local-6989586621690559629"><span class="hs-identifier hs-var">_cfiFunction</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">FunctionArgsExpG (ArgumentExp (UnpreparedValue 'BigQuery))
 </span><a href="#local-6989586621690559591"><span class="hs-identifier hs-var">functionArgs'</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-396"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnPerm:AnnSelectG :: TablePermG 'BigQuery (UnpreparedValue 'BigQuery)
+</span><span id="line-397"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnPerm:AnnSelectG :: TablePermG 'BigQuery (UnpreparedValue 'BigQuery)
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnPerm%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnPerm</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
 SelPermInfo b -&gt; TablePerms b
 </span><a href="Hasura.GraphQL.Schema.Select.html#tablePermissionsInfo"><span class="hs-identifier hs-var">tablePermissionsInfo</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo 'BigQuery
 </span><a href="#local-6989586621690559604"><span class="hs-identifier hs-var">returnTablePermissions</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-397"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnArgs:AnnSelectG :: SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery)
+</span><span id="line-398"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnArgs:AnnSelectG :: SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery)
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnArgs%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnArgs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery)
 </span><a href="#local-6989586621690559590"><span class="hs-identifier hs-var">args</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-398"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnStrfyNum:AnnSelectG :: StringifyNumbers
+</span><span id="line-399"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnStrfyNum:AnnSelectG :: StringifyNumbers
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnStrfyNum%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnStrfyNum</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="#local-6989586621690559618"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-399"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnNamingConvention:AnnSelectG :: Maybe NamingCase
+</span><span id="line-400"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnNamingConvention:AnnSelectG :: Maybe NamingCase
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnNamingConvention%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnNamingConvention</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-400"></span><span>                  </span><span class="hs-special">}</span><span>
-</span><span id="line-401"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ReturnTableSchema"><span class="hs-identifier hs-type">BigQuery.ReturnTableSchema</span></a></span><span> </span><span id="local-6989586621690559574"><span class="annot"><span class="annottext">[(ColumnName, Name, ScalarType)]
+</span><span id="line-401"></span><span>                  </span><span class="hs-special">}</span><span>
+</span><span id="line-402"></span><span>    </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ReturnTableSchema"><span class="hs-identifier hs-type">BigQuery.ReturnTableSchema</span></a></span><span> </span><span id="local-6989586621690559574"><span class="annot"><span class="annottext">[(ColumnName, Name, ScalarType)]
 </span><a href="#local-6989586621690559574"><span class="hs-identifier hs-var">returnFields</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-402"></span><span>      </span><span class="hs-comment">-- Check if the computed field is available in the select permission</span><span>
-</span><span id="line-403"></span><span>      </span><span id="local-6989586621690559573"><span class="annot"><span class="annottext">SelPermInfo 'BigQuery
+</span><span id="line-403"></span><span>      </span><span class="hs-comment">-- Check if the computed field is available in the select permission</span><span>
+</span><span id="line-404"></span><span>      </span><span id="local-6989586621690559573"><span class="annot"><span class="annottext">SelPermInfo 'BigQuery
 </span><a href="#local-6989586621690559573"><span class="hs-identifier hs-var">selectPermissions</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) b. Applicative m =&gt; Maybe b -&gt; MaybeT m b
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">hoistMaybe</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
@@ -1907,7 +1908,7 @@ RoleName -&gt; TableInfo b -&gt; Maybe (SelPermInfo b)
 </span><a href="Hasura.GraphQL.Schema.Table.html#tableSelectPermissions"><span class="hs-identifier hs-var">tableSelectPermissions</span></a></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621690559616"><span class="hs-identifier hs-var">roleName</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'BigQuery
 </span><a href="#local-6989586621690559620"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-404"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
+</span><span id="line-405"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Alternative f =&gt; Bool -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">guard</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall k a. (Eq k, Hashable k) =&gt; k -&gt; HashMap k a -&gt; Bool
 </span><span class="hs-identifier hs-var">Map.member</span></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
@@ -1918,28 +1919,28 @@ SelPermInfo b
      ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 </span><a href="Hasura.RQL.Types.Table.html#spiComputedFields"><span class="hs-identifier hs-var">spiComputedFields</span></a></span><span> </span><span class="annot"><span class="annottext">SelPermInfo 'BigQuery
 </span><a href="#local-6989586621690559573"><span class="hs-identifier hs-var">selectPermissions</span></a></span><span>
-</span><span id="line-405"></span><span>      </span><span id="local-6989586621690559570"><span class="annot"><span class="annottext">Name
+</span><span id="line-406"></span><span>      </span><span id="local-6989586621690559570"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690559570"><span class="hs-identifier hs-var">objectTypeName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-406"></span><span>        </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *).
+</span><span id="line-407"></span><span>        </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *).
 (MonadReader r m, Has MkTypename r) =&gt;
 Name -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Typename.html#mkTypename"><span class="hs-identifier hs-var">mkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">=&lt;&lt;</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-407"></span><span>          </span><span id="local-6989586621690559567"><span class="annot"><span class="annottext">Name
+</span><span id="line-408"></span><span>          </span><span id="local-6989586621690559567"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690559567"><span class="hs-identifier hs-var">computedFieldGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadError QErr m =&gt; Text -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Common.html#textToName"><span class="hs-identifier hs-var">textToName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.ComputedField.html#computedFieldNameToText"><span class="hs-identifier hs-var">computedFieldNameToText</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
 </span><a href="#local-6989586621690559630"><span class="hs-identifier hs-var">_cfiName</span></a></span><span>
-</span><span id="line-408"></span><span>          </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-409"></span><span>          </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690559567"><span class="hs-identifier hs-var">computedFieldGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__"><span class="hs-identifier hs-var">Name.__</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__fields"><span class="hs-identifier hs-var">Name.__fields</span></a></span><span>
-</span><span id="line-409"></span><span>      </span><span id="local-6989586621690559564"><span class="annot"><span class="annottext">Parser MetadataObjId 'Output n (AnnotatedFields 'BigQuery)
+</span><span id="line-410"></span><span>      </span><span id="local-6989586621690559564"><span class="annot"><span class="annottext">Parser MetadataObjId 'Output n (AnnotatedFields 'BigQuery)
 </span><a href="#local-6989586621690559564"><span class="hs-identifier hs-var">selectionSetParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-410"></span><span>        </span><span id="local-6989586621690559563"><span class="annot"><span class="annottext">[FieldParser n (AnnotatedField 'BigQuery)]
+</span><span id="line-411"></span><span>        </span><span id="local-6989586621690559563"><span class="annot"><span class="annottext">[FieldParser n (AnnotatedField 'BigQuery)]
 </span><a href="#local-6989586621690559563"><span class="hs-identifier hs-var">fieldParsers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
@@ -1951,17 +1952,17 @@ t a -&gt; (a -&gt; f b) -&gt; f (t b)
 </span><a href="#local-6989586621690559574"><span class="hs-identifier hs-var">returnFields</span></a></span><span> </span><span class="annot"><span class="annottext">(ColumnName, Name, ScalarType)
 -&gt; SchemaT r m (FieldParser n (AnnotatedField 'BigQuery))
 </span><a href="#local-6989586621690559561"><span class="hs-identifier hs-var">selectArbitraryField</span></a></span><span>
-</span><span id="line-411"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559560"><span class="annot"><span class="annottext">description :: Description
+</span><span id="line-412"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559560"><span class="annot"><span class="annottext">description :: Description
 </span><a href="#local-6989586621690559560"><span class="hs-identifier hs-var hs-var">description</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.Description</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;column fields returning by &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
 </span><a href="#local-6989586621690559630"><span class="hs-identifier hs-var">_cfiName</span></a></span><span>
-</span><span id="line-412"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-413"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-413"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a b.
+</span><span id="line-414"></span><span>          </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a b.
 MonadParse m =&gt;
 Name
 -&gt; Maybe Description
@@ -1973,13 +1974,13 @@ Name
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">Description
 </span><a href="#local-6989586621690559560"><span class="hs-identifier hs-var">description</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[FieldParser n (AnnotatedField 'BigQuery)]
 </span><a href="#local-6989586621690559563"><span class="hs-identifier hs-var">fieldParsers</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-414"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span id="line-415"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&amp;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a.
 (Text -&gt; a) -&gt; InsOrdHashMap Name (ParsedSelection a) -&gt; Fields a
 </span><a href="Hasura.GraphQL.Schema.Common.html#parsedSelectionsToFields"><span class="hs-identifier hs-var">parsedSelectionsToFields</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v. Text -&gt; AnnFieldG b r v
 </span><a href="Hasura.RQL.IR.Select.html#AFExpression"><span class="hs-identifier hs-var">IR.AFExpression</span></a></span><span>
-</span><span id="line-415"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
-</span><span id="line-416"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a b.
+</span><span id="line-416"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
+</span><span id="line-417"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a b.
 MonadParse m =&gt;
 Name
 -&gt; Maybe Description
@@ -1994,11 +1995,11 @@ Name
   (FunctionArgsExpG (ArgumentExp (UnpreparedValue 'BigQuery)))
 </span><a href="#local-6989586621690559610"><span class="hs-identifier hs-var">functionArgsParser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser MetadataObjId 'Output n (AnnotatedFields 'BigQuery)
 </span><a href="#local-6989586621690559564"><span class="hs-identifier hs-var">selectionSetParser</span></a></span><span>
-</span><span id="line-417"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
+</span><span id="line-418"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&amp;&gt;</span></a></span><span> </span><span class="hs-glyph">\</span><span class="hs-special">(</span><span id="local-6989586621690559555"><span class="annot"><span class="annottext">FunctionArgsExpG (ArgumentExp (UnpreparedValue 'BigQuery))
 </span><a href="#local-6989586621690559555"><span class="hs-identifier hs-var">functionArgs'</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690559554"><span class="annot"><span class="annottext">AnnotatedFields 'BigQuery
 </span><a href="#local-6989586621690559554"><span class="hs-identifier hs-var">fields</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-418"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
+</span><span id="line-419"></span><span>            </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 XComputedField b
 -&gt; ComputedFieldName
 -&gt; ComputedFieldSelect b r v
@@ -2007,17 +2008,17 @@ XComputedField b
 </span><a href="#local-6989586621690559631"><span class="hs-identifier hs-var">_cfiXComputedFieldInfo</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
 </span><a href="#local-6989586621690559630"><span class="hs-identifier hs-var">_cfiName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-419"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
+</span><span id="line-420"></span><span>              </span><span class="annot"><span class="annottext">forall (b :: BackendType) r v.
 JsonAggSelect
 -&gt; AnnSimpleSelectG b r v -&gt; ComputedFieldSelect b r v
 </span><a href="Hasura.RQL.IR.Select.html#CFSTable"><span class="hs-identifier hs-var">IR.CFSTable</span></a></span><span> </span><span class="annot"><span class="annottext">JsonAggSelect
 </span><a href="Hasura.RQL.Types.Common.html#JASMultipleRows"><span class="hs-identifier hs-var">JASMultipleRows</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-420"></span><span>                </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AnnSelectG"><span class="hs-identifier hs-type">IR.AnnSelectG</span></a></span><span>
-</span><span id="line-421"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:_asnFields:AnnSelectG :: AnnotatedFields 'BigQuery
+</span><span id="line-421"></span><span>                </span><span class="annot"><a href="Hasura.RQL.IR.Select.html#AnnSelectG"><span class="hs-identifier hs-type">IR.AnnSelectG</span></a></span><span>
+</span><span id="line-422"></span><span>                  </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">$sel:_asnFields:AnnSelectG :: AnnotatedFields 'BigQuery
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnFields%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnFields</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">AnnotatedFields 'BigQuery
 </span><a href="#local-6989586621690559554"><span class="hs-identifier hs-var">fields</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-422"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnFrom:AnnSelectG :: SelectFromG 'BigQuery (UnpreparedValue 'BigQuery)
+</span><span id="line-423"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnFrom:AnnSelectG :: SelectFromG 'BigQuery (UnpreparedValue 'BigQuery)
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnFrom%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) v.
 FunctionName b
 -&gt; FunctionArgsExp b v
@@ -2029,37 +2030,37 @@ ComputedFieldFunction b -&gt; FunctionName b
 </span><a href="#local-6989586621690559629"><span class="hs-identifier hs-var">_cfiFunction</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">FunctionArgsExpG (ArgumentExp (UnpreparedValue 'BigQuery))
 </span><a href="#local-6989586621690559555"><span class="hs-identifier hs-var">functionArgs'</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-423"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnPerm:AnnSelectG :: TablePermG 'BigQuery (UnpreparedValue 'BigQuery)
+</span><span id="line-424"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnPerm:AnnSelectG :: TablePermG 'BigQuery (UnpreparedValue 'BigQuery)
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnPerm%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnPerm</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (backend :: BackendType) v. TablePermG backend v
 </span><a href="Hasura.RQL.IR.Select.html#noTablePermissions"><span class="hs-identifier hs-var">IR.noTablePermissions</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-424"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnArgs:AnnSelectG :: SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery)
+</span><span id="line-425"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnArgs:AnnSelectG :: SelectArgsG 'BigQuery (UnpreparedValue 'BigQuery)
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnArgs%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnArgs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (backend :: BackendType) v. SelectArgsG backend v
 </span><a href="Hasura.RQL.IR.Select.html#noSelectArgs"><span class="hs-identifier hs-var">IR.noSelectArgs</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-425"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnStrfyNum:AnnSelectG :: StringifyNumbers
+</span><span id="line-426"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnStrfyNum:AnnSelectG :: StringifyNumbers
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnStrfyNum%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnStrfyNum</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="#local-6989586621690559618"><span class="hs-identifier hs-var">stringifyNumbers</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-426"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnNamingConvention:AnnSelectG :: Maybe NamingCase
+</span><span id="line-427"></span><span>                    </span><span class="annot"><span class="annottext">$sel:_asnNamingConvention:AnnSelectG :: Maybe NamingCase
 </span><a href="Hasura.RQL.IR.Select.html#%24sel%3A_asnNamingConvention%3AAnnSelectG"><span class="hs-identifier hs-var">IR._asnNamingConvention</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-427"></span><span>                  </span><span class="hs-special">}</span><span>
-</span><span id="line-428"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-429"></span><span>    </span><span class="annot"><a href="#local-6989586621690559593"><span class="hs-identifier hs-type">fieldDescription</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Description</span></a></span><span>
-</span><span id="line-430"></span><span>    </span><span id="local-6989586621690559593"><span class="annot"><span class="annottext">fieldDescription :: Maybe Description
+</span><span id="line-428"></span><span>                  </span><span class="hs-special">}</span><span>
+</span><span id="line-429"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-430"></span><span>    </span><span class="annot"><a href="#local-6989586621690559593"><span class="hs-identifier hs-type">fieldDescription</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Description</span></a></span><span>
+</span><span id="line-431"></span><span>    </span><span id="local-6989586621690559593"><span class="annot"><span class="annottext">fieldDescription :: Maybe Description
 </span><a href="#local-6989586621690559593"><span class="hs-identifier hs-var hs-var">fieldDescription</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; Description
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.Description</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe Text
 </span><a href="#local-6989586621690559627"><span class="hs-identifier hs-var">_cfiDescription</span></a></span><span>
-</span><span id="line-431"></span><span>
-</span><span id="line-432"></span><span>    </span><span class="annot"><a href="#local-6989586621690559561"><span class="hs-identifier hs-type">selectArbitraryField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-433"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ColumnName"><span class="hs-identifier hs-type">BigQuery.ColumnName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ScalarType"><span class="hs-identifier hs-type">BigQuery.ScalarType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-434"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedField"><span class="hs-identifier hs-type">AnnotatedField</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-435"></span><span>    </span><span id="local-6989586621690559561"><span class="annot"><span class="annottext">selectArbitraryField :: (ColumnName, Name, ScalarType)
+</span><span id="line-432"></span><span>
+</span><span id="line-433"></span><span>    </span><span class="annot"><a href="#local-6989586621690559561"><span class="hs-identifier hs-type">selectArbitraryField</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-434"></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ColumnName"><span class="hs-identifier hs-type">BigQuery.ColumnName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-type">G.Name</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ScalarType"><span class="hs-identifier hs-type">BigQuery.ScalarType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-435"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#FieldParser"><span class="hs-identifier hs-type">FieldParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#AnnotatedField"><span class="hs-identifier hs-type">AnnotatedField</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-436"></span><span>    </span><span id="local-6989586621690559561"><span class="annot"><span class="annottext">selectArbitraryField :: (ColumnName, Name, ScalarType)
 -&gt; SchemaT r m (FieldParser n (AnnotatedField 'BigQuery))
 </span><a href="#local-6989586621690559561"><span class="hs-identifier hs-var hs-var">selectArbitraryField</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690559551"><span class="annot"><span class="annottext">ColumnName
 </span><a href="#local-6989586621690559551"><span class="hs-identifier hs-var">columnName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690559550"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690559550"><span class="hs-identifier hs-var">graphQLName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690559549"><span class="annot"><span class="annottext">ScalarType
 </span><a href="#local-6989586621690559549"><span class="hs-identifier hs-var">columnType</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-436"></span><span>      </span><span id="local-6989586621690559548"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery))
+</span><span id="line-437"></span><span>      </span><span id="local-6989586621690559548"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery))
 </span><a href="#local-6989586621690559548"><span class="hs-identifier hs-var">field</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (BackendSchema b, MonadBuildSchema b r m n) =&gt;
 ColumnType b
@@ -2070,8 +2071,8 @@ ColumnType b
 </span><a href="#local-6989586621690559549"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Nullability
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.Nullability</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-437"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
-</span><span id="line-438"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
+</span><span id="line-438"></span><span>      </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span>
+</span><span id="line-439"></span><span>        </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) origin a.
 MonadParse m =&gt;
 Name
 -&gt; Maybe Description
@@ -2081,7 +2082,7 @@ Name
 </span><a href="#local-6989586621690559550"><span class="hs-identifier hs-var">graphQLName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery))
 </span><a href="#local-6989586621690559548"><span class="hs-identifier hs-var">field</span></a></span><span>
-</span><span id="line-439"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
+</span><span id="line-440"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (backend :: BackendType) v r.
 Column backend
 -&gt; ColumnType backend
@@ -2094,11 +2095,11 @@ Column backend
 </span><a href="#local-6989586621690559549"><span class="hs-identifier hs-var">columnType</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-440"></span><span>
-</span><span id="line-441"></span><span>    </span><span class="annot"><a href="#local-6989586621690559609"><span class="hs-identifier hs-type">computedFieldFunctionArgs</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-442"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-type">ComputedFieldFunction</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-443"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExp"><span class="hs-identifier hs-type">FunctionArgsExp</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-444"></span><span>    </span><span id="local-6989586621690559609"><span class="annot"><span class="annottext">computedFieldFunctionArgs :: ComputedFieldFunction 'BigQuery
+</span><span id="line-441"></span><span>
+</span><span id="line-442"></span><span>    </span><span class="annot"><a href="#local-6989586621690559609"><span class="hs-identifier hs-type">computedFieldFunctionArgs</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-443"></span><span>      </span><span class="annot"><a href="Hasura.RQL.Types.ComputedField.html#ComputedFieldFunction"><span class="hs-identifier hs-type">ComputedFieldFunction</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-444"></span><span>      </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Function.html#FunctionArgsExp"><span class="hs-identifier hs-type">FunctionArgsExp</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-445"></span><span>    </span><span id="local-6989586621690559609"><span class="annot"><span class="annottext">computedFieldFunctionArgs :: ComputedFieldFunction 'BigQuery
 -&gt; SchemaT
      r
      m
@@ -2121,26 +2122,26 @@ _cffName :: FunctionName 'BigQuery
 _cffName :: forall (b :: BackendType).
 ComputedFieldFunction b -&gt; FunctionName b
 </span><a href="Hasura.RQL.Types.ComputedField.html#_cffDescription"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span></span><span class="hs-special">}</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-445"></span><span>      </span><span id="local-6989586621690559536"><span class="annot"><span class="annottext">Name
+</span><span id="line-446"></span><span>      </span><span id="local-6989586621690559536"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690559536"><span class="hs-identifier hs-var">objectName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-446"></span><span>        </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *).
+</span><span id="line-447"></span><span>        </span><span class="annot"><span class="annottext">forall r (m :: * -&gt; *).
 (MonadReader r m, Has MkTypename r) =&gt;
 Name -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Typename.html#mkTypename"><span class="hs-identifier hs-var">mkTypename</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">=&lt;&lt;</span></a></span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-447"></span><span>          </span><span id="local-6989586621690559535"><span class="annot"><span class="annottext">Name
+</span><span id="line-448"></span><span>          </span><span id="local-6989586621690559535"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690559535"><span class="hs-identifier hs-var">computedFieldGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadError QErr m =&gt; Text -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Common.html#textToName"><span class="hs-identifier hs-var">textToName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; Text
 </span><a href="Hasura.RQL.Types.ComputedField.html#computedFieldNameToText"><span class="hs-identifier hs-var">computedFieldNameToText</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
 </span><a href="#local-6989586621690559630"><span class="hs-identifier hs-var">_cfiName</span></a></span><span>
-</span><span id="line-448"></span><span>          </span><span id="local-6989586621690559534"><span class="annot"><span class="annottext">Name
+</span><span id="line-449"></span><span>          </span><span id="local-6989586621690559534"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690559534"><span class="hs-identifier hs-var">tableGQLName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) (m :: * -&gt; *).
 (Backend b, MonadError QErr m) =&gt;
 TableInfo b -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Table.html#getTableGQLName"><span class="hs-identifier hs-var">getTableGQLName</span></a></span><span> </span><span class="hs-glyph">@</span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span> </span><span class="annot"><span class="annottext">TableInfo 'BigQuery
 </span><a href="#local-6989586621690559620"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-449"></span><span>          </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Name
+</span><span id="line-450"></span><span>          </span><span class="hs-identifier">pure</span><span> </span><span class="hs-operator">$</span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690559535"><span class="hs-identifier hs-var">computedFieldGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__"><span class="hs-identifier hs-var">Name.__</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
@@ -2148,8 +2149,8 @@ TableInfo b -&gt; m Name
 </span><a href="#local-6989586621690559534"><span class="hs-identifier hs-var">tableGQLName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="Hasura.Name.html#__args"><span class="hs-identifier hs-var">Name.__args</span></a></span><span>
-</span><span id="line-450"></span><span>
-</span><span id="line-451"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559531"><span class="annot"><span class="annottext">userInputArgs :: [FunctionArgument]
+</span><span id="line-451"></span><span>
+</span><span id="line-452"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559531"><span class="annot"><span class="annottext">userInputArgs :: [FunctionArgument]
 </span><a href="#local-6989586621690559531"><span class="hs-identifier hs-var hs-var">userInputArgs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -2161,8 +2162,8 @@ TableInfo b -&gt; m Name
 </span><a href="Hasura.Backends.BigQuery.Types.html#%24sel%3A_faName%3AFunctionArgument"><span class="hs-identifier hs-var">BigQuery._faName</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">toList</span></a></span><span> </span><span class="annot"><span class="annottext">Seq (FunctionArgument 'BigQuery)
 </span><a href="#local-6989586621690559542"><span class="hs-identifier hs-var">_cffInputArgs</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-452"></span><span>
-</span><span id="line-453"></span><span>      </span><span id="local-6989586621690559527"><span class="annot"><span class="annottext">InputFieldsParser
+</span><span id="line-453"></span><span>
+</span><span id="line-454"></span><span>      </span><span id="local-6989586621690559527"><span class="annot"><span class="annottext">InputFieldsParser
   MetadataObjId n [(Text, ArgumentExp (UnpreparedValue 'BigQuery))]
 </span><a href="#local-6989586621690559527"><span class="hs-identifier hs-var">argumentParsers</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (f :: * -&gt; *) a.
 (Traversable t, Applicative f) =&gt;
@@ -2179,8 +2180,8 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
      (InputFieldsParser
         n (Text, ArgumentExp (UnpreparedValue 'BigQuery)))
 </span><a href="#local-6989586621690559525"><span class="hs-identifier hs-var">parseArgument</span></a></span><span>
-</span><span id="line-454"></span><span>
-</span><span id="line-455"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559524"><span class="annot"><span class="annottext">userArgsParser :: Parser
+</span><span id="line-455"></span><span>
+</span><span id="line-456"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559524"><span class="annot"><span class="annottext">userArgsParser :: Parser
   MetadataObjId
   'Input
   n
@@ -2196,28 +2197,28 @@ Name
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
   MetadataObjId n [(Text, ArgumentExp (UnpreparedValue 'BigQuery))]
 </span><a href="#local-6989586621690559527"><span class="hs-identifier hs-var">argumentParsers</span></a></span><span>
-</span><span id="line-456"></span><span>
-</span><span id="line-457"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559523"><span class="annot"><span class="annottext">fieldDesc :: Description
+</span><span id="line-457"></span><span>
+</span><span id="line-458"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559523"><span class="annot"><span class="annottext">fieldDesc :: Description
 </span><a href="#local-6989586621690559523"><span class="hs-identifier hs-var hs-var">fieldDesc</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-458"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Description
+</span><span id="line-459"></span><span>            </span><span class="annot"><span class="annottext">Text -&gt; Description
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.Description</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-459"></span><span>              </span><span class="annot"><span class="annottext">Text
+</span><span id="line-460"></span><span>              </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;input parameters for computed field &quot;</span></span><span>
-</span><span id="line-460"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-461"></span><span>                </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
 </span><a href="#local-6989586621690559630"><span class="hs-identifier hs-var">_cfiName</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; defined on table &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableName 'BigQuery
 </span><a href="#local-6989586621690559621"><span class="hs-identifier hs-var">tableName</span></a></span><span>
-</span><span id="line-461"></span><span>
-</span><span id="line-462"></span><span>          </span><span id="local-6989586621690559522"><span class="annot"><span class="annottext">argsField :: InputFieldsParser
+</span><span id="line-462"></span><span>
+</span><span id="line-463"></span><span>          </span><span id="local-6989586621690559522"><span class="annot"><span class="annottext">argsField :: InputFieldsParser
   MetadataObjId
   n
   (Maybe [(Text, ArgumentExp (UnpreparedValue 'BigQuery))])
 </span><a href="#local-6989586621690559522"><span class="hs-identifier hs-var hs-var">argsField</span></a></span></span><span>
-</span><span id="line-463"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
+</span><span id="line-464"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">null</span></a></span><span> </span><span class="annot"><span class="annottext">[FunctionArgument]
 </span><a href="#local-6989586621690559531"><span class="hs-identifier hs-var">userInputArgs</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
 (MonadParse m, 'Input &lt;: k) =&gt;
@@ -2234,7 +2235,7 @@ Name
   n
   [(Text, ArgumentExp (UnpreparedValue 'BigQuery))]
 </span><a href="#local-6989586621690559524"><span class="hs-identifier hs-var">userArgsParser</span></a></span><span>
-</span><span id="line-464"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span id="line-465"></span><span>            </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
@@ -2252,11 +2253,11 @@ Name
   n
   [(Text, ArgumentExp (UnpreparedValue 'BigQuery))]
 </span><a href="#local-6989586621690559524"><span class="hs-identifier hs-var">userArgsParser</span></a></span><span>
-</span><span id="line-465"></span><span>
-</span><span id="line-466"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-466"></span><span>
+</span><span id="line-467"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-467"></span><span>        </span><span class="annot"><span class="annottext">InputFieldsParser
+</span><span id="line-468"></span><span>        </span><span class="annot"><span class="annottext">InputFieldsParser
   MetadataObjId
   n
   (Maybe [(Text, ArgumentExp (UnpreparedValue 'BigQuery))])
@@ -2266,7 +2267,7 @@ InputFieldsParser origin m a
 -&gt; (a -&gt; m b) -&gt; InputFieldsParser origin m b
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-operator hs-var">`P.bindFields`</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690559518"><span class="annot"><span class="annottext">Maybe [(Text, ArgumentExp (UnpreparedValue 'BigQuery))]
 </span><a href="#local-6989586621690559518"><span class="hs-identifier hs-var">maybeInputArguments</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-468"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559517"><span class="annot"><span class="annottext">tableColumnInputs :: HashMap Text (ArgumentExp (UnpreparedValue 'BigQuery))
+</span><span id="line-469"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559517"><span class="annot"><span class="annottext">tableColumnInputs :: HashMap Text (ArgumentExp (UnpreparedValue 'BigQuery))
 </span><a href="#local-6989586621690559517"><span class="hs-identifier hs-var hs-var">tableColumnInputs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall v1 v2 k. (v1 -&gt; v2) -&gt; HashMap k v1 -&gt; HashMap k v2
 </span><span class="hs-identifier hs-var">Map.map</span></span><span> </span><span class="annot"><span class="annottext">forall v. ColumnName -&gt; ArgumentExp v
 </span><a href="Hasura.Backends.BigQuery.Types.html#AETableColumn"><span class="hs-identifier hs-var">BigQuery.AETableColumn</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -2276,7 +2277,7 @@ InputFieldsParser origin m a
 </span><span class="hs-identifier hs-var">Map.mapKeys</span></span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; Text
 </span><a href="Hasura.RQL.Types.Function.html#getFuncArgNameTxt"><span class="hs-identifier hs-var">getFuncArgNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldImplicitArguments 'BigQuery
 </span><a href="#local-6989586621690559541"><span class="hs-identifier hs-var">_cffComputedFieldImplicitArgs</span></a></span><span>
-</span><span id="line-469"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-470"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. [a] -&gt; HashMap Text a -&gt; FunctionArgsExpG a
 </span><a href="Hasura.RQL.Types.Function.html#FunctionArgsExp"><span class="hs-identifier hs-var">FunctionArgsExp</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
@@ -2288,9 +2289,9 @@ InputFieldsParser origin m a
 </span><a href="#local-6989586621690559518"><span class="hs-identifier hs-var">maybeInputArguments</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap Text (ArgumentExp (UnpreparedValue 'BigQuery))
 </span><a href="#local-6989586621690559517"><span class="hs-identifier hs-var">tableColumnInputs</span></a></span><span>
-</span><span id="line-470"></span><span>
-</span><span id="line-471"></span><span>    </span><span class="annot"><a href="#local-6989586621690559525"><span class="hs-identifier hs-type">parseArgument</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#FunctionArgument"><span class="hs-identifier hs-type">BigQuery.FunctionArgument</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ArgumentExp"><span class="hs-identifier hs-type">BigQuery.ArgumentExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-472"></span><span>    </span><span id="local-6989586621690559525"><span class="annot"><span class="annottext">parseArgument :: FunctionArgument
+</span><span id="line-471"></span><span>
+</span><span id="line-472"></span><span>    </span><span class="annot"><a href="#local-6989586621690559525"><span class="hs-identifier hs-type">parseArgument</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#FunctionArgument"><span class="hs-identifier hs-type">BigQuery.FunctionArgument</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.GraphQL.Schema.Common.html#SchemaT"><span class="hs-identifier hs-type">SchemaT</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559805"><span class="hs-identifier hs-type">r</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559804"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.GraphQL.Schema.Parser.html#InputFieldsParser"><span class="hs-identifier hs-type">InputFieldsParser</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690559803"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.Backends.BigQuery.Types.html#ArgumentExp"><span class="hs-identifier hs-type">BigQuery.ArgumentExp</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.IR.Value.html#UnpreparedValue"><span class="hs-identifier hs-type">IR.UnpreparedValue</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#BigQuery"><span class="hs-identifier hs-type">BigQuery</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-473"></span><span>    </span><span id="local-6989586621690559525"><span class="annot"><span class="annottext">parseArgument :: FunctionArgument
 -&gt; SchemaT
      r
      m
@@ -2298,7 +2299,7 @@ InputFieldsParser origin m a
         n (Text, ArgumentExp (UnpreparedValue 'BigQuery)))
 </span><a href="#local-6989586621690559525"><span class="hs-identifier hs-var hs-var">parseArgument</span></a></span></span><span> </span><span id="local-6989586621690559510"><span class="annot"><span class="annottext">FunctionArgument
 </span><a href="#local-6989586621690559510"><span class="hs-identifier hs-var">arg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-473"></span><span>      </span><span id="local-6989586621690559509"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery))
+</span><span id="line-474"></span><span>      </span><span id="local-6989586621690559509"><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery))
 </span><a href="#local-6989586621690559509"><span class="hs-identifier hs-var">typedParser</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) r (m :: * -&gt; *) (n :: * -&gt; *).
 (BackendSchema b, MonadBuildSchema b r m n) =&gt;
 ColumnType b
@@ -2311,17 +2312,17 @@ ColumnType b
 </span><a href="#local-6989586621690559510"><span class="hs-identifier hs-var">arg</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Nullability
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.Nullability</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-474"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559507"><span class="annot"><span class="annottext">argumentName :: Text
+</span><span id="line-475"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559507"><span class="annot"><span class="annottext">argumentName :: Text
 </span><a href="#local-6989586621690559507"><span class="hs-identifier hs-var hs-var">argumentName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FunctionArgName -&gt; Text
 </span><a href="Hasura.RQL.Types.Function.html#getFuncArgNameTxt"><span class="hs-identifier hs-var">getFuncArgNameTxt</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgument -&gt; FunctionArgName
 </span><a href="Hasura.Backends.BigQuery.Types.html#%24sel%3A_faName%3AFunctionArgument"><span class="hs-identifier hs-var">BigQuery._faName</span></a></span><span> </span><span class="annot"><span class="annottext">FunctionArgument
 </span><a href="#local-6989586621690559510"><span class="hs-identifier hs-var">arg</span></a></span><span>
-</span><span id="line-475"></span><span>      </span><span id="local-6989586621690559506"><span class="annot"><span class="annottext">Name
+</span><span id="line-476"></span><span>      </span><span id="local-6989586621690559506"><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690559506"><span class="hs-identifier hs-var">fieldName</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *). MonadError QErr m =&gt; Text -&gt; m Name
 </span><a href="Hasura.GraphQL.Schema.Common.html#textToName"><span class="hs-identifier hs-var">textToName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690559507"><span class="hs-identifier hs-var">argumentName</span></a></span><span>
-</span><span id="line-476"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559505"><span class="annot"><span class="annottext">argParser :: InputFieldsParser
+</span><span id="line-477"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690559505"><span class="annot"><span class="annottext">argParser :: InputFieldsParser
   MetadataObjId n (ValueWithOrigin (ColumnValue 'BigQuery))
 </span><a href="#local-6989586621690559505"><span class="hs-identifier hs-var hs-var">argParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (k :: Kind) origin a.
 (MonadParse m, 'Input &lt;: k) =&gt;
@@ -2333,7 +2334,7 @@ Name
 </span><a href="#local-6989586621690559506"><span class="hs-identifier hs-var">fieldName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">Parser 'Both n (ValueWithOrigin (ColumnValue 'BigQuery))
 </span><a href="#local-6989586621690559509"><span class="hs-identifier hs-var">typedParser</span></a></span><span>
-</span><span id="line-477"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-478"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">InputFieldsParser
   MetadataObjId n (ValueWithOrigin (ColumnValue 'BigQuery))
@@ -2350,4 +2351,4 @@ InputFieldsParser origin m a
 ValueWithOrigin (ColumnValue b) -&gt; UnpreparedValue b
 </span><a href="Hasura.RQL.IR.Value.html#mkParameter"><span class="hs-identifier hs-var">IR.mkParameter</span></a></span><span> </span><span class="annot"><span class="annottext">ValueWithOrigin (ColumnValue 'BigQuery)
 </span><a href="#local-6989586621690559504"><span class="hs-identifier hs-var">inputValue</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-478"></span></pre></body></html>
+</span><span id="line-479"></span></pre></body></html>

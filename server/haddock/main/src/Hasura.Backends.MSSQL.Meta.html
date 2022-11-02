@@ -416,12 +416,13 @@ Options -&gt; Value -&gt; Parser a
 </span><span id="line-146"></span><span>          </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="annot"><span class="annottext">SysColumn -&gt; Bool
 </span><a href="Hasura.Backends.MSSQL.Meta.html#scIsIdentity"><span class="hs-identifier hs-var">scIsIdentity</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SysTable -&gt; [SysColumn]
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-147"></span><span>            </span><span class="annot"><span class="annottext">SysTable -&gt; [SysColumn]
 </span><a href="Hasura.Backends.MSSQL.Meta.html#staJoinedSysColumn"><span class="hs-identifier hs-var">staJoinedSysColumn</span></a></span><span> </span><span class="annot"><span class="annottext">SysTable
 </span><a href="#local-6989586621690480990"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-147"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">TableName
+</span><span id="line-148"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">TableName
 </span><a href="#local-6989586621690480987"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-148"></span><span>        </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span id="line-149"></span><span>        </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 OID
 -&gt; [RawColumnInfo b]
 -&gt; Maybe (PrimaryKey b (Column b))
@@ -432,49 +433,49 @@ OID
 -&gt; ExtraTableMetadata b
 -&gt; DBTableMetadata b
 </span><a href="Hasura.RQL.Types.Table.html#DBTableMetadata"><span class="hs-identifier hs-var">DBTableMetadata</span></a></span><span>
-</span><span id="line-149"></span><span>          </span><span class="annot"><span class="annottext">OID
+</span><span id="line-150"></span><span>          </span><span class="annot"><span class="annottext">OID
 </span><a href="#local-6989586621690480985"><span class="hs-identifier hs-var">tableOID</span></a></span><span>
-</span><span id="line-150"></span><span>          </span><span class="annot"><span class="annottext">[RawColumnInfo 'MSSQL]
+</span><span id="line-151"></span><span>          </span><span class="annot"><span class="annottext">[RawColumnInfo 'MSSQL]
 </span><a href="#local-6989586621690480983"><span class="hs-identifier hs-var">columns</span></a></span><span>
-</span><span id="line-151"></span><span>          </span><span class="annot"><span class="annottext">Maybe (PrimaryKey 'MSSQL ColumnName)
+</span><span id="line-152"></span><span>          </span><span class="annot"><span class="annottext">Maybe (PrimaryKey 'MSSQL ColumnName)
 </span><a href="#local-6989586621690480974"><span class="hs-identifier hs-var">primaryKey</span></a></span><span>
-</span><span id="line-152"></span><span>          </span><span class="annot"><span class="annottext">forall a. HashSet a
+</span><span id="line-153"></span><span>          </span><span class="annot"><span class="annottext">forall a. HashSet a
 </span><span class="hs-identifier hs-var">HS.empty</span></span><span> </span><span class="hs-comment">-- no unique constraints?</span><span>
-</span><span id="line-153"></span><span>          </span><span class="annot"><span class="annottext">HashSet (ForeignKeyMetadata 'MSSQL)
+</span><span id="line-154"></span><span>          </span><span class="annot"><span class="annottext">HashSet (ForeignKeyMetadata 'MSSQL)
 </span><a href="#local-6989586621690480979"><span class="hs-identifier hs-var">foreignKeysMetadata</span></a></span><span>
-</span><span id="line-154"></span><span>          </span><span class="annot"><span class="annottext">forall a. Maybe a
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-comment">-- no views, only tables</span><span>
 </span><span id="line-155"></span><span>          </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-comment">-- no views, only tables</span><span>
+</span><span id="line-156"></span><span>          </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-comment">-- no description</span><span>
-</span><span id="line-156"></span><span>          </span><span class="annot"><span class="annottext">[ColumnName]
+</span><span id="line-157"></span><span>          </span><span class="annot"><span class="annottext">[ColumnName]
 </span><a href="#local-6989586621690480972"><span class="hs-identifier hs-var">identityColumns</span></a></span><span>
-</span><span id="line-157"></span><span>      </span><span class="hs-special">)</span><span>
-</span><span id="line-158"></span><span>
-</span><span id="line-159"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#transformColumn"><span class="hs-identifier hs-type">transformColumn</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-160"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#SysColumn"><span class="hs-identifier hs-type">SysColumn</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-161"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
-</span><span id="line-162"></span><span id="transformColumn"><span class="annot"><span class="annottext">transformColumn :: SysColumn -&gt; (RawColumnInfo 'MSSQL, [ForeignKey 'MSSQL])
+</span><span id="line-158"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-159"></span><span>
+</span><span id="line-160"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#transformColumn"><span class="hs-identifier hs-type">transformColumn</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-161"></span><span>  </span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#SysColumn"><span class="hs-identifier hs-type">SysColumn</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-162"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-163"></span><span id="transformColumn"><span class="annot"><span class="annottext">transformColumn :: SysColumn -&gt; (RawColumnInfo 'MSSQL, [ForeignKey 'MSSQL])
 </span><a href="Hasura.Backends.MSSQL.Meta.html#transformColumn"><span class="hs-identifier hs-var hs-var">transformColumn</span></a></span></span><span> </span><span id="local-6989586621690480968"><span class="annot"><span class="annottext">SysColumn
 </span><a href="#local-6989586621690480968"><span class="hs-identifier hs-var">sysCol</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-163"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690480967"><span class="annot"><span class="annottext">rciName :: ColumnName
+</span><span id="line-164"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690480967"><span class="annot"><span class="annottext">rciName :: ColumnName
 </span><a href="#local-6989586621690480967"><span class="hs-identifier hs-var hs-var">rciName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ColumnName
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ColumnName"><span class="hs-identifier hs-var">ColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SysColumn -&gt; Text
 </span><a href="Hasura.Backends.MSSQL.Meta.html#scName"><span class="hs-identifier hs-var">scName</span></a></span><span> </span><span class="annot"><span class="annottext">SysColumn
 </span><a href="#local-6989586621690480968"><span class="hs-identifier hs-var">sysCol</span></a></span><span>
-</span><span id="line-164"></span><span>      </span><span id="local-6989586621690480966"><span class="annot"><span class="annottext">rciPosition :: Int
+</span><span id="line-165"></span><span>      </span><span id="local-6989586621690480966"><span class="annot"><span class="annottext">rciPosition :: Int
 </span><a href="#local-6989586621690480966"><span class="hs-identifier hs-var hs-var">rciPosition</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SysColumn -&gt; Int
 </span><a href="Hasura.Backends.MSSQL.Meta.html#scColumnId"><span class="hs-identifier hs-var">scColumnId</span></a></span><span> </span><span class="annot"><span class="annottext">SysColumn
 </span><a href="#local-6989586621690480968"><span class="hs-identifier hs-var">sysCol</span></a></span><span>
-</span><span id="line-165"></span><span>
-</span><span id="line-166"></span><span>      </span><span id="local-6989586621690480965"><span class="annot"><span class="annottext">rciIsNullable :: Bool
+</span><span id="line-166"></span><span>
+</span><span id="line-167"></span><span>      </span><span id="local-6989586621690480965"><span class="annot"><span class="annottext">rciIsNullable :: Bool
 </span><a href="#local-6989586621690480965"><span class="hs-identifier hs-var hs-var">rciIsNullable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SysColumn -&gt; Bool
 </span><a href="Hasura.Backends.MSSQL.Meta.html#scIsNullable"><span class="hs-identifier hs-var">scIsNullable</span></a></span><span> </span><span class="annot"><span class="annottext">SysColumn
 </span><a href="#local-6989586621690480968"><span class="hs-identifier hs-var">sysCol</span></a></span><span>
-</span><span id="line-167"></span><span>      </span><span id="local-6989586621690480964"><span class="annot"><span class="annottext">rciDescription :: Maybe a
+</span><span id="line-168"></span><span>      </span><span id="local-6989586621690480964"><span class="annot"><span class="annottext">rciDescription :: Maybe a
 </span><a href="#local-6989586621690480964"><span class="hs-identifier hs-var hs-var">rciDescription</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-168"></span><span>      </span><span id="local-6989586621690480963"><span class="annot"><span class="annottext">rciType :: ScalarType
+</span><span id="line-169"></span><span>      </span><span id="local-6989586621690480963"><span class="annot"><span class="annottext">rciType :: ScalarType
 </span><a href="#local-6989586621690480963"><span class="hs-identifier hs-var hs-var">rciType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ScalarType
 </span><a href="Hasura.Backends.MSSQL.Meta.html#parseScalarType"><span class="hs-identifier hs-var">parseScalarType</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SysType -&gt; Text
@@ -482,14 +483,14 @@ OID
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SysColumn -&gt; SysType
 </span><a href="Hasura.Backends.MSSQL.Meta.html#scJoinedSysType"><span class="hs-identifier hs-var">scJoinedSysType</span></a></span><span> </span><span class="annot"><span class="annottext">SysColumn
 </span><a href="#local-6989586621690480968"><span class="hs-identifier hs-var">sysCol</span></a></span><span>
-</span><span id="line-169"></span><span>      </span><span id="local-6989586621690480961"><span class="annot"><span class="annottext">foreignKeys :: [ForeignKey 'MSSQL]
+</span><span id="line-170"></span><span>      </span><span id="local-6989586621690480961"><span class="annot"><span class="annottext">foreignKeys :: [ForeignKey 'MSSQL]
 </span><a href="#local-6989586621690480961"><span class="hs-identifier hs-var hs-var">foreignKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-170"></span><span>        </span><span class="annot"><span class="annottext">SysColumn -&gt; [SysForeignKeyColumn]
+</span><span id="line-171"></span><span>        </span><span class="annot"><span class="annottext">SysColumn -&gt; [SysForeignKeyColumn]
 </span><a href="Hasura.Backends.MSSQL.Meta.html#scJoinedForeignKeyColumns"><span class="hs-identifier hs-var">scJoinedForeignKeyColumns</span></a></span><span> </span><span class="annot"><span class="annottext">SysColumn
 </span><a href="#local-6989586621690480968"><span class="hs-identifier hs-var">sysCol</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; (a -&gt; b) -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&amp;&gt;</span></a></span><span> </span><span class="hs-glyph">\</span><span id="local-6989586621690480959"><span class="annot"><span class="annottext">SysForeignKeyColumn
 </span><a href="#local-6989586621690480959"><span class="hs-identifier hs-var">foreignKeyColumn</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-171"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690480958"><span class="annot"><span class="annottext">_fkConstraint :: Constraint 'MSSQL
+</span><span id="line-172"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690480958"><span class="annot"><span class="annottext">_fkConstraint :: Constraint 'MSSQL
 </span><a href="#local-6989586621690480958"><span class="hs-identifier hs-var hs-var">_fkConstraint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ConstraintName b -&gt; OID -&gt; Constraint b
 </span><a href="Hasura.RQL.Types.Table.html#Constraint"><span class="hs-identifier hs-var">Constraint</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ConstraintName
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ConstraintName"><span class="hs-identifier hs-var">ConstraintName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -499,8 +500,8 @@ OID
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SysForeignKeyColumn -&gt; Int
 </span><a href="Hasura.Backends.MSSQL.Meta.html#sfkcConstraintObjectId"><span class="hs-identifier hs-var">sfkcConstraintObjectId</span></a></span><span> </span><span class="annot"><span class="annottext">SysForeignKeyColumn
 </span><a href="#local-6989586621690480959"><span class="hs-identifier hs-var">foreignKeyColumn</span></a></span><span>
-</span><span id="line-172"></span><span>
-</span><span id="line-173"></span><span>              </span><span id="local-6989586621690480955"><span class="annot"><span class="annottext">schemaName :: SchemaName
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span>              </span><span id="local-6989586621690480955"><span class="annot"><span class="annottext">schemaName :: SchemaName
 </span><a href="#local-6989586621690480955"><span class="hs-identifier hs-var hs-var">schemaName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SchemaName
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#SchemaName"><span class="hs-identifier hs-var">SchemaName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SysSchema -&gt; Text
@@ -508,13 +509,13 @@ OID
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SysForeignKeyColumn -&gt; SysSchema
 </span><a href="Hasura.Backends.MSSQL.Meta.html#sfkcJoinedReferencedSysSchema"><span class="hs-identifier hs-var">sfkcJoinedReferencedSysSchema</span></a></span><span> </span><span class="annot"><span class="annottext">SysForeignKeyColumn
 </span><a href="#local-6989586621690480959"><span class="hs-identifier hs-var">foreignKeyColumn</span></a></span><span>
-</span><span id="line-174"></span><span>              </span><span id="local-6989586621690480954"><span class="annot"><span class="annottext">_fkForeignTable :: TableName
+</span><span id="line-175"></span><span>              </span><span id="local-6989586621690480954"><span class="annot"><span class="annottext">_fkForeignTable :: TableName
 </span><a href="#local-6989586621690480954"><span class="hs-identifier hs-var hs-var">_fkForeignTable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Text -&gt; SchemaName -&gt; TableName
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">SysForeignKeyColumn -&gt; Text
 </span><a href="Hasura.Backends.MSSQL.Meta.html#sfkcJoinedReferencedTableName"><span class="hs-identifier hs-var">sfkcJoinedReferencedTableName</span></a></span><span> </span><span class="annot"><span class="annottext">SysForeignKeyColumn
 </span><a href="#local-6989586621690480959"><span class="hs-identifier hs-var">foreignKeyColumn</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">SchemaName
 </span><a href="#local-6989586621690480955"><span class="hs-identifier hs-var">schemaName</span></a></span><span>
-</span><span id="line-175"></span><span>              </span><span id="local-6989586621690480953"><span class="annot"><span class="annottext">_fkColumnMapping :: NEHashMap ColumnName ColumnName
+</span><span id="line-176"></span><span>              </span><span id="local-6989586621690480953"><span class="annot"><span class="annottext">_fkColumnMapping :: NEHashMap ColumnName ColumnName
 </span><a href="#local-6989586621690480953"><span class="hs-identifier hs-var hs-var">_fkColumnMapping</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. Hashable k =&gt; k -&gt; v -&gt; NEHashMap k v
 </span><a href="Data.HashMap.Strict.NonEmpty.html#singleton"><span class="hs-identifier hs-var">NEHashMap.singleton</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnName
 </span><a href="#local-6989586621690480967"><span class="hs-identifier hs-var">rciName</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -523,7 +524,7 @@ OID
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SysForeignKeyColumn -&gt; Text
 </span><a href="Hasura.Backends.MSSQL.Meta.html#sfkcJoinedReferencedColumnName"><span class="hs-identifier hs-var">sfkcJoinedReferencedColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">SysForeignKeyColumn
 </span><a href="#local-6989586621690480959"><span class="hs-identifier hs-var">foreignKeyColumn</span></a></span><span>
-</span><span id="line-176"></span><span>           </span><span class="hs-keyword">in</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">NEHashMap ColumnName ColumnName
+</span><span id="line-177"></span><span>           </span><span class="hs-keyword">in</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">NEHashMap ColumnName ColumnName
 TableName
 Constraint 'MSSQL
 _fkColumnMapping :: NEHashMap (Column 'MSSQL) (Column 'MSSQL)
@@ -533,15 +534,15 @@ _fkColumnMapping :: NEHashMap ColumnName ColumnName
 _fkForeignTable :: TableName
 _fkConstraint :: Constraint 'MSSQL
 </span><a href="Hasura.RQL.Types.Table.html#_fkColumnMapping"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-177"></span><span>
-</span><span id="line-178"></span><span>      </span><span id="local-6989586621690480947"><span class="annot"><span class="annottext">colIsImmutable :: Bool
+</span><span id="line-178"></span><span>
+</span><span id="line-179"></span><span>      </span><span id="local-6989586621690480947"><span class="annot"><span class="annottext">colIsImmutable :: Bool
 </span><a href="#local-6989586621690480947"><span class="hs-identifier hs-var hs-var">colIsImmutable</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">SysColumn -&gt; Bool
 </span><a href="Hasura.Backends.MSSQL.Meta.html#scIsComputed"><span class="hs-identifier hs-var">scIsComputed</span></a></span><span> </span><span class="annot"><span class="annottext">SysColumn
 </span><a href="#local-6989586621690480968"><span class="hs-identifier hs-var">sysCol</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">SysColumn -&gt; Bool
 </span><a href="Hasura.Backends.MSSQL.Meta.html#scIsIdentity"><span class="hs-identifier hs-var">scIsIdentity</span></a></span><span> </span><span class="annot"><span class="annottext">SysColumn
 </span><a href="#local-6989586621690480968"><span class="hs-identifier hs-var">sysCol</span></a></span><span>
-</span><span id="line-179"></span><span>      </span><span id="local-6989586621690480945"><span class="annot"><span class="annottext">rciMutability :: ColumnMutability
+</span><span id="line-180"></span><span>      </span><span id="local-6989586621690480945"><span class="annot"><span class="annottext">rciMutability :: ColumnMutability
 </span><a href="#local-6989586621690480945"><span class="hs-identifier hs-var hs-var">rciMutability</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Column.html#ColumnMutability"><span class="hs-identifier hs-type">ColumnMutability</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">_cmIsInsertable :: Bool
 </span><a href="Hasura.RQL.Types.Column.html#_cmIsInsertable"><span class="hs-identifier hs-var">_cmIsInsertable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
@@ -549,7 +550,7 @@ _fkConstraint :: Constraint 'MSSQL
 </span><a href="Hasura.RQL.Types.Column.html#_cmIsUpdatable"><span class="hs-identifier hs-var">_cmIsUpdatable</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">not</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621690480947"><span class="hs-identifier hs-var">colIsImmutable</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-180"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Bool
+</span><span id="line-181"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Column.html#RawColumnInfo"><span class="hs-identifier hs-type">RawColumnInfo</span></a></span><span> </span><span class="hs-special">{</span><span class="annot"><span class="annottext">Bool
 Int
 ColumnMutability
 ScalarType
@@ -569,9 +570,9 @@ rciPosition :: Int
 rciName :: ColumnName
 </span><a href="Hasura.RQL.Types.Column.html#rciMutability"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span><span class="hs-special">}</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[ForeignKey 'MSSQL]
 </span><a href="#local-6989586621690480961"><span class="hs-identifier hs-var">foreignKeys</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-181"></span><span>
-</span><span id="line-182"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#transformPrimaryKey"><span class="hs-identifier hs-type">transformPrimaryKey</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#SysPrimaryKey"><span class="hs-identifier hs-type">SysPrimaryKey</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#PrimaryKey"><span class="hs-identifier hs-type">PrimaryKey</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-183"></span><span id="transformPrimaryKey"><span class="annot"><span class="annottext">transformPrimaryKey :: SysPrimaryKey -&gt; PrimaryKey 'MSSQL ColumnName
+</span><span id="line-182"></span><span>
+</span><span id="line-183"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#transformPrimaryKey"><span class="hs-identifier hs-type">transformPrimaryKey</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#SysPrimaryKey"><span class="hs-identifier hs-type">SysPrimaryKey</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#PrimaryKey"><span class="hs-identifier hs-type">PrimaryKey</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-184"></span><span id="transformPrimaryKey"><span class="annot"><span class="annottext">transformPrimaryKey :: SysPrimaryKey -&gt; PrimaryKey 'MSSQL ColumnName
 </span><a href="Hasura.Backends.MSSQL.Meta.html#transformPrimaryKey"><span class="hs-identifier hs-var hs-var">transformPrimaryKey</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#SysPrimaryKey"><span class="hs-identifier hs-type">SysPrimaryKey</span></a></span><span> </span><span class="hs-special">{</span><span id="local-6989586621690480930"><span id="local-6989586621690480931"><span id="local-6989586621690480932"><span class="annot"><span class="annottext">Int
 Text
 NESeq SysPrimaryKeyColumn
@@ -582,7 +583,7 @@ spkColumns :: SysPrimaryKey -&gt; NESeq SysPrimaryKeyColumn
 spkIndexId :: SysPrimaryKey -&gt; Int
 spkName :: SysPrimaryKey -&gt; Text
 </span><a href="#local-6989586621690480930"><span class="hs-glyph hs-var hs-var hs-var hs-var hs-var hs-var">..</span></a></span></span></span></span><span class="hs-special">}</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-184"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690480929"><span class="annot"><span class="annottext">constraint :: Constraint 'MSSQL
+</span><span id="line-185"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690480929"><span class="annot"><span class="annottext">constraint :: Constraint 'MSSQL
 </span><a href="#local-6989586621690480929"><span class="hs-identifier hs-var hs-var">constraint</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ConstraintName b -&gt; OID -&gt; Constraint b
 </span><a href="Hasura.RQL.Types.Table.html#Constraint"><span class="hs-identifier hs-var">Constraint</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ConstraintName
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ConstraintName"><span class="hs-identifier hs-var">ConstraintName</span></a></span><span> </span><span class="annot"><span class="annottext">Text
@@ -590,25 +591,25 @@ spkName :: SysPrimaryKey -&gt; Text
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; OID
 </span><a href="Hasura.RQL.Types.Common.html#OID"><span class="hs-identifier hs-var">OID</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690480931"><span class="hs-identifier hs-var">spkIndexId</span></a></span><span>
-</span><span id="line-185"></span><span>      </span><span id="local-6989586621690480928"><span class="annot"><span class="annottext">columns :: NESeq ColumnName
+</span><span id="line-186"></span><span>      </span><span id="local-6989586621690480928"><span class="annot"><span class="annottext">columns :: NESeq ColumnName
 </span><a href="#local-6989586621690480928"><span class="hs-identifier hs-var hs-var">columns</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text -&gt; ColumnName
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#ColumnName"><span class="hs-identifier hs-var">ColumnName</span></a></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">SysPrimaryKeyColumn -&gt; Text
 </span><a href="Hasura.Backends.MSSQL.Meta.html#spkcName"><span class="hs-identifier hs-var">spkcName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">NESeq SysPrimaryKeyColumn
 </span><a href="#local-6989586621690480930"><span class="hs-identifier hs-var">spkColumns</span></a></span><span>
-</span><span id="line-186"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
+</span><span id="line-187"></span><span>   </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) a.
 Constraint b -&gt; NESeq a -&gt; PrimaryKey b a
 </span><a href="Hasura.RQL.Types.Table.html#PrimaryKey"><span class="hs-identifier hs-var">PrimaryKey</span></a></span><span> </span><span class="annot"><span class="annottext">Constraint 'MSSQL
 </span><a href="#local-6989586621690480929"><span class="hs-identifier hs-var">constraint</span></a></span><span> </span><span class="annot"><span class="annottext">NESeq ColumnName
 </span><a href="#local-6989586621690480928"><span class="hs-identifier hs-var">columns</span></a></span><span>
-</span><span id="line-187"></span><span>
-</span><span id="line-188"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
-</span><span id="line-189"></span><span>
-</span><span id="line-190"></span><span class="hs-comment">-- * Helpers</span><span>
-</span><span id="line-191"></span><span>
-</span><span id="line-192"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#coalesceKeys"><span class="hs-identifier hs-type">coalesceKeys</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-193"></span><span id="coalesceKeys"><span class="annot"><span class="annottext">coalesceKeys :: [ForeignKey 'MSSQL] -&gt; [ForeignKey 'MSSQL]
+</span><span id="line-188"></span><span>
+</span><span id="line-189"></span><span class="hs-comment">--------------------------------------------------------------------------------</span><span>
+</span><span id="line-190"></span><span>
+</span><span id="line-191"></span><span class="hs-comment">-- * Helpers</span><span>
+</span><span id="line-192"></span><span>
+</span><span id="line-193"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#coalesceKeys"><span class="hs-identifier hs-type">coalesceKeys</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#ForeignKey"><span class="hs-identifier hs-type">ForeignKey</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="Hasura.SQL.Backend.html#MSSQL"><span class="hs-identifier hs-type">MSSQL</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-194"></span><span id="coalesceKeys"><span class="annot"><span class="annottext">coalesceKeys :: [ForeignKey 'MSSQL] -&gt; [ForeignKey 'MSSQL]
 </span><a href="Hasura.Backends.MSSQL.Meta.html#coalesceKeys"><span class="hs-identifier hs-var hs-var">coalesceKeys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">HM.elems</span></span><span> </span><span class="annot"><span class="annottext">forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">.</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) b a.
@@ -621,8 +622,8 @@ HashMap (Constraint b, TableName b) (ForeignKey b)
 -&gt; HashMap (Constraint b, TableName b) (ForeignKey b)
 </span><a href="#local-6989586621690480924"><span class="hs-identifier hs-var">coalesce</span></a></span><span> </span><span class="annot"><span class="annottext">forall k v. HashMap k v
 </span><span class="hs-identifier hs-var">HM.empty</span></span><span>
-</span><span id="line-194"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-195"></span><span>    </span><span id="local-6989586621690480924"><span class="annot"><span class="annottext">coalesce :: HashMap (Constraint b, TableName b) (ForeignKey b)
+</span><span id="line-195"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-196"></span><span>    </span><span id="local-6989586621690480924"><span class="annot"><span class="annottext">coalesce :: HashMap (Constraint b, TableName b) (ForeignKey b)
 -&gt; ForeignKey b
 -&gt; HashMap (Constraint b, TableName b) (ForeignKey b)
 </span><a href="#local-6989586621690480924"><span class="hs-identifier hs-var hs-var">coalesce</span></a></span></span><span> </span><span id="local-6989586621690480900"><span class="annot"><span class="annottext">HashMap (Constraint b, TableName b) (ForeignKey b)
@@ -641,7 +642,7 @@ ForeignKey b -&gt; ForeignKey b -&gt; ForeignKey b
 </span><a href="#local-6989586621690480897"><span class="hs-identifier hs-var">tableName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ForeignKey b
 </span><a href="#local-6989586621690480899"><span class="hs-identifier hs-var">fk</span></a></span><span> </span><span class="annot"><span class="annottext">HashMap (Constraint b, TableName b) (ForeignKey b)
 </span><a href="#local-6989586621690480900"><span class="hs-identifier hs-var">mapping</span></a></span><span>
-</span><span id="line-196"></span><span>    </span><span id="local-6989586621690480895"><span class="annot"><span class="annottext">combine :: ForeignKey b -&gt; ForeignKey b -&gt; ForeignKey b
+</span><span id="line-197"></span><span>    </span><span id="local-6989586621690480895"><span class="annot"><span class="annottext">combine :: ForeignKey b -&gt; ForeignKey b -&gt; ForeignKey b
 </span><a href="#local-6989586621690480895"><span class="hs-identifier hs-var hs-var">combine</span></a></span></span><span> </span><span id="local-6989586621690480890"><span class="annot"><span class="annottext">ForeignKey b
 </span><a href="#local-6989586621690480890"><span class="hs-identifier hs-var">oldFK</span></a></span></span><span> </span><span id="local-6989586621690480889"><span class="annot"><span class="annottext">ForeignKey b
 </span><a href="#local-6989586621690480889"><span class="hs-identifier hs-var">newFK</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ForeignKey b
@@ -655,87 +656,87 @@ ForeignKey b -&gt; NEHashMap (Column b) (Column b)
 </span><a href="Hasura.RQL.Types.Table.html#_fkColumnMapping"><span class="hs-identifier hs-var">_fkColumnMapping</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ForeignKey b
 </span><a href="#local-6989586621690480890"><span class="hs-identifier hs-var">oldFK</span></a></span><span> </span><span class="annot"><span class="annottext">ForeignKey b
 </span><a href="#local-6989586621690480889"><span class="hs-identifier hs-var">newFK</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-197"></span><span>
-</span><span id="line-198"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#parseScalarType"><span class="hs-identifier hs-type">parseScalarType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span>
-</span><span id="line-199"></span><span id="parseScalarType"><span class="annot"><span class="annottext">parseScalarType :: Text -&gt; ScalarType
+</span><span id="line-198"></span><span>
+</span><span id="line-199"></span><span class="annot"><a href="Hasura.Backends.MSSQL.Meta.html#parseScalarType"><span class="hs-identifier hs-type">parseScalarType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.Backends.MSSQL.Types.Internal.html#ScalarType"><span class="hs-identifier hs-type">ScalarType</span></a></span><span>
+</span><span id="line-200"></span><span id="parseScalarType"><span class="annot"><span class="annottext">parseScalarType :: Text -&gt; ScalarType
 </span><a href="Hasura.Backends.MSSQL.Meta.html#parseScalarType"><span class="hs-identifier hs-var hs-var">parseScalarType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-200"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-201"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;char&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#CharType"><span class="hs-identifier hs-var">CharType</span></a></span><span>
-</span><span id="line-201"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-202"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;numeric&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#NumericType"><span class="hs-identifier hs-var">NumericType</span></a></span><span>
-</span><span id="line-202"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-203"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;decimal&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#DecimalType"><span class="hs-identifier hs-var">DecimalType</span></a></span><span>
-</span><span id="line-203"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-204"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;money&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#DecimalType"><span class="hs-identifier hs-var">DecimalType</span></a></span><span>
-</span><span id="line-204"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-205"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;smallmoney&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#DecimalType"><span class="hs-identifier hs-var">DecimalType</span></a></span><span>
-</span><span id="line-205"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-206"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;int&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#IntegerType"><span class="hs-identifier hs-var">IntegerType</span></a></span><span>
-</span><span id="line-206"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-207"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;smallint&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#SmallintType"><span class="hs-identifier hs-var">SmallintType</span></a></span><span>
-</span><span id="line-207"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-208"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;float&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#FloatType"><span class="hs-identifier hs-var">FloatType</span></a></span><span>
-</span><span id="line-208"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-209"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;real&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#RealType"><span class="hs-identifier hs-var">RealType</span></a></span><span>
-</span><span id="line-209"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-210"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;date&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#DateType"><span class="hs-identifier hs-var">DateType</span></a></span><span>
-</span><span id="line-210"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-211"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;time&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#Ss_time2Type"><span class="hs-identifier hs-var">Ss_time2Type</span></a></span><span>
-</span><span id="line-211"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-212"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;varchar&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#VarcharType"><span class="hs-identifier hs-var">VarcharType</span></a></span><span>
-</span><span id="line-212"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-213"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;nchar&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#WcharType"><span class="hs-identifier hs-var">WcharType</span></a></span><span>
-</span><span id="line-213"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-214"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;nvarchar&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#WvarcharType"><span class="hs-identifier hs-var">WvarcharType</span></a></span><span>
-</span><span id="line-214"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-215"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;ntext&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#WtextType"><span class="hs-identifier hs-var">WtextType</span></a></span><span>
-</span><span id="line-215"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-216"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;timestamp&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TimestampType"><span class="hs-identifier hs-var">TimestampType</span></a></span><span>
-</span><span id="line-216"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-217"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;text&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TextType"><span class="hs-identifier hs-var">TextType</span></a></span><span>
-</span><span id="line-217"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-218"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;binary&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#BinaryType"><span class="hs-identifier hs-var">BinaryType</span></a></span><span>
-</span><span id="line-218"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-219"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;bigint&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#BigintType"><span class="hs-identifier hs-var">BigintType</span></a></span><span>
-</span><span id="line-219"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-220"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;tinyint&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#TinyintType"><span class="hs-identifier hs-var">TinyintType</span></a></span><span>
-</span><span id="line-220"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-221"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;varbinary&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#VarbinaryType"><span class="hs-identifier hs-var">VarbinaryType</span></a></span><span>
-</span><span id="line-221"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-222"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;bit&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#BitType"><span class="hs-identifier hs-var">BitType</span></a></span><span>
-</span><span id="line-222"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-223"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;uniqueidentifier&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#GuidType"><span class="hs-identifier hs-var">GuidType</span></a></span><span>
-</span><span id="line-223"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-224"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;geography&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#GeographyType"><span class="hs-identifier hs-var">GeographyType</span></a></span><span>
-</span><span id="line-224"></span><span>  </span><span class="annot"><span class="annottext">Text
+</span><span id="line-225"></span><span>  </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;geometry&quot;</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#GeometryType"><span class="hs-identifier hs-var">GeometryType</span></a></span><span>
-</span><span id="line-225"></span><span>  </span><span id="local-6989586621690480863"><span class="annot"><span class="annottext">Text
+</span><span id="line-226"></span><span>  </span><span id="local-6989586621690480863"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690480863"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; ScalarType
 </span><a href="Hasura.Backends.MSSQL.Types.Internal.html#UnknownType"><span class="hs-identifier hs-var">UnknownType</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690480863"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-226"></span></pre></body></html>
+</span><span id="line-227"></span></pre></body></html>

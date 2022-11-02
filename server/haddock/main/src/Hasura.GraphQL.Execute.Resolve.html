@@ -260,18 +260,18 @@ _vdDefaultValue :: Maybe (Value Void)
 </span><a href="#local-6989586621690299296"><span class="hs-identifier hs-var">defaultValue</span></a></span><span>
 </span><span id="line-88"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-89"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><span id="line-89"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#ValidationFailed"><span class="hs-identifier hs-var">ValidationFailed</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-90"></span><span>              </span><span class="annot"><span class="annottext">Text
+</span><span id="line-90"></span><span>                </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expecting a value for non-nullable variable: &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690299302"><span class="hs-identifier hs-var">_vdName</span></a></span><span>
 </span><span id="line-91"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span>
-</span><span id="line-92"></span><span>        </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$!</span></a></span><span> </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span>
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$!</span></a></span><span>
+</span><span id="line-92"></span><span>        </span><span class="annot"><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-type">Variable</span></a></span><span>
 </span><span id="line-93"></span><span>          </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">vInfo :: VariableInfo
 </span><a href="#local-6989586621690299281"><span class="hs-identifier hs-var">vInfo</span></a></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-94"></span><span>              </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool

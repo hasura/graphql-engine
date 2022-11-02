@@ -770,10 +770,12 @@ HashSet (EngineLogType impl) -&gt; EngineLogType impl -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-301"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. MonadIO m =&gt; IO a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">liftIO</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">LoggerSet -&gt; LogStr -&gt; IO ()
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-302"></span><span>      </span><span class="annot"><span class="annottext">LoggerSet -&gt; LogStr -&gt; IO ()
 </span><span class="hs-identifier hs-var">FL.pushLogStrLn</span></span><span> </span><span class="annot"><span class="annottext">LoggerSet
 </span><a href="#local-6989586621690286523"><span class="hs-identifier hs-var">loggerSet</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall msg. ToLogStr msg =&gt; msg -&gt; LogStr
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-303"></span><span>        </span><span class="annot"><span class="annottext">forall msg. ToLogStr msg =&gt; msg -&gt; LogStr
 </span><span class="hs-identifier hs-var">FL.toLogStr</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. ToJSON a =&gt; a -&gt; ByteString
 </span><span class="hs-identifier hs-var">J.encode</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall impl.
@@ -784,9 +786,9 @@ FormattedTime
 </span><a href="#local-6989586621690286500"><span class="hs-identifier hs-var">logLevel</span></a></span><span> </span><span class="annot"><span class="annottext">EngineLogType impl
 </span><a href="#local-6989586621690286499"><span class="hs-identifier hs-var">logTy</span></a></span><span> </span><span class="annot"><span class="annottext">Value
 </span><a href="#local-6989586621690286498"><span class="hs-identifier hs-var">logDet</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-302"></span><span>
-</span><span id="line-303"></span><span class="annot"><a href="Hasura.Logging.html#nullLogger"><span class="hs-identifier hs-type">nullLogger</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span>
-</span><span id="line-304"></span><span id="nullLogger"><span class="annot"><span class="annottext">nullLogger :: Logger Hasura
+</span><span id="line-304"></span><span>
+</span><span id="line-305"></span><span class="annot"><a href="Hasura.Logging.html#nullLogger"><span class="hs-identifier hs-type">nullLogger</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-type">Logger</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span>
+</span><span id="line-306"></span><span id="nullLogger"><span class="annot"><span class="annottext">nullLogger :: Logger Hasura
 </span><a href="Hasura.Logging.html#nullLogger"><span class="hs-identifier hs-var hs-var">nullLogger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall impl.
 (forall a (m :: * -&gt; *).
  (ToEngineLog a impl, MonadIO m) =&gt;
@@ -795,22 +797,22 @@ FormattedTime
 </span><a href="Hasura.Logging.html#Logger"><span class="hs-identifier hs-var">Logger</span></a></span><span> </span><span class="hs-glyph">\</span><span class="annot"><span class="annottext">a
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-305"></span><span>
-</span><span id="line-306"></span><span class="annot"><a href="Hasura.Logging.html#eventTriggerLogType"><span class="hs-identifier hs-type">eventTriggerLogType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">EngineLogType</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span>
-</span><span id="line-307"></span><span id="eventTriggerLogType"><span class="annot"><span class="annottext">eventTriggerLogType :: EngineLogType Hasura
+</span><span id="line-307"></span><span>
+</span><span id="line-308"></span><span class="annot"><a href="Hasura.Logging.html#eventTriggerLogType"><span class="hs-identifier hs-type">eventTriggerLogType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">EngineLogType</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span>
+</span><span id="line-309"></span><span id="eventTriggerLogType"><span class="annot"><span class="annottext">eventTriggerLogType :: EngineLogType Hasura
 </span><a href="Hasura.Logging.html#eventTriggerLogType"><span class="hs-identifier hs-var hs-var">eventTriggerLogType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InternalLogTypes -&gt; EngineLogType Hasura
 </span><a href="Hasura.Logging.html#ELTInternal"><span class="hs-identifier hs-var">ELTInternal</span></a></span><span> </span><span class="annot"><span class="annottext">InternalLogTypes
 </span><a href="Hasura.Logging.html#ILTEventTrigger"><span class="hs-identifier hs-var">ILTEventTrigger</span></a></span><span>
-</span><span id="line-308"></span><span>
-</span><span id="line-309"></span><span class="annot"><a href="Hasura.Logging.html#scheduledTriggerLogType"><span class="hs-identifier hs-type">scheduledTriggerLogType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">EngineLogType</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span>
-</span><span id="line-310"></span><span id="scheduledTriggerLogType"><span class="annot"><span class="annottext">scheduledTriggerLogType :: EngineLogType Hasura
+</span><span id="line-310"></span><span>
+</span><span id="line-311"></span><span class="annot"><a href="Hasura.Logging.html#scheduledTriggerLogType"><span class="hs-identifier hs-type">scheduledTriggerLogType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">EngineLogType</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span>
+</span><span id="line-312"></span><span id="scheduledTriggerLogType"><span class="annot"><span class="annottext">scheduledTriggerLogType :: EngineLogType Hasura
 </span><a href="Hasura.Logging.html#scheduledTriggerLogType"><span class="hs-identifier hs-var hs-var">scheduledTriggerLogType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InternalLogTypes -&gt; EngineLogType Hasura
 </span><a href="Hasura.Logging.html#ELTInternal"><span class="hs-identifier hs-var">ELTInternal</span></a></span><span> </span><span class="annot"><span class="annottext">InternalLogTypes
 </span><a href="Hasura.Logging.html#ILTScheduledTrigger"><span class="hs-identifier hs-var">ILTScheduledTrigger</span></a></span><span>
-</span><span id="line-311"></span><span>
-</span><span id="line-312"></span><span class="annot"><a href="Hasura.Logging.html#sourceCatalogMigrationLogType"><span class="hs-identifier hs-type">sourceCatalogMigrationLogType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">EngineLogType</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span>
-</span><span id="line-313"></span><span id="sourceCatalogMigrationLogType"><span class="annot"><span class="annottext">sourceCatalogMigrationLogType :: EngineLogType Hasura
+</span><span id="line-313"></span><span>
+</span><span id="line-314"></span><span class="annot"><a href="Hasura.Logging.html#sourceCatalogMigrationLogType"><span class="hs-identifier hs-type">sourceCatalogMigrationLogType</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.Logging.html#EngineLogType"><span class="hs-identifier hs-type">EngineLogType</span></a></span><span> </span><span class="annot"><a href="Hasura.Logging.html#Hasura"><span class="hs-identifier hs-type">Hasura</span></a></span><span>
+</span><span id="line-315"></span><span id="sourceCatalogMigrationLogType"><span class="annot"><span class="annottext">sourceCatalogMigrationLogType :: EngineLogType Hasura
 </span><a href="Hasura.Logging.html#sourceCatalogMigrationLogType"><span class="hs-identifier hs-var hs-var">sourceCatalogMigrationLogType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">InternalLogTypes -&gt; EngineLogType Hasura
 </span><a href="Hasura.Logging.html#ELTInternal"><span class="hs-identifier hs-var">ELTInternal</span></a></span><span> </span><span class="annot"><span class="annottext">InternalLogTypes
 </span><a href="Hasura.Logging.html#ILTSourceCatalogMigration"><span class="hs-identifier hs-var">ILTSourceCatalogMigration</span></a></span><span>
-</span><span id="line-314"></span></pre></body></html>
+</span><span id="line-316"></span></pre></body></html>

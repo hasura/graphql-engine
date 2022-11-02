@@ -12,10 +12,10 @@ Likewise, we distinguish binders of names from uses of names: The types
 previously bound names.
 
 We want to ensure these are handled in an hygenic way:
-* 'TableAlias'es and 'ColumnAlias'es can be constructed freely, but
-* 'TableIdentifier' can only be constructed from a 'TableAlias' via
+\* 'TableAlias'es and 'ColumnAlias'es can be constructed freely, but
+\* 'TableIdentifier' can only be constructed from a 'TableAlias' via
   'tableAliasToIdentifier', and
-* 'ColumnIdentifier's can only be constructed from a 'ColumnAlias', and
+\* 'ColumnIdentifier's can only be constructed from a 'ColumnAlias', and
   potentially be qualified with a 'TableIdentifier'.
 
 

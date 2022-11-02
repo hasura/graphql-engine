@@ -176,7 +176,7 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><span id="line-61"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">PGDumpReqBody -&gt; Bool
 </span><a href="Hasura.Server.API.PGDump.html#prbCleanOutput"><span class="hs-identifier hs-var">prbCleanOutput</span></a></span><span> </span><span class="annot"><span class="annottext">PGDumpReqBody
 </span><a href="#local-6989586621690337138"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-62"></span><span>        </span><span class="annot"><span class="annottext">[String] -&gt; String
+</span><span id="line-62"></span><span>          </span><span class="annot"><span class="annottext">[String] -&gt; String
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">unlines</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. (a -&gt; Bool) -&gt; [a] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">filter</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Bool -&gt; Bool
@@ -199,24 +199,24 @@ Either e a -&gt; (e -&gt; m a) -&gt; m a
 </span><a href="#local-6989586621690337103"><span class="hs-identifier hs-var">line</span></a></span><span>
 </span><span id="line-68"></span><span>        </span><span class="hs-comment">-- delete comments</span><span>
 </span><span id="line-69"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;--&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; [a] -&gt; [a] -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">`L.isPrefixOf`</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690337103"><span class="hs-identifier hs-var">line</span></a></span><span>
+</span><a href="#local-6989586621690337103"><span class="hs-identifier hs-var">line</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-70"></span><span>        </span><span class="hs-comment">-- delete front matter</span><span>
 </span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690337103"><span class="hs-identifier hs-var">line</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. (Foldable t, Eq a) =&gt; a -&gt; t a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">`elem`</span></a></span><span> </span><span class="annot"><span class="annottext">[String]
-</span><a href="#local-6989586621690337098"><span class="hs-identifier hs-var">preambleLines</span></a></span><span>
+</span><a href="#local-6989586621690337098"><span class="hs-identifier hs-var">preambleLines</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>        </span><span class="hs-comment">-- delete notify triggers</span><span>
 </span><span id="line-73"></span><span>        </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="annot"><span class="annottext">Regex
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">||</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Regex
 </span><a href="#local-6989586621690337097"><span class="hs-identifier hs-var">eventTriggerRegex</span></a></span><span> </span><span class="annot"><span class="annottext">forall regex source target.
 RegexContext regex source target =&gt;
 regex -&gt; source -&gt; target
 </span><span class="hs-operator hs-var">`TDFA.match`</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621690337103"><span class="hs-identifier hs-var">line</span></a></span><span>
+</span><a href="#local-6989586621690337103"><span class="hs-identifier hs-var">line</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span>
 </span><span id="line-75"></span><span>    </span><span id="local-6989586621690337098"><span class="annot"><span class="annottext">preambleLines :: [String]
 </span><a href="#local-6989586621690337098"><span class="hs-identifier hs-var hs-var">preambleLines</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>

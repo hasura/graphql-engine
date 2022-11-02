@@ -237,7 +237,7 @@ a -&gt; f CorsConfig
 </span><a href="Hasura.Server.Cors.html#CCAllowAll"><span class="hs-identifier hs-var">CCAllowAll</span></a></span><span>
 </span><span id="line-84"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-85"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690295326"><span class="annot"><span class="annottext">domains :: [Text]
+</span><span id="line-85"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690295326"><span class="annot"><span class="annottext">domains :: [Text]
 </span><a href="#local-6989586621690295326"><span class="hs-identifier hs-var hs-var">domains</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Text
 </span><span class="hs-identifier hs-var">T.strip</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -246,21 +246,21 @@ a -&gt; f CorsConfig
 </span><span class="hs-string">&quot;,&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Text
 </span><span class="hs-identifier hs-var">T.pack</span></span><span> </span><span class="annot"><span class="annottext">String
 </span><a href="#local-6989586621690295327"><span class="hs-identifier hs-var">str</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-86"></span><span>    </span><span id="local-6989586621690295322"><span class="annot"><span class="annottext">[Either Text DomainParts]
+</span><span id="line-86"></span><span>      </span><span id="local-6989586621690295322"><span class="annot"><span class="annottext">[Either Text DomainParts]
 </span><a href="#local-6989586621690295322"><span class="hs-identifier hs-var">pDomains</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Traversable t, Monad m) =&gt;
 (a -&gt; m b) -&gt; t a -&gt; m (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">mapM</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; Either String (Either Text DomainParts)
 </span><a href="Hasura.Server.Cors.html#parseOptWildcardDomain"><span class="hs-identifier hs-var">parseOptWildcardDomain</span></a></span><span> </span><span class="annot"><span class="annottext">[Text]
 </span><a href="#local-6989586621690295326"><span class="hs-identifier hs-var">domains</span></a></span><span>
-</span><span id="line-87"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690295319"><span class="annot"><span class="annottext">[Text]
+</span><span id="line-87"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690295319"><span class="annot"><span class="annottext">[Text]
 </span><a href="#local-6989586621690295319"><span class="hs-identifier hs-var">fqdns</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690295318"><span class="annot"><span class="annottext">[DomainParts]
 </span><a href="#local-6989586621690295318"><span class="hs-identifier hs-var">wcs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. [Either a b] -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">lefts</span></a></span><span> </span><span class="annot"><span class="annottext">[Either Text DomainParts]
 </span><a href="#local-6989586621690295322"><span class="hs-identifier hs-var">pDomains</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">forall a b. [Either a b] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">rights</span></a></span><span> </span><span class="annot"><span class="annottext">[Either Text DomainParts]
 </span><a href="#local-6989586621690295322"><span class="hs-identifier hs-var">pDomains</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-88"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span id="line-88"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Domains -&gt; CorsConfig
 </span><a href="Hasura.Server.Cors.html#CCAllowedOrigins"><span class="hs-identifier hs-var">CCAllowedOrigins</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b

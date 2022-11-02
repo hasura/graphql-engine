@@ -131,13 +131,14 @@ t a -&gt; (a -&gt; m b) -&gt; m (t b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-58"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw500"><span class="hs-identifier hs-var">throw500</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-59"></span><span>                </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;column &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Column ('Postgres pgKind)
 </span><a href="#local-6989586621690478525"><span class="hs-identifier hs-var">pgCol</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; not found in returning values&quot;</span></span><span>
-</span><span id="line-59"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span id="line-60"></span><span>          </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall {pgKind :: PostgresKind}.
 ColumnType ('Postgres pgKind) -&gt; TxtEncodedVal -&gt; SQLExp
@@ -145,21 +146,21 @@ ColumnType ('Postgres pgKind) -&gt; TxtEncodedVal -&gt; SQLExp
 </span><a href="Hasura.RQL.Types.Column.html#ciType"><span class="hs-identifier hs-var">ciType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo ('Postgres pgKind)
 </span><a href="#local-6989586621690478526"><span class="hs-identifier hs-var">ci</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">TxtEncodedVal
 </span><a href="#local-6989586621690478523"><span class="hs-identifier hs-var">val</span></a></span><span>
-</span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span>    </span><span id="local-6989586621690478553"><span class="annot"><span class="annottext">selNoRows :: Select
+</span><span id="line-61"></span><span>
+</span><span id="line-62"></span><span>    </span><span id="local-6989586621690478553"><span class="annot"><span class="annottext">selNoRows :: Select
 </span><a href="#local-6989586621690478553"><span class="hs-identifier hs-var hs-var">selNoRows</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-62"></span><span>      </span><span class="annot"><span class="annottext">Select
+</span><span id="line-63"></span><span>      </span><span class="annot"><span class="annottext">Select
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkSelect"><span class="hs-identifier hs-var">S.mkSelect</span></a></span><span>
-</span><span id="line-63"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">selExtr :: [Extractor]
+</span><span id="line-64"></span><span>        </span><span class="hs-special">{</span><span> </span><span class="annot"><span class="annottext">selExtr :: [Extractor]
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selExtr"><span class="hs-identifier hs-var">S.selExtr</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Extractor
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selectStar"><span class="hs-identifier hs-var">S.selectStar</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span>
-</span><span id="line-64"></span><span>          </span><span class="annot"><span class="annottext">selFrom :: Maybe FromExp
+</span><span id="line-65"></span><span>          </span><span class="annot"><span class="annottext">selFrom :: Maybe FromExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selFrom"><span class="hs-identifier hs-var">S.selFrom</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable -&gt; FromExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#mkSimpleFromExp"><span class="hs-identifier hs-var">S.mkSimpleFromExp</span></a></span><span> </span><span class="annot"><span class="annottext">QualifiedTable
 </span><a href="#local-6989586621690478555"><span class="hs-identifier hs-var">qt</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-65"></span><span>          </span><span class="annot"><span class="annottext">selWhere :: Maybe WhereFrag
+</span><span id="line-66"></span><span>          </span><span class="annot"><span class="annottext">selWhere :: Maybe WhereFrag
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#selWhere"><span class="hs-identifier hs-var">S.selWhere</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">BoolExp -&gt; WhereFrag
@@ -167,17 +168,17 @@ ColumnType ('Postgres pgKind) -&gt; TxtEncodedVal -&gt; SQLExp
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; BoolExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#BELit"><span class="hs-identifier hs-var">S.BELit</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span>
-</span><span id="line-66"></span><span>        </span><span class="hs-special">}</span><span>
-</span><span id="line-67"></span><span>
-</span><span id="line-68"></span><span>    </span><span id="local-6989586621690478518"><span class="annot"><span class="annottext">txtEncodedToSQLExp :: ColumnType ('Postgres pgKind) -&gt; TxtEncodedVal -&gt; SQLExp
+</span><span id="line-67"></span><span>        </span><span class="hs-special">}</span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span>    </span><span id="local-6989586621690478518"><span class="annot"><span class="annottext">txtEncodedToSQLExp :: ColumnType ('Postgres pgKind) -&gt; TxtEncodedVal -&gt; SQLExp
 </span><a href="#local-6989586621690478518"><span class="hs-identifier hs-var hs-var">txtEncodedToSQLExp</span></a></span></span><span> </span><span id="local-6989586621690478511"><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
 </span><a href="#local-6989586621690478511"><span class="hs-identifier hs-var">colTy</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-69"></span><span>      </span><span class="annot"><span class="annottext">TxtEncodedVal
+</span><span id="line-70"></span><span>      </span><span class="annot"><span class="annottext">TxtEncodedVal
 </span><a href="Hasura.SQL.Value.html#TENull"><span class="hs-identifier hs-var">TENull</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SENull"><span class="hs-identifier hs-var">S.SENull</span></a></span><span>
-</span><span id="line-70"></span><span>      </span><span class="annot"><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-type">TELit</span></a></span><span> </span><span id="local-6989586621690478507"><span class="annot"><span class="annottext">Text
+</span><span id="line-71"></span><span>      </span><span class="annot"><a href="Hasura.SQL.Value.html#TELit"><span class="hs-identifier hs-type">TELit</span></a></span><span> </span><span id="local-6989586621690478507"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690478507"><span class="hs-identifier hs-var">textValue</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-71"></span><span>        </span><span class="annot"><span class="annottext">PGScalarType -&gt; SQLExp -&gt; SQLExp
+</span><span id="line-72"></span><span>        </span><span class="annot"><span class="annottext">PGScalarType -&gt; SQLExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.Value.html#withScalarTypeAnn"><span class="hs-identifier hs-var">withScalarTypeAnn</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (pgKind :: PostgresKind).
 ColumnType ('Postgres pgKind) -&gt; PGScalarType
 </span><a href="Hasura.Backends.Postgres.Types.Column.html#unsafePGColumnToBackend"><span class="hs-identifier hs-var">unsafePGColumnToBackend</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
@@ -185,4 +186,4 @@ ColumnType ('Postgres pgKind) -&gt; PGScalarType
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SELit"><span class="hs-identifier hs-var">S.SELit</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690478507"><span class="hs-identifier hs-var">textValue</span></a></span><span>
-</span><span id="line-72"></span></pre></body></html>
+</span><span id="line-73"></span></pre></body></html>

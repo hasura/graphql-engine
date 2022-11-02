@@ -1123,7 +1123,7 @@ NonEmpty
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
 </span><span id="line-428"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-429"></span><span>        </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690467036"><span class="annot"><span class="annottext">nonNothingBoolExps :: [GBoolExp b (AnnColumnCaseBoolExpField b (PartialSQLExp b))]
+</span><span id="line-429"></span><span>          </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690467036"><span class="annot"><span class="annottext">nonNothingBoolExps :: [GBoolExp b (AnnColumnCaseBoolExpField b (PartialSQLExp b))]
 </span><a href="#local-6989586621690467036"><span class="hs-identifier hs-var hs-var">nonNothingBoolExps</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Filterable f =&gt; f (Maybe a) -&gt; f a
 </span><span class="hs-identifier hs-var">catMaybes</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; [a]
@@ -1131,7 +1131,7 @@ NonEmpty
   (Maybe
      (GBoolExp b (AnnColumnCaseBoolExpField b (PartialSQLExp b))))
 </span><a href="#local-6989586621690467038"><span class="hs-identifier hs-var">booleanExpressions</span></a></span><span>
-</span><span id="line-430"></span><span>         </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; a -&gt; Bool -&gt; a
+</span><span id="line-430"></span><span>           </span><span class="hs-keyword">in</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; a -&gt; Bool -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">bool</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (backend :: BackendType) field.
@@ -2267,9 +2267,9 @@ RoleName -&gt; TableInfo b -&gt; RolePermInfo b
 </span><a href="#local-6989586621690464642"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
 </span><span id="line-939"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-940"></span><span>    </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
+</span><span id="line-940"></span><span>      </span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromMaybe</span></a></span><span>
-</span><span id="line-941"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span id="line-941"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Maybe (InsPermInfo b)
 -&gt; Maybe (SelPermInfo b)
 -&gt; Maybe (UpdPermInfo b)
@@ -2280,7 +2280,7 @@ Maybe (InsPermInfo b)
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-942"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
+</span><span id="line-942"></span><span>        </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; k -&gt; HashMap k v -&gt; Maybe v
 </span><span class="hs-identifier hs-var">M.lookup</span></span><span> </span><span class="annot"><span class="annottext">RoleName
 </span><a href="#local-6989586621690464643"><span class="hs-keyword hs-var">role</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). TableInfo b -&gt; RolePermInfoMap b
@@ -2693,64 +2693,65 @@ MonadError QErr m =&gt;
 FieldInfoMap fieldInfo -&gt; FieldName -&gt; m fieldInfo
 </span><a href="Hasura.RQL.Types.Table.html#askFieldInfo"><span class="hs-identifier hs-var">askFieldInfo</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo backend)
 </span><a href="#local-6989586621690464253"><span class="hs-identifier hs-var">fields</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; FieldName
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-1075"></span><span>        </span><span class="annot"><span class="annottext">ComputedFieldName -&gt; FieldName
 </span><a href="Hasura.RQL.Types.ComputedField.html#fromComputedField"><span class="hs-identifier hs-var">fromComputedField</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
 </span><a href="#local-6989586621690464252"><span class="hs-identifier hs-var">computedField</span></a></span><span>
-</span><span id="line-1075"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FieldInfo backend
+</span><span id="line-1076"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FieldInfo backend
 </span><a href="#local-6989586621690464251"><span class="hs-identifier hs-var">fieldInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-1076"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo backend
+</span><span id="line-1077"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIColumn"><span class="hs-identifier hs-type">FIColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo backend
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (ComputedFieldInfo backend)
 </span><a href="#local-6989586621690464250"><span class="hs-identifier hs-var">throwErr</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;column&quot;</span></span><span>
-</span><span id="line-1077"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRelationship"><span class="hs-identifier hs-type">FIRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo backend
+</span><span id="line-1078"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRelationship"><span class="hs-identifier hs-type">FIRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo backend
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (ComputedFieldInfo backend)
 </span><a href="#local-6989586621690464250"><span class="hs-identifier hs-var">throwErr</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;relationship&quot;</span></span><span>
-</span><span id="line-1078"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRemoteRelationship"><span class="hs-identifier hs-type">FIRemoteRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteFieldInfo (DBJoinField backend)
+</span><span id="line-1079"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRemoteRelationship"><span class="hs-identifier hs-type">FIRemoteRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteFieldInfo (DBJoinField backend)
 </span><span class="hs-identifier">_</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Text -&gt; m (ComputedFieldInfo backend)
 </span><a href="#local-6989586621690464250"><span class="hs-identifier hs-var">throwErr</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;remote relationship&quot;</span></span><span>
-</span><span id="line-1079"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIComputedField"><span class="hs-identifier hs-type">FIComputedField</span></a></span><span> </span><span id="local-6989586621690464249"><span class="annot"><span class="annottext">ComputedFieldInfo backend
+</span><span id="line-1080"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIComputedField"><span class="hs-identifier hs-type">FIComputedField</span></a></span><span> </span><span id="local-6989586621690464249"><span class="annot"><span class="annottext">ComputedFieldInfo backend
 </span><a href="#local-6989586621690464249"><span class="hs-identifier hs-var">cci</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldInfo backend
 </span><a href="#local-6989586621690464249"><span class="hs-identifier hs-var">cci</span></a></span><span>
-</span><span id="line-1080"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-1081"></span><span>    </span><span id="local-6989586621690464250"><span class="annot"><span class="annottext">throwErr :: Text -&gt; m (ComputedFieldInfo backend)
+</span><span id="line-1081"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-1082"></span><span>    </span><span id="local-6989586621690464250"><span class="annot"><span class="annottext">throwErr :: Text -&gt; m (ComputedFieldInfo backend)
 </span><a href="#local-6989586621690464250"><span class="hs-identifier hs-var hs-var">throwErr</span></a></span></span><span> </span><span id="local-6989586621690464248"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690464248"><span class="hs-identifier hs-var">fieldType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-1082"></span><span>      </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
+</span><span id="line-1083"></span><span>      </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">throwError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1083"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
+</span><span id="line-1084"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="Hasura.Base.Error.html#err400"><span class="hs-identifier hs-var">err400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1084"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-1085"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expecting a computed field; but, &quot;</span></span><span>
-</span><span id="line-1085"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-1086"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ComputedFieldName
 </span><a href="#local-6989586621690464252"><span class="hs-identifier hs-var">computedField</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is a &quot;</span></span><span>
-</span><span id="line-1086"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-1087"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690464248"><span class="hs-identifier hs-var">fieldType</span></a></span><span>
-</span><span id="line-1087"></span><span>
-</span><span id="line-1088"></span><span class="annot"><a href="Hasura.RQL.Types.Table.html#assertColumnExists"><span class="hs-identifier hs-type">assertColumnExists</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-1089"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690469369"><span class="annot"><a href="#local-6989586621690469369"><span class="hs-identifier hs-type">backend</span></a></span></span><span> </span><span id="local-6989586621690469370"><span class="annot"><a href="#local-6989586621690469370"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
-</span><span id="line-1090"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469370"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469369"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-1091"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469369"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-1092"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-1093"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469369"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-1094"></span><span>  </span><span class="annot"><a href="#local-6989586621690469370"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-1095"></span><span id="assertColumnExists"><span class="annot"><span class="annottext">assertColumnExists :: forall (backend :: BackendType) (m :: * -&gt; *).
+</span><span id="line-1088"></span><span>
+</span><span id="line-1089"></span><span class="annot"><a href="Hasura.RQL.Types.Table.html#assertColumnExists"><span class="hs-identifier hs-type">assertColumnExists</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-1090"></span><span>  </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621690469369"><span class="annot"><a href="#local-6989586621690469369"><span class="hs-identifier hs-type">backend</span></a></span></span><span> </span><span id="local-6989586621690469370"><span class="annot"><a href="#local-6989586621690469370"><span class="hs-identifier hs-type">m</span></a></span></span><span class="hs-operator">.</span><span>
+</span><span id="line-1091"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469370"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469369"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-1092"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469369"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-1093"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-1094"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Column"><span class="hs-identifier hs-type">Column</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469369"><span class="hs-identifier hs-type">backend</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-1095"></span><span>  </span><span class="annot"><a href="#local-6989586621690469370"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-1096"></span><span id="assertColumnExists"><span class="annot"><span class="annottext">assertColumnExists :: forall (backend :: BackendType) (m :: * -&gt; *).
 (MonadError QErr m, Backend backend) =&gt;
 FieldInfoMap (FieldInfo backend) -&gt; Text -&gt; Column backend -&gt; m ()
 </span><a href="Hasura.RQL.Types.Table.html#assertColumnExists"><span class="hs-identifier hs-var hs-var">assertColumnExists</span></a></span></span><span> </span><span id="local-6989586621690464239"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo backend)
 </span><a href="#local-6989586621690464239"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span id="local-6989586621690464238"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690464238"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span id="local-6989586621690464237"><span class="annot"><span class="annottext">Column backend
 </span><a href="#local-6989586621690464237"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-1096"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
+</span><span id="line-1097"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Functor f =&gt; f a -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">void</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) (backend :: BackendType).
 (MonadError QErr m, Backend backend) =&gt;
@@ -2760,14 +2761,14 @@ FieldInfoMap (FieldInfo backend)
 </span><a href="#local-6989586621690464239"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="annot"><span class="annottext">Column backend
 </span><a href="#local-6989586621690464237"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690464238"><span class="hs-identifier hs-var">msg</span></a></span><span>
-</span><span id="line-1097"></span><span>
-</span><span id="line-1098"></span><span id="local-6989586621690469363"><span id="local-6989586621690469364"><span class="annot"><a href="Hasura.RQL.Types.Table.html#askRelType"><span class="hs-identifier hs-type">askRelType</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-1099"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469364"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-1100"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469363"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-1101"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-1102"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-1103"></span><span>  </span><span class="annot"><a href="#local-6989586621690469364"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469363"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span></span></span><span>
-</span><span id="line-1104"></span><span id="askRelType"><span class="annot"><span class="annottext">askRelType :: forall (m :: * -&gt; *) (backend :: BackendType).
+</span><span id="line-1098"></span><span>
+</span><span id="line-1099"></span><span id="local-6989586621690469363"><span id="local-6989586621690469364"><span class="annot"><a href="Hasura.RQL.Types.Table.html#askRelType"><span class="hs-identifier hs-type">askRelType</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-1100"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469364"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-1101"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469363"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-1102"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-1103"></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Text</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-1104"></span><span>  </span><span class="annot"><a href="#local-6989586621690469364"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Local.html#RelInfo"><span class="hs-identifier hs-type">RelInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469363"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-1105"></span><span id="askRelType"><span class="annot"><span class="annottext">askRelType :: forall (m :: * -&gt; *) (backend :: BackendType).
 MonadError QErr m =&gt;
 FieldInfoMap (FieldInfo backend)
 -&gt; RelName -&gt; Text -&gt; m (RelInfo backend)
@@ -2775,59 +2776,59 @@ FieldInfoMap (FieldInfo backend)
 </span><a href="#local-6989586621690464220"><span class="hs-identifier hs-var">m</span></a></span></span><span> </span><span id="local-6989586621690464219"><span class="annot"><span class="annottext">RelName
 </span><a href="#local-6989586621690464219"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span id="local-6989586621690464218"><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690464218"><span class="hs-identifier hs-var">msg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-1105"></span><span>  </span><span id="local-6989586621690464217"><span class="annot"><span class="annottext">FieldInfo backend
+</span><span id="line-1106"></span><span>  </span><span id="local-6989586621690464217"><span class="annot"><span class="annottext">FieldInfo backend
 </span><a href="#local-6989586621690464217"><span class="hs-identifier hs-var">colInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span>
-</span><span id="line-1106"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; (Text -&gt; Text) -&gt; m a -&gt; m a
+</span><span id="line-1107"></span><span>    </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; (Text -&gt; Text) -&gt; m a -&gt; m a
 </span><a href="Hasura.Base.Error.html#modifyErr"><span class="hs-identifier hs-var">modifyErr</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;relationship &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1107"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) fieldInfo.
+</span><span id="line-1108"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) fieldInfo.
 MonadError QErr m =&gt;
 FieldInfoMap fieldInfo -&gt; FieldName -&gt; m fieldInfo
 </span><a href="Hasura.RQL.Types.Table.html#askFieldInfo"><span class="hs-identifier hs-var">askFieldInfo</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo backend)
 </span><a href="#local-6989586621690464220"><span class="hs-identifier hs-var">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelName -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Relationships.Local.html#fromRel"><span class="hs-identifier hs-var">fromRel</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
 </span><a href="#local-6989586621690464219"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-1108"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FieldInfo backend
+</span><span id="line-1109"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FieldInfo backend
 </span><a href="#local-6989586621690464217"><span class="hs-identifier hs-var">colInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-1109"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRelationship"><span class="hs-identifier hs-type">FIRelationship</span></a></span><span> </span><span id="local-6989586621690464216"><span class="annot"><span class="annottext">RelInfo backend
+</span><span id="line-1110"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRelationship"><span class="hs-identifier hs-type">FIRelationship</span></a></span><span> </span><span id="local-6989586621690464216"><span class="annot"><span class="annottext">RelInfo backend
 </span><a href="#local-6989586621690464216"><span class="hs-identifier hs-var">relInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">RelInfo backend
 </span><a href="#local-6989586621690464216"><span class="hs-identifier hs-var">relInfo</span></a></span><span>
-</span><span id="line-1110"></span><span>    </span><span class="annot"><span class="annottext">FieldInfo backend
+</span><span id="line-1111"></span><span>    </span><span class="annot"><span class="annottext">FieldInfo backend
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-1111"></span><span>      </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
+</span><span id="line-1112"></span><span>      </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">throwError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1112"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
+</span><span id="line-1113"></span><span>        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="Hasura.Base.Error.html#err400"><span class="hs-identifier hs-var">err400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-1113"></span><span>          </span><span class="annot"><span class="annottext">Text
+</span><span id="line-1114"></span><span>          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expecting a relationship; but, &quot;</span></span><span>
-</span><span id="line-1114"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-1115"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
 </span><a href="#local-6989586621690464219"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot; is a postgres column; &quot;</span></span><span>
-</span><span id="line-1115"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-1116"></span><span>            </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690464218"><span class="hs-identifier hs-var">msg</span></a></span><span>
-</span><span id="line-1116"></span><span>
-</span><span id="line-1117"></span><span id="local-6989586621690469358"><span id="local-6989586621690469359"><span class="annot"><a href="Hasura.RQL.Types.Table.html#askRemoteRel"><span class="hs-identifier hs-type">askRemoteRel</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-1118"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469359"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
-</span><span id="line-1119"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469358"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-1120"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-1121"></span><span>  </span><span class="annot"><a href="#local-6989586621690469359"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RemoteFieldInfo"><span class="hs-identifier hs-type">RemoteFieldInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#DBJoinField"><span class="hs-identifier hs-type">DBJoinField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469358"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
-</span><span id="line-1122"></span><span id="askRemoteRel"><span class="annot"><span class="annottext">askRemoteRel :: forall (m :: * -&gt; *) (backend :: BackendType).
+</span><span id="line-1117"></span><span>
+</span><span id="line-1118"></span><span id="local-6989586621690469358"><span id="local-6989586621690469359"><span class="annot"><a href="Hasura.RQL.Types.Table.html#askRemoteRel"><span class="hs-identifier hs-type">askRemoteRel</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-1119"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-type">MonadError</span></a></span><span> </span><span class="annot"><a href="Hasura.Base.Error.html#QErr"><span class="hs-identifier hs-type">QErr</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469359"><span class="hs-identifier hs-type">m</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span>
+</span><span id="line-1120"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfoMap"><span class="hs-identifier hs-type">FieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FieldInfo"><span class="hs-identifier hs-type">FieldInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469358"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-1121"></span><span>  </span><span class="annot"><a href="Hasura.RQL.Types.Common.html#RelName"><span class="hs-identifier hs-type">RelName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-1122"></span><span>  </span><span class="annot"><a href="#local-6989586621690469359"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#RemoteFieldInfo"><span class="hs-identifier hs-type">RemoteFieldInfo</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#DBJoinField"><span class="hs-identifier hs-type">DBJoinField</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469358"><span class="hs-identifier hs-type">backend</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span></span></span><span>
+</span><span id="line-1123"></span><span id="askRemoteRel"><span class="annot"><span class="annottext">askRemoteRel :: forall (m :: * -&gt; *) (backend :: BackendType).
 MonadError QErr m =&gt;
 FieldInfoMap (FieldInfo backend)
 -&gt; RelName -&gt; m (RemoteFieldInfo (DBJoinField backend))
 </span><a href="Hasura.RQL.Types.Table.html#askRemoteRel"><span class="hs-identifier hs-var hs-var">askRemoteRel</span></a></span></span><span> </span><span id="local-6989586621690464208"><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo backend)
 </span><a href="#local-6989586621690464208"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span></span><span> </span><span id="local-6989586621690464207"><span class="annot"><span class="annottext">RelName
 </span><a href="#local-6989586621690464207"><span class="hs-identifier hs-var">relName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-1123"></span><span>  </span><span id="local-6989586621690464206"><span class="annot"><span class="annottext">FieldInfo backend
+</span><span id="line-1124"></span><span>  </span><span id="local-6989586621690464206"><span class="annot"><span class="annottext">FieldInfo backend
 </span><a href="#local-6989586621690464206"><span class="hs-identifier hs-var">fieldInfo</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) fieldInfo.
 MonadError QErr m =&gt;
 FieldInfoMap fieldInfo -&gt; FieldName -&gt; m fieldInfo
@@ -2835,26 +2836,26 @@ FieldInfoMap fieldInfo -&gt; FieldName -&gt; m fieldInfo
 </span><a href="#local-6989586621690464208"><span class="hs-identifier hs-var">fieldInfoMap</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">RelName -&gt; FieldName
 </span><a href="Hasura.RQL.Types.Common.html#fromRemoteRelationship"><span class="hs-identifier hs-var">fromRemoteRelationship</span></a></span><span> </span><span class="annot"><span class="annottext">RelName
 </span><a href="#local-6989586621690464207"><span class="hs-identifier hs-var">relName</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-1124"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FieldInfo backend
+</span><span id="line-1125"></span><span>  </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">FieldInfo backend
 </span><a href="#local-6989586621690464206"><span class="hs-identifier hs-var">fieldInfo</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-1125"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRemoteRelationship"><span class="hs-identifier hs-type">FIRemoteRelationship</span></a></span><span> </span><span id="local-6989586621690464205"><span class="annot"><span class="annottext">RemoteFieldInfo (DBJoinField backend)
+</span><span id="line-1126"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.Table.html#FIRemoteRelationship"><span class="hs-identifier hs-type">FIRemoteRelationship</span></a></span><span> </span><span id="local-6989586621690464205"><span class="annot"><span class="annottext">RemoteFieldInfo (DBJoinField backend)
 </span><a href="#local-6989586621690464205"><span class="hs-identifier hs-var">remoteFieldInfo</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteFieldInfo (DBJoinField backend)
 </span><a href="#local-6989586621690464205"><span class="hs-identifier hs-var">remoteFieldInfo</span></a></span><span>
-</span><span id="line-1126"></span><span>    </span><span class="annot"><span class="annottext">FieldInfo backend
+</span><span id="line-1127"></span><span>    </span><span class="annot"><span class="annottext">FieldInfo backend
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-1127"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
+</span><span id="line-1128"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. QErrM m =&gt; Code -&gt; Text -&gt; m a
 </span><a href="Hasura.Base.Error.html#throw400"><span class="hs-identifier hs-var">throw400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;expecting a remote relationship&quot;</span></span><span>
-</span><span id="line-1128"></span><span>
-</span><span id="line-1129"></span><span id="local-6989586621690469355"><span class="annot"><a href="Hasura.RQL.Types.Table.html#mkAdminRolePermInfo"><span class="hs-identifier hs-type">mkAdminRolePermInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469355"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableCoreInfo"><span class="hs-identifier hs-type">TableCoreInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469355"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469355"><span class="hs-identifier hs-type">b</span></a></span></span><span>
-</span><span id="line-1130"></span><span id="mkAdminRolePermInfo"><span class="annot"><span class="annottext">mkAdminRolePermInfo :: forall (b :: BackendType).
+</span><span id="line-1129"></span><span>
+</span><span id="line-1130"></span><span id="local-6989586621690469355"><span class="annot"><a href="Hasura.RQL.Types.Table.html#mkAdminRolePermInfo"><span class="hs-identifier hs-type">mkAdminRolePermInfo</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Backend.html#Backend"><span class="hs-identifier hs-type">Backend</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469355"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#TableCoreInfo"><span class="hs-identifier hs-type">TableCoreInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469355"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Table.html#RolePermInfo"><span class="hs-identifier hs-type">RolePermInfo</span></a></span><span> </span><span class="annot"><a href="#local-6989586621690469355"><span class="hs-identifier hs-type">b</span></a></span></span><span>
+</span><span id="line-1131"></span><span id="mkAdminRolePermInfo"><span class="annot"><span class="annottext">mkAdminRolePermInfo :: forall (b :: BackendType).
 Backend b =&gt;
 TableCoreInfo b -&gt; RolePermInfo b
 </span><a href="Hasura.RQL.Types.Table.html#mkAdminRolePermInfo"><span class="hs-identifier hs-var hs-var">mkAdminRolePermInfo</span></a></span></span><span> </span><span id="local-6989586621690464183"><span class="annot"><span class="annottext">TableCoreInfo b
 </span><a href="#local-6989586621690464183"><span class="hs-identifier hs-var">tableInfo</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-1131"></span><span>  </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span id="line-1132"></span><span>  </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Maybe (InsPermInfo b)
 -&gt; Maybe (SelPermInfo b)
 -&gt; Maybe (UpdPermInfo b)
@@ -2869,13 +2870,13 @@ Maybe (InsPermInfo b)
 </span><a href="#local-6989586621690464180"><span class="hs-identifier hs-var">u</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. a -&gt; Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Just</span></a></span><span> </span><span class="annot"><span class="annottext">DelPermInfo b
 </span><a href="#local-6989586621690464179"><span class="hs-identifier hs-var">d</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-1132"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-1133"></span><span>    </span><span id="local-6989586621690464178"><span class="annot"><span class="annottext">fields :: FieldInfoMap (FieldInfo b)
+</span><span id="line-1133"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-1134"></span><span>    </span><span id="local-6989586621690464178"><span class="annot"><span class="annottext">fields :: FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621690464178"><span class="hs-identifier hs-var hs-var">fields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
 </span><a href="Hasura.RQL.Types.Table.html#_tciFieldInfoMap"><span class="hs-identifier hs-var">_tciFieldInfoMap</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
 </span><a href="#local-6989586621690464183"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-1134"></span><span>    </span><span id="local-6989586621690464177"><span class="annot"><span class="annottext">pgCols :: [Column b]
+</span><span id="line-1135"></span><span>    </span><span id="local-6989586621690464177"><span class="annot"><span class="annottext">pgCols :: [Column b]
 </span><a href="#local-6989586621690464177"><span class="hs-identifier hs-var hs-var">pgCols</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -2883,19 +2884,19 @@ TableCoreInfoG b field primaryKeyColumn -&gt; FieldInfoMap field
 FieldInfoMap (FieldInfo backend) -&gt; [ColumnInfo backend]
 </span><a href="Hasura.RQL.Types.Table.html#getCols"><span class="hs-identifier hs-var">getCols</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621690464178"><span class="hs-identifier hs-var">fields</span></a></span><span>
-</span><span id="line-1135"></span><span>    </span><span id="local-6989586621690464176"><span class="annot"><span class="annottext">pgColsWithFilter :: HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
+</span><span id="line-1136"></span><span>    </span><span id="local-6989586621690464176"><span class="annot"><span class="annottext">pgColsWithFilter :: HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 </span><a href="#local-6989586621690464176"><span class="hs-identifier hs-var hs-var">pgColsWithFilter</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall k v. (Eq k, Hashable k) =&gt; [(k, v)] -&gt; HashMap k v
 </span><span class="hs-identifier hs-var">M.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Column b]
 </span><a href="#local-6989586621690464177"><span class="hs-identifier hs-var">pgCols</span></a></span><span>
-</span><span id="line-1136"></span><span>    </span><span id="local-6989586621690464174"><span class="annot"><span class="annottext">computedFields :: HashSet ComputedFieldName
+</span><span id="line-1137"></span><span>    </span><span id="local-6989586621690464174"><span class="annot"><span class="annottext">computedFields :: HashSet ComputedFieldName
 </span><a href="#local-6989586621690464174"><span class="hs-identifier hs-var hs-var">computedFields</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-1137"></span><span>      </span><span class="hs-comment">-- Fetch the list of computed fields not returning rows of existing table.</span><span>
-</span><span id="line-1138"></span><span>      </span><span class="hs-comment">-- For other computed fields returning existing table rows, the admin role can query them</span><span>
-</span><span id="line-1139"></span><span>      </span><span class="hs-comment">-- as their permissions are derived from returning table permissions.</span><span>
-</span><span id="line-1140"></span><span>      </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
+</span><span id="line-1138"></span><span>      </span><span class="hs-comment">-- Fetch the list of computed fields not returning rows of existing table.</span><span>
+</span><span id="line-1139"></span><span>      </span><span class="hs-comment">-- For other computed fields returning existing table rows, the admin role can query them</span><span>
+</span><span id="line-1140"></span><span>      </span><span class="hs-comment">-- as their permissions are derived from returning table permissions.</span><span>
+</span><span id="line-1141"></span><span>      </span><span class="annot"><span class="annottext">forall a. (Eq a, Hashable a) =&gt; [a] -&gt; HashSet a
 </span><span class="hs-identifier hs-var">HS.fromList</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ComputedFieldInfo b -&gt; ComputedFieldName
@@ -2908,20 +2909,20 @@ Backend backend =&gt;
 FieldInfoMap (FieldInfo backend) -&gt; [ComputedFieldInfo backend]
 </span><a href="Hasura.RQL.Types.Table.html#getComputedFieldInfos"><span class="hs-identifier hs-var">getComputedFieldInfos</span></a></span><span> </span><span class="annot"><span class="annottext">FieldInfoMap (FieldInfo b)
 </span><a href="#local-6989586621690464178"><span class="hs-identifier hs-var">fields</span></a></span><span>
-</span><span id="line-1141"></span><span>    </span><span id="local-6989586621690464172"><span class="annot"><span class="annottext">computedFields' :: HashMap
+</span><span id="line-1142"></span><span>    </span><span id="local-6989586621690464172"><span class="annot"><span class="annottext">computedFields' :: HashMap
   ComputedFieldName (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 </span><a href="#local-6989586621690464172"><span class="hs-identifier hs-var hs-var">computedFields'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall a. HashSet a -&gt; HashMap a ()
 </span><span class="hs-identifier hs-var">HS.toMap</span></span><span> </span><span class="annot"><span class="annottext">HashSet ComputedFieldName
 </span><a href="#local-6989586621690464174"><span class="hs-identifier hs-var">computedFields</span></a></span><span> </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; f a -&gt; b -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-1142"></span><span>
-</span><span id="line-1143"></span><span>    </span><span id="local-6989586621690464169"><span class="annot"><span class="annottext">tableName :: TableName b
+</span><span id="line-1143"></span><span>
+</span><span id="line-1144"></span><span>    </span><span id="local-6989586621690464169"><span class="annot"><span class="annottext">tableName :: TableName b
 </span><a href="#local-6989586621690464169"><span class="hs-identifier hs-var hs-var">tableName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType) field primaryKeyColumn.
 TableCoreInfoG b field primaryKeyColumn -&gt; TableName b
 </span><a href="Hasura.RQL.Types.Table.html#_tciName"><span class="hs-identifier hs-var">_tciName</span></a></span><span> </span><span class="annot"><span class="annottext">TableCoreInfo b
 </span><a href="#local-6989586621690464183"><span class="hs-identifier hs-var">tableInfo</span></a></span><span>
-</span><span id="line-1144"></span><span>    </span><span id="local-6989586621690464182"><span class="annot"><span class="annottext">i :: InsPermInfo b
+</span><span id="line-1145"></span><span>    </span><span id="local-6989586621690464182"><span class="annot"><span class="annottext">i :: InsPermInfo b
 </span><a href="#local-6989586621690464182"><span class="hs-identifier hs-var hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 HashSet (Column b)
 -&gt; AnnBoolExpPartialSQL b
@@ -2936,7 +2937,7 @@ HashSet (Column b)
 </span><span class="hs-identifier hs-var">M.empty</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span>
-</span><span id="line-1145"></span><span>    </span><span id="local-6989586621690464181"><span class="annot"><span class="annottext">s :: SelPermInfo b
+</span><span id="line-1146"></span><span>    </span><span id="local-6989586621690464181"><span class="annot"><span class="annottext">s :: SelPermInfo b
 </span><a href="#local-6989586621690464181"><span class="hs-identifier hs-var hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 -&gt; HashMap
@@ -2958,7 +2959,7 @@ HashMap (Column b) (Maybe (AnnColumnCaseBoolExpPartialSQL b))
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span> </span><span class="annot"><span class="annottext">forall rootFieldType. AllowedRootFields rootFieldType
 </span><a href="Hasura.RQL.Types.Permission.html#ARFAllowAllRootFields"><span class="hs-identifier hs-var">ARFAllowAllRootFields</span></a></span><span> </span><span class="annot"><span class="annottext">forall rootFieldType. AllowedRootFields rootFieldType
 </span><a href="Hasura.RQL.Types.Permission.html#ARFAllowAllRootFields"><span class="hs-identifier hs-var">ARFAllowAllRootFields</span></a></span><span>
-</span><span id="line-1146"></span><span>    </span><span id="local-6989586621690464180"><span class="annot"><span class="annottext">u :: UpdPermInfo b
+</span><span id="line-1147"></span><span>    </span><span id="local-6989586621690464180"><span class="annot"><span class="annottext">u :: UpdPermInfo b
 </span><a href="#local-6989586621690464180"><span class="hs-identifier hs-var hs-var">u</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 HashSet (Column b)
 -&gt; TableName b
@@ -2977,7 +2978,7 @@ HashSet (Column b)
 </span><span class="hs-identifier hs-var">M.empty</span></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span>
-</span><span id="line-1147"></span><span>    </span><span id="local-6989586621690464179"><span class="annot"><span class="annottext">d :: DelPermInfo b
+</span><span id="line-1148"></span><span>    </span><span id="local-6989586621690464179"><span class="annot"><span class="annottext">d :: DelPermInfo b
 </span><a href="#local-6989586621690464179"><span class="hs-identifier hs-var hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 TableName b
 -&gt; AnnBoolExpPartialSQL b -&gt; Bool -&gt; HashSet Text -&gt; DelPermInfo b
@@ -2986,4 +2987,4 @@ TableName b
 </span><a href="Hasura.RQL.IR.BoolExp.html#annBoolExpTrue"><span class="hs-identifier hs-var">annBoolExpTrue</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Monoid a =&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">mempty</span></a></span><span>
-</span><span id="line-1148"></span></pre></body></html>
+</span><span id="line-1149"></span></pre></body></html>

@@ -163,14 +163,14 @@ $cshowsPrec :: Int -&gt; ConnectionRestricted -&gt; ShowS
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Network.HTTP.Client.Restricted.html#ConnectionRestricted"><span class="hs-identifier hs-type">ConnectionRestricted</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall e. Exception e =&gt; SomeException -&gt; Maybe e
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromException</span></a></span><span> </span><span class="annot"><span class="annottext">SomeException
 </span><a href="#local-6989586621690301862"><span class="hs-identifier hs-var">se</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-98"></span><span>          </span><span class="annot"><span class="annottext">forall e. Exception e =&gt; e -&gt; SomeException
+</span><span id="line-98"></span><span>            </span><span class="annot"><span class="annottext">forall e. Exception e =&gt; e -&gt; SomeException
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">toException</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-99"></span><span>            </span><span class="annot"><span class="annottext">Request -&gt; HttpExceptionContent -&gt; HttpException
+</span><span id="line-99"></span><span>              </span><span class="annot"><span class="annottext">Request -&gt; HttpExceptionContent -&gt; HttpException
 </span><span class="hs-identifier hs-var">HTTP.HttpExceptionRequest</span></span><span> </span><span class="annot"><span class="annottext">Request
 </span><a href="#local-6989586621690301865"><span class="hs-identifier hs-var">req</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-100"></span><span>              </span><span class="annot"><span class="annottext">SomeException -&gt; HttpExceptionContent
+</span><span id="line-100"></span><span>                </span><span class="annot"><span class="annottext">SomeException -&gt; HttpExceptionContent
 </span><span class="hs-identifier hs-var">HTTP.InternalException</span></span><span> </span><span class="annot"><span class="annottext">SomeException
 </span><a href="#local-6989586621690301862"><span class="hs-identifier hs-var">se</span></a></span><span>
 </span><span id="line-101"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool

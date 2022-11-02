@@ -695,16 +695,16 @@ arr (e, (a, s)) b -&gt; arr (e, (t a, s)) ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">/=</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/graphql-parser-0.2.0.0/opt/doc/html/graphql-parser/src"><span class="hs-identifier hs-var">G.unName</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690626294"><span class="hs-identifier hs-var">fieldGQLName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-187"></span><span>                                  </span><span class="annot"><span class="annottext">forall e (arr :: * -&gt; * -&gt; *) a. ArrowError e arr =&gt; arr e a
+</span><span id="line-187"></span><span>                                    </span><span class="annot"><span class="annottext">forall e (arr :: * -&gt; * -&gt; *) a. ArrowError e arr =&gt; arr e a
 </span><a href="Control.Arrow.Trans.html#throwA"><span class="hs-identifier hs-var">throwA</span></a></span><span>
-</span><span id="line-188"></span><span>                                    </span><span class="hs-glyph">-&lt;</span><span>
-</span><span id="line-189"></span><span>                                      </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
+</span><span id="line-188"></span><span>                                      </span><span class="hs-glyph">-&lt;</span><span>
+</span><span id="line-189"></span><span>                                        </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="Hasura.Base.Error.html#err400"><span class="hs-identifier hs-var">err400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#AlreadyExists"><span class="hs-identifier hs-var">AlreadyExists</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-190"></span><span>                                        </span><span class="annot"><span class="annottext">Text
+</span><span id="line-190"></span><span>                                          </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;field definition conflicts with custom field name for postgres column &quot;</span></span><span>
-</span><span id="line-191"></span><span>                                          </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
+</span><span id="line-191"></span><span>                                            </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; Text -&gt; t -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3E%3E"><span class="hs-operator hs-var">&lt;&gt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnInfo b -&gt; Column b
 </span><a href="Hasura.RQL.Types.Column.html#ciColumn"><span class="hs-identifier hs-var">ciColumn</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnInfo b
 </span><a href="#local-6989586621690626292"><span class="hs-identifier hs-var">columnInfo</span></a></span><span>
@@ -1363,11 +1363,10 @@ i b -&gt; AnyBackend i
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#SOITable"><span class="hs-identifier hs-var">SOITable</span></a></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621690626887"><span class="hs-identifier hs-type">b</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690626036"><span class="hs-identifier hs-var">table</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">DependencyReason
 </span><a href="Hasura.RQL.Types.SchemaCacheTypes.html#DRTable"><span class="hs-identifier hs-var">DRTable</span></a></span><span>
-</span><span id="line-359"></span><span>            </span><span class="hs-comment">-- the relationship is also dependent on all the lhs</span><span>
-</span><span id="line-360"></span><span>            </span><span class="hs-comment">-- columns that are used in the join condition</span><span>
-</span><span id="line-361"></span><span>            </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span>
-</span><span id="line-362"></span><span>            </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span id="line-359"></span><span>              </span><span class="hs-comment">-- the relationship is also dependent on all the lhs</span><span>
+</span><span id="line-360"></span><span>              </span><span class="hs-comment">-- columns that are used in the join condition</span><span>
+</span><span id="line-361"></span><span>              </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">flip</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall k v. HashMap k v -&gt; [v]
 </span><span class="hs-identifier hs-var">M.elems</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1375,11 +1374,11 @@ i b -&gt; AnyBackend i
 RemoteFieldInfo lhsJoinField -&gt; HashMap FieldName lhsJoinField
 </span><a href="Hasura.RQL.Types.Relationships.Remote.html#_rfiLHS"><span class="hs-identifier hs-var">_rfiLHS</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteFieldInfo (DBJoinField b)
 </span><a href="#local-6989586621690626027"><span class="hs-identifier hs-var">remoteField</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">\</span><span class="hs-glyph">case</span><span>
-</span><span id="line-363"></span><span>              </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#JoinColumn"><span class="hs-identifier hs-type">JoinColumn</span></a></span><span> </span><span id="local-6989586621690626018"><span class="annot"><span class="annottext">Column b
+</span><span id="line-362"></span><span>                </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#JoinColumn"><span class="hs-identifier hs-type">JoinColumn</span></a></span><span> </span><span id="local-6989586621690626018"><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621690626018"><span class="hs-identifier hs-var">column</span></a></span></span><span> </span><span class="annot"><span class="annottext">ColumnType b
 </span><span class="hs-identifier">_</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-364"></span><span>                </span><span class="hs-comment">-- TODO: shouldn't this be DRColumn??</span><span>
-</span><span id="line-365"></span><span>                </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span id="line-363"></span><span>                  </span><span class="hs-comment">-- TODO: shouldn't this be DRColumn??</span><span>
+</span><span id="line-364"></span><span>                  </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
 DependencyReason
 -&gt; SourceName -&gt; TableName b -&gt; Column b -&gt; SchemaDependency
@@ -1388,9 +1387,9 @@ DependencyReason
 </span><a href="#local-6989586621690626037"><span class="hs-identifier hs-var">source</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690626036"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">Column b
 </span><a href="#local-6989586621690626018"><span class="hs-identifier hs-var">column</span></a></span><span>
-</span><span id="line-366"></span><span>              </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#JoinComputedField"><span class="hs-identifier hs-type">JoinComputedField</span></a></span><span> </span><span id="local-6989586621690626015"><span class="annot"><span class="annottext">ScalarComputedField b
+</span><span id="line-365"></span><span>                </span><span class="annot"><a href="Hasura.RQL.Types.Relationships.Remote.html#JoinComputedField"><span class="hs-identifier hs-type">JoinComputedField</span></a></span><span> </span><span id="local-6989586621690626015"><span class="annot"><span class="annottext">ScalarComputedField b
 </span><a href="#local-6989586621690626015"><span class="hs-identifier hs-var">computedFieldInfo</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-367"></span><span>                </span><span class="annot"><span class="annottext">forall (b :: BackendType).
+</span><span id="line-366"></span><span>                  </span><span class="annot"><span class="annottext">forall (b :: BackendType).
 Backend b =&gt;
 DependencyReason
 -&gt; SourceName
@@ -1405,9 +1404,9 @@ DependencyReason
 ScalarComputedField b -&gt; ComputedFieldName
 </span><a href="Hasura.RQL.Types.Relationships.Remote.html#_scfName"><span class="hs-identifier hs-var">_scfName</span></a></span><span> </span><span class="annot"><span class="annottext">ScalarComputedField b
 </span><a href="#local-6989586621690626015"><span class="hs-identifier hs-var">computedFieldInfo</span></a></span><span>
-</span><span id="line-368"></span><span>      </span><span class="hs-comment">-- Here is the essence of the function: construct dependencies on the RHS</span><span>
-</span><span id="line-369"></span><span>      </span><span class="hs-comment">-- of the join condition.</span><span>
-</span><span id="line-370"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-367"></span><span>      </span><span class="hs-comment">-- Here is the essence of the function: construct dependencies on the RHS</span><span>
+</span><span id="line-368"></span><span>      </span><span class="hs-comment">-- of the join condition.</span><span>
+</span><span id="line-369"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadWriter (Seq CollectedInfo) m =&gt;
 MetadataObject -&gt; SchemaObjId -&gt; [SchemaDependency] -&gt; m ()
 </span><a href="Hasura.RQL.Types.SchemaCache.Build.html#recordDependenciesM"><span class="hs-identifier hs-var">recordDependenciesM</span></a></span><span> </span><span class="annot"><span class="annottext">MetadataObject
@@ -1416,7 +1415,7 @@ MetadataObject -&gt; SchemaObjId -&gt; [SchemaDependency] -&gt; m ()
 </span><a href="#local-6989586621690626023"><span class="hs-identifier hs-var">lhsDependencies</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">[SchemaDependency]
 </span><a href="#local-6989586621690626026"><span class="hs-identifier hs-var">rhsDependencies</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-371"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span id="line-370"></span><span>      </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">RemoteFieldInfo (DBJoinField b)
 </span><a href="#local-6989586621690626027"><span class="hs-identifier hs-var">remoteField</span></a></span><span>
-</span><span id="line-372"></span></pre></body></html>
+</span><span id="line-371"></span></pre></body></html>

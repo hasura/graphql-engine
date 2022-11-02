@@ -404,30 +404,32 @@ field -&gt; OpExpG backend field
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-105"></span><span>            </span><span class="annot"><span class="annottext">forall e (m :: * -&gt; *) a. MonadError e m =&gt; e -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/mtl-2.2.2/src"><span class="hs-identifier hs-var">throwError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall {t} {a}. (ToTxt t, ToTxt a) =&gt; t -&gt; [a] -&gt; QErr
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-106"></span><span>              </span><span class="annot"><span class="annottext">forall {t} {a}. (ToTxt t, ToTxt a) =&gt; t -&gt; [a] -&gt; QErr
 </span><a href="#local-6989586621690527759"><span class="hs-identifier hs-var">buildMsg</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType 'MSSQL
 </span><a href="#local-6989586621690527786"><span class="hs-identifier hs-var">colTy</span></a></span><span> </span><span class="annot"><span class="annottext">[ScalarType]
 </span><a href="#local-6989586621690527764"><span class="hs-identifier hs-var">validTys</span></a></span><span>
-</span><span id="line-106"></span><span>
-</span><span id="line-107"></span><span>        </span><span id="local-6989586621690527759"><span class="annot"><span class="annottext">buildMsg :: t -&gt; [a] -&gt; QErr
+</span><span id="line-107"></span><span>
+</span><span id="line-108"></span><span>        </span><span id="local-6989586621690527759"><span class="annot"><span class="annottext">buildMsg :: t -&gt; [a] -&gt; QErr
 </span><a href="#local-6989586621690527759"><span class="hs-identifier hs-var hs-var">buildMsg</span></a></span></span><span> </span><span id="local-6989586621690527749"><span class="annot"><span class="annottext">t
 </span><a href="#local-6989586621690527749"><span class="hs-identifier hs-var">ty</span></a></span></span><span> </span><span id="local-6989586621690527748"><span class="annot"><span class="annottext">[a]
 </span><a href="#local-6989586621690527748"><span class="hs-identifier hs-var">expTys</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-108"></span><span>          </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
+</span><span id="line-109"></span><span>          </span><span class="annot"><span class="annottext">Code -&gt; Text -&gt; QErr
 </span><a href="Hasura.Base.Error.html#err400"><span class="hs-identifier hs-var">err400</span></a></span><span> </span><span class="annot"><span class="annottext">Code
 </span><a href="Hasura.Base.Error.html#UnexpectedPayload"><span class="hs-identifier hs-var">UnexpectedPayload</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-109"></span><span>            </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot; is of type &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-110"></span><span>            </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot; is of type &quot;</span></span><span>
+</span><span id="line-111"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">t
 </span><a href="#local-6989586621690527749"><span class="hs-identifier hs-var">ty</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;; this operator works only on columns of type &quot;</span></span><span>
-</span><span id="line-110"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-112"></span><span>              </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; [Text] -&gt; Text
 </span><span class="hs-identifier hs-var">T.intercalate</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;/&quot;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">map</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. ToTxt a =&gt; a -&gt; Text
 </span><a href="Data.Text.Extended.html#dquote"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="annot"><span class="annottext">[a]
 </span><a href="#local-6989586621690527748"><span class="hs-identifier hs-var">expTys</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-111"></span></pre></body></html>
+</span><span id="line-113"></span></pre></body></html>

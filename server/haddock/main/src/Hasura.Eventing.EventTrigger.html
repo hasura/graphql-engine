@@ -731,22 +731,22 @@ Async a -&gt; m a
 </span><a href="#local-6989586621690594462"><span class="hs-identifier hs-var">lenEvents</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690594603"><span class="hs-identifier hs-var">fetchBatchSize</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-320"></span><span>            </span><span class="hs-comment">-- If we've seen N fetches in a row from the DB come back full (i.e. only limited</span><span>
-</span><span id="line-321"></span><span>            </span><span class="hs-comment">-- by our LIMIT clause), then we say we're clearly falling behind:</span><span>
-</span><span id="line-322"></span><span>            </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690594461"><span class="annot"><span class="annottext">clearlyBehind :: Bool
+</span><span id="line-320"></span><span>              </span><span class="hs-comment">-- If we've seen N fetches in a row from the DB come back full (i.e. only limited</span><span>
+</span><span id="line-321"></span><span>              </span><span class="hs-comment">-- by our LIMIT clause), then we say we're clearly falling behind:</span><span>
+</span><span id="line-322"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621690594461"><span class="annot"><span class="annottext">clearlyBehind :: Bool
 </span><a href="#local-6989586621690594461"><span class="hs-identifier hs-var hs-var">clearlyBehind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690594517"><span class="hs-identifier hs-var">fullFetchCount</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&gt;=</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">3</span></span><span>
-</span><span id="line-323"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span id="line-323"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">unless</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621690594516"><span class="hs-identifier hs-var">alreadyWarned</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-324"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span id="line-324"></span><span>                </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621690594461"><span class="hs-identifier hs-var">clearlyBehind</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-325"></span><span>                </span><span class="annot"><span class="annottext">forall impl.
+</span><span id="line-325"></span><span>                  </span><span class="annot"><span class="annottext">forall impl.
 Logger impl
 -&gt; forall a (m :: * -&gt; *).
    (ToEngineLog a impl, MonadIO m) =&gt;
@@ -754,22 +754,22 @@ Logger impl
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">L.unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621690594619"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-326"></span><span>                  </span><span class="annot"><span class="annottext">LogLevel -&gt; SerializableBlob -&gt; UnstructuredLog
+</span><span id="line-326"></span><span>                    </span><span class="annot"><span class="annottext">LogLevel -&gt; SerializableBlob -&gt; UnstructuredLog
 </span><a href="Hasura.Logging.html#UnstructuredLog"><span class="hs-identifier hs-var">L.UnstructuredLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelWarn"><span class="hs-identifier hs-var">L.LevelWarn</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-327"></span><span>                    </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
+</span><span id="line-327"></span><span>                      </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromString</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-328"></span><span>                      </span><span class="annot"><span class="annottext">String
+</span><span id="line-328"></span><span>                        </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;Events processor may not be keeping up with events generated in postgres, &quot;</span></span><span>
-</span><span id="line-329"></span><span>                        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-329"></span><span>                          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;or we're working on a backlog of events. Consider increasing &quot;</span></span><span>
-</span><span id="line-330"></span><span>                        </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-330"></span><span>                          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;HASURA_GRAPHQL_EVENTS_HTTP_POOL_SIZE&quot;</span></span><span>
-</span><span id="line-331"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span id="line-331"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[BackendEventWithSource]
 </span><a href="#local-6989586621690594513"><span class="hs-identifier hs-var">eventsNext</span></a></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690594517"><span class="hs-identifier hs-var">fullFetchCount</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Num a =&gt; a -&gt; a -&gt; a
@@ -780,7 +780,7 @@ Logger impl
 </span><a href="#local-6989586621690594461"><span class="hs-identifier hs-var">clearlyBehind</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-332"></span><span>          </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-333"></span><span>            </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
+</span><span id="line-333"></span><span>              </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *). Applicative f =&gt; Bool -&gt; f () -&gt; f ()
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">when</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690594462"><span class="hs-identifier hs-var">lenEvents</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">/=</span></a></span><span> </span><span class="annot"><span class="annottext">Int
@@ -788,8 +788,8 @@ Logger impl
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">&amp;&amp;</span></a></span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="#local-6989586621690594516"><span class="hs-identifier hs-var">alreadyWarned</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-334"></span><span>              </span><span class="hs-comment">-- emit as warning in case users are only logging warning severity and saw above</span><span>
-</span><span id="line-335"></span><span>              </span><span class="annot"><span class="annottext">forall impl.
+</span><span id="line-334"></span><span>                </span><span class="hs-comment">-- emit as warning in case users are only logging warning severity and saw above</span><span>
+</span><span id="line-335"></span><span>                </span><span class="annot"><span class="annottext">forall impl.
 Logger impl
 -&gt; forall a (m :: * -&gt; *).
    (ToEngineLog a impl, MonadIO m) =&gt;
@@ -797,16 +797,16 @@ Logger impl
 </span><a href="Hasura.Logging.html#unLogger"><span class="hs-identifier hs-var">L.unLogger</span></a></span><span> </span><span class="annot"><span class="annottext">Logger Hasura
 </span><a href="#local-6989586621690594619"><span class="hs-identifier hs-var">logger</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-336"></span><span>                </span><span class="annot"><span class="annottext">LogLevel -&gt; SerializableBlob -&gt; UnstructuredLog
+</span><span id="line-336"></span><span>                  </span><span class="annot"><span class="annottext">LogLevel -&gt; SerializableBlob -&gt; UnstructuredLog
 </span><a href="Hasura.Logging.html#UnstructuredLog"><span class="hs-identifier hs-var">L.UnstructuredLog</span></a></span><span> </span><span class="annot"><span class="annottext">LogLevel
 </span><a href="Hasura.Logging.html#LevelWarn"><span class="hs-identifier hs-var">L.LevelWarn</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-337"></span><span>                  </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
+</span><span id="line-337"></span><span>                    </span><span class="annot"><span class="annottext">forall a. IsString a =&gt; String -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">fromString</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-338"></span><span>                    </span><span class="annot"><span class="annottext">String
+</span><span id="line-338"></span><span>                      </span><span class="annot"><span class="annottext">String
 </span><span class="hs-string">&quot;It looks like the events processor is keeping up again.&quot;</span></span><span>
-</span><span id="line-339"></span><span>            </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
+</span><span id="line-339"></span><span>              </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[BackendEventWithSource]
 </span><a href="#local-6989586621690594513"><span class="hs-identifier hs-var">eventsNext</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">0</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Bool
@@ -1751,17 +1751,18 @@ SourceName -&gt; TableName b -&gt; SourceCache -&gt; Maybe (TableInfo b)
 </span><span id="line-565"></span><span>    </span><span class="annot"><span class="annottext">forall a b. a -&gt; Either a b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Left</span></a></span><span>
 </span><span id="line-566"></span><span>      </span><span class="hs-special">(</span><span> </span><span class="annot"><span class="annottext">Text
-</span><span class="hs-string">&quot;event trigger '&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-string">&quot;event trigger '&quot;</span></span><span>
+</span><span id="line-567"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName -&gt; Text
 </span><a href="Hasura.RQL.Types.EventTrigger.html#triggerNameToTxt"><span class="hs-identifier hs-var">triggerNameToTxt</span></a></span><span> </span><span class="annot"><span class="annottext">TriggerName
 </span><a href="#local-6989586621690594041"><span class="hs-identifier hs-var">triggerName</span></a></span><span>
-</span><span id="line-567"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-568"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' on table '&quot;</span></span><span>
-</span><span id="line-568"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span id="line-569"></span><span>          </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">TableName b
 </span><a href="#local-6989586621690594048"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">forall t. ToTxt t =&gt; t -&gt; Text -&gt; Text
 </span><a href="Data.Text.Extended.html#%3C%3C%3E"><span class="hs-operator hs-var">&lt;&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;' not found&quot;</span></span><span>
-</span><span id="line-569"></span><span>      </span><span class="hs-special">)</span><span>
-</span><span id="line-570"></span></pre></body></html>
+</span><span id="line-570"></span><span>      </span><span class="hs-special">)</span><span>
+</span><span id="line-571"></span></pre></body></html>

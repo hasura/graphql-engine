@@ -339,21 +339,23 @@ v
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-140"></span><span>              </span><span class="annot"><span class="annottext">ConnPoolSettings -&gt; Word
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscMaxConnections"><span class="hs-identifier hs-var">MySQL._cscMaxConnections</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ConnPoolSettings
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-141"></span><span>                </span><span class="annot"><span class="annottext">ConnSourceConfig -&gt; ConnPoolSettings
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#_cscPoolSettings"><span class="hs-identifier hs-var">MySQL._cscPoolSettings</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig -&gt; ConnSourceConfig
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
+</span><span id="line-142"></span><span>                  </span><span class="annot"><span class="annottext">SourceConfig -&gt; ConnSourceConfig
 </span><a href="Hasura.Backends.MySQL.Types.Internal.html#scConfig"><span class="hs-identifier hs-var">MySQL.scConfig</span></a></span><span> </span><span class="annot"><span class="annottext">SourceConfig 'MySQL
 </span><a href="#local-6989586621690417417"><span class="hs-identifier hs-var">sourceConfig</span></a></span><span>
-</span><span id="line-141"></span><span>    </span><span class="hs-comment">-- Resize the pool max resources</span><span>
-</span><span id="line-142"></span><span>    </span><span class="annot"><span class="annottext">forall a. Pool a -&gt; Int -&gt; IO ()
+</span><span id="line-143"></span><span>    </span><span class="hs-comment">-- Resize the pool max resources</span><span>
+</span><span id="line-144"></span><span>    </span><span class="annot"><span class="annottext">forall a. Pool a -&gt; Int -&gt; IO ()
 </span><span class="hs-identifier hs-var">Pool.resizePool</span></span><span> </span><span class="annot"><span class="annottext">Pool Connection
 </span><a href="#local-6989586621690417415"><span class="hs-identifier hs-var">pool</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
 </span><a href="#local-6989586621690417413"><span class="hs-identifier hs-var">maxConnections</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Integral a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">`div`</span></a></span><span> </span><span class="annot"><span class="annottext">ServerReplicas -&gt; Int
 </span><a href="Hasura.RQL.Types.ResizePool.html#getServerReplicasInt"><span class="hs-identifier hs-var">getServerReplicasInt</span></a></span><span> </span><span class="annot"><span class="annottext">ServerReplicas
 </span><a href="#local-6989586621690417416"><span class="hs-identifier hs-var">serverReplicas</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-143"></span><span>    </span><span class="hs-comment">-- Trim pool by destroying excess resources, if any</span><span>
-</span><span id="line-144"></span><span>    </span><span class="annot"><span class="annottext">forall a. Pool a -&gt; IO ()
+</span><span id="line-145"></span><span>    </span><span class="hs-comment">-- Trim pool by destroying excess resources, if any</span><span>
+</span><span id="line-146"></span><span>    </span><span class="annot"><span class="annottext">forall a. Pool a -&gt; IO ()
 </span><span class="hs-identifier hs-var">Pool.tryTrimPool</span></span><span> </span><span class="annot"><span class="annottext">Pool Connection
 </span><a href="#local-6989586621690417415"><span class="hs-identifier hs-var">pool</span></a></span><span>
-</span><span id="line-145"></span></pre></body></html>
+</span><span id="line-147"></span></pre></body></html>

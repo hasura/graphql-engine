@@ -135,16 +135,16 @@ n -&gt; ErrorMessage -&gt; InputValue Variable -&gt; m a
 </span><span id="line-64"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Scientific -&gt; Bool
 </span><span class="hs-identifier hs-var">Scientific.isInteger</span></span><span> </span><span class="annot"><span class="annottext">Scientific
 </span><a href="#local-6989586621690458431"><span class="hs-identifier hs-var">sci</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-65"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall i. (Integral i, Bounded i) =&gt; Scientific -&gt; Maybe i
+</span><span id="line-65"></span><span>          </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">forall i. (Integral i, Bounded i) =&gt; Scientific -&gt; Maybe i
 </span><span class="hs-identifier hs-var">Scientific.toBoundedInteger</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Int64</span></a></span><span> </span><span class="annot"><span class="annottext">Scientific
 </span><a href="#local-6989586621690458431"><span class="hs-identifier hs-var">sci</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-66"></span><span>          </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690458428"><span class="annot"><span class="annottext">Int64
+</span><span id="line-66"></span><span>            </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Just</span></a></span><span> </span><span id="local-6989586621690458428"><span class="annot"><span class="annottext">Int64
 </span><a href="#local-6989586621690458428"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">return</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Int64 -&gt; Int64
 </span><a href="Hasura.Backends.BigQuery.Types.html#intToInt64"><span class="hs-identifier hs-var">BigQuery.intToInt64</span></a></span><span> </span><span class="annot"><span class="annottext">Int64
 </span><a href="#local-6989586621690458428"><span class="hs-identifier hs-var">v</span></a></span><span>
-</span><span id="line-67"></span><span>          </span><span class="annot"><span class="annottext">Maybe Int64
+</span><span id="line-67"></span><span>            </span><span class="annot"><span class="annottext">Maybe Int64
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">forall a. Text -&gt; m a
 </span><a href="#local-6989586621690458457"><span class="hs-identifier hs-var">boundsFailure</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><a href="#local-6989586621690458432"><span class="hs-identifier hs-var">inputText</span></a></span><span>
@@ -478,25 +478,28 @@ Name
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-schema-parsers-1.0.0/opt/doc/html/hasura-schema-parsers/src"><span class="hs-identifier hs-var">parseError</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
 </span><span id="line-145"></span><span>    </span><span class="annot"><span class="annottext">ErrorMessage
-</span><span class="hs-string">&quot;expected &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621690458278"><span class="hs-identifier hs-var">typeName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
-</span><span class="hs-string">&quot; represented as a string, but got &quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
-</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="annot"><span class="annottext">Text
-</span><a href="#local-6989586621690458277"><span class="hs-identifier hs-var">actualString</span></a></span><span>
+</span><span class="hs-string">&quot;expected &quot;</span></span><span>
 </span><span id="line-146"></span><span>      </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
-</span><span class="hs-string">&quot;, which is not a recognizable &quot;</span></span><span>
-</span><span id="line-147"></span><span>      </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
 </span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Name
 </span><a href="#local-6989586621690458278"><span class="hs-identifier hs-var">typeName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-147"></span><span>      </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
+</span><span class="hs-string">&quot; represented as a string, but got &quot;</span></span><span>
 </span><span id="line-148"></span><span>      </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">dquote</span></a></span><span> </span><span class="annot"><span class="annottext">Text
+</span><a href="#local-6989586621690458277"><span class="hs-identifier hs-var">actualString</span></a></span><span>
+</span><span id="line-149"></span><span>      </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
+</span><span class="hs-string">&quot;, which is not a recognizable &quot;</span></span><span>
+</span><span id="line-150"></span><span>      </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Text -&gt; ErrorMessage
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-error-message-1.0.0/opt/doc/html/hasura-error-message/src"><span class="hs-identifier hs-var">toErrorMessage</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">forall a. Show a =&gt; a -&gt; Text
+</span><a href="../file:///workdir/dist-newstyle/build/x86_64-linux/ghc-9.2.4.20220919/hasura-prelude-0.1.0.0/opt/doc/html/hasura-prelude/src"><span class="hs-identifier hs-var">tshow</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621690458278"><span class="hs-identifier hs-var">typeName</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-151"></span><span>      </span><span class="annot"><span class="annottext">forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">ErrorMessage
 </span><span class="hs-string">&quot;.&quot;</span></span><span>
-</span><span id="line-149"></span></pre></body></html>
+</span><span id="line-152"></span></pre></body></html>

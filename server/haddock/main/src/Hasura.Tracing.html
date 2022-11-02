@@ -764,22 +764,22 @@ tcCurrentTrace :: TraceContext -&gt; TraceId
 </span><span id="line-236"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;X-B3-TraceId&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TraceId -&gt; ByteString
 </span><a href="Hasura.Tracing.TraceId.html#traceIdToHex"><span class="hs-identifier hs-var">traceIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">TraceId
-</span><a href="#local-6989586621690304016"><span class="hs-identifier hs-var">tcCurrentTrace</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span>
-</span><span id="line-237"></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690304016"><span class="hs-identifier hs-var">tcCurrentTrace</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-237"></span><span>    </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;X-B3-SpanId&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SpanId -&gt; ByteString
 </span><a href="Hasura.Tracing.TraceId.html#spanIdToHex"><span class="hs-identifier hs-var">spanIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
-</span><a href="#local-6989586621690304015"><span class="hs-identifier hs-var">tcCurrentSpan</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span>
-</span><span id="line-238"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
+</span><a href="#local-6989586621690304015"><span class="hs-identifier hs-var">tcCurrentSpan</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-238"></span><span>    </span><span class="annot"><span class="annottext">forall a. a -&gt; [a] -&gt; [a]
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-glyph hs-var">:</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HeaderName
 </span><span class="hs-string">&quot;X-B3-ParentSpanId&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">SpanId -&gt; ByteString
 </span><a href="Hasura.Tracing.TraceId.html#spanIdToHex"><span class="hs-identifier hs-var">spanIdToHex</span></a></span><span> </span><span class="annot"><span class="annottext">SpanId
 </span><a href="#local-6989586621690304013"><span class="hs-identifier hs-var">parentID</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-239"></span><span>      </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621690304013"><span class="annot"><span class="annottext">SpanId
+</span><span id="line-239"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span id="local-6989586621690304013"><span class="annot"><span class="annottext">SpanId
 </span><a href="#local-6989586621690304013"><span class="hs-identifier hs-var">parentID</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">forall a. Maybe a -&gt; [a]
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">maybeToList</span></a></span><span> </span><span class="annot"><span class="annottext">Maybe SpanId
 </span><a href="#local-6989586621690304014"><span class="hs-identifier hs-var">tcCurrentParent</span></a></span><span>
-</span><span id="line-240"></span><span>    </span><span class="hs-special">]</span><span>
+</span><span id="line-240"></span><span>      </span><span class="hs-special">]</span><span>
 </span><span id="line-241"></span><span>
 </span><span id="line-242"></span><span class="hs-comment">-- | Extract the trace and parent span headers from a HTTP request</span><span>
 </span><span id="line-243"></span><span class="hs-comment">-- and create a new 'TraceContext'. The new context will contain</span><span>
@@ -810,7 +810,7 @@ tcCurrentTrace :: TraceContext -&gt; TraceId
 </span><a href="#local-6989586621690304007"><span class="hs-identifier hs-var">rawTraceId</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">32</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-256"></span><span>                </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe TraceId
+</span><span id="line-256"></span><span>                  </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe TraceId
 </span><a href="Hasura.Tracing.TraceId.html#traceIdFromHex"><span class="hs-identifier hs-var">traceIdFromHex</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><a href="#local-6989586621690304007"><span class="hs-identifier hs-var">rawTraceId</span></a></span><span>
 </span><span id="line-257"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Int
@@ -818,7 +818,7 @@ tcCurrentTrace :: TraceContext -&gt; TraceId
 </span><a href="#local-6989586621690304007"><span class="hs-identifier hs-var">rawTraceId</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-operator hs-var">==</span></a></span><span> </span><span class="annot"><span class="annottext">Int
 </span><span class="hs-number">16</span></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-258"></span><span>                </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe TraceId
+</span><span id="line-258"></span><span>                  </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe TraceId
 </span><a href="Hasura.Tracing.TraceId.html#traceIdFromHex"><span class="hs-identifier hs-var">traceIdFromHex</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Char -&gt; ByteString
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/bytestring-0.11.3.1/src"><span class="hs-identifier hs-var">Char8.replicate</span></a></span><span> </span><span class="annot"><span class="annottext">Int
@@ -828,7 +828,7 @@ tcCurrentTrace :: TraceContext -&gt; TraceId
 </span><a href="#local-6989586621690304007"><span class="hs-identifier hs-var">rawTraceId</span></a></span><span>
 </span><span id="line-259"></span><span>              </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">otherwise</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
-</span><span id="line-260"></span><span>                </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><span id="line-260"></span><span>                  </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
 </span><span id="line-261"></span><span>  </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">pure</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b

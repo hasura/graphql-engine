@@ -72,7 +72,7 @@ StringifyNumbers
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">True</span></a></span><span class="hs-special">;</span><span> </span><span class="annot"><span class="annottext">StringifyNumbers
 </span><a href="Hasura.GraphQL.Schema.Options.html#Don%27tStringifyNumbers"><span class="hs-identifier hs-var">Options.Don'tStringifyNumbers</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/ghc-prim-0.8.0/src"><span class="hs-identifier hs-var">False</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-31"></span><span>    </span><span class="annot"><span class="annottext">SQLExp
+</span><span id="line-31"></span><span>      </span><span class="annot"><span class="annottext">SQLExp
 </span><a href="#local-6989586621690398793"><span class="hs-identifier hs-var">expression</span></a></span><span> </span><span class="annot"><span class="annottext">SQLExp -&gt; TypeAnn -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SETyAnn"><span class="hs-operator hs-var">`SETyAnn`</span></a></span><span> </span><span class="annot"><span class="annottext">TypeAnn
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#textTypeAnn"><span class="hs-identifier hs-var">textTypeAnn</span></a></span><span>
@@ -82,22 +82,22 @@ StringifyNumbers
 </span><a href="Hasura.RQL.Types.Column.html#isScalarColumnWhere"><span class="hs-identifier hs-var">isScalarColumnWhere</span></a></span><span> </span><span class="annot"><span class="annottext">PGScalarType -&gt; Bool
 </span><a href="Hasura.Backends.Postgres.SQL.Types.html#isGeoType"><span class="hs-identifier hs-var">isGeoType</span></a></span><span> </span><span class="annot"><span class="annottext">ColumnType ('Postgres pgKind)
 </span><a href="#local-6989586621690398796"><span class="hs-identifier hs-var">colType</span></a></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-34"></span><span>    </span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
+</span><span id="line-34"></span><span>      </span><span class="annot"><span class="annottext">Text -&gt; [SQLExp] -&gt; Maybe OrderByExp -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEFnApp"><span class="hs-identifier hs-var">SEFnApp</span></a></span><span>
-</span><span id="line-35"></span><span>      </span><span class="annot"><span class="annottext">Text
+</span><span id="line-35"></span><span>        </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;ST_AsGeoJSON&quot;</span></span><span>
-</span><span id="line-36"></span><span>      </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">SQLExp
+</span><span id="line-36"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">SQLExp
 </span><a href="#local-6989586621690398793"><span class="hs-identifier hs-var">expression</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-37"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
+</span><span id="line-37"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEUnsafe"><span class="hs-identifier hs-var">SEUnsafe</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;15&quot;</span></span><span class="hs-special">,</span><span> </span><span class="hs-comment">-- max decimal digits</span><span>
-</span><span id="line-38"></span><span>        </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
+</span><span id="line-38"></span><span>          </span><span class="annot"><span class="annottext">Text -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SEUnsafe"><span class="hs-identifier hs-var">SEUnsafe</span></a></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;4&quot;</span></span><span> </span><span class="hs-comment">-- to print out crs</span><span>
-</span><span id="line-39"></span><span>      </span><span class="hs-special">]</span><span>
-</span><span id="line-40"></span><span>      </span><span class="annot"><span class="annottext">forall a. Maybe a
+</span><span id="line-39"></span><span>        </span><span class="hs-special">]</span><span>
+</span><span id="line-40"></span><span>        </span><span class="annot"><span class="annottext">forall a. Maybe a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var">Nothing</span></a></span><span>
-</span><span id="line-41"></span><span>      </span><span class="annot"><span class="annottext">SQLExp -&gt; TypeAnn -&gt; SQLExp
+</span><span id="line-41"></span><span>        </span><span class="annot"><span class="annottext">SQLExp -&gt; TypeAnn -&gt; SQLExp
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#SETyAnn"><span class="hs-operator hs-var">`SETyAnn`</span></a></span><span> </span><span class="annot"><span class="annottext">TypeAnn
 </span><a href="Hasura.Backends.Postgres.SQL.DML.html#jsonTypeAnn"><span class="hs-identifier hs-var">jsonTypeAnn</span></a></span><span>
 </span><span id="line-42"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">forall (b :: BackendType). ColumnType b -&gt; Bool

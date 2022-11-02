@@ -102,7 +102,7 @@ For example:
 ------------
 We've a table "user" tracked by hasura and a role "public"
 
-* If the update permission for the table "user" is marked as backend_only then the
+\* If the update permission for the table "user" is marked as backend_only then the
   GQL context for that table will look like:
 
     {"public": (["insert_user","delete_user"], ["update_user"])}
@@ -111,7 +111,7 @@ We've a table "user" tracked by hasura and a role "public"
   by default on the frontend client. And the 'update_user' opertaion is only visible
   when the `x-hasura-use-backend-only-permissions` request header is present.
 
-* If there is no backend_only permissions defined on the role then the GQL context
+\* If there is no backend_only permissions defined on the role then the GQL context
   looks like:
 
     {"public": (["insert_user","delete_user", "update_user"], [])}

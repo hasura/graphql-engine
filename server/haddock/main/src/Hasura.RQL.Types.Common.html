@@ -1642,7 +1642,7 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;host&quot;</span></span><span>
-</span><span id="line-378"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-378"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">PGConnectionParams -&gt; Text
@@ -1651,7 +1651,7 @@ ObjectCodec oldInput output
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;username&quot;</span></span><span>
-</span><span id="line-380"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-380"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">PGConnectionParams -&gt; Text
@@ -1662,7 +1662,7 @@ HasCodec output =&gt;
 Text -&gt; ObjectCodec (Maybe output) (Maybe output)
 </span><span class="hs-identifier hs-var">optionalFieldOrNull'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;password&quot;</span></span><span>
-</span><span id="line-382"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-382"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">PGConnectionParams -&gt; Maybe Text
@@ -1671,7 +1671,7 @@ ObjectCodec oldInput output
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;port&quot;</span></span><span>
-</span><span id="line-384"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-384"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">PGConnectionParams -&gt; Int
@@ -1680,7 +1680,7 @@ ObjectCodec oldInput output
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output. HasCodec output =&gt; Text -&gt; ObjectCodec output output
 </span><span class="hs-identifier hs-var">requiredField'</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;database&quot;</span></span><span>
-</span><span id="line-386"></span><span>        </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+</span><span id="line-386"></span><span>          </span><span class="annot"><span class="annottext">forall oldInput output newInput.
 ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">AC..=</span></span><span> </span><span class="annot"><span class="annottext">PGConnectionParams -&gt; Text
@@ -1700,31 +1700,31 @@ ObjectCodec oldInput output
 </span><span id="line-393"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690334361"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-394"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span id="line-394"></span><span>        </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;host&quot;</span></span><span>
 </span><span id="line-395"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690334361"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-396"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span id="line-396"></span><span>        </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;username&quot;</span></span><span>
 </span><span id="line-397"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690334361"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-398"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
+</span><span id="line-398"></span><span>        </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser (Maybe a)
 </span><span class="hs-operator hs-var">.:?</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;password&quot;</span></span><span>
 </span><span id="line-399"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690334361"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-400"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span id="line-400"></span><span>        </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;port&quot;</span></span><span>
 </span><span id="line-401"></span><span>      </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">Object
 </span><a href="#local-6989586621690334361"><span class="hs-identifier hs-var">o</span></a></span><span>
-</span><span id="line-402"></span><span>      </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
+</span><span id="line-402"></span><span>        </span><span class="annot"><span class="annottext">forall a. FromJSON a =&gt; Object -&gt; Key -&gt; Parser a
 </span><span class="hs-operator hs-var">.:</span></span><span> </span><span class="annot"><span class="annottext">Key
 </span><span class="hs-string">&quot;database&quot;</span></span><span>
 </span><span id="line-403"></span><span>
