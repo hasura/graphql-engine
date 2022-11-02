@@ -38,7 +38,7 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > Prettify > click'
+        'GraphiQl - click - Prettify'
       );
     });
 
@@ -49,7 +49,7 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > History > click'
+        'GraphiQl - click - History'
       );
     });
 
@@ -60,7 +60,7 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > Explorer > click'
+        'GraphiQl - click - Explorer'
       );
     });
 
@@ -71,7 +71,7 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > REST > click'
+        'GraphiQl - click - REST'
       );
     });
 
@@ -82,7 +82,7 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > Derive action > click'
+        'GraphiQl - click - Derive action'
       );
     });
 
@@ -109,13 +109,13 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > Analyze > click'
+        'GraphiQl - click - Analyze'
       );
     });
 
     // --------------------
     cy.log(
-      `**--- ⚠️ 'GraphiQl > Cache > click' is not tested because it's part of the Pro Console for which we do not have tests yet**`
+      `**--- ⚠️ 'GraphiQl - click - Cache' is not tested because it's part of the Pro Console for which we do not have tests yet**`
     );
 
     // --------------------
@@ -125,7 +125,7 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > Code Exporter > click'
+        'GraphiQl - click - Code Exporter'
       );
     });
 
@@ -136,7 +136,7 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > Code Exporter > JavaScript/TypeScript > click'
+        'GraphiQl > Code Exporter - click - JavaScript/TypeScript'
       );
 
       // --------------------
@@ -145,7 +145,7 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > Code Exporter > Fetch > click'
+        'GraphiQl > Code Exporter - click - Fetch'
       );
 
       // --------------------
@@ -154,7 +154,7 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > Code Exporter > server-side usage > click'
+        'GraphiQl > Code Exporter - click - server-side usage'
       );
 
       // --------------------
@@ -163,7 +163,7 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > Code Exporter > async/await > click'
+        'GraphiQl > Code Exporter - click - async/await'
       );
 
       // --------------------
@@ -182,7 +182,7 @@ describe('Tracing GraphiQL plugins usage', () => {
 
       cy.get('@spyHeapTrack').should(
         'have.been.calledWith',
-        'GraphiQl > Code Exporter > copy > click'
+        'GraphiQl > Code Exporter - click - copy'
       );
     });
   });

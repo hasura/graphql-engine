@@ -1,5 +1,4 @@
 import { trackCustomEvent } from '@/features/Analytics';
-import type { GraphiQlToolbarButtonClickEventNames } from './types';
 
 /**
  * Track all the clicks on the buttons at the top of GraphiQL.
@@ -15,6 +14,9 @@ export function trackGraphiQlToolbarButtonClick(
     | 'Derive action'
     | 'Code Exporter'
 ) {
-  const eventName: GraphiQlToolbarButtonClickEventNames = `GraphiQl > ${button} > click`;
-  trackCustomEvent(eventName);
+  trackCustomEvent({
+    location: 'GraphiQl',
+    action: 'click',
+    object: button,
+  });
 }

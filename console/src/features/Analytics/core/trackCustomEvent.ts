@@ -1,5 +1,12 @@
 import * as Sentry from '@sentry/react';
-import type { ReservedEventNames } from './heap/types';
+
+// Heap suggest using the "Location – Action – Object" pattern
+// @see: https://help.heap.io/definitions/events/events-overview/#:~:text=Custom%20events%20are%20events%20that,events%20to%20keep%20them%20organized.
+interface HeapEvent {
+  location: string;
+  action: string;
+  object: string;
+}
 
 interface CustomEventOptions {
   severity?: 'log' | 'warning' | 'error';
@@ -17,41 +24,27 @@ const defaultOptions: CustomEventOptions = {
 /**
  * Track a custom event both in Heap and Sentry.
  */
-export function trackCustomEvent<EVENT_NAME extends string>(
-  name: EVENT_NAME extends ReservedEventNames ? never : EVENT_NAME,
+export function trackCustomEvent(
+  event: HeapEvent,
   options?: CustomEventOptions
 ) {
-  const trackOptions = { ...defaultOptions, ...options };
+  const eventName = `${event.location} - ${event.action} - ${event.object}`;
 
-  const { message, severity } = trackOptions;
+  const trackOptions = { ...defaultOptions, ...options };
+  const { message } = trackOptions;
   const data = message ? { message, ...trackOptions.data } : trackOptions.data;
 
   // --------------------------------------------------
   // HEAP TRACKING
   // --------------------------------------------------
-  switch (severity) {
-    case 'error':
-      const errorName = `(ERROR) ${name}`;
-      window.heap?.track(errorName, data);
-      break;
-
-    case 'warning':
-      const warningName = `(WARN) ${name}`;
-      window.heap?.track(warningName, data);
-      break;
-
-    case 'log':
-    default:
-      window.heap?.track(name, data);
-      break;
-  }
+  window.heap?.track(eventName, data);
 
   // --------------------------------------------------
   // SENTRY TRACKING
   // --------------------------------------------------
   Sentry.addBreadcrumb({
     message,
-    type: name,
+    type: eventName,
     data: options?.data,
     level: options?.severity,
   });
