@@ -7,6 +7,7 @@ module Test.Subscriptions.LiveQueriesSpec (spec) where
 import Data.Aeson
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Citus qualified as Citus
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine
 import Harness.Quoter.Graphql
@@ -30,6 +31,11 @@ spec =
           (Fixture.fixture $ Fixture.Backend Fixture.Citus)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Citus.setupTablesAction schema testEnvironment
+                ]
+            },
+          (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
+            { Fixture.setupTeardown = \(testEnvironment, _) ->
+                [ Cockroach.setupTablesAction schema testEnvironment
                 ]
             }
         ]

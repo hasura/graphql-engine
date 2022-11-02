@@ -255,16 +255,20 @@ newtype CohortIdArray = CohortIdArray {unCohortIdArray :: [CohortId]}
 instance PG.ToPrepArg CohortIdArray where
   toPrepVal (CohortIdArray l) = PG.toPrepValHelper PTI.unknown encoder $ map unCohortId l
     where
-      encoder = PE.array 2950 . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
+      encoder = PE.array (PTI.unOid PTI.uuid) . PE.dimensionArray foldl' (PE.encodingArray . PE.uuid)
 
 newtype CohortVariablesArray = CohortVariablesArray {unCohortVariablesArray :: [CohortVariables]}
   deriving (Show, Eq)
 
+-- to get around a CockroachDB JSON issue, we encode as JSONB instead of JSON
+-- here. The query already casts it to the JSON it expects.
+-- we can change this back to sending JSON once this issue is fixed:
+-- https://github.com/cockroachdb/cockroach/issues/90839
 instance PG.ToPrepArg CohortVariablesArray where
   toPrepVal (CohortVariablesArray l) =
-    PG.toPrepValHelper PTI.unknown encoder (map J.toJSON l)
+    PG.toPrepValHelper PTI.jsonb_array encoder (map J.toJSON l)
     where
-      encoder = PE.array 114 . PE.dimensionArray foldl' (PE.encodingArray . PE.json_ast)
+      encoder = PE.array (PTI.unOid PTI.jsonb) . PE.dimensionArray foldl' (PE.encodingArray . PE.jsonb_ast)
 
 ----------------------------------------------------------------------------------------------------
 -- Live query plans

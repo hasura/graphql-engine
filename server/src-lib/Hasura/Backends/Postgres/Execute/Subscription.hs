@@ -95,11 +95,14 @@ validateVariables ::
   f (ColumnValue ('Postgres pgKind)) ->
   m (ValidatedVariables f)
 validateVariables pgExecCtx variableValues = do
-  let valSel = mkValidationSel $ toList variableValues
-  PG.Discard () <-
-    runQueryTx_ $
-      liftTx $
-        PG.rawQE dataExnErrHandler (PG.fromBuilder $ toSQL valSel) [] False
+  -- no need to test the types when there are no variables to test.
+  unless (null variableValues) do
+    let valSel = mkValidationSel $ toList variableValues
+    PG.Discard () <-
+      runQueryTx_ $
+        liftTx $
+          PG.rawQE dataExnErrHandler (PG.fromBuilder $ toSQL valSel) [] False
+    pure ()
   pure . ValidatedVariables $ fmap (txtEncodedVal . cvValue) variableValues
   where
     mkExtr = flip S.Extractor Nothing . toTxtValue

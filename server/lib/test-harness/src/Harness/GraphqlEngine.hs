@@ -451,12 +451,12 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
         -- the other thread if it encounters an error.
         responseListener :: IO ()
         responseListener = do
-          res <- eitherDecode <$> WS.receiveData conn
-
-          case res of
+          msgBytes <- WS.receiveData conn
+          case eitherDecode msgBytes of
             Left err -> do
-              testLog testEnvironment $ "subscription decode failed: " ++ err
-              throw $ userError err
+              testLog testEnvironment $ "Subscription decode failed: " ++ err
+              testLogBytestring testEnvironment $ "Payload was: " <> msgBytes
+              throw $ userError (unlines ["Subscription decode failed: " <> err, "Payload: " <> show msgBytes])
             Right msg -> do
               when (isInteresting msg) do
                 testLog testEnvironment $ "subscriptions message: " ++ jsonToString msg
@@ -496,6 +496,8 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
           atomicModify handlers (Map.insert (tshow subId) messageBox)
 
           -- initialize a connection.
+          testLog testEnvironment ("Initialising websocket connection")
+          testLogBytestring testEnvironment (encode query)
           WS.sendTextData conn (encode $ startQueryMessage subId query)
           pure $ SubscriptionHandle messageBox
 
