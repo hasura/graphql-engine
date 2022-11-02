@@ -3,7 +3,13 @@ package projectmetadata
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"testing"
+
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/internal/cliext"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject"
@@ -11,10 +17,7 @@ import (
 	"github.com/mitchellh/go-homedir"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"testing"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_inconsistentObject_GetName(t *testing.T) {
@@ -442,5 +445,70 @@ func TestGenMetadataFromMap(t *testing.T) {
 
 			assert.Equalf(t, string(wantbs), buf.String(), "GenMetadataFromMap(%v)", tt.args.metadata)
 		})
+	}
+}
+
+func TestBuildMetadataErrorStrict(t *testing.T) {
+	testEC := cli.NewExecutionContext()
+	testEC.Version = version.NewCLIVersion(version.DevVersion)
+	testEC.Logger = logrus.New()
+	home, err := homedir.Dir()
+	assert.NoError(t, err)
+	testEC.GlobalConfigDir = filepath.Join(home, cli.GlobalConfigDirName)
+	testEC.Config = &cli.Config{Version: cli.V3}
+	testEC.HasMetadataV3 = true
+	assert.NoError(t, cliext.Setup(testEC))
+
+	getObjects := func(metadataDir string) metadataobject.Objects {
+		return GetMetadataObjectsWithDir(testEC, metadataDir)
+	}
+	type args struct {
+		h *Handler
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr require.ErrorAssertionFunc
+	}{
+		{
+			"returns correct error type when v3 Metadata files not found",
+			args{
+				h: func() *Handler {
+					metadataDir := filepath.Join("testdata/test-gen-metadata-from-map/") // metadata files don't exist in this folder
+					testEC.MetadataDir = metadataDir
+					handler := NewHandler(getObjects(metadataDir), nil, nil, logrus.New())
+					assert.NoError(t, err)
+					return handler
+				}(),
+			},
+			require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
+				require.True(t, errors.Is(err, metadataobject.ErrMetadataFileNotFound))
+			}),
+		},
+		{
+			"returns correct error type when v2 Metadata files not found",
+			args{
+				h: func() *Handler {
+					testEC.Config.Version = cli.V2
+					testEC.HasMetadataV3 = false
+
+					metadataDir := filepath.Join("testdata/test-gen-metadata-from-map/") // metadata files don't exist in this folder
+					testEC.MetadataDir = metadataDir
+					handler := NewHandler(getObjects(metadataDir), nil, nil, logrus.New())
+					assert.NoError(t, err)
+					return handler
+				}(),
+			},
+			require.ErrorAssertionFunc(func(tt require.TestingT, err error, i ...interface{}) {
+				require.True(t, errors.Is(err, metadataobject.ErrMetadataFileNotFound))
+			}),
+		},
+	}
+	for _, tc := range tests {
+		h := tc.args.h
+		for _, object := range h.objects {
+			_, err := object.Build()
+			tc.wantErr(t, err)
+		}
 	}
 }
