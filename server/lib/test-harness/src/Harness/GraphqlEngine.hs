@@ -367,18 +367,13 @@ initMessage =
   }
   |]
 
--- | A subscription's start query message. @"id"@ is always 1.
-startQueryMessage :: Int -> Value -> Value
-startQueryMessage subId q =
+-- | A subscription's start query message.
+startQueryMessage :: Int -> Value -> [Pair] -> Value
+startQueryMessage subId query extras =
   object
     [ "id" .= String (tshow subId),
       "type" .= String "start",
-      "payload"
-        .= object
-          [ "variables" .= object [],
-            "extensions" .= object [],
-            "query" .= q
-          ]
+      "payload" .= object (["query" .= query] <> extras)
     ]
 
 -- | A handle to an active subscription. Can be queried for the next message received.
@@ -407,7 +402,7 @@ newtype SubscriptionHandle = SubscriptionHandle {unSubscriptionHandle :: MVar (E
 -- >         actual :: IO Value
 -- >         actual = getNextResponse query
 -- >     actual `shouldBe` expected
-withSubscriptions :: SpecWith (Value -> IO SubscriptionHandle, TestEnvironment) -> SpecWith TestEnvironment
+withSubscriptions :: SpecWith (Value -> [Pair] -> IO SubscriptionHandle, TestEnvironment) -> SpecWith TestEnvironment
 withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
   WS.runClient "127.0.0.1" (fromIntegral $ port $ server testEnvironment) "/v1/graphql" \conn -> do
     -- CAVE: loads of stuff still outstanding:
@@ -482,8 +477,8 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
         -- Create a subscription over this websocket connection. Will be used
         -- by the user to create new subscriptions. The handled can be used to
         -- request the next response.
-        mkSub :: Value -> IO SubscriptionHandle
-        mkSub query = do
+        mkSub :: Value -> [Pair] -> IO SubscriptionHandle
+        mkSub query extras = do
           -- each subscription has an id, this manages a new id for each subscription.
           subId <- atomically do
             currSubId <- readTVar subNextId
@@ -498,7 +493,7 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
           -- initialize a connection.
           testLog testEnvironment ("Initialising websocket connection")
           testLogBytestring testEnvironment (encode query)
-          WS.sendTextData conn (encode $ startQueryMessage subId query)
+          WS.sendTextData conn (encode $ startQueryMessage subId query extras)
           pure $ SubscriptionHandle messageBox
 
         handleExceptionsAndTimeout action = do
@@ -526,4 +521,4 @@ getNextResponse handle = do
     Just (Right val) -> pure val
 
 subscriptionsTimeoutTime :: Seconds
-subscriptionsTimeoutTime = 15
+subscriptionsTimeoutTime = 20
