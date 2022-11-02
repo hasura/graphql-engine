@@ -52,7 +52,7 @@ import Data.Text qualified as T
 import Data.UUID qualified as UUID
 import Data.UUID.V4 qualified as UUID
 import Data.Word (Word16)
-import GHC.AssertNF.CPP
+import GHC.AssertNF
 import GHC.Int (Int64)
 import Hasura.GraphQL.ParameterizedQueryHash (ParameterizedQueryHash)
 import Hasura.GraphQL.Transport.HTTP.Protocol

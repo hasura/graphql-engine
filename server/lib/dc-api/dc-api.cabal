@@ -3,6 +3,8 @@ name: dc-api
 version: 1.0.0
 extra-source-files:
   test/Test/Data/ChinookData.xml.gz
+  test/Test/Data/ChinookData.xml.gz
+  test/Test/Data/schema-tables.json
   test/Test/Data/schema-tables.json
 
 flag profiling
@@ -40,6 +42,7 @@ common common-all
 library
   import: common-all
   hs-source-dirs: src
+  ghc-options: -fdefer-typed-holes
 
   build-depends:
     aeson,

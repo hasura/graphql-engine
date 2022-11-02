@@ -75,7 +75,7 @@ import Data.Yaml qualified as Y
 import Database.MSSQL.Pool qualified as MSPool
 import Database.PG.Query qualified as PG
 import Database.PG.Query qualified as Q
-import GHC.AssertNF.CPP
+import GHC.AssertNF
 import Hasura.Backends.MSSQL.Connection
 import Hasura.Backends.Postgres.Connection
 import Hasura.Base.Error

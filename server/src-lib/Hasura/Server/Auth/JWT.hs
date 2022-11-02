@@ -86,7 +86,7 @@ import Data.Time.Clock
     diffUTCTime,
     getCurrentTime,
   )
-import GHC.AssertNF.CPP
+import GHC.AssertNF
 import Hasura.Base.Error
 import Hasura.HTTP
 import Hasura.Logging (Hasura, LogLevel (..), Logger (..))

@@ -49,7 +49,7 @@ library
       ImportQualifiedPost
       OverloadedStrings
       ScopedTypeVariables
-  ghc-options: -foptimal-applicative-do -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists
+  ghc-options: -foptimal-applicative-do -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists
   build-depends:
       aeson
     , base
@@ -79,7 +79,7 @@ test-suite tests
       ImportQualifiedPost
       OverloadedStrings
       ScopedTypeVariables
-  ghc-options: -foptimal-applicative-do -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -Wmissing-export-lists -main-is Main
+  ghc-options: -foptimal-applicative-do -Wall -Werror -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -main-is Main
   build-depends:
       aeson
     , base

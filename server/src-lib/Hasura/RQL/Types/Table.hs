@@ -795,7 +795,7 @@ deriving instance (Backend b, Show a) => Show (PrimaryKey b a)
 
 instance (Backend b, NFData a) => NFData (PrimaryKey b a)
 
-instance (Backend b, Hashable (NESeq a)) => Hashable (PrimaryKey b a)
+instance (Eq a, Backend b, Hashable (NESeq a)) => Hashable (PrimaryKey b a)
 
 instance (Backend b, Cacheable a) => Cacheable (PrimaryKey b a)
 

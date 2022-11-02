@@ -158,7 +158,8 @@ flag ghci-load-test-with-lib
 common common-all
   ghc-options:
     -foptimal-applicative-do
-    -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints
+    -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns
+    -- -Wredundant-constraints
     -- This is just to keep compile-times in check and might be adjusted later (See mono #2610):
     -fmax-simplifier-iterations=2
     -- Insisting on export lists might help with compile times, and help to document modules:
@@ -293,6 +294,7 @@ common lib-depends
                      , some
                      , split
                      , template-haskell
+                     , ghc-heap-view
                      , text
                      , text-builder >= 0.6
                      , th-lift
@@ -443,10 +445,6 @@ common lib-depends
                      , mysql-simple
                       -- dependency of vendored 'ip':
                      , wide-word
-  if !flag(profiling)
-    -- ghc-heap-view can't be built with profiling
-    build-depends:     ghc-heap-view
-
 library
   import: common-all, lib-depends
   hs-source-dirs:      src-lib
@@ -482,7 +480,6 @@ library
                      , Data.URL.Template
                      , Database.MSSQL.Transaction
                      , Database.MSSQL.Pool
-                     , GHC.AssertNF.CPP
                      , GHC.Stats.Extended
                      , GHC.Generics.Extended
                      , Hasura.App

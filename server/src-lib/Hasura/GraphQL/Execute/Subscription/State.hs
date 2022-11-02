@@ -34,7 +34,7 @@ import Data.Aeson.Extended qualified as J
 import Data.String
 import Data.Text.Extended
 import Data.UUID.V4 qualified as UUID
-import GHC.AssertNF.CPP
+import GHC.AssertNF
 import Hasura.Base.Error
 import Hasura.GraphQL.Execute.Backend
 import Hasura.GraphQL.Execute.Subscription.Options
