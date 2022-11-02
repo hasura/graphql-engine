@@ -1,17 +1,16 @@
 import React from 'react';
+
 import { useTableMachine, PermissionsTable } from '../PermissionsTable';
 import { BulkDelete } from '../PermissionsForm';
 import { PermissionsForm } from '../PermissionsForm/PermissionsForm';
 import { AccessType } from '../PermissionsForm/types';
 
 export interface PermissionsTabProps {
-  currentSource: string;
   dataSourceName: string;
   table: unknown;
 }
 
 export const PermissionsTab: React.FC<PermissionsTabProps> = ({
-  currentSource,
   dataSourceName,
   table,
 }) => {
@@ -31,7 +30,6 @@ export const PermissionsTab: React.FC<PermissionsTabProps> = ({
           !!state.context.bulkSelections.length && (
             <BulkDelete
               roles={state.context.bulkSelections}
-              currentSource={currentSource}
               dataSourceName={dataSourceName}
               table={table}
               handleClose={() => send('CLOSE')}
@@ -40,7 +38,6 @@ export const PermissionsTab: React.FC<PermissionsTabProps> = ({
 
         {state.value === 'formOpen' && (
           <PermissionsForm
-            currentSource={currentSource}
             dataSourceName={dataSourceName}
             table={table}
             roleName={state.context.selectedForm.roleName || ''}

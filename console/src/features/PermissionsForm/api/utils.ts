@@ -2,23 +2,24 @@ import produce from 'immer';
 
 import { allowedMetadataTypes } from '@/features/MetadataAPI';
 
-import { AccessType, FormOutput } from '../types';
+import { AccessType } from '../types';
+import { PermissionsSchema } from '../utils';
 
 interface PermissionArgs {
   columns: string[];
   presets?: Record<string, string | number>;
   computed_fields: string[];
-  backend_only: boolean;
-  allow_aggregations: boolean;
-  check: Record<string, unknown>;
-  filter: Record<string, unknown>;
+  backend_only?: boolean;
+  allow_aggregations?: boolean;
+  check: Record<string, any>;
+  filter: Record<string, any>;
   limit?: number;
 }
 
 /**
  * creates the permissions object for the server
  */
-const createPermission = (formData: FormOutput) => {
+const createPermission = (formData: PermissionsSchema) => {
   // presets need reformatting for server
   const presets = formData.presets?.reduce((acc, preset) => {
     if (preset.columnValue) {
@@ -33,6 +34,21 @@ const createPermission = (formData: FormOutput) => {
     .filter(({ 1: value }) => value)
     .map(([key]) => key);
 
+  // in row permissions builder an extra input is rendered automatically
+  // this will always be empty and needs to be removed
+  const filter = Object.entries(formData.filter).reduce<Record<string, any>>(
+    (acc, [operator, value]) => {
+      if (operator === '_and' || operator === '_or') {
+        const newValue = (value as any[])?.slice(0, -1);
+        acc[operator] = newValue;
+        return acc;
+      }
+
+      acc[operator] = value;
+      return acc;
+    },
+    {}
+  );
   // return permissions object for args
   const permissionObject: PermissionArgs = {
     columns,
@@ -41,7 +57,7 @@ const createPermission = (formData: FormOutput) => {
     backend_only: formData.backendOnly,
     allow_aggregations: formData.aggregationEnabled,
     check: formData.check,
-    filter: formData.filter,
+    filter,
   };
 
   if (formData.rowCount && formData.rowCount !== '0') {
@@ -52,14 +68,14 @@ const createPermission = (formData: FormOutput) => {
 };
 
 export interface CreateInsertArgs {
-  currentSource: string;
   dataSourceName: string;
   table: unknown;
   queryType: string;
   role: string;
   accessType: AccessType;
-  formData: FormOutput;
+  formData: PermissionsSchema;
   existingPermissions: ExistingPermission[];
+  driver: string;
 }
 
 interface ExistingPermission {
@@ -73,20 +89,20 @@ interface ExistingPermission {
  * and creates drop arguments where permissions already exist
  */
 export const createInsertArgs = ({
-  currentSource,
   dataSourceName,
   table,
   queryType,
   role,
   formData,
   existingPermissions,
+  driver,
 }: CreateInsertArgs) => {
   const permission = createPermission(formData);
 
   // create args object with args from form
   const initialArgs = [
     {
-      type: `${currentSource}_create_${queryType}_permission` as allowedMetadataTypes,
+      type: `${driver}_create_${queryType}_permission` as allowedMetadataTypes,
       args: {
         table,
         role,
@@ -108,7 +124,7 @@ export const createInsertArgs = ({
     // if the permission already exists it needs to be dropped
     if (permissionExists) {
       draft.unshift({
-        type: `${currentSource}_drop_${queryType}_permission` as allowedMetadataTypes,
+        type: `${driver}_drop_${queryType}_permission` as allowedMetadataTypes,
         args: {
           table,
           role,
@@ -137,7 +153,7 @@ export const createInsertArgs = ({
         );
         // add each closed permission to args
         draft.push({
-          type: `${currentSource}_create_${clonedPermission.queryType}_permission` as allowedMetadataTypes,
+          type: `${driver}_create_${clonedPermission.queryType}_permission` as allowedMetadataTypes,
           args: {
             table: clonedPermission.tableName || '',
             role: clonedPermission.roleName || '',
@@ -158,7 +174,7 @@ export const createInsertArgs = ({
         // if it already exists drop it
         if (clonedPermissionExists) {
           draft.unshift({
-            type: `${currentSource}_drop_${clonedPermission.queryType}_permission` as allowedMetadataTypes,
+            type: `${driver}_drop_${clonedPermission.queryType}_permission` as allowedMetadataTypes,
             args: {
               table: clonedPermission.tableName,
               role: clonedPermission.roleName,

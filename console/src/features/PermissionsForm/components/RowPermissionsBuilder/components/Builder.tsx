@@ -1,11 +1,10 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { GraphQLSchema } from 'graphql';
-
+import { Table } from '@/features/MetadataAPI';
 import { RenderFormElement } from './RenderFormElement';
 import { CustomField } from './Fields';
 import { JsonItem } from './Elements';
-
 import { getColumnOperators } from '../utils';
 
 import { useData } from '../hooks';
@@ -110,15 +109,22 @@ interface Props {
    */
   nesting: string[];
   schema: GraphQLSchema;
+  dataSourceName: string;
+  table: Table;
 }
 
 export const Builder = (props: Props) => {
-  const { tableName, nesting, schema } = props;
+  const { tableName, nesting, schema, dataSourceName, table } = props;
 
-  const { data } = useData({ tableName, schema });
-
+  const { data, tableConfig } = useData({
+    tableName,
+    schema,
+    // we have to pass in table like this because if it is a relationship if will
+    // fetch the wrong table config otherwise
+    table,
+    dataSourceName,
+  });
   const { unregister, setValue, getValues } = useFormContext();
-
   // the selections from the dropdowns are stored on the form state under the key "operators"
   // this will be removed for submitting the form
   // and is generated from the permissions object when rendering the form from existing data
@@ -138,11 +144,12 @@ export const Builder = (props: Props) => {
         tableName,
         columnName: dropDownState.name,
         schema,
+        tableConfig,
       });
     }
 
     return [];
-  }, [tableName, dropDownState, schema]);
+  }, [tableName, dropDownState, schema, tableConfig]);
 
   const handleDropdownChange: React.ChangeEventHandler<HTMLSelectElement> =
     e => {
@@ -216,6 +223,8 @@ export const Builder = (props: Props) => {
         handleColumnChange={handleColumnChange}
         nesting={nesting}
         schema={schema}
+        table={table}
+        dataSourceName={dataSourceName}
       />
     </div>
   );

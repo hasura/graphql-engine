@@ -7,7 +7,7 @@ import { handlers } from '../PermissionsForm/mocks/handlers.mock';
 import { useTableMachine } from './hooks';
 
 export default {
-  title: 'Features/Permissions Table/Table',
+  title: 'Features/Permissions Tab/Permissions Table/Table',
   component: PermissionsTable,
   decorators: [ReactQueryDecorator()],
   parameters: {

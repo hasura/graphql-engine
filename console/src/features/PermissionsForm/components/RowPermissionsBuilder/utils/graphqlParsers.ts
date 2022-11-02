@@ -1,3 +1,4 @@
+import { MetadataTable } from '@/features/MetadataAPI';
 import {
   GraphQLFieldMap,
   GraphQLInputFieldMap,
@@ -71,16 +72,20 @@ interface GetColumnOperatorsArgs {
   tableName: string;
   columnName: string;
   schema: GraphQLSchema;
+  tableConfig: MetadataTable['configuration'];
 }
 
 export const getColumnOperators = ({
   tableName,
   columnName,
   schema,
+  tableConfig,
 }: GetColumnOperatorsArgs) => {
   const fields = getFields(`${tableName}_bool_exp`, schema);
 
-  const col = fields?.[columnName];
+  const customName =
+    tableConfig?.column_config?.[columnName]?.custom_name ?? columnName;
+  const col = fields?.[customName];
 
   if (col?.type && !isListType(col?.type)) {
     const colType = schema.getType(col.type.name);
@@ -156,14 +161,32 @@ export const findColumnOperator = ({
 interface Args {
   tableName: string;
   schema: GraphQLSchema;
+  tableConfig: MetadataTable['configuration'];
 }
+
+const getOriginalTableNameFromCustomName = (
+  tableConfig: MetadataTable['configuration'],
+  columnName: string
+) => {
+  const columnConfig = tableConfig?.column_config;
+
+  const matchingEntry = Object.entries(columnConfig ?? {}).find(value => {
+    return value?.[1]?.custom_name === columnName;
+  });
+
+  return matchingEntry?.[0] ?? columnName;
+};
 /**
  *
  * Returns a list of all the boolOperators, columns and relationships for the selected table
  */
-export const getAllColumnsAndOperators = ({ tableName, schema }: Args) => {
-  const fields = getFields(tableName, schema);
-
+export const getAllColumnsAndOperators = ({
+  tableName,
+  schema,
+  tableConfig,
+}: Args) => {
+  const metadataTableName = tableConfig?.custom_name ?? tableName;
+  const fields = getFields(metadataTableName, schema);
   const boolOperators = getBoolOperators();
   const columns = getColumns(fields);
   const relationships = getRelationships(fields);
@@ -174,7 +197,7 @@ export const getAllColumnsAndOperators = ({ tableName, schema }: Args) => {
     meta: null,
   }));
   const colMap = columns.map(column => ({
-    name: column.name,
+    name: getOriginalTableNameFromCustomName(tableConfig, column.name),
     kind: 'column',
     meta: column,
   }));
@@ -183,6 +206,5 @@ export const getAllColumnsAndOperators = ({ tableName, schema }: Args) => {
     kind: 'relationship',
     meta: relationship,
   }));
-
   return { boolOperators: boolMap, columns: colMap, relationships: relMap };
 };
