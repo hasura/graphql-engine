@@ -165,3 +165,4 @@ executable api-tests
     Test.ServiceLivenessSpec
     Test.Subscriptions.CustomFieldsSpec
     Test.Subscriptions.LiveQueriesSpec
+    Test.Subscriptions.StreamingSubscriptionsSpec
