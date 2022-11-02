@@ -86,10 +86,12 @@ export const generateGqlQueryFromTable = (
   const fieldName = table.table_name;
   const fields = table.columns;
   const pascalCaseName = toPascalCase(fieldName);
+  const tableSchemaPart =
+    table.table_schema !== 'public' ? `${table.table_schema}_` : '';
 
   if (operationType === 'query') {
     const query = `query Get${pascalCaseName} {
-  ${fieldName} {
+  ${tableSchemaPart}${fieldName} {
     ${indentFields(fields, 2)}
   }
 }
@@ -113,8 +115,9 @@ export const generateGqlQueryFromTable = (
       .map(sf => `${sf.column_name}: $${sf.column_name}`)
       .join(', ')
       .trim();
+
     const query = `mutation Insert${pascalCaseName}(${args}) {
-  insert_${fieldName}(objects: {${argsUsage}}) {
+  insert_${tableSchemaPart}${fieldName}(objects: {${argsUsage}}) {
     affected_rows
     returning {
       ${indentFields(fields, 3)}
@@ -145,7 +148,7 @@ export const generateGqlQueryFromTable = (
       );
 
       const query = `subscription Get${pascalCaseName}StreamingSubscription {
-  ${fieldName}_stream(batch_size: 10, cursor: {initial_value: {${
+  ${tableSchemaPart}${fieldName}_stream(batch_size: 10, cursor: {initial_value: {${
         initialValueColumn.column_name
       }: ${initialValue}}}) {
     ${indentFields(fields, 2)}
@@ -160,10 +163,11 @@ export const generateGqlQueryFromTable = (
 
   if (operationType === 'subscription') {
     const query = `subscription Get${pascalCaseName}StreamingSubscription {
-  ${fieldName} {
+  ${tableSchemaPart}${fieldName} {
     ${indentFields(fields, 2)}
   }
 }
+    
 
     `;
     return {
