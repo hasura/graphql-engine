@@ -15,6 +15,7 @@ import Data.Aeson.Casing
 import Data.Aeson.Types qualified as A
 import Data.Environment qualified as Env
 import Data.Has (Has)
+import Data.SerializableBlob qualified as SerializableBlob
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import GHC.Generics.Extended (constrName)
@@ -396,10 +397,19 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
         newResourceVersion <-
           Tracing.trace "setMetadata" $
             setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
+        L.unLogger logger $
+          L.UnstructuredLog L.LevelInfo $
+            SerializableBlob.fromText $
+              "Put new metadata in storage, received new resource version " <> tshow newResourceVersion
 
         -- notify schema cache sync
         Tracing.trace "notifySchemaCacheSync" $
           notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
+        L.unLogger logger $
+          L.UnstructuredLog L.LevelInfo $
+            SerializableBlob.fromText $
+              "Sent schema cache sync notification at resource version " <> tshow newResourceVersion
+
         (_, modSchemaCache', _) <-
           Tracing.trace "setMetadataResourceVersionInSchemaCache" $
             setMetadataResourceVersionInSchemaCache newResourceVersion
