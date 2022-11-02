@@ -60,7 +60,7 @@ tests opts = withSubscriptions $ do
       shouldBe = shouldReturnYaml opts
 
   describe "Websockets-based live queries" do
-    it "Sanity check" \(mkSubscription, testEnvironment) -> do
+    it "Hasura sends updated query results after insert" \(mkSubscription, testEnvironment) -> do
       let schemaName :: Schema.SchemaName
           schemaName = Schema.getSchemaName testEnvironment
       query <-
@@ -122,7 +122,86 @@ tests opts = withSubscriptions $ do
                     - id: 2
                       name: "B"
               |]
-            actual :: IO Value
-            actual = getNextResponse query
 
-        actual `shouldBe` expected
+        getNextResponse query `shouldBe` expected
+
+    it "Multiplexes" \(mkSubscription, testEnvironment) -> do
+      let schemaName :: Schema.SchemaName
+          schemaName = Schema.getSchemaName testEnvironment
+
+      subIdEq3 <-
+        mkSubscription
+          [graphql|
+            subscription {
+              #{schemaName}_example(where: { id: { _eq: 3 } }) {
+                id
+                name
+              }
+            }
+          |]
+
+      subIdEq4 <-
+        mkSubscription
+          [graphql|
+            subscription {
+              #{schemaName}_example(where: { id: { _eq: 4 } }) {
+                id
+                name
+              }
+            }
+          |]
+
+      getNextResponse subIdEq3
+        `shouldBe` [yaml|
+        data:
+          hasura_example: []
+      |]
+
+      getNextResponse subIdEq4
+        `shouldBe` [yaml|
+        data:
+          hasura_example: []
+      |]
+
+      let expected :: Value
+          expected =
+            [yaml|
+              data:
+                insert_hasura_example:
+                  affected_rows: 2
+            |]
+
+          actual :: IO Value
+          actual =
+            postGraphql
+              testEnvironment
+              [graphql|
+                mutation {
+                  insert_#{schemaName}_example(
+                    objects:
+                      [ {id: 3, name: "A"},
+                        {id: 4, name: "B"}
+                      ]
+                  ) {
+                    affected_rows
+                  }
+                }
+              |]
+
+      actual `shouldBe` expected
+
+      getNextResponse subIdEq3
+        `shouldBe` [yaml|
+        data:
+          hasura_example:
+            - id: 3
+              name: "A"
+      |]
+
+      getNextResponse subIdEq4
+        `shouldBe` [yaml|
+        data:
+          hasura_example:
+            - id: 4
+              name: "B"
+      |]
