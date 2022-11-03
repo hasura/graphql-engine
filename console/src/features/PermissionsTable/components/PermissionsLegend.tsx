@@ -4,9 +4,6 @@ import { PermissionsIcon } from './PermissionsIcons';
 
 export const PermissionsLegend: React.FC = () => (
   <div className="grid gap-2">
-    <p>
-      <strong>Permissions</strong>
-    </p>
     <div className="flex gap-4">
       <span>
         <PermissionsIcon type="fullAccess" />

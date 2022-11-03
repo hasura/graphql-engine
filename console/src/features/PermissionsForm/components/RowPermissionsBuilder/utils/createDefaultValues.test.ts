@@ -17,6 +17,7 @@ test('renders basic permission', () => {
     tableName: 'Album',
     schema,
     existingPermission: simpleExample,
+    tableConfig: {},
   });
 
   const expected: Expected = {
@@ -43,6 +44,7 @@ test('renders bool operator permission', () => {
     tableName: 'Album',
     schema,
     existingPermission: exampleWithBoolOperator,
+    tableConfig: {},
   });
 
   const expected = {
@@ -78,6 +80,7 @@ test('renders permission with relationship', () => {
     tableName: 'Album',
     schema,
     existingPermission: exampleWithRelationship,
+    tableConfig: {},
   });
 
   const expected: Expected = {
@@ -101,6 +104,7 @@ test('renders complex permission', () => {
     tableName: 'user',
     schema,
     existingPermission: complicatedExample,
+    tableConfig: {},
   });
 
   const expected: Expected = {

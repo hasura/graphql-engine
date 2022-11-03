@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { Story, Meta } from '@storybook/react';
 
 import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
@@ -16,7 +17,6 @@ export const Primary: Story<PermissionsTabProps> = args => (
   <PermissionsTab {...args} />
 );
 Primary.args = {
-  currentSource: 'postgres',
   dataSourceName: 'default',
   table: {
     name: 'user',
@@ -28,7 +28,6 @@ export const GDC: Story<PermissionsTabProps> = args => (
   <PermissionsTab {...args} />
 );
 GDC.args = {
-  currentSource: 'sqlite',
   dataSourceName: 'sqlite',
   table: ['Artist'],
 };
@@ -41,7 +40,6 @@ export const GDCNoMocks: Story<PermissionsTabProps> = args => (
   <PermissionsTab {...args} />
 );
 GDCNoMocks.args = {
-  currentSource: 'sqlite',
   dataSourceName: 'sqlite',
   table: ['Artist'],
 };

@@ -4,7 +4,6 @@ import { Button } from '@/new-components/Button';
 import { useBulkDeletePermissions } from './hooks';
 
 export interface BulkDeleteProps {
-  currentSource: string;
   dataSourceName: string;
   roles: string[];
   table: unknown;
@@ -12,14 +11,12 @@ export interface BulkDeleteProps {
 }
 
 export const BulkDelete: React.FC<BulkDeleteProps> = ({
-  currentSource,
   dataSourceName,
   roles,
   table,
   handleClose,
 }) => {
   const { submit, isLoading, isError } = useBulkDeletePermissions({
-    currentSource,
     dataSourceName,
     table,
   });
