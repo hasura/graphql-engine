@@ -84,7 +84,7 @@ orderByExp sourceInfo tableInfo = P.memoizeOn 'orderByExp (_siName sourceInfo, t
       roleName <- retrieve scRole
       case fieldInfo of
         FIColumn columnInfo -> do
-          let fieldName = ciName columnInfo
+          let !fieldName = ciName columnInfo
           pure $
             P.fieldOptional
               fieldName
