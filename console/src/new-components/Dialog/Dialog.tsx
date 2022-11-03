@@ -1,3 +1,4 @@
+import { useGetAnalyticsAttributes } from '@/features/Analytics';
 import { IconTooltip } from '@/new-components/Tooltip';
 import * as RadixDialog from '@radix-ui/react-dialog';
 import clsx from 'clsx';
@@ -13,6 +14,8 @@ export type FooterProps = {
   onClose: () => void;
   isLoading?: boolean;
   className?: string;
+  onSubmitAnalyticsName?: string;
+  onCancelAnalyticsName?: string;
 };
 
 const Footer: React.VFC<FooterProps> = ({
@@ -23,8 +26,18 @@ const Footer: React.VFC<FooterProps> = ({
   onSubmit,
   isLoading = false,
   className,
+  onSubmitAnalyticsName,
+  onCancelAnalyticsName,
 }) => {
   const callToActionProps = onSubmit ? { onClick: onSubmit } : {};
+
+  const onSubmitAnalyticsAttributes = useGetAnalyticsAttributes(
+    onSubmitAnalyticsName
+  );
+
+  const onCancelAnalyticsAttributes = useGetAnalyticsAttributes(
+    onCancelAnalyticsName
+  );
 
   return (
     <div
@@ -35,7 +48,9 @@ const Footer: React.VFC<FooterProps> = ({
     >
       {callToDeny && (
         <div className="mr-1.5">
-          <Button onClick={onClose}>{callToDeny}</Button>
+          <Button onClick={onClose} {...onCancelAnalyticsAttributes}>
+            {callToDeny}
+          </Button>
         </div>
       )}
       <Button
@@ -44,6 +59,7 @@ const Footer: React.VFC<FooterProps> = ({
         mode="primary"
         isLoading={isLoading}
         loadingText={callToActionLoadingText}
+        {...onSubmitAnalyticsAttributes}
       >
         {callToAction}
       </Button>

@@ -181,12 +181,17 @@ const ActionEditor: React.FC<ActionEditorProps> = ({
             onClose={() => setIsTypesGeneratorOpen(false)}
           />
 
-          <Button
-            icon={<FaMagic />}
-            onClick={() => setIsTypesGeneratorOpen(true)}
+          <Analytics
+            name="actions-tab-btn-type-generator"
+            passHtmlAttributesToChildren
           >
-            Type generator
-          </Button>
+            <Button
+              icon={<FaMagic />}
+              onClick={() => setIsTypesGeneratorOpen(true)}
+            >
+              Type generator
+            </Button>
+          </Analytics>
         </div>
       </Analytics>
 
