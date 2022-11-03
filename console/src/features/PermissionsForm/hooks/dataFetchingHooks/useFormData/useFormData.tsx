@@ -1,102 +1,17 @@
 import { useQuery } from 'react-query';
+import { buildClientSchema } from 'graphql';
 
-import { DataSource, exportMetadata, TableColumn } from '@/features/DataSource';
+import {
+  DataSource,
+  exportMetadata,
+  runIntrospectionQuery,
+} from '@/features/DataSource';
 import { useHttpClient } from '@/features/Network';
 
-import { Metadata, MetadataTable } from '@/features/MetadataAPI';
-import { isPermission } from '../utils';
+import { createDefaultValues } from './createDefaultValues';
+import { createFormData } from './createFormData';
 
-type Operation = 'insert' | 'select' | 'update' | 'delete';
-
-const supportedQueries: Operation[] = ['insert', 'select', 'update', 'delete'];
-
-export const getAllowedFilterKeys = (
-  query: 'insert' | 'select' | 'update' | 'delete'
-): ('check' | 'filter')[] => {
-  switch (query) {
-    case 'insert':
-      return ['check'];
-    case 'update':
-      return ['filter', 'check'];
-    default:
-      return ['filter'];
-  }
-};
-
-type GetMetadataTableArgs = {
-  dataSourceName: string;
-  table: unknown;
-  metadata: Metadata;
-};
-
-const getMetadataTable = (args: GetMetadataTableArgs) => {
-  const { dataSourceName, table, metadata } = args;
-
-  const trackedTables = metadata.metadata?.sources?.find(
-    source => source.name === dataSourceName
-  )?.tables;
-
-  const selectedTable = trackedTables?.find(
-    trackedTable => JSON.stringify(trackedTable.table) === JSON.stringify(table)
-  );
-
-  // find selected table
-  return {
-    table: selectedTable,
-    tables: trackedTables,
-    // for gdc tables will be an array of strings so this needs updating
-    tableNames: trackedTables?.map(each => each.table),
-  };
-};
-
-const getRoles = (metadataTables?: MetadataTable[]) => {
-  // go through all tracked tables
-  const res = metadataTables?.reduce<Set<string>>((acc, each) => {
-    // go through all permissions
-    Object.entries(each).forEach(([key, value]) => {
-      const props = { key, value };
-      // check object key of metadata is a permission
-      if (isPermission(props)) {
-        // add each role from each permission to the set
-        props.value.forEach(permission => {
-          acc.add(permission.role);
-        });
-      }
-    });
-
-    return acc;
-  }, new Set());
-
-  return Array.from(res || []);
-};
-
-interface CreateFormDataArgs {
-  dataSourceName: string;
-  table: unknown;
-  metadata: Metadata;
-  tableColumns: TableColumn[];
-}
-
-export const createFormData = (props: CreateFormDataArgs) => {
-  const { dataSourceName, table, metadata, tableColumns } = props;
-  // find the specific metadata table
-  const metadataTable = getMetadataTable({
-    dataSourceName,
-    table,
-    metadata,
-  });
-
-  const roles = getRoles(metadataTable.tables);
-
-  return {
-    roles,
-    supportedQueries,
-    tableNames: metadataTable.tableNames,
-    columns: tableColumns?.map(({ name }) => name),
-  };
-};
-
-export type UseFormDataArgs = {
+export type Args = {
   dataSourceName: string;
   table: unknown;
   roleName: string;
@@ -104,21 +19,32 @@ export type UseFormDataArgs = {
 };
 
 type ReturnValue = {
-  roles: string[];
-  supportedQueries: Operation[];
-  tableNames: unknown;
-  columns: string[];
+  formData: ReturnType<typeof createFormData>;
+  defaultValues: ReturnType<typeof createDefaultValues>;
 };
 
 /**
  *
  * creates data for displaying in the form e.g. column names, roles etc.
+ * creates default values for form i.e. existing permissions from metadata
  */
-export const useFormData = ({ dataSourceName, table }: UseFormDataArgs) => {
+export const useFormData = ({
+  dataSourceName,
+  table,
+  roleName,
+  queryType,
+}: Args) => {
   const httpClient = useHttpClient();
   return useQuery<ReturnValue, Error>({
-    queryKey: [dataSourceName, 'permissionFormData'],
+    queryKey: [
+      dataSourceName,
+      'permissionFormData',
+      JSON.stringify(table),
+      roleName,
+    ],
     queryFn: async () => {
+      const introspectionResult = await runIntrospectionQuery({ httpClient });
+      const schema = buildClientSchema(introspectionResult.data);
       const metadata = await exportMetadata({ httpClient });
 
       // get table columns for metadata table from db introspection
@@ -127,12 +53,24 @@ export const useFormData = ({ dataSourceName, table }: UseFormDataArgs) => {
         table,
       });
 
-      return createFormData({
+      const defaultValues = createDefaultValues({
+        queryType,
+        roleName,
+        dataSourceName,
+        metadata,
+        table,
+        tableColumns,
+        schema,
+      });
+
+      const formData = createFormData({
         dataSourceName,
         table,
         metadata,
         tableColumns,
       });
+
+      return { formData, defaultValues };
     },
     refetchOnWindowFocus: false,
   });

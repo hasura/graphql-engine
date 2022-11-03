@@ -3,6 +3,7 @@ import { AxiosInstance } from 'axios';
 import { exportMetadata } from '@/features/DataSource';
 import { useHttpClient } from '@/features/Network';
 import { Permission, useMetadataMigration } from '@/features/MetadataAPI';
+import { useFireNotification } from '@/new-components/Notifications';
 
 import { api } from '../../api';
 import { QueryType } from '../../types';
@@ -38,6 +39,7 @@ const getMetadataTable = async ({
         JSON.stringify(trackedTable.table) === JSON.stringify(table)
     ),
     resourceVersion: resource_version,
+    driver: currentMetadataSource.kind,
   };
 };
 
@@ -69,16 +71,11 @@ const isPermission = (props: {
 } => props.key in keyToPermission;
 
 interface Args {
-  currentSource: string;
   dataSourceName: string;
   table: unknown;
 }
 
-export const useBulkDeletePermissions = ({
-  currentSource,
-  dataSourceName,
-  table,
-}: Args) => {
+export const useBulkDeletePermissions = ({ dataSourceName, table }: Args) => {
   const {
     mutateAsync,
     isLoading: mutationLoading,
@@ -88,9 +85,10 @@ export const useBulkDeletePermissions = ({
 
   const httpClient = useHttpClient();
   const queryClient = useQueryClient();
+  const { fireNotification } = useFireNotification();
 
   const submit = async (roles: string[]) => {
-    const { metadataTable, resourceVersion } = await getMetadataTable({
+    const { metadataTable, resourceVersion, driver } = await getMetadataTable({
       dataSourceName,
       table,
       httpClient,
@@ -129,18 +127,48 @@ export const useBulkDeletePermissions = ({
     );
 
     const body = api.createBulkDeleteBody({
-      source: currentSource,
+      driver,
       dataSourceName,
       table,
       resourceVersion,
       roleList,
     });
 
-    await mutateAsync({
-      query: body,
-    });
+    await mutateAsync(
+      {
+        query: body,
+      },
+      {
+        onSuccess: () => {
+          fireNotification({
+            type: 'success',
+            title: 'Success!',
+            message: 'Permissions successfully deleted',
+          });
+        },
+        onError: err => {
+          fireNotification({
+            type: 'error',
+            title: 'Error!',
+            message:
+              err?.message ?? 'Something went wrong while deleting permissions',
+          });
+        },
+        onSettled: () => {
+          queryClient.invalidateQueries([
+            dataSourceName,
+            'permissionFormData',
+            JSON.stringify(table),
+          ]);
 
-    queryClient.invalidateQueries([dataSourceName, 'permissionsTable']);
+          queryClient.invalidateQueries([
+            dataSourceName,
+            'permissionsTable',
+            JSON.stringify(table),
+          ]);
+        },
+      }
+    );
   };
 
   const isLoading = mutationLoading;

@@ -1,6 +1,7 @@
 import { BrowseRowsContainer } from '@/features/BrowseRows';
 import { DatabaseRelationshipsContainer } from '@/features/DataRelationships';
 import { getTableName } from '@/features/DataSource';
+import { PermissionsTab } from '@/features/PermissionsTab';
 import { Table } from '@/features/MetadataAPI';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Tabs } from '@/new-components/Tabs';
@@ -18,16 +19,6 @@ export interface ManageTableProps {
     operation: AllowedTabs;
   };
 }
-
-const FeatureNotImplemented = () => {
-  return (
-    <div className="my-4">
-      <IndicatorCard headline="Feature is currently unavailable">
-        Feature not implemented
-      </IndicatorCard>
-    </div>
-  );
-};
 
 const availableTabs = (
   dataSourceName: string,
@@ -65,7 +56,7 @@ const availableTabs = (
   {
     value: 'permissions',
     label: 'Permissions',
-    content: <FeatureNotImplemented />,
+    content: <PermissionsTab dataSourceName={dataSourceName} table={table} />,
   },
 ];
 

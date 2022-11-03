@@ -1,4 +1,5 @@
 import isEqual from 'lodash.isequal';
+import { GraphQLSchema } from 'graphql';
 import { TableColumn } from '@/features/DataSource';
 
 import type {
@@ -10,10 +11,14 @@ import type {
   UpdatePermissionDefinition,
 } from '@/features/MetadataAPI';
 
-import { isPermission, keyToPermission, permissionToKey } from '../utils';
-import { createDefaultValues } from '../../../components/RowPermissionsBuilder';
+import {
+  isPermission,
+  keyToPermission,
+  permissionToKey,
+} from '../../../../utils';
+import { createDefaultValues } from '../../../../components/RowPermissionsBuilder';
 
-import type { QueryType } from '../../../types';
+import type { QueryType } from '../../../../types';
 
 export const getCheckType = (
   check?: Record<string, unknown> | null
@@ -150,12 +155,15 @@ export const createPermission = {
   select: (
     permission: SelectPermissionDefinition,
     tableColumns: TableColumn[],
-    schema: any
+    schema: GraphQLSchema,
+    tableName: string,
+    tableConfig: MetadataTable['configuration']
   ) => {
     const { filter, operators } = createDefaultValues({
-      tableName: 'Artist',
+      tableName,
       existingPermission: permission.filter,
       schema,
+      tableConfig,
     });
 
     const filterType = getCheckType(permission?.filter);
@@ -254,6 +262,7 @@ interface ObjArgs {
   tableColumns: TableColumn[];
   roleName: string;
   schema: any;
+  tableName: string;
 }
 
 export const createPermissionsObject = ({
@@ -262,6 +271,7 @@ export const createPermissionsObject = ({
   tableColumns,
   roleName,
   schema,
+  tableName,
 }: ObjArgs) => {
   const selectedPermission = getCurrentPermission({
     table: selectedTable,
@@ -279,7 +289,9 @@ export const createPermissionsObject = ({
       return createPermission.select(
         selectedPermission.permission as SelectPermissionDefinition,
         tableColumns,
-        schema
+        schema,
+        tableName,
+        selectedTable.configuration
       );
     case 'update':
       return createPermission.update(

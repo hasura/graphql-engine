@@ -101,30 +101,34 @@ export const ManualLocalRelationshipWidget = (
             <div className="mb-sm">
               <Name />
             </div>
-
-            <div className="mb-sm">
-              <RelationshipType disabled={mode === 'edit'} />
-            </div>
           </div>
 
-          <div className="grid grid-cols-12">
-            <div className="col-span-5">
-              <div className="rounded bg-gray-50 border border-gray-300 p-md gap-y-4 border-l-4 border-l-green-600">
-                <SourceTable />
+          {mode === 'create' && (
+            <div>
+              <div className="mb-sm w-1/2">
+                <RelationshipType disabled={false} />
               </div>
-            </div>
 
-            <LinkBlockHorizontal />
-            <div className="col-span-5">
-              <div className="rounded bg-gray-50 border border-gray-300 p-md gap-y-4 border-l-4 border-l-indigo-600">
-                <TargetTable disabled={mode === 'edit'} />
+              <div className="grid grid-cols-12">
+                <div className="col-span-5">
+                  <div className="rounded bg-gray-50 border border-gray-300 p-md gap-y-4 border-l-4 border-l-green-600">
+                    <SourceTable />
+                  </div>
+                </div>
+
+                <LinkBlockHorizontal />
+                <div className="col-span-5">
+                  <div className="rounded bg-gray-50 border border-gray-300 p-md gap-y-4 border-l-4 border-l-indigo-600">
+                    <TargetTable disabled={false} />
+                  </div>
+                </div>
               </div>
+
+              <LinkBlockVertical title="Columns Mapped To" />
+
+              <MapColumns disabled={false} />
             </div>
-          </div>
-
-          <LinkBlockVertical title="Columns Mapped To" />
-
-          <MapColumns disabled={mode === 'edit'} />
+          )}
 
           <Button
             mode="primary"

@@ -1,10 +1,10 @@
 import { allowedMetadataTypes } from '@/features/MetadataAPI';
 
-import { AccessType, FormOutput, QueryType } from '../types';
+import { AccessType, QueryType } from '../types';
+import { PermissionsSchema } from '../utils';
 import { createInsertArgs } from './utils';
 
 interface CreateBodyArgs {
-  currentSource: string;
   dataSourceName: string;
   table: unknown;
   roleName: string;
@@ -13,10 +13,11 @@ interface CreateBodyArgs {
 
 interface CreateDeleteBodyArgs extends CreateBodyArgs {
   queries: QueryType[];
+  driver: string;
 }
 
 const createDeleteBody = ({
-  currentSource,
+  driver,
   dataSourceName,
   table,
   roleName,
@@ -28,12 +29,8 @@ const createDeleteBody = ({
   resource_version: number;
   args: BulkArgs[];
 } => {
-  // if (!['postgres', 'mssql'].includes(currentSource)) {
-  //   throw new Error(`${currentSource} not supported`);
-  // }
-
   const args = queries.map(queryType => ({
-    type: `${currentSource}_drop_${queryType}_permission` as allowedMetadataTypes,
+    type: `${driver}_drop_${queryType}_permission` as allowedMetadataTypes,
     args: {
       table,
       role: roleName,
@@ -52,11 +49,11 @@ const createDeleteBody = ({
 };
 
 interface CreateBulkDeleteBodyArgs {
-  source: string;
   dataSourceName: string;
   table: unknown;
   resourceVersion: number;
   roleList?: Array<{ roleName: string; queries: string[] }>;
+  driver: string;
 }
 
 interface BulkArgs {
@@ -65,8 +62,8 @@ interface BulkArgs {
 }
 
 const createBulkDeleteBody = ({
-  source,
   dataSourceName,
+  driver,
   table,
   resourceVersion,
   roleList,
@@ -76,15 +73,11 @@ const createBulkDeleteBody = ({
   resource_version: number;
   args: BulkArgs[];
 } => {
-  // if (!['postgres', 'mssql'].includes(source)) {
-  //   throw new Error(`${dataSourceName} not supported`);
-  // }
-
   const args =
     roleList?.reduce<BulkArgs[]>((acc, role) => {
       role.queries.forEach(queryType => {
         acc.push({
-          type: `${source}_drop_${queryType}_permission` as allowedMetadataTypes,
+          type: `${driver}_drop_${queryType}_permission` as allowedMetadataTypes,
           args: {
             table,
             role: role.roleName,
@@ -108,9 +101,10 @@ const createBulkDeleteBody = ({
 
 interface CreateInsertBodyArgs extends CreateBodyArgs {
   queryType: QueryType;
-  formData: FormOutput;
+  formData: PermissionsSchema;
   accessType: AccessType;
   existingPermissions: any;
+  driver: string;
 }
 
 export interface InsertBodyResult {
@@ -120,7 +114,6 @@ export interface InsertBodyResult {
 }
 
 const createInsertBody = ({
-  currentSource,
   dataSourceName,
   table,
   queryType,
@@ -129,13 +122,10 @@ const createInsertBody = ({
   accessType,
   resourceVersion,
   existingPermissions,
+  driver,
 }: CreateInsertBodyArgs): InsertBodyResult => {
-  // if (!['postgres', 'mssql'].includes(currentSource)) {
-  //   throw new Error(`${currentSource} not supported`);
-  // }
-
   const args = createInsertArgs({
-    currentSource,
+    driver,
     dataSourceName,
     table,
     queryType,

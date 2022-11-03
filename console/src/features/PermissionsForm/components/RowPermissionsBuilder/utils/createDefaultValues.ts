@@ -1,3 +1,4 @@
+import { MetadataTable } from '@/features/MetadataAPI';
 import { GraphQLSchema } from 'graphql';
 import { getAllColumnsAndOperators } from '.';
 
@@ -5,17 +6,19 @@ export interface CreateOperatorsArgs {
   tableName: string;
   schema?: GraphQLSchema;
   existingPermission?: Record<string, any>;
+  tableConfig: MetadataTable['configuration'];
 }
 
 export const createOperatorsObject = ({
   tableName,
   schema,
   existingPermission,
+  tableConfig,
 }: CreateOperatorsArgs): Record<string, any> => {
   if (!existingPermission || !schema) {
     return {};
   }
-  const data = getAllColumnsAndOperators({ tableName, schema });
+  const data = getAllColumnsAndOperators({ tableName, schema, tableConfig });
 
   const colNames = data.columns.map(col => col.name);
   const boolOperators = data.boolOperators.map(bo => bo.name);
@@ -33,6 +36,7 @@ export const createOperatorsObject = ({
               tableName,
               schema,
               existingPermission: each,
+              tableConfig,
             })
           ),
         };
@@ -50,6 +54,7 @@ export const createOperatorsObject = ({
             tableName: typeName || '',
             schema,
             existingPermission: value,
+            tableConfig,
           }),
         };
       }
@@ -63,6 +68,7 @@ export const createOperatorsObject = ({
             tableName,
             schema,
             existingPermission: value,
+            tableConfig,
           }),
         };
       }
@@ -79,10 +85,11 @@ export interface CreateDefaultsArgs {
   tableName: string;
   schema?: GraphQLSchema;
   existingPermission?: Record<string, any>;
+  tableConfig: MetadataTable['configuration'];
 }
 
 export const createDefaultValues = (props: CreateDefaultsArgs) => {
-  const { tableName, schema, existingPermission } = props;
+  const { tableName, schema, existingPermission, tableConfig } = props;
   if (!existingPermission) {
     return {};
   }
@@ -91,6 +98,7 @@ export const createDefaultValues = (props: CreateDefaultsArgs) => {
     tableName,
     schema,
     existingPermission,
+    tableConfig,
   });
 
   return {
