@@ -108,7 +108,6 @@ library
     Harness.Test.BackendType
     Harness.Test.CustomOptions
     Harness.Test.Fixture
-    Harness.Test.Hspec.Extended
     Harness.Test.Introspection
     Harness.Test.Permissions
     Harness.Test.Schema

@@ -28,11 +28,9 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
-import Harness.Test.Hspec.Extended
 import Harness.TestEnvironment (TestEnvironment (..), testLog)
 import Hasura.Prelude
-import Test.Hspec (ActionWith, SpecWith, aroundAllWith, aroundWith, describe, pendingWith)
-import Test.Hspec.Core.Spec (mapSpecItem)
+import Test.Hspec (SpecWith, aroundAllWith, aroundWith, beforeWith, describe, pendingWith)
 
 -- | Runs the given tests, for each provided 'Fixture'@ ()@.
 --
@@ -49,25 +47,7 @@ import Test.Hspec.Core.Spec (mapSpecItem)
 -- 'runWithLocalTestEnvironment'.
 run :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
 run fixtures tests = do
-  let mappedTests opts =
-        mapSpecItem
-          actionWithTestEnvironmentMapping
-          (mapItemAction actionWithTestEnvironmentMapping)
-          (tests opts)
-  runWithLocalTestEnvironment fixtures mappedTests
-
--- | Observe that there is a direct correspondance (i.e. an isomorphism) from
--- @TestEnvironment@ to @(TestEnvironment, ())@ within 'ActionWith'.
---
--- NOTE: 'ActionWith'@ a@ is a type alias for @a -> IO ()@; thus, the fully
--- expanded type signature here is @(TestEnvironment -> IO ()) -> (TestEnvironment, ()) -> IO ()@.
---
--- NOTE: This can possibly be generalized to a @Control.Lens.Iso@.
---
--- NOTE: This should probably be extracted to some common helper module (e.g.
--- @Harness.TestEnvironment@).
-actionWithTestEnvironmentMapping :: ActionWith TestEnvironment -> ActionWith (TestEnvironment, ())
-actionWithTestEnvironmentMapping actionWith (testEnvironment, _) = actionWith testEnvironment
+  runWithLocalTestEnvironment fixtures (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
 
 -- | Runs the given tests, for each provided 'Fixture'@ a@.
 --
