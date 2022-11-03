@@ -4,7 +4,6 @@ import { useDeletePermission } from './useDeletePermission';
 import { AccessType, QueryType } from '../../types';
 
 export interface UseUpdatePermissionsArgs {
-  currentSource: string;
   dataSourceName: string;
   table: unknown;
   roleName: string;
@@ -13,7 +12,6 @@ export interface UseUpdatePermissionsArgs {
 }
 
 export const useUpdatePermissions = ({
-  currentSource,
   dataSourceName,
   table,
   roleName,
@@ -21,7 +19,6 @@ export const useUpdatePermissions = ({
   accessType,
 }: UseUpdatePermissionsArgs) => {
   const updatePermissions = useSubmitForm({
-    currentSource,
     dataSourceName,
     table,
     roleName,
@@ -30,7 +27,6 @@ export const useUpdatePermissions = ({
   });
 
   const deletePermissions = useDeletePermission({
-    currentSource,
     dataSourceName,
     table,
     roleName,

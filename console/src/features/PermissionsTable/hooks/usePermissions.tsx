@@ -1,10 +1,10 @@
-import { AxiosInstance } from 'axios';
 import isEqual from 'lodash.isequal';
 import { DataSource, exportMetadata } from '@/features/DataSource';
 import type { TableColumn } from '@/features/DataSource';
 
 import { useQuery } from 'react-query';
 import { useHttpClient } from '@/features/Network';
+import { MetadataTable, Metadata } from '@/features/MetadataAPI';
 
 interface RolePermission {
   roleName: string;
@@ -95,19 +95,16 @@ const getAccessType = ({
 type GetMetadataTableArgs = {
   dataSourceName: string;
   table: unknown;
-  httpClient: AxiosInstance;
+  metadata?: Metadata;
 };
 
-const getMetadataTable = async ({
-  httpClient,
+const getMetadataTable = ({
+  metadata,
   dataSourceName,
   table,
 }: GetMetadataTableArgs) => {
-  // get all metadata
-  const { metadata } = await exportMetadata({ httpClient });
-
   // find current source
-  const currentMetadataSource = metadata?.sources?.find(
+  const currentMetadataSource = metadata?.metadata?.sources?.find(
     source => source.name === dataSourceName
   );
 
@@ -140,14 +137,16 @@ const isPermission = (props: {
 type CreateRoleTableDataArgs = {
   metadataTable: any;
   tableColumns?: TableColumn[];
+  allRoles: string[];
 };
 
 type RoleToPermissionsMap = Record<string, Partial<Record<QueryType, Access>>>;
 
-const createRoleTableData = async ({
+const createRoleTableData = ({
   metadataTable,
   tableColumns,
-}: CreateRoleTableDataArgs): Promise<RolePermission[]> => {
+  allRoles,
+}: CreateRoleTableDataArgs): RolePermission[] => {
   if (!metadataTable) return [];
   // create object with key of role
   // and value describing permissions attached to that role
@@ -178,8 +177,22 @@ const createRoleTableData = async ({
     return acc;
   }, {});
 
+  const allRolesToPermissionsMap = allRoles.reduce<RoleToPermissionsMap>(
+    (acc, role) => {
+      return {
+        ...acc,
+        [role]: roleToPermissionsMap[role] ?? {
+          insert: 'noAccess',
+          select: 'noAccess',
+          update: 'noAccess',
+          delete: 'noAccess',
+        },
+      };
+    },
+    {}
+  );
   // create the array that has the relevant information for each row of the table
-  const permissions = Object.entries(roleToPermissionsMap).map(
+  const permissions = Object.entries(allRolesToPermissionsMap).map(
     ([roleName, permission]) => {
       const permissionEntries = Object.entries(permission) as [
         QueryType,
@@ -246,34 +259,113 @@ type UseRolePermissionsArgs = {
   table: unknown;
 };
 
+type PermKeys = Pick<
+  MetadataTable,
+  | 'update_permissions'
+  | 'select_permissions'
+  | 'delete_permissions'
+  | 'insert_permissions'
+>;
+const permKeys: Array<keyof PermKeys> = [
+  'insert_permissions',
+  'update_permissions',
+  'select_permissions',
+  'delete_permissions',
+];
+
+const getRoles = (m: Metadata) => {
+  if (!m) return null;
+
+  const { metadata } = m;
+
+  const actions = metadata.actions;
+  const tableEntries: MetadataTable[] = metadata.sources.reduce<
+    MetadataTable[]
+  >((acc, source) => {
+    return [...acc, ...source.tables];
+  }, []);
+  const inheritedRoles = metadata.inherited_roles;
+  const remoteSchemas = metadata.remote_schemas;
+  const allowlists = metadata.allowlist;
+  const securitySettings = {
+    api_limits: metadata.api_limits,
+    graphql_schema_introspection: metadata.graphql_schema_introspection,
+  };
+  const roleNames: string[] = [];
+
+  tableEntries?.forEach(table =>
+    permKeys.forEach(key =>
+      table[key]?.forEach(({ role }: { role: string }) => roleNames.push(role))
+    )
+  );
+
+  actions?.forEach(action =>
+    action.permissions?.forEach(p => roleNames.push(p.role))
+  );
+
+  remoteSchemas?.forEach(remoteSchema => {
+    remoteSchema?.permissions?.forEach(p => roleNames.push(p.role));
+  });
+
+  allowlists?.forEach(allowlist => {
+    if (allowlist?.scope?.global === false) {
+      allowlist?.scope?.roles?.forEach(role => roleNames.push(role));
+    }
+  });
+
+  inheritedRoles?.forEach(role => roleNames.push(role.role_name));
+
+  Object.entries(securitySettings?.api_limits ?? {}).forEach(
+    ([limit, value]) => {
+      if (limit !== 'disabled' && typeof value !== 'boolean') {
+        Object.keys(value?.per_role ?? {}).forEach(role =>
+          roleNames.push(role)
+        );
+      }
+    }
+  );
+
+  securitySettings?.graphql_schema_introspection?.disabled_for_roles.forEach(
+    role => roleNames.push(role)
+  );
+
+  return Array.from(new Set(roleNames));
+};
+
 export const useRolePermissions = ({
   dataSourceName,
   table,
 }: UseRolePermissionsArgs) => {
   const httpClient = useHttpClient();
+
   return useQuery<
     { supportedQueries: QueryType[]; rolePermissions: RolePermission[] },
     Error
   >({
-    queryKey: [dataSourceName, 'permissionsTable'],
+    queryKey: [dataSourceName, 'permissionsTable', JSON.stringify(table)],
     queryFn: async () => {
-      // find the specific metadata table
-      const metadataTable = await getMetadataTable({
-        httpClient,
-        dataSourceName,
-        table,
-      });
-
+      const metadata = await exportMetadata({ httpClient });
       // get table columns for metadata table from db introspection
       const tableColumns = await DataSource(httpClient).getTableColumns({
         dataSourceName,
         table,
       });
 
+      // find the specific metadata table
+      const metadataTable = getMetadataTable({
+        metadata,
+        dataSourceName,
+        table,
+      });
+
+      // get all roles
+      const roles = getRoles(metadata);
+
       // // extract the permissions data in the format required for the table
-      const rolePermissions = await createRoleTableData({
+      const rolePermissions = createRoleTableData({
         metadataTable,
         tableColumns,
+        allRoles: roles ?? [],
       });
 
       return { rolePermissions, supportedQueries };
