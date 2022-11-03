@@ -290,11 +290,9 @@ run_server_upgrade_pytest() {
 		# In this case, Hasura metadata will have GraphQL servers defined as remote.
 		# We need to have remote GraphQL server running for the graphql-engine to avoid
 		# inconsistent metadata error
-		cd $RELEASE_PYTEST_DIR
-		python3 graphql_server.py &
+		python3 server/tests-py/graphql_server.py &
 		REMOTE_GQL_PID=$!
 		wait_for_port 5000
-		cd -
 	fi
 
 	log "start the current build"
@@ -330,11 +328,9 @@ run_server_upgrade_pytest() {
 	############## Tests for latest release GraphQL engine once more after downgrade #########################
 
 	if [[ "$1" =~ "test_schema_stitching" ]]; then
-		cd $RELEASE_PYTEST_DIR
-		python3 graphql_server.py &
+		python3 server/tests-py/graphql_server.py &
 		REMOTE_GQL_PID=$!
 		wait_for_port 5000
-		cd -
 	fi
 
 	# Start the old (latest release) GraphQL Engine
