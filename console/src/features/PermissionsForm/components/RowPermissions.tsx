@@ -1,15 +1,17 @@
 import React from 'react';
+import AceEditor from 'react-ace';
 import { useFormContext } from 'react-hook-form';
-
-import 'brace/mode/json';
-import 'brace/theme/github';
-
+import { Table } from '@/features/MetadataAPI';
+import { useHttpClient } from '@/features/Network';
+import { useQuery } from 'react-query';
+import { exportMetadata } from '@/features/DataSource';
+import { areTablesEqual } from '@/features/RelationshipsTable';
+import { getTypeName } from '@/features/GraphQLUtils';
 import { InputField } from '@/new-components/Form';
 import { IconTooltip } from '@/new-components/Tooltip';
 import { Collapse } from '@/new-components/deprecated';
 import { getIngForm } from '../../../components/Services/Data/utils';
 
-import JSONEditor from './JSONEditor';
 import { RowPermissionBuilder } from './RowPermissionsBuilder';
 
 import { QueryType } from '../types';
@@ -37,6 +39,7 @@ export interface RowPermissionsProps {
   queryType: QueryType;
   subQueryType?: string;
   allRowChecks: Array<{ queryType: QueryType; value: string }>;
+  dataSourceName: string;
 }
 
 enum SelectedSection {
@@ -80,26 +83,40 @@ const getRowPermissionCheckType = (
   return 'filterType';
 };
 
-const isGDCTable = (table: unknown): table is string[] => {
-  return Array.isArray(table);
-};
+const useTypeName = ({
+  table,
+  dataSourceName,
+}: {
+  table: Table;
+  dataSourceName: string;
+}) => {
+  const httpClient = useHttpClient();
 
-const hasTableName = (table: unknown): table is { name: string } => {
-  return typeof table === 'object' && 'name' in (table || {});
-};
+  return useQuery({
+    queryKey: ['gql_introspection', 'type_name', table, dataSourceName],
+    queryFn: async () => {
+      const { metadata } = await exportMetadata({ httpClient });
+      const metadataSource = metadata.sources.find(
+        s => s.name === dataSourceName
+      );
+      const metadataTable = metadataSource?.tables.find(t =>
+        areTablesEqual(t.table, table)
+      );
 
-const getTableName = (table: unknown) => {
-  const gdcTable = isGDCTable(table);
-  if (gdcTable) {
-    return table[table.length - 1];
-  }
+      if (!metadataSource || !metadataTable)
+        throw Error('unable to generate type name');
 
-  const tableName = hasTableName(table);
-  if (tableName) {
-    return table.name;
-  }
+      // This is very GDC specific. We have to move this to DAL later
+      const typeName = getTypeName({
+        defaultQueryRoot: (table as string[]).join('_'),
+        operation: 'select',
+        sourceCustomization: metadataSource?.customization,
+        configuration: metadataTable.configuration,
+      });
 
-  throw new Error('cannot read table');
+      return typeName;
+    },
+  });
 };
 
 export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
@@ -107,8 +124,9 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
   queryType,
   subQueryType,
   allRowChecks,
+  dataSourceName,
 }) => {
-  const tableName = getTableName(table);
+  const { data: tableName, isLoading } = useTypeName({ table, dataSourceName });
   const { register, watch, setValue } = useFormContext();
   // determines whether the inputs should be pointed at `check` or `filter`
   const rowPermissions = getRowPermission(queryType, subQueryType);
@@ -143,13 +161,20 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
         </label>
 
         {selectedSection === SelectedSection.NoChecks && (
-          <div className="pt-4">
-            <JSONEditor
-              data="{}"
+          <div className="mt-4 p-6 rounded-lg bg-white border border-gray-200 min-h-32 w-full">
+            <AceEditor
+              mode="json"
+              minLines={1}
+              fontSize={14}
+              height="18px"
+              width="100%"
+              theme="github"
+              name={`${tableName}-json-editor`}
+              value="{}"
               onChange={() =>
                 setValue(rowPermissionsCheckType, SelectedSection.Custom)
               }
-              initData="{}"
+              editorProps={{ $blockScrolling: true }}
             />
           </div>
         )}
@@ -175,14 +200,20 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
           </label>
 
           {selectedSection === query && (
-            <div className="pt-4">
-              <JSONEditor
-                data={value}
-                onChange={output => {
-                  setValue(rowPermissionsCheckType, SelectedSection.Custom);
-                  setValue(rowPermissions, output);
-                }}
-                initData=""
+            <div className="mt-4 p-6 rounded-lg bg-white border border-gray-200 min-h-32 w-full">
+              <AceEditor
+                mode="json"
+                minLines={1}
+                fontSize={14}
+                height="18px"
+                width="100%"
+                theme="github"
+                name={`${tableName}-json-editor`}
+                value="{}"
+                onChange={() =>
+                  setValue(rowPermissionsCheckType, SelectedSection.Custom)
+                }
+                editorProps={{ $blockScrolling: true }}
               />
             </div>
           )}
@@ -203,7 +234,16 @@ export const RowPermissionsSection: React.FC<RowPermissionsProps> = ({
 
         {selectedSection === SelectedSection.Custom && (
           <div className="pt-4">
-            <RowPermissionBuilder tableName={tableName} nesting={['filter']} />
+            {!isLoading && tableName ? (
+              <RowPermissionBuilder
+                tableName={tableName}
+                nesting={['filter']}
+                table={table}
+                dataSourceName={dataSourceName}
+              />
+            ) : (
+              <>Loading...</>
+            )}
           </div>
         )}
       </div>

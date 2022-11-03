@@ -1,7 +1,7 @@
 import { CreateInsertArgs, createInsertArgs } from './utils';
 
 const insertArgs: CreateInsertArgs = {
-  currentSource: 'postgres',
+  driver: 'postgres',
   dataSourceName: 'default',
   accessType: 'fullAccess',
   table: 'users',
@@ -88,7 +88,7 @@ test('create insert args object from form data', () => {
 });
 
 const insertArgsWithClonePermissions: CreateInsertArgs = {
-  currentSource: 'postgres',
+  driver: 'postgres',
   dataSourceName: 'default',
   accessType: 'fullAccess',
   table: 'users',

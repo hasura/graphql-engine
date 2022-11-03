@@ -4,34 +4,34 @@ import React from 'react';
 import { screen } from '@testing-library/dom';
 import { expect } from '@storybook/jest';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
-import { RenderOpenApi3Form } from '../common/RenderOpenApi3Form';
+import { RenderOpenApi3Form } from './common/RenderOpenApi3Form';
 
 export default {
-  title: 'Components/OpenApi3Form ⚛️ /Boolean',
+  title: 'Components/OpenApi3Form ⚛️/EnumInput',
+  component: RenderOpenApi3Form,
   parameters: {
     docs: {
       description: {
-        component: `This component demonstrates how to use a boolean input via the OpenApi3Form component`,
+        component: `This component demonstrates how to use a Enum input via the OpenApi3Form component`,
       },
       source: { type: 'code' },
     },
   },
-  component: RenderOpenApi3Form,
   decorators: [
     ReactQueryDecorator(),
     Story => <div className="p-4 w-full">{Story()}</div>,
   ],
 } as ComponentMeta<typeof RenderOpenApi3Form>;
 
-export const booleanInput: ComponentStory<typeof RenderOpenApi3Form> = () => {
+export const EnumInput: ComponentStory<typeof RenderOpenApi3Form> = () => {
   return (
     <RenderOpenApi3Form
-      name="BooleanInput"
+      name="enumInput"
       getSchema={() => [
         {
-          title: 'Boolean Input (nullable set to false)',
-          type: 'boolean',
-          nullable: false,
+          title: 'Enum Input',
+          type: 'string',
+          enum: ['option1', 'option2'],
         },
         {},
       ]}
@@ -40,21 +40,41 @@ export const booleanInput: ComponentStory<typeof RenderOpenApi3Form> = () => {
   );
 };
 
-export const booleanInputWithExistingValues: ComponentStory<
+export const EnumInputWithNullableAsOption: ComponentStory<
   typeof RenderOpenApi3Form
 > = () => {
   return (
     <RenderOpenApi3Form
-      name="booleanInput"
+      name="enumInput"
       getSchema={() => [
         {
-          title: 'Boolean Input (with existing value)',
-          type: 'boolean',
+          title: 'Enum Input',
+          type: 'string',
+          enum: ['option1', 'option2', null],
+        },
+        {},
+      ]}
+      defaultValues={{}}
+    />
+  );
+};
+
+export const EnumInputWithExistingValues: ComponentStory<
+  typeof RenderOpenApi3Form
+> = () => {
+  return (
+    <RenderOpenApi3Form
+      name="enumInput"
+      getSchema={() => [
+        {
+          title: 'Enum Input',
+          type: 'string',
+          enum: ['option1', 'option2', null],
         },
         {},
       ]}
       defaultValues={{
-        booleanInput: true,
+        enumInput: 'option1',
       }}
     />
   );
@@ -62,12 +82,12 @@ export const booleanInputWithExistingValues: ComponentStory<
 
 export const Test: ComponentStory<typeof RenderOpenApi3Form> = () => (
   <RenderOpenApi3Form
-    name="BooleanInput"
+    name="enumInput"
     getSchema={() => [
       {
-        title: 'Boolean Input (nullable set to false)',
-        type: 'boolean',
-        nullable: false,
+        title: 'Enum Input',
+        type: 'string',
+        enum: ['option1', 'option2', null],
       },
       {},
     ]}
@@ -76,13 +96,13 @@ export const Test: ComponentStory<typeof RenderOpenApi3Form> = () => (
   />
 );
 
-Test.storyName = '🧪 Testing - toggle interaction';
+Test.storyName = '🧪 Testing - input interaction';
 
 Test.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   await waitFor(async () => {
-    await userEvent.click(canvas.getByTestId('BooleanInput'));
+    await userEvent.selectOptions(canvas.getByTestId('enumInput'), 'option1');
   });
 
   await waitFor(async () => {
@@ -91,7 +111,7 @@ Test.play = async ({ canvasElement }) => {
 
   await waitFor(async () => {
     await expect(screen.getByTestId('output').textContent).toBe(
-      '{"BooleanInput":true}'
+      '{"enumInput":"option1"}'
     );
   });
 };

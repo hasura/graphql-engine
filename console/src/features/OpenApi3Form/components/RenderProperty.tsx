@@ -19,6 +19,7 @@ import {
   ObjectArrayInputField,
 } from './ObjectArrayInputField';
 import { isOneOf, OneOfInputField } from './OneOfInputField';
+import { EnumInputField, isEnumInputField } from './EnumInputField';
 
 export const RenderProperty = ({
   name,
@@ -44,6 +45,9 @@ export const RenderProperty = ({
   /**
    * Basic input conditions -> these field are terminal. They do not have any recursive behaviour to them.
    */
+  if (isEnumInputField(configSchema))
+    return <EnumInputField name={name} configSchema={configSchema} />;
+
   if (isTextInputField(configSchema))
     return <TextInputField name={name} configSchema={configSchema} />;
 

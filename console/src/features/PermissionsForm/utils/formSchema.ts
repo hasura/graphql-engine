@@ -3,8 +3,8 @@ import * as z from 'zod';
 export const schema = z.object({
   checkType: z.string(),
   filterType: z.string(),
-  check: z.any(),
-  filter: z.any(),
+  check: z.any().optional(),
+  filter: z.any().optional(),
   rowCount: z.string().optional(),
   columns: z.record(z.optional(z.boolean())),
   presets: z.optional(
@@ -16,8 +16,8 @@ export const schema = z.object({
       })
     )
   ),
-  aggregationEnabled: z.boolean(),
-  backendOnly: z.boolean(),
+  aggregationEnabled: z.boolean().optional(),
+  backendOnly: z.boolean().optional(),
   clonePermissions: z.optional(
     z.array(
       z.object({

@@ -230,6 +230,7 @@ export const DatabaseRelationshipsTab = ({
           }}
           onComplete={onComplete}
           driver={driver}
+          onClose={closeForm}
         />
       ) : null}
       <FeatureFlagFloatingButton />
