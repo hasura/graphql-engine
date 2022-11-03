@@ -36,7 +36,7 @@ export const getModifyState = (currentAction, allTypes) => {
     forwardClientHeaders: actionDef.forward_client_headers,
     timeout: actionDef?.timeout ?? '',
     comment: currentAction.comment,
-    response_transfrom: actionDef?.response_transfrom ?? {},
+    response_transform: actionDef?.response_transform ?? {},
   };
   return modifyState;
 };

@@ -59,10 +59,7 @@ import {
   persistDerivedAction,
   updatePersistedDerivation,
 } from './utils';
-import {
-  getRequestTransformObject,
-  getResponseTransformObject,
-} from '../../Common/ConfigureTransformation/utils';
+import { getRequestTransformObject } from '../../Common/ConfigureTransformation/utils';
 
 export const createAction = transformState => (dispatch, getState) => {
   const { add: rawState } = getState().actions;
@@ -241,7 +238,7 @@ export const saveAction =
     };
 
     const requestTransform = getRequestTransformObject(transformState);
-    const responseTransform = getResponseTransformObject(transformState);
+    const responseTransform = currentAction.definition.response_transform;
     const validationError = getStateValidationError(state);
 
     if (validationError) {

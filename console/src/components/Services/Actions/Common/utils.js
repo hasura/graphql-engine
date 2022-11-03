@@ -50,7 +50,12 @@ export const generateActionDefinition = (
     forward_client_headers: forwardClientHeaders,
     timeout,
     request_transform: requestTransform ?? null,
-    response_transform: responseTransform ?? null,
+    response_transform:
+      !responseTransform ||
+      (responseTransform?.body?.action === 'transform' &&
+        responseTransform?.body?.template === '')
+        ? null
+        : responseTransform,
   };
 };
 
