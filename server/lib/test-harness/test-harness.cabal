@@ -82,35 +82,36 @@ library
   ghc-options: -Wall -Werror
 
   exposed-modules:
+    Harness.Backend.BigQuery
+    Harness.Backend.Citus
+    Harness.Backend.Cockroach
+    Harness.Backend.DataConnector.Chinook
+    Harness.Backend.DataConnector.Chinook.Reference
+    Harness.Backend.DataConnector.Chinook.Sqlite
+    Harness.Backend.DataConnector.Mock
+    Harness.Backend.DataConnector.Mock.Server
+    Harness.Backend.DataConnector.Sqlite
+    Harness.Backend.Mysql
+    Harness.Backend.Postgres
+    Harness.Backend.Sqlserver
     Harness.Constants
     Harness.Env
     Harness.Exceptions
     Harness.GraphqlEngine
     Harness.Http
+    Harness.Quoter.Graphql
+    Harness.Quoter.Yaml
+    Harness.Quoter.Yaml.InterpolateYaml
     Harness.RemoteServer
-    Harness.TestEnvironment
-    Harness.Webhook
-    Harness.Yaml
-    Harness.Backend.BigQuery
-    Harness.Backend.Citus
-    Harness.Backend.Cockroach
-    Harness.Backend.DataConnector.Mock
-    Harness.Backend.DataConnector.Mock.Server
-    Harness.Backend.DataConnector.Chinook
-    Harness.Backend.DataConnector.Chinook.Reference
-    Harness.Backend.DataConnector.Chinook.Sqlite
-    Harness.Backend.DataConnector.Sqlite
-    Harness.Backend.Mysql
-    Harness.Backend.Postgres
-    Harness.Backend.Sqlserver
+    Harness.Subscriptions
     Harness.Test.BackendType
     Harness.Test.CustomOptions
     Harness.Test.Fixture
     Harness.Test.Hspec.Extended
     Harness.Test.Introspection
-    Harness.Test.Schema
     Harness.Test.Permissions
+    Harness.Test.Schema
     Harness.Test.SchemaName
-    Harness.Quoter.Graphql
-    Harness.Quoter.Yaml
-    Harness.Quoter.Yaml.InterpolateYaml
+    Harness.TestEnvironment
+    Harness.Webhook
+    Harness.Yaml
