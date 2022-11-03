@@ -172,17 +172,17 @@ tableSelectFields sourceInfo tableInfo = do
   where
     canBeSelected _ Nothing _ = pure False
     canBeSelected _ (Just permissions) (FIColumn columnInfo) =
-      pure $ Map.member (ciColumn columnInfo) (spiCols permissions)
+      pure $! Map.member (ciColumn columnInfo) (spiCols permissions)
     canBeSelected role _ (FIRelationship relationshipInfo) = do
       tableInfo' <- askTableInfo sourceInfo $ riRTable relationshipInfo
-      pure $ isJust $ tableSelectPermissions @b role tableInfo'
+      pure $! isJust $ tableSelectPermissions @b role tableInfo'
     canBeSelected role (Just permissions) (FIComputedField computedFieldInfo) =
       case computedFieldReturnType @b (_cfiReturnType computedFieldInfo) of
         ReturnsScalar _ ->
-          pure $ Map.member (_cfiName computedFieldInfo) $ spiComputedFields permissions
+          pure $! Map.member (_cfiName computedFieldInfo) $ spiComputedFields permissions
         ReturnsTable tableName -> do
           tableInfo' <- askTableInfo sourceInfo tableName
-          pure $ isJust $ tableSelectPermissions @b role tableInfo'
+          pure $! isJust $ tableSelectPermissions @b role tableInfo'
         ReturnsOthers -> pure False
     canBeSelected _ _ (FIRemoteRelationship _) = pure True
 
