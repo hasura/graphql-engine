@@ -6,7 +6,8 @@ import { Form } from '@/new-components/Form';
 import { BackendOnlySection, BackEndOnlySectionProps } from './BackendOnly';
 
 export default {
-  title: 'Features/Permissions Form/Components/Backend Only Section',
+  title:
+    'Features/Permissions Tab/Permissions Form/Components/Backend Only Section',
   component: BackendOnlySection,
   parameters: {
     // Disable storybook for playground stories

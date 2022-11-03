@@ -10,7 +10,8 @@ import {
 } from './ClonePermissions';
 
 export default {
-  title: 'Features/Permissions Form/Components/Clone Permissions',
+  title:
+    'Features/Permissions Tab/Permissions Form/Components/Clone Permissions',
   component: ClonePermissionsSection,
   decorators: [
     (StoryComponent: React.FC) => (

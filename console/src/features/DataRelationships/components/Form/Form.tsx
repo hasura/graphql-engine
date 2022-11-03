@@ -20,6 +20,7 @@ interface Props {
     message?: string;
     type: 'success' | 'error' | 'cancel';
   }) => void;
+  onClose?: () => void;
 }
 
 export const Form = ({
@@ -27,6 +28,7 @@ export const Form = ({
   sourceTableInfo,
   onComplete,
   driver,
+  onClose,
 }: Props) => {
   if (existingRelationship) {
     return (
@@ -36,6 +38,7 @@ export const Form = ({
           sourceTableInfo={sourceTableInfo}
           existingRelationship={existingRelationship}
           onComplete={onComplete}
+          onClose={onClose}
         />
       </FormLayout>
     );

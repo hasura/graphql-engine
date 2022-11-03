@@ -1,5 +1,7 @@
 import { TableColumn } from '@/features/DataSource';
 import { Metadata } from '@/features/MetadataAPI';
+import { createDefaultValues } from '../createDefaultValues';
+import { schema } from '../../../../components/RowPermissionsBuilder/mocks';
 
 interface Input {
   dataSourceName: string;
@@ -26,9 +28,14 @@ const metadata: Metadata = {
               {
                 role: 'user',
                 permission: {
-                  columns: ['ArtistId', 'Name'],
-                  filter: {},
+                  columns: ['Name'],
+                  filter: {
+                    ArtistId: {
+                      _gt: 5,
+                    },
+                  },
                   allow_aggregations: true,
+                  limit: 3,
                 },
               },
             ],
@@ -54,7 +61,7 @@ const metadata: Metadata = {
   },
 };
 
-export const input: Input = {
+export const formDataInput: Input = {
   dataSourceName: 'sqlite',
   table: ['Artist'],
   metadata,
@@ -80,4 +87,35 @@ export const input: Input = {
       },
     },
   ],
+};
+
+export const defaultValuesInput: Parameters<typeof createDefaultValues>[0] = {
+  dataSourceName: 'sqlite',
+  table: ['Artist'],
+  metadata,
+  queryType: 'select' as const,
+  roleName: 'user',
+  tableColumns: [
+    {
+      name: 'ArtistId',
+      dataType: 'number',
+      nullable: false,
+      isPrimaryKey: true,
+      graphQLProperties: {
+        name: 'ArtistId',
+        scalarType: 'decimal',
+      },
+    },
+    {
+      name: 'Name',
+      dataType: 'string',
+      nullable: true,
+      isPrimaryKey: false,
+      graphQLProperties: {
+        name: 'Name',
+        scalarType: 'String',
+      },
+    },
+  ],
+  schema,
 };
