@@ -49,7 +49,6 @@ import { ordinalColSort } from '../utils';
 import Spinner from '../../../Common/Spinner/Spinner';
 
 import { E_SET_EDITITEM } from '../TableEditItem/EditActions';
-import { I_SET_CLONE } from '../TableInsertItem/InsertActions';
 import {
   getTableInsertRowRoute,
   getTableEditRowRoute,
@@ -70,6 +69,8 @@ import {
   getPersistedColumnsOrder,
 } from './tableUtils';
 import { compareRows, isTableWithPK } from './utils';
+import { push } from 'react-router-redux';
+import globals from '@/Globals';
 
 const ViewRows = props => {
   const {
@@ -412,16 +413,19 @@ const ViewRows = props => {
           const cloneIcon = <FaClone />;
 
           const handleCloneClick = () => {
-            dispatch({ type: I_SET_CLONE, clone: row });
+            const urlPrefix = globals.urlPrefix;
             dispatch(
-              _push(
-                getTableInsertRowRoute(
-                  currentSchema,
-                  currentSource,
-                  curTableName,
-                  true
-                )
-              )
+              push({
+                pathname:
+                  urlPrefix +
+                  getTableInsertRowRoute(
+                    currentSchema,
+                    currentSource,
+                    curTableName,
+                    true
+                  ),
+                state: { row },
+              })
             );
           };
 

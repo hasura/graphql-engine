@@ -23,7 +23,6 @@ import { removeAll } from 'react-notification-system-redux';
 import { getNotificationDetails } from '../../Common/Notification';
 import { getTableConfiguration } from '../TableBrowseRows/utils';
 
-const I_SET_CLONE = 'InsertItem/I_SET_CLONE';
 const I_RESET = 'InsertItem/I_RESET';
 const I_ONGOING_REQ = 'InsertItem/I_ONGOING_REQ';
 const I_REQUEST_SUCCESS = 'InsertItem/I_REQUEST_SUCCESS';
@@ -302,14 +301,6 @@ const insertReducer = (tableName, state, action) => {
         lastSuccess: null,
         enumOptions: null,
       };
-    case I_SET_CLONE:
-      return {
-        clone: action.clone,
-        ongoingRequest: false,
-        lastError: null,
-        lastSuccess: null,
-        enumOptions: null,
-      };
     case I_ONGOING_REQ:
       return {
         ...state,
@@ -360,4 +351,4 @@ const insertReducer = (tableName, state, action) => {
 };
 
 export default insertReducer;
-export { fetchEnumOptions, insertItem, I_SET_CLONE, I_RESET, Open, Close };
+export { fetchEnumOptions, insertItem, I_RESET, Open, Close };

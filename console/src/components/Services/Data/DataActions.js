@@ -178,6 +178,7 @@ const loadSchema = (configOptions = {}) => {
           )
       );
     }
+
     const body = {
       type: 'bulk',
       source,
@@ -223,7 +224,6 @@ const loadSchema = (configOptions = {}) => {
       return dispatch(requestAction(url, options)).then(
         data => {
           if (!data || !data[0] || !data[0].result) return;
-
           let mergedData = [];
           switch (currentDriver) {
             case 'postgres':

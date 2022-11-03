@@ -373,6 +373,7 @@ export const mergeLoadSchemaDataPostgres = (
     Table['foreign_key_constraints'][0],
     'is_table_tracked' | 'is_ref_table_tracked'
   >[];
+
   const primaryKeys = JSON.parse(data[2].result[1]) as Table['primary_key'][];
   const uniqueKeys = JSON.parse(data[3].result[1]) as any;
 

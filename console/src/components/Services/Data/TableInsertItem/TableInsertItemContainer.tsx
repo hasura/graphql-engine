@@ -1,10 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { setTable } from '../DataActions';
-import { fetchEnumOptions, I_RESET, insertItem } from './InsertActions';
+import { useMigrationMode, useReadOnlyMode } from '@/hooks';
+import { useMetadata } from '@/features/MetadataAPI';
+import { HasuraMetadataV3 } from '@/metadata/types';
+import { insertItem } from './InsertActions';
 import { ColumnName, RowValues } from '../TableCommon/DataTableRowItem.types';
 import { DataTableRowItemProps } from '../TableCommon/DataTableRowItem';
 import { TableInsertItems } from './TableInsertItems';
+import {
+  useTableEnums,
+  UseTableEnumsResponseArrayType,
+} from './hooks/useTableEnums';
+import { useSchemas } from './hooks/useSchemas';
+import { TableObject } from './types';
 
 type GetButtonTextArgs = {
   insertedRows: number;
@@ -23,25 +31,93 @@ const getButtonText = ({ insertedRows, ongoingRequest }: GetButtonTextArgs) => {
   return 'Save';
 };
 
+const getTableWithEnumRelations = (
+  source: string,
+  schema: string,
+  metadata: HasuraMetadataV3 | undefined
+) => {
+  return metadata
+    ? (metadata?.sources
+        ?.find(s => s.name === source)
+        ?.tables.filter((t: any) => {
+          return t?.is_enum && t?.table?.schema === schema;
+        })
+        ?.map(t => t?.table) as TableObject[])
+    : [];
+};
+
+const formatEnumOptions = (
+  tableEnums: UseTableEnumsResponseArrayType | undefined
+) =>
+  tableEnums
+    ? tableEnums?.reduce((tally, curr) => {
+        return {
+          ...tally,
+          [curr.from]: curr.values,
+        };
+      }, {})
+    : [];
+
+const getTableMetadata = (
+  source: string,
+  table: string,
+  metadata: HasuraMetadataV3 | undefined
+) => {
+  return metadata?.sources
+    ?.find((s: { name: string }) => s.name === source)
+    ?.tables.filter(
+      (t: { table: { name: string } }) => t?.table?.name === table
+    )?.[0];
+};
+
 type TableInsertItemContainerContainer = {
   params: {
     schema: string;
     source: string;
     table: string;
   };
+  router: { location: { state: any } };
 };
 
 export const TableInsertItemContainer = (
   props: TableInsertItemContainerContainer
 ) => {
-  const { table: tableName } = props.params;
-
+  const {
+    table: tableName,
+    source: dataSourceName,
+    schema: schemaName,
+  } = props.params;
+  const currentRow = props.router?.location?.state?.row;
   const dispatch = useAppDispatch();
 
   const [isMigration, setIsMigration] = useState(false);
   const [insertedRows, setInsertedRows] = useState(0);
   const [values, setValues] = useState<Record<ColumnName, RowValues>>({});
 
+  const { data: metadata } = useMetadata();
+  const tableMetadata = getTableMetadata(
+    dataSourceName,
+    tableName,
+    metadata?.metadata
+  );
+
+  const { data: migrationMode } = useMigrationMode();
+  const { data: readOnlyMode } = useReadOnlyMode();
+  const { data: schemas, isLoading: schemasIsLoading } = useSchemas({
+    dataSourceName,
+    schemaName,
+  });
+
+  const tablesWithEnumRelations = getTableWithEnumRelations(
+    dataSourceName,
+    schemaName,
+    metadata?.metadata
+  );
+
+  const { data: tableEnums } = useTableEnums({
+    tables: tablesWithEnumRelations,
+    dataSourceName,
+  });
   const onColumnUpdate: DataTableRowItemProps['onColumnUpdate'] = (
     columnName,
     rowValues
@@ -59,37 +135,8 @@ export const TableInsertItemContainer = (
     setValues(newValues);
   };
 
-  useEffect(() => {
-    dispatch(setTable(tableName));
-    dispatch(fetchEnumOptions());
-
-    return () => {
-      dispatch({ type: I_RESET });
-    };
-  }, [tableName]);
-
-  const nextInsert = () =>
-    setInsertedRows(prevInsertedRows => prevInsertedRows + 1);
-
   const toggleMigrationCheckBox = () =>
     setIsMigration(prevIsMigration => !prevIsMigration);
-
-  const insert = useAppSelector(store => store.tables.insert);
-  const allSchemas = useAppSelector(store => store.tables.allSchemas);
-  const tablesView = useAppSelector(store => store.tables.view);
-  const currentSchema = useAppSelector(store => store.tables.currentSchema);
-  const currentDataSource = useAppSelector(
-    store => store.tables.currentDataSource
-  );
-  const migrationMode = useAppSelector(store => store.main.migrationMode);
-  const readOnlyMode = useAppSelector(store => store.main.readOnlyMode);
-
-  const { count } = tablesView;
-  const { ongoingRequest, lastError, lastSuccess, clone, enumOptions } = insert;
-  const buttonText = getButtonText({
-    insertedRows,
-    ongoingRequest,
-  });
 
   const onClickClear = () => {
     const form = document.getElementById('insertForm');
@@ -110,6 +157,22 @@ export const TableInsertItemContainer = (
       }
     });
   };
+
+  const enumOptions = formatEnumOptions(tableEnums);
+
+  // Refactor in next iteration: --- Insert section start ---
+  const insert = useAppSelector(
+    (store: { tables: { insert: any } }) => store.tables.insert
+  );
+  const { ongoingRequest, lastError, lastSuccess } = insert;
+
+  const nextInsert = () =>
+    setInsertedRows(prevInsertedRows => prevInsertedRows + 1);
+
+  const buttonText = getButtonText({
+    insertedRows,
+    ongoingRequest,
+  });
 
   const onClickSave: React.MouseEventHandler = e => {
     e.preventDefault();
@@ -133,7 +196,7 @@ export const TableInsertItemContainer = (
     dispatch(
       insertItem(
         tableName,
-        clone ? { ...clone, ...inputValues } : inputValues,
+        currentRow ? { ...currentRow, ...inputValues } : inputValues,
         isMigration
       )
     ).then(() => {
@@ -141,21 +204,26 @@ export const TableInsertItemContainer = (
     });
   };
 
+  // --- Insert section end ---
+
+  if (schemasIsLoading) return <p>Loading...</p>;
+
   return (
     <TableInsertItems
+      isEnum={!!tableMetadata?.is_enum}
       toggleMigrationCheckBox={toggleMigrationCheckBox}
       onColumnUpdate={onColumnUpdate}
       isMigration={isMigration}
       dispatch={dispatch}
       tableName={tableName}
-      currentSchema={currentSchema}
-      clone={clone}
-      schemas={allSchemas}
-      migrationMode={migrationMode}
-      readOnlyMode={readOnlyMode}
-      count={count}
+      currentSchema={schemaName}
+      clone={currentRow}
+      schemas={schemas}
+      migrationMode={!!migrationMode}
+      readOnlyMode={!!readOnlyMode}
+      count={0}
       enumOptions={enumOptions}
-      currentSource={currentDataSource}
+      currentSource={dataSourceName}
       onClickSave={onClickSave}
       onClickClear={onClickClear}
       lastError={lastError}

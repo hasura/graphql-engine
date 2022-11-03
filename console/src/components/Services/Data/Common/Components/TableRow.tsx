@@ -70,7 +70,7 @@ export interface TableRowProps {
     refName: 'valueNode' | 'nullNode' | 'defaultNode' | 'radioNode',
     node: HTMLInputElement | null
   ) => void;
-  enumOptions: Record<string, any>;
+  enumOptions: string[];
   index: string;
   clone?: Record<string, any>;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>, val: unknown) => void;
