@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/update"
 	"github.com/hasura/graphql-engine/cli/v2/version"
-	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -119,9 +119,10 @@ func NewDefaultHasuraCommandWithArgs(pluginHandler PluginHandler, args []string,
 
 // Execute executes the command and returns the error
 func Execute() error {
+	var op errors.Op = "commands.Execute"
 	err := ec.Prepare()
 	if err != nil {
-		return errors.Wrap(err, "preparing execution context failed")
+		return errors.E(op, fmt.Errorf("preparing execution context failed: %w", err))
 	}
 	execCmd, err := NewDefaultHasuraCommand().ExecuteC()
 	if err != nil {
@@ -140,5 +141,12 @@ func Execute() error {
 	if ec.Spinner != nil {
 		ec.Spinner.Stop()
 	}
-	return err
+	if err != nil {
+		return errors.E(op, err)
+	}
+	return nil
+}
+
+func genOpName(cmd *cobra.Command, funcName string) errors.Op {
+	return errors.Op("command: " + cmd.Name() + "." + funcName)
 }
