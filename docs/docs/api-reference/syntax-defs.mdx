@@ -470,6 +470,12 @@ Supported in `v2.0.0-alpha.3` and above.
 | remote_table   | true     | [TableName](#tablename)                      | The table to which the relationship has to be established |
 | column_mapping | true     | Object ([PGColumn](#pgcolumn) : [PGColumn](#pgcolumn)) | Mapping of columns from current table to remote table     |
 
+## ScheduledEventStatus {#scheduledEventStatus}
+
+```
+scheduled | locked | delivered | error | dead
+```
+
 ## BoolExp {#boolexp}
 
 <div className="parsed-literal haskell-pre">

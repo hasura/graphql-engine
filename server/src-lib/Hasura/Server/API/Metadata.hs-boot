@@ -106,7 +106,7 @@ data RQLMetadataV1
   | RMCreateScheduledEvent !CreateScheduledEvent
   | RMDeleteScheduledEvent !DeleteScheduledEvent
   | RMGetScheduledEvents !GetScheduledEvents
-  | RMGetEventInvocations !GetEventInvocations
+  | RMGetScheduledEventInvocations !GetScheduledEventInvocations
   | RMGetCronTriggers
   | -- Actions
     RMCreateAction !(Unvalidated CreateAction)

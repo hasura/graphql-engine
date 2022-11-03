@@ -1210,7 +1210,7 @@ instance {-# OVERLAPPING #-} MonadIO m => MonadMetadataStorage (MetadataStorageT
   clearFutureCronEvents = runInSeparateTx . dropFutureCronEventsTx
   getOneOffScheduledEvents a b c = runInSeparateTx $ getOneOffScheduledEventsTx a b c
   getCronEvents a b c d = runInSeparateTx $ getCronEventsTx a b c d
-  getInvocations a = runInSeparateTx $ getInvocationsTx a
+  getScheduledEventInvocations a = runInSeparateTx $ getScheduledEventInvocationsTx a
   deleteScheduledEvent a b = runInSeparateTx $ deleteScheduledEventTx a b
 
   insertAction a b c d = runInSeparateTx $ insertActionTx a b c d

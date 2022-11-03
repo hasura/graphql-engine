@@ -27,8 +27,8 @@ module Hasura.RQL.Types.ScheduledTrigger
     GetScheduledEvents (..),
     WithOptionalTotalCount (..),
     DeleteScheduledEvent (..),
-    GetInvocationsBy (..),
-    GetEventInvocations (..),
+    GetScheduledEventInvocationsBy (..),
+    GetScheduledEventInvocations (..),
     ClearCronEvents (..),
     cctName,
     cctWebhook,
@@ -425,13 +425,13 @@ data DeleteScheduledEvent = DeleteScheduledEvent
 
 $(deriveJSON hasuraJSON ''DeleteScheduledEvent)
 
-data GetInvocationsBy
+data GetScheduledEventInvocationsBy
   = GIBEventId EventId ScheduledEventType
   | GIBEvent ScheduledEvent
   deriving (Show, Eq)
 
-data GetEventInvocations = GetEventInvocations
-  { _geiInvocationsBy :: GetInvocationsBy,
+data GetScheduledEventInvocations = GetScheduledEventInvocations
+  { _geiInvocationsBy :: GetScheduledEventInvocationsBy,
     _geiPagination :: ScheduledEventPagination,
     -- | Option to include the total rows corresponding in
     --   response.
@@ -439,9 +439,9 @@ data GetEventInvocations = GetEventInvocations
   }
   deriving (Eq, Show)
 
-instance FromJSON GetEventInvocations where
-  parseJSON = withObject "GetEventInvocations" $ \o ->
-    GetEventInvocations
+instance FromJSON GetScheduledEventInvocations where
+  parseJSON = withObject "GetScheduledEventInvocations" $ \o ->
+    GetScheduledEventInvocations
       <$> (parseEventId o <|> (GIBEvent <$> parseScheduledEvent o))
       <*> parseScheduledEventPagination o
       <*> o .:? "get_rows_count" .!= DontIncludeRowsCount
@@ -449,8 +449,8 @@ instance FromJSON GetEventInvocations where
       parseEventId o =
         GIBEventId <$> o .: "event_id" <*> o .: "type"
 
-instance ToJSON GetEventInvocations where
-  toJSON GetEventInvocations {..} =
+instance ToJSON GetScheduledEventInvocations where
+  toJSON GetScheduledEventInvocations {..} =
     object $
       case _geiInvocationsBy of
         GIBEventId eventId eventType -> ["event_id" .= eventId, "type" .= eventType]

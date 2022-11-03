@@ -95,9 +95,9 @@ module Hasura.Eventing.ScheduledTrigger
     getOneOffScheduledEventsTx,
     getCronEventsTx,
     deleteScheduledEventTx,
-    getInvocationsTx,
-    getInvocationsQuery,
-    getInvocationsQueryNoPagination,
+    getScheduledEventInvocationsTx,
+    getScheduledEventsInvocationsQuery,
+    getScheduledEventsInvocationsQueryNoPagination,
 
     -- * Export utility functions which are useful to build
 
@@ -982,12 +982,12 @@ mkEventIdBoolExp table eventId =
     (S.SEQIdentifier $ S.mkQIdentifierTable table $ Identifier "event_id")
     (S.SELit $ unEventId eventId)
 
-getInvocationsTx ::
-  GetEventInvocations ->
+getScheduledEventInvocationsTx ::
+  GetScheduledEventInvocations ->
   PG.TxE QErr (WithOptionalTotalCount [ScheduledEventInvocation])
-getInvocationsTx getEventInvocations = do
+getScheduledEventInvocationsTx getEventInvocations = do
   let eventsTables = EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable
-      sql = PG.fromBuilder $ toSQL $ getInvocationsQuery eventsTables getEventInvocations
+      sql = PG.fromBuilder $ toSQL $ getScheduledEventsInvocationsQuery eventsTables getEventInvocations
   executeWithOptionalTotalCount sql (_geiGetRowsCount getEventInvocations)
   where
     oneOffInvocationsTable = QualifiedObject "hdb_catalog" $ TableName "hdb_scheduled_event_invocation_logs"
@@ -999,8 +999,8 @@ data EventTables = EventTables
     etCronEventsTable :: QualifiedTable
   }
 
-getInvocationsQueryNoPagination :: EventTables -> GetInvocationsBy -> S.Select
-getInvocationsQueryNoPagination (EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable') invocationsBy =
+getScheduledEventsInvocationsQueryNoPagination :: EventTables -> GetScheduledEventInvocationsBy -> S.Select
+getScheduledEventsInvocationsQueryNoPagination (EventTables oneOffInvocationsTable cronInvocationsTable cronEventsTable') invocationsBy =
   allRowsSelect
   where
     createdAtOrderBy table =
@@ -1053,7 +1053,7 @@ getInvocationsQueryNoPagination (EventTables oneOffInvocationsTable cronInvocati
                   S.selOrderBy = Just $ createdAtOrderBy invocationTable
                 }
 
-getInvocationsQuery :: EventTables -> GetEventInvocations -> S.Select
-getInvocationsQuery eventTables (GetEventInvocations invocationsBy pagination shouldIncludeRowsCount) =
-  let invocationsSelect = getInvocationsQueryNoPagination eventTables invocationsBy
+getScheduledEventsInvocationsQuery :: EventTables -> GetScheduledEventInvocations -> S.Select
+getScheduledEventsInvocationsQuery eventTables (GetScheduledEventInvocations invocationsBy pagination shouldIncludeRowsCount) =
+  let invocationsSelect = getScheduledEventsInvocationsQueryNoPagination eventTables invocationsBy
    in mkPaginationSelectExp invocationsSelect pagination shouldIncludeRowsCount
