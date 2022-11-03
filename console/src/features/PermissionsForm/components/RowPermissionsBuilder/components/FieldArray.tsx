@@ -2,9 +2,10 @@ import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 
 import { GraphQLSchema } from 'graphql';
-
+import { Table } from '@/features/MetadataAPI';
 import { Builder } from './Builder';
 import { JsonItem } from './Elements';
+// import { useTableConfiguration } from '../hooks';
 
 interface FieldArrayElementProps {
   index: number;
@@ -15,13 +16,27 @@ interface FieldArrayElementProps {
   fields: Field[];
   append: ReturnType<typeof useFieldArray>['append'];
   schema: GraphQLSchema;
+  dataSourceName: string;
+  table: Table;
+  // tableConfig: ReturnType<typeof useTableConfiguration>['data'];
 }
 
 type Field = Record<'id', string>;
 
 export const FieldArrayElement = (props: FieldArrayElementProps) => {
-  const { index, arrayKey, tableName, field, nesting, fields, append, schema } =
-    props;
+  const {
+    index,
+    arrayKey,
+    tableName,
+    field,
+    nesting,
+    fields,
+    append,
+    schema,
+    table,
+    dataSourceName,
+    // tableConfig,
+  } = props;
   const { watch } = useFormContext();
 
   // from this we can determine if the dropdown has been selected
@@ -44,6 +59,9 @@ export const FieldArrayElement = (props: FieldArrayElementProps) => {
             tableName={tableName}
             nesting={[...nesting, index.toString()]}
             schema={schema}
+            dataSourceName={dataSourceName}
+            table={table}
+            // tableConfig={tableConfig}
           />
           <JsonItem text="}" />
         </div>
@@ -60,6 +78,9 @@ export const FieldArrayElement = (props: FieldArrayElementProps) => {
         tableName={tableName}
         nesting={[...nesting, index.toString()]}
         schema={schema}
+        dataSourceName={dataSourceName}
+        table={table}
+        // tableConfig={tableConfig}
       />
       <JsonItem text="}," />
     </div>
@@ -70,10 +91,20 @@ interface Props {
   tableName: string;
   nesting: string[];
   schema: GraphQLSchema;
+  dataSourceName: string;
+  table: Table;
+  // tableConfig: ReturnType<typeof useTableConfiguration>['data'];
 }
 
 export const FieldArray = (props: Props) => {
-  const { tableName, nesting, schema } = props;
+  const {
+    tableName,
+    nesting,
+    schema,
+    dataSourceName,
+    table,
+    // tableConfig
+  } = props;
   const arrayKey = nesting.join('.');
 
   const { fields, append } = useFieldArray({
@@ -103,6 +134,9 @@ export const FieldArray = (props: Props) => {
             nesting={nesting}
             append={append}
             schema={schema}
+            dataSourceName={dataSourceName}
+            table={table}
+            // tableConfig={tableConfig}
           />
         ))}
       </div>

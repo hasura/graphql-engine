@@ -4,7 +4,7 @@ import React from 'react';
 import { screen } from '@testing-library/dom';
 import { expect } from '@storybook/jest';
 import { userEvent, waitFor, within } from '@storybook/testing-library';
-import { RenderOpenApi3Form } from '../common/RenderOpenApi3Form';
+import { RenderOpenApi3Form } from './common/RenderOpenApi3Form';
 
 export default {
   title: 'Components/OpenApi3Form ⚛️/NumberInput',

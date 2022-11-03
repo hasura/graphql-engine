@@ -17,7 +17,6 @@ export const Primary: Story<BulkDeleteProps> = args => {
   return <BulkDelete {...args} />;
 };
 Primary.args = {
-  currentSource: 'postgres',
   dataSourceName: 'default',
   roles: ['user'],
   handleClose: () => {},

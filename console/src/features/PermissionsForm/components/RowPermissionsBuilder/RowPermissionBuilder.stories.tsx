@@ -1,6 +1,7 @@
 import React from 'react';
 import { z } from 'zod';
 import { ComponentStory, Meta } from '@storybook/react';
+import { ReactQueryDecorator } from '@/storybook/decorators/react-query';
 import { UpdatedForm } from '@/new-components/Form';
 
 import { RowPermissionBuilder } from './RowPermissionBuilder';
@@ -15,8 +16,10 @@ import {
 } from './mocks';
 
 export default {
-  title: 'Features/Permissions Form/Components/New Builder',
+  title:
+    'Features/Permissions Tab/Permissions Form/Components/Row Permissions Builder',
   component: RowPermissionBuilder,
+  decorators: [ReactQueryDecorator()],
   parameters: {
     msw: handlers(),
   },
@@ -60,6 +63,7 @@ WithDefaults.decorators = [
               tableName: 'Album',
               schema,
               existingPermission: simpleExample,
+              tableConfig: {},
             }),
           }}
           onSubmit={console.log}
@@ -92,6 +96,7 @@ WithDefaultsBool.decorators = [
               tableName: 'user',
               schema,
               existingPermission: exampleWithBoolOperator,
+              tableConfig: {},
             }),
           }}
           onSubmit={console.log}
@@ -124,6 +129,7 @@ WithDefaultsRelationship.decorators = [
               tableName: 'user',
               schema,
               existingPermission: exampleWithRelationship,
+              tableConfig: {},
             }),
           }}
           onSubmit={console.log}
@@ -157,6 +163,7 @@ WithPointlesslyComplicatedRelationship.decorators = [
               tableName: 'user',
               schema,
               existingPermission: complicatedExample,
+              tableConfig: {},
             }),
           }}
           onSubmit={console.log}
