@@ -8740,16 +8740,16 @@ data DeleteScheduledEvent
 DeleteScheduledEvent :: ScheduledEventType -> ScheduledEventId -> DeleteScheduledEvent
 [_dseType] :: DeleteScheduledEvent -> ScheduledEventType
 [_dseEventId] :: DeleteScheduledEvent -> ScheduledEventId
-data GetInvocationsBy
-GIBEventId :: EventId -> ScheduledEventType -> GetInvocationsBy
-GIBEvent :: ScheduledEvent -> GetInvocationsBy
-data GetEventInvocations
-GetEventInvocations :: GetInvocationsBy -> ScheduledEventPagination -> RowsCountOption -> GetEventInvocations
-[_geiInvocationsBy] :: GetEventInvocations -> GetInvocationsBy
-[_geiPagination] :: GetEventInvocations -> ScheduledEventPagination
+data GetScheduledEventInvocationsBy
+GIBEventId :: EventId -> ScheduledEventType -> GetScheduledEventInvocationsBy
+GIBEvent :: ScheduledEvent -> GetScheduledEventInvocationsBy
+data GetScheduledEventInvocations
+GetScheduledEventInvocations :: GetScheduledEventInvocationsBy -> ScheduledEventPagination -> RowsCountOption -> GetScheduledEventInvocations
+[_geiInvocationsBy] :: GetScheduledEventInvocations -> GetScheduledEventInvocationsBy
+[_geiPagination] :: GetScheduledEventInvocations -> ScheduledEventPagination
 
 -- | Option to include the total rows corresponding in response.
-[_geiGetRowsCount] :: GetEventInvocations -> RowsCountOption
+[_geiGetRowsCount] :: GetScheduledEventInvocations -> RowsCountOption
 data ClearCronEvents
 
 -- | Used to delete the cron events only of the specified cron trigger
@@ -8759,14 +8759,14 @@ SingleCronTrigger :: TriggerName -> ClearCronEvents
 --   `include_in_metadata: true` It is used in the case of the
 --   <tt>replace_metadata</tt> API
 MetadataCronTriggers :: [TriggerName] -> ClearCronEvents
-instance GHC.Classes.Eq Hasura.RQL.Types.ScheduledTrigger.GetInvocationsBy
-instance GHC.Show.Show Hasura.RQL.Types.ScheduledTrigger.GetInvocationsBy
-instance GHC.Show.Show Hasura.RQL.Types.ScheduledTrigger.GetEventInvocations
-instance GHC.Classes.Eq Hasura.RQL.Types.ScheduledTrigger.GetEventInvocations
+instance GHC.Classes.Eq Hasura.RQL.Types.ScheduledTrigger.GetScheduledEventInvocationsBy
+instance GHC.Show.Show Hasura.RQL.Types.ScheduledTrigger.GetScheduledEventInvocationsBy
+instance GHC.Show.Show Hasura.RQL.Types.ScheduledTrigger.GetScheduledEventInvocations
+instance GHC.Classes.Eq Hasura.RQL.Types.ScheduledTrigger.GetScheduledEventInvocations
 instance GHC.Classes.Eq Hasura.RQL.Types.ScheduledTrigger.ClearCronEvents
 instance GHC.Show.Show Hasura.RQL.Types.ScheduledTrigger.ClearCronEvents
-instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.ScheduledTrigger.GetEventInvocations
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.ScheduledTrigger.GetEventInvocations
+instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.ScheduledTrigger.GetScheduledEventInvocations
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.ScheduledTrigger.GetScheduledEventInvocations
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.RQL.Types.ScheduledTrigger.DeleteScheduledEvent
 instance Data.Aeson.Types.FromJSON.FromJSON Hasura.RQL.Types.ScheduledTrigger.DeleteScheduledEvent
 instance GHC.Classes.Eq Hasura.RQL.Types.ScheduledTrigger.ScheduledEventPagination
@@ -19208,7 +19208,7 @@ unlockAllLockedScheduledEvents :: MonadMetadataStorage m => m ()
 clearFutureCronEvents :: MonadMetadataStorage m => ClearCronEvents -> m ()
 getOneOffScheduledEvents :: MonadMetadataStorage m => ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> m (WithOptionalTotalCount [OneOffScheduledEvent])
 getCronEvents :: MonadMetadataStorage m => TriggerName -> ScheduledEventPagination -> [ScheduledEventStatus] -> RowsCountOption -> m (WithOptionalTotalCount [CronEvent])
-getInvocations :: MonadMetadataStorage m => GetEventInvocations -> m (WithOptionalTotalCount [ScheduledEventInvocation])
+getScheduledEventInvocations :: MonadMetadataStorage m => GetScheduledEventInvocations -> m (WithOptionalTotalCount [ScheduledEventInvocation])
 deleteScheduledEvent :: MonadMetadataStorage m => ScheduledEventId -> ScheduledEventType -> m ()
 insertAction :: MonadMetadataStorage m => ActionName -> SessionVariables -> [Header] -> Value -> m ActionId
 fetchUndeliveredActionEvents :: MonadMetadataStorage m => m [ActionLogItem]
@@ -19242,7 +19242,7 @@ dropFutureCronEvents :: MonadMetadataStorageQueryAPI m => ClearCronEvents -> m (
 deleteActionData :: MonadMetadataStorageQueryAPI m => ActionName -> m ()
 
 -- | Fetch cron/oneoff scheduled event invocations
-fetchInvocations :: MonadMetadataStorageQueryAPI m => GetEventInvocations -> m (WithOptionalTotalCount [ScheduledEventInvocation])
+fetchScheduledEventInvocations :: MonadMetadataStorageQueryAPI m => GetScheduledEventInvocations -> m (WithOptionalTotalCount [ScheduledEventInvocation])
 
 -- | Fetch cron/oneoff scheduled events
 fetchScheduledEvents :: MonadMetadataStorageQueryAPI m => GetScheduledEvents -> m Value
@@ -22874,14 +22874,14 @@ getCronEventsTx :: TriggerName -> ScheduledEventPagination -> [ScheduledEventSta
 deleteScheduledEventTx :: ScheduledEventId -> ScheduledEventType -> TxE QErr ()
 invocationFieldExtractors :: QualifiedTable -> [Extractor]
 mkEventIdBoolExp :: QualifiedTable -> EventId -> BoolExp
-getInvocationsTx :: GetEventInvocations -> TxE QErr (WithOptionalTotalCount [ScheduledEventInvocation])
+getScheduledEventInvocationsTx :: GetScheduledEventInvocations -> TxE QErr (WithOptionalTotalCount [ScheduledEventInvocation])
 data EventTables
 EventTables :: QualifiedTable -> QualifiedTable -> QualifiedTable -> EventTables
 [etOneOffInvocationsTable] :: EventTables -> QualifiedTable
 [etCronInvocationsTable] :: EventTables -> QualifiedTable
 [etCronEventsTable] :: EventTables -> QualifiedTable
-getInvocationsQueryNoPagination :: EventTables -> GetInvocationsBy -> Select
-getInvocationsQuery :: EventTables -> GetEventInvocations -> Select
+getScheduledEventsInvocationsQueryNoPagination :: EventTables -> GetScheduledEventInvocationsBy -> Select
+getScheduledEventsInvocationsQuery :: EventTables -> GetScheduledEventInvocations -> Select
 
 module Hasura.RQL.DDL.ScheduledTrigger
 populateInitialCronTriggerEvents :: (MonadIO m, MonadMetadataStorageQueryAPI m) => CronSchedule -> TriggerName -> m ()
@@ -22896,7 +22896,7 @@ dropCronTriggerInMetadata :: TriggerName -> MetadataModifier
 runCreateScheduledEvent :: MonadMetadataStorageQueryAPI m => CreateScheduledEvent -> m EncJSON
 runDeleteScheduledEvent :: MonadMetadataStorageQueryAPI m => DeleteScheduledEvent -> m EncJSON
 runGetScheduledEvents :: (CacheRM m, MonadMetadataStorageQueryAPI m) => GetScheduledEvents -> m EncJSON
-runGetEventInvocations :: (CacheRM m, MonadMetadataStorageQueryAPI m) => GetEventInvocations -> m EncJSON
+runGetScheduledEventInvocations :: (CacheRM m, MonadMetadataStorageQueryAPI m) => GetScheduledEventInvocations -> m EncJSON
 
 -- | Metadata API handler to retrieve all the cron triggers from the
 --   metadata
@@ -25486,7 +25486,7 @@ RMDeleteCronTrigger :: !ScheduledTriggerName -> RQLMetadataV1
 RMCreateScheduledEvent :: !CreateScheduledEvent -> RQLMetadataV1
 RMDeleteScheduledEvent :: !DeleteScheduledEvent -> RQLMetadataV1
 RMGetScheduledEvents :: !GetScheduledEvents -> RQLMetadataV1
-RMGetEventInvocations :: !GetEventInvocations -> RQLMetadataV1
+RMGetScheduledEventInvocations :: !GetScheduledEventInvocations -> RQLMetadataV1
 RMGetCronTriggers :: RQLMetadataV1
 RMCreateAction :: !Unvalidated CreateAction -> RQLMetadataV1
 RMDropAction :: !DropAction -> RQLMetadataV1

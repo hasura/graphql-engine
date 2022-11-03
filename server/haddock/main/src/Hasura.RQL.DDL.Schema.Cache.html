@@ -360,7 +360,7 @@ ScheduledEventPagination
 -&gt; RowsCountOption
 -&gt; CacheRWT m (WithOptionalTotalCount [OneOffScheduledEvent])
 ClearCronEvents -&gt; CacheRWT m ()
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; CacheRWT m (WithOptionalTotalCount [ScheduledEventInvocation])
 LockedActionIdArray -&gt; CacheRWT m ()
 ActionId -&gt; CacheRWT m ActionLogResponse
@@ -409,7 +409,7 @@ MonadError QErr m
     -&gt; [ScheduledEventStatus]
     -&gt; RowsCountOption
     -&gt; m (WithOptionalTotalCount [CronEvent]))
--&gt; (GetEventInvocations
+-&gt; (GetScheduledEventInvocations
     -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation]))
 -&gt; (ScheduledEventId -&gt; ScheduledEventType -&gt; m ())
 -&gt; (ActionName
@@ -482,7 +482,7 @@ MonadMetadataStorage m =&gt;
 ClearCronEvents -&gt; CacheRWT m ()
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; CacheRWT m (WithOptionalTotalCount [ScheduledEventInvocation])
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
@@ -546,11 +546,11 @@ deleteScheduledEvent :: ScheduledEventId -&gt; ScheduledEventType -&gt; CacheRWT
 $cdeleteScheduledEvent :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
 ScheduledEventId -&gt; ScheduledEventType -&gt; CacheRWT m ()
-getInvocations :: GetEventInvocations
+getScheduledEventInvocations :: GetScheduledEventInvocations
 -&gt; CacheRWT m (WithOptionalTotalCount [ScheduledEventInvocation])
-$cgetInvocations :: forall (m :: * -&gt; *).
+$cgetScheduledEventInvocations :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; CacheRWT m (WithOptionalTotalCount [ScheduledEventInvocation])
 getCronEvents :: TriggerName
 -&gt; ScheduledEventPagination
@@ -659,7 +659,7 @@ ScheduledEventId -&gt; ScheduledEventType -&gt; CacheRWT m ()
 OneOffEvent -&gt; CacheRWT m ScheduledEventId
 GetScheduledEvents -&gt; CacheRWT m Value
 ClearCronEvents -&gt; CacheRWT m ()
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; CacheRWT m (WithOptionalTotalCount [ScheduledEventInvocation])
 ActionName -&gt; CacheRWT m ()
 CatalogStateType -&gt; Value -&gt; CacheRWT m ()
@@ -686,7 +686,7 @@ MonadMetadataStorageQueryAPI m =&gt;
 ClearCronEvents -&gt; CacheRWT m ()
 forall (m :: * -&gt; *).
 MonadMetadataStorageQueryAPI m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; CacheRWT m (WithOptionalTotalCount [ScheduledEventInvocation])
 forall (m :: * -&gt; *).
 MonadMetadataStorageQueryAPI m =&gt;
@@ -700,7 +700,7 @@ MonadMetadataStorage m
 -&gt; ([CronEventSeed] -&gt; m ())
 -&gt; (ClearCronEvents -&gt; m ())
 -&gt; (ActionName -&gt; m ())
--&gt; (GetEventInvocations
+-&gt; (GetScheduledEventInvocations
     -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation]))
 -&gt; (GetScheduledEvents -&gt; m Value)
 -&gt; (ScheduledEventId -&gt; ScheduledEventType -&gt; m ())
@@ -723,11 +723,11 @@ fetchScheduledEvents :: GetScheduledEvents -&gt; CacheRWT m Value
 $cfetchScheduledEvents :: forall (m :: * -&gt; *).
 MonadMetadataStorageQueryAPI m =&gt;
 GetScheduledEvents -&gt; CacheRWT m Value
-fetchInvocations :: GetEventInvocations
+fetchScheduledEventInvocations :: GetScheduledEventInvocations
 -&gt; CacheRWT m (WithOptionalTotalCount [ScheduledEventInvocation])
-$cfetchInvocations :: forall (m :: * -&gt; *).
+$cfetchScheduledEventInvocations :: forall (m :: * -&gt; *).
 MonadMetadataStorageQueryAPI m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; CacheRWT m (WithOptionalTotalCount [ScheduledEventInvocation])
 deleteActionData :: ActionName -&gt; CacheRWT m ()
 $cdeleteActionData :: forall (m :: * -&gt; *).

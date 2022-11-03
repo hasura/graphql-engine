@@ -120,7 +120,7 @@ TODO: Reference to open issue or rfc?
 </span><span id="line-118"></span><span>  </span><span class="hs-comment">-- Console API requirements</span><span>
 </span><span id="line-119"></span><span>  </span><span id="getOneOffScheduledEvents"><span class="annot"><a href="Hasura.Metadata.Class.html#getOneOffScheduledEvents"><span class="hs-identifier hs-type">getOneOffScheduledEvents</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventPagination"><span class="hs-identifier hs-type">ScheduledEventPagination</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventStatus"><span class="hs-identifier hs-type">ScheduledEventStatus</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#RowsCountOption"><span class="hs-identifier hs-type">RowsCountOption</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690521504"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithOptionalTotalCount"><span class="hs-identifier hs-type">WithOptionalTotalCount</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#OneOffScheduledEvent"><span class="hs-identifier hs-type">OneOffScheduledEvent</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-120"></span><span>  </span><span id="getCronEvents"><span class="annot"><a href="Hasura.Metadata.Class.html#getCronEvents"><span class="hs-identifier hs-type">getCronEvents</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.EventTrigger.html#TriggerName"><span class="hs-identifier hs-type">TriggerName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventPagination"><span class="hs-identifier hs-type">ScheduledEventPagination</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventStatus"><span class="hs-identifier hs-type">ScheduledEventStatus</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#RowsCountOption"><span class="hs-identifier hs-type">RowsCountOption</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690521504"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithOptionalTotalCount"><span class="hs-identifier hs-type">WithOptionalTotalCount</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#CronEvent"><span class="hs-identifier hs-type">CronEvent</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
-</span><span id="line-121"></span><span>  </span><span id="getInvocations"><span class="annot"><a href="Hasura.Metadata.Class.html#getInvocations"><span class="hs-identifier hs-type">getInvocations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GetEventInvocations"><span class="hs-identifier hs-type">GetEventInvocations</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690521504"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithOptionalTotalCount"><span class="hs-identifier hs-type">WithOptionalTotalCount</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventInvocation"><span class="hs-identifier hs-type">ScheduledEventInvocation</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-121"></span><span>  </span><span id="getScheduledEventInvocations"><span class="annot"><a href="Hasura.Metadata.Class.html#getScheduledEventInvocations"><span class="hs-identifier hs-type">getScheduledEventInvocations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GetScheduledEventInvocations"><span class="hs-identifier hs-type">GetScheduledEventInvocations</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690521504"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithOptionalTotalCount"><span class="hs-identifier hs-type">WithOptionalTotalCount</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventInvocation"><span class="hs-identifier hs-type">ScheduledEventInvocation</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-122"></span><span>  </span><span id="deleteScheduledEvent"><span class="annot"><a href="Hasura.Metadata.Class.html#deleteScheduledEvent"><span class="hs-identifier hs-type">deleteScheduledEvent</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventId"><span class="hs-identifier hs-type">ScheduledEventId</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventType"><span class="hs-identifier hs-type">ScheduledEventType</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690521504"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-123"></span><span>
 </span><span id="line-124"></span><span>  </span><span class="hs-comment">-- Async actions</span><span>
@@ -368,18 +368,18 @@ TriggerName
 </span><a href="#local-6989586621690520967"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[ScheduledEventStatus]
 </span><a href="#local-6989586621690520966"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">RowsCountOption
 </span><a href="#local-6989586621690520965"><span class="hs-identifier hs-var">d</span></a></span><span>
-</span><span id="line-160"></span><span>  </span><span id="local-6989586621690520961"><span class="annot"><span class="annottext">getInvocations :: GetEventInvocations
+</span><span id="line-160"></span><span>  </span><span id="local-6989586621690520961"><span class="annot"><span class="annottext">getScheduledEventInvocations :: GetScheduledEventInvocations
 -&gt; ReaderT r m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="#local-6989586621690520961"><span class="hs-identifier hs-var hs-var hs-var hs-var">getInvocations</span></a></span></span><span> </span><span id="local-6989586621690520960"><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="#local-6989586621690520961"><span class="hs-identifier hs-var hs-var hs-var hs-var">getScheduledEventInvocations</span></a></span></span><span> </span><span id="local-6989586621690520960"><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520960"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="Hasura.Metadata.Class.html#getInvocations"><span class="hs-identifier hs-var">getInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="Hasura.Metadata.Class.html#getScheduledEventInvocations"><span class="hs-identifier hs-var">getScheduledEventInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520960"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-161"></span><span>  </span><span id="local-6989586621690520956"><span class="annot"><span class="annottext">deleteScheduledEvent :: EventId -&gt; ScheduledEventType -&gt; ReaderT r m ()
 </span><a href="#local-6989586621690520956"><span class="hs-identifier hs-var hs-var hs-var hs-var">deleteScheduledEvent</span></a></span></span><span> </span><span id="local-6989586621690520955"><span class="annot"><span class="annottext">EventId
@@ -690,18 +690,18 @@ TriggerName
 </span><a href="#local-6989586621690520788"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[ScheduledEventStatus]
 </span><a href="#local-6989586621690520787"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">RowsCountOption
 </span><a href="#local-6989586621690520786"><span class="hs-identifier hs-var">d</span></a></span><span>
-</span><span id="line-193"></span><span>  </span><span id="local-6989586621690520782"><span class="annot"><span class="annottext">getInvocations :: GetEventInvocations
+</span><span id="line-193"></span><span>  </span><span id="local-6989586621690520782"><span class="annot"><span class="annottext">getScheduledEventInvocations :: GetScheduledEventInvocations
 -&gt; StateT s m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="#local-6989586621690520782"><span class="hs-identifier hs-var hs-var hs-var hs-var">getInvocations</span></a></span></span><span> </span><span id="local-6989586621690520781"><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="#local-6989586621690520782"><span class="hs-identifier hs-var hs-var hs-var hs-var">getScheduledEventInvocations</span></a></span></span><span> </span><span id="local-6989586621690520781"><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520781"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="Hasura.Metadata.Class.html#getInvocations"><span class="hs-identifier hs-var">getInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="Hasura.Metadata.Class.html#getScheduledEventInvocations"><span class="hs-identifier hs-var">getScheduledEventInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520781"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-194"></span><span>  </span><span id="local-6989586621690520777"><span class="annot"><span class="annottext">deleteScheduledEvent :: EventId -&gt; ScheduledEventType -&gt; StateT s m ()
 </span><a href="#local-6989586621690520777"><span class="hs-identifier hs-var hs-var hs-var hs-var">deleteScheduledEvent</span></a></span></span><span> </span><span id="local-6989586621690520776"><span class="annot"><span class="annottext">EventId
@@ -1012,18 +1012,18 @@ TriggerName
 </span><a href="#local-6989586621690520609"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[ScheduledEventStatus]
 </span><a href="#local-6989586621690520608"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">RowsCountOption
 </span><a href="#local-6989586621690520607"><span class="hs-identifier hs-var">d</span></a></span><span>
-</span><span id="line-226"></span><span>  </span><span id="local-6989586621690520603"><span class="annot"><span class="annottext">getInvocations :: GetEventInvocations
+</span><span id="line-226"></span><span>  </span><span id="local-6989586621690520603"><span class="annot"><span class="annottext">getScheduledEventInvocations :: GetScheduledEventInvocations
 -&gt; TraceT m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="#local-6989586621690520603"><span class="hs-identifier hs-var hs-var hs-var hs-var">getInvocations</span></a></span></span><span> </span><span id="local-6989586621690520602"><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="#local-6989586621690520603"><span class="hs-identifier hs-var hs-var hs-var hs-var">getScheduledEventInvocations</span></a></span></span><span> </span><span id="local-6989586621690520602"><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520602"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="Hasura.Metadata.Class.html#getInvocations"><span class="hs-identifier hs-var">getInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="Hasura.Metadata.Class.html#getScheduledEventInvocations"><span class="hs-identifier hs-var">getScheduledEventInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520602"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-227"></span><span>  </span><span id="local-6989586621690520598"><span class="annot"><span class="annottext">deleteScheduledEvent :: EventId -&gt; ScheduledEventType -&gt; TraceT m ()
 </span><a href="#local-6989586621690520598"><span class="hs-identifier hs-var hs-var hs-var hs-var">deleteScheduledEvent</span></a></span></span><span> </span><span id="local-6989586621690520597"><span class="annot"><span class="annottext">EventId
@@ -1336,19 +1336,19 @@ TriggerName
 </span><a href="#local-6989586621690520430"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[ScheduledEventStatus]
 </span><a href="#local-6989586621690520429"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">RowsCountOption
 </span><a href="#local-6989586621690520428"><span class="hs-identifier hs-var">d</span></a></span><span>
-</span><span id="line-259"></span><span>  </span><span id="local-6989586621690520424"><span class="annot"><span class="annottext">getInvocations :: GetEventInvocations
+</span><span id="line-259"></span><span>  </span><span id="local-6989586621690520424"><span class="annot"><span class="annottext">getScheduledEventInvocations :: GetScheduledEventInvocations
 -&gt; ExceptT
      QErr m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="#local-6989586621690520424"><span class="hs-identifier hs-var hs-var hs-var hs-var">getInvocations</span></a></span></span><span> </span><span id="local-6989586621690520423"><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="#local-6989586621690520424"><span class="hs-identifier hs-var hs-var hs-var hs-var">getScheduledEventInvocations</span></a></span></span><span> </span><span id="local-6989586621690520423"><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520423"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="Hasura.Metadata.Class.html#getInvocations"><span class="hs-identifier hs-var">getInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="Hasura.Metadata.Class.html#getScheduledEventInvocations"><span class="hs-identifier hs-var">getScheduledEventInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520423"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-260"></span><span>  </span><span id="local-6989586621690520419"><span class="annot"><span class="annottext">deleteScheduledEvent :: EventId -&gt; ScheduledEventType -&gt; ExceptT QErr m ()
 </span><a href="#local-6989586621690520419"><span class="hs-identifier hs-var hs-var hs-var hs-var">deleteScheduledEvent</span></a></span></span><span> </span><span id="local-6989586621690520418"><span class="annot"><span class="annottext">EventId
@@ -1659,18 +1659,18 @@ TriggerName
 </span><a href="#local-6989586621690520251"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[ScheduledEventStatus]
 </span><a href="#local-6989586621690520250"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">RowsCountOption
 </span><a href="#local-6989586621690520249"><span class="hs-identifier hs-var">d</span></a></span><span>
-</span><span id="line-292"></span><span>  </span><span id="local-6989586621690520245"><span class="annot"><span class="annottext">getInvocations :: GetEventInvocations
+</span><span id="line-292"></span><span>  </span><span id="local-6989586621690520245"><span class="annot"><span class="annottext">getScheduledEventInvocations :: GetScheduledEventInvocations
 -&gt; MetadataT m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="#local-6989586621690520245"><span class="hs-identifier hs-var hs-var hs-var hs-var">getInvocations</span></a></span></span><span> </span><span id="local-6989586621690520244"><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="#local-6989586621690520245"><span class="hs-identifier hs-var hs-var hs-var hs-var">getScheduledEventInvocations</span></a></span></span><span> </span><span id="local-6989586621690520244"><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520244"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="Hasura.Metadata.Class.html#getInvocations"><span class="hs-identifier hs-var">getInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="Hasura.Metadata.Class.html#getScheduledEventInvocations"><span class="hs-identifier hs-var">getScheduledEventInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520244"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-293"></span><span>  </span><span id="local-6989586621690520240"><span class="annot"><span class="annottext">deleteScheduledEvent :: EventId -&gt; ScheduledEventType -&gt; MetadataT m ()
 </span><a href="#local-6989586621690520240"><span class="hs-identifier hs-var hs-var hs-var hs-var">deleteScheduledEvent</span></a></span></span><span> </span><span id="local-6989586621690520239"><span class="annot"><span class="annottext">EventId
@@ -1981,18 +1981,18 @@ TriggerName
 </span><a href="#local-6989586621690520072"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[ScheduledEventStatus]
 </span><a href="#local-6989586621690520071"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">RowsCountOption
 </span><a href="#local-6989586621690520070"><span class="hs-identifier hs-var">d</span></a></span><span>
-</span><span id="line-325"></span><span>  </span><span id="local-6989586621690520066"><span class="annot"><span class="annottext">getInvocations :: GetEventInvocations
+</span><span id="line-325"></span><span>  </span><span id="local-6989586621690520066"><span class="annot"><span class="annottext">getScheduledEventInvocations :: GetScheduledEventInvocations
 -&gt; TxET QErr m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="#local-6989586621690520066"><span class="hs-identifier hs-var hs-var hs-var hs-var">getInvocations</span></a></span></span><span> </span><span id="local-6989586621690520065"><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="#local-6989586621690520066"><span class="hs-identifier hs-var hs-var hs-var hs-var">getScheduledEventInvocations</span></a></span></span><span> </span><span id="local-6989586621690520065"><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520065"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (t :: (* -&gt; *) -&gt; * -&gt; *) (m :: * -&gt; *) a.
 (MonadTrans t, Monad m) =&gt;
 m a -&gt; t m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="Hasura.Metadata.Class.html#getInvocations"><span class="hs-identifier hs-var">getInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="Hasura.Metadata.Class.html#getScheduledEventInvocations"><span class="hs-identifier hs-var">getScheduledEventInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690520065"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-326"></span><span>  </span><span id="local-6989586621690520061"><span class="annot"><span class="annottext">deleteScheduledEvent :: EventId -&gt; ScheduledEventType -&gt; TxET QErr m ()
 </span><a href="#local-6989586621690520061"><span class="hs-identifier hs-var hs-var hs-var hs-var">deleteScheduledEvent</span></a></span></span><span> </span><span id="local-6989586621690520060"><span class="annot"><span class="annottext">EventId
@@ -2739,10 +2739,10 @@ TriggerName
 </span><a href="#local-6989586621690519577"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[ScheduledEventStatus]
 </span><a href="#local-6989586621690519576"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">RowsCountOption
 </span><a href="#local-6989586621690519575"><span class="hs-identifier hs-var">d</span></a></span><span>
-</span><span id="line-435"></span><span>  </span><span id="local-6989586621690519569"><span class="annot"><span class="annottext">getInvocations :: GetEventInvocations
+</span><span id="line-435"></span><span>  </span><span id="local-6989586621690519569"><span class="annot"><span class="annottext">getScheduledEventInvocations :: GetScheduledEventInvocations
 -&gt; MetadataStorageT
      (t m) (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="#local-6989586621690519569"><span class="hs-identifier hs-var hs-var hs-var hs-var">getInvocations</span></a></span></span><span> </span><span id="local-6989586621690519568"><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="#local-6989586621690519569"><span class="hs-identifier hs-var hs-var hs-var hs-var">getScheduledEventInvocations</span></a></span></span><span> </span><span id="local-6989586621690519568"><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690519568"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall {k} (t :: (* -&gt; *) -&gt; k -&gt; *) (m :: * -&gt; *) (n :: * -&gt; *)
        (b :: k).
 (MFunctor t, Monad m) =&gt;
@@ -2753,9 +2753,9 @@ m a -&gt; t m a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/transformers-0.5.6.2/src"><span class="hs-identifier hs-var">lift</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="Hasura.Metadata.Class.html#getInvocations"><span class="hs-identifier hs-var">getInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="Hasura.Metadata.Class.html#getScheduledEventInvocations"><span class="hs-identifier hs-var">getScheduledEventInvocations</span></a></span><span> </span><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690519568"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-436"></span><span>  </span><span id="local-6989586621690519562"><span class="annot"><span class="annottext">deleteScheduledEvent :: EventId -&gt; ScheduledEventType -&gt; MetadataStorageT (t m) ()
 </span><a href="#local-6989586621690519562"><span class="hs-identifier hs-var hs-var hs-var hs-var">deleteScheduledEvent</span></a></span></span><span> </span><span id="local-6989586621690519561"><span class="annot"><span class="annottext">EventId
@@ -2894,14 +2894,14 @@ ClearCronEvents -&gt; m ()
 </span><a href="Hasura.Metadata.Class.html#clearActionData"><span class="hs-identifier hs-var">clearActionData</span></a></span></span><span>
 </span><span id="line-462"></span><span>
 </span><span id="line-463"></span><span>  </span><span class="hs-comment">-- | Fetch cron/oneoff scheduled event invocations</span><span>
-</span><span id="line-464"></span><span>  </span><span id="fetchInvocations"><span class="annot"><a href="Hasura.Metadata.Class.html#fetchInvocations"><span class="hs-identifier hs-type">fetchInvocations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-465"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GetEventInvocations"><span class="hs-identifier hs-type">GetEventInvocations</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><span id="line-464"></span><span>  </span><span id="fetchScheduledEventInvocations"><span class="annot"><a href="Hasura.Metadata.Class.html#fetchScheduledEventInvocations"><span class="hs-identifier hs-type">fetchScheduledEventInvocations</span></a></span></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-465"></span><span>    </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GetScheduledEventInvocations"><span class="hs-identifier hs-type">GetScheduledEventInvocations</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-466"></span><span>    </span><span class="annot"><a href="#local-6989586621690521230"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#WithOptionalTotalCount"><span class="hs-identifier hs-type">WithOptionalTotalCount</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#ScheduledEventInvocation"><span class="hs-identifier hs-type">ScheduledEventInvocation</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
-</span><span id="line-467"></span><span>  </span><span id="local-6989586621690519497"><span class="annot"><a href="Hasura.Metadata.Class.html#fetchInvocations"><span class="hs-identifier hs-var hs-var">fetchInvocations</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
+</span><span id="line-467"></span><span>  </span><span id="local-6989586621690519497"><span class="annot"><a href="Hasura.Metadata.Class.html#fetchScheduledEventInvocations"><span class="hs-identifier hs-var hs-var">fetchScheduledEventInvocations</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="Hasura.Metadata.Class.html#getInvocations"><span class="hs-identifier hs-var">getInvocations</span></a></span></span><span>
+</span><a href="Hasura.Metadata.Class.html#getScheduledEventInvocations"><span class="hs-identifier hs-var">getScheduledEventInvocations</span></a></span></span><span>
 </span><span id="line-468"></span><span>
 </span><span id="line-469"></span><span>  </span><span class="hs-comment">-- | Fetch cron/oneoff scheduled events</span><span>
 </span><span id="line-470"></span><span>  </span><span id="fetchScheduledEvents"><span class="annot"><a href="Hasura.Metadata.Class.html#fetchScheduledEvents"><span class="hs-identifier hs-type">fetchScheduledEvents</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.ScheduledTrigger.html#GetScheduledEvents"><span class="hs-identifier hs-type">GetScheduledEvents</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621690521230"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Value</span></span><span>

@@ -156,7 +156,7 @@ ScheduledEventPagination
 -&gt; RowsCountOption
 -&gt; RunT m (WithOptionalTotalCount [OneOffScheduledEvent])
 ClearCronEvents -&gt; RunT m ()
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; RunT m (WithOptionalTotalCount [ScheduledEventInvocation])
 LockedActionIdArray -&gt; RunT m ()
 ActionId -&gt; RunT m ActionLogResponse
@@ -205,7 +205,7 @@ MonadError QErr m
     -&gt; [ScheduledEventStatus]
     -&gt; RowsCountOption
     -&gt; m (WithOptionalTotalCount [CronEvent]))
--&gt; (GetEventInvocations
+-&gt; (GetScheduledEventInvocations
     -&gt; m (WithOptionalTotalCount [ScheduledEventInvocation]))
 -&gt; (ScheduledEventId -&gt; ScheduledEventType -&gt; m ())
 -&gt; (ActionName
@@ -274,7 +274,7 @@ MonadMetadataStorage m =&gt;
 ClearCronEvents -&gt; RunT m ()
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; RunT m (WithOptionalTotalCount [ScheduledEventInvocation])
 forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
@@ -338,11 +338,11 @@ deleteScheduledEvent :: ScheduledEventId -&gt; ScheduledEventType -&gt; RunT m (
 $cdeleteScheduledEvent :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
 ScheduledEventId -&gt; ScheduledEventType -&gt; RunT m ()
-getInvocations :: GetEventInvocations
+getScheduledEventInvocations :: GetScheduledEventInvocations
 -&gt; RunT m (WithOptionalTotalCount [ScheduledEventInvocation])
-$cgetInvocations :: forall (m :: * -&gt; *).
+$cgetScheduledEventInvocations :: forall (m :: * -&gt; *).
 MonadMetadataStorage m =&gt;
-GetEventInvocations
+GetScheduledEventInvocations
 -&gt; RunT m (WithOptionalTotalCount [ScheduledEventInvocation])
 getCronEvents :: TriggerName
 -&gt; ScheduledEventPagination

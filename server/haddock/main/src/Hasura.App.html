@@ -4259,18 +4259,18 @@ TxE QErr a -&gt; MetadataStorageT (PGMetadataStorageAppT m) a
 </span><a href="#local-6989586621690682731"><span class="hs-identifier hs-var">b</span></a></span><span> </span><span class="annot"><span class="annottext">[ScheduledEventStatus]
 </span><a href="#local-6989586621690682730"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">RowsCountOption
 </span><a href="#local-6989586621690682729"><span class="hs-identifier hs-var">d</span></a></span><span>
-</span><span id="line-1213"></span><span>  </span><span id="local-6989586621690682726"><span class="annot"><span class="annottext">getInvocations :: GetEventInvocations
+</span><span id="line-1213"></span><span>  </span><span id="local-6989586621690682726"><span class="annot"><span class="annottext">getScheduledEventInvocations :: GetScheduledEventInvocations
 -&gt; MetadataStorageT
      (PGMetadataStorageAppT m)
      (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="Hasura.Metadata.Class.html#getInvocations"><span class="hs-identifier hs-var hs-var hs-var hs-var">getInvocations</span></a></span></span><span> </span><span id="local-6989586621690682724"><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="Hasura.Metadata.Class.html#getScheduledEventInvocations"><span class="hs-identifier hs-var hs-var hs-var hs-var">getScheduledEventInvocations</span></a></span></span><span> </span><span id="local-6989586621690682724"><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690682724"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">forall (m :: * -&gt; *) a.
 MonadIO m =&gt;
 TxE QErr a -&gt; MetadataStorageT (PGMetadataStorageAppT m) a
 </span><a href="Hasura.App.html#runInSeparateTx"><span class="hs-identifier hs-var">runInSeparateTx</span></a></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span> </span><span class="annot"><span class="annottext">GetScheduledEventInvocations
 -&gt; TxE QErr (WithOptionalTotalCount [ScheduledEventInvocation])
-</span><a href="Hasura.Eventing.ScheduledTrigger.html#getInvocationsTx"><span class="hs-identifier hs-var">getInvocationsTx</span></a></span><span> </span><span class="annot"><span class="annottext">GetEventInvocations
+</span><a href="Hasura.Eventing.ScheduledTrigger.html#getScheduledEventInvocationsTx"><span class="hs-identifier hs-var">getScheduledEventInvocationsTx</span></a></span><span> </span><span class="annot"><span class="annottext">GetScheduledEventInvocations
 </span><a href="#local-6989586621690682724"><span class="hs-identifier hs-var">a</span></a></span><span>
 </span><span id="line-1214"></span><span>  </span><span id="local-6989586621690682721"><span class="annot"><span class="annottext">deleteScheduledEvent :: CronEventId
 -&gt; ScheduledEventType
