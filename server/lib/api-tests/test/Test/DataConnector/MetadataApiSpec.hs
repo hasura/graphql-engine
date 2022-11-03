@@ -20,7 +20,7 @@ import Harness.Backend.DataConnector.Chinook.Sqlite qualified as Sqlite
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (defaultBackendCapabilities, defaultBackendServerUrl)
-import Harness.Test.Fixture (defaultBackendTypeString, defaultSource, emptySetupAction)
+import Harness.Test.Fixture (defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
 import Harness.TestEnvironment qualified as TE
@@ -432,3 +432,12 @@ schemaCrudTests opts = describe "A series of actions to setup and teardown a sou
             [yaml|
               message: success
             |]
+
+-- | Setup a test action without any initialization then reset the
+-- metadata in the teardown. This is useful for running tests on the Metadata API.
+emptySetupAction :: TestEnvironment -> Fixture.SetupAction
+emptySetupAction testEnvironment =
+  Fixture.SetupAction
+    { setupAction = pure (),
+      teardownAction = const $ GraphqlEngine.clearMetadata testEnvironment
+    }

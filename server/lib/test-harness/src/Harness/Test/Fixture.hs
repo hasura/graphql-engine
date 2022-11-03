@@ -14,7 +14,6 @@ module Harness.Test.Fixture
     schemaKeyword,
     noLocalTestEnvironment,
     SetupAction (..),
-    emptySetupAction,
     Options (..),
     combineOptions,
     defaultOptions,
@@ -25,7 +24,6 @@ where
 import Data.Text qualified as T
 import Data.UUID.V4 (nextRandom)
 import Harness.Exceptions
-import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.TestEnvironment (TestEnvironment (..), testLog)
@@ -214,15 +212,6 @@ data SetupAction = forall a.
   { setupAction :: IO a,
     teardownAction :: Maybe a -> IO ()
   }
-
--- | Setup a test action without any initialization then reset the
--- metadata in the teardown. This is useful for running tests on the Metadata API.
-emptySetupAction :: TestEnvironment -> SetupAction
-emptySetupAction testEnvironment =
-  SetupAction
-    { setupAction = pure (),
-      teardownAction = const $ GraphqlEngine.clearMetadata testEnvironment
-    }
 
 -- | A name describing the given context.
 data FixtureName
