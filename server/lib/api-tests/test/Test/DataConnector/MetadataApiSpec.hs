@@ -1,4 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
+-- For runWithLocalTestEnvironmentSingleSetup
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | Metadata API tests for Data Connector Backend
 module Test.DataConnector.MetadataApiSpec
@@ -33,7 +35,7 @@ import Test.Hspec (SpecWith, describe, it, pendingWith)
 
 spec :: SpecWith TestEnvironment
 spec = do
-  Fixture.runWithLocalTestEnvironment
+  Fixture.runWithLocalTestEnvironmentSingleSetup
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
             { Fixture.setupTeardown = \(testEnv, _) ->
@@ -47,7 +49,7 @@ spec = do
     )
     schemaCrudTests
 
-  Fixture.runWithLocalTestEnvironment
+  Fixture.runWithLocalTestEnvironmentSingleSetup
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.DataConnectorReference)
             { Fixture.setupTeardown = \(testEnv, _) ->

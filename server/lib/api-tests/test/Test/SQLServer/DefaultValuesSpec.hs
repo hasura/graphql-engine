@@ -1,4 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
+-- For runWithLocalTestEnvironmentSingleSetup
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | Test that Postgres databases correctly roundtrip timestamps.
 --
@@ -20,7 +22,7 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Fixture.run
+  Fixture.runSingleSetup
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
             { Fixture.setupTeardown = \(testEnv, _) ->

@@ -1,4 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
+-- For runWithLocalTestEnvironmentSingleSetup
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- |
 -- Tests around mutations involving fields with custom names.
@@ -27,7 +29,7 @@ import Prelude
 
 spec :: SpecWith TestEnvironment
 spec = do
-  Fixture.run
+  Fixture.runSingleSetup
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.setupTeardown = \(testEnv, _) ->

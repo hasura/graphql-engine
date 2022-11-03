@@ -4,7 +4,9 @@
 -- Central types and functions are 'Fixture', 'SetupAction', and 'run'.
 module Harness.Test.Fixture
   ( run,
+    runSingleSetup,
     runWithLocalTestEnvironment,
+    runWithLocalTestEnvironmentSingleSetup,
     Fixture (..),
     fixture,
     FixtureName (..),
@@ -28,7 +30,15 @@ import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.TestEnvironment (TestEnvironment (..), testLog)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, aroundAllWith, aroundWith, beforeWith, describe, pendingWith)
+import Test.Hspec
+  ( ActionWith,
+    SpecWith,
+    aroundAllWith,
+    aroundWith,
+    beforeWith,
+    describe,
+    pendingWith,
+  )
 
 -- | Runs the given tests, for each provided 'Fixture'@ ()@.
 --
@@ -43,9 +53,16 @@ import Test.Hspec (SpecWith, aroundAllWith, aroundWith, beforeWith, describe, pe
 --
 -- For a more general version that can run tests for any 'Fixture'@ a@, see
 -- 'runWithLocalTestEnvironment'.
+--
+-- This function runs setup and teardown for each Spec item individually.
 run :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
 run fixtures tests = do
   runWithLocalTestEnvironment fixtures (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
+
+{-# DEPRECATED runSingleSetup "runSingleSetup lets all specs in aFixture share a single database environment, which impedes parallelisation and out-of-order execution." #-}
+runSingleSetup :: NonEmpty (Fixture ()) -> (Options -> SpecWith TestEnvironment) -> SpecWith TestEnvironment
+runSingleSetup fixtures tests = do
+  runWithLocalTestEnvironmentSingleSetup fixtures (\opts -> beforeWith (\(te, ()) -> return te) (tests opts))
 
 -- | Runs the given tests, for each provided 'Fixture'@ a@.
 --
@@ -56,27 +73,45 @@ run fixtures tests = do
 -- 'Fixture's are parameterized by the type of local testEnvironment that needs
 -- to be carried throughout the tests.
 --
+-- This function runs setup and teardown for each Spec item individually.
+--
 -- See 'Fixture' for details.
 runWithLocalTestEnvironment ::
   forall a.
   NonEmpty (Fixture a) ->
   (Options -> SpecWith (TestEnvironment, a)) ->
   SpecWith TestEnvironment
-runWithLocalTestEnvironment fixtures tests =
-  for_ fixtures \context -> do
-    let n = name context
-        co = customOptions context
+runWithLocalTestEnvironment = runWithLocalTestEnvironmentInternal aroundWith
+
+{-# DEPRECATED runWithLocalTestEnvironmentSingleSetup "runWithLocalTestEnvironmentSingleSetup lets all specs in a Fixture share a single database environment, which impedes parallelisation and out-of-order execution." #-}
+runWithLocalTestEnvironmentSingleSetup ::
+  forall a.
+  NonEmpty (Fixture a) ->
+  (Options -> SpecWith (TestEnvironment, a)) ->
+  SpecWith TestEnvironment
+runWithLocalTestEnvironmentSingleSetup = runWithLocalTestEnvironmentInternal aroundAllWith
+
+runWithLocalTestEnvironmentInternal ::
+  forall a.
+  ((ActionWith (TestEnvironment, a) -> ActionWith (TestEnvironment)) -> SpecWith (TestEnvironment, a) -> SpecWith (TestEnvironment)) ->
+  NonEmpty (Fixture a) ->
+  (Options -> SpecWith (TestEnvironment, a)) ->
+  SpecWith TestEnvironment
+runWithLocalTestEnvironmentInternal aroundSomeWith fixtures tests =
+  for_ fixtures \fixture' -> do
+    let n = name fixture'
+        co = customOptions fixture'
         options = fromMaybe defaultOptions co
     case skipTests options of
       Just skipMsg ->
-        describe (show n) $ aroundWith (\_ _ -> pendingWith $ "Tests skipped: " <> T.unpack skipMsg) (tests options)
+        describe (show n) $ aroundSomeWith (\_ _ -> pendingWith $ "Tests skipped: " <> T.unpack skipMsg) (tests options)
       Nothing ->
-        describe (show n) $ aroundAllWith (fixtureBracket context) (tests options)
+        describe (show n) $ aroundSomeWith (fixtureBracket fixture') (tests options)
 
 -- We want to be able to report exceptions happening both during the tests
 -- and at teardown, which is why we use a custom re-implementation of
 -- @bracket@.
-fixtureBracket :: Fixture b -> ((TestEnvironment, b) -> IO a) -> TestEnvironment -> IO ()
+fixtureBracket :: Fixture b -> (ActionWith (TestEnvironment, b)) -> ActionWith TestEnvironment
 fixtureBracket Fixture {name, mkLocalTestEnvironment, setupTeardown} actionWith globalTestEnvironment =
   mask \restore -> do
     -- log DB of test

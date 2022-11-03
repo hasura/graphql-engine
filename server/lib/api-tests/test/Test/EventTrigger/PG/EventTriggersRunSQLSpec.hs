@@ -1,5 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
+-- For runWithLocalTestEnvironmentSingleSetup
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | Testing the `run_sql` API
 module Test.EventTrigger.PG.EventTriggersRunSQLSpec (spec) where
@@ -29,7 +31,7 @@ import Test.Hspec (SpecWith, it, shouldBe)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Fixture.runWithLocalTestEnvironment
+  Fixture.runWithLocalTestEnvironmentSingleSetup
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { -- setup the webhook server as the local test environment,

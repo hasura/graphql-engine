@@ -1,5 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
+-- For runWithLocalTestEnvironmentSingleSetup
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | Test that drop_source metadata API executes successfully when any remote
 -- relationships is present between a database and a database.
@@ -46,7 +48,7 @@ import Test.RemoteRelationship.MetadataAPI.Common (LocalTestTestEnvironment (..)
 -- Preamble
 
 spec :: SpecWith TestEnvironment
-spec = Fixture.runWithLocalTestEnvironment contexts tests
+spec = Fixture.runWithLocalTestEnvironmentSingleSetup contexts tests
   where
     contexts = NE.fromList [dbTodbRemoteRelationshipFixture]
 

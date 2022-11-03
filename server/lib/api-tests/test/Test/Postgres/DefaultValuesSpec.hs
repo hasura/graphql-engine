@@ -1,4 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
+-- For runWithLocalTestEnvironmentSingleSetup
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- |
 -- Tests for the behaviour of columns with default values.
@@ -23,7 +25,7 @@ import Test.Hspec (SpecWith, describe, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Fixture.run
+  Fixture.runSingleSetup
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.setupTeardown = \(testEnv, _) ->

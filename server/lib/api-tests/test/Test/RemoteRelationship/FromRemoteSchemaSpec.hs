@@ -1,5 +1,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE QuasiQuotes #-}
+-- For runWithLocalTestEnvironmentSingleSetup
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | Tests for remote relationships from remote schemas. Unlike the "ToX"
 -- modules, this module specifically cares about the remote schema on the LHS:
@@ -29,7 +31,7 @@ import Test.Hspec (SpecWith, describe, it)
 -- Preamble
 
 spec :: SpecWith TestEnvironment
-spec = Fixture.runWithLocalTestEnvironment (NE.fromList [context]) tests
+spec = Fixture.runWithLocalTestEnvironmentSingleSetup (NE.fromList [context]) tests
   where
     context =
       (Fixture.fixture $ Fixture.RemoteGraphQLServer)

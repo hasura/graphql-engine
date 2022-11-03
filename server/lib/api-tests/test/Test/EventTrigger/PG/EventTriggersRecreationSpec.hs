@@ -1,4 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
+-- For runWithLocalTestEnvironmentSingleSetup
+{-# OPTIONS_GHC -Wno-deprecations #-}
 
 module Test.EventTrigger.PG.EventTriggersRecreationSpec (spec) where
 
@@ -22,7 +24,7 @@ import Test.Hspec (SpecWith, it)
 
 spec :: SpecWith TestEnvironment
 spec =
-  Fixture.runWithLocalTestEnvironment
+  Fixture.runWithLocalTestEnvironmentSingleSetup
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
