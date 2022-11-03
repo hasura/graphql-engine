@@ -1,6 +1,7 @@
 import { useQueryClient } from 'react-query';
 import { useMetadataMigration } from '@/features/MetadataAPI';
 import { exportMetadata } from '@/features/DataSource';
+import { useFireNotification } from '@/new-components/Notifications';
 
 import { useHttpClient } from '@/features/Network';
 
@@ -8,14 +9,12 @@ import { QueryType } from '../../types';
 import { api } from '../../api';
 
 export interface UseDeletePermissionArgs {
-  currentSource: string;
   dataSourceName: string;
   table: unknown;
   roleName: string;
 }
 
 export const useDeletePermission = ({
-  currentSource,
   dataSourceName,
   table,
   roleName,
@@ -23,19 +22,25 @@ export const useDeletePermission = ({
   const mutate = useMetadataMigration();
   const httpClient = useHttpClient();
   const queryClient = useQueryClient();
+  const { fireNotification } = useFireNotification();
 
   const submit = async (queries: QueryType[]) => {
-    const { resource_version: resourceVersion } = await exportMetadata({
-      httpClient,
-    });
+    const { resource_version: resourceVersion, metadata } =
+      await exportMetadata({
+        httpClient,
+      });
 
     if (!resourceVersion) {
       console.error('No resource version');
       return;
     }
 
+    const driver = metadata.sources.find(s => s.name === dataSourceName)?.kind;
+
+    if (!driver) throw Error('Unable to find driver in metadata');
+
     const body = api.createDeleteBody({
-      currentSource,
+      driver,
       dataSourceName,
       table,
       roleName,
@@ -43,11 +48,41 @@ export const useDeletePermission = ({
       queries,
     });
 
-    await mutate.mutateAsync({
-      query: body,
-    });
+    await mutate.mutateAsync(
+      {
+        query: body,
+      },
+      {
+        onSuccess: () => {
+          fireNotification({
+            type: 'success',
+            title: 'Success!',
+            message: 'Permissions successfully deleted',
+          });
+        },
+        onError: err => {
+          fireNotification({
+            type: 'error',
+            title: 'Error!',
+            message:
+              err?.message ?? 'Something went wrong while deleting permissions',
+          });
+        },
+        onSettled: async () => {
+          await queryClient.invalidateQueries([
+            dataSourceName,
+            'permissionFormData',
+            JSON.stringify(table),
+          ]);
 
-    queryClient.invalidateQueries([dataSourceName, 'permissionsTable']);
+          await queryClient.invalidateQueries([
+            dataSourceName,
+            'permissionsTable',
+            JSON.stringify(table),
+          ]);
+        },
+      }
+    );
   };
 
   const isLoading = mutate.isLoading;

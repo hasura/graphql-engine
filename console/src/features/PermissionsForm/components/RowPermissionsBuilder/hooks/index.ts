@@ -1,9 +1,11 @@
 import React from 'react';
 import { buildClientSchema, GraphQLSchema, IntrospectionQuery } from 'graphql';
 import { useHttpClient } from '@/features/Network';
-import { runIntrospectionQuery } from '@/features/DataSource';
-
-import { createDefaultValues, getAllColumnsAndOperators } from '../utils';
+import { exportMetadata, runIntrospectionQuery } from '@/features/DataSource';
+import { Table } from '@/features/MetadataAPI';
+import { useQuery } from 'react-query';
+import { areTablesEqual } from '@/features/RelationshipsTable';
+import { getAllColumnsAndOperators } from '../utils';
 
 /**
  *
@@ -28,9 +30,33 @@ export const useIntrospectSchema = () => {
   return { data: schema };
 };
 
+export const useTableConfiguration = ({
+  dataSourceName,
+  table,
+}: {
+  dataSourceName: string;
+  table: Table;
+}) => {
+  const httpClient = useHttpClient();
+  return useQuery({
+    queryKey: ['export_metadata', dataSourceName, table, 'configuration'],
+    queryFn: async () => {
+      const { metadata } = await exportMetadata({ httpClient });
+      const metadataTable = metadata.sources
+        .find(s => s.name === dataSourceName)
+        ?.tables.find(t => areTablesEqual(t.table, table));
+      if (!metadata) throw Error('Unable to find table in metadata');
+
+      return metadataTable?.configuration ?? {};
+    },
+  });
+};
+
 interface Args {
   tableName: string;
   schema?: GraphQLSchema;
+  table: Table;
+  dataSourceName: string;
 }
 
 /**
@@ -38,7 +64,11 @@ interface Args {
  * get all boolOperators, columns and relationships
  * and information about types for each
  */
-export const useData = ({ tableName, schema }: Args) => {
+export const useData = ({ tableName, schema, table, dataSourceName }: Args) => {
+  const { data: tableConfig } = useTableConfiguration({
+    table,
+    dataSourceName,
+  });
   if (!schema)
     return {
       data: {
@@ -47,21 +77,7 @@ export const useData = ({ tableName, schema }: Args) => {
         relationships: [],
       },
     };
-  const data = getAllColumnsAndOperators({ tableName, schema });
-  return { data };
-};
 
-interface A {
-  tableName: string;
-  existingPermission: Record<string, any>;
-}
-
-export const useCreateRowPermissionsDefaults = () => {
-  const { data: schema } = useIntrospectSchema();
-
-  const fetchDefaults = async ({ tableName, existingPermission }: A) => {
-    createDefaultValues({ tableName, schema, existingPermission });
-  };
-
-  return fetchDefaults;
+  const data = getAllColumnsAndOperators({ tableName, schema, tableConfig });
+  return { data, tableConfig };
 };

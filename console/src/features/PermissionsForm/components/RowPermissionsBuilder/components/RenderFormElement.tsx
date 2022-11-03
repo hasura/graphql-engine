@@ -1,8 +1,7 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
-
 import { GraphQLSchema } from 'graphql';
-
+import { Table } from '@/features/MetadataAPI';
 import { CustomField } from './Fields';
 import { FieldArray } from './FieldArray';
 import { Builder } from './Builder';
@@ -23,6 +22,8 @@ interface Props {
    */
   nesting: string[];
   schema: GraphQLSchema;
+  table: Table;
+  dataSourceName: string;
 }
 
 export const RenderFormElement = (props: Props) => {
@@ -34,6 +35,9 @@ export const RenderFormElement = (props: Props) => {
     handleColumnChange,
     nesting,
     schema,
+    table,
+    dataSourceName,
+    // tableConfig,
   } = props;
 
   const { register, setValue, watch } = useFormContext();
@@ -117,6 +121,8 @@ export const RenderFormElement = (props: Props) => {
               tableName={dropDownState.typeName}
               nesting={[...nesting, dropDownState.name]}
               schema={schema}
+              table={table}
+              dataSourceName={dataSourceName}
             />
           </div>
           <JsonItem text="}" />
@@ -134,6 +140,8 @@ export const RenderFormElement = (props: Props) => {
                   tableName={tableName}
                   nesting={[...nesting, dropDownState.name]}
                   schema={schema}
+                  table={table}
+                  dataSourceName={dataSourceName}
                 />
               </div>
               <JsonItem text="}" />
@@ -146,6 +154,8 @@ export const RenderFormElement = (props: Props) => {
               tableName={tableName}
               nesting={[...nesting, dropDownState.name]}
               schema={schema}
+              table={table}
+              dataSourceName={dataSourceName}
             />
           )}
         </>

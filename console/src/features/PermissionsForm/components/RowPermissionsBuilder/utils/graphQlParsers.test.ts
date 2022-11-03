@@ -6,7 +6,11 @@ import {
 import { schema } from '../mocks';
 
 test('correctly fetches items for dropdown from schema', () => {
-  const result = getAllColumnsAndOperators({ tableName: 'user', schema });
+  const result = getAllColumnsAndOperators({
+    tableName: 'user',
+    schema,
+    tableConfig: {},
+  });
 
   expect(result.boolOperators.length).toBe(3);
   expect(result.columns.length).toBe(4);
@@ -25,6 +29,7 @@ test('correctly fetches operators for a given column', () => {
     tableName: 'user',
     schema,
     columnName: 'age',
+    tableConfig: {},
   });
 
   const expected: ReturnType<typeof getColumnOperators> = [
@@ -94,6 +99,7 @@ test('correctly fetches information about a column operator', () => {
     tableName: 'user',
     schema,
     columnName: 'age',
+    tableConfig: {},
   });
   const result = findColumnOperator({ columnKey: '_eq', columnOperators });
   const expected: ReturnType<typeof findColumnOperator> = {

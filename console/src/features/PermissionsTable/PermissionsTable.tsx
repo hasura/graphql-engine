@@ -1,6 +1,7 @@
 import React from 'react';
 import { FaInfo } from 'react-icons/fa';
-
+import Skeleton from 'react-loading-skeleton';
+import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { useRolePermissions } from './hooks/usePermissions';
 import { PermissionsLegend } from './components/PermissionsLegend';
 import { EditableCell, InputCell } from './components/Cells';
@@ -56,15 +57,28 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
   table,
   machine,
 }) => {
-  const { data } = useRolePermissions({
+  const { data, isLoading } = useRolePermissions({
     dataSourceName,
     table,
   });
 
   const [state, send] = machine;
 
+  if (isLoading)
+    return (
+      <div>
+        <Skeleton count={5} height={30} className="my-1.5" />
+      </div>
+    );
+
   if (!data) {
-    return null;
+    return (
+      <div>
+        <IndicatorCard status="negative" headline="Error">
+          Something went wrong while fetching permissions
+        </IndicatorCard>
+      </div>
+    );
   }
 
   const { supportedQueries, rolePermissions } = data;

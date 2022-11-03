@@ -168,7 +168,13 @@ export const DatabaseRelationshipsTable = ({
                     className="flex px-2 py-0.5 items-center font-semibold rounded text-secondary mr-0.5 hover:bg-indigo-50 focus:bg-indigo-100"
                   >
                     <FaEdit className="fill-current mr-1" />
-                    Edit
+                    {[
+                      'toLocalTableFk',
+                      'toSameTableFk',
+                      'toLocalTableManual',
+                    ].includes(relationship.type)
+                      ? 'Rename'
+                      : 'Edit'}
                   </button>
                   <button
                     onClick={() =>
