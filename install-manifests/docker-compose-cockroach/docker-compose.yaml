@@ -25,7 +25,6 @@ services:
       COCKROACH_DATABASE: 'hasura'
     volumes:
       - '${PWD}/cockroach-data:/cockroach/cockroach-data'
-      - ./docker-compose/cockroach/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
 
   graphql-engine:
     ## TODO: replace image after beta release

@@ -71,7 +71,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - psql -U hasura < /dev/null && sleep 5 && psql -U hasura < /dev/null
+        - psql -U hasura < /dev/null && sleep 1 && psql -U hasura < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
@@ -92,7 +92,6 @@ services:
       YSQL_DB: "hasura"
     volumes:
       - yugabyte-data:/var/lib/postgresql/data
-      - ./docker-compose/yugabyte/init.sql:/init.sql:ro 
 
   sqlserver:
     # We cannot use this image on arm64, as it's not available.
@@ -168,7 +167,7 @@ services:
     healthcheck:
       test:
         - CMD-SHELL
-        - psql -U hasura < /dev/null && sleep 5 && psql -U hasura < /dev/null
+        - psql -U hasura < /dev/null && sleep 1 && psql -U hasura < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s
@@ -187,11 +186,10 @@ services:
       COCKROACH_DATABASE: "hasura"
     volumes:
       - cockroach-data:/cockroach/cockroach-data
-      - ./docker-compose/cockroach/init.sh:/docker-entrypoint-initdb.d/init-hasura.sh:ro
     healthcheck:
       test:
         - CMD-SHELL
-        - cockroach sql --insecure --database "hasura" --execute "SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'hasura';" | grep -q -F 'hasura'
+        - cockroach sql --insecure < /dev/null && sleep 1 && cockroach sql --insecure < /dev/null
       start_period: 5s
       interval: 5s
       timeout: 10s

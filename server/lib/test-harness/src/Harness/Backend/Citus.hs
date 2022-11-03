@@ -26,6 +26,7 @@ import Control.Monad.Reader
 import Data.Aeson (Value)
 import Data.ByteString.Char8 qualified as S8
 import Data.String (fromString)
+import Data.String.Interpolate (i)
 import Data.Text qualified as T
 import Data.Text.Extended (commaSeparated)
 import Data.Time (defaultTimeLocale, formatTime)
@@ -43,7 +44,7 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (Citus), defaultSource)
 import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
-import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
+import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.TestEnvironment (TestEnvironment)
 import Hasura.Prelude
@@ -108,6 +109,7 @@ configuration:
 createTable :: HasCallStack => TestEnvironment -> Schema.Table -> IO ()
 createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
+
   run_ $
     T.unpack $
       T.unwords
@@ -168,7 +170,7 @@ wrapIdentifier identifier = "\"" <> identifier <> "\""
 -- | 'ScalarValue' serializer for Citus
 serialize :: ScalarValue -> Text
 serialize = \case
-  VInt i -> tshow i
+  VInt n -> tshow n
   VStr s -> "'" <> T.replace "'" "\'" s <> "'"
   VUTCTime t -> T.pack $ formatTime defaultTimeLocale "'%F %T'" t
   VBool b -> if b then "TRUE" else "FALSE"
@@ -209,8 +211,22 @@ untrackTable testEnvironment table =
 -- NOTE: Certain test modules may warrant having their own local version.
 setup :: HasCallStack => [Schema.Table] -> (TestEnvironment, ()) -> IO ()
 setup tables (testEnvironment, _) = do
+  let schemaName = Schema.getSchemaName testEnvironment
+
   -- Clear and reconfigure the metadata
   GraphqlEngine.setSource testEnvironment defaultSourceMetadata Nothing
+
+  -- Because the test harness sets the schema name we use for testing, we need
+  -- to make sure it exists before we run the tests. We may want to consider
+  -- removing it again in 'teardown'.
+  run_
+    [i|
+      BEGIN;
+      SET LOCAL client_min_messages = warning;
+      CREATE SCHEMA IF NOT EXISTS #{unSchemaName schemaName};
+      COMMIT;
+  |]
+
   -- Setup and track tables
   for_ tables $ \table -> do
     createTable testEnvironment table

@@ -41,6 +41,7 @@ library
     , servant-server
     , sop-core
     , stm
+    , string-interpolate
     , template-haskell
     , text
     , th-lift
