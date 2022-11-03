@@ -164,12 +164,10 @@ function ButtonIcon(props: {
   const className = clsx(
     'inline-flex',
     {
-      'mr-2': buttonHasChildren || iconPosition === 'start',
-      'ml-2': buttonHasChildren || iconPosition === 'end',
+      'mr-2': buttonHasChildren && iconPosition === 'start',
+      'ml-2': buttonHasChildren && iconPosition === 'end',
     },
-
     size === 'sm' ? 'w-4 h-4' : 'w-5 h-5',
-
     icon.props.className
   );
 
