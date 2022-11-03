@@ -65,4 +65,4 @@ Learn more
 
 .. admonition:: Additional Resources
 
-  Data Federation with Hasura - `Watch Webinar <https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.
+  Data federation with Hasura - `Watch Webinar <https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.

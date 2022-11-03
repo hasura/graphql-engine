@@ -183,4 +183,4 @@ To achieve this you can use community tooling to write your own client-facing Gr
 
 .. admonition:: Additional Resources
 
-  Data Federation with Hasura - `Watch Webinar <https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.
+  Data federation with Hasura - `Watch Webinar <https://hasura.io/events/webinar/data-federation-hasura-graphql/?pg=docs&plcmt=body&cta=watch-webinar&tech=>`__.
