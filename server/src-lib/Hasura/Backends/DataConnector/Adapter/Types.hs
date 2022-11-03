@@ -14,7 +14,9 @@ module Hasura.Backends.DataConnector.Adapter.Types
     scSchema,
     scTemplate,
     scTimeoutMicroseconds,
-    DataConnectorName (..),
+    DataConnectorName,
+    unDataConnectorName,
+    mkDataConnectorName,
     DataConnectorOptions (..),
     DataConnectorInfo (..),
     TableName (..),
@@ -149,10 +151,23 @@ instance Cacheable SourceConfig where
 
 --------------------------------------------------------------------------------
 
+-- | Note: Currently you should not use underscores in this name.
+--         This should be enforced in instances, and the `mkDataConnectorName`
+--         smart constructor is available to assist.
 newtype DataConnectorName = DataConnectorName {unDataConnectorName :: GQL.Name}
   deriving stock (Eq, Ord, Show, Typeable, Generic)
-  deriving newtype (FromJSON, ToJSON, FromJSONKey, ToJSONKey, Hashable, ToTxt)
+  deriving newtype (ToJSON, FromJSONKey, ToJSONKey, Hashable, ToTxt)
   deriving anyclass (Cacheable, NFData)
+
+instance FromJSON DataConnectorName where
+  parseJSON v = (`onLeft` fail) =<< (mkDataConnectorName <$> J.parseJSON v)
+
+mkDataConnectorName :: GQL.Name -> Either String DataConnectorName
+mkDataConnectorName n =
+  if ('_' `Text.elem` GQL.unName n)
+    then -- Could return other errors in future.
+      Left "DataConnectorName may not contain underscores."
+    else Right (DataConnectorName n)
 
 instance Witch.From DataConnectorName NonEmptyText where
   from = mkNonEmptyTextUnsafe . GQL.unName . unDataConnectorName -- mkNonEmptyTextUnsafe is safe here since GQL.Name is never empty

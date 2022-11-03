@@ -85,8 +85,8 @@ agentSourceKinds = do
       pure $ fmap mkAgentSource $ InsOrdHashMap.keys agents
 
 mkAgentSource :: DC.Types.DataConnectorName -> SourceKindInfo
-mkAgentSource (DC.Types.DataConnectorName name) =
-  SourceKindInfo {_skiSourceKind = GQL.unName name, _skiBuiltin = Agent}
+mkAgentSource dcName =
+  SourceKindInfo {_skiSourceKind = GQL.unName (DC.Types.unDataConnectorName dcName), _skiBuiltin = Agent}
 
 mkNativeSource :: Backend.BackendType -> Maybe SourceKindInfo
 mkNativeSource = \case

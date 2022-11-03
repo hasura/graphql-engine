@@ -8,6 +8,7 @@ module Hasura.Server.API.V2Query
   )
 where
 
+import Control.Lens (preview, _Right)
 import Control.Monad.Trans.Control (MonadBaseControl)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
@@ -16,7 +17,7 @@ import Data.Text qualified as T
 import GHC.Generics.Extended (constrName)
 import Hasura.Backends.BigQuery.DDL.RunSQL qualified as BigQuery
 import Hasura.Backends.DataConnector.Adapter.RunSQL qualified as DataConnector
-import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName (..))
+import Hasura.Backends.DataConnector.Adapter.Types (DataConnectorName, mkDataConnectorName)
 import Hasura.Backends.MSSQL.DDL.RunSQL qualified as MSSQL
 import Hasura.Backends.MySQL.SQL qualified as MySQL
 import Hasura.Backends.Postgres.DDL.RunSQL qualified as Postgres
@@ -72,7 +73,7 @@ instance FromJSON RQLQuery where
     t <- o .: "type"
     let args :: forall a. FromJSON a => Parser a
         args = o .: "args"
-        dcNameFromRunSql = T.stripSuffix "_run_sql" >=> GQL.mkName >=> pure . DataConnectorName
+        dcNameFromRunSql = T.stripSuffix "_run_sql" >=> GQL.mkName >=> preview _Right . mkDataConnectorName
     case t of
       "insert" -> RQInsert <$> args
       "select" -> RQSelect <$> args
