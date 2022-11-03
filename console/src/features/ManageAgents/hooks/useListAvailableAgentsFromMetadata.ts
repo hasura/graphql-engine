@@ -37,5 +37,6 @@ export const useListAvailableAgentsFromMetadata = () => {
 
       return result;
     },
+    refetchOnWindowFocus: false,
   });
 };

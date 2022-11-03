@@ -6,7 +6,8 @@ import { Form } from '@/new-components/Form';
 import { AggregationSection, AggregationProps } from './Aggregation';
 
 export default {
-  title: 'Features/Permissions Form/Components/Aggregation Section',
+  title:
+    'Features/Permissions Tab/Permissions Form/Components/Aggregation Section',
   component: AggregationSection,
   parameters: {
     // Disable storybook for playground stories

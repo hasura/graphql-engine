@@ -99,14 +99,15 @@ export const ColumnPermissionsSection: React.FC<ColumnPermissionsSectionProps> =
               </p>
             </div>
 
-            <fieldset className="flex gap-4">
+            <fieldset className="flex gap-4 flex-wrap">
               {columns?.map(fieldName => (
                 <label key={fieldName} className="flex gap-2 items-center">
                   <input
                     type="checkbox"
                     title={disabled ? 'Set a row permission first' : ''}
                     disabled={disabled}
-                    className="mt-0 rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
+                    style={{ marginTop: '0px !important' }}
+                    className="rounded shadow-sm border border-gray-300 hover:border-gray-400 focus:ring-yellow-400"
                     {...register(`columns.${fieldName}`)}
                   />
                   <i>{fieldName}</i>
