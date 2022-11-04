@@ -17,6 +17,8 @@ module Hasura.RemoteSchema.Metadata.RemoteRelationship
   )
 where
 
+import Autodocodec
+import Autodocodec.Extended (graphQLValueCodec, hashSetCodec)
 import Control.Lens (makeLenses)
 import Data.Aeson qualified as J
 import Data.Aeson.Key qualified as K
@@ -48,6 +50,14 @@ instance NFData ToSchemaRelationshipDef
 
 instance Cacheable ToSchemaRelationshipDef
 
+instance HasCodec ToSchemaRelationshipDef where
+  codec =
+    object "ToSchemaRelationshipDef" $
+      ToSchemaRelationshipDef
+        <$> requiredField' "remote_schema" .= _trrdRemoteSchema
+        <*> requiredFieldWith' "lhs_fields" hashSetCodec .= _trrdLhsFields
+        <*> requiredField' "remote_field" .= _trrdRemoteField
+
 -- | Targeted field in a remote schema relationship.
 -- TODO: explain about subfields and why this is a container
 newtype RemoteFields = RemoteFields {unRemoteFields :: NonEmpty FieldCall}
@@ -56,6 +66,36 @@ newtype RemoteFields = RemoteFields {unRemoteFields :: NonEmpty FieldCall}
 instance NFData RemoteFields
 
 instance Cacheable RemoteFields
+
+instance HasCodec RemoteFields where
+  codec =
+    named "RemoteFields" $
+      bimapCodec dec enc $
+        hashMapCodec argumentsCodec
+          <?> "Remote fields are represented by an object that maps each field name to its arguments."
+    where
+      argumentsCodec :: JSONCodec (RemoteArguments, Maybe RemoteFields)
+      argumentsCodec =
+        object "FieldCall" $
+          (,)
+            <$> requiredField' "arguments"
+              .= fst
+            <*> optionalField' "field"
+              .= snd
+
+      dec :: HashMap G.Name (RemoteArguments, Maybe RemoteFields) -> Either String RemoteFields
+      dec hashmap = case HM.toList hashmap of
+        [(fieldName, (arguments, maybeSubField))] ->
+          let subfields = maybe [] (toList . unRemoteFields) maybeSubField
+           in Right $
+                RemoteFields $
+                  FieldCall {fcName = fieldName, fcArguments = arguments} :| subfields
+        [] -> Left "Expecting one single mapping, received none."
+        _ -> Left "Expecting one single mapping, received too many."
+
+      enc :: RemoteFields -> HashMap G.Name (RemoteArguments, Maybe RemoteFields)
+      enc (RemoteFields (field :| subfields)) =
+        HM.singleton (fcName field) (fcArguments field, RemoteFields <$> nonEmpty subfields)
 
 instance J.FromJSON RemoteFields where
   parseJSON = prependFailure details . fmap RemoteFields . parseRemoteFields
@@ -114,6 +154,26 @@ newtype RemoteArguments = RemoteArguments
   deriving (Show, Eq, Generic, Cacheable, NFData)
 
 instance Hashable RemoteArguments
+
+instance HasCodec RemoteArguments where
+  codec =
+    named "RemoteArguments" $
+      CommentCodec "Remote arguments are represented by an object that maps each argument name to its value." $
+        dimapCodec RemoteArguments getRemoteArguments $
+          hashMapCodec (graphQLValueCodec varCodec)
+    where
+      varCodec = bimapCodec decodeVariable encodeVariable textCodec
+
+      decodeVariable text = case T.uncons text of
+        Just ('$', rest)
+          | T.null rest -> Left $ "Empty variable name"
+          | otherwise ->
+              onNothing
+                (G.mkName rest)
+                (Left $ "Invalid variable name '" <> T.unpack rest <> "'")
+        _ -> Left $ "Variable name must start with $"
+
+      encodeVariable name = "$" <> G.unName name
 
 instance J.FromJSON RemoteArguments where
   parseJSON = prependFailure details . fmap RemoteArguments . J.withObject "RemoteArguments" parseObjectFieldsToGValue

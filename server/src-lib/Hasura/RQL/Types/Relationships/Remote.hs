@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Hasura.RQL.Types.Relationships.Remote
@@ -23,6 +24,9 @@ module Hasura.RQL.Types.Relationships.Remote
   )
 where
 
+import Autodocodec (HasCodec (codec), JSONCodec, dimapCodec, disjointEitherCodec, requiredField', requiredFieldWith')
+import Autodocodec qualified as AC
+import Autodocodec.Extended (hashSetCodec)
 import Control.Lens (makePrisms)
 import Data.Aeson
 import Data.Aeson.Types (Parser)
@@ -43,6 +47,16 @@ import Hasura.SQL.AnyBackend (AnyBackend)
 import Hasura.SQL.Backend
 
 type RemoteRelationship = RemoteRelationshipG RemoteRelationshipDefinition
+
+instance HasCodec RemoteRelationship where
+  codec =
+    AC.object "RemoteRelationship" $
+      RemoteRelationship
+        <$> requiredField' "name" AC..= _rrName
+        <*> requiredFieldWith'
+          "definition"
+          (remoteRelationshipDefinitionCodec RRPLenient)
+          AC..= _rrDefinition
 
 instance FromJSON RemoteRelationship where
   parseJSON = withObject "RemoteRelationship" $ \obj ->
@@ -94,6 +108,42 @@ data RRParseMode
   | -- | Reject legacy fields when parsing 'RemoteRelationshipDefinition'
     RRPStrict
   deriving (Show, Eq, Generic)
+
+remoteRelationshipDefinitionCodec :: RRParseMode -> JSONCodec RemoteRelationshipDefinition
+remoteRelationshipDefinitionCodec mode =
+  dimapCodec
+    (either RelationshipToSource (uncurry RelationshipToSchema))
+    ( \case
+        RelationshipToSource source -> Left source
+        RelationshipToSchema format schema -> Right (format, schema)
+    )
+    $ disjointEitherCodec toSource toSchema
+  where
+    toSource = AC.object "RelationshipToSource" $ requiredField' "to_source"
+
+    toSchema :: JSONCodec (RRFormat, ToSchemaRelationshipDef)
+    toSchema = case mode of
+      RRPLegacy -> dimapCodec (RRFOldDBToRemoteSchema,) snd toSchemaOldDBFormat
+      RRPStrict -> dimapCodec (RRFUnifiedFormat,) snd toSchemaUnified
+      RRPLenient ->
+        dimapCodec
+          (either (RRFUnifiedFormat,) (RRFOldDBToRemoteSchema,)) -- decoding
+          ( \case
+              (RRFUnifiedFormat, l) -> Left l
+              (RRFOldDBToRemoteSchema, r) -> Right r
+          )
+          $ disjointEitherCodec toSchemaUnified toSchemaOldDBFormat
+
+    toSchemaUnified :: JSONCodec ToSchemaRelationshipDef
+    toSchemaUnified = AC.object "RelationshipToSchema" $ requiredField' "to_remote_schema"
+
+    toSchemaOldDBFormat :: JSONCodec ToSchemaRelationshipDef
+    toSchemaOldDBFormat =
+      AC.object "ToSchemaRelationshipDefLegacyFormat" $
+        ToSchemaRelationshipDef
+          <$> requiredField' "remote_schema" AC..= _trrdRemoteSchema
+          <*> requiredFieldWith' "hasura_fields" hashSetCodec AC..= _trrdLhsFields
+          <*> requiredField' "remote_field" AC..= _trrdRemoteField
 
 -- | Parse 'RemoteRelationshipDefinition' letting the caller decide how lenient to be.
 --

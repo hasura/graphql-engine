@@ -3,6 +3,7 @@ module Hasura.RemoteSchema.Metadata.Base
   )
 where
 
+import Autodocodec (HasCodec (codec), dimapCodec)
 import Data.Aeson qualified as J
 import Data.Text.Extended
 import Data.Text.NonEmpty
@@ -32,3 +33,6 @@ newtype RemoteSchemaName = RemoteSchemaName
       Generic,
       Cacheable
     )
+
+instance HasCodec RemoteSchemaName where
+  codec = dimapCodec RemoteSchemaName unRemoteSchemaName codec

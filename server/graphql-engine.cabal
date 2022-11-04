@@ -1136,6 +1136,7 @@ test-suite graphql-engine-tests
     Hasura.RQL.Types.AllowlistSpec
     Hasura.RQL.Types.CommonSpec
     Hasura.RQL.Types.EndpointSpec
+    Hasura.RQL.Types.Relationships.RemoteSpec
     Hasura.RQL.Types.TableSpec
     Hasura.RQL.WebhookTransformsSpec
     Hasura.Server.Auth.JWTSpec

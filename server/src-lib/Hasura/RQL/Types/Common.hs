@@ -53,6 +53,7 @@ import Autodocodec
     dimapCodec,
     disjointEitherCodec,
     optionalFieldOrNull',
+    requiredField,
     requiredField',
     stringConstCodec,
   )
@@ -124,6 +125,13 @@ instance NFData RelType
 instance Hashable RelType
 
 instance Cacheable RelType
+
+instance HasCodec RelType where
+  codec =
+    stringConstCodec
+      [ (ObjRel, relTypeToTxt ObjRel),
+        (ArrRel, relTypeToTxt ArrRel)
+      ]
 
 instance ToJSON RelType where
   toJSON = String . relTypeToTxt
@@ -208,6 +216,9 @@ newtype FieldName = FieldName {getFieldNameTxt :: Text}
 
 instance ToTxt FieldName where
   toTxt (FieldName c) = c
+
+instance HasCodec FieldName where
+  codec = dimapCodec FieldName getFieldNameTxt codec
 
 -- The field name here is the GraphQL alias, i.e, the name with which the field
 -- should appear in the response
@@ -609,6 +620,9 @@ data ApolloFederationVersion = V1 deriving (Show, Eq, Generic)
 
 instance Cacheable ApolloFederationVersion
 
+instance HasCodec ApolloFederationVersion where
+  codec = stringConstCodec [(V1, "v1")]
+
 instance ToJSON ApolloFederationVersion where
   toJSON V1 = J.String "v1"
 
@@ -626,6 +640,14 @@ data ApolloFederationConfig = ApolloFederationConfig
   deriving (Show, Eq, Generic)
 
 instance Cacheable ApolloFederationConfig
+
+instance HasCodec ApolloFederationConfig where
+  codec =
+    AC.object "ApolloFederationConfig" $
+      ApolloFederationConfig
+        <$> requiredField "enable" enableDoc AC..= enable
+    where
+      enableDoc = "enable takes the version of apollo federation. Supported value is v1 only."
 
 instance ToJSON ApolloFederationConfig
 

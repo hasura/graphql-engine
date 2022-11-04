@@ -89,6 +89,20 @@ module Hasura.RQL.Types.Table
   )
 where
 
+import Autodocodec
+  ( HasCodec (codec),
+    dimapCodec,
+    disjointEitherCodec,
+    hashMapCodec,
+    nullCodec,
+    optionalFieldOrNullWith',
+    optionalFieldOrNullWithOmittedDefault',
+    optionalFieldWithDefault',
+    optionalFieldWithDefaultWith',
+    optionalFieldWithOmittedDefault',
+  )
+import Autodocodec qualified as AC
+import Autodocodec.Extended (graphQLFieldNameCodec)
 import Control.Lens hiding ((.=))
 import Data.Aeson.Casing
 import Data.Aeson.Extended
@@ -107,6 +121,7 @@ import Data.Text.Extended
 import Hasura.Backends.Postgres.SQL.Types qualified as Postgres (PGDescription)
 import Hasura.Base.Error
 import Hasura.Incremental (Cacheable)
+import Hasura.Metadata.DTO.Utils (codecNamePrefix)
 import Hasura.Name qualified as Name
 import Hasura.Prelude
 import Hasura.RQL.IR.BoolExp
@@ -133,6 +148,28 @@ data CustomRootField = CustomRootField
 instance NFData CustomRootField
 
 instance Cacheable CustomRootField
+
+instance HasCodec CustomRootField where
+  codec =
+    dimapCodec dec enc $
+      disjointEitherCodec nullCodec $
+        disjointEitherCodec (codec @Text) nameAndComment
+    where
+      nameAndComment =
+        AC.object "CustomRootField" $
+          CustomRootField
+            <$> optionalFieldOrNullWith' "name" graphQLFieldNameCodec AC..= _crfName
+            <*> optionalFieldOrNullWithOmittedDefault' "comment" Automatic AC..= _crfComment
+
+      dec = \case
+        Left _ -> CustomRootField Nothing Automatic
+        Right (Left text) -> CustomRootField (G.mkName text) Automatic
+        Right (Right obj) -> obj
+
+      enc = \case
+        (CustomRootField Nothing Automatic) -> Left ()
+        (CustomRootField (Just name) Automatic) -> Right $ Left $ G.unName name
+        obj -> Right $ Right obj
 
 instance FromJSON CustomRootField where
   parseJSON = \case
@@ -174,6 +211,24 @@ data TableCustomRootFields = TableCustomRootFields
 instance NFData TableCustomRootFields
 
 instance Cacheable TableCustomRootFields
+
+instance HasCodec TableCustomRootFields where
+  codec =
+    AC.object "TableCustomRootFields" $
+      TableCustomRootFields
+        <$> field "select" AC..= _tcrfSelect
+        <*> field "select_by_pk" AC..= _tcrfSelectByPk
+        <*> field "select_aggregate" AC..= _tcrfSelectAggregate
+        <*> field "select_stream" AC..= _tcrfSelectStream
+        <*> field "insert" AC..= _tcrfInsert
+        <*> field "insert_one" AC..= _tcrfInsertOne
+        <*> field "update" AC..= _tcrfUpdate
+        <*> field "update_by_pk" AC..= _tcrfUpdateByPk
+        <*> field "update_many" AC..= _tcrfUpdateMany
+        <*> field "delete" AC..= _tcrfDelete
+        <*> field "delete_by_pk" AC..= _tcrfDeleteByPk
+    where
+      field name = optionalFieldWithOmittedDefault' name defaultCustomRootField
 
 instance ToJSON TableCustomRootFields where
   toJSON TableCustomRootFields {..} =
@@ -679,6 +734,13 @@ instance NFData ColumnConfig
 
 instance Cacheable ColumnConfig
 
+instance HasCodec ColumnConfig where
+  codec =
+    AC.object "ColumnConfig" $
+      ColumnConfig
+        <$> optionalFieldOrNullWith' "custom_name" graphQLFieldNameCodec AC..= _ccfgCustomName
+        <*> optionalFieldWithOmittedDefault' "comment" Automatic AC..= _ccfgComment
+
 instance ToJSON ColumnConfig where
   toJSON ColumnConfig {..} =
     object $
@@ -726,6 +788,45 @@ $(makeLenses ''TableConfig)
 emptyTableConfig :: TableConfig b
 emptyTableConfig =
   TableConfig emptyCustomRootFields M.empty Nothing Automatic
+
+instance (Backend b) => HasCodec (TableConfig b) where
+  codec =
+    AC.object (codecNamePrefix @b <> "TableConfig") $
+      TableConfig
+        <$> optionalFieldWithDefault' "custom_root_fields" emptyCustomRootFields AC..= _tcCustomRootFields
+        <*> columnConfigCodec AC..= _tcColumnConfig
+        <*> optionalFieldOrNullWith' "custom_name" graphQLFieldNameCodec AC..= _tcCustomName
+        <*> optionalFieldWithOmittedDefault' "comment" Automatic AC..= _tcComment
+    where
+      -- custom_column_names is a deprecated property that has been replaced by column_config.
+      -- We merge custom_column_names into column_config transparently to maintain backwards
+      -- compatibility (with both the metadata API and the metadata JSON saved in the HGE DB)
+      -- custom_column_names can be removed once the deprecation period has expired and we get rid of it
+      --
+      -- This codec translates between a single column config value on the
+      -- Haskell side, and a pair of object properties on the JSON side that are
+      -- merged into the object codec above. When encoding the value for
+      -- @custom_column_names@ is derived from @_tcColumnConfig@. When decoding
+      -- values from @column_config@ and @custom_column_names@ are merged
+      -- produce one value for @_tcColumnConfig@.
+      columnConfigCodec =
+        dimapCodec dec enc $
+          (,)
+            <$> optionalFieldWithDefault' "column_config" M.empty AC..= fst
+            <*> optionalFieldWithDefaultWith' "custom_column_names" (hashMapCodec graphQLFieldNameCodec) M.empty AC..= snd
+
+      -- if @custom_column_names@ was given then merge its value during decoding
+      -- to get a complete value for _tcColumnConfig
+      dec (columnConfig, legacyCustomColumnNames) =
+        let legacyColumnConfig = (\name -> ColumnConfig (Just name) Automatic) <$> legacyCustomColumnNames
+         in M.unionWith (<>) columnConfig legacyColumnConfig -- columnConfig takes precedence over legacy
+
+      -- encode value from _tcColumnConfig for @column_config@, and for the
+      -- legacy representation for @custom_column_names@.
+      enc columnConfig =
+        let outputColumnConfig = M.filter (/= mempty) columnConfig
+            legacyCustomColumnNames = mapMaybe _ccfgCustomName columnConfig
+         in (outputColumnConfig, legacyCustomColumnNames)
 
 instance (Backend b) => FromJSON (TableConfig b) where
   parseJSON = withObject "TableConfig" $ \obj -> do
