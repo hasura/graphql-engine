@@ -297,12 +297,19 @@ spec TestData {..} api sourceName config relationshipCapabilities = describe "Ag
               let aggregates = Data.mkFieldsMap [("count", Number . fromIntegral $ length albums)]
               pure $ Data.insertField "Albums" (mkSubqueryResponse (Just albums) (Just aggregates)) artist
 
+        let sortAlbums (artistRows :: [HashMap FieldName FieldValue]) =
+              artistRows & traverse . Data.field "Albums" . Data._RelationshipFieldRows %~ sortOn (^? Data.field "AlbumId")
+
         let expectedArtists =
               _tdArtistsRows
                 & take 5
                 & fmap joinInAlbums
+                & sortAlbums
 
-        Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
+        -- Ignore the sort order of the related albums by sorting them in the response and the expected data
+        let receivedArtistRows = sortAlbums $ Data.responseRows receivedArtists
+
+        receivedArtistRows `rowsShouldBe` expectedArtists
         Data.responseAggregates receivedArtists `jsonShouldBe` mempty
 
       it "can query with many nested relationships, with aggregates at multiple levels, with filtering, pagination and ordering" $ do

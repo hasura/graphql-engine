@@ -25,6 +25,7 @@ module Test.Data
     _ColumnFieldNumber,
     _ColumnFieldString,
     _ColumnFieldBoolean,
+    _RelationshipFieldRows,
     orderByColumn,
     guardQueryResponse,
     guardedQuery,
@@ -38,7 +39,7 @@ where
 import Codec.Compression.GZip qualified as GZip
 import Command (NameCasing (..), TestConfig (..))
 import Control.Arrow (first, (>>>))
-import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?))
+import Control.Lens (Index, IxValue, Ixed, Traversal', ix, lens, (%~), (&), (^.), (^..), (^?), _Just)
 import Data.Aeson (eitherDecodeStrict)
 import Data.Aeson qualified as J
 import Data.Aeson.Lens (_Bool, _Number, _String)
@@ -515,6 +516,9 @@ _ColumnFieldString = API._ColumnFieldValue . _String
 
 _ColumnFieldBoolean :: Traversal' API.FieldValue Bool
 _ColumnFieldBoolean = API._ColumnFieldValue . _Bool
+
+_RelationshipFieldRows :: Traversal' API.FieldValue [HashMap API.FieldName API.FieldValue]
+_RelationshipFieldRows = API._RelationshipFieldValue . API.qrRows . _Just
 
 columnField :: Text -> API.ScalarType -> API.Field
 columnField name scalarType = API.ColumnField (API.ColumnName name) scalarType
