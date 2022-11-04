@@ -40,7 +40,8 @@
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,mdx}\"",
     "build-unused": "webpack --stats=verbose --config webpack/prod.config.js --json | webpack-unused -s src",
     "--- OTHERS ------------------------------------------------": "",
-    "server-build": "make server-build"
+    "server-build": "make server-build",
+    "generate-control-plane-gql-types": "graphql-codegen --config control-plane-graphql-codegen.yml"
   },
   "lint-staged": {
     "*.{js,ts,tsx}": [
@@ -183,6 +184,8 @@
     "@babel/preset-typescript": "7.13.0",
     "@babel/register": "7.9.0",
     "@babel/runtime": "7.14.8",
+    "@graphql-codegen/cli": "2.13.8",
+    "@graphql-codegen/typescript-operations": "^2.5.5",
     "@hookform/devtools": "4.0.1",
     "@storybook/addon-actions": "6.5.10",
     "@storybook/addon-essentials": "6.5.10",
