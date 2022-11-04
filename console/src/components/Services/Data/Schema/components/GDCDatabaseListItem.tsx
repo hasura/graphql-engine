@@ -46,7 +46,9 @@ export const GDCDatabaseListItem: React.FC<GDCDatabaseListItemItemProps> = ({
           className="mr-xs"
           isLoading={isDropSourceInProgress}
           onClick={() => {
-            dispatch(_push(`/data/v2/manage?database=${dataSource.name}`));
+            dispatch(
+              _push(`/data/v2/manage/database?database=${dataSource.name}`)
+            );
           }}
           disabled={isInconsistentDataSource}
         >
