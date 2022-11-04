@@ -212,16 +212,22 @@ buildTableStreamingSubscriptionFields ::
   C.GQLNameIdentifier ->
   SchemaT r m [FieldParser n (QueryDB b (RemoteRelationshipField UnpreparedValue) (UnpreparedValue b))]
 buildTableStreamingSubscriptionFields mkRootFieldName sourceInfo tableName tableInfo tableIdentifier = do
-  tCase <- asks getter
-  let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
-      selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner: " <>> tableName
-      selectStreamName =
-        runMkRootFieldName mkRootFieldName $
-          setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier
-  catMaybes
-    <$> sequenceA
-      [ optionalFieldParser QDBStreamMultipleRows $ selectStreamTable sourceInfo tableInfo selectStreamName selectDesc
-      ]
+  -- Check in schema options whether we should include streaming subscription
+  -- fields
+  include <- retrieve Options.soIncludeStreamFields
+  case include of
+    Options.Don'tIncludeStreamFields -> pure mempty
+    Options.IncludeStreamFields -> do
+      tCase <- asks getter
+      let customRootFields = _tcCustomRootFields $ _tciCustomConfig $ _tiCoreInfo tableInfo
+          selectDesc = Just $ G.Description $ "fetch data from the table in a streaming manner: " <>> tableName
+          selectStreamName =
+            runMkRootFieldName mkRootFieldName $
+              setFieldNameCase tCase tableInfo (_tcrfSelectStream customRootFields) mkSelectStreamField tableIdentifier
+      catMaybes
+        <$> sequenceA
+          [ optionalFieldParser QDBStreamMultipleRows $ selectStreamTable sourceInfo tableInfo selectStreamName selectDesc
+          ]
 
 buildTableInsertMutationFields ::
   forall b r m n.

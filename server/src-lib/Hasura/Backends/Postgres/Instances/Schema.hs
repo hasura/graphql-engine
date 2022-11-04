@@ -409,7 +409,7 @@ pgkBuildTableUpdateMutationFields mkRootFieldName scenario sourceInfo tableName 
       pure $ case soIncludeUpdateManyFields of
         Options.IncludeUpdateManyFields ->
           singleUpdates ++ maybeToList multiUpdate
-        Options.DontIncludeUpdateManyFields ->
+        Options.Don'tIncludeUpdateManyFields ->
           singleUpdates
 
 -- | Create a parser for 'update_table_many'. This function is very similar to

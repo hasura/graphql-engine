@@ -189,12 +189,16 @@ buildSchemaOptions
         soOptimizePermissionFilters = optimizePermissionFilters,
         soIncludeUpdateManyFields =
           if EFHideUpdateManyFields `Set.member` expFeatures
-            then Options.DontIncludeUpdateManyFields
+            then Options.Don'tIncludeUpdateManyFields
             else Options.IncludeUpdateManyFields,
         soIncludeAggregationPredicates =
           if EFHideAggregationPredicates `Set.member` expFeatures
             then Options.Don'tIncludeAggregationPredicates
             else Options.IncludeAggregationPredicates,
+        soIncludeStreamFields =
+          if EFHideStreamFields `Set.member` expFeatures
+            then Options.Don'tIncludeStreamFields
+            else Options.IncludeStreamFields,
         soBigQueryStringNumericInput = bigqueryStringNumericInput
       }
 

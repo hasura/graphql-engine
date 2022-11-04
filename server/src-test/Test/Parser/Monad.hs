@@ -64,6 +64,7 @@ defaultSchemaOptions =
       soOptimizePermissionFilters = Options.Don'tOptimizePermissionFilters,
       soIncludeUpdateManyFields = Options.IncludeUpdateManyFields,
       soIncludeAggregationPredicates = Options.IncludeAggregationPredicates,
+      soIncludeStreamFields = Options.IncludeStreamFields,
       soBigQueryStringNumericInput = Options.EnableBigQueryStringNumericInput
     }
 

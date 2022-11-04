@@ -82,6 +82,7 @@ data ExperimentalFeature
   | EFHideUpdateManyFields
   | EFBigQueryStringNumericInput
   | EFHideAggregationPredicates
+  | EFHideStreamFields
   deriving (Bounded, Enum, Eq, Generic, Show)
 
 experimentalFeatureKey :: ExperimentalFeature -> Text
@@ -94,6 +95,7 @@ experimentalFeatureKey = \case
   EFHideUpdateManyFields -> "hide_update_many_fields"
   EFBigQueryStringNumericInput -> "bigquery_string_numeric_input"
   EFHideAggregationPredicates -> "hide_aggregation_predicates"
+  EFHideStreamFields -> "hide_stream_fields"
 
 instance Hashable ExperimentalFeature
 

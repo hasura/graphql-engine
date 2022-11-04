@@ -8,6 +8,7 @@ module Hasura.GraphQL.Schema.Options
     RemoteSchemaPermissions (..),
     OptimizePermissionFilters (..),
     IncludeAggregationPredicates (..),
+    IncludeStreamFields (..),
     IncludeUpdateManyFields (..),
     BigQueryStringNumericInput (..),
   )
@@ -25,6 +26,7 @@ data SchemaOptions = SchemaOptions
     soOptimizePermissionFilters :: OptimizePermissionFilters,
     soIncludeUpdateManyFields :: IncludeUpdateManyFields,
     soIncludeAggregationPredicates :: IncludeAggregationPredicates,
+    soIncludeStreamFields :: IncludeStreamFields,
     soBigQueryStringNumericInput :: BigQueryStringNumericInput
   }
 
@@ -42,7 +44,15 @@ data StringifyNumbers
 -- any tables that this may conflict with if needed
 data IncludeUpdateManyFields
   = IncludeUpdateManyFields
-  | DontIncludeUpdateManyFields
+  | Don'tIncludeUpdateManyFields
+  deriving (Eq, Show)
+
+-- | Should we include `TABLE_stream` fields in schemas
+-- This is a toggle so that users can opt-in, and so that we can rename
+-- any tables that this may conflict with if needed
+data IncludeStreamFields
+  = IncludeStreamFields
+  | Don'tIncludeStreamFields
   deriving (Eq, Show)
 
 -- | Should we include aggregation functions in where clauses?
