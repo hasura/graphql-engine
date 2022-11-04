@@ -345,63 +345,54 @@ refreshSchemaCache
                       <> tshow resourceVersion
                       <> " as an initial version. Not updating the schema cache."
               Just engineResourceVersion ->
-                if (engineResourceVersion == resourceVersion)
-                  then do
-                    logInfo logger threadType $
-                      String $
-                        "Received metadata resource version "
-                          <> tshow resourceVersion
-                          <> ", the same as the current engine resource version "
-                          <> tshow engineResourceVersion
-                          <> ". Not updating the schema cache."
-                  else do
-                    logInfo logger threadType $
-                      String $
-                        "Received metadata resource version "
-                          <> tshow resourceVersion
-                          <> ", different from the current engine resource version"
-                          <> tshow engineResourceVersion
-                          <> "."
+                unless (engineResourceVersion == resourceVersion) $ do
+                  logInfo logger threadType $
+                    String $
+                      "Received metadata resource version "
+                        <> tshow resourceVersion
+                        <> ", different from the current engine resource version"
+                        <> tshow engineResourceVersion
+                        <> "."
 
-                    (metadata, latestResourceVersion) <- fetchMetadata
-                    logInfo logger threadType $
-                      String $
-                        "Fetched metadata with resource version "
-                          <> tshow latestResourceVersion
+                  (metadata, latestResourceVersion) <- fetchMetadata
+                  logInfo logger threadType $
+                    String $
+                      "Fetched metadata with resource version "
+                        <> tshow latestResourceVersion
 
-                    notifications <- fetchMetadataNotifications engineResourceVersion instanceId
+                  notifications <- fetchMetadataNotifications engineResourceVersion instanceId
 
-                    case notifications of
-                      [] -> do
-                        logInfo logger threadType $
-                          String $
-                            "Fetched metadata notifications and received no notifications. Not updating the schema cache."
-                        setMetadataResourceVersionInSchemaCache latestResourceVersion
-                      _ -> do
-                        logInfo logger threadType $
-                          String $
-                            "Fetched metadata notifications and received some notifications. Updating the schema cache."
-                        let cacheInvalidations =
-                              if any ((== (engineResourceVersion + 1)) . fst) notifications
-                                then -- If (engineResourceVersion + 1) is in the list of notifications then
-                                -- we know that we haven't missed any.
-                                  mconcat $ snd <$> notifications
-                                else -- Otherwise we may have missed some notifications so we need to invalidate the
-                                -- whole cache.
+                  case notifications of
+                    [] -> do
+                      logInfo logger threadType $
+                        String $
+                          "Fetched metadata notifications and received no notifications. Not updating the schema cache."
+                      setMetadataResourceVersionInSchemaCache latestResourceVersion
+                    _ -> do
+                      logInfo logger threadType $
+                        String $
+                          "Fetched metadata notifications and received some notifications. Updating the schema cache."
+                      let cacheInvalidations =
+                            if any ((== (engineResourceVersion + 1)) . fst) notifications
+                              then -- If (engineResourceVersion + 1) is in the list of notifications then
+                              -- we know that we haven't missed any.
+                                mconcat $ snd <$> notifications
+                              else -- Otherwise we may have missed some notifications so we need to invalidate the
+                              -- whole cache.
 
-                                  CacheInvalidations
-                                    { ciMetadata = True,
-                                      ciRemoteSchemas = HS.fromList $ getAllRemoteSchemas schemaCache,
-                                      ciSources = HS.fromList $ HM.keys $ scSources schemaCache,
-                                      ciDataConnectors =
-                                        maybe mempty (HS.fromList . HM.keys . unBackendInfoWrapper) $
-                                          BackendMap.lookup @'DataConnector $
-                                            scBackendCache schemaCache
-                                    }
-                        logInfo logger threadType $ object ["currentVersion" .= engineResourceVersion, "latestResourceVersion" .= latestResourceVersion]
-                        buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata
-                        setMetadataResourceVersionInSchemaCache latestResourceVersion
-                        logInfo logger threadType $ object ["message" .= ("Schema Version changed with notifications" :: Text)]
+                                CacheInvalidations
+                                  { ciMetadata = True,
+                                    ciRemoteSchemas = HS.fromList $ getAllRemoteSchemas schemaCache,
+                                    ciSources = HS.fromList $ HM.keys $ scSources schemaCache,
+                                    ciDataConnectors =
+                                      maybe mempty (HS.fromList . HM.keys . unBackendInfoWrapper) $
+                                        BackendMap.lookup @'DataConnector $
+                                          scBackendCache schemaCache
+                                  }
+                      logInfo logger threadType $ object ["currentVersion" .= engineResourceVersion, "latestResourceVersion" .= latestResourceVersion]
+                      buildSchemaCacheWithOptions CatalogSync cacheInvalidations metadata
+                      setMetadataResourceVersionInSchemaCache latestResourceVersion
+                      logInfo logger threadType $ object ["message" .= ("Schema Version changed with notifications" :: Text)]
         pure (msg, cache)
     onLeft respErr (logError logger threadType . TEQueryError)
     where
