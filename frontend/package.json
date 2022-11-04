@@ -250,7 +250,7 @@
     "eslint-plugin-react": "7.30.1",
     "eslint-plugin-react-hooks": "4.6.0",
     "jest": "27.5.1",
-    "msw": "^0.44.2",
+    "msw": "^0.47.4",
     "msw-storybook-addon": "^1.6.3",
     "nx": "14.5.2",
     "path-browserify": "^1.0.1",
