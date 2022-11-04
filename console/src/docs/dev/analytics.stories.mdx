@@ -58,15 +58,21 @@ Please note: previously, we used the `data-trackid` attribute. Now, we consider 
 
 The `<Analytics />` have batteries included to redact their text or HTML attributes that leak sensitive data.
 
+Sensitive data’s importance:
+
+1. Extremely important: secrets and environment variables - We must be 100% sure we do not leak this kind of data. The best way to ensure that must be explored yet, maybe [Heap's Visual Labeling](https://help.heap.io/definitions/visual-labeling/define-events-with-visual-labeling-web/) can help by identifying sensitive-data components in the UI, creating selectors out of them, and running a search in the past data.
+2. Important: database names, table names, etc. - Avoid leaking them would be better off, but the importance is not the same as the prior point.
+
 ## The plan
 
 Currently
 
-- All the sections of the Console redact everything for Heap (see the usage of `<Analytics />`)
+- All the sections of the Console redact everything for Heap (see the usage of `<Analytics />`, you can verify it by opening the devtools and looking for the `data-analytics-name` attribute used at section-containers level, here is an example ![The Console showing a section with the data redaction attributes](./images/storybook-assets/analytics/section-data-redaction.jpg 'Data redaction at the section level')
 
 What we have to do
 
 - One by one, we must refactor every section to stop exposing sensitive data (see here [the complete list of exposed data](https://docs.google.com/document/d/1bVXpz0p1k2os7lmvSuwDzQDUoYwGQ9thOyckcuI6Hgk))
+- Then, we must remove the section-level data redaction
 
 ## Custom events
 

@@ -175,7 +175,7 @@ export const Primary: Story = args => <UserInfo {...args} />;
 
 The component should now load in storybook:
 
-![image info](./assets/user-info1.png)
+![image info](./images/storybook-assets/component-driven-development/user-info1.png)
 
 ```md
 This is the basic method for Test Driven Development with storybooks: update the component, visually check in storybook, iterate
@@ -227,7 +227,7 @@ export const UserInfo = () => {
 
 - Check the rendered output in storybook
 
-![image info](./assets/user-info2.png)
+![image info](./images/storybook-assets/component-driven-development/user-info2.png)
 
 - Now that we have one component correctly rendering let's create another component using the same workflow as before:
 
@@ -369,7 +369,7 @@ This time we don't need to use a decorator as the Form is being implemented in t
 
 - Check the component in storybook to ensure it is rendering properly:
 
-![image info](./assets/example-form.png)
+![image info](./images/storybook-assets/component-driven-development/example-form.png)
 
 - Check the form output in the console it should look something like this:
 
@@ -540,7 +540,7 @@ if (data?.status === "success") {
 
 - And check that it renders correctly in storybook
 
-![image info](./assets/success-message.png)
+![image info](./images/storybook-assets/component-driven-development/success-message.png)
 
 - We can also add an error test case while we're at it:
 
@@ -577,7 +577,7 @@ Error.parameters = {
 
 - Finally check the error message renders correctly:
 
-![image info](./assets/error-message.png)
+![image info](./images/storybook-assets/component-driven-development/error-message.png)
 
 ### Collaboration and testing
 
