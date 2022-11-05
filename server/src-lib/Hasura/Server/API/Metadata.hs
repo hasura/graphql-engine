@@ -15,7 +15,6 @@ import Data.Aeson.Casing
 import Data.Aeson.Types qualified as A
 import Data.Environment qualified as Env
 import Data.Has (Has)
-import Data.SerializableBlob qualified as SerializableBlob
 import Data.Text qualified as T
 import Data.Text.Extended qualified as T
 import GHC.Generics.Extended (constrName)
@@ -71,6 +70,7 @@ import Hasura.SQL.AnyBackend
 import Hasura.SQL.Backend
 import Hasura.Server.API.Backend
 import Hasura.Server.API.Instances ()
+import Hasura.Server.Logging (SchemaSyncLog (..), SchemaSyncThreadType (TTMetadataApi))
 import Hasura.Server.Types
 import Hasura.Server.Utils (APIVersion (..))
 import Hasura.Session
@@ -398,16 +398,16 @@ runMetadataQuery env logger instanceId userInfo httpManager serverConfigCtx sche
           Tracing.trace "setMetadata" $
             setMetadata (fromMaybe currentResourceVersion _rqlMetadataResourceVersion) modMetadata
         L.unLogger logger $
-          L.UnstructuredLog L.LevelInfo $
-            SerializableBlob.fromText $
+          SchemaSyncLog L.LevelInfo TTMetadataApi $
+            String $
               "Put new metadata in storage, received new resource version " <> tshow newResourceVersion
 
         -- notify schema cache sync
         Tracing.trace "notifySchemaCacheSync" $
           notifySchemaCacheSync newResourceVersion instanceId cacheInvalidations
         L.unLogger logger $
-          L.UnstructuredLog L.LevelInfo $
-            SerializableBlob.fromText $
+          SchemaSyncLog L.LevelInfo TTMetadataApi $
+            String $
               "Sent schema cache sync notification at resource version " <> tshow newResourceVersion
 
         (_, modSchemaCache', _) <-

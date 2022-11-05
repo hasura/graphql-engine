@@ -4,8 +4,7 @@
 module Hasura.Server.SchemaUpdate
   ( startSchemaSyncListenerThread,
     startSchemaSyncProcessorThread,
-    ThreadType (..),
-    ThreadError (..),
+    SchemaSyncThreadType (..),
   )
 where
 
@@ -44,33 +43,6 @@ import Hasura.Session
 import Network.HTTP.Client qualified as HTTP
 import Refined (NonNegative, Refined, unrefine)
 
-data ThreadType
-  = TTListener
-  | TTProcessor
-  deriving (Eq)
-
-instance Show ThreadType where
-  show TTListener = "listener"
-  show TTProcessor = "processor"
-
-data SchemaSyncThreadLog = SchemaSyncThreadLog
-  { suelLogLevel :: !LogLevel,
-    suelThreadType :: !ThreadType,
-    suelInfo :: !Value
-  }
-  deriving (Show, Eq)
-
-instance ToJSON SchemaSyncThreadLog where
-  toJSON (SchemaSyncThreadLog _ t info) =
-    object
-      [ "thread_type" .= show t,
-        "info" .= info
-      ]
-
-instance ToEngineLog SchemaSyncThreadLog Hasura where
-  toEngineLog threadLog =
-    (suelLogLevel threadLog, ELTInternal ILTSchemaSyncThread, toJSON threadLog)
-
 data ThreadError
   = TEPayloadParse !Text
   | TEQueryError !QErr
@@ -87,7 +59,7 @@ logThreadStarted ::
   (MonadIO m) =>
   Logger Hasura ->
   InstanceId ->
-  ThreadType ->
+  SchemaSyncThreadType ->
   Immortal.Thread ->
   m ()
 logThreadStarted logger instanceId threadType thread =
@@ -314,7 +286,7 @@ refreshSchemaCache ::
   Logger Hasura ->
   HTTP.Manager ->
   SchemaCacheRef ->
-  ThreadType ->
+  SchemaSyncThreadType ->
   ServerConfigCtx ->
   STM.TVar Bool ->
   m ()
@@ -398,20 +370,20 @@ refreshSchemaCache
     where
       runCtx = RunCtx adminUserInfo httpManager serverConfigCtx
 
-logInfo :: (MonadIO m) => Logger Hasura -> ThreadType -> Value -> m ()
+logInfo :: (MonadIO m) => Logger Hasura -> SchemaSyncThreadType -> Value -> m ()
 logInfo logger threadType val =
   unLogger logger $
-    SchemaSyncThreadLog LevelInfo threadType val
+    SchemaSyncLog LevelInfo threadType val
 
-logError :: (MonadIO m, ToJSON a) => Logger Hasura -> ThreadType -> a -> m ()
+logError :: (MonadIO m, ToJSON a) => Logger Hasura -> SchemaSyncThreadType -> a -> m ()
 logError logger threadType err =
   unLogger logger $
-    SchemaSyncThreadLog LevelError threadType $
+    SchemaSyncLog LevelError threadType $
       object ["error" .= toJSON err]
 
 -- Currently unused
-_logDebug :: (MonadIO m) => Logger Hasura -> ThreadType -> String -> m ()
+_logDebug :: (MonadIO m) => Logger Hasura -> SchemaSyncThreadType -> String -> m ()
 _logDebug logger threadType msg =
   unLogger logger $
-    SchemaSyncThreadLog LevelDebug threadType $
+    SchemaSyncLog LevelDebug threadType $
       object ["message" .= msg]

@@ -124,7 +124,7 @@ data InternalLogTypes
     ILTMetadata
   | ILTJwkRefreshLog
   | ILTTelemetry
-  | ILTSchemaSyncThread
+  | ILTSchemaSync
   | ILTSourceCatalogMigration
   deriving (Show, Eq, Generic)
 
@@ -140,7 +140,7 @@ instance Witch.From InternalLogTypes Text where
     ILTMetadata -> "metadata"
     ILTJwkRefreshLog -> "jwk-refresh-log"
     ILTTelemetry -> "telemetry-log"
-    ILTSchemaSyncThread -> "schema-sync-thread"
+    ILTSchemaSync -> "schema-sync"
     ILTSourceCatalogMigration -> "source-catalog-migration"
 
 instance J.ToJSON InternalLogTypes where

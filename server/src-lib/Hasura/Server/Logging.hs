@@ -28,6 +28,8 @@ module Hasura.Server.Logging
     emptyHttpLogMetadata,
     MetadataQueryLoggingMode (..),
     LoggingSettings (..),
+    SchemaSyncThreadType (..),
+    SchemaSyncLog (..),
   )
 where
 
@@ -607,3 +609,32 @@ logDeprecatedEnvVars logger env sources = do
         SB.fromText $
           "The following environment variables are deprecated: "
             <> toText deprecated
+
+data SchemaSyncThreadType
+  = TTListener
+  | TTProcessor
+  | TTMetadataApi
+  deriving (Eq)
+
+instance Show SchemaSyncThreadType where
+  show TTListener = "listener"
+  show TTProcessor = "processor"
+  show TTMetadataApi = "metadata-api"
+
+data SchemaSyncLog = SchemaSyncLog
+  { sslLogLevel :: !LogLevel,
+    sslThreadType :: !SchemaSyncThreadType,
+    sslInfo :: !Value
+  }
+  deriving (Show, Eq)
+
+instance ToJSON SchemaSyncLog where
+  toJSON (SchemaSyncLog _ t info) =
+    object
+      [ "thread_type" .= show t,
+        "info" .= info
+      ]
+
+instance ToEngineLog SchemaSyncLog Hasura where
+  toEngineLog threadLog =
+    (sslLogLevel threadLog, ELTInternal ILTSchemaSync, toJSON threadLog)
