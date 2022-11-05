@@ -1,7 +1,7 @@
-This note is in [Hasura.Server.SchemaUpdate](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/SchemaUpdate.hs#L103).
+This note is in [Hasura.Server.SchemaUpdate](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/SchemaUpdate.hs#L75).
 It is referenced at:
-  - line 147 of [Hasura.Server.SchemaUpdate](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/SchemaUpdate.hs#L147)
-  - line 165 of [Hasura.Server.SchemaUpdate](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/SchemaUpdate.hs#L165)
+  - line 119 of [Hasura.Server.SchemaUpdate](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/SchemaUpdate.hs#L119)
+  - line 137 of [Hasura.Server.SchemaUpdate](https://github.com/hasura/graphql-engine/blob/master/server/src-lib/Hasura/Server/SchemaUpdate.hs#L137)
 
 # Schema Cache Sync
 

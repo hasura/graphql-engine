@@ -1792,7 +1792,7 @@ ILTPgClient :: InternalLogTypes
 ILTMetadata :: InternalLogTypes
 ILTJwkRefreshLog :: InternalLogTypes
 ILTTelemetry :: InternalLogTypes
-ILTSchemaSyncThread :: InternalLogTypes
+ILTSchemaSync :: InternalLogTypes
 ILTSourceCatalogMigration :: InternalLogTypes
 defaultEnabledEngineLogTypes :: HashSet (EngineLogType Hasura)
 isEngineLogTypeEnabled :: HashSet (EngineLogType Hasura) -> EngineLogType Hasura -> Bool
@@ -21586,6 +21586,21 @@ mkHttpLog :: HttpLogContext -> HttpLogLine
 
 -- | Log warning messages for deprecated environment variables
 logDeprecatedEnvVars :: Logger Hasura -> Environment -> SourceCache -> IO ()
+data SchemaSyncThreadType
+TTListener :: SchemaSyncThreadType
+TTProcessor :: SchemaSyncThreadType
+TTMetadataApi :: SchemaSyncThreadType
+data SchemaSyncLog
+SchemaSyncLog :: !LogLevel -> !SchemaSyncThreadType -> !Value -> SchemaSyncLog
+[sslLogLevel] :: SchemaSyncLog -> !LogLevel
+[sslThreadType] :: SchemaSyncLog -> !SchemaSyncThreadType
+[sslInfo] :: SchemaSyncLog -> !Value
+instance GHC.Classes.Eq Hasura.Server.Logging.SchemaSyncThreadType
+instance GHC.Classes.Eq Hasura.Server.Logging.SchemaSyncLog
+instance GHC.Show.Show Hasura.Server.Logging.SchemaSyncLog
+instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Logging.SchemaSyncLog
+instance Hasura.Logging.ToEngineLog Hasura.Server.Logging.SchemaSyncLog Hasura.Logging.Hasura
+instance GHC.Show.Show Hasura.Server.Logging.SchemaSyncThreadType
 instance Hasura.Logging.ToEngineLog Hasura.Server.Logging.HttpLogLine Hasura.Logging.Hasura
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.Logging.HttpLogContext
 instance GHC.Classes.Eq Hasura.Server.Logging.BatchOperationLog
@@ -22739,21 +22754,21 @@ instance Hasura.Logging.ToEngineLog Hasura.Eventing.EventTrigger.EventInternalEr
 
 module Hasura.RQL.DDL.EventTrigger
 data CreateEventTriggerQuery (b :: BackendType)
-cteqCleanupConfig :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (Maybe AutoTriggerLogCleanupConfig)
-cetqWebhookFromEnv :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (Maybe Text)
-cetqWebhook :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (Maybe InputWebhook)
-cetqUpdate :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (Maybe (SubscribeOpSpec b_aCVwd))
-cetqTable :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (TableName b_aCVwd)
-cetqSource :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) SourceName
-cetqRetryConf :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (Maybe RetryConf)
-cetqResponseTrasnform :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (Maybe MetadataResponseTransform)
-cetqRequestTransform :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (Maybe RequestTransform)
-cetqReplace :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) Bool
-cetqName :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) TriggerName
-cetqInsert :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (Maybe (SubscribeOpSpec b_aCVwd))
-cetqHeaders :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (Maybe [HeaderConf])
-cetqEnableManual :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (Maybe Bool)
-cetqDelete :: forall b_aCVwd. Lens' (CreateEventTriggerQuery b_aCVwd) (Maybe (SubscribeOpSpec b_aCVwd))
+cteqCleanupConfig :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (Maybe AutoTriggerLogCleanupConfig)
+cetqWebhookFromEnv :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (Maybe Text)
+cetqWebhook :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (Maybe InputWebhook)
+cetqUpdate :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (Maybe (SubscribeOpSpec b_aCWuX))
+cetqTable :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (TableName b_aCWuX)
+cetqSource :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) SourceName
+cetqRetryConf :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (Maybe RetryConf)
+cetqResponseTrasnform :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (Maybe MetadataResponseTransform)
+cetqRequestTransform :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (Maybe RequestTransform)
+cetqReplace :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) Bool
+cetqName :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) TriggerName
+cetqInsert :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (Maybe (SubscribeOpSpec b_aCWuX))
+cetqHeaders :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (Maybe [HeaderConf])
+cetqEnableManual :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (Maybe Bool)
+cetqDelete :: forall b_aCWuX. Lens' (CreateEventTriggerQuery b_aCWuX) (Maybe (SubscribeOpSpec b_aCWuX))
 data DeleteEventTriggerQuery (b :: BackendType)
 data RedeliverEventQuery (b :: BackendType)
 data InvokeEventTriggerQuery (b :: BackendType)
@@ -24130,12 +24145,6 @@ getSchemaCache :: SchemaCacheRef -> IO SchemaCache
 logInconsistentMetadata :: Logger Hasura -> [InconsistentMetadata] -> IO ()
 
 module Hasura.Server.SchemaUpdate
-data ThreadType
-TTListener :: ThreadType
-TTProcessor :: ThreadType
-data ThreadError
-TEPayloadParse :: !Text -> ThreadError
-TEQueryError :: !QErr -> ThreadError
 
 -- | An async thread which listen to Postgres notify to enable schema
 --   syncing See Note [Schema Cache Sync]
@@ -24146,12 +24155,6 @@ startSchemaSyncListenerThread :: ForkableMonadIO m => Logger Hasura -> PGPool ->
 startSchemaSyncProcessorThread :: (ForkableMonadIO m, MonadMetadataStorage (MetadataStorageT m), MonadResolveSource m) => Logger Hasura -> Manager -> TMVar MetadataResourceVersion -> SchemaCacheRef -> InstanceId -> ServerConfigCtx -> TVar Bool -> ManagedT m Thread
 instance GHC.Classes.Eq Hasura.Server.SchemaUpdate.ErrorState
 instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.SchemaUpdate.ThreadError
-instance GHC.Classes.Eq Hasura.Server.SchemaUpdate.ThreadType
-instance GHC.Classes.Eq Hasura.Server.SchemaUpdate.SchemaSyncThreadLog
-instance GHC.Show.Show Hasura.Server.SchemaUpdate.SchemaSyncThreadLog
-instance Data.Aeson.Types.ToJSON.ToJSON Hasura.Server.SchemaUpdate.SchemaSyncThreadLog
-instance Hasura.Logging.ToEngineLog Hasura.Server.SchemaUpdate.SchemaSyncThreadLog Hasura.Logging.Hasura
-instance GHC.Show.Show Hasura.Server.SchemaUpdate.ThreadType
 
 module Hasura.RQL.DDL.Relationship.Rename
 data RenameRel b
