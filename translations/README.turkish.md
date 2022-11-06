@@ -212,5 +212,6 @@ Bu Readme sayfası aşağıdaki çevirilerde mevcuttur:
 - [Almanca 🇩🇪](./README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
 - [Çince :cn:](./README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
 - [Korece :kr:](./README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
+- [Marathi :india:](translations/README.marathi.md) (:pray: [@vieee](https://github.com/vieee))
 
 Diğer dosyalar için çeviriler [burada](./) bulunabilir.

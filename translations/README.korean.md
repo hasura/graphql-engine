@@ -214,5 +214,6 @@ GraphQL Engine core 는 [아파치 라이선스 2.0](https://www.apache.org/lice
 - [German 🇩🇪](../translations/README.german.md) (:pray: [@FynnGrandke](https://github.com/FynnGrandke))
 - [Chinese :cn:](../translations/README.chinese.md) (:pray: [@jagreetdg](https://github.com/jagreetdg) & [@johnbanq](https://github.com/johnbanq))
 - [Korean :kr:](../translations/README.korean.md) (:pray: [@라스크](https://github.com/laskdjlaskdj12))
+- [Marathi :india:](translations/README.marathi.md) (:pray: [@vieee](https://github.com/vieee))
 
 이문서의 다른 번역을 보고 싶다면 [여기](../translations) 를 참고하세요.
