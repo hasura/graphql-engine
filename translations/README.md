@@ -7,4 +7,4 @@
 | Remote Schemas  | [:uk: English](../remote-schemas.md)  ￨ [:fr: Français](remote-schemas.french.md) ￨ [:india: Hindi](remote-schemas.hindi.md)                   
 | Contributing    | [:uk: English](../CONTRIBUTING.md)    ￨ [:fr: Français](CONTRIBUTING.french.md)
 | Security        | [:uk: English](../SECURITY.md)        ￨ [:fr: Français](SECURITY.french.md)  ￨ [:india: हिंदी](SECURITY.hindi.md)
-| Code of Conduct | [:uk: English](../code-of-conduct.md) ￨ [:fr: Français](code-of-conduct.french.md)
+| Code of Conduct | [:uk: English](../code-of-conduct.md) ￨ [:fr: Français](code-of-conduct.french.md) ￨ [:indonesia: Indonesia](code-of-conduct.indonesian.md)
