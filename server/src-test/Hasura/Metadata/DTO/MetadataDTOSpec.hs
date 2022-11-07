@@ -112,7 +112,8 @@ emptyMetadataV3 =
       metaV3InheritedRoles = Nothing,
       metaV3GraphqlSchemaIntrospection = Nothing,
       metaV3Network = Nothing,
-      metaV3BackendConfigs = Nothing
+      metaV3BackendConfigs = Nothing,
+      metaV3OpenTelemetryConfig = Nothing
     }
 
 emptyMetadataV2 :: MetadataV2

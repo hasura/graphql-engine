@@ -71,6 +71,7 @@ import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.ScheduledTrigger
 import Hasura.RQL.Types.SchemaCache
@@ -236,6 +237,7 @@ runReplaceMetadataV2 ReplaceMetadataV2 {..} = do
           introspectionDisabledRoles
           emptyNetwork
           mempty
+          emptyOpenTelemetryConfig
   putMetadata metadata
 
   let oldSources = _metaSources oldMetadata
@@ -575,6 +577,12 @@ purgeMetadataObj = \case
     MetadataModifier $
       metaBackendConfigs
         %~ BackendMap.modify @'DataConnector (BackendConfigWrapper . OMap.delete agentName . unBackendConfigWrapper)
+  MOOpenTelemetry subobject ->
+    case subobject of
+      OtelSubobjectExporterOtlp ->
+        MetadataModifier $ metaOpenTelemetryConfig . ocExporterOtlp .~ defaultOtelExporterConfig
+      OtelSubobjectBatchSpanProcessor ->
+        MetadataModifier $ metaOpenTelemetryConfig . ocBatchSpanProcessor .~ defaultOtelBatchSpanProcessorConfig
   where
     handleSourceObj :: forall b. BackendMetadata b => SourceName -> SourceMetadataObjId b -> MetadataModifier
     handleSourceObj source = \case

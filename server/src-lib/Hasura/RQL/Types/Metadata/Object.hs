@@ -53,6 +53,7 @@ import Hasura.RQL.Types.ComputedField
 import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.EventTrigger
 import Hasura.RQL.Types.Instances ()
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection (CollectionName, ListedQuery (_lqName))
 import Hasura.RemoteSchema.Metadata
@@ -105,6 +106,7 @@ data MetadataObjId
   | MOHostTlsAllowlist String
   | MOQueryCollectionsQuery CollectionName ListedQuery
   | MODataConnectorAgent DataConnectorName
+  | MOOpenTelemetry OpenTelemetryConfigSubobject
   deriving (Show, Eq, Ord, Generic)
 
 $(makePrisms ''MetadataObjId)
@@ -130,6 +132,7 @@ moiTypeName = \case
   MOHostTlsAllowlist _ -> "host_network_tls_allowlist"
   MOQueryCollectionsQuery _ _ -> "query_collections"
   MODataConnectorAgent _ -> "data_connector_agent"
+  MOOpenTelemetry _ -> "open_telemetry"
   where
     handleSourceObj :: forall b. SourceMetadataObjId b -> Text
     handleSourceObj = \case
@@ -167,6 +170,9 @@ moiName objectId =
     MOHostTlsAllowlist hostTlsAllowlist -> T.pack hostTlsAllowlist
     MOQueryCollectionsQuery cName lq -> (toTxt . _lqName) lq <> " in " <> toTxt cName
     MODataConnectorAgent agentName -> toTxt agentName
+    MOOpenTelemetry subobject -> case subobject of
+      OtelSubobjectExporterOtlp -> "exporter_otlp"
+      OtelSubobjectBatchSpanProcessor -> "batch_span_processor"
   where
     handleSourceObj ::
       forall b.

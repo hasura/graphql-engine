@@ -27,6 +27,7 @@ import Hasura.RQL.Types.Endpoint
 import Hasura.RQL.Types.Function
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
@@ -256,6 +257,10 @@ deleteMetadataObject = \case
   MODataConnectorAgent agentName ->
     boBackendCache
       %~ (BackendMap.modify @'DataConnector $ BackendInfoWrapper . M.delete agentName . unBackendInfoWrapper)
+  MOOpenTelemetry subobject ->
+    case subobject of
+      OtelSubobjectExporterOtlp -> boOpenTelemetryInfo . otiExporterOtlp .~ Nothing
+      OtelSubobjectBatchSpanProcessor -> boOpenTelemetryInfo . otiBatchSpanProcessor .~ Nothing
   where
     removeHostFromAllowList hst bo =
       bo

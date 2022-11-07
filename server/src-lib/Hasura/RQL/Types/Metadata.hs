@@ -30,6 +30,7 @@ module Hasura.RQL.Types.Metadata
     metaInheritedRoles,
     metaMetricsConfig,
     metaNetwork,
+    metaOpenTelemetryConfig,
     metaQueryCollections,
     metaRemoteSchemas,
     metaRestEndpoints,
@@ -67,6 +68,7 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata.Common
 import Hasura.RQL.Types.Metadata.Serialization
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.Permission
 import Hasura.RemoteSchema.Metadata
 import Hasura.SQL.AnyBackend qualified as AB
@@ -129,7 +131,8 @@ data Metadata = Metadata
     _metaInheritedRoles :: InheritedRoles,
     _metaSetGraphqlIntrospectionOptions :: SetGraphqlIntrospectionOptions,
     _metaNetwork :: Network,
-    _metaBackendConfigs :: BackendMap BackendConfigWrapper
+    _metaBackendConfigs :: BackendMap BackendConfigWrapper,
+    _metaOpenTelemetryConfig :: OpenTelemetryConfig
   }
   deriving (Show, Eq, Generic)
 
@@ -146,6 +149,7 @@ instance FromJSON Metadata where
     sources <- oMapFromL getSourceName <$> mapWithJSONPath parseSourceMetadata rawSources <?> Key "sources"
     endpoints <- oMapFromL _ceName <$> o .:? "rest_endpoints" .!= []
     network <- o .:? "network" .!= emptyNetwork
+    openTelemetry <- o .:? "opentelemetry" .!= emptyOpenTelemetryConfig
     ( remoteSchemas,
       queryCollections,
       allowlist,
@@ -174,6 +178,7 @@ instance FromJSON Metadata where
         disabledSchemaIntrospectionRoles
         network
         backendConfigs
+        openTelemetry
     where
       parseSourceMetadata :: Value -> Parser BackendSourceMetadata
       parseSourceMetadata = withObject "SourceMetadata" \o -> do
@@ -200,7 +205,8 @@ emptyMetadata =
       _metaApiLimits = emptyApiLimit,
       _metaMetricsConfig = emptyMetricsConfig,
       _metaNetwork = emptyNetwork,
-      _metaBackendConfigs = mempty
+      _metaBackendConfigs = mempty,
+      _metaOpenTelemetryConfig = emptyOpenTelemetryConfig
     }
 
 -- | This type serves to allow Metadata arguments to be distinguished
@@ -238,7 +244,8 @@ overrideMetadataDefaults md (MetadataDefaults defs) =
       _metaApiLimits = (_metaApiLimits md) `overrideApiLimitsDefaults` (_metaApiLimits defs),
       _metaMetricsConfig = (_metaMetricsConfig md) `overrideMetricsConfigDefaults` (_metaMetricsConfig defs),
       _metaNetwork = (_metaNetwork md) `overrideNetworkDefaults` (_metaNetwork defs),
-      _metaBackendConfigs = _metaBackendConfigs md `BackendMap.overridesDeeply` _metaBackendConfigs defs
+      _metaBackendConfigs = _metaBackendConfigs md `BackendMap.overridesDeeply` _metaBackendConfigs defs,
+      _metaOpenTelemetryConfig = _metaOpenTelemetryConfig md -- no merge strategy implemented
     }
   where
     overrideCustomTypesDefaults (CustomTypes a1 a2 a3 a4) (CustomTypes b1 b2 b3 b4) = CustomTypes (a1 <> b1) (a2 <> b2) (a3 <> b3) (a4 <> b4)
@@ -429,6 +436,7 @@ metadataToOrdJSON
       introspectionDisabledRoles
       networkConfig
       backendConfigs
+      openTelemetryConfig
     ) =
     AO.object $
       [versionPair, sourcesPair]
@@ -445,7 +453,8 @@ metadataToOrdJSON
             inheritedRolesPair,
             introspectionDisabledRolesPair,
             networkPair,
-            backendConfigsPair
+            backendConfigsPair,
+            openTelemetryConfigPair
           ]
     where
       versionPair = ("version", AO.toOrdered currentMetadataVersion)
@@ -464,6 +473,7 @@ metadataToOrdJSON
         ("graphql_schema_introspection",) <$> introspectionDisabledRolesToOrdJSON introspectionDisabledRoles
       networkPair = ("network",) <$> networkConfigToOrdJSON networkConfig
       backendConfigsPair = ("backend_configs",) <$> backendConfigsToOrdJSON backendConfigs
+      openTelemetryConfigPair = ("opentelemetry",) <$> openTelemetryConfigToOrdJSON openTelemetryConfig
 
 instance ToJSON Metadata where
   toJSON = AO.fromOrdered . metadataToOrdJSON
@@ -493,6 +503,7 @@ metadataToDTO
       introspectionDisabledRoles
       networkConfig
       backendConfigs
+      openTelemetryConfig
     ) =
     MetadataV3
       { metaV3Sources = sources,
@@ -508,7 +519,8 @@ metadataToDTO
         metaV3InheritedRoles = placeholder <$> inheritedRolesToOrdJSONList inheritedRoles,
         metaV3GraphqlSchemaIntrospection = placeholder . objectFromOrdJSON <$> introspectionDisabledRolesToOrdJSON introspectionDisabledRoles,
         metaV3Network = placeholder . objectFromOrdJSON <$> networkConfigToOrdJSON networkConfig,
-        metaV3BackendConfigs = placeholder . objectFromOrdJSON <$> backendConfigsToOrdJSON backendConfigs
+        metaV3BackendConfigs = placeholder . objectFromOrdJSON <$> backendConfigsToOrdJSON backendConfigs,
+        metaV3OpenTelemetryConfig = placeholder . objectFromOrdJSON <$> openTelemetryConfigToOrdJSON openTelemetryConfig
       }
     where
       -- This is a /partial/ function to unwrap a JSON object

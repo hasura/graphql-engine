@@ -66,6 +66,7 @@ import Hasura.RQL.Types.Metadata hiding (fmFunction, tmTable)
 import Hasura.RQL.Types.Metadata.Backend
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.OpenTelemetry
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Remote
 import Hasura.RQL.Types.Roles
@@ -361,7 +362,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
           scTlsAllowlist = _boTlsAllowlist resolvedOutputs,
           scQueryCollections = _boQueryCollections resolvedOutputs,
           scBackendCache = _boBackendCache resolvedOutputs,
-          scSourceHealthChecks = buildHealthCheckCache (_metaSources metadata)
+          scSourceHealthChecks = buildHealthCheckCache (_metaSources metadata),
+          scOpenTelemetryConfig = _boOpenTelemetryInfo resolvedOutputs
         }
   where
     resolveBackendInfo' ::
@@ -664,7 +666,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
             inheritedRoles
             _introspectionDisabledRoles
             networkConfig
-            backendConfigs = overrideMetadataDefaults metadata metadataDefaults
+            backendConfigs
+            openTelemetryConfig = overrideMetadataDefaults metadata metadataDefaults
           actionRoles = map _apmRole . _amPermissions =<< OMap.elems actions
           remoteSchemaRoles = map _rspmRole . _rsmPermissions =<< OMap.elems remoteSchemas
           sourceRoles =
@@ -861,6 +864,29 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
 
       cronTriggersMap <- buildCronTriggers -< ((), OMap.elems cronTriggers)
 
+      -- open telemetry
+      mOtelExporterInfo <-
+        let exporterOtlp = _ocExporterOtlp openTelemetryConfig
+         in (|
+              withRecordInconsistency
+                ( bindErrorA -< liftEither (parseOtelExporterConfig env exporterOtlp)
+                )
+            |) (MetadataObject (MOOpenTelemetry OtelSubobjectExporterOtlp) (toJSON exporterOtlp))
+      mOtelBatchSpanProcessorInfo <-
+        let batchSpanProcessor = _ocBatchSpanProcessor openTelemetryConfig
+         in (|
+              withRecordInconsistency
+                ( bindErrorA -< liftEither (parseOtelBatchSpanProcessorConfig batchSpanProcessor)
+                )
+            |) (MetadataObject (MOOpenTelemetry OtelSubobjectBatchSpanProcessor) (toJSON batchSpanProcessor))
+      let openTelemetryInfo =
+            -- Disable configuration for a data type if it is not in the enabled set
+            OpenTelemetryInfo
+              mOtelExporterInfo
+              ( if OtelTraces `S.member` _ocEnabledDataTypes openTelemetryConfig
+                  then mOtelBatchSpanProcessorInfo
+                  else Nothing
+              )
       returnA
         -<
           BuildOutputs
@@ -876,7 +902,8 @@ buildSchemaCacheRule logger env = proc (metadata, invalidationKeys) -> do
               _boRoles = mapFromL _rRoleName $ _unOrderedRoles orderedRoles,
               _boTlsAllowlist = (networkTlsAllowlist networkConfig),
               _boQueryCollections = collections,
-              _boBackendCache = backendCache
+              _boBackendCache = backendCache,
+              _boOpenTelemetryInfo = openTelemetryInfo
             }
 
     mkEndpointMetadataObject (name, createEndpoint) =

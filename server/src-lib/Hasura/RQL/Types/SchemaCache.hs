@@ -143,6 +143,7 @@ import Hasura.RQL.Types.GraphqlSchemaIntrospection
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network (TlsAllow)
+import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryInfo)
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
 import Hasura.RQL.Types.Relationships.Remote
@@ -475,7 +476,8 @@ data SchemaCache = SchemaCache
     scTlsAllowlist :: [TlsAllow],
     scQueryCollections :: QueryCollections,
     scBackendCache :: BackendCache,
-    scSourceHealthChecks :: SourceHealthCheckCache
+    scSourceHealthChecks :: SourceHealthCheckCache,
+    scOpenTelemetryConfig :: OpenTelemetryInfo
   }
 
 -- WARNING: this can only be used for debug purposes, as it loses all

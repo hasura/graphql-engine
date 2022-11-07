@@ -5,6 +5,7 @@ module Hasura.RQL.Types.Metadata.Serialization
     allowlistToOrdJSONList,
     apiLimitsToOrdJSON,
     backendConfigsToOrdJSON,
+    openTelemetryConfigToOrdJSON,
     cronTriggersToOrdJSONList,
     customTypesToOrdJSON,
     endpointsToOrdJSONList,
@@ -70,6 +71,10 @@ import Hasura.RQL.Types.Metadata.Common
     getSourceName,
   )
 import Hasura.RQL.Types.Network (Network, emptyNetwork)
+import Hasura.RQL.Types.OpenTelemetry
+  ( OpenTelemetryConfig (..),
+    emptyOpenTelemetryConfig,
+  )
 import Hasura.RQL.Types.Permission
   ( AllowedRootFields (..),
     DelPerm (..),
@@ -411,6 +416,17 @@ backendConfigsToOrdJSON = ifNotEmpty (== mempty) configsToOrdJSON
         let backendTypeStr = T.toTxt $ reify $ backendTag @b
             val = AO.toOrdered backendConfig'
          in (backendTypeStr, val)
+
+openTelemetryConfigToOrdJSON :: OpenTelemetryConfig -> Maybe AO.Value
+openTelemetryConfigToOrdJSON = ifNotEmpty (== emptyOpenTelemetryConfig) configToOrdJSON
+  where
+    configToOrdJSON :: OpenTelemetryConfig -> AO.Value
+    configToOrdJSON (OpenTelemetryConfig enabledDataTypes exporterOtlp batchSpanProcessor) =
+      AO.object
+        [ ("data_types", AO.toOrdered enabledDataTypes),
+          ("exporter_otlp", AO.toOrdered exporterOtlp),
+          ("batch_span_processor", AO.toOrdered batchSpanProcessor)
+        ]
 
 inheritedRolesToOrdJSONList :: InheritedRoles -> Maybe AO.Array
 inheritedRolesToOrdJSONList = listToMaybeArraySort inheritedRolesQToOrdJSON _rRoleName

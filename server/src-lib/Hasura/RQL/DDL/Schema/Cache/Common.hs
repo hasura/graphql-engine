@@ -31,6 +31,7 @@ module Hasura.RQL.DDL.Schema.Cache.Common
     boCustomTypes,
     boBackendCache,
     boEndpoints,
+    boOpenTelemetryInfo,
     boQueryCollections,
     boRemoteSchemas,
     boRoles,
@@ -70,6 +71,7 @@ import Hasura.RQL.Types.Metadata.Backend (BackendMetadata (..))
 import Hasura.RQL.Types.Metadata.Instances ()
 import Hasura.RQL.Types.Metadata.Object
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.OpenTelemetry (OpenTelemetryInfo)
 import Hasura.RQL.Types.Permission
 import Hasura.RQL.Types.QueryCollection
 import Hasura.RQL.Types.Relationships.Local
@@ -219,7 +221,8 @@ data BuildOutputs = BuildOutputs
     _boRoles :: HashMap RoleName Role,
     _boTlsAllowlist :: [TlsAllow],
     _boQueryCollections :: QueryCollections,
-    _boBackendCache :: BackendCache
+    _boBackendCache :: BackendCache,
+    _boOpenTelemetryInfo :: OpenTelemetryInfo
   }
 
 $(makeLenses ''BuildOutputs)

@@ -49,6 +49,7 @@ import Hasura.RQL.Types.Common
 import Hasura.RQL.Types.CustomTypes
 import Hasura.RQL.Types.Metadata
 import Hasura.RQL.Types.Network
+import Hasura.RQL.Types.OpenTelemetry (emptyOpenTelemetryConfig)
 import Hasura.RQL.Types.SourceCustomization
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.SQL.Backend
@@ -349,6 +350,7 @@ migrations maybeDefaultSourceConfig dryRun maintenanceMode =
                       mempty
                       emptyNetwork
                       mempty
+                      emptyOpenTelemetryConfig
           liftTx $ insertMetadataInCatalog metadataV3
 
     from43To42 = do
