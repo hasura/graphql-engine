@@ -1,7 +1,5 @@
-import {
-  MetadataTableConfig,
-  useMetadataMigration,
-} from '@/features/MetadataAPI';
+import { MetadataTable } from '@/features/hasura-metadata-types';
+import { useMetadataMigration } from '@/features/MetadataAPI';
 import { useFireNotification } from '@/new-components/Notifications';
 import { useCallback } from 'react';
 import { useQueryClient } from 'react-query';
@@ -23,7 +21,7 @@ export const useUpdateTableConfiguration = (
   );
 
   const updateTableConfiguration = useCallback(
-    (config: MetadataTableConfig) => {
+    (config: MetadataTable['configuration']) => {
       const driver = metadata?.kind;
 
       return new Promise<void>((resolve, reject) => {
@@ -83,8 +81,8 @@ export const useUpdateTableConfiguration = (
 
   // helper function
   const updateCustomRootFields = useCallback(
-    (config: MetadataTableConfig) => {
-      const newConfig: MetadataTableConfig = {
+    (config: MetadataTable['configuration']) => {
+      const newConfig: MetadataTable['configuration'] = {
         ...metadataTable?.configuration,
         custom_name: config?.custom_name || undefined,
         custom_root_fields: config?.custom_root_fields || {},

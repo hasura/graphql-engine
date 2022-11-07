@@ -1,4 +1,4 @@
-import { MetadataTable } from '@/features/MetadataAPI';
+import { MetadataTable } from '@/features/hasura-metadata-types';
 import { OrderBy, WhereClause } from './types';
 
 export const getFields = ({

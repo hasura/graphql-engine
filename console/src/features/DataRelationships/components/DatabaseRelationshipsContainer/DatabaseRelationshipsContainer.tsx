@@ -2,7 +2,7 @@ import { Tooltip } from '@/new-components/Tooltip';
 import React, { useState } from 'react';
 import clsx from 'clsx';
 import { FaPlus, FaQuestionCircle } from 'react-icons/fa';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { CardRadioGroup } from '@/new-components/CardRadioGroup';

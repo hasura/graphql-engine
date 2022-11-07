@@ -1,4 +1,4 @@
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { UpdatedForm } from '@/new-components/Form';
 import React, { useMemo } from 'react';

@@ -2,10 +2,9 @@ import React from 'react';
 import { useFieldArray, useFormContext } from 'react-hook-form';
 
 import { GraphQLSchema } from 'graphql';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { Builder } from './Builder';
 import { JsonItem } from './Elements';
-// import { useTableConfiguration } from '../hooks';
 
 interface FieldArrayElementProps {
   index: number;

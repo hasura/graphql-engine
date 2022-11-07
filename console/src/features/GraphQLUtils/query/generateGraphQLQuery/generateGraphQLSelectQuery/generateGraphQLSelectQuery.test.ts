@@ -1,4 +1,4 @@
-import { MetadataTable, Source } from '../../../../MetadataAPI';
+import { MetadataTable, Source } from '../../../../hasura-metadata-types';
 import { generateGraphQLSelectQuery } from './generateGraphQLSelectQuery';
 
 describe('GraphQL utils for browse rows - ', () => {

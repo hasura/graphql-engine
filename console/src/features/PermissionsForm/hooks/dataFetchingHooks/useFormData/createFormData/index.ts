@@ -1,6 +1,6 @@
 import { TableColumn } from '@/features/DataSource';
 
-import { Metadata, MetadataTable } from '@/features/MetadataAPI';
+import { Metadata, MetadataTable } from '@/features/hasura-metadata-types';
 import { isPermission } from '../../../../utils';
 
 type Operation = 'insert' | 'select' | 'update' | 'delete';

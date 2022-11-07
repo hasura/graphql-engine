@@ -2,7 +2,7 @@ import { useHttpClient } from '@/features/Network';
 import { areTablesEqual } from '@/features/RelationshipsTable';
 import { exportMetadata } from '@/features/DataSource';
 import { useQuery } from 'react-query';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { AxiosError } from 'axios';
 
 export const useGetTargetOptions = (

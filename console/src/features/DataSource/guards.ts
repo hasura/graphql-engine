@@ -7,7 +7,7 @@ import {
   SourceToRemoteSchemaRelationship,
   SourceToSourceRelationship,
   SameTableObjectRelationship,
-} from '@/features/MetadataAPI';
+} from '@/features/hasura-metadata-types';
 import { AllowedTableRelationships } from './types';
 
 function isArrayOfStrings(value: any): value is string[] {

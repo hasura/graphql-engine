@@ -1,7 +1,7 @@
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
 import { GraphQLSchema } from 'graphql';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { CustomField } from './Fields';
 import { FieldArray } from './FieldArray';
 import { Builder } from './Builder';

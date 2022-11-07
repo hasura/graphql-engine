@@ -1,6 +1,6 @@
 import { useDatabaseHierarchy } from '@/features/Data';
 import { getTableName } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { InputField, Select } from '@/new-components/Form';
 import React from 'react';
 import { useWatch } from 'react-hook-form';

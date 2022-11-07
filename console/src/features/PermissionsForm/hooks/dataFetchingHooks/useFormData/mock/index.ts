@@ -1,5 +1,5 @@
 import { TableColumn } from '@/features/DataSource';
-import { Metadata } from '@/features/MetadataAPI';
+import { Metadata } from '@/features/hasura-metadata-types';
 import { createDefaultValues } from '../createDefaultValues';
 import { schema } from '../../../../components/RowPermissionsBuilder/mocks';
 

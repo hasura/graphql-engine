@@ -1,5 +1,5 @@
 import { exportMetadata } from '@/features/DataSource';
-import { Source } from '@/features/MetadataAPI';
+import { Source } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { AxiosError } from 'axios';
 import isEqual from 'lodash.isequal';

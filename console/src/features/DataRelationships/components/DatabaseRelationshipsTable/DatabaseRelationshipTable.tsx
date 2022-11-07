@@ -1,5 +1,5 @@
 import React from 'react';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import {
   FaArrowRight,
   FaColumns,

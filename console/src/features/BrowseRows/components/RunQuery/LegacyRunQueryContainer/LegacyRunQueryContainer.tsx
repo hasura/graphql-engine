@@ -5,7 +5,7 @@ import {
   downloadObjectAsJsonFile,
   getCurrTimeForFileName,
 } from '@/components/Common/utils/jsUtils';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { vMakeExportRequest } from '../../../../../components/Services/Data/TableBrowseRows/ViewActions';
 import { setOffset } from '../../../../../components/Services/Data/TableBrowseRows/FilterActions';
 import {

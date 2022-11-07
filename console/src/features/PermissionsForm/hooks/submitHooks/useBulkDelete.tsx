@@ -2,9 +2,9 @@ import { useQueryClient } from 'react-query';
 import { AxiosInstance } from 'axios';
 import { exportMetadata } from '@/features/DataSource';
 import { useHttpClient } from '@/features/Network';
-import { Permission, useMetadataMigration } from '@/features/MetadataAPI';
+import { useMetadataMigration } from '@/features/MetadataAPI';
 import { useFireNotification } from '@/new-components/Notifications';
-
+import { Permission } from '@/features/hasura-metadata-types';
 import { api } from '../../api';
 import { QueryType } from '../../types';
 

@@ -1,4 +1,4 @@
-import { MetadataTableConfig, Table } from '@/features/MetadataAPI';
+import { MetadataTable, Table } from '@/features/hasura-metadata-types';
 
 export type TrackableTable = {
   /**
@@ -34,5 +34,5 @@ export type TrackableTable = {
    * In other words, the UI needs this property for is_tracked: false objects so
    * configuration can be added prior to applying changes
    */
-  configuration?: MetadataTableConfig;
+  configuration?: MetadataTable['configuration'];
 };

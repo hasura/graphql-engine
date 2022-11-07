@@ -2,7 +2,7 @@ import { BrowseRowsContainer } from '@/features/BrowseRows';
 import { DatabaseRelationshipsContainer } from '@/features/DataRelationships';
 import { getTableName } from '@/features/DataSource';
 import { PermissionsTab } from '@/features/PermissionsTab';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { Tabs } from '@/new-components/Tabs';
 import { getRoute } from '@/features/Data';

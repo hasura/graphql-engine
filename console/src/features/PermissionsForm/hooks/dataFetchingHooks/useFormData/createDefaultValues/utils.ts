@@ -9,7 +9,7 @@ import type {
   Permission,
   SelectPermissionDefinition,
   UpdatePermissionDefinition,
-} from '@/features/MetadataAPI';
+} from '@/features/hasura-metadata-types';
 
 import {
   isPermission,

@@ -1,4 +1,8 @@
-import { Source, SupportedDrivers, Table } from '@/features/MetadataAPI';
+import {
+  Source,
+  SupportedDrivers,
+  Table,
+} from '@/features/hasura-metadata-types';
 import { OpenApiSchema } from '@hasura/dc-api-types';
 import { DataNode } from 'antd/lib/tree';
 import { AxiosInstance } from 'axios';

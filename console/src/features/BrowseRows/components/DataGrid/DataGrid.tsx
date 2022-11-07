@@ -1,6 +1,6 @@
 import { useRows } from '@/components/Services/Data/TableBrowseRows/Hooks';
 import { Feature, OrderBy, WhereClause } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { IndicatorCard } from '@/new-components/IndicatorCard';
 import { ColumnSort } from '@tanstack/react-table';
 import React, { useEffect, useState } from 'react';

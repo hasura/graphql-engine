@@ -1,7 +1,7 @@
 import { TrackingTableFormValues } from '@/components/Services/Data/Schema/tableTrackCustomization/types';
 
 import { Analytics, REDACT_EVERYTHING } from '@/features/Analytics';
-import { MetadataTableConfig } from '@/features/MetadataAPI';
+import { MetadataTableConfig } from '@/features/hasura-metadata-types';
 import { Dialog } from '@/new-components/Dialog';
 import React from 'react';
 import { TableTrackingCustomizationForm } from './TableTrackingCustomizationForm';

@@ -30,6 +30,4 @@ export { useMetadataMigration } from './hooks/useMetadataMigration';
 export { useObjectRelationships } from './hooks/useObjectRelationships';
 export { useArrayRelationships } from './hooks/useArrayRelationships';
 export { useLocalRelationships } from './hooks/useLocalRelationships';
-
 export * from './types';
-export * from './metadataTypes';

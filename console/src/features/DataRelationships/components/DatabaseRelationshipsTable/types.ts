@@ -4,7 +4,7 @@ import {
   ManualArrayRelationship,
   ManualObjectRelationship,
   Table,
-} from '@/features/MetadataAPI';
+} from '@/features/hasura-metadata-types';
 
 type SourceDef = {
   source: string;

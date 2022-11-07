@@ -4,7 +4,7 @@ import {
   TrackingTableFormValues,
 } from '@/components/Services/Data/Schema/tableTrackCustomization/types';
 import { Driver } from '@/dataSources';
-import { MetadataTableConfig } from '@/features/MetadataAPI';
+import { MetadataTableConfig } from '@/features/hasura-metadata-types';
 import pickBy from 'lodash.pickby';
 
 export const getTrackingTableFormPlaceholders = (

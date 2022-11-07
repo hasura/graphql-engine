@@ -1,4 +1,4 @@
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 
 export const getTableName = (
   table: Table,

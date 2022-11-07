@@ -1,5 +1,5 @@
 import { OrderBy, TableColumn } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { Dialog } from '@/new-components/Dialog';
 import { UpdatedForm } from '@/new-components/Form';
 import React from 'react';

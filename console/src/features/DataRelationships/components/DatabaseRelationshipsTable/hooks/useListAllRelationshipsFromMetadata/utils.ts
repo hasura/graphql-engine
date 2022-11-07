@@ -12,7 +12,7 @@ import {
   SourceToRemoteSchemaRelationship,
   SameTableObjectRelationship,
   Table,
-} from '@/features/MetadataAPI';
+} from '@/features/hasura-metadata-types';
 import { getRemoteFieldPath } from '@/features/RelationshipsTable';
 import { Relationship } from '../../types';
 

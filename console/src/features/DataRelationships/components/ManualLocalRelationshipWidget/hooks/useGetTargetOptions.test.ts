@@ -2,7 +2,7 @@ import { renderHook } from '@testing-library/react-hooks';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 import { wrapper } from '../../../../../hooks/__tests__/common/decorator';
-import { Metadata, Table } from '../../../../MetadataAPI';
+import { Metadata, Table } from '../../../../hasura-metadata-types';
 import { useGetTargetOptions } from './useGetTargetOptions';
 
 describe('useGetTargetOptions', () => {

@@ -1,5 +1,5 @@
 import { TableRow } from '@/features/DataSource';
-import { Metadata } from '@/features/MetadataAPI';
+import { Metadata } from '@/features/hasura-metadata-types';
 import { rest } from 'msw';
 import { setupServer } from 'msw/node';
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import AceEditor from 'react-ace';
 import { useFormContext } from 'react-hook-form';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 import { exportMetadata } from '@/features/DataSource';

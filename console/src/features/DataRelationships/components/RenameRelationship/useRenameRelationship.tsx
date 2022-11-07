@@ -1,5 +1,6 @@
 import { exportMetadata } from '@/features/DataSource';
-import { Table, useMetadataMigration } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
+import { useMetadataMigration } from '@/features/MetadataAPI';
 import { useHttpClient } from '@/features/Network';
 import { useFireNotification } from '@/new-components/Notifications';
 import { useCallback } from 'react';

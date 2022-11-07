@@ -5,7 +5,7 @@ import { wrapper } from '../../../../../hooks/__tests__/common/decorator';
 import { useRows } from '.';
 import { UseRowsPropType } from './useRows';
 import { TableRow } from '../../../../../features/DataSource';
-import { Metadata } from '../../../../../features/MetadataAPI';
+import { Metadata } from '../../../../../features/hasura-metadata-types';
 
 describe('Postgres browse rows data', () => {
   const mockMetadata: Metadata = {

@@ -2,7 +2,7 @@ import React from 'react';
 import { buildClientSchema, GraphQLSchema, IntrospectionQuery } from 'graphql';
 import { useHttpClient } from '@/features/Network';
 import { exportMetadata, runIntrospectionQuery } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { useQuery } from 'react-query';
 import { areTablesEqual } from '@/features/RelationshipsTable';
 import { getAllColumnsAndOperators } from '../utils';

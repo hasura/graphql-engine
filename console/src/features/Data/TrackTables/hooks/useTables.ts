@@ -5,7 +5,7 @@ import {
   exportMetadata,
   Feature,
 } from '@/features/DataSource';
-import { MetadataTable } from '@/features/MetadataAPI';
+import { MetadataTable } from '@/features/hasura-metadata-types';
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 import type { TrackableTable } from '../types';

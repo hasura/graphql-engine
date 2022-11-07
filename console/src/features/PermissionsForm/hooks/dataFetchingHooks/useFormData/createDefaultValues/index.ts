@@ -5,7 +5,7 @@ import isEqual from 'lodash.isequal';
 import { TableColumn } from '@/features/DataSource';
 import { getTypeName } from '@/features/GraphQLUtils';
 
-import { Metadata } from '@/features/MetadataAPI';
+import { Metadata } from '@/features/hasura-metadata-types';
 
 import { PermissionsSchema } from '../../../../utils';
 

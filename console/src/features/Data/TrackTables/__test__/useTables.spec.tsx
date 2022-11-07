@@ -4,7 +4,7 @@ import { setupServer } from 'msw/node';
 import { useTables, UseTablesProps } from '../hooks/useTables';
 import { wrapper } from '../../../../hooks/__tests__/common/decorator';
 import { TrackableTable } from '../types';
-import { Metadata } from '../../../MetadataAPI';
+import { Metadata } from '../../../hasura-metadata-types';
 
 const metadataStub: Metadata = {
   resource_version: 1,

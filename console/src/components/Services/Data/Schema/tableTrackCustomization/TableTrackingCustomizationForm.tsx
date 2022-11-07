@@ -1,5 +1,5 @@
 import { TrackingTableFormValues } from '@/components/Services/Data/Schema/tableTrackCustomization/types';
-import { MetadataTableConfig } from '@/features/MetadataAPI';
+import { MetadataTableConfig } from '@/features/hasura-metadata-types';
 import { Button } from '@/new-components/Button';
 import { Collapse } from '@/new-components/deprecated';
 import { Dialog } from '@/new-components/Dialog';

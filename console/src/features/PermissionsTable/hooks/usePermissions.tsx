@@ -4,7 +4,7 @@ import type { TableColumn } from '@/features/DataSource';
 
 import { useQuery } from 'react-query';
 import { useHttpClient } from '@/features/Network';
-import { MetadataTable, Metadata } from '@/features/MetadataAPI';
+import { MetadataTable, Metadata } from '@/features/hasura-metadata-types';
 
 interface RolePermission {
   roleName: string;

@@ -1,7 +1,7 @@
 import { useHttpClient } from '@/features/Network';
 import { useQuery } from 'react-query';
 import { DataSource, TableColumn } from '@/features/DataSource';
-import { Table } from '@/features/MetadataAPI';
+import { Table } from '@/features/hasura-metadata-types';
 import { AxiosError } from 'axios';
 
 export const useTableColumns = ({

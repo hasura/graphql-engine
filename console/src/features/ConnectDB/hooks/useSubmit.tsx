@@ -1,8 +1,8 @@
 import { useQueryClient } from 'react-query';
 import { push } from 'react-router-redux';
+import { SupportedDrivers } from '@/features/hasura-metadata-types';
 import {
   allowedMetadataTypes,
-  SupportedDrivers,
   useMetadataMigration,
 } from '@/features/MetadataAPI';
 import { APIError } from '@/hooks/error';
