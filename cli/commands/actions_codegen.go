@@ -5,9 +5,10 @@ import (
 	"strings"
 
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadataobject/actions/types"
-	"github.com/pkg/errors"
+
 	"github.com/spf13/cobra"
 )
 
@@ -31,18 +32,23 @@ func newActionsCodegenCmd(ec *cli.ExecutionContext) *cobra.Command {
   hasura actions codegen [action-name] --derive-from ""`,
 		SilenceUsage: true,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PreRunE")
 			if err := ec.SetupCodegenAssetsRepo(); err != nil {
-				return fmt.Errorf("setting up codegen-assets repo failed (this is required for automatically generating actions code): %w", err)
+				return errors.E(op, fmt.Errorf("setting up codegen-assets repo failed (this is required for automatically generating actions code): %w", err))
 			}
 			// ensure codegen-assets repo exists
 			if err := ec.CodegenAssetsRepo.EnsureCloned(); err != nil {
-				return fmt.Errorf("pulling latest actions codegen files from internet failed: %w", err)
+				return errors.E(op, fmt.Errorf("pulling latest actions codegen files from internet failed: %w", err))
 			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "RunE")
 			opts.actions = args
-			return opts.run()
+			if err := opts.run(); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 	}
 	f := actionsCodegenCmd.Flags()
@@ -58,22 +64,23 @@ type actionsCodegenOptions struct {
 }
 
 func (o *actionsCodegenOptions) run() (err error) {
+	var op errors.Op = "commands.actionsCodegenOptions.run"
 	var derivePayload types.DerivePayload
 	if o.deriveFrom != "" {
 		derivePayload.Operation = strings.TrimSpace(o.deriveFrom)
 		o.EC.Spin("Deriving a Hasura operation...")
 		introSchema, err := o.EC.APIClient.V1Graphql.GetIntrospectionSchema()
 		if err != nil {
-			return errors.Wrap(err, "unable to fetch introspection schema")
+			return errors.E(op, fmt.Errorf("unable to fetch introspection schema: %w", err))
 		}
 		derivePayload.IntrospectionSchema = introSchema
 		o.EC.Spinner.Stop()
 	}
 
 	if o.EC.Config.ActionConfig.Codegen.Framework == "" {
-		return fmt.Errorf(`could not find codegen config. For adding codegen config, run:
+		return errors.E(op, fmt.Errorf(`could not find codegen config. For adding codegen config, run:
 
-  hasura actions use-codegen`)
+  hasura actions use-codegen`))
 	}
 
 	// if no actions are passed, perform codegen for all actions
@@ -83,7 +90,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 	if len(o.actions) == 0 {
 		actionsFileContent, err := actionCfg.GetActionsFileContent()
 		if err != nil {
-			return errors.Wrap(err, "error getting actions file content")
+			return errors.E(op, fmt.Errorf("error getting actions file content: %w", err))
 		}
 		for _, action := range actionsFileContent.Actions {
 			codegenActions = append(codegenActions, action.Name)
@@ -95,7 +102,7 @@ func (o *actionsCodegenOptions) run() (err error) {
 	for _, actionName := range codegenActions {
 		err = actionCfg.Codegen(actionName, derivePayload)
 		if err != nil {
-			return errors.Wrapf(err, "error generating codegen for action %s", actionName)
+			return errors.E(op, fmt.Errorf("error generating codegen for action %s: %w", actionName, err))
 		}
 	}
 	o.EC.Spinner.Stop()
