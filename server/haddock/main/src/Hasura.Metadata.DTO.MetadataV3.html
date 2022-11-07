@@ -12,7 +12,7 @@
 </span><span id="line-12"></span><span class="hs-comment">-- | Revision 3 of the Metadata export format. Note that values of the types,</span><span>
 </span><span id="line-13"></span><span class="hs-comment">-- 'PlaceholderArray' and 'PlaceholderObject' are placeholders that will</span><span>
 </span><span id="line-14"></span><span class="hs-comment">-- eventually be expanded to represent more detail.</span><span>
-</span><span id="line-15"></span><span id="local-6989586621690514763"><span id="local-6989586621690514764"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataV3"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetadataV3"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span></span><span>
+</span><span id="line-15"></span><span id="local-6989586621690547798"><span id="local-6989586621690547799"></span></span><span class="hs-keyword">data</span><span> </span><span id="MetadataV3"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="MetadataV3"><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span></span><span>
 </span><span id="line-16"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="metaV3Sources"><span class="annot"><span class="annottext">MetadataV3 -&gt; Sources
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Sources"><span class="hs-identifier hs-var hs-var">metaV3Sources</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Hasura.RQL.Types.Metadata.Common.html#Sources"><span class="hs-identifier hs-type">Sources</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-17"></span><span>    </span><span id="metaV3RemoteSchemas"><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderArray
@@ -40,9 +40,11 @@
 </span><span id="line-28"></span><span>    </span><span id="metaV3Network"><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderObject
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Network"><span class="hs-identifier hs-var hs-var">metaV3Network</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-type">PlaceholderObject</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-29"></span><span>    </span><span id="metaV3BackendConfigs"><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderObject
-</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3BackendConfigs"><span class="hs-identifier hs-var hs-var">metaV3BackendConfigs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-type">PlaceholderObject</span></a></span><span>
-</span><span id="line-30"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-31"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690514720"><span id="local-6989586621690514722"><span id="local-6989586621690514746"><span class="annot"><span class="annottext">Int -&gt; MetadataV3 -&gt; ShowS
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3BackendConfigs"><span class="hs-identifier hs-var hs-var">metaV3BackendConfigs</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-type">PlaceholderObject</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>    </span><span id="metaV3OpenTelemetryConfig"><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderObject
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3OpenTelemetryConfig"><span class="hs-identifier hs-var hs-var">metaV3OpenTelemetryConfig</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-type">Maybe</span></a></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.Placeholder.html#PlaceholderObject"><span class="hs-identifier hs-type">PlaceholderObject</span></a></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="annot"><span class="hs-keyword">stock</span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621690547753"><span id="local-6989586621690547755"><span id="local-6989586621690547780"><span class="annot"><span class="annottext">Int -&gt; MetadataV3 -&gt; ShowS
 [MetadataV3] -&gt; ShowS
 MetadataV3 -&gt; String
 forall a.
@@ -53,7 +55,7 @@ show :: MetadataV3 -&gt; String
 $cshow :: MetadataV3 -&gt; String
 showsPrec :: Int -&gt; MetadataV3 -&gt; ShowS
 $cshowsPrec :: Int -&gt; MetadataV3 -&gt; ShowS
-</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690514691"><span id="local-6989586621690514713"><span class="annot"><span class="annottext">MetadataV3 -&gt; MetadataV3 -&gt; Bool
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690547723"><span id="local-6989586621690547746"><span class="annot"><span class="annottext">MetadataV3 -&gt; MetadataV3 -&gt; Bool
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: MetadataV3 -&gt; MetadataV3 -&gt; Bool
 $c/= :: MetadataV3 -&gt; MetadataV3 -&gt; Bool
@@ -66,7 +68,7 @@ forall a.
 $cto :: forall x. Rep MetadataV3 x -&gt; MetadataV3
 $cfrom :: forall x. MetadataV3 -&gt; Rep MetadataV3 x
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-identifier hs-var hs-var hs-var hs-var">Generic</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-32"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690514674"><span id="local-6989586621690514680"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataV3]
+</span><span id="line-33"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621690547706"><span id="local-6989586621690547712"><span class="annot"><span class="annottext">Value -&gt; Parser [MetadataV3]
 Value -&gt; Parser MetadataV3
 forall a.
 (Value -&gt; Parser a) -&gt; (Value -&gt; Parser [a]) -&gt; FromJSON a
@@ -74,7 +76,7 @@ parseJSONList :: Value -&gt; Parser [MetadataV3]
 $cparseJSONList :: Value -&gt; Parser [MetadataV3]
 parseJSON :: Value -&gt; Parser MetadataV3
 $cparseJSON :: Value -&gt; Parser MetadataV3
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690514651"><span id="local-6989586621690514656"><span id="local-6989586621690514661"><span id="local-6989586621690514667"><span class="annot"><span class="annottext">[MetadataV3] -&gt; Value
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">FromJSON</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690547683"><span id="local-6989586621690547688"><span id="local-6989586621690547693"><span id="local-6989586621690547699"><span class="annot"><span class="annottext">[MetadataV3] -&gt; Value
 [MetadataV3] -&gt; Encoding
 MetadataV3 -&gt; Value
 MetadataV3 -&gt; Encoding
@@ -92,7 +94,7 @@ toEncoding :: MetadataV3 -&gt; Encoding
 $ctoEncoding :: MetadataV3 -&gt; Encoding
 toJSON :: MetadataV3 -&gt; Value
 $ctoJSON :: MetadataV3 -&gt; Value
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690514642"><span class="annot"><span class="annottext">Typeable MetadataV3
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">ToJSON</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621690547674"><span class="annot"><span class="annottext">Typeable MetadataV3
 Proxy MetadataV3 -&gt; Declare (Definitions Schema) NamedSchema
 forall a.
 Typeable a
@@ -101,21 +103,21 @@ Typeable a
 declareNamedSchema :: Proxy MetadataV3 -&gt; Declare (Definitions Schema) NamedSchema
 $cdeclareNamedSchema :: Proxy MetadataV3 -&gt; Declare (Definitions Schema) NamedSchema
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var">OpenApi.ToSchema</span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Autodocodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-33"></span><span>
-</span><span id="line-34"></span><span class="hs-comment">-- | Codecs simultaneously provide serialization logic for a type, and</span><span>
-</span><span id="line-35"></span><span class="hs-comment">-- documentation. A codec can be used to generate a specification in OpenAPI or</span><span>
-</span><span id="line-36"></span><span class="hs-comment">-- another format that matches the JSON serialization of the same type.</span><span>
-</span><span id="line-37"></span><span class="hs-comment">-- Documentation strings (the second argument to 'optionalField' and to</span><span>
-</span><span id="line-38"></span><span class="hs-comment">-- 'requiredField') appear in the generated specification for users' reference.</span><span>
-</span><span id="line-39"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690514632"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-40"></span><span>  </span><span id="local-6989586621690514568"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV3
-</span><a href="#local-6989586621690514568"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-41"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- | Codecs simultaneously provide serialization logic for a type, and</span><span>
+</span><span id="line-36"></span><span class="hs-comment">-- documentation. A codec can be used to generate a specification in OpenAPI or</span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- another format that matches the JSON serialization of the same type.</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- Documentation strings (the second argument to 'optionalField' and to</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- 'requiredField') appear in the generated specification for users' reference.</span><span>
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621690547664"><span class="annot"><span class="hs-identifier hs-type">HasCodec</span></span><span> </span><span class="annot"><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-type">MetadataV3</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-41"></span><span>  </span><span id="local-6989586621690547596"><span class="annot"><span class="annottext">codec :: JSONCodec MetadataV3
+</span><a href="#local-6989586621690547596"><span class="hs-identifier hs-var hs-var hs-var hs-var">codec</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 </span><span class="hs-identifier hs-var">object</span></span><span> </span><span class="annot"><span class="annottext">Text
 </span><span class="hs-string">&quot;MetadataV3&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">$</span></a></span><span>
-</span><span id="line-42"></span><span>      </span><span class="annot"><span class="annottext">Sources
+</span><span id="line-43"></span><span>      </span><span class="annot"><span class="annottext">Sources
 -&gt; Maybe PlaceholderArray
 -&gt; Maybe PlaceholderArray
 -&gt; Maybe PlaceholderArray
@@ -126,16 +128,17 @@ Text -&gt; ObjectCodec input output -&gt; ValueCodec input output
 -&gt; Maybe PlaceholderObject
 -&gt; Maybe PlaceholderObject
 -&gt; Maybe PlaceholderArray
+-&gt; Maybe PlaceholderObject
 -&gt; Maybe PlaceholderObject
 -&gt; Maybe PlaceholderObject
 -&gt; Maybe PlaceholderObject
 -&gt; MetadataV3
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#MetadataV3"><span class="hs-identifier hs-var">MetadataV3</span></a></span><span>
-</span><span id="line-43"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
+</span><span id="line-44"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Functor f =&gt; a -&gt; f b -&gt; f a
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;$</span></a></span><span> </span><span class="annot"><span class="annottext">forall a. Integer -&gt; ObjectCodec a Scientific
 </span><a href="Hasura.Metadata.DTO.Utils.html#versionField"><span class="hs-identifier hs-var">versionField</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
 </span><span class="hs-number">3</span></span><span>
-</span><span id="line-44"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall input output.
 Text -&gt; ValueCodec input output -&gt; Text -&gt; ObjectCodec input output
 </span><span class="hs-identifier hs-var">requiredFieldWith</span></span><span> </span><span class="annot"><span class="annottext">Text
@@ -146,7 +149,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Sources
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Sources"><span class="hs-identifier hs-var">metaV3Sources</span></a></span><span>
-</span><span id="line-45"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-46"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -157,7 +160,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3RemoteSchemas"><span class="hs-identifier hs-var">metaV3RemoteSchemas</span></a></span><span>
-</span><span id="line-46"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-47"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -168,7 +171,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3QueryCollections"><span class="hs-identifier hs-var">metaV3QueryCollections</span></a></span><span>
-</span><span id="line-47"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-48"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -179,7 +182,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Allowlist"><span class="hs-identifier hs-var">metaV3Allowlist</span></a></span><span>
-</span><span id="line-48"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-49"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -190,7 +193,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Actions"><span class="hs-identifier hs-var">metaV3Actions</span></a></span><span>
-</span><span id="line-49"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-50"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -201,7 +204,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderObject
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3CustomTypes"><span class="hs-identifier hs-var">metaV3CustomTypes</span></a></span><span>
-</span><span id="line-50"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-51"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -212,7 +215,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3CronTriggers"><span class="hs-identifier hs-var">metaV3CronTriggers</span></a></span><span>
-</span><span id="line-51"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-52"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -223,7 +226,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3RestEndpoints"><span class="hs-identifier hs-var">metaV3RestEndpoints</span></a></span><span>
-</span><span id="line-52"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-53"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -234,7 +237,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderObject
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3ApiLimits"><span class="hs-identifier hs-var">metaV3ApiLimits</span></a></span><span>
-</span><span id="line-53"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -245,7 +248,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderObject
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3MetricsConfig"><span class="hs-identifier hs-var">metaV3MetricsConfig</span></a></span><span>
-</span><span id="line-54"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-55"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -256,7 +259,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderArray
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3InheritedRoles"><span class="hs-identifier hs-var">metaV3InheritedRoles</span></a></span><span>
-</span><span id="line-55"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-56"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -267,7 +270,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderObject
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3GraphqlSchemaIntrospection"><span class="hs-identifier hs-var">metaV3GraphqlSchemaIntrospection</span></a></span><span>
-</span><span id="line-56"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -278,7 +281,7 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderObject
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3Network"><span class="hs-identifier hs-var">metaV3Network</span></a></span><span>
-</span><span id="line-57"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><span id="line-58"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
 HasCodec output =&gt;
 Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
@@ -289,4 +292,15 @@ ObjectCodec oldInput output
 -&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
 </span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderObject
 </span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3BackendConfigs"><span class="hs-identifier hs-var">metaV3BackendConfigs</span></a></span><span>
-</span><span id="line-58"></span></pre></body></html>
+</span><span id="line-59"></span><span>        </span><span class="annot"><span class="annottext">forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
+</span><a href="../file:///root/.ghcup/ghc/9.2.4/share/doc/ghc-9.2.4.20220919/html/libraries/base-4.16.3.0/src"><span class="hs-operator hs-var">&lt;*&gt;</span></a></span><span> </span><span class="annot"><span class="annottext">forall output.
+HasCodec output =&gt;
+Text -&gt; Text -&gt; ObjectCodec (Maybe output) (Maybe output)
+</span><span class="hs-identifier hs-var">optionalField</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;opentelemetry&quot;</span></span><span> </span><span class="annot"><span class="annottext">Text
+</span><span class="hs-string">&quot;TODO&quot;</span></span><span> </span><span class="annot"><span class="annottext">forall oldInput output newInput.
+ObjectCodec oldInput output
+-&gt; (newInput -&gt; oldInput) -&gt; ObjectCodec newInput output
+</span><span class="hs-operator hs-var">.=</span></span><span> </span><span class="annot"><span class="annottext">MetadataV3 -&gt; Maybe PlaceholderObject
+</span><a href="Hasura.Metadata.DTO.MetadataV3.html#metaV3OpenTelemetryConfig"><span class="hs-identifier hs-var">metaV3OpenTelemetryConfig</span></a></span><span>
+</span><span id="line-60"></span></pre></body></html>
