@@ -2,9 +2,10 @@ package commands
 
 import (
 	"github.com/hasura/graphql-engine/cli/v2/seed"
-
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2"
 	"github.com/hasura/graphql-engine/cli/v2/util"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -19,12 +20,13 @@ func NewSeedCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Short:        "Manage seed data",
 		SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PersistentPreRunE")
 			err := ec.Prepare()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			if err := ec.Validate(); err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			return nil
 		},
