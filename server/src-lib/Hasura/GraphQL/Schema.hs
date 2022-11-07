@@ -242,7 +242,7 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
 
     -- build all remote schemas
     -- we only keep the ones that don't result in a name conflict
-    (remoteSchemaFields, remoteSchemaErrors) <-
+    (remoteSchemaFields, !remoteSchemaErrors) <-
       runRemoteSchema schemaContext $
         buildAndValidateRemoteSchemas remotes sourcesQueryFields sourcesMutationBackendFields role remoteSchemaPermsCtx
     let remotesQueryFields = concatMap piQuery remoteSchemaFields
@@ -275,7 +275,7 @@ buildRoleContext options sources remotes actions customTypes role remoteSchemaPe
     -- required for introspection, which ends up doing a few correctness
     -- checks in the GraphQL schema. Furthermore, we want to persist this
     -- information in the case of the admin role.
-    introspectionSchema <- do
+    !introspectionSchema <- do
       result <-
         throwOnConflictingDefinitions $
           convertToSchemaIntrospection

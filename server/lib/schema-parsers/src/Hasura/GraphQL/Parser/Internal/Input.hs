@@ -242,6 +242,7 @@ field ::
   Maybe Description ->
   Parser origin k m a ->
   InputFieldsParser origin m a
+{-# INLINE field #-}
 field name description parser =
   InputFieldsParser
     { ifDefinitions = [Definition name description Nothing [] $ InputFieldInfo (pType parser) Nothing],
@@ -270,6 +271,7 @@ fieldOptional ::
   Maybe Description ->
   Parser origin k m a ->
   InputFieldsParser origin m (Maybe a)
+{-# INLINE fieldOptional #-}
 fieldOptional name description parser =
   InputFieldsParser
     { ifDefinitions =
@@ -295,6 +297,7 @@ fieldWithDefault ::
   Value Void ->
   Parser origin k m a ->
   InputFieldsParser origin m a
+{-# INLINE fieldWithDefault #-}
 fieldWithDefault name description defaultValue parser =
   InputFieldsParser
     { ifDefinitions = [Definition name description Nothing [] $ InputFieldInfo (pType parser) (Just defaultValue)],
@@ -354,6 +357,7 @@ object ::
   Maybe Description ->
   InputFieldsParser origin m a ->
   Parser origin 'Input m a
+{-# INLINE object #-}
 object name description parser =
   Parser
     { pType = schemaType,
@@ -386,6 +390,7 @@ object name description parser =
     invalidName key = parseError $ "variable value contains object with key " <> ErrorValue.dquote key <> ", which is not a legal GraphQL name"
 
 list :: forall origin k m a. (MonadParse m, 'Input <: k) => Parser origin k m a -> Parser origin k m [a]
+{-# INLINE list #-}
 list parser =
   gcastWith
     (inputParserInput @k)

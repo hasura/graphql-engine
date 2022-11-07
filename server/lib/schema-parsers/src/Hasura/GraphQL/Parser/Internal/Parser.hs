@@ -185,6 +185,7 @@ safeSelectionSet ::
   Maybe Description ->
   [FieldParser origin m a] ->
   n (Parser origin 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a)))
+{-# INLINE safeSelectionSet #-}
 safeSelectionSet name description fields =
   case duplicatesList of
     [] -> pure $ selectionSetObject name description fields []
@@ -224,6 +225,7 @@ selectionSetObject ::
   -- see Note [The interfaces story] in Hasura.GraphQL.Parser.Schema.
   [Parser origin 'Output m b] ->
   Parser origin 'Output m (OMap.InsOrdHashMap Name (ParsedSelection a))
+{-# INLINE selectionSetObject #-}
 selectionSetObject name description parsers implementsInterfaces =
   Parser
     { pType =
@@ -283,6 +285,7 @@ selectionSetInterface ::
   -- Note [The interfaces story] in Hasura.GraphQL.Parser.Schema for details.
   t (Parser origin 'Output n b) ->
   Parser origin 'Output n (t b)
+{-# INLINE selectionSetInterface #-}
 selectionSetInterface name description fields objectImplementations =
   Parser
     { pType =
@@ -311,6 +314,7 @@ selectionSetUnion ::
   -- | The member object types.
   t (Parser origin 'Output n b) ->
   Parser origin 'Output n (t b)
+{-# INLINE selectionSetUnion #-}
 selectionSetUnion name description objectImplementations =
   Parser
     { pType =
@@ -338,6 +342,7 @@ selection ::
   -- | type of the result
   Parser origin 'Both m b ->
   FieldParser origin m a
+{-# INLINE selection #-}
 selection name description argumentsParser resultParser =
   rawSelection name description argumentsParser resultParser
     <&> \(_alias, _args, a) -> a
@@ -353,6 +358,7 @@ rawSelection ::
   Parser origin 'Both m b ->
   -- | alias provided (if any), and the arguments
   FieldParser origin m (Maybe Name, HashMap Name (Value Variable), a)
+{-# INLINE rawSelection #-}
 rawSelection name description argumentsParser resultParser =
   FieldParser
     { fDefinition =
@@ -396,6 +402,7 @@ subselection ::
   -- | parser for the subselection set
   Parser origin 'Output m b ->
   FieldParser origin m (a, b)
+{-# INLINE subselection #-}
 subselection name description argumentsParser bodyParser =
   rawSubselection name description argumentsParser bodyParser
     <&> \(_alias, _args, a, b) -> (a, b)
@@ -410,6 +417,7 @@ rawSubselection ::
   -- | parser for the subselection set
   Parser origin 'Output m b ->
   FieldParser origin m (Maybe Name, HashMap Name (Value Variable), a, b)
+{-# INLINE rawSubselection #-}
 rawSubselection name description argumentsParser bodyParser =
   FieldParser
     { fDefinition =
@@ -437,6 +445,7 @@ selection_ ::
   -- | type of the result
   Parser origin 'Both m a ->
   FieldParser origin m ()
+{-# INLINE selection_ #-}
 selection_ name description = selection name description (pure ())
 
 -- | A shorthand for a 'subselection' that takes no arguments.
@@ -447,5 +456,6 @@ subselection_ ::
   -- | parser for the subselection set
   Parser origin 'Output m a ->
   FieldParser origin m a
+{-# INLINE subselection_ #-}
 subselection_ name description bodyParser =
   snd <$> subselection name description (pure ()) bodyParser

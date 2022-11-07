@@ -953,12 +953,13 @@ tableAggregationFields sourceInfo tableInfo =
     mkNumericAggFields name
       | name == Name._sum = traverse mkColumnAggField
       | otherwise = traverse \columnInfo ->
-          pure $
+          pure $! do
+            let !cfcol = IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
             P.selection_
               (ciName columnInfo)
               (ciDescription columnInfo)
               (P.nullable P.float)
-              $> IR.CFCol (ciColumn columnInfo) (ciType columnInfo)
+              $> cfcol
 
     mkColumnAggField :: ColumnInfo b -> SchemaT r m (FieldParser n (IR.ColFld b))
     mkColumnAggField columnInfo =
@@ -1040,9 +1041,9 @@ fieldSelection sourceInfo table tableInfo = \case
       let columnName = ciColumn columnInfo
       selectPermissions <- hoistMaybe $ tableSelectPermissions roleName tableInfo
       guard $ columnName `Map.member` spiCols selectPermissions
-      let caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
-          caseBoolExpUnpreparedValue =
-            (fmap . fmap) partialSQLExpToUnpreparedValue <$> caseBoolExp
+      let !caseBoolExp = join $ Map.lookup columnName (spiCols selectPermissions)
+          !caseBoolExpUnpreparedValue =
+            (fmap . fmap) partialSQLExpToUnpreparedValue <$!> caseBoolExp
           pathArg = scalarSelectionArgumentsParser $ ciType columnInfo
           -- In an inherited role, when a column is part of all the select
           -- permissions which make up the inherited role then the nullability
@@ -1065,7 +1066,7 @@ fieldSelection sourceInfo table tableInfo = \case
           -- allow the case analysis only on nullable columns.
           nullability = ciIsNullable columnInfo || isJust caseBoolExp
       field <- lift $ columnParser (ciType columnInfo) (G.Nullability nullability)
-      pure $
+      pure $!
         P.selection fieldName (ciDescription columnInfo) pathArg field
           <&> IR.mkAnnColumnField (ciColumn columnInfo) (ciType columnInfo) caseBoolExpUnpreparedValue
   FIRelationship relationshipInfo ->
