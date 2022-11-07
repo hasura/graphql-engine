@@ -1,10 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.DataConnector.MockAgent.QueryRelationshipsSpec
-  ( spec,
-  )
-where
+module Test.DataConnector.MockAgent.QueryRelationshipsSpec (spec) where
 
 --------------------------------------------------------------------------------
 

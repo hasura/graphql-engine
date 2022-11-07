@@ -5,7 +5,7 @@
 --
 -- https://hasura.io/docs/latest/mutations/postgres/delete/#delete-all-objects
 -- https://hasura.io/docs/latest/mutations/ms-sql-server/delete/#delete-all-objects
-module Test.Mutations.Delete.AllSpec where
+module Test.Mutations.Delete.AllSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

@@ -2,10 +2,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Tests for Error Conditions in Data Connector Backends
-module Test.DataConnector.MockAgent.ErrorSpec
-  ( spec,
-  )
-where
+module Test.DataConnector.MockAgent.ErrorSpec (spec) where
 
 --------------------------------------------------------------------------------
 

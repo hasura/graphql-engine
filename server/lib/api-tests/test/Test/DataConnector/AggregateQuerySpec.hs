@@ -1,9 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.DataConnector.AggregateQuerySpec
-  ( spec,
-  )
-where
+module Test.DataConnector.AggregateQuerySpec (spec) where
 
 import Data.Aeson qualified as Aeson
 import Data.List.NonEmpty qualified as NE

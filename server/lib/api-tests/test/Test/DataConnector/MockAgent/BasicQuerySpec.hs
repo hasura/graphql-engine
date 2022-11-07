@@ -2,10 +2,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Query Tests for Data Connector Backend using a Mock Agent
-module Test.DataConnector.MockAgent.BasicQuerySpec
-  ( spec,
-  )
-where
+module Test.DataConnector.MockAgent.BasicQuerySpec (spec) where
 
 --------------------------------------------------------------------------------
 

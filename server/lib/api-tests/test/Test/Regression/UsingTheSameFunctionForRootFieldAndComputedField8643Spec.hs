@@ -1,8 +1,5 @@
 -- | Testing regression reported at https://github.com/hasura/graphql-engine/issues/8643
-module Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec
-  ( spec,
-  )
-where
+module Test.Regression.UsingTheSameFunctionForRootFieldAndComputedField8643Spec (spec) where
 
 -- import Data.Aeson (Value (Null))
 import Data.List.NonEmpty qualified as NE

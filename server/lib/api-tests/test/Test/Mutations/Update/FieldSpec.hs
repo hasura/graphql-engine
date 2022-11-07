@@ -5,7 +5,7 @@
 --
 -- https://hasura.io/docs/latest/mutations/postgres/update/#update-objects-based-on-their-fields
 -- https://hasura.io/docs/latest/mutations/ms-sql-server/update/#update-objects-based-on-their-fields
-module Test.Mutations.Update.FieldSpec where
+module Test.Mutations.Update.FieldSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

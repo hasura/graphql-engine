@@ -1,9 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Test.DataConnector.MockAgent.AggregateQuerySpec
-  ( spec,
-  )
-where
+module Test.DataConnector.MockAgent.AggregateQuerySpec (spec) where
 
 --------------------------------------------------------------------------------
 

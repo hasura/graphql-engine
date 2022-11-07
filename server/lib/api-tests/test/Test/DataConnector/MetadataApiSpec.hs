@@ -3,10 +3,7 @@
 {-# OPTIONS_GHC -Wno-deprecations #-}
 
 -- | Metadata API tests for Data Connector Backend
-module Test.DataConnector.MetadataApiSpec
-  ( spec,
-  )
-where
+module Test.DataConnector.MetadataApiSpec (spec) where
 
 --------------------------------------------------------------------------------
 

@@ -6,7 +6,7 @@
 -- https://hasura.io/docs/latest/queries/postgres/variables-aliases-fragments-directives/#using-variables
 -- https://hasura.io/docs/latest/queries/ms-sql-server/variables-aliases-fragments-directives/#using-variables
 -- https://hasura.io/docs/latest/queries/bigquery/variables-aliases-fragments-directives/#using-variables
-module Test.Queries.VariablesSpec where
+module Test.Queries.VariablesSpec (spec) where
 
 import Data.Aeson (Value (String), object, (.=))
 import Data.List.NonEmpty qualified as NE

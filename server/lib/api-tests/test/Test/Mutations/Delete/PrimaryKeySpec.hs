@@ -5,7 +5,7 @@
 --
 -- https://hasura.io/docs/latest/mutations/postgres/delete/#delete-an-object-by-its-primary-key
 -- https://hasura.io/docs/latest/mutations/ms-sql-server/delete/#delete-an-object-by-its-primary-key
-module Test.Mutations.Delete.PrimaryKeySpec where
+module Test.Mutations.Delete.PrimaryKeySpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

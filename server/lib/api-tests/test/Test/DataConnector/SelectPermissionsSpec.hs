@@ -1,10 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Select Permissions Tests for Data Connector Backend
-module Test.DataConnector.SelectPermissionsSpec
-  ( spec,
-  )
-where
+module Test.DataConnector.SelectPermissionsSpec (spec) where
 
 --------------------------------------------------------------------------------
 

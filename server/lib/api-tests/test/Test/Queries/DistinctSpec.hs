@@ -4,7 +4,7 @@
 -- Tests for @distinct@ queries.
 --
 -- https://hasura.io/docs/latest/queries/postgres/distinct-queries/
-module Test.Queries.DistinctSpec where
+module Test.Queries.DistinctSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

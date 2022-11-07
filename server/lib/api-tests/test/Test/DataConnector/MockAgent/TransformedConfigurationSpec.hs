@@ -1,10 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Configuration Transformation Tests for Data Connector Backend using a Mock Agent
-module Test.DataConnector.MockAgent.TransformedConfigurationSpec
-  ( spec,
-  )
-where
+module Test.DataConnector.MockAgent.TransformedConfigurationSpec (spec) where
 
 --------------------------------------------------------------------------------
 

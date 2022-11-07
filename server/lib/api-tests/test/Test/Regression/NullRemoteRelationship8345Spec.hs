@@ -2,10 +2,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Regression tests for issue 8345.
-module Test.Regression.NullRemoteRelationship8345Spec
-  ( spec,
-  )
-where
+module Test.Regression.NullRemoteRelationship8345Spec (spec) where
 
 import Data.Aeson qualified as Aeson
 import Data.Char (isUpper, toLower)

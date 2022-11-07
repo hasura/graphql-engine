@@ -8,10 +8,7 @@
 -- All tests use the same GraphQL syntax, and the only difference is in the
 -- setup: we do a cartesian product of all kinds of sources we support on the
 -- left-hand side and all databases we support on the right-hand side.
-module Test.RemoteRelationship.XToDBArrayRelationshipSpec
-  ( spec,
-  )
-where
+module Test.RemoteRelationship.XToDBArrayRelationshipSpec (spec) where
 
 import Control.Lens (findOf, has, only, (^?!))
 import Data.Aeson (Value)

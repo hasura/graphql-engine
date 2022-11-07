@@ -5,7 +5,7 @@
 --
 -- https://hasura.io/docs/latest/mutations/postgres/delete/#delete-objects-based-on-nested-objects-fields
 -- https://hasura.io/docs/latest/mutations/ms-sql-server/delete/#delete-objects-based-on-nested-objects-fields
-module Test.Mutations.Delete.NestedFieldSpec where
+module Test.Mutations.Delete.NestedFieldSpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE

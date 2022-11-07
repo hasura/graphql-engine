@@ -1,10 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 
 -- | Query Tests for Data Connector Backend
-module Test.DataConnector.QuerySpec
-  ( spec,
-  )
-where
+module Test.DataConnector.QuerySpec (spec) where
 
 --------------------------------------------------------------------------------
 

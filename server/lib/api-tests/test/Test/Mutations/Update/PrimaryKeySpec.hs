@@ -5,7 +5,7 @@
 --
 -- https://hasura.io/docs/latest/mutations/postgres/update/#update-an-object-by-its-primary-key
 -- https://hasura.io/docs/latest/mutations/ms-sql-server/update/#update-an-object-by-its-primary-key
-module Test.Mutations.Update.PrimaryKeySpec where
+module Test.Mutations.Update.PrimaryKeySpec (spec) where
 
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
