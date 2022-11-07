@@ -1,4 +1,3 @@
-import { GrowthExperimentsClient } from '@/features/GrowthExperiments';
 import { SurveysResponseData } from '@/features/Surveys';
 import {
   getMetadataUrl,
@@ -7,103 +6,158 @@ import {
   getSchemaImageUrl,
   NEON_TEMPLATE_BASE_PATH,
 } from '../constants';
+import { OnboardingResponseData } from '../types';
 
-export const mockGrowthClient: Record<string, GrowthExperimentsClient> = {
+export const mockOnboardingData: Record<
+  string,
+  OnboardingResponseData['data']
+> = {
   /**
-   * config to hide wizard as experiment name error
+   *  config to show wizard as user activity is empty
    */
-  nameError: {
-    getAllExperimentConfig: () => [
+  emptyActivity: {
+    user_onboarding: [
       {
-        experiment: 'console_onboarding_wizardddd_v1',
-        status: 'enabled',
-        metadata: {},
-        userActivity: {},
+        activity: {},
+        target: 'cloud_console',
       },
     ],
-    setAllExperimentConfig: () => Promise.resolve(),
   },
   /**
-   *  config to show wizard as experiment enabled and
-   *  user activity is empty
+   *  config to hide wizard as hasura data source created
    */
-  enabledWithoutActivity: {
-    getAllExperimentConfig: () => [
+  hasuraDataSourceCreationStart: {
+    user_onboarding: [
       {
-        experiment: 'console_onboarding_wizard_v1',
-        status: 'enabled',
-        metadata: {},
-        userActivity: {},
-      },
-    ],
-    setAllExperimentConfig: () => Promise.resolve(),
-  },
-  /**
-   *  config to hide wizard as experiment is disabled
-   */
-  disabledWithoutActivity: {
-    getAllExperimentConfig: () => [
-      {
-        experiment: 'console_onboarding_wizard_v1',
-        status: 'disabled',
-        metadata: {},
-        userActivity: {},
-      },
-    ],
-    setAllExperimentConfig: () => Promise.resolve(),
-  },
-  /**
-   *  config to hide wizard as user has completed
-   *  the onboarding
-   */
-  enabledWithCorrectActivity: {
-    getAllExperimentConfig: () => [
-      {
-        experiment: 'console_onboarding_wizard_v1',
-        status: 'enabled',
-        metadata: {},
-        userActivity: {
-          onboarding_complete: true,
+        activity: {
+          project_id: {
+            value: '44300b64-fb3a-4f17-8a0f-6f698568eade',
+            version: 'v1',
+          },
+          run_query_skip: {},
+          run_query_click: {},
+          neon_login_start: {},
+          skipped_onboarding: {},
+          onboarding_complete: {},
+          neon_onboarding_error: {},
+          install_template_start: {
+            value: 'true',
+            version: 'v1',
+            action_time: '2022-11-02T13:31:32.526653286Z',
+          },
+          neon_db_creation_start: {
+            value: 'true',
+            version: 'v1',
+            action_time: '2022-11-02T13:31:18.114022923Z',
+          },
+          hasura_source_creation_start: {
+            value: 'true',
+            version: 'v1',
+            action_time: '2022-11-02T13:31:32.492540278Z',
+          },
         },
+        target: 'cloud_console',
       },
     ],
-    setAllExperimentConfig: () => Promise.resolve(),
   },
   /**
-   *  config to hide wizard as experiment is disabled,
-   *  user has completed the onboarding or not should not matter
-   *  in this case.
+   *  config to hide wizard as run query clicked
    */
-  disabledWithCorrectActivity: {
-    getAllExperimentConfig: () => [
+  runQueryClick: {
+    user_onboarding: [
       {
-        experiment: 'console_onboarding_wizard_v1',
-        status: 'disabled',
-        metadata: {},
-        userActivity: {
-          onboarding_complete: true,
+        activity: {
+          project_id: {
+            value: '44300b64-fb3a-4f17-8a0f-6f698568eade',
+            version: 'v1',
+          },
+          run_query_skip: {},
+          run_query_click: {
+            value: 'true',
+            version: 'v1',
+            action_time: '2022-11-02T13:32:54.084118133Z',
+          },
+          neon_login_start: {},
+          skipped_onboarding: {},
+          onboarding_complete: {},
+          neon_onboarding_error: {},
+          install_template_start: {
+            value: 'true',
+            version: 'v1',
+            action_time: '2022-11-02T13:31:32.526653286Z',
+          },
+          neon_db_creation_start: {
+            value: 'true',
+            version: 'v1',
+            action_time: '2022-11-02T13:31:18.114022923Z',
+          },
+          hasura_source_creation_start: {
+            value: 'true',
+            version: 'v1',
+            action_time: '2022-11-02T13:31:32.492540278Z',
+          },
         },
+        target: 'cloud_console',
       },
     ],
-    setAllExperimentConfig: () => Promise.resolve(),
   },
   /**
-   *  config to show wizard as experiment is enabled,
-   *  and user activity is incorrect. Could mean a error on backend
-   *  while saving user activity.
+   *  config to hide wizard as user skipped onboarding
    */
-  enabledWithWrongActivity: {
-    getAllExperimentConfig: () => [
+  skippedOnboarding: {
+    user_onboarding: [
       {
-        experiment: 'console_onboarding_wizard_v1',
-        status: 'enabled',
-        metadata: {},
-        userActivity: {
-          onboarding_completessss: true,
+        activity: {
+          project_id: {
+            value: '44300b64-fb3a-4f17-8a0f-6f698568eade',
+            version: 'v1',
+          },
+          run_query_skip: {},
+          run_query_click: {},
+          neon_login_start: {},
+          skipped_onboarding: {
+            value: 'true',
+            version: 'v1',
+            action_time: '2022-11-02T14:49:49.908295178Z',
+          },
+          onboarding_complete: {},
+          neon_onboarding_error: {},
+          install_template_start: {},
+          neon_db_creation_start: {},
+          hasura_source_creation_start: {},
         },
+        target: 'cloud_console',
       },
     ],
-    setAllExperimentConfig: () => Promise.resolve(),
+  },
+  /**
+   *  config to hide wizard as user completed onboarding
+   */
+  completedOnboarding: {
+    user_onboarding: [
+      {
+        activity: {
+          project_id: {
+            value: '44300b64-fb3a-4f17-8a0f-6f698568eade',
+            version: 'v1',
+          },
+          run_query_skip: {},
+          run_query_click: {},
+          neon_login_start: {},
+          skipped_onboarding: {},
+          onboarding_complete: {
+            value: 'true',
+            version: 'v1',
+            action_time: '2022-11-02T14:49:49.908295178Z',
+          },
+          neon_onboarding_error: {},
+          install_template_start: {},
+          neon_db_creation_start: {},
+          hasura_source_creation_start: {},
+        },
+        target: 'cloud_console',
+      },
+    ],
   },
 };
 
@@ -277,8 +331,7 @@ export const MOCK_INITIAL_METADATA = {
       ],
       configuration: {
         connection_info: {
-          database_url:
-            'postgres://abhijeet:dxefFu5yvVJ2@fragrant-firefly-499238.cloud.neon.tech/main',
+          database_url: 'some_secret_db_url',
           isolation_level: 'read-committed',
           use_prepared_statements: false,
         },

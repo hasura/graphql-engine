@@ -34,8 +34,13 @@ export function NeonOnboarding(props: {
     proceed();
   };
 
-  const onErrorHanlder = () => {
+  const onErrorHandler = () => {
     dispatch(_push('/data/manage/connect'));
+    dismiss();
+  };
+
+  const onInstallTemplateErrorHandler = () => {
+    dispatch(_push('/data/default/schema/public'));
     dismiss();
   };
 
@@ -47,7 +52,7 @@ export function NeonOnboarding(props: {
     'default',
     NEON_TEMPLATE_BASE_PATH,
     onSuccessHandler,
-    onErrorHanlder
+    onInstallTemplateErrorHandler
   );
 
   const neonIntegrationStatus = useNeonIntegration(
@@ -63,7 +68,7 @@ export function NeonOnboarding(props: {
       install();
     },
     () => {
-      onErrorHanlder();
+      onErrorHandler();
     },
     dispatch,
     'onboarding'

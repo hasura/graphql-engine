@@ -19,7 +19,7 @@ export {
 } from '../src/features/Analytics';
 export { OnboardingWizard } from '../src/features/OnboardingWizard';
 export { prefetchSurveysData } from '../src/features/Surveys';
-export { makeGrowthExperimentsClient } from '../src/features/GrowthExperiments';
+export { prefetchOnboardingData } from '../src/features/OnboardingWizard';
 export { default as PageNotFound } from '../src/components/Error/PageNotFound';
 export * from '../src/new-components/Button/';
 export * from '../src/new-components/Tooltip/';

@@ -1,9 +1,9 @@
 import { parse, print } from 'graphql';
-import { ExperimentConfig } from '@/features/GrowthExperiments';
 import { Dispatch } from '@/types';
 import { cloudDataServiceApiClient } from '@/hooks/cloudDataServiceApiClient';
 import { Api } from '@/hooks/apiUtils';
 import { HasuraMetadataV3 } from '@/metadata/types';
+import { reactQueryClient } from '@/lib/reactQuery';
 import { programmaticallyTraceError } from '@/features/Analytics';
 import {
   clickRunQueryButton,
@@ -16,51 +16,60 @@ import {
   templateSummaryRunQueryClickVariables,
   templateSummaryRunQuerySkipVariables,
   hasuraSourceCreationStartVariables,
-  graphQlMutation,
+  trackOnboardingActivityMutation,
+  onboardingQueryKey,
+  fetchAllOnboardingDataQuery,
+  fetchAllOnboardingDataQueryVariables,
 } from './constants';
 import { WizardState } from './hooks/useWizardState';
+import { OnboardingResponseData, UserOnboarding } from './types';
 
-export function isExperimentActive(
-  experimentsData: ExperimentConfig[],
-  experimentId: string
-) {
-  const experimentData = experimentsData?.find(
-    experimentConfig => experimentConfig.experiment === experimentId
-  );
-  return experimentData && experimentData?.status === 'enabled';
-}
-
-export function shouldShowOnboarding(
-  experimentsData: ExperimentConfig[],
-  experimentId: string
-) {
-  const experimentData = experimentsData?.find(
-    experimentConfig => experimentConfig.experiment === experimentId
-  );
-
-  const userActivity = experimentData?.userActivity;
+export function shouldShowOnboarding(onboardingData: UserOnboarding) {
+  const userActivity = onboardingData?.activity;
 
   if (
-    userActivity?.[skippedOnboardingVariables.kind] ||
-    userActivity?.[onboardingCompleteVariables.kind] ||
-    userActivity?.[hasuraSourceCreationStartVariables.kind] ||
-    userActivity?.[templateSummaryRunQuerySkipVariables.kind] ||
-    userActivity?.[templateSummaryRunQueryClickVariables.kind]
+    userActivity?.[skippedOnboardingVariables.kind]?.value === 'true' ||
+    userActivity?.[onboardingCompleteVariables.kind]?.value === 'true' ||
+    userActivity?.[hasuraSourceCreationStartVariables.kind]?.value === 'true' ||
+    userActivity?.[templateSummaryRunQuerySkipVariables.kind]?.value ===
+      'true' ||
+    userActivity?.[templateSummaryRunQueryClickVariables.kind]?.value === 'true'
   ) {
     return false;
   }
   return true;
 }
 
+const nullUserOnboardingData = {
+  activity: {},
+  target: 'cloud_console',
+};
+
+/**
+ * Transforms server returned data to the required format.
+ */
+function onboardingDataTransformFn(
+  data: OnboardingResponseData
+): UserOnboarding {
+  return (
+    data?.data?.user_onboarding?.find(
+      onboarding => onboarding.target === 'cloud_console'
+    ) || nullUserOnboardingData
+  );
+}
+
 export function getWizardState(
-  experimentsData: ExperimentConfig[],
-  experimentId: string,
-  showFamiliaritySurvey: boolean
+  showFamiliaritySurvey: boolean,
+  onboardingData?: OnboardingResponseData
 ): WizardState {
-  if (
-    shouldShowOnboarding(experimentsData, experimentId) &&
-    isExperimentActive(experimentsData, experimentId)
-  ) {
+  // if onbarding data is not present due to api error, or data loading state, then hide the wizard
+  // this early return is required to distinguish between server errors vs data not being present for user
+  // if the request is successful and data is not present for the given user, then we should show the onboarding wizard
+  if (!onboardingData) return 'hidden';
+
+  // transform the onboarding data if present, to a consumable format
+  const transformedOnboardingData = onboardingDataTransformFn(onboardingData);
+  if (shouldShowOnboarding(transformedOnboardingData)) {
     if (showFamiliaritySurvey) return 'familiarity-survey';
     return 'landing-page';
   }
@@ -69,7 +78,7 @@ export function getWizardState(
 
 type ResponseDataOnMutation = {
   data: {
-    trackExperimentsCohortActivity: {
+    trackOnboardingActivity: {
       status: string;
     };
   };
@@ -83,7 +92,7 @@ const cloudHeaders = {
 export const persistSkippedOnboarding = () => {
   // mutate server data
   cloudDataServiceApiClient<ResponseDataOnMutation, ResponseDataOnMutation>(
-    graphQlMutation,
+    trackOnboardingActivityMutation,
     skippedOnboardingVariables,
     cloudHeaders
   ).catch(error => {
@@ -95,7 +104,7 @@ export const persistSkippedOnboarding = () => {
 export const emitOnboardingEvent = (variables: Record<string, unknown>) => {
   // mutate server data
   cloudDataServiceApiClient<ResponseDataOnMutation, ResponseDataOnMutation>(
-    graphQlMutation,
+    trackOnboardingActivityMutation,
     variables,
     cloudHeaders
   ).catch(error => {
@@ -206,4 +215,18 @@ export const fillSampleQueryInGraphiQL = (
   setTimeout(() => {
     forceChangeGraphiqlQuery(query, dispatch);
   }, 500);
+};
+
+export const fetchAllOnboardingDataQueryFn = () =>
+  cloudDataServiceApiClient<OnboardingResponseData, OnboardingResponseData>(
+    fetchAllOnboardingDataQuery,
+    fetchAllOnboardingDataQueryVariables,
+    cloudHeaders
+  );
+
+export const prefetchOnboardingData = () => {
+  reactQueryClient.prefetchQuery(
+    onboardingQueryKey,
+    fetchAllOnboardingDataQueryFn
+  );
 };

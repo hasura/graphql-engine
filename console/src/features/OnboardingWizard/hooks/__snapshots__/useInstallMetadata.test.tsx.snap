@@ -55,7 +55,7 @@ Object {
       Object {
         "configuration": Object {
           "connection_info": Object {
-            "database_url": "postgres://abhijeet:dxefFu5yvVJ2@fragrant-firefly-499238.cloud.neon.tech/main",
+            "database_url": "some_secret_db_url",
             "isolation_level": "read-committed",
             "use_prepared_statements": false,
           },

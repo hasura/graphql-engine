@@ -14,19 +14,12 @@ import {
   dialogHeader,
   familiaritySurveySubHeader,
 } from './constants';
-import { GrowthExperimentsClient } from '../GrowthExperiments';
 import { HasuraFamiliaritySurvey } from '../Surveys';
-
-type Props = {
-  growthExperimentsClient: GrowthExperimentsClient;
-};
 
 /**
  * Parent container for the onboarding wizard. Takes care of assembling and rendering all steps.
  */
-function Root(props: Props) {
-  const { growthExperimentsClient } = props;
-
+function Root() {
   const dispatch = useAppDispatch();
 
   const [stepperIndex, setStepperIndex] = React.useState<number>(1);
@@ -37,7 +30,7 @@ function Root(props: Props) {
     familiaritySurveyData,
     familiaritySurveyOnOptionClick,
     familiaritySurveyOnSkip,
-  } = useWizardState(growthExperimentsClient);
+  } = useWizardState();
 
   const transitionToTemplateSummary = () => {
     setState('template-summary');
@@ -96,13 +89,13 @@ function Root(props: Props) {
   }
 }
 
-export function RootWithCloudCheck(props: Props) {
+export function RootWithCloudCheck() {
   /*
    * Don't render Root component if current context is not cloud-console
    * and current user is not project owner
    */
   if (isCloudConsole(globals) && globals.userRole === 'owner') {
-    return <Root {...props} />;
+    return <Root />;
   }
   return null;
 }

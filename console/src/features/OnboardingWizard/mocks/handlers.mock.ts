@@ -5,10 +5,12 @@ import {
   fetchSurveysDataResponse,
   mockMetadataUrl,
   mockMigrationUrl,
+  mockOnboardingData,
   MOCK_METADATA_FILE_CONTENTS,
   MOCK_MIGRATION_FILE_CONTENTS,
   serverDownErrorMessage,
 } from './constants';
+import { OnboardingResponseData } from '../types';
 
 type ResponseBodyOnSuccess = {
   status: 'success';
@@ -16,18 +18,7 @@ type ResponseBodyOnSuccess = {
 
 const controlPlaneApi = graphql.link(Endpoints.luxDataGraphql);
 
-export const baseHandlers = () => [
-  controlPlaneApi.query<ResponseBodyOnSuccess>(
-    'fetchAllExperimentsData',
-    (req, res, ctx) => {
-      return res(
-        ctx.status(200),
-        ctx.data({
-          status: 'success',
-        })
-      );
-    }
-  ),
+export const mutationBaseHandlers = () => [
   controlPlaneApi.mutation<ResponseBodyOnSuccess>(
     'addSurveyAnswer',
     (req, res, ctx) => {
@@ -40,7 +31,7 @@ export const baseHandlers = () => [
     }
   ),
   controlPlaneApi.mutation<ResponseBodyOnSuccess>(
-    'trackExperimentsCohortActivity',
+    'trackOnboardingActivity',
     (req, res, ctx) => {
       return res(
         ctx.status(200),
@@ -51,6 +42,45 @@ export const baseHandlers = () => [
     }
   ),
 ];
+
+export const fetchOnboardingDataFailure = controlPlaneApi.query<
+  Record<string, string>
+>('fetchAllOnboardingData', (req, res, ctx) => {
+  return res(ctx.status(503), ctx.data(serverDownErrorMessage));
+});
+
+export const onboardingDataEmptyActivity = controlPlaneApi.query<
+  OnboardingResponseData['data']
+>('fetchAllOnboardingData', (req, res, ctx) => {
+  return res(ctx.status(200), ctx.data(mockOnboardingData.emptyActivity));
+});
+
+export const onboardingDataSkippedOnboarding = controlPlaneApi.query<
+  OnboardingResponseData['data']
+>('fetchAllOnboardingData', (req, res, ctx) => {
+  return res(ctx.status(200), ctx.data(mockOnboardingData.skippedOnboarding));
+});
+
+export const onboardingDataCompleteOnboarding = controlPlaneApi.query<
+  OnboardingResponseData['data']
+>('fetchAllOnboardingData', (req, res, ctx) => {
+  return res(ctx.status(200), ctx.data(mockOnboardingData.completedOnboarding));
+});
+
+export const onboardingDataHasuraSourceCreationStart = controlPlaneApi.query<
+  OnboardingResponseData['data']
+>('fetchAllOnboardingData', (req, res, ctx) => {
+  return res(
+    ctx.status(200),
+    ctx.data(mockOnboardingData.hasuraDataSourceCreationStart)
+  );
+});
+
+export const onboardingDataRunQueryClick = controlPlaneApi.query<
+  OnboardingResponseData['data']
+>('fetchAllOnboardingData', (req, res, ctx) => {
+  return res(ctx.status(200), ctx.data(mockOnboardingData.runQueryClick));
+});
 
 export const fetchUnansweredSurveysHandler = controlPlaneApi.query<
   SurveysResponseData['data']
