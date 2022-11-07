@@ -28,8 +28,6 @@ services:
 
   graphql-engine:
     image: hasura/graphql-engine:v2.15.0-beta.1-ce
-    ## Apple M1-compatible image
-    # image: hasura/graphql-engine:dev-2da1d2a-enable-cockroach.debian.arm64
     ports:
       - '8080:8080'
     depends_on:
