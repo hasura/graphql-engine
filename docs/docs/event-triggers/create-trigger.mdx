@@ -12,18 +12,20 @@ keywords:
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import Thumbnail from '@site/src/components/Thumbnail';
-import TOCInline from '@theme/TOCInline';
 
 # Creating an event trigger
 
 ## Introduction
 
-Event triggers can be created using the Hasura console, CLI or metadata APIs.
+Event triggers can be created using the Hasura Console, Hasura CLI, or Metadata APIs. Currently, support for event
+triggers exists for Postgres and MSSQL databases.
+
+## Creating triggers
 
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Open the Hasura console, head to the `Events` tab and click on the `Create` button to open the page below:
+Open the Hasura Console, head to the `Events` tab and click on the `Create` button to open the page below:
 
 <Thumbnail src='/img/event-triggers/create-event-trigger.png' alt='Create an event trigger' />
 
@@ -57,8 +59,14 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-Add an event trigger by using the
-[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
+You can create event triggers by using the appropriate Metadata API, either:
+[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) or
+[mssql_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-mssql-create-event-trigger).
+
+To create an event trigger via the the Metadata API, replace `<db_type_create_event_trigger>` with the following:
+
+- **Postgres**: `pg_create_event_trigger`
+- **MSSQL**: `mssql_create_event_trigger`
 
 ```http
 POST /v1/metadata HTTP/1.1
@@ -66,7 +74,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type" : "pg_create_event_trigger",
+   "type" : "<db_type_create_event_trigger>",
    "args" : {
       "name": "author_trigger",
       "source": "<db_name>",
@@ -88,7 +96,13 @@ X-Hasura-Role: admin
 </TabItem>
 </Tabs>
 
-## Parameters
+:::info Note
+
+UPDATE event trigger for MSSQL will only work on tables that have a primary key.
+
+:::
+
+### Parameters
 
 **Trigger Name**
 
@@ -117,8 +131,6 @@ If you are running Hasura using Docker, ensure that the Hasura Docker container 
 
 ## Advanced Settings
 
-<TOCInline toc={toc} filterTOC={'advanced-settings'} />
-
 ### Listen columns for update
 
 Update operations are special because you may want to trigger a webhook only if specific columns have changed in a row.
@@ -129,7 +141,7 @@ If a column is not selected here, then an update to that column will not trigger
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an event trigger:
+Expand the `Advanced Settings` section on the Hasura Console to define advanced settings for an event trigger:
 
 <Thumbnail
   src='/img/event-triggers/create-event-trigger-listen-columns.png'
@@ -167,8 +179,14 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure advanced settings via the
-[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
+You can configure advanced settings via the appropriate Metadata API using either
+[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) or
+[mssql_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-mssql-create-event-trigger).
+
+Replace `<db_type_create_event_trigger>` with the following:
+
+- **Postgres**: `pg_create_event_trigger`
+- **MSSQL**: `mssql_create_event_trigger`
 
 ```http {18-20}
 POST /v1/metadata HTTP/1.1
@@ -176,7 +194,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "pg_create_event_trigger",
+   "type" : "<db_type_create_event_trigger>",
    "args": {
       "name": "author_trigger",
       "source": "<db_name>",
@@ -225,7 +243,7 @@ Retry configuration is available in the "Advanced settings" when you create a tr
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an event trigger:
+Expand the `Advanced Settings` section on the Hasura Console to define advanced settings for an event trigger:
 
 <Thumbnail
    src="/img/event-triggers/create-event-trigger-retry.png"
@@ -269,8 +287,14 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure advanced settings via the
-[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
+Again, you can configure advanced settings via the appropriate Metadata API, either:
+[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) or
+[mssql_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-mssql-create-event-trigger).
+
+Replace `<db_type_create_event_trigger>` with the following:
+
+- **Postgres**: `pg_create_event_trigger`
+- **MSSQL**: `mssql_create_event_trigger`
 
 ```http {21-25}
 POST /v1/metadata HTTP/1.1
@@ -278,7 +302,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "pg_create_event_trigger",
+   "type": "<db_type_create_event_trigger>",
    "args": {
       "name": "author_trigger",
       "source": "<db_name>",
@@ -313,6 +337,16 @@ X-Hasura-Role: admin
 }
 ```
 
+:::info Note
+
+Event triggers are supported for Postgres and MSSQL databases. To create an event trigger via the the Metadata API,
+replace `<db_type>` with the following:
+
+- **Postgres**: `pg`
+- **MSSQL**: `mssql`
+
+:::
+
 </TabItem>
 </Tabs>
 
@@ -331,7 +365,7 @@ Each header has 3 parameters:
 <Tabs className="api-tabs">
 <TabItem value="console" label="Console">
 
-Expand the `Advanced Settings` section on the Hasura console to define advanced settings for an event trigger:
+Expand the `Advanced Settings` section on the Hasura Console to define advanced settings for an event trigger:
 
 <Thumbnail
    src="/img/event-triggers/create-event-trigger-headers.png"
@@ -375,8 +409,14 @@ hasura metadata apply
 </TabItem>
 <TabItem value="api" label="API">
 
-You can configure advanced settings via the
-[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) metadata API.
+You can configure advanced settings via the appropriate Metadata API, either:
+[pg_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-pg-create-event-trigger) or
+[mssql_create_event_trigger](/api-reference/metadata-api/event-triggers.mdx#metadata-mssql-create-event-trigger).
+
+Replace `<db_type_create_event_trigger>` with the following:
+
+- **Postgres**: `pg_create_event_trigger`
+- **MSSQL**: `mssql_create_event_trigger`
 
 ```http {26-35}
 POST /v1/metadata HTTP/1.1
@@ -384,7 +424,7 @@ Content-Type: application/json
 X-Hasura-Role: admin
 
 {
-   "type": "pg_create_event_trigger",
+   "type": "<db_type_create_event_trigger>",
    "args": {
       "name": "author_trigger",
       "source": "<db_name>",
