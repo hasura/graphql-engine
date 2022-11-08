@@ -8,6 +8,7 @@ import (
 
 	"github.com/goccy/go-yaml"
 	"github.com/hasura/graphql-engine/cli/v2"
+	"github.com/hasura/graphql-engine/cli/v2/internal/errors"
 	"github.com/hasura/graphql-engine/cli/v2/internal/metadatautil"
 	"github.com/hasura/graphql-engine/cli/v2/internal/scripts"
 	"github.com/hasura/graphql-engine/cli/v2/util"
@@ -28,17 +29,21 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 		Aliases: []string{"md"},
 		Short:   "Manage Hasura GraphQL engine metadata saved in the database",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			op := genOpName(cmd, "PersistentPreRunE")
 			cmd.Root().PersistentPreRun(cmd, args)
 			ec.Viper = v
 			err := ec.Prepare()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
 			err = ec.Validate()
 			if err != nil {
-				return err
+				return errors.E(op, err)
 			}
-			return scripts.CheckIfUpdateToConfigV3IsRequired(ec)
+			if err := scripts.CheckIfUpdateToConfigV3IsRequired(ec); err != nil {
+				return errors.E(op, err)
+			}
+			return nil
 		},
 		SilenceUsage: true,
 	}
@@ -72,28 +77,29 @@ func NewMetadataCmd(ec *cli.ExecutionContext) *cobra.Command {
 }
 
 func writeByOutputFormat(w io.Writer, b []byte, format rawOutputFormat) error {
+	var op errors.Op = "commands.writeByOutputFormat"
 	switch format {
 	case rawOutputFormatJSON:
 		out := new(bytes.Buffer)
 		err := json.Indent(out, b, "", "  ")
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 		_, err = io.Copy(w, out)
 		if err != nil {
-			return fmt.Errorf("writing output failed: %w", err)
+			return errors.E(op, fmt.Errorf("writing output failed: %w", err))
 		}
 	case rawOutputFormatYAML:
 		o, err := metadatautil.JSONToYAML(b)
 		if err != nil {
-			return err
+			return errors.E(op, err)
 		}
 		_, err = io.Copy(w, bytes.NewReader(o))
 		if err != nil {
-			return fmt.Errorf("writing output failed: %w", err)
+			return errors.E(op, fmt.Errorf("writing output failed: %w", err))
 		}
 	default:
-		return fmt.Errorf("output format '%v' is not supported. supported formats: %v, %v", format, rawOutputFormatJSON, rawOutputFormatYAML)
+		return errors.E(op, fmt.Errorf("output format '%v' is not supported. supported formats: %v, %v", format, rawOutputFormatJSON, rawOutputFormatYAML))
 	}
 	return nil
 }
