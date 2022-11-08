@@ -863,9 +863,8 @@ query-logs)
 	JWKS_PID=$!
 	wait_for_port 5001
 
-	echo "Test: jwk-refresh-log type logs present if it is enabled"
+	echo "Test: jwk-refresh-log type logs is enabled by default"
 	export HASURA_GRAPHQL_JWT_SECRET="{\"jwk_url\": \"${JWK_SERVER_URL}/jwk-cache-control?no-cache=true\"}"
-	export HASURA_GRAPHQL_ENABLED_LOG_TYPES=" startup,http-log,webhook-log,websocket-log,query-log, jwk-refresh-log"
 
 	#run_hge_with_args serve
 	# we are doing this instead of calling run_hge_with_args, because we want to save in a custom log file
@@ -882,7 +881,6 @@ query-logs)
 		test_logging.py::TestConfiguragbleLogs
 
 	kill_hge_servers
-	unset HASURA_GRAPHQL_ENABLED_LOG_TYPES
 
 	echo "Test: no jwk-refresh-log type logs if it is not enabled"
 	export HASURA_GRAPHQL_ENABLED_LOG_TYPES=" startup,http-log,webhook-log,websocket-log,query-log"

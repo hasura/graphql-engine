@@ -319,3 +319,5 @@ class TestConfiguragbleLogs():
                 assert len(jwk_refresh_logs) > 0
             else:
                 assert len(jwk_refresh_logs) == 0
+        else:
+            assert len(jwk_refresh_logs) > 0

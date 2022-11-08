@@ -149,7 +149,7 @@ instance J.ToJSON InternalLogTypes where
 -- the default enabled log-types
 defaultEnabledEngineLogTypes :: Set.HashSet (EngineLogType Hasura)
 defaultEnabledEngineLogTypes =
-  Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog]
+  Set.fromList [ELTStartup, ELTHttpLog, ELTWebhookLog, ELTWebsocketLog, ELTJwkRefreshLog]
 
 isEngineLogTypeEnabled :: Set.HashSet (EngineLogType Hasura) -> EngineLogType Hasura -> Bool
 isEngineLogTypeEnabled enabledTypes logTy = case logTy of
