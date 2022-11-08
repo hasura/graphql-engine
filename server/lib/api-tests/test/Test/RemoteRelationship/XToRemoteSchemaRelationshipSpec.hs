@@ -199,7 +199,7 @@ lhsCockroachMkLocalTestEnvironment _ = pure Nothing
 lhsCockroachSetup :: (TestEnvironment, Maybe Server) -> IO ()
 lhsCockroachSetup (testEnvironment, _) = do
   let sourceName = "source"
-      sourceConfig = Cockroach.defaultSourceConfiguration
+      sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
@@ -212,7 +212,7 @@ lhsCockroachSetup (testEnvironment, _) = do
     |]
   -- setup tables only
   Cockroach.createTable testEnvironment track
-  Cockroach.insertTable track
+  Cockroach.insertTable testEnvironment track
   Schema.trackTable Fixture.Cockroach sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -240,7 +240,7 @@ lhsCockroachTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsCockroachTeardown (testEnvironment, _) = do
   let sourceName = "source"
   Schema.untrackTable Fixture.Cockroach sourceName track testEnvironment
-  Cockroach.dropTable track
+  Cockroach.dropTable testEnvironment track
 
 --------------------------------------------------------------------------------
 -- LHS SQLServer

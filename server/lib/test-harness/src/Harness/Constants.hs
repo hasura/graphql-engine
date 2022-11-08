@@ -33,6 +33,7 @@ module Harness.Constants
     citusConnectionString,
     citusDb,
     cockroachConnectionString,
+    defaultCockroachConnectionString,
     cockroachDb,
     serveOptions,
     dataConnectorDb,
@@ -220,8 +221,20 @@ cockroachHost = "127.0.0.1"
 cockroachPort :: Word16
 cockroachPort = 65008
 
-cockroachConnectionString :: String
-cockroachConnectionString =
+cockroachConnectionString :: TestEnvironment -> String
+cockroachConnectionString testEnvironment =
+  "postgresql://"
+    ++ cockroachUser
+    ++ "@"
+    ++ cockroachHost
+    ++ ":"
+    ++ show cockroachPort
+    ++ "/"
+    ++ uniqueDbName (uniqueTestId testEnvironment)
+    ++ "?sslmode=disable"
+
+defaultCockroachConnectionString :: String
+defaultCockroachConnectionString =
   "postgresql://"
     ++ cockroachUser
     ++ "@"

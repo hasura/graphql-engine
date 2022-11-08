@@ -40,9 +40,8 @@ spec =
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Fixture.SetupAction
                     { Fixture.setupAction =
-                        Cockroach.run_ setup,
-                      Fixture.teardownAction = \_ ->
-                        Cockroach.run_ teardown
+                        Cockroach.run_ testEnvironment setup,
+                      Fixture.teardownAction = \_ -> pure ()
                     },
                   Cockroach.setupTablesAction schema testEnvironment
                 ]

@@ -330,7 +330,7 @@ lhsCockroachMkLocalTestEnvironment _ = pure Nothing
 lhsCockroachSetup :: Value -> (TestEnvironment, Maybe Server) -> IO ()
 lhsCockroachSetup rhsTableName (testEnvironment, _) = do
   let sourceName = "source"
-      sourceConfig = Cockroach.defaultSourceConfiguration
+      sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
@@ -343,7 +343,7 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
     |]
   -- setup tables only
   Cockroach.createTable testEnvironment track
-  Cockroach.insertTable track
+  Cockroach.insertTable testEnvironment track
   Schema.trackTable Fixture.Cockroach sourceName track testEnvironment
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -387,7 +387,7 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
     |]
 
 lhsCockroachTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsCockroachTeardown _ = Cockroach.dropTable track
+lhsCockroachTeardown _ = pure ()
 
 --------------------------------------------------------------------------------
 -- LHS SQLServer
@@ -727,7 +727,7 @@ rhsPostgresTeardown (_testEnvironment, _) =
 rhsCockroachSetup :: (TestEnvironment, ()) -> IO ()
 rhsCockroachSetup (testEnvironment, _) = do
   let sourceName = "target"
-      sourceConfig = Cockroach.defaultSourceConfiguration
+      sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
 
   -- Add remote source
@@ -741,7 +741,7 @@ rhsCockroachSetup (testEnvironment, _) = do
     |]
   -- setup tables only
   Cockroach.createTable testEnvironment album
-  Cockroach.insertTable album
+  Cockroach.insertTable testEnvironment album
   Schema.trackTable Fixture.Cockroach sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
@@ -780,7 +780,7 @@ rhsCockroachSetup (testEnvironment, _) = do
     |]
 
 rhsCockroachTeardown :: (TestEnvironment, ()) -> IO ()
-rhsCockroachTeardown _ = Cockroach.dropTable album
+rhsCockroachTeardown _ = pure ()
 
 --------------------------------------------------------------------------------
 -- RHS SQLServer

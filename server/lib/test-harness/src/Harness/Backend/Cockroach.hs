@@ -7,6 +7,8 @@ module Harness.Backend.Cockroach
     run_,
     defaultSourceMetadata,
     defaultSourceConfiguration,
+    createDatabase,
+    dropDatabase,
     createTable,
     insertTable,
     trackTable,
@@ -43,11 +45,11 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (Cockroach), defaultBackendTypeString, defaultSource)
-import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.Test.SetupAction (SetupAction (..))
+import Harness.TestEnvironment (TestEnvironment (..), testLog)
 import Hasura.Prelude
 import System.Process.Typed
 
@@ -60,7 +62,7 @@ livenessCheck = loop Constants.postgresLivenessCheckAttempts
       catch
         ( bracket
             ( Postgres.connectPostgreSQL
-                (fromString Constants.cockroachConnectionString)
+                (fromString Constants.defaultCockroachConnectionString)
             )
             Postgres.close
             (const (pure ()))
@@ -70,17 +72,37 @@ livenessCheck = loop Constants.postgresLivenessCheckAttempts
             loop (attempts - 1)
         )
 
--- | Run a plain SQL query. On error, print something useful for
--- debugging.
-run_ :: HasCallStack => String -> IO ()
-run_ q =
+-- | when we are creating databases, we want to connect with the 'original' DB
+-- we started with
+runWithInitialDb_ :: HasCallStack => TestEnvironment -> String -> IO ()
+runWithInitialDb_ testEnvironment =
+  runInternal testEnvironment Constants.defaultCockroachConnectionString
+
+-- | Run a plain SQL query.
+-- On error, print something useful for debugging.
+run_ :: HasCallStack => TestEnvironment -> String -> IO ()
+run_ testEnvironment =
+  runInternal testEnvironment (Constants.cockroachConnectionString testEnvironment)
+
+--- | Run a plain SQL query.
+-- On error, print something useful for debugging.
+runInternal :: HasCallStack => TestEnvironment -> String -> String -> IO ()
+runInternal testEnvironment connectionString query = do
+  testLog
+    testEnvironment
+    ( "Executing connection string: "
+        <> connectionString
+        <> "\n"
+        <> "Query: "
+        <> query
+    )
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
-            (fromString Constants.cockroachConnectionString)
+            (fromString connectionString)
         )
         Postgres.close
-        (\conn -> void (Postgres.execute_ conn (fromString q)))
+        (\conn -> void (Postgres.execute_ conn (fromString query)))
     )
     ( \(e :: Postgres.SqlError) ->
         error
@@ -88,37 +110,39 @@ run_ q =
               [ "CockroachDB query error:",
                 S8.unpack (Postgres.sqlErrorMsg e),
                 "SQL was:",
-                q
+                query
               ]
           )
     )
 
 -- | Metadata source information for the default CockroachDB instance.
-defaultSourceMetadata :: Value
-defaultSourceMetadata =
+defaultSourceMetadata :: TestEnvironment -> Value
+defaultSourceMetadata testEnvironment =
   let source = defaultSource Cockroach
       backendType = defaultBackendTypeString Cockroach
+      sourceConfiguration = defaultSourceConfiguration testEnvironment
    in [yaml|
-name: *source
-kind: *backendType
-tables: []
-configuration: *defaultSourceConfiguration
-|]
+        name: *source
+        kind: *backendType
+        tables: []
+        configuration: *sourceConfiguration
+      |]
 
-defaultSourceConfiguration :: Value
-defaultSourceConfiguration =
-  [yaml|
-connection_info:
-  database_url: *cockroachConnectionString
-  pool_settings: {}
-|]
+defaultSourceConfiguration :: TestEnvironment -> Value
+defaultSourceConfiguration testEnvironment =
+  let databaseUrl = cockroachConnectionString testEnvironment
+   in [yaml|
+        connection_info:
+          database_url: *databaseUrl
+          pool_settings: {}
+      |]
 
 -- | Serialize Table into a PL-SQL statement, as needed, and execute it on the Cockroach backend
 createTable :: TestEnvironment -> Schema.Table -> IO ()
 createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk, tableReferences, tableConstraints, tableUniqueIndexes} = do
   let schemaName = Schema.getSchemaName testEnv
 
-  run_ $
+  run_ testEnv $
     T.unpack $
       T.unwords
         [ "CREATE TABLE",
@@ -132,7 +156,7 @@ createTable testEnv Schema.Table {tableName, tableColumns, tablePrimaryKey = pk,
           ");"
         ]
 
-  for_ tableUniqueIndexes (run_ . Postgres.createUniqueIndexSql schemaName tableName)
+  for_ tableUniqueIndexes (run_ testEnv . Postgres.createUniqueIndexSql schemaName tableName)
 
 scalarType :: HasCallStack => Schema.ScalarType -> Text
 scalarType = \case
@@ -153,11 +177,11 @@ mkColumnSql Schema.Column {columnName, columnType, columnNullable, columnDefault
     ]
 
 -- | Serialize tableData into a PL-SQL insert statement and execute it.
-insertTable :: Schema.Table -> IO ()
-insertTable Schema.Table {tableName, tableColumns, tableData}
+insertTable :: TestEnvironment -> Schema.Table -> IO ()
+insertTable testEnvironment Schema.Table {tableName, tableColumns, tableData}
   | null tableData = pure ()
   | otherwise = do
-      run_ $
+      run_ testEnvironment $
         T.unpack $
           T.unwords
             [ "INSERT INTO",
@@ -197,9 +221,9 @@ mkRow row =
     ]
 
 -- | Serialize Table into a PL-SQL DROP statement and execute it
-dropTable :: Schema.Table -> IO ()
-dropTable Schema.Table {tableName} = do
-  run_ $
+dropTable :: TestEnvironment -> Schema.Table -> IO ()
+dropTable testEnvironment Schema.Table {tableName} = do
+  run_ testEnvironment $
     T.unpack $
       T.unwords
         [ "DROP TABLE", -- we don't want @IF EXISTS@ here, because we don't want this to fail silently
@@ -207,9 +231,9 @@ dropTable Schema.Table {tableName} = do
           ";"
         ]
 
-dropTableIfExists :: Schema.Table -> IO ()
-dropTableIfExists Schema.Table {tableName} = do
-  run_ $
+dropTableIfExists :: TestEnvironment -> Schema.Table -> IO ()
+dropTableIfExists testEnvironment Schema.Table {tableName} = do
+  run_ testEnvironment $
     T.unpack $
       T.unwords
         [ "DROP TABLE IF EXISTS",
@@ -226,19 +250,32 @@ untrackTable :: TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
   Schema.untrackTable Cockroach (defaultSource Cockroach) table testEnvironment
 
--- | Setup the schema in the most expected way.
--- NOTE: Certain test modules may warrant having their own local version.
-setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-setup tables (testEnvironment, _) = do
+-- | create a database to use and later drop for these tests
+-- note we use the 'initial' connection string here, ie, the one we started
+-- with.
+createDatabase :: TestEnvironment -> IO ()
+createDatabase testEnvironment = do
+  runWithInitialDb_
+    testEnvironment
+    ("CREATE DATABASE " <> uniqueDbName (uniqueTestId testEnvironment) <> ";")
+  createSchema testEnvironment
+
+-- | we drop databases at the end of test runs so we don't need to do DB clean
+-- up.
+dropDatabase :: TestEnvironment -> IO ()
+dropDatabase testEnvironment = do
+  let dbName = uniqueDbName (uniqueTestId testEnvironment)
+  runWithInitialDb_
+    testEnvironment
+    ("DROP DATABASE " <> dbName <> ";")
+
+-- Because the test harness sets the schema name we use for testing, we need
+-- to make sure it exists before we run the tests.
+createSchema :: TestEnvironment -> IO ()
+createSchema testEnvironment = do
   let schemaName = Schema.getSchemaName testEnvironment
-
-  -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment defaultSourceMetadata Nothing
-
-  -- Because the test harness sets the schema name we use for testing, we need
-  -- to make sure it exists before we run the tests. We may want to consider
-  -- removing it again in 'teardown'.
   run_
+    testEnvironment
     [i|
       BEGIN;
       SET LOCAL client_min_messages = warning;
@@ -246,10 +283,17 @@ setup tables (testEnvironment, _) = do
       COMMIT;
   |]
 
+-- | Setup the schema in the most expected way.
+-- NOTE: Certain test modules may warrant having their own local version.
+setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+setup tables (testEnvironment, _) = do
+  -- Clear and reconfigure the metadata
+  GraphqlEngine.setSource testEnvironment (defaultSourceMetadata testEnvironment) Nothing
+
   -- Setup and track tables
   for_ tables $ \table -> do
     createTable testEnvironment table
-    insertTable table
+    insertTable testEnvironment table
     trackTable testEnvironment table
   -- Setup relationships
   for_ tables $ \table -> do
@@ -258,19 +302,11 @@ setup tables (testEnvironment, _) = do
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
+-- Because the Fixture takes care of dropping the DB, all we do here is
+-- clear the metadata with `replace_metadata`.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown (reverse -> tables) (testEnvironment, _) = do
-  finally
-    -- Teardown relationships first
-    ( forFinally_ tables $ \table ->
-        Schema.untrackRelationships Cockroach table testEnvironment
-    )
-    -- Then teardown tables
-    ( forFinally_ tables $ \table ->
-        finally
-          (untrackTable testEnvironment table)
-          (dropTable table)
-    )
+teardown _ (testEnvironment, _) = do
+  GraphqlEngine.setSources testEnvironment mempty Nothing
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =

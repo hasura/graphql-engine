@@ -336,7 +336,7 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
   let schemaName = Schema.getSchemaName testEnvironment
 
   let sourceName = "source"
-      sourceConfig = Cockroach.defaultSourceConfiguration
+      sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -348,7 +348,7 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
     |]
   -- setup tables only
   Cockroach.createTable testEnvironment artist
-  Cockroach.insertTable artist
+  Cockroach.insertTable testEnvironment artist
   Schema.trackTable Fixture.Cockroach sourceName artist testEnvironment
 
   GraphqlEngine.postMetadata_
@@ -393,7 +393,7 @@ lhsCockroachSetup rhsTableName (testEnvironment, _) = do
     |]
 
 lhsCockroachTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsCockroachTeardown _ = Cockroach.dropTable artist
+lhsCockroachTeardown _ = pure ()
 
 --------------------------------------------------------------------------------
 -- LHS SQLServer
@@ -720,7 +720,7 @@ rhsCockroachSetup :: (TestEnvironment, ()) -> IO ()
 rhsCockroachSetup (testEnvironment, _) = do
   let schemaName = Schema.getSchemaName testEnvironment
   let sourceName = "target"
-      sourceConfig = Cockroach.defaultSourceConfiguration
+      sourceConfig = Cockroach.defaultSourceConfiguration testEnvironment
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -732,7 +732,7 @@ rhsCockroachSetup (testEnvironment, _) = do
     |]
   -- setup tables only
   Cockroach.createTable testEnvironment album
-  Cockroach.insertTable album
+  Cockroach.insertTable testEnvironment album
   Schema.trackTable Fixture.Cockroach sourceName album testEnvironment
 
   GraphqlEngine.postMetadata_
@@ -771,7 +771,7 @@ rhsCockroachSetup (testEnvironment, _) = do
     |]
 
 rhsCockroachTeardown :: (TestEnvironment, ()) -> IO ()
-rhsCockroachTeardown _ = Cockroach.dropTable album
+rhsCockroachTeardown _ = pure ()
 
 --------------------------------------------------------------------------------
 -- RHS SQLServer

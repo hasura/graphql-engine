@@ -26,6 +26,7 @@ where
 import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.UUID.V4 (nextRandom)
+import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Exceptions
 import Harness.Test.BackendType
@@ -159,6 +160,8 @@ createDatabases fixtureName testEnvironment =
     ( \case
         Postgres ->
           Postgres.createDatabase testEnvironment
+        Cockroach ->
+          Cockroach.createDatabase testEnvironment
         _ -> pure ()
     )
     (backendTypesForFixture fixtureName)
@@ -169,6 +172,8 @@ dropDatabases fixtureName testEnvironment =
     ( \case
         Postgres ->
           Postgres.dropDatabase testEnvironment
+        Cockroach ->
+          Cockroach.dropDatabase testEnvironment
         _ -> pure ()
     )
     (backendTypesForFixture fixtureName)

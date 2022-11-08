@@ -40,7 +40,7 @@ spec =
           (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
-                  setupCockroach,
+                  setupCockroach testEnvironment,
                   setupMetadata Fixture.Cockroach testEnvironment
                 ]
             }
@@ -143,17 +143,19 @@ setupPostgres testEnvironment =
 --------------------------------------------------------------------------------
 -- Cockroach setup
 
-setupCockroach :: Fixture.SetupAction
-setupCockroach =
+setupCockroach :: TestEnvironment -> Fixture.SetupAction
+setupCockroach testEnvironment =
   Fixture.SetupAction
     { Fixture.setupAction =
         Cockroach.run_
+          testEnvironment
           [sql|
             CREATE OR REPLACE VIEW hasura.author_view
             AS SELECT id, name FROM hasura.author
           |],
       Fixture.teardownAction = \_ ->
         Cockroach.run_
+          testEnvironment
           [sql|
             DROP VIEW IF EXISTS hasura.author_view
           |]

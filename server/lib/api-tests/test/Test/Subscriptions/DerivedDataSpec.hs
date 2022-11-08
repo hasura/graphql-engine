@@ -35,7 +35,7 @@ spec =
           (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Cockroach.setupTablesAction schema testEnvironment,
-                  setupCockroach,
+                  setupCockroach testEnvironment,
                   setupMetadata Fixture.Cockroach testEnvironment
                 ]
             }
@@ -228,13 +228,13 @@ setupPostgres testEnvironment =
 --------------------------------------------------------------------------------
 -- Cockroach setup
 
-setupCockroach :: Fixture.SetupAction
-setupCockroach =
+setupCockroach :: TestEnvironment -> Fixture.SetupAction
+setupCockroach testEnvironment =
   Fixture.SetupAction
     { Fixture.setupAction =
-        Cockroach.run_ setupViewSQL,
+        Cockroach.run_ testEnvironment setupViewSQL,
       Fixture.teardownAction = \_ ->
-        Cockroach.run_ teardownViewSQL
+        Cockroach.run_ testEnvironment teardownViewSQL
     }
 
 --------------------------------------------------------------------------------
