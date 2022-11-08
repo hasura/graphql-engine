@@ -31,6 +31,10 @@ describe('Tracing GraphiQL plugins usage', () => {
   });
 
   it('When the users interact with GraphiQL, then some custom Heap events must be traced', () => {
+    // ATTENTION: This test checks only that the events are sent, not that the involved features work!
+    // For example: the query used in this test is not valid, but the test passes anyway since it
+    // checks for the events only
+
     // --------------------
     cy.log('**--- Click the GraphiQL Prettify button**');
     cy.get('.graphiql-container').within(() => {
