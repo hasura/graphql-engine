@@ -171,7 +171,7 @@ class GraphiQLWrapper extends Component {
       dispatch(_push(getActionsCreateRoute()));
     };
 
-    const routeToREST = gqlProps => () => {
+    const createRouteToREST = gqlProps => () => {
       const { query, schema } = graphiqlContext.state;
       setLSItem(LS_KEYS.graphiqlQuery, query);
       if (!query || !schema || !gqlProps.query || !isQueryValid(query)) {
@@ -239,6 +239,8 @@ class GraphiQLWrapper extends Component {
 
       // get toolbar buttons
       const getGraphiqlButtons = () => {
+        const routeToREST = createRouteToREST(graphiqlProps);
+
         const buttons = [
           {
             label: 'Prettify',
@@ -274,7 +276,7 @@ class GraphiQLWrapper extends Component {
             title: 'REST Endpoints',
             onClick: () => {
               trackGraphiQlToolbarButtonClick('REST');
-              routeToREST(graphiqlProps);
+              routeToREST();
             },
           },
         ];
