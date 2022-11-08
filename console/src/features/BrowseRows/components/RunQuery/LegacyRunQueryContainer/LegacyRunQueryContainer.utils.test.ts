@@ -1,5 +1,8 @@
 import { TableColumn } from '../../../../DataSource';
-import { adaptFormValuesToQuery } from './LegacyRunQueryContainer.utils';
+import {
+  adaptFormValuesToQuery,
+  filterValidUserQuery,
+} from './LegacyRunQueryContainer.utils';
 import { FiltersAndSortFormValues, UserQuery } from '../types';
 
 describe('adaptFormValuesToQuery', () => {
@@ -73,5 +76,20 @@ describe('adaptFormValuesToQuery', () => {
       },
     ];
     expect(adaptFormValuesToQuery(input, columnDataTypes)).toEqual(expected);
+  });
+});
+
+describe('filterValidUserQuery', () => {
+  it('removes empty and conditions', () => {
+    const userQuery: UserQuery = {
+      where: { $and: [{ '': { '': '' } }] },
+      order_by: [{ column: '', type: '--', nulls: 'last' }],
+    };
+
+    const expected: UserQuery = {
+      where: { $and: [] },
+      order_by: [],
+    };
+    expect(filterValidUserQuery(userQuery)).toEqual(expected);
   });
 });
