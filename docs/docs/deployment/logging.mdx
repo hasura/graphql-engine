@@ -46,13 +46,14 @@ Default enabled log-types are: `startup, http-log, webhook-log, websocket-log`
 
 All the log-types that can be enabled/disabled are:
 
-| Log type        | Description                                                                                                                                                                                                                       | Log Level          |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `startup`       | Information that is logged during startup                                                                                                                                                                                         | `info`             |
-| `query-log`     | Logs: the entire GraphQL query with variables, generated SQL statements (only for database queries, not for mutations/subscriptions or remote schema and action queries), the operation name (if provided in the GraphQL request) | `info`             |
-| `http-log`      | Http access and error logs at the webserver layer (handling GraphQL and metadata requests)                                                                                                                                        | `info` and `error` |
-| `websocket-log` | Websocket events and error logs at the websocket server layer (handling GraphQL requests)                                                                                                                                         | `info` and `error` |
-| `webhook-log`   | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                               | `info` and `error` |
+| Log type             | Description                                                                                                                                                                                                                       | Log Level          |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `startup`            | Information that is logged during startup                                                                                                                                                                                         | `info`             |
+| `query-log`          | Logs: the entire GraphQL query with variables, generated SQL statements (only for database queries, not for mutations/subscriptions or remote schema and action queries), the operation name (if provided in the GraphQL request) | `info`             |
+| `http-log`           | Http access and error logs at the webserver layer (handling GraphQL and metadata requests)                                                                                                                                        | `info` and `error` |
+| `websocket-log`      | Websocket events and error logs at the websocket server layer (handling GraphQL requests)                                                                                                                                         | `info` and `error` |
+| `webhook-log`        | Logs responses and errors from the authorization webhook (if setup)                                                                                                                                                               | `info` and `error` |
+| `jwk-refresh-log`    | Logs information and errors about periodic refreshing of JWK                                                                                                                                                                      | `info` and `error` |
 
 Configurable log-types
 
@@ -62,7 +63,6 @@ Apart from the above, there are other internal log-types which cannot be configu
 |----------------------|-----------------------------------------------------------------------------------------------------|--------------------|
 | `pg-client`          | Logs from the postgres client library                                                               | `warn`             |
 | `metadata`           | Logs inconsistent metadata items                                                                    | `warn`             |
-| `jwk-refresh-log`    | Logs information and errors about periodic refreshing of JWK                                        | `info` and `error` |
 | `telemetry-log`      | Logs error (if any) while sending out telemetry data                                                | `info`             |
 | `event-trigger`      | Logs HTTP responses from the webhook, HTTP exceptions and internal errors                           | `info` and `error` |
 | `ws-server`          | Debug logs from the websocket server, mostly used internally for debugging                          | `debug`            |

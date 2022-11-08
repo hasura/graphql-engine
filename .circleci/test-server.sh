@@ -847,6 +847,66 @@ query-logs)
 	unset HASURA_GRAPHQL_ENABLED_LOG_TYPES
 	kill_hge_servers
 
+	# configurable jwk-refresh-log test
+	unset HASURA_GRAPHQL_AUTH_HOOK
+	unset HASURA_GRAPHQL_AUTH_HOOK_MODE
+	unset HASURA_GRAPHQL_JWT_SECRET
+
+	echo -e "\n$(time_elapsed): <########## TEST GRAPHQL-ENGINE WITH JWK REFRESH LOG ########> \n"
+
+	export JWK_SERVER_URL='http://localhost:5001'
+
+	# Start the JWK server.
+	# There is a fixture to do this, but when running in this fashion, we need to
+	# start the JWK server first so the HGE server can communicate with it.
+	python3 jwk_server.py >"$OUTPUT_FOLDER/configurable_log.log" 2>&1 &
+	JWKS_PID=$!
+	wait_for_port 5001
+
+	echo "Test: jwk-refresh-log type logs present if it is enabled"
+	export HASURA_GRAPHQL_JWT_SECRET="{\"jwk_url\": \"${JWK_SERVER_URL}/jwk-cache-control?no-cache=true\"}"
+	export HASURA_GRAPHQL_ENABLED_LOG_TYPES=" startup,http-log,webhook-log,websocket-log,query-log, jwk-refresh-log"
+
+	#run_hge_with_args serve
+	# we are doing this instead of calling run_hge_with_args, because we want to save in a custom log file
+	set -x
+	export LOGGING_TEST_LOGFILE_PATH="$OUTPUT_FOLDER/graphql-engine-verbose-logging.log"
+	"$GRAPHQL_ENGINE" serve >"$LOGGING_TEST_LOGFILE_PATH" 2>&1 &
+	HGE_PIDS=("${HGE_PIDS[@]}" $!)
+	set +x
+
+	wait_for_port 8080
+
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--test-logging \
+		test_logging.py::TestConfiguragbleLogs
+
+	kill_hge_servers
+	unset HASURA_GRAPHQL_ENABLED_LOG_TYPES
+
+	echo "Test: no jwk-refresh-log type logs if it is not enabled"
+	export HASURA_GRAPHQL_ENABLED_LOG_TYPES=" startup,http-log,webhook-log,websocket-log,query-log"
+	#run_hge_with_args serve
+	# we are doing this instead of calling run_hge_with_args, because we want to save in a custom log file
+	set -x
+	export LOGGING_TEST_LOGFILE_PATH="$OUTPUT_FOLDER/graphql-engine-verbose-logging.log"
+	"$GRAPHQL_ENGINE" serve >"$LOGGING_TEST_LOGFILE_PATH" 2>&1 &
+	HGE_PIDS=("${HGE_PIDS[@]}" $!)
+	set +x
+
+	wait_for_port 8080
+
+	pytest "${PYTEST_COMMON_ARGS[@]}" \
+		--test-logging \
+		test_logging.py::TestConfiguragbleLogs
+
+	kill_hge_servers
+	unset HASURA_GRAPHQL_ENABLED_LOG_TYPES
+	unset HASURA_GRAPHQL_JWT_SECRET
+	unset JWK_SERVER_URL
+
+	kill $JWKS_PID
+
 	# end verbose logging tests
 	;;
 

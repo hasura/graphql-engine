@@ -205,8 +205,7 @@ class TestLogging():
         # By default, 'raw_query' field is ignored for metadata queries. To allow
         # logging this field use the flag HASURA_GRAPHQL_ENABLE_METADATA_QUERY_LOGGING
         assert http_logs[0]['detail']['operation'].get('raw_query') is None
-
-
+    
 class TestWebsocketLogging():
     """
     Test logs emitted on websocket transport
@@ -278,3 +277,45 @@ class TestWebsocketLogging():
         onelog = ws_logs[0]['detail']
         assert 'operation_id' in onelog['metadata']
         assert 'operation_name' in onelog['metadata']
+
+class TestConfiguragbleLogs():
+    dir = 'queries/logging'
+    success_query = {'query': 'query { hello {code name} }'}
+
+    def _teardown(self, hge_ctx):
+        hge_ctx.v1q_f(self.dir + '/teardown.yaml')
+
+    @pytest.fixture(autouse=True)
+    def transact(self, hge_ctx):
+        # setup some tables
+        hge_ctx.v1q_f(self.dir + '/setup.yaml')
+
+        try:
+            # make a successful query
+            q = self.success_query
+            headers = {'x-request-id': 'successful-query-log-test'}
+            if hge_ctx.hge_key:
+                headers['x-hasura-admin-secret'] = hge_ctx.hge_key
+            resp = hge_ctx.http.post(hge_ctx.hge_url + '/v1/graphql', json=q,
+                                     headers=headers)
+            assert resp.status_code == 200 and 'data' in resp.json()
+
+            # gather and parse the logs now
+            self.logs = parse_logs()
+            # sometimes the log might take time to buffer
+            time.sleep(2)
+            yield
+        finally:
+            self._teardown(hge_ctx)
+
+    @pytest.mark.jwk_path('/jwk-cache-control?no-cache=true')
+    def test_jwk_refresh_log(self, hge_ctx):
+        def _get_jwk_refresh_log(x):
+            return x['type'] == 'jwk-refresh-log'
+        jwk_refresh_logs = list(filter(_get_jwk_refresh_log, self.logs))
+        env_var = os.getenv('HASURA_GRAPHQL_ENABLED_LOG_TYPES')
+        if env_var:
+            if "jwk-refresh-log" in env_var:
+                assert len(jwk_refresh_logs) > 0
+            else:
+                assert len(jwk_refresh_logs) == 0

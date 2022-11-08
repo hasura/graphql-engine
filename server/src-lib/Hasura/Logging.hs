@@ -77,6 +77,7 @@ data instance EngineLogType Hasura
   | ELTLivequeryPollerLog
   | ELTActionHandler
   | ELTDataConnectorLog
+  | ELTJwkRefreshLog
   | -- internal log types
     ELTInternal !InternalLogTypes
   deriving (Show, Eq, Generic)
@@ -93,6 +94,7 @@ instance Witch.From (EngineLogType Hasura) Text where
     ELTLivequeryPollerLog -> "livequery-poller-log"
     ELTActionHandler -> "action-handler-log"
     ELTDataConnectorLog -> "data-connector-log"
+    ELTJwkRefreshLog -> "jwk-refresh-log"
     ELTInternal t -> Witch.from t
 
 instance J.ToJSON (EngineLogType Hasura) where
@@ -122,7 +124,6 @@ data InternalLogTypes
   | ILTPgClient
   | -- | log type for logging metadata related actions; currently used in logging inconsistent metadata
     ILTMetadata
-  | ILTJwkRefreshLog
   | ILTTelemetry
   | ILTSchemaSync
   | ILTSourceCatalogMigration
@@ -138,7 +139,6 @@ instance Witch.From InternalLogTypes Text where
     ILTWsServer -> "ws-server"
     ILTPgClient -> "pg-client"
     ILTMetadata -> "metadata"
-    ILTJwkRefreshLog -> "jwk-refresh-log"
     ILTTelemetry -> "telemetry-log"
     ILTSchemaSync -> "schema-sync"
     ILTSourceCatalogMigration -> "source-catalog-migration"
@@ -176,7 +176,8 @@ userAllowedLogTypes =
     ELTQueryLog,
     ELTLivequeryPollerLog,
     ELTActionHandler,
-    ELTDataConnectorLog
+    ELTDataConnectorLog,
+    ELTJwkRefreshLog
   ]
 
 data LogLevel
