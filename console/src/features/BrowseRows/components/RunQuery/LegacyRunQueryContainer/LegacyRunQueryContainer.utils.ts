@@ -151,12 +151,25 @@ export const getColumns = (columns: string[]) => {
 };
 
 export const filterValidUserQuery = (userQuery: UserQuery): UserQuery => {
+  const filteredWhereClauses = userQuery.where.$and.filter(w => {
+    const colName = Object.keys(w)[0].trim();
+    if (colName === '') {
+      return false;
+    }
+    const opName = Object.keys(w[colName])[0].trim();
+    if (opName === '') {
+      return false;
+    }
+    return true;
+  });
+
+  const filteredOrderBy = userQuery.order_by.filter(
+    clause => !!clause.column && !!clause.type
+  );
+
   return {
-    ...userQuery,
-    where: { $and: userQuery.where.$and },
-    order_by: userQuery.order_by.filter(
-      clause => !!clause.column && !!clause.type
-    ),
+    where: { $and: filteredWhereClauses },
+    order_by: filteredOrderBy,
   };
 };
 
@@ -171,18 +184,12 @@ type RunFilterQuery = {
 export const runFilterQuery =
   ({ tableSchema, whereAnd, orderBy, limit, offset }: RunFilterQuery) =>
   (dispatch: ThunkDispatch<ReduxState, unknown, AnyAction>) => {
-    const whereClauses = whereAnd.filter(w => {
-      const colName = Object.keys(w)[0].trim();
-      if (colName === '') {
-        return false;
-      }
-      const opName = Object.keys(w[colName])[0].trim();
-      if (opName === '') {
-        return false;
-      }
-      return true;
+    const filteredUserQuery = filterValidUserQuery({
+      where: { $and: whereAnd },
+      order_by: orderBy,
     });
-    const finalWhereClauses = whereClauses.map(whereClause => {
+
+    const finalWhereClauses = filteredUserQuery.where.$and.map(whereClause => {
       const colName = Object.keys(whereClause)[0];
       const opName = Object.keys(whereClause[colName])[0];
       const val = whereClause[colName][opName];
@@ -216,11 +223,12 @@ export const runFilterQuery =
       }
       return whereClause;
     });
+
     const newQuery = {
       where: { $and: finalWhereClauses },
       limit,
       offset,
-      order_by: orderBy.filter(w => w.column.trim() !== ''),
+      order_by: filteredUserQuery.order_by,
     };
     dispatch({ type: 'ViewTable/V_SET_QUERY_OPTS', queryStuff: newQuery });
     dispatch(vMakeTableRequests());
