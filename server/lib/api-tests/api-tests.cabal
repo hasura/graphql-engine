@@ -37,6 +37,7 @@ executable api-tests
     DeriveGeneric
     DerivingStrategies
     ImportQualifiedPost
+    LambdaCase
     MultiWayIf
     NamedFieldPuns
     NoImplicitPrelude

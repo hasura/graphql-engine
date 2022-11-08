@@ -6,9 +6,12 @@ module Harness.Backend.Postgres
   ( livenessCheck,
     metadataLivenessCheck,
     run_,
+    runWithInitialDb_,
     runSQL,
     defaultSourceMetadata,
     defaultSourceConfiguration,
+    createDatabase,
+    dropDatabase,
     createTable,
     insertTable,
     dropTable,
@@ -45,7 +48,6 @@ import Harness.Exceptions
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (Postgres), defaultBackendTypeString, defaultSource)
-import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema
   ( BackendScalarType (..),
@@ -54,7 +56,8 @@ import Harness.Test.Schema
     SchemaName (..),
   )
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment)
+import Harness.Test.SetupAction (SetupAction (..))
+import Harness.TestEnvironment (TestEnvironment (..), testLog)
 import Hasura.Prelude
 import System.Process.Typed
 
@@ -64,7 +67,7 @@ metadataLivenessCheck =
 
 livenessCheck :: HasCallStack => TestEnvironment -> IO ()
 livenessCheck =
-  doLivenessCheck . fromString . postgresqlConnectionString
+  doLivenessCheck . fromString . defaultPostgresqlConnectionString
 
 -- | Check the postgres server is live and ready to accept connections.
 doLivenessCheck :: HasCallStack => BS.ByteString -> IO ()
@@ -84,17 +87,37 @@ doLivenessCheck connectionString = loop Constants.postgresLivenessCheckAttempts
             loop (attempts - 1)
         )
 
+-- | when we are creating databases, we want to connect with the 'original' DB
+-- we started with
+runWithInitialDb_ :: HasCallStack => TestEnvironment -> String -> IO ()
+runWithInitialDb_ testEnvironment =
+  runInternal testEnvironment (Constants.defaultPostgresqlConnectionString testEnvironment)
+
 -- | Run a plain SQL query.
 -- On error, print something useful for debugging.
 run_ :: HasCallStack => TestEnvironment -> String -> IO ()
-run_ testEnvironment q =
+run_ testEnvironment =
+  runInternal testEnvironment (Constants.postgresqlConnectionString testEnvironment)
+
+--- | Run a plain SQL query.
+-- On error, print something useful for debugging.
+runInternal :: HasCallStack => TestEnvironment -> String -> String -> IO ()
+runInternal testEnvironment connectionString query = do
+  testLog
+    testEnvironment
+    ( "Executing connection string: "
+        <> connectionString
+        <> "\n"
+        <> "Query: "
+        <> query
+    )
   catch
     ( bracket
         ( Postgres.connectPostgreSQL
-            (fromString (Constants.postgresqlConnectionString testEnvironment))
+            (fromString connectionString)
         )
         Postgres.close
-        (\conn -> void (Postgres.execute_ conn (fromString q)))
+        (\conn -> void (Postgres.execute_ conn (fromString query)))
     )
     ( \(e :: Postgres.SqlError) ->
         error
@@ -102,7 +125,44 @@ run_ testEnvironment q =
               [ "PostgreSQL query error:",
                 S8.unpack (Postgres.sqlErrorMsg e),
                 "SQL was:",
-                q
+                query
+              ]
+          )
+    )
+
+-- | when we are creating databases, we want to connect with the 'original' DB
+-- we started with
+queryWithInitialDb :: (Postgres.FromRow a, HasCallStack) => TestEnvironment -> String -> IO [a]
+queryWithInitialDb testEnvironment =
+  queryInternal testEnvironment (Constants.defaultPostgresqlConnectionString testEnvironment)
+
+--- | Run a plain SQL query.
+-- On error, print something useful for debugging.
+queryInternal :: (Postgres.FromRow a) => HasCallStack => TestEnvironment -> String -> String -> IO [a]
+queryInternal testEnvironment connectionString query = do
+  testLog
+    testEnvironment
+    ( "Querying connection string: "
+        <> connectionString
+        <> "\n"
+        <> "Query: "
+        <> query
+    )
+  catch
+    ( bracket
+        ( Postgres.connectPostgreSQL
+            (fromString connectionString)
+        )
+        Postgres.close
+        (\conn -> Postgres.query_ conn (fromString query))
+    )
+    ( \(e :: Postgres.SqlError) ->
+        error
+          ( unlines
+              [ "PostgreSQL query error:",
+                S8.unpack (Postgres.sqlErrorMsg e),
+                "SQL was:",
+                query
               ]
           )
     )
@@ -288,18 +348,41 @@ untrackTable :: TestEnvironment -> Schema.Table -> IO ()
 untrackTable testEnvironment table =
   Schema.untrackTable Postgres (defaultSource Postgres) table testEnvironment
 
--- | Setup the schema in the most expected way.
--- NOTE: Certain test modules may warrant having their own local version.
-setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-setup tables (testEnvironment, _) = do
+-- | create a database to use and later drop for these tests
+-- note we use the 'initial' connection string here, ie, the one we started
+-- with.
+createDatabase :: TestEnvironment -> IO ()
+createDatabase testEnvironment = do
+  runWithInitialDb_
+    testEnvironment
+    ("CREATE DATABASE " <> uniqueDbName (uniqueTestId testEnvironment) <> ";")
+  createSchema testEnvironment
+
+-- | we drop databases at the end of test runs so we don't need to do DB clean
+-- up. we can't use DROP DATABASE <dbname> WITH (FORCE) because we're using PG
+-- < 13 in CI so instead we boot all the active users then drop as normal.
+dropDatabase :: TestEnvironment -> IO ()
+dropDatabase testEnvironment = do
+  let dbName = uniqueDbName (uniqueTestId testEnvironment)
+  void $
+    queryWithInitialDb @(Postgres.Only Bool)
+      testEnvironment
+      [i|
+      SELECT pg_terminate_backend(pg_stat_activity.pid)
+      FROM pg_stat_activity
+      WHERE pg_stat_activity.datname = '#{dbName}'
+      AND pid <> pg_backend_pid();
+    |]
+
+  runWithInitialDb_
+    testEnvironment
+    ("DROP DATABASE " <> dbName <> ";")
+
+-- Because the test harness sets the schema name we use for testing, we need
+-- to make sure it exists before we run the tests.
+createSchema :: TestEnvironment -> IO ()
+createSchema testEnvironment = do
   let schemaName = Schema.getSchemaName testEnvironment
-
-  -- Clear and reconfigure the metadata
-  GraphqlEngine.setSource testEnvironment (defaultSourceMetadata testEnvironment) Nothing
-
-  -- Because the test harness sets the schema name we use for testing, we need
-  -- to make sure it exists before we run the tests. We may want to consider
-  -- removing it again in 'teardown'.
   run_
     testEnvironment
     [i|
@@ -308,6 +391,13 @@ setup tables (testEnvironment, _) = do
       CREATE SCHEMA IF NOT EXISTS #{unSchemaName schemaName};
       COMMIT;
   |]
+
+-- | Setup the schema in the most expected way.
+-- NOTE: Certain test modules may warrant having their own local version.
+setup :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
+setup tables (testEnvironment, _) = do
+  -- Clear and reconfigure the metadata
+  GraphqlEngine.setSource testEnvironment (defaultSourceMetadata testEnvironment) Nothing
 
   -- Setup and track tables
   for_ tables $ \table -> do
@@ -321,19 +411,10 @@ setup tables (testEnvironment, _) = do
 
 -- | Teardown the schema and tracking in the most expected way.
 -- NOTE: Certain test modules may warrant having their own version.
+-- we replace metadata with nothing.
 teardown :: [Schema.Table] -> (TestEnvironment, ()) -> IO ()
-teardown (reverse -> tables) (testEnvironment, _) = do
-  finally
-    -- Teardown relationships first
-    ( forFinally_ tables $ \table ->
-        Schema.untrackRelationships Postgres table testEnvironment
-    )
-    -- Then teardown tables
-    ( forFinally_ tables $ \table ->
-        finally
-          (untrackTable testEnvironment table)
-          (dropTable testEnvironment table)
-    )
+teardown _ (testEnvironment, _) =
+  GraphqlEngine.setSources testEnvironment mempty Nothing
 
 setupTablesAction :: [Schema.Table] -> TestEnvironment -> SetupAction
 setupTablesAction ts env =

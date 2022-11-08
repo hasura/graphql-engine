@@ -112,6 +112,7 @@ library
     Harness.Test.Permissions
     Harness.Test.Schema
     Harness.Test.SchemaName
+    Harness.Test.SetupAction
     Harness.TestEnvironment
     Harness.Webhook
     Harness.Yaml

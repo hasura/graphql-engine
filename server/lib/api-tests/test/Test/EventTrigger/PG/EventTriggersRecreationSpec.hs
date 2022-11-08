@@ -4,6 +4,7 @@
 
 module Test.EventTrigger.PG.EventTriggersRecreationSpec (spec) where
 
+import Data.Aeson.Types qualified as Aeson
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postV2Query_)
@@ -17,7 +18,7 @@ import Harness.TestEnvironment (TestEnvironment, stopServer)
 import Harness.Webhook qualified as Webhook
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, it)
+import Test.Hspec (SpecWith, it, shouldContain)
 
 --------------------------------------------------------------------------------
 -- Preamble
@@ -208,52 +209,65 @@ args:
       [yaml|
 message: success
            |]
-  it "The source catalog should have been initialized along with the creation of the SQL trigger" $ \(testEnvironment, _) ->
-    shouldReturnYaml
-      opts
-      ( GraphQLEngine.postV2Query
-          200
-          testEnvironment
-          [yaml|
-type: run_sql
-args:
-  source: postgres
-  sql: |
-      SELECT tag, object_identity FROM hasura.ddl_history ORDER BY object_identity COLLATE "C";
+  it "The source catalog should have been initialized along with the creation of the SQL trigger" $ \(testEnvironment, _) -> do
+    -- fetch `$.result` from the result / expectation so we can compare array
+    -- membership
+    let getResult :: Aeson.Value -> [Aeson.Value]
+        getResult = fromMaybe mempty . parse
+          where
+            parse =
+              ( Aeson.parseMaybe $ \case
+                  (Aeson.Object o) -> o Aeson..: "result"
+                  _ -> mempty
+              )
+
+    result <-
+      GraphQLEngine.postV2Query
+        200
+        testEnvironment
+        [yaml|
+            type: run_sql
+            args:
+              source: postgres
+              sql: |
+                  SELECT tag, object_identity FROM hasura.ddl_history ORDER BY object_identity COLLATE "C";
           |]
-      )
-      [yaml|
-result:
-- - tag
-  - object_identity
-- - CREATE TRIGGER
-  - '"notify_hasura_users_INSERT_INSERT" on hasura.users'
-- - CREATE SCHEMA
-  - "hdb_catalog"
-- - CREATE FUNCTION
-  - hdb_catalog."notify_hasura_users_INSERT_INSERT"()
-- - CREATE TABLE
-  - hdb_catalog.event_invocation_logs
-- - CREATE INDEX
-  - hdb_catalog.event_invocation_logs_event_id_idx
-- - CREATE TABLE
-  - hdb_catalog.event_log
-- - CREATE INDEX
-  - hdb_catalog.event_log_fetch_events
-- - CREATE INDEX
-  - hdb_catalog.event_log_trigger_name_idx
-- - CREATE FUNCTION
-  - hdb_catalog.gen_hasura_uuid()
-- - CREATE TABLE
-  - hdb_catalog.hdb_event_log_cleanups
-- - CREATE TABLE
-  - hdb_catalog.hdb_source_catalog_version
-- - CREATE INDEX
-  - hdb_catalog.hdb_source_catalog_version_one_row
-- - CREATE FUNCTION
-  - hdb_catalog.insert_event_log(pg_catalog.text,pg_catalog.text,pg_catalog.text,pg_catalog.text,pg_catalog.json)
-result_type: TuplesOk
-|]
+
+    let expected =
+          [yaml|
+        result:
+        - - tag
+          - object_identity
+        - - CREATE TRIGGER
+          - '"notify_hasura_users_INSERT_INSERT" on hasura.users'
+        - - CREATE SCHEMA
+          - "hdb_catalog"
+        - - CREATE FUNCTION
+          - hdb_catalog."notify_hasura_users_INSERT_INSERT"()
+        - - CREATE TABLE
+          - hdb_catalog.event_invocation_logs
+        - - CREATE INDEX
+          - hdb_catalog.event_invocation_logs_event_id_idx
+        - - CREATE TABLE
+          - hdb_catalog.event_log
+        - - CREATE INDEX
+          - hdb_catalog.event_log_fetch_events
+        - - CREATE INDEX
+          - hdb_catalog.event_log_trigger_name_idx
+        - - CREATE FUNCTION
+          - hdb_catalog.gen_hasura_uuid()
+        - - CREATE TABLE
+          - hdb_catalog.hdb_event_log_cleanups
+        - - CREATE TABLE
+          - hdb_catalog.hdb_source_catalog_version
+        - - CREATE INDEX
+          - hdb_catalog.hdb_source_catalog_version_one_row
+        - - CREATE FUNCTION
+          - hdb_catalog.insert_event_log(pg_catalog.text,pg_catalog.text,pg_catalog.text,pg_catalog.text,pg_catalog.json)
+      |]
+
+    getResult result `shouldContain` getResult expected
+
   it "only reloading the metadata should not recreate the SQL triggers" $ \(testEnvironment, _) -> do
     -- Truncate the ddl_history
     postV2Query_

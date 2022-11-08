@@ -31,8 +31,7 @@ spec =
                 [ Fixture.SetupAction
                     { Fixture.setupAction =
                         Postgres.run_ testEnvironment setup,
-                      Fixture.teardownAction = \_ ->
-                        Postgres.run_ testEnvironment teardown
+                      Fixture.teardownAction = \_ -> pure ()
                     },
                   Postgres.setupTablesAction schema testEnvironment
                 ]

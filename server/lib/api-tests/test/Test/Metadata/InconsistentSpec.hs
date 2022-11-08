@@ -5,7 +5,6 @@ module Test.Metadata.InconsistentSpec (spec) where
 import Data.Aeson (Value)
 import Data.List.NonEmpty qualified as NE
 import Data.Maybe qualified as Maybe
-import Harness.Backend.Cockroach qualified as Cockroach
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.GraphqlEngine (postMetadata, postMetadata_)
 import Harness.Quoter.Yaml
@@ -20,14 +19,7 @@ spec :: SpecWith TestEnvironment
 spec =
   Fixture.run
     ( NE.fromList
-        [ (Fixture.fixture $ Fixture.Backend Fixture.Cockroach)
-            { Fixture.setupTeardown = \(testEnvironment, _) ->
-                [ Cockroach.setupTablesAction [] testEnvironment,
-                  dropTablesBeforeAndAfter testEnvironment,
-                  setupMetadata Fixture.Cockroach testEnvironment
-                ]
-            },
-          (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
+        [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { Fixture.setupTeardown = \(testEnvironment, _) ->
                 [ Postgres.setupTablesAction [] testEnvironment,
                   dropTablesBeforeAndAfter testEnvironment,
@@ -177,6 +169,5 @@ dropTablesBeforeAndAfter testEnvironment = do
   where
     action = case backendType testEnvironment of
       Just Fixture.Postgres -> Postgres.dropTableIfExists testEnvironment table
-      Just Fixture.Cockroach -> Cockroach.dropTableIfExists table
       Just b -> fail $ "Unknown backend:" <> show b
       Nothing -> fail $ "Unknown backend."

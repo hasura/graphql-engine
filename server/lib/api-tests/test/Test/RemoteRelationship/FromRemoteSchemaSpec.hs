@@ -252,8 +252,11 @@ track =
         ]
     }
 
+-- | we have to create a PG database manually here because it's not a Postgres
+-- Fixture test
 rhsPostgresSetup :: TestEnvironment -> IO ()
 rhsPostgresSetup testEnvironment = do
+  Postgres.createDatabase testEnvironment
   let sourceName = "db"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
   GraphqlEngine.postMetadata_
@@ -270,7 +273,7 @@ args:
   Schema.trackTable Fixture.Postgres sourceName track testEnvironment
 
 rhsPostgresTeardown :: TestEnvironment -> IO ()
-rhsPostgresTeardown testEnvironment = Postgres.dropTable testEnvironment track
+rhsPostgresTeardown testEnvironment = Postgres.dropDatabase testEnvironment
 
 --------------------------------------------------------------------------------
 -- Tests

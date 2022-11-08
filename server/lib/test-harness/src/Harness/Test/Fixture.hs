@@ -23,11 +23,14 @@ module Harness.Test.Fixture
   )
 where
 
+import Data.Set qualified as S
 import Data.Text qualified as T
 import Data.UUID.V4 (nextRandom)
+import Harness.Backend.Postgres qualified as Postgres
 import Harness.Exceptions
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
+import Harness.Test.SetupAction (SetupAction (..))
 import Harness.TestEnvironment (TestEnvironment (..), testLog)
 import Hasura.Prelude
 import Test.Hspec
@@ -130,6 +133,9 @@ fixtureBracket Fixture {name, mkLocalTestEnvironment, setupTeardown} actionWith 
               uniqueTestId = uniqueTestId
             }
 
+    -- create databases we need for the tests
+    createDatabases name globalTestEnvWithUnique
+
     let testEnvironment = (globalTestEnvWithUnique, localTestEnvironment)
 
     cleanup <- runSetupActions globalTestEnvironment (setupTeardown testEnvironment)
@@ -139,7 +145,33 @@ fixtureBracket Fixture {name, mkLocalTestEnvironment, setupTeardown} actionWith 
         (restore $ actionWith testEnvironment)
         cleanup
 
+    -- run test-specific clean up
     cleanup
+
+    -- drop all DBs created for the tests
+    dropDatabases name globalTestEnvWithUnique
+
+-- | given the `FixtureName` and `uniqueTestId`, spin up all necessary
+-- databases for these tests
+createDatabases :: FixtureName -> TestEnvironment -> IO ()
+createDatabases fixtureName testEnvironment =
+  traverse_
+    ( \case
+        Postgres ->
+          Postgres.createDatabase testEnvironment
+        _ -> pure ()
+    )
+    (backendTypesForFixture fixtureName)
+
+dropDatabases :: FixtureName -> TestEnvironment -> IO ()
+dropDatabases fixtureName testEnvironment =
+  traverse_
+    ( \case
+        Postgres ->
+          Postgres.dropDatabase testEnvironment
+        _ -> pure ()
+    )
+    (backendTypesForFixture fixtureName)
 
 -- | A function that makes it easy to perform setup and teardown when
 -- debugging/developing tests within a repl.
@@ -236,23 +268,17 @@ fixture name = Fixture {..}
     mkLocalTestEnvironment = noLocalTestEnvironment
     customOptions = Nothing
 
--- | a 'SetupAction' encodes how to setup and tear down a single piece of test
--- system state.
---
--- The value produced by a 'setupAction' is to be input into the corresponding
--- 'teardownAction', if the 'setupAction' completed without throwing an
--- exception.
-data SetupAction = forall a.
-  SetupAction
-  { setupAction :: IO a,
-    teardownAction :: Maybe a -> IO ()
-  }
-
 -- | A name describing the given context.
 data FixtureName
   = Backend BackendType
   | RemoteGraphQLServer
   | Combine FixtureName FixtureName
+
+backendTypesForFixture :: FixtureName -> S.Set BackendType
+backendTypesForFixture (Backend be) = S.singleton be
+backendTypesForFixture RemoteGraphQLServer = mempty
+backendTypesForFixture (Combine a b) =
+  backendTypesForFixture a <> backendTypesForFixture b
 
 instance Show FixtureName where
   show (Backend backend) = show backend

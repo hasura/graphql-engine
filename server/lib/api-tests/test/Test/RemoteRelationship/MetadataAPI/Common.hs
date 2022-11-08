@@ -229,7 +229,7 @@ args:
   Schema.trackTable Fixture.Postgres sourceName albumTable testEnvironment
 
 rhsPostgresTeardown :: TestEnvironment -> IO ()
-rhsPostgresTeardown testEnvironment = Postgres.dropTable testEnvironment albumTable
+rhsPostgresTeardown _testEnvironment = pure ()
 
 -- | LHS Postgres Setup
 lhsPostgresSetup :: (TestEnvironment, Maybe Server) -> IO ()

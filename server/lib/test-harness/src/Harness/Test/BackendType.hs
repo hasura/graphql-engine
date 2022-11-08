@@ -30,7 +30,7 @@ data BackendType
   | DataConnectorMock
   | DataConnectorReference
   | DataConnectorSqlite
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 -- | The default hasura metadata source name used for a given backend in this test suite project.
 defaultSource :: BackendType -> String

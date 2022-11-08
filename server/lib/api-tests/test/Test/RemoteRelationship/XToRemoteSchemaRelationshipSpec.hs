@@ -143,6 +143,7 @@ lhsPostgresSetup (testEnvironment, _) = do
   let sourceName = "source"
       sourceConfig = Postgres.defaultSourceConfiguration testEnvironment
       schemaName = Schema.getSchemaName testEnvironment
+
   -- Add remote source
   GraphqlEngine.postMetadata_
     testEnvironment
@@ -182,7 +183,6 @@ lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
 lhsPostgresTeardown (testEnvironment, _) = do
   let sourceName = "source"
   Schema.untrackTable Fixture.Postgres sourceName track testEnvironment
-  Postgres.dropTable testEnvironment track
 
 --------------------------------------------------------------------------------
 -- LHS Cockroach

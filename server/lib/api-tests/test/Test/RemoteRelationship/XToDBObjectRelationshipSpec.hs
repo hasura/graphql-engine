@@ -318,7 +318,8 @@ args:
     |]
 
 lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresTeardown (testEnvironment, _) = Postgres.dropTable testEnvironment track
+lhsPostgresTeardown (_testEnvironment, _) =
+  pure ()
 
 --------------------------------------------------------------------------------
 -- LHS Cockroach
@@ -717,7 +718,8 @@ args:
   |]
 
 rhsPostgresTeardown :: (TestEnvironment, ()) -> IO ()
-rhsPostgresTeardown (testEnvironment, _) = Postgres.dropTable testEnvironment album
+rhsPostgresTeardown (_testEnvironment, _) =
+  pure ()
 
 --------------------------------------------------------------------------------
 -- RHS Cockroach

@@ -10,6 +10,7 @@ module Harness.Constants
     postgresPort,
     postgresqlConnectionString,
     postgresqlMetadataConnectionString,
+    defaultPostgresqlConnectionString,
     postgresLivenessCheckAttempts,
     postgresLivenessCheckIntervalSeconds,
     mysqlLivenessCheckAttempts,
@@ -37,12 +38,15 @@ module Harness.Constants
     dataConnectorDb,
     sqliteSchemaName,
     maxRetriesRateLimitExceeded,
+    uniqueDbName,
   )
 where
 
 -------------------------------------------------------------------------------
 
+import Data.Char qualified
 import Data.HashSet qualified as Set
+import Data.UUID (UUID)
 import Data.Word (Word16)
 import Database.MySQL.Simple qualified as Mysql
 import Database.PG.Query qualified as PG
@@ -141,7 +145,36 @@ postgresqlConnectionString testEnv =
     ++ ":"
     ++ show (postgresPort (backendSettings testEnv))
     ++ "/"
+    ++ uniqueDbName (uniqueTestId testEnv)
+
+defaultPostgresqlConnectionString :: TestEnvironment -> String
+defaultPostgresqlConnectionString testEnv =
+  "postgres://"
+    ++ postgresUser
+    ++ ":"
+    ++ postgresPassword
+    ++ "@"
+    ++ postgresHost
+    ++ ":"
+    ++ show (postgresPort (backendSettings testEnv))
+    ++ "/"
     ++ postgresDb
+
+-- | return a unique database name from our TestEnvironment's uniqueTestId
+uniqueDbName :: UUID -> String
+uniqueDbName uuid = "test" <> showUUID uuid
+
+-- | Sanitise UUID for use in BigQuery dataset name
+-- must be alphanumeric (plus underscores)
+showUUID :: UUID -> String
+showUUID =
+  map
+    ( \a ->
+        if Data.Char.isAlphaNum a
+          then a
+          else '_'
+    )
+    . show
 
 -- * Citus
 

@@ -220,8 +220,7 @@ args:
   |]
 
 lhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-lhsPostgresTeardown (testEnvironment, _) = do
-  Postgres.dropTable testEnvironment lhsTrack
+lhsPostgresTeardown (_testEnvironment, _) = pure ()
 
 --------------------------------------------------------------------------------
 -- RHS Postgres
@@ -249,9 +248,8 @@ args:
   Schema.trackTable Fixture.Postgres sourceName rhsArtist testEnvironment
 
 rhsPostgresTeardown :: (TestEnvironment, Maybe Server) -> IO ()
-rhsPostgresTeardown (testEnvironment, _) = do
-  Postgres.dropTable testEnvironment rhsAlbum
-  Postgres.dropTable testEnvironment rhsArtist
+rhsPostgresTeardown (_testEnvironment, _) =
+  pure ()
 
 --------------------------------------------------------------------------------
 -- LHS Remote Server
