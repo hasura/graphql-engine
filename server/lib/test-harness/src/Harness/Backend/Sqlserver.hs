@@ -35,7 +35,7 @@ import Harness.Test.Fixture (SetupAction (..))
 import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..))
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment, testLog)
+import Harness.TestEnvironment (TestEnvironment, testLogHarness)
 import Hasura.Prelude
 import System.Process.Typed
 
@@ -278,7 +278,7 @@ setupTablesActionDiscardingTeardownErrors :: [Schema.Table] -> TestEnvironment -
 setupTablesActionDiscardingTeardownErrors ts env =
   SetupAction
     (setup ts (env, ()))
-    (const $ teardown ts (env, ()) `catchAny` \ex -> testLog env ("Teardown failed: " <> show ex))
+    (const $ teardown ts (env, ()) `catchAny` \ex -> testLogHarness env ("Teardown failed: " <> show ex))
 
 setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
 setupPermissionsAction permissions env =

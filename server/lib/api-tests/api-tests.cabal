@@ -15,6 +15,7 @@ executable api-tests
     , graphql-parser
     , hasura-prelude
     , hspec
+    , hspec-core
     , http-conduit
     , http-types
     , lens

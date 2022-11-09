@@ -47,7 +47,7 @@ import Harness.Test.Permissions qualified as Permissions
 import Harness.Test.Schema (BackendScalarType (..), BackendScalarValue (..), ScalarValue (..), SchemaName (..))
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), testLog)
+import Harness.TestEnvironment (TestEnvironment (..), testLogHarness)
 import Hasura.Prelude
 import System.Process.Typed
 
@@ -86,7 +86,7 @@ run_ testEnvironment =
 -- On error, print something useful for debugging.
 runInternal :: HasCallStack => TestEnvironment -> String -> String -> IO ()
 runInternal testEnvironment connectionString query = do
-  testLog
+  testLogHarness
     testEnvironment
     ( "Executing connection string: "
         <> connectionString

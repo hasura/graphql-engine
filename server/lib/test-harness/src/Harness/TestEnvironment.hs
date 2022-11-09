@@ -9,30 +9,28 @@ module Harness.TestEnvironment
     getServer,
     serverUrl,
     stopServer,
-    testLog,
+    testLogTrace,
+    testLogMessage,
     testLogShow,
-    testLogBytestring,
+    testLogHarness,
   )
 where
 
 import Control.Concurrent.Async (Async)
 import Control.Concurrent.Async qualified as Async
-import Data.ByteString.Lazy qualified as LBS
-import Data.String (fromString)
-import Data.Text qualified as T
-import Data.Text.Encoding
 import Data.UUID (UUID)
 import Data.Word
+import Harness.Logging.Messages
 import Harness.Test.BackendType
 import Hasura.Prelude
-import System.Log.FastLogger qualified as FL
+import Text.Pretty.Simple
 
 -- | A testEnvironment that's passed to all tests.
 data TestEnvironment = TestEnvironment
   { -- | connection details for the instance of HGE we're connecting to
     server :: Server,
     -- | shared function to log information from tests
-    logger :: FL.LogStr -> IO (),
+    logger :: Logger,
     -- | action to clean up logger
     loggerCleanup :: IO (),
     -- | a uuid generated for each test suite used to generate a unique
@@ -83,17 +81,25 @@ serverUrl Server {urlPrefix, port} = urlPrefix ++ ":" ++ show port
 stopServer :: Server -> IO ()
 stopServer Server {thread} = Async.cancel thread
 
--- | log a string out in tests
-testLog :: TestEnvironment -> String -> IO ()
-testLog testEnv =
-  logger testEnv . fromString . (<>) "\n"
+-- | Log a structured message in tests
+testLogMessage :: LoggableMessage a => TestEnvironment -> a -> IO ()
+testLogMessage testEnv = runLogger (logger testEnv)
 
--- | log a Show-able value in tests
+-- | Log an unstructured trace string. Should only be used directly in specs,
+-- not in the Harness modules.
+testLogTrace :: TraceString a => TestEnvironment -> a -> IO ()
+testLogTrace testEnv =
+  testLogMessage testEnv . logTrace
+
+-- | Log a Show-able value trace string in tests. Should only be used directly
+-- in specs, not in the Harness modules.
 testLogShow :: (Show a) => TestEnvironment -> a -> IO ()
 testLogShow testEnv =
-  testLog testEnv . show
+  testLogTrace testEnv . pShowNoColor
 
--- | log a UTF-8 Bytestring. Forgive me Padre for converting through String
-testLogBytestring :: TestEnvironment -> LBS.ByteString -> IO ()
-testLogBytestring testEnv =
-  testLog testEnv . T.unpack . decodeUtf8 . LBS.toStrict
+-- | log a trace message happening in the Harness modules. Should only be used
+-- in the Harness modules, not in Specs.
+--
+-- This should ideally be replaced with more specific logging functions.
+testLogHarness :: TraceString a => TestEnvironment -> a -> IO ()
+testLogHarness testEnv = testLogMessage testEnv . logHarness

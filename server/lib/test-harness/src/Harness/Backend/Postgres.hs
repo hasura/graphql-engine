@@ -56,7 +56,7 @@ import Harness.Test.Schema
   )
 import Harness.Test.Schema qualified as Schema
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), testLog)
+import Harness.TestEnvironment (TestEnvironment (..), testLogHarness)
 import Hasura.Prelude
 import System.Process.Typed
 
@@ -102,7 +102,7 @@ run_ testEnvironment =
 -- On error, print something useful for debugging.
 runInternal :: HasCallStack => TestEnvironment -> String -> String -> IO ()
 runInternal testEnvironment connectionString query = do
-  testLog
+  testLogHarness
     testEnvironment
     ( "Executing connection string: "
         <> connectionString
@@ -139,7 +139,7 @@ queryWithInitialDb testEnvironment =
 -- On error, print something useful for debugging.
 queryInternal :: (Postgres.FromRow a) => HasCallStack => TestEnvironment -> String -> String -> IO [a]
 queryInternal testEnvironment connectionString query = do
-  testLog
+  testLogHarness
     testEnvironment
     ( "Querying connection string: "
         <> connectionString
@@ -425,7 +425,7 @@ setupTablesActionDiscardingTeardownErrors :: [Schema.Table] -> TestEnvironment -
 setupTablesActionDiscardingTeardownErrors ts env =
   SetupAction
     (setup ts (env, ()))
-    (const $ teardown ts (env, ()) `catchAny` \ex -> testLog env ("Teardown failed: " <> show ex))
+    (const $ teardown ts (env, ()) `catchAny` \ex -> testLogHarness env ("Teardown failed: " <> show ex))
 
 setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
 setupPermissionsAction permissions env =

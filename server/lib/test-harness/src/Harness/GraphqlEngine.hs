@@ -54,7 +54,14 @@ import Harness.Constants qualified as Constants
 import Harness.Exceptions (bracket, withFrozenCallStack)
 import Harness.Http qualified as Http
 import Harness.Quoter.Yaml (yaml)
-import Harness.TestEnvironment (BackendSettings (..), Server (..), TestEnvironment (..), getServer, serverUrl, testLog, testLogBytestring)
+import Harness.TestEnvironment
+  ( BackendSettings (..),
+    Server (..),
+    TestEnvironment (..),
+    getServer,
+    serverUrl,
+    testLogHarness,
+  )
 import Hasura.App (Loggers (..), ServeCtx (..))
 import Hasura.App qualified as App
 import Hasura.Logging (Hasura)
@@ -111,10 +118,10 @@ postWithHeaders =
 postWithHeadersStatus ::
   HasCallStack => Int -> TestEnvironment -> String -> Http.RequestHeaders -> Value -> IO Value
 postWithHeadersStatus statusCode testEnv@(getServer -> Server {urlPrefix, port}) path headers requestBody = do
-  testLog testEnv $ "Posting to " <> path
-  testLogBytestring testEnv $ "Request body: " <> AP.encodePretty requestBody
+  testLogHarness testEnv $ "Posting to " <> T.pack path
+  testLogHarness testEnv $ "Request body: " <> AP.encodePretty requestBody
   responseBody <- withFrozenCallStack $ Http.postValueWithStatus statusCode (urlPrefix ++ ":" ++ show port ++ path) headers requestBody
-  testLogBytestring testEnv $ "Response body: " <> AP.encodePretty responseBody
+  testLogHarness testEnv $ "Response body: " <> AP.encodePretty responseBody
   pure responseBody
 
 -- | Post some JSON to graphql-engine, getting back more JSON.

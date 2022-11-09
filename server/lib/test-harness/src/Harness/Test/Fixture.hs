@@ -37,7 +37,7 @@ import Harness.Exceptions
 import Harness.Test.BackendType
 import Harness.Test.CustomOptions
 import Harness.Test.SetupAction (SetupAction (..))
-import Harness.TestEnvironment (TestEnvironment (..), testLog)
+import Harness.TestEnvironment (TestEnvironment (..), testLogHarness)
 import Hasura.Prelude
 import Test.Hspec
   ( ActionWith,
@@ -124,7 +124,7 @@ fixtureBracket :: Fixture b -> (ActionWith (TestEnvironment, b)) -> ActionWith T
 fixtureBracket Fixture {name, mkLocalTestEnvironment, setupTeardown} actionWith globalTestEnvironment =
   mask \restore -> do
     -- log DB of test
-    testLog globalTestEnvironment $ "Testing " <> show name <> "..."
+    testLogHarness globalTestEnvironment $ "Testing " <> show name <> "..."
 
     localTestEnvironment <- mkLocalTestEnvironment globalTestEnvironment
 
@@ -215,20 +215,20 @@ runSetupActions testEnv acts = go acts []
         -- commented out.
         case a of
           Left (exn :: SomeException) -> do
-            testLog testEnv $ "Setup failed for step " ++ show (length cleanupAcc) ++ "."
+            testLogHarness testEnv $ "Setup failed for step " ++ show (length cleanupAcc) ++ "."
             rethrowAll
               ( throwIO exn
-                  : ( testLog testEnv ("Teardown failed for step " ++ show (length cleanupAcc) ++ ".")
+                  : ( testLogHarness testEnv ("Teardown failed for step " ++ show (length cleanupAcc) ++ ".")
                         >> teardownAction Nothing
                     )
                   : cleanupAcc
               )
             return (return ())
           Right x -> do
-            testLog testEnv $ "Setup for step " ++ show (length cleanupAcc) ++ " succeeded."
+            testLogHarness testEnv $ "Setup for step " ++ show (length cleanupAcc) ++ " succeeded."
             go
               rest
-              ( ( testLog testEnv ("Teardown for step " ++ show (length cleanupAcc) ++ " succeeded.")
+              ( ( testLogHarness testEnv ("Teardown for step " ++ show (length cleanupAcc) ++ " succeeded.")
                     >> teardownAction (Just x)
                 )
                   : cleanupAcc

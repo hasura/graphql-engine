@@ -34,7 +34,11 @@ import Data.IORef (IORef, atomicModifyIORef', newIORef, readIORef)
 import Data.Map.Strict qualified as Map
 import Data.Text qualified as T
 import Harness.Exceptions (throw, withFrozenCallStack)
-import Harness.TestEnvironment (Server (..), TestEnvironment (..), testLog, testLogBytestring)
+import Harness.TestEnvironment
+  ( Server (..),
+    TestEnvironment (..),
+    testLogHarness,
+  )
 import Hasura.Prelude
 import Network.WebSockets qualified as WS
 import System.Timeout (timeout)
@@ -137,12 +141,12 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
           msgBytes <- WS.receiveData conn
           case eitherDecode msgBytes of
             Left err -> do
-              testLog testEnvironment $ "Subscription decode failed: " ++ err
-              testLogBytestring testEnvironment $ "Payload was: " <> msgBytes
+              testLogHarness testEnvironment $ "Subscription decode failed: " ++ err
+              testLogHarness testEnvironment $ "Payload was: " <> msgBytes
               throw $ userError (unlines ["Subscription decode failed: " <> err, "Payload: " <> show msgBytes])
             Right msg -> do
               when (isInteresting msg) do
-                testLog testEnvironment $ "subscriptions message: " ++ jsonToString msg
+                testLogHarness testEnvironment $ "subscriptions message: " ++ jsonToString msg
 
                 let maybePayload :: Maybe Value
                     maybePayload = preview (key "payload") msg
@@ -152,7 +156,7 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
 
                 case liftA2 (,) maybePayload maybeIdentifier of
                   Nothing -> do
-                    testLog testEnvironment "Unable to parse message"
+                    testLogHarness testEnvironment ("Unable to parse message" :: Text)
                     throw $ userError ("Unable to parse message: " ++ show msg)
                   Just (payload, identifier) ->
                     readIORef handlers >>= \mvars ->
@@ -179,8 +183,8 @@ withSubscriptions = aroundAllWith \actionWithSubAndTest testEnvironment -> do
           atomicModify handlers (Map.insert (tshow subId) messageBox)
 
           -- initialize a connection.
-          testLog testEnvironment ("Initialising websocket connection")
-          testLogBytestring testEnvironment (encode query)
+          testLogHarness testEnvironment ("Initialising websocket connection" :: Text)
+          testLogHarness testEnvironment (encode query)
           WS.sendTextData conn (encode $ startQueryMessage subId query extras)
           pure $ SubscriptionHandle messageBox
 

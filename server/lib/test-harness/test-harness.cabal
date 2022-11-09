@@ -35,6 +35,7 @@ library
     , parsec
     , pg-client
     , postgresql-simple
+    , pretty-simple
     , refined
     , resourcet
     , safe-exceptions
@@ -100,6 +101,8 @@ library
     Harness.Exceptions
     Harness.GraphqlEngine
     Harness.Http
+    Harness.Logging
+    Harness.Logging.Messages
     Harness.Quoter.Graphql
     Harness.Quoter.Yaml
     Harness.Quoter.Yaml.InterpolateYaml

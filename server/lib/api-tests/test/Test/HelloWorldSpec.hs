@@ -10,7 +10,7 @@ import Harness.Backend.Postgres qualified as Postgres
 import Harness.Quoter.Yaml (yaml)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema qualified as Schema
-import Harness.TestEnvironment (TestEnvironment (..))
+import Harness.TestEnvironment (TestEnvironment (..), testLogTrace)
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
 import Test.Hspec (SpecWith, describe, it)
@@ -64,5 +64,5 @@ tests opts = do
           actual :: IO Value
           actual = pure Null
 
-      logger testEnvironment "A log message\n"
+      testLogTrace testEnvironment ("A log message" :: Text)
       actual `shouldBe` expected
