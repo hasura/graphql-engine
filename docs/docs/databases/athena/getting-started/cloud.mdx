@@ -17,6 +17,24 @@ import Thumbnail from '@site/src/components/Thumbnail';
 
 ## Try it out
 
+:::info Note
+
+**Prerequisite: Turn on the experimental features for GDC**.
+
+While the Amazon Athena Connector is in beta, the feature can only be enabled by turning on the _Experimental features
+for GDC_ under the _Feature Flags_ section of the Console configuration page.
+
+Click the gear icon (1) in the top-right corner of your Cloud project; in the side navigation, click "Feature Flags"
+(2); finally, toggle the "Experimental features for GDC" switch to enable (3).
+
+<Thumbnail
+  src='/img/databases/athena/setting-experimental.png'
+  alt='Turning on experimental features.'
+  width='1000px'
+/>
+
+:::
+
 ### Step 1: Create an account on Hasura Cloud and create a new Hasura Project
 
 Navigate to
@@ -41,7 +59,7 @@ Head to the `Data > Manage databases` section on the Console to add your Amazon 
 
 :::
 
-Begin by clicking "Connect Database":
+Now begin by clicking "Connect Database":
 
 <Thumbnail src='/img/databases/athena/manage-databases.png' alt='Manage databases' width='1000px' />
 
