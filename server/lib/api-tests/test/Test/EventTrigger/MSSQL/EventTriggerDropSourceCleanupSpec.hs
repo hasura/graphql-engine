@@ -32,11 +32,16 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              Fixture.setupTeardown = \testEnv ->
+              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ Fixture.SetupAction
-                    { Fixture.setupAction = mssqlSetupWithEventTriggers testEnv,
-                      Fixture.teardownAction = \_ -> mssqlTeardown testEnv
+                    { Fixture.setupAction = pure (),
+                      Fixture.teardownAction = \_ -> stopServer webhookServer
+                    },
+                  Sqlserver.setupTablesActionDiscardingTeardownErrors (schema "authors") testEnvironment,
+                  Fixture.SetupAction
+                    { Fixture.setupAction = mssqlSetupWithEventTriggers testEnvironment webhookServer,
+                      Fixture.teardownAction = \_ -> pure ()
                     }
                 ]
             }
@@ -177,9 +182,8 @@ cleanupEventTriggersWhenSourceDropped opts =
 
 -- ** Setup and teardown override
 
-mssqlSetupWithEventTriggers :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-mssqlSetupWithEventTriggers (testEnvironment, (webhookServer, _)) = do
-  Sqlserver.setup (schema "authors") (testEnvironment, ())
+mssqlSetupWithEventTriggers :: TestEnvironment -> GraphqlEngine.Server -> IO ()
+mssqlSetupWithEventTriggers testEnvironment webhookServer = do
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
@@ -196,13 +200,3 @@ mssqlSetupWithEventTriggers (testEnvironment, (webhookServer, _)) = do
           insert:
             columns: "*"
       |]
-
-mssqlTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-mssqlTeardown (_, (server, _)) = do
-  stopServer server
-  Sqlserver.dropTable (authorsTable "authors")
-
-webhookServerMkLocalTestEnvironment ::
-  TestEnvironment -> IO (GraphqlEngine.Server, Webhook.EventsQueue)
-webhookServerMkLocalTestEnvironment _ = do
-  Webhook.run

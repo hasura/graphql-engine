@@ -36,11 +36,16 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              Fixture.setupTeardown = \testEnv ->
+              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ Fixture.SetupAction
-                    { Fixture.setupAction = postgresSetup testEnv,
-                      Fixture.teardownAction = \_ -> postgresTeardown testEnv
+                    { Fixture.setupAction = pure (),
+                      Fixture.teardownAction = \_ -> stopServer webhookServer
+                    },
+                  Postgres.setupTablesActionDiscardingTeardownErrors (schema "authors") testEnvironment,
+                  Fixture.SetupAction
+                    { Fixture.setupAction = postgresSetup testEnvironment webhookServer,
+                      Fixture.teardownAction = \_ -> postgresTeardown testEnvironment
                     }
                 ]
             }
@@ -274,9 +279,8 @@ new:
 
 -- ** Setup and teardown override
 
-postgresSetup :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresSetup (testEnvironment, (webhookServer, _)) = do
-  Postgres.setup (schema "authors") (testEnvironment, ())
+postgresSetup :: TestEnvironment -> GraphqlEngine.Server -> IO ()
+postgresSetup testEnvironment webhookServer = do
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
@@ -306,8 +310,8 @@ args:
         - created_at
 |]
 
-postgresTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresTeardown (testEnvironment, (server, _)) = do
+postgresTeardown :: TestEnvironment -> IO ()
+postgresTeardown testEnvironment = do
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
 type: bulk
@@ -317,15 +321,9 @@ args:
     name: authors_all
     source: postgres
 |]
-  stopServer server
   -- only authors table needs to be tear down because
   -- the users table has already been dropped in the
   -- `dropTableContainingTriggerTest` test.
 
   -- The authors table was renamed in the `renameTableContainingTriggerTests` test
-  Postgres.teardown [(authorsTable "authors_new")] (testEnvironment, ())
-
-webhookServerMkLocalTestEnvironment ::
-  TestEnvironment -> IO (GraphqlEngine.Server, Webhook.EventsQueue)
-webhookServerMkLocalTestEnvironment _ = do
-  Webhook.run
+  Postgres.dropTableIfExists testEnvironment (authorsTable "authors_new")

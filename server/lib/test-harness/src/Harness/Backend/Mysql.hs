@@ -11,8 +11,6 @@ module Harness.Backend.Mysql
     trackTable,
     dropTable,
     untrackTable,
-    setup,
-    teardown,
     setupTablesAction,
     setupPermissionsAction,
   )

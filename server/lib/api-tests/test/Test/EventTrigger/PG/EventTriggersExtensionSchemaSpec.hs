@@ -9,8 +9,10 @@ import Control.Concurrent.Chan qualified as Chan
 import Data.List.NonEmpty qualified as NE
 import Harness.Backend.Postgres qualified as Postgres
 import Harness.Constants (postgresqlConnectionString)
+import Harness.Exceptions (HasCallStack)
 import Harness.GraphqlEngine qualified as GraphqlEngine
 import Harness.Quoter.Yaml
+import Harness.Test.BackendType qualified as BackendType
 import Harness.Test.Fixture qualified as Fixture
 import Harness.Test.Schema (Table (..), table)
 import Harness.Test.Schema qualified as Schema
@@ -32,11 +34,16 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              Fixture.setupTeardown = \testEnv ->
+              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ Fixture.SetupAction
-                    { Fixture.setupAction = postgresSetup testEnv,
-                      Fixture.teardownAction = \_ -> postgresTeardown testEnv
+                    { Fixture.setupAction = pure (),
+                      Fixture.teardownAction = \_ -> stopServer webhookServer
+                    },
+                  Postgres.setupTablesActionDiscardingTeardownErrors schema testEnvironment,
+                  Fixture.SetupAction
+                    { Fixture.setupAction = postgresSetup testEnvironment webhookServer,
+                      Fixture.teardownAction = \_ -> postgresTeardown testEnvironment
                     }
                 ]
             }
@@ -49,6 +56,9 @@ spec =
 -- * Backend
 
 -- ** Schema
+
+schema :: [Schema.Table]
+schema = [authorsTable "authors"]
 
 authorsTable :: Text -> Schema.Table
 authorsTable tableName =
@@ -165,9 +175,10 @@ checkEventTriggerWhenExtensionInDifferentSchema opts =
 
 -- ** Setup and teardown override
 
-postgresSetup :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresSetup (testEnvironment, (webhookServer, _)) = do
-  let sourceName = "hge_test"
+postgresSetup :: HasCallStack => TestEnvironment -> GraphqlEngine.Server -> IO ()
+postgresSetup testEnvironment webhookServer = do
+  let defaultSourceName = BackendType.defaultSource BackendType.Postgres
+      sourceName = "hge_test"
       extensionsSchema = "hasura" :: Text
       databaseUrl = postgresqlConnectionString testEnvironment
       sourceConfig =
@@ -179,6 +190,7 @@ postgresSetup (testEnvironment, (webhookServer, _)) = do
              |]
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
 
+  -- create a new source
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
       type: pg_add_source
@@ -187,10 +199,10 @@ postgresSetup (testEnvironment, (webhookServer, _)) = do
         configuration: *sourceConfig
     |]
 
-  -- setup tables
-  Postgres.createTable testEnvironment (authorsTable "authors")
-  Postgres.insertTable testEnvironment (authorsTable "authors")
-  Schema.trackTable Fixture.Postgres sourceName (authorsTable "authors") testEnvironment
+  -- track table(s) with the new source
+  forM_ schema \theTable -> do
+    Schema.untrackTable Fixture.Postgres defaultSourceName theTable testEnvironment
+    Schema.trackTable Fixture.Postgres sourceName theTable testEnvironment
 
   -- create the event trigger
   GraphqlEngine.postMetadata_ testEnvironment $
@@ -209,8 +221,8 @@ postgresSetup (testEnvironment, (webhookServer, _)) = do
             columns: "*"
     |]
 
-postgresTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresTeardown (testEnvironment, (server, _)) = do
+postgresTeardown :: HasCallStack => TestEnvironment -> IO ()
+postgresTeardown testEnvironment = do
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
       type: bulk
@@ -220,8 +232,6 @@ postgresTeardown (testEnvironment, (server, _)) = do
           name: authors_all
           source: hge_test
     |]
-  stopServer server
-  Postgres.dropTable testEnvironment (authorsTable "authors")
 
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
@@ -232,8 +242,3 @@ postgresTeardown (testEnvironment, (server, _)) = do
           name: hge_test
           cascade: true
     |]
-
-webhookServerMkLocalTestEnvironment ::
-  TestEnvironment -> IO (GraphqlEngine.Server, Webhook.EventsQueue)
-webhookServerMkLocalTestEnvironment _ = do
-  Webhook.run

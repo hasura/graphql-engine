@@ -32,11 +32,16 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Fixture.SQLServer)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              Fixture.setupTeardown = \testEnv ->
+              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ Fixture.SetupAction
-                    { Fixture.setupAction = mssqlSetupWithEventTriggers testEnv,
-                      Fixture.teardownAction = \_ -> mssqlTeardown testEnv
+                    { Fixture.setupAction = pure (),
+                      Fixture.teardownAction = \_ -> stopServer webhookServer
+                    },
+                  Sqlserver.setupTablesAction (schema "authors" "articles") testEnvironment,
+                  Fixture.SetupAction
+                    { Fixture.setupAction = mssqlSetupWithEventTriggers testEnvironment webhookServer,
+                      Fixture.teardownAction = \_ -> mssqlTeardown testEnvironment
                     }
                 ]
             }
@@ -148,7 +153,7 @@ duplicateTriggerNameNotAllowed opts =
             |]
 
             createEventTriggerWithDuplicateNameExpectedResponse =
-              [yaml| 
+              [yaml|
                 code: already-exists
                 error: Event trigger with name "authors_all" already exists
                 path: $.args
@@ -165,7 +170,7 @@ duplicateTriggerNameNotAllowed opts =
         let replaceMetadata = getReplaceMetadata webhookServer
 
             replaceMetadataWithDuplicateNameExpectedResponse =
-              [yaml| 
+              [yaml|
                 code: not-supported
                 error: 'Event trigger with duplicate names not allowed: "authors_all"'
                 path: $.args
@@ -181,9 +186,8 @@ duplicateTriggerNameNotAllowed opts =
 
 -- ** Setup and teardown override
 
-mssqlSetupWithEventTriggers :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-mssqlSetupWithEventTriggers (testEnvironment, (webhookServer, _)) = do
-  Sqlserver.setup (schema "authors" "articles") (testEnvironment, ())
+mssqlSetupWithEventTriggers :: TestEnvironment -> GraphqlEngine.Server -> IO ()
+mssqlSetupWithEventTriggers testEnvironment webhookServer = do
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
@@ -208,7 +212,7 @@ getReplaceMetadata webhookServer =
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
    in [yaml|
       type: replace_metadata
-      args: 
+      args:
         version: 3
         sources:
         - configuration: *sourceConfig
@@ -247,8 +251,8 @@ getReplaceMetadata webhookServer =
               webhook: *webhookServerEchoEndpoint
     |]
 
-mssqlTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-mssqlTeardown (testEnvironment, (server, _)) = do
+mssqlTeardown :: TestEnvironment -> IO ()
+mssqlTeardown testEnvironment = do
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
       type: bulk
@@ -258,11 +262,3 @@ mssqlTeardown (testEnvironment, (server, _)) = do
           name: authors_all
           source: mssql
     |]
-  stopServer server
-  Sqlserver.dropTable (authorsTable "authors")
-  Sqlserver.dropTable (articlesTable "articles")
-
-webhookServerMkLocalTestEnvironment ::
-  TestEnvironment -> IO (GraphqlEngine.Server, Webhook.EventsQueue)
-webhookServerMkLocalTestEnvironment _ = do
-  Webhook.run

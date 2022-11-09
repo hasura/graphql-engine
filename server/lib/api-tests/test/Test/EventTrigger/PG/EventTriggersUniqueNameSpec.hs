@@ -32,11 +32,16 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              Fixture.setupTeardown = \testEnv ->
+              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ Fixture.SetupAction
-                    { Fixture.setupAction = postgresSetup testEnv,
-                      Fixture.teardownAction = \_ -> postgresTeardown testEnv
+                    { Fixture.setupAction = pure (),
+                      Fixture.teardownAction = \_ -> stopServer webhookServer
+                    },
+                  Postgres.setupTablesAction (schema "authors" "articles") testEnvironment,
+                  Fixture.SetupAction
+                    { Fixture.setupAction = postgresSetup testEnvironment webhookServer,
+                      Fixture.teardownAction = \_ -> postgresTeardown testEnvironment
                     }
                 ]
             }
@@ -148,7 +153,7 @@ duplicateTriggerNameNotAllowed opts =
             |]
 
             createEventTriggerWithDuplicateNameExpectedResponse =
-              [yaml| 
+              [yaml|
                 code: already-exists
                 error: Event trigger with name "authors_all" already exists
                 path: $.args
@@ -165,7 +170,7 @@ duplicateTriggerNameNotAllowed opts =
         let replaceMetadata = getReplaceMetadata testEnvironment webhookServer
 
             replaceMetadataWithDuplicateNameExpectedResponse =
-              [yaml| 
+              [yaml|
                 code: not-supported
                 error: 'Event trigger with duplicate names not allowed: "authors_all"'
                 path: $.args
@@ -181,9 +186,8 @@ duplicateTriggerNameNotAllowed opts =
 
 -- ** Setup and teardown override
 
-postgresSetup :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresSetup (testEnvironment, (webhookServer, _)) = do
-  Postgres.setup (schema "authors" "articles") (testEnvironment, ())
+postgresSetup :: TestEnvironment -> GraphqlEngine.Server -> IO ()
+postgresSetup testEnvironment webhookServer = do
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
@@ -208,7 +212,7 @@ getReplaceMetadata testEnvironment webhookServer =
       webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
    in [yaml|
       type: replace_metadata
-      args: 
+      args:
         version: 3
         sources:
         - configuration: *sourceConfig
@@ -247,8 +251,8 @@ getReplaceMetadata testEnvironment webhookServer =
               webhook: *webhookServerEchoEndpoint
     |]
 
-postgresTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresTeardown (testEnvironment, (server, _)) = do
+postgresTeardown :: TestEnvironment -> IO ()
+postgresTeardown testEnvironment = do
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
       type: bulk
@@ -258,11 +262,3 @@ postgresTeardown (testEnvironment, (server, _)) = do
           name: authors_all
           source: postgres
     |]
-  stopServer server
-  Postgres.dropTable testEnvironment (authorsTable "authors")
-  Postgres.dropTable testEnvironment (articlesTable "articles")
-
-webhookServerMkLocalTestEnvironment ::
-  TestEnvironment -> IO (GraphqlEngine.Server, Webhook.EventsQueue)
-webhookServerMkLocalTestEnvironment _ = do
-  Webhook.run

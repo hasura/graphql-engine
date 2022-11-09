@@ -28,11 +28,16 @@ spec =
   Fixture.runWithLocalTestEnvironmentSingleSetup
     ( NE.fromList
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
-            { Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              Fixture.setupTeardown = \testEnv ->
+            { Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ Fixture.SetupAction
-                    { Fixture.setupAction = postgresSetup testEnv,
-                      Fixture.teardownAction = \_ -> postgresTeardown testEnv
+                    { Fixture.setupAction = pure (),
+                      Fixture.teardownAction = \_ -> stopServer webhookServer
+                    },
+                  Postgres.setupTablesAction schema testEnvironment,
+                  Fixture.SetupAction
+                    { Fixture.setupAction = postgresSetup testEnvironment,
+                      Fixture.teardownAction = \_ -> postgresTeardown testEnvironment
                     }
                 ]
             }
@@ -64,14 +69,13 @@ schema = [usersTable]
 
 -- ** Setup and teardown override
 
-postgresSetup :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresSetup (testEnvironment, _) = do
+postgresSetup :: TestEnvironment -> IO ()
+postgresSetup testEnvironment = do
   -- In the setup, we create postgres's event triggers that capture every DDL
   -- change made in the database and then store them in a table called
   -- `ddl_history` that contains metadata about the DDL query like
   -- the query that was executed, time at which the query was executed,
   -- what type of query it was etc.
-  Postgres.setup schema (testEnvironment, ())
   GraphqlEngine.postV2Query_
     testEnvironment
     [yaml|
@@ -159,8 +163,8 @@ postgresSetup (testEnvironment, _) = do
            CREATE EVENT TRIGGER pg_get_ddl_command on ddl_command_end EXECUTE PROCEDURE hasura.log_ddl_command();
     |]
 
-postgresTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresTeardown (testEnvironment, (server, _)) = do
+postgresTeardown :: TestEnvironment -> IO ()
+postgresTeardown testEnvironment = do
   GraphqlEngine.postV2Query_ testEnvironment $
     [yaml|
 type: run_sql
@@ -173,13 +177,6 @@ args:
 
     DROP TABLE hasura.ddl_history;
 |]
-  stopServer server
-  Postgres.teardown schema (testEnvironment, ())
-
-webhookServerMkLocalTestEnvironment ::
-  TestEnvironment -> IO (GraphqlEngine.Server, Webhook.EventsQueue)
-webhookServerMkLocalTestEnvironment _ = do
-  Webhook.run
 
 --------------------------------------------------------------------------------
 

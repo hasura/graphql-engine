@@ -13,8 +13,6 @@ module Harness.Backend.BigQuery
     trackTable,
     dropTable,
     untrackTable,
-    setup,
-    teardown,
     setupTablesAction,
     setupPermissionsAction,
   )

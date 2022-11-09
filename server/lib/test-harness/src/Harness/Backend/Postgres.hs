@@ -18,9 +18,8 @@ module Harness.Backend.Postgres
     dropTableIfExists,
     trackTable,
     untrackTable,
-    setup,
-    teardown,
     setupTablesAction,
+    setupTablesActionDiscardingTeardownErrors,
     setupPermissionsAction,
     setupFunctionRootFieldAction,
     setupComputedFieldAction,
@@ -421,6 +420,12 @@ setupTablesAction ts env =
   SetupAction
     (setup ts (env, ()))
     (const $ teardown ts (env, ()))
+
+setupTablesActionDiscardingTeardownErrors :: [Schema.Table] -> TestEnvironment -> SetupAction
+setupTablesActionDiscardingTeardownErrors ts env =
+  SetupAction
+    (setup ts (env, ()))
+    (const $ teardown ts (env, ()) `catchAny` \ex -> testLog env ("Teardown failed: " <> show ex))
 
 setupPermissionsAction :: [Permissions.Permission] -> TestEnvironment -> SetupAction
 setupPermissionsAction permissions env =

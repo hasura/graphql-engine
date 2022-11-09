@@ -12,8 +12,6 @@ module Harness.Backend.Citus
     trackTable,
     dropTable,
     untrackTable,
-    setup,
-    teardown,
     setupPermissions,
     teardownPermissions,
     setupTablesAction,

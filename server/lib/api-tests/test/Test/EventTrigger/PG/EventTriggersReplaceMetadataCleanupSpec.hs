@@ -32,11 +32,16 @@ spec =
         [ (Fixture.fixture $ Fixture.Backend Fixture.Postgres)
             { -- setup the webhook server as the local test environment,
               -- so that the server can be referenced while testing
-              Fixture.mkLocalTestEnvironment = webhookServerMkLocalTestEnvironment,
-              Fixture.setupTeardown = \testEnv ->
+              Fixture.mkLocalTestEnvironment = const Webhook.run,
+              Fixture.setupTeardown = \(testEnvironment, (webhookServer, _)) ->
                 [ Fixture.SetupAction
-                    { Fixture.setupAction = postgresSetup testEnv,
-                      Fixture.teardownAction = \_ -> postgresTeardown testEnv
+                    { Fixture.setupAction = pure (),
+                      Fixture.teardownAction = \_ -> stopServer webhookServer
+                    },
+                  Postgres.setupTablesActionDiscardingTeardownErrors (schema "authors") testEnvironment,
+                  Fixture.SetupAction
+                    { Fixture.setupAction = postgresSetup testEnvironment webhookServer,
+                      Fixture.teardownAction = \_ -> pure ()
                     }
                 ]
             }
@@ -109,9 +114,8 @@ cleanupEventTriggersWhenSourceRemoved opts =
 
 -- ** Setup and teardown override
 
-postgresSetup :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresSetup (testEnvironment, (webhookServer, _)) = do
-  Postgres.setup (schema "authors") (testEnvironment, ())
+postgresSetup :: TestEnvironment -> GraphqlEngine.Server -> IO ()
+postgresSetup testEnvironment webhookServer = do
   let webhookServerEchoEndpoint = GraphqlEngine.serverUrl webhookServer ++ "/echo"
   GraphqlEngine.postMetadata_ testEnvironment $
     [yaml|
@@ -128,16 +132,6 @@ postgresSetup (testEnvironment, (webhookServer, _)) = do
           insert:
             columns: "*"
     |]
-
-postgresTeardown :: (TestEnvironment, (GraphqlEngine.Server, Webhook.EventsQueue)) -> IO ()
-postgresTeardown (testEnvironment, (server, _)) = do
-  Postgres.dropTable testEnvironment (authorsTable "authors")
-  stopServer server
-
-webhookServerMkLocalTestEnvironment ::
-  TestEnvironment -> IO (GraphqlEngine.Server, Webhook.EventsQueue)
-webhookServerMkLocalTestEnvironment _ = do
-  Webhook.run
 
 checkIfPGTableExists :: TestEnvironment -> String -> IO Bool
 checkIfPGTableExists testEnvironment tableName = do

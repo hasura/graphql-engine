@@ -15,8 +15,6 @@ module Harness.Backend.Cockroach
     dropTable,
     dropTableIfExists,
     untrackTable,
-    setup,
-    teardown,
     setupPermissions,
     teardownPermissions,
     setupTablesAction,
