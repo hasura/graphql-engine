@@ -7,19 +7,18 @@
 2.  Install dependencies:
 
     ```sh
-    brew install google-cloud-sdk
-    brew install node@14
-    brew install openssl
-    brew install pcre
-    brew install unixodbc
-    brew install libpq
-    brew install mysql-client@5.7
-    brew install libffi
-    brew install llvm@11
-    brew install microsoft/mssql-release/mssql-tools
-    brew install direnv
-    brew install coreutils
-    brew install pcre
+    brew install google-cloud-sdk \
+                 node@16 \
+                 openssl \
+                 pcre \
+                 unixodbc \
+                 libpq \
+                 mysql-client@5.7 \                 
+                 libffi \
+                 microsoft/mssql-release/mssql-tools18 \
+                 direnv \
+                 coreutils \
+                 pcre
     ```
 
      And add them to your environment:
@@ -27,12 +26,13 @@
     ```sh
     echo 'export PATH="/opt/homebrew/Caskroom/google-cloud-sdk/latest/google-cloud-sdk/bin:$PATH"' >> ~/.zshrc
     echo 'export PATH="/opt/homebrew/opt/openssl@1.1/bin:$PATH"' >> ~/.zshrc
-    echo 'export PATH="/opt/homebrew/opt/node@14/bin:$PATH"' >> ~/.zshrc
+    echo 'export PATH="/opt/homebrew/opt/node@16/bin:$PATH"' >> ~/.zshrc
     echo 'export PATH="/opt/homebrew/opt/mysql-client@5.7/bin:$PATH"' >> ~/.zshrc
     echo 'export PATH="/opt/homebrew/opt/libpq/bin:$PATH"' >> ~/.zshrc
-    echo 'export PATH="/opt/homebrew/opt/llvm@11/bin:$PATH"' >> ~/.zshrc
     ```
 
+If you are re-running this command to update your Mac, you may need to run
+`cabal clean` before things start working again.
 
 3. Install console assets
 
