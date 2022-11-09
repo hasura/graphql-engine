@@ -65,8 +65,9 @@ import Hasura.GraphQL.Transport.WebSocket.Types
 import Hasura.Logging qualified as L
 import Hasura.Metadata.Class
 import Hasura.Prelude
+import Hasura.RQL.Types.Common (MetricsConfig (_mcAnalyzeQueryVariables))
 import Hasura.RQL.Types.ResultCustomization
-import Hasura.RQL.Types.SchemaCache (scApiLimits)
+import Hasura.RQL.Types.SchemaCache (scApiLimits, scMetricsConfig)
 import Hasura.RemoteSchema.SchemaCache
 import Hasura.SQL.AnyBackend qualified as AB
 import Hasura.Server.Auth
@@ -416,11 +417,24 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
   op <- liftIO $ STM.atomically $ STMMap.lookup opId opMap
   let opName = _grOperationName q
 
+  (sc, scVer) <- liftIO getSchemaCache
+
+  let shouldCaptureVariables = _mcAnalyzeQueryVariables $ scMetricsConfig sc
+      logOpEv :: MonadIO n => OpDetail -> Maybe RequestId -> Maybe ParameterizedQueryHash -> n ()
+      logOpEv opTy reqId parameterizedQueryHash =
+        -- See Note [Disable query printing when query-log is disabled]
+        let censoredReq =
+              if shouldCaptureVariables then q else q {_grVariables = Nothing}
+            queryToLog = censoredReq <$ guard (Set.member L.ELTQueryLog enabledLogTypes)
+         in logWSEvent logger wsConn $
+              EOperation $
+                OperationDetails opId reqId opName opTy queryToLog parameterizedQueryHash
+
   -- NOTE: it should be safe to rely on this check later on in this function, since we expect that
   -- we process all operations on a websocket connection serially:
   when (isJust op) $
-    withComplete $
-      sendStartErr $
+    withComplete logOpEv $
+      sendStartErr logOpEv $
         "an operation already exists with this id: " <> unOperationId opId
 
   userInfoM <- liftIO $ STM.readTVarIO userInfoR
@@ -428,14 +442,12 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
     CSInitialised WsClientState {..} -> return (wscsUserInfo, wscsReqHeaders, wscsIpAddress)
     CSInitError initErr -> do
       let e = "cannot start as connection_init failed with: " <> initErr
-      withComplete $ sendStartErr e
+      withComplete logOpEv $ sendStartErr logOpEv e
     CSNotInitialised _ _ -> do
       let e = "start received before the connection is initialised"
-      withComplete $ sendStartErr e
+      withComplete logOpEv $ sendStartErr logOpEv e
 
   (requestId, reqHdrs) <- liftIO $ getRequestId origReqHdrs
-  (sc, scVer) <- liftIO getSchemaCache
-
   operationLimit <- askGraphqlOperationLimit requestId userInfo (scApiLimits sc)
   let runLimits ::
         ExceptT (Either GQExecError QErr) (ExceptT () m) a ->
@@ -443,9 +455,9 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
       runLimits = withErr Right $ runResourceLimits operationLimit
 
   reqParsedE <- lift $ E.checkGQLExecution userInfo (reqHdrs, ipAddress) enableAL sc q requestId
-  reqParsed <- onLeft reqParsedE (withComplete . preExecErr requestId Nothing)
+  reqParsed <- onLeft reqParsedE (withComplete logOpEv . preExecErr logOpEv requestId Nothing)
   queryPartsE <- runExceptT $ getSingleOperation reqParsed
-  queryParts <- onLeft queryPartsE (withComplete . preExecErr requestId Nothing)
+  queryParts <- onLeft queryPartsE (withComplete logOpEv . preExecErr logOpEv requestId Nothing)
   let gqlOpType = G._todType queryParts
       maybeOperationName = _unOperationName <$> _grOperationName reqParsed
   execPlanE <-
@@ -466,7 +478,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         maybeOperationName
         requestId
 
-  (parameterizedQueryHash, execPlan) <- onLeft execPlanE (withComplete . preExecErr requestId (Just gqlOpType))
+  (parameterizedQueryHash, execPlan) <- onLeft execPlanE (withComplete logOpEv . preExecErr logOpEv requestId (Just gqlOpType))
 
   case execPlan of
     E.QueryExecutionPlan queryPlan asts dirMap -> Tracing.trace "Query" $ do
@@ -537,7 +549,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                         allResponses <- traverse getResponse lst
                         pure $ AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse allResponses)) []
                  in getResponse
-          sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType
+          sendResultFromFragments logOpEv Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType
           case conclusion of
             Left _ -> pure ()
             Right results ->
@@ -548,7 +560,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                   cacheStore cacheKey cachedDirective $
                     encodeAnnotatedResponseParts results
 
-      liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
+      liftIO $ sendCompleted logOpEv (Just requestId) (Just parameterizedQueryHash)
     E.MutationExecutionPlan mutationPlan -> do
       -- See Note [Backwards-compatible transaction optimisation]
       case coalescePostgresMutations mutationPlan of
@@ -560,7 +572,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                 doQErr $
                   runPGMutationTransaction requestId q userInfo logger sourceConfig pgMutations
           -- we do not construct result fragments since we have only one result
-          handleResult requestId gqlOpType resp \(telemTimeIO_DT, results) -> do
+          handleResult logOpEv requestId gqlOpType resp \(telemTimeIO_DT, results) -> do
             let telemQueryType = Telem.Query
                 telemLocality = Telem.Local
                 telemTimeIO = convertDuration telemTimeIO_DT
@@ -614,8 +626,8 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                         allResponses <- traverse getResponse lst
                         pure $ AnnotatedResponsePart 0 Telem.Local (encJFromList (map arpResponse allResponses)) []
                  in getResponse
-          sendResultFromFragments Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType
-      liftIO $ sendCompleted (Just requestId) (Just parameterizedQueryHash)
+          sendResultFromFragments logOpEv Telem.Query timerTot requestId conclusion opName parameterizedQueryHash gqlOpType
+      liftIO $ sendCompleted logOpEv (Just requestId) (Just parameterizedQueryHash)
     E.SubscriptionExecutionPlan subExec -> do
       case subExec of
         E.SEAsyncActionsWithNoRelationships actions -> do
@@ -623,7 +635,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
           liftIO do
             let allActionIds = map fst $ toList actions
             case NE.nonEmpty allActionIds of
-              Nothing -> sendCompleted (Just requestId) (Just parameterizedQueryHash)
+              Nothing -> sendCompleted logOpEv (Just requestId) (Just parameterizedQueryHash)
               Just actionIds -> do
                 let sendResponseIO actionLogMap = do
                       (dTime, resultsE) <- withElapsedTime $
@@ -634,7 +646,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                                 `onNothing` throw500 "unexpected: cannot lookup action_id in response map"
                             liftEither $ resultBuilder actionLogResponse
                       case resultsE of
-                        Left err -> sendError requestId err
+                        Left err -> sendError logOpEv requestId err
                         Right results -> do
                           let dataMsg =
                                 sendDataMsg $
@@ -646,19 +658,19 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
 
                     asyncActionQueryLive =
                       ES.LAAQNoRelationships $
-                        ES.LiveAsyncActionQueryWithNoRelationships sendResponseIO (sendCompleted (Just requestId) (Just parameterizedQueryHash))
+                        ES.LiveAsyncActionQueryWithNoRelationships sendResponseIO (sendCompleted logOpEv (Just requestId) (Just parameterizedQueryHash))
 
                 ES.addAsyncActionLiveQuery
                   (ES._ssAsyncActions subscriptionsState)
                   opId
                   actionIds
-                  (sendError requestId)
+                  (sendError logOpEv requestId)
                   asyncActionQueryLive
         E.SEOnSourceDB (E.SSLivequery actionIds liveQueryBuilder) -> do
           actionLogMapE <- fmap fst <$> runExceptT (EA.fetchActionLogResponses actionIds)
-          actionLogMap <- onLeft actionLogMapE (withComplete . preExecErr requestId (Just gqlOpType))
+          actionLogMap <- onLeft actionLogMapE (withComplete logOpEv . preExecErr logOpEv requestId (Just gqlOpType))
           opMetadataE <- liftIO $ startLiveQuery liveQueryBuilder parameterizedQueryHash requestId actionLogMap
-          lqId <- onLeft opMetadataE (withComplete . preExecErr requestId (Just gqlOpType))
+          lqId <- onLeft opMetadataE (withComplete logOpEv . preExecErr logOpEv requestId (Just gqlOpType))
 
           -- Update async action query subscription state
           case NE.nonEmpty (toList actionIds) of
@@ -675,7 +687,7 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
                           restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder
 
                     onUnexpectedException err = do
-                      sendError requestId err
+                      sendError logOpEv requestId err
                       stopOperation serverEnv wsConn opId (pure ()) -- Don't log in case opId don't exist
                 ES.addAsyncActionLiveQuery
                   (ES._ssAsyncActions subscriptionsState)
@@ -720,18 +732,19 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
 
     handleResult ::
       forall a.
+      (OpDetail -> Maybe RequestId -> Maybe ParameterizedQueryHash -> IO ()) ->
       RequestId ->
       G.OperationType ->
       Either (Either GQExecError QErr) a ->
       (a -> ExceptT () m ()) ->
       ExceptT () m ()
-    handleResult requestId gqlOpType r f = case r of
+    handleResult logOpEv' requestId gqlOpType r f = case r of
       Left (Left err) -> postExecErr' gqlOpType err
-      Left (Right err) -> postExecErr requestId gqlOpType err
+      Left (Right err) -> postExecErr logOpEv' requestId gqlOpType err
       Right results -> f results
 
-    sendResultFromFragments telemQueryType timerTot requestId r opName pqh gqlOpType =
-      handleResult requestId gqlOpType r \results -> do
+    sendResultFromFragments logOpEv' telemQueryType timerTot requestId r opName pqh gqlOpType =
+      handleResult logOpEv' requestId gqlOpType r \results -> do
         let telemLocality = foldMap arpLocality results
             telemTimeIO = convertDuration $ sum $ fmap arpTimeIO results
         totalTime <- timerTot
@@ -793,35 +806,33 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
 
     WSConnData userInfoR opMap errRespTy queryType = WS.getData wsConn
 
-    logOpEv opTy reqId parameterizedQueryHash =
-      -- See Note [Disable query printing when query-log is disabled]
-      let queryToLog = bool Nothing (Just q) (Set.member L.ELTQueryLog enabledLogTypes)
-       in logWSEvent logger wsConn $
-            EOperation $
-              OperationDetails opId reqId (_grOperationName q) opTy queryToLog parameterizedQueryHash
-
     getErrFn ERTLegacy = encodeQErr
     getErrFn ERTGraphqlCompliant = encodeGQLErr
 
-    sendStartErr e = do
+    sendStartErr logOpEv' e = do
       let errFn = getErrFn errRespTy
       sendMsg wsConn $
         SMErr $
           ErrorMsg opId $
             errFn False $
               err400 StartFailed e
-      liftIO $ logOpEv (ODProtoErr e) Nothing Nothing
+      liftIO $ logOpEv' (ODProtoErr e) Nothing Nothing
       liftIO $ reportGQLQueryError Nothing
       liftIO $ closeConnAction wsConn opId (T.unpack e)
 
-    sendCompleted reqId paramQueryHash = do
+    sendCompleted logOpEv' reqId paramQueryHash = do
       sendMsg wsConn (SMComplete . CompletionMsg $ opId)
-      logOpEv ODCompleted reqId paramQueryHash
+      logOpEv' ODCompleted reqId paramQueryHash
 
-    postExecErr :: RequestId -> G.OperationType -> QErr -> ExceptT () m ()
-    postExecErr reqId gqlOpType qErr = do
+    postExecErr ::
+      (OpDetail -> Maybe RequestId -> Maybe ParameterizedQueryHash -> IO ()) ->
+      RequestId ->
+      G.OperationType ->
+      QErr ->
+      ExceptT () m ()
+    postExecErr logOpEv' reqId gqlOpType qErr = do
       let errFn = getErrFn errRespTy False
-      liftIO $ logOpEv (ODQueryErr qErr) (Just reqId) Nothing
+      liftIO $ logOpEv' (ODQueryErr qErr) (Just reqId) Nothing
       postExecErr' gqlOpType $ GQExecError $ pure $ errFn qErr
 
     postExecErr' :: G.OperationType -> GQExecError -> ExceptT () m ()
@@ -831,13 +842,13 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         postExecErrAction wsConn opId qErr
 
     -- why wouldn't pre exec error use graphql response?
-    preExecErr reqId mGqlOpType qErr = do
+    preExecErr logOpEv' reqId mGqlOpType qErr = do
       liftIO $ reportGQLQueryError mGqlOpType
-      liftIO $ sendError reqId qErr
+      liftIO $ sendError logOpEv' reqId qErr
 
-    sendError reqId qErr = do
+    sendError logOpEv' reqId qErr = do
       let errFn = getErrFn errRespTy
-      logOpEv (ODQueryErr qErr) (Just reqId) Nothing
+      logOpEv' (ODQueryErr qErr) (Just reqId) Nothing
       let err = case errRespTy of
             ERTLegacy -> errFn False qErr
             ERTGraphqlCompliant -> fmtErrorMessage [errFn False qErr]
@@ -856,10 +867,13 @@ onStart env enabledLogTypes serverEnv wsConn (StartMsg opId q) onMessageActions 
         opName
         (Just queryHash)
 
-    withComplete :: ExceptT () m () -> ExceptT () m a
-    withComplete action = do
+    withComplete ::
+      (OpDetail -> Maybe RequestId -> Maybe ParameterizedQueryHash -> IO ()) ->
+      ExceptT () m () ->
+      ExceptT () m a
+    withComplete logOpEv' action = do
       action
-      liftIO $ sendCompleted Nothing Nothing
+      liftIO $ sendCompleted logOpEv' Nothing Nothing
       throwError ()
 
     restartLiveQuery parameterizedQueryHash requestId liveQueryBuilder lqId actionLogMap = do

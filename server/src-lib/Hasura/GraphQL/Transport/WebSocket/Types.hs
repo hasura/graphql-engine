@@ -3,7 +3,7 @@ module Hasura.GraphQL.Transport.WebSocket.Types
     WSConn,
     WSConnData (WSConnData, _wscOpMap, _wscUser),
     WSConnState (CSInitError, CSInitialised, CSNotInitialised),
-    WSServerEnv (WSServerEnv, _wseCorsPolicy, _wseHManager, _wseKeepAliveDelay, _wseSubscriptionState, _wseLogger, _wseServer, _wseServerMetrics, _wsePrometheusMetrics),
+    WSServerEnv (WSServerEnv, _wseCorsPolicy, _wseGCtxMap, _wseHManager, _wseKeepAliveDelay, _wseSubscriptionState, _wseLogger, _wseServer, _wseServerMetrics, _wsePrometheusMetrics),
     WsClientState (WsClientState, wscsIpAddress, wscsReqHeaders, wscsTokenExpTime, wscsUserInfo),
     WsHeaders (WsHeaders, unWsHeaders),
     SubscriberType (..),

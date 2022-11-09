@@ -59,6 +59,7 @@ import Hasura.GraphQL.Transport.HTTP.Protocol
 import Hasura.GraphQL.Transport.WebSocket.Protocol
 import Hasura.Logging qualified as L
 import Hasura.Prelude
+import Hasura.RQL.Types.Common (MetricsConfig (..))
 import Hasura.Server.Init.Config (WSConnectionInitTimeout (..))
 import ListT qualified
 import Network.Wai.Extended (IpAddress)
@@ -303,6 +304,7 @@ data WSHandlers m a = WSHandlers
 
 createServerApp ::
   (MonadIO m, MC.MonadBaseControl IO m, LA.Forall (LA.Pure m), MonadWSLog m) =>
+  IO MetricsConfig ->
   WSConnectionInitTimeout ->
   WSServer a ->
   -- | user provided handlers
@@ -310,7 +312,7 @@ createServerApp ::
   -- | aka WS.ServerApp
   HasuraServerApp m
 {-# INLINE createServerApp #-}
-createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !ipAddress !pendingConn = do
+createServerApp getMetricsConfig wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverStatus) wsHandlers !ipAddress !pendingConn = do
   wsId <- WSId <$> liftIO UUID.nextRandom
   logWSLog logger $ WSLog wsId EConnectionRequest Nothing
   -- NOTE: this timer is specific to `graphql-ws`. the server has to close the connection
@@ -388,6 +390,7 @@ createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverSta
             closeHandler wsConn
           AcceptingConns _ -> do
             let rcv = forever $ do
+                  shouldCaptureVariables <- liftIO $ _mcAnalyzeQueryVariables <$> getMetricsConfig
                   -- Process all messages serially (important!), in a separate thread:
                   msg <-
                     liftIO $
@@ -398,8 +401,11 @@ createServerApp wsConnInitTimeout (WSServer logger@(L.Logger writeLog) serverSta
                       -- Regardless this should be safe:
                       handleJust (guard . E.isResourceVanishedError) (\() -> throw WS.ConnectionClosed) $
                         WS.receiveData conn
-                  let message = MessageDetails (SB.fromLBS msg) (BL.length msg)
-                  logWSLog logger $ WSLog wsId (EMessageReceived message) Nothing
+                  let censoredMessage =
+                        MessageDetails
+                          (SB.fromLBS (if shouldCaptureVariables then msg else "<censored>"))
+                          (BL.length msg)
+                  logWSLog logger $ WSLog wsId (EMessageReceived censoredMessage) Nothing
                   messageHandler wsConn msg subProtocol
 
             let send = forever $ do
