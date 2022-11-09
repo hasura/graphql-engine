@@ -17,10 +17,9 @@ import Harness.Quoter.Yaml (yaml)
 import Harness.Test.BackendType (BackendType (..), defaultBackendTypeString, defaultSource)
 import Harness.Test.Fixture qualified as Fixture
 import Harness.TestEnvironment (TestEnvironment)
-import Harness.TestEnvironment qualified as TE
 import Harness.Yaml (shouldReturnYaml)
 import Hasura.Prelude
-import Test.Hspec (SpecWith, describe, it, pendingWith)
+import Test.Hspec (SpecWith, describe, it)
 
 --------------------------------------------------------------------------------
 
@@ -288,7 +287,6 @@ tests opts = describe "SelectPermissionsSpec" $ do
       |]
 
   it "Query that orders by a related table that has a permissions filter" $ \(testEnvironment, _) -> do
-    when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
     shouldReturnYaml
       opts
       ( GraphqlEngine.postGraphqlWithHeaders

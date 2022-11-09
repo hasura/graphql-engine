@@ -51,6 +51,42 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
     Data.responseRows receivedAlbums `rowsShouldBe` expectedAlbums
     _qrAggregates receivedAlbums `jsonShouldBe` Nothing
 
+  it "orders nulls last when sorting ascending" $ do
+    let orderBy =
+          OrderBy mempty $
+            NonEmpty.fromList
+              [ _tdOrderByColumn [] "BillingState" Ascending,
+                _tdOrderByColumn [] "InvoiceId" Ascending -- Required for a stable sort
+              ]
+    let query = invoicesQueryRequest & qrQuery . qOrderBy ?~ orderBy
+    receivedInvoices <- guardedQuery api sourceName config query
+
+    let expectedInvoices =
+          _tdInvoicesRows
+            & sortOn (\row -> (row ^? Data.field "BillingState", row ^? Data.field "InvoiceId"))
+            & fmap (Data.filterColumnsByQueryFields (invoicesQueryRequest ^. qrQuery))
+
+    Data.responseRows receivedInvoices `rowsShouldBe` expectedInvoices
+    _qrAggregates receivedInvoices `jsonShouldBe` Nothing
+
+  it "orders nulls first when sorting descending" $ do
+    let orderBy =
+          OrderBy mempty $
+            NonEmpty.fromList
+              [ _tdOrderByColumn [] "BillingState" Descending,
+                _tdOrderByColumn [] "InvoiceId" Descending -- Required for a stable sort
+              ]
+    let query = invoicesQueryRequest & qrQuery . qOrderBy ?~ orderBy
+    receivedInvoices <- guardedQuery api sourceName config query
+
+    let expectedInvoices =
+          _tdInvoicesRows
+            & sortOn (\row -> (Down $ row ^? Data.field "BillingState", Down $ row ^? Data.field "InvoiceId"))
+            & fmap (Data.filterColumnsByQueryFields (invoicesQueryRequest ^. qrQuery))
+
+    Data.responseRows receivedInvoices `rowsShouldBe` expectedInvoices
+    _qrAggregates receivedInvoices `jsonShouldBe` Nothing
+
   when (isJust _cRelationships) . describe "involving relationships" $ do
     it "can order results by a column in a related table" $ do
       let orderByRelations = HashMap.fromList [(_tdArtistRelationshipName, OrderByRelation Nothing mempty)]
@@ -156,26 +192,34 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
       _qrAggregates receivedTracks `jsonShouldBe` Nothing
 
     it "can order results separately within each array relationship" $ do
+      -- Assemble a query of artists (desc by name) -> albums (desc by title) -> tracks (desc by name)
+      -- But only a paginated subset of each, in order to reduce the size of final resultset to something manageable
+      let tracksLimit = 5
+      let albumsLimit = 3
+      let artistsOffset = 75
+      let artistsLimit = 5
       let tracksOrdering = OrderBy mempty $ _tdOrderByColumn [] "Name" Descending :| []
       let tracksField =
             RelField . RelationshipField _tdTracksRelationshipName $
               tracksQuery
                 & qOrderBy ?~ tracksOrdering
-                & qLimit ?~ 5
+                & qLimit ?~ tracksLimit
       let albumsOrdering = OrderBy mempty $ _tdOrderByColumn [] "Title" Descending :| []
       let albumsField =
             RelField . RelationshipField _tdAlbumsRelationshipName $
               albumsQuery
                 & qFields . _Just %~ Data.insertField "Tracks" tracksField
                 & qOrderBy ?~ albumsOrdering
-                & qLimit ?~ 3
+                & qLimit ?~ albumsLimit
       let artistsOrdering = OrderBy mempty $ _tdOrderByColumn [] "Name" Descending :| []
       let query =
             artistsQueryRequest
-              & qrQuery . qFields . _Just %~ Data.insertField "Albums" albumsField
-              & qrQuery . qOrderBy ?~ artistsOrdering
-              & qrQuery . qOffset ?~ 75
-              & qrQuery . qLimit ?~ 5
+              & qrQuery
+                %~ ( qFields . _Just %~ Data.insertField "Albums" albumsField
+                       >>> qOrderBy ?~ artistsOrdering
+                       >>> qOffset ?~ artistsOffset
+                       >>> qLimit ?~ artistsLimit
+                   )
               & qrTableRelationships
                 .~ [ Data.onlyKeepRelationships [_tdTracksRelationshipName] _tdAlbumsTableRelationships,
                      Data.onlyKeepRelationships [_tdAlbumsRelationshipName] _tdArtistsTableRelationships
@@ -188,7 +232,7 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
                   _tdTracksRows
                     & filter ((^? Data.field "AlbumId" . Data._ColumnFieldNumber) >>> (== Just albumId))
                     & sortOn ((^? Data.field "Name") >>> Down)
-                    & take 5
+                    & take tracksLimit
                     & Data.filterColumns ["TrackId", "Name"]
             pure $ Data.insertField "Tracks" (mkSubqueryResponse (Just albums) Nothing) album
 
@@ -198,15 +242,15 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
                   _tdAlbumsRows
                     & filter ((^? Data.field "ArtistId" . Data._ColumnFieldNumber) >>> (== Just artistId))
                     & sortOn ((^? Data.field "Title") >>> Down)
-                    & take 3
+                    & take albumsLimit
                     & fmap joinInTracks
             pure $ Data.insertField "Albums" (mkSubqueryResponse (Just albums) Nothing) artist
 
       let expectedArtists =
             _tdArtistsRows
               & sortOn ((^? Data.field "Name") >>> Down)
-              & drop 75
-              & take 5
+              & drop artistsOffset
+              & take artistsLimit
               & fmap joinInAlbums
 
       Data.responseRows receivedArtists `rowsShouldBe` expectedArtists
@@ -337,6 +381,12 @@ spec TestData {..} api sourceName config Capabilities {..} = describe "Order By 
     tracksQueryRequest :: QueryRequest
     tracksQueryRequest =
       QueryRequest _tdTracksTableName [] tracksQuery
+
+    invoicesQueryRequest :: QueryRequest
+    invoicesQueryRequest =
+      let fields = Data.mkFieldsMap [("InvoiceId", _tdColumnField "InvoiceId" _tdIntType), ("BillingState", _tdColumnField "BillingState" _tdStringType)]
+          query = Data.emptyQuery & qFields ?~ fields
+       in QueryRequest _tdInvoicesTableName [] query
 
 data NullableOrdered a
   = NullFirst

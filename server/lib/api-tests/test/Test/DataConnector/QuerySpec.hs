@@ -492,7 +492,6 @@ tests opts = describe "Queries" $ do
         |]
 
     it "can order by an aggregate" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql
@@ -528,7 +527,6 @@ tests opts = describe "Queries" $ do
         |]
 
     it "can order by a related field" $ \(testEnvironment, _) -> do
-      when (TE.backendType testEnvironment == Just Fixture.DataConnectorSqlite) (pendingWith "TODO: Test currently broken for SQLite DataConnector")
       shouldReturnYaml
         opts
         ( GraphqlEngine.postGraphql

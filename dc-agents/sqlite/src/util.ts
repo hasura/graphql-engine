@@ -2,7 +2,7 @@
 
 export const coerceUndefinedToNull = <T>(v: T | undefined): T | null => v === undefined ? null : v;
 
-export const coerceUndefinedOrNullToEmptyArray = <T>(v: Array<T> | undefined | null): Array<T> => v == null ? [] : v;
+export const coerceUndefinedOrNullToEmptyArray = <T>(v: T[] | undefined | null): T[] => v == null ? [] : v;
 
 export const coerceUndefinedOrNullToEmptyRecord = <V>(v: Record<string, V> | undefined | null): Record<string, V> => v == null ? {} : v;
 
@@ -20,10 +20,6 @@ export const zip = <T, U>(arr1: T[], arr2: U[]): [T,U][] => {
 export const crossProduct = <T, U>(arr1: T[], arr2: U[]): [T,U][] => {
   return arr1.flatMap(a1 => arr2.map<[T,U]>(a2 => [a1, a2]));
 };
-
-export function omap<V,O>(m: { [x: string]: V; },f: (k: string, v: V) => O) {
-  return Object.keys(m).map(k => f(k, m[k]))
-}
 
 export function stringToBool(x: string | null | undefined): boolean {
   return (/1|true|t|yes|y/i).test(x || '');
@@ -43,7 +39,7 @@ export function envToNum(envVarName: string, defaultValue: number): number {
   return val === undefined ? defaultValue : Number(val);
 }
 
-export function last<T>(x: Array<T>): T {
+export function last<T>(x: T[]): T {
   return x[x.length - 1];
 }
 
@@ -67,8 +63,12 @@ export function delay(ms: number): Promise<void> {
 }
 
 export const tableNameEquals = (tableName1: TableName) => (tableName2: TableName): boolean => {
-  if (tableName1.length !== tableName2.length)
+  return stringArrayEquals(tableName1)(tableName2);
+}
+
+export const stringArrayEquals = (arr1: string[]) => (arr2: string[]): boolean => {
+  if (arr1.length !== arr2.length)
     return false;
 
-  return zip(tableName1, tableName2).every(([n1, n2]) => n1 === n2);
+  return zip(arr1, arr2).every(([n1, n2]) => n1 === n2);
 }
